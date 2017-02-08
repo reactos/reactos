@@ -25,7 +25,7 @@
 .globl __SEH2EnterHandleTrylevel
 __SEH2EnterHandleTrylevel:
 	mov eax, [esp+8]
-	mov ecx, [esp+12]
+	mov ecx, [esp]
 	mov [eax+8], ecx
 	mov [eax+16], ebp
 	mov [eax+20], ebx
@@ -43,7 +43,7 @@ __SEH2EnterHandleTrylevel:
 .globl __SEH2EnterFrameAndHandleTrylevel
 __SEH2EnterFrameAndHandleTrylevel:
 	mov eax, [esp+8]
-	mov ecx, [esp+12]
+	mov ecx, [esp]
 	mov [eax+8], ecx
 	mov [eax+16], ebp
 	mov [eax+20], ebx

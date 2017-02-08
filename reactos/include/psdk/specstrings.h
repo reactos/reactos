@@ -27,6 +27,7 @@
 #include <driverspecs.h>
 
 #define __field_bcount(size) __notnull __byte_writableTo(size)
+#define __field_bcount_full(size) __notnull __byte_writableTo(size) __byte_readableTo(size)
 #define __field_ecount(size) __notnull __elem_writableTo(size)
 #define __post_invalid _Post_ __notvalid
 

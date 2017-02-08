@@ -4,7 +4,7 @@
  * FILE:            dll/directx/dsound_new/capturebuffer.c
  * PURPOSE:         IDirectSoundCaptureBuffer8 implementation
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 

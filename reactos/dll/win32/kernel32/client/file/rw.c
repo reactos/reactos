@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/rw.c
+ * FILE:            dll/win32/kernel32/client/file/rw.c
  * PURPOSE:         Read/write functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -23,41 +23,38 @@ DEBUG_CHANNEL(kernel32file);
 BOOL WINAPI
 WriteFile(IN HANDLE hFile,
           IN LPCVOID lpBuffer,
-          IN DWORD nNumberOfBytesToWrite  OPTIONAL,
-          OUT LPDWORD lpNumberOfBytesWritten  OPTIONAL,
-          IN LPOVERLAPPED lpOverlapped  OPTIONAL)
+          IN DWORD nNumberOfBytesToWrite OPTIONAL,
+          OUT LPDWORD lpNumberOfBytesWritten OPTIONAL,
+          IN LPOVERLAPPED lpOverlapped OPTIONAL)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   TRACE("WriteFile(hFile %x)\n", hFile);
+    TRACE("WriteFile(hFile %p)\n", hFile);
 
-   if (lpNumberOfBytesWritten != NULL)
-     {
-        *lpNumberOfBytesWritten = 0;
-     }
+    if (lpNumberOfBytesWritten != NULL) *lpNumberOfBytesWritten = 0;
 
-   hFile = TranslateStdHandle(hFile);
+    hFile = TranslateStdHandle(hFile);
 
-   if (IsConsoleHandle(hFile))
-     {
-	return WriteConsoleA(hFile,
+    if (IsConsoleHandle(hFile))
+    {
+        return WriteConsoleA(hFile,
                              lpBuffer,
                              nNumberOfBytesToWrite,
                              lpNumberOfBytesWritten,
                              lpOverlapped);
-     }
+    }
 
-   if (lpOverlapped != NULL)
-     {
+    if (lpOverlapped != NULL)
+    {
         LARGE_INTEGER Offset;
         PVOID ApcContext;
 
         Offset.u.LowPart = lpOverlapped->Offset;
         Offset.u.HighPart = lpOverlapped->OffsetHigh;
-	lpOverlapped->Internal = STATUS_PENDING;
-	ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
+        lpOverlapped->Internal = STATUS_PENDING;
+        ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
 
-	Status = NtWriteFile(hFile,
+        Status = NtWriteFile(hFile,
                              lpOverlapped->hEvent,
                              NULL,
                              ApcContext,
@@ -69,18 +66,16 @@ WriteFile(IN HANDLE hFile,
 
         /* return FALSE in case of failure and pending operations! */
         if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
-          {
-             BaseSetLastNTError(Status);
-             return FALSE;
-          }
+        {
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
 
         if (lpNumberOfBytesWritten != NULL)
-          {
-             *lpNumberOfBytesWritten = lpOverlapped->InternalHigh;
-          }
-     }
-   else
-     {
+            *lpNumberOfBytesWritten = lpOverlapped->InternalHigh;
+    }
+    else
+    {
         IO_STATUS_BLOCK Iosb;
 
         Status = NtWriteFile(hFile,
@@ -93,34 +88,31 @@ WriteFile(IN HANDLE hFile,
                              NULL,
                              NULL);
 
-        /* wait in case operation is pending */
+        /* Wait in case operation is pending */
         if (Status == STATUS_PENDING)
-          {
-             Status = NtWaitForSingleObject(hFile,
-                                            FALSE,
-                                            NULL);
-             if (NT_SUCCESS(Status))
-               {
-                  Status = Iosb.Status;
-               }
-          }
+        {
+            Status = NtWaitForSingleObject(hFile, FALSE, NULL);
+            if (NT_SUCCESS(Status)) Status = Iosb.Status;
+        }
 
         if (NT_SUCCESS(Status))
-          {
-             /* lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
-                check that case either and crashes (only after the operation
-                completed) */
-             *lpNumberOfBytesWritten = Iosb.Information;
-          }
+        {
+            /*
+             * lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
+             * check that case either and crashes (only after the operation
+             * completed).
+             */
+            *lpNumberOfBytesWritten = Iosb.Information;
+        }
         else
-          {
-             BaseSetLastNTError(Status);
-             return FALSE;
-          }
-     }
+        {
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
+    }
 
-   TRACE("WriteFile() succeeded\n");
-   return TRUE;
+    TRACE("WriteFile() succeeded\n");
+    return TRUE;
 }
 
 
@@ -131,56 +123,48 @@ BOOL WINAPI
 ReadFile(IN HANDLE hFile,
          IN LPVOID lpBuffer,
          IN DWORD nNumberOfBytesToRead,
-         OUT LPDWORD lpNumberOfBytesRead  OPTIONAL,
-         IN LPOVERLAPPED lpOverlapped  OPTIONAL)
+         OUT LPDWORD lpNumberOfBytesRead OPTIONAL,
+         IN LPOVERLAPPED lpOverlapped OPTIONAL)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   TRACE("ReadFile(hFile %x)\n", hFile);
+    TRACE("ReadFile(hFile %p)\n", hFile);
 
-   if (lpNumberOfBytesRead != NULL)
-     {
-        *lpNumberOfBytesRead = 0;
-     }
+    if (lpNumberOfBytesRead != NULL) *lpNumberOfBytesRead = 0;
 
-   if (!nNumberOfBytesToRead)
-     {
-        return TRUE;
-     }
+    hFile = TranslateStdHandle(hFile);
 
-   hFile = TranslateStdHandle(hFile);
-
-   if (IsConsoleHandle(hFile))
-     {
+    if (IsConsoleHandle(hFile))
+    {
         if (ReadConsoleA(hFile,
-                            lpBuffer,
-                            nNumberOfBytesToRead,
-                            lpNumberOfBytesRead,
-                            NULL))
-          {
-             DWORD dwMode;
-             GetConsoleMode(hFile, &dwMode);
-             if ((dwMode & ENABLE_PROCESSED_INPUT) && *(char *)lpBuffer == 0x1a)
-               {
-                  /* EOF character entered; simulate end-of-file */
-                  *lpNumberOfBytesRead = 0;
-               }
-             return TRUE;
-          }
+                         lpBuffer,
+                         nNumberOfBytesToRead,
+                         lpNumberOfBytesRead,
+                         NULL))
+        {
+            DWORD dwMode;
+            GetConsoleMode(hFile, &dwMode);
+            if ((dwMode & ENABLE_PROCESSED_INPUT) && *(PCHAR)lpBuffer == 0x1a)
+            {
+                /* EOF character entered; simulate end-of-file */
+                *lpNumberOfBytesRead = 0;
+            }
+            return TRUE;
+        }
         return FALSE;
-     }
+    }
 
-   if (lpOverlapped != NULL)
-     {
+    if (lpOverlapped != NULL)
+    {
         LARGE_INTEGER Offset;
         PVOID ApcContext;
 
         Offset.u.LowPart = lpOverlapped->Offset;
         Offset.u.HighPart = lpOverlapped->OffsetHigh;
-	lpOverlapped->Internal = STATUS_PENDING;
-	ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
+        lpOverlapped->Internal = STATUS_PENDING;
+        ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
 
-	Status = NtReadFile(hFile,
+        Status = NtReadFile(hFile,
                             lpOverlapped->hEvent,
                             NULL,
                             ApcContext,
@@ -192,24 +176,19 @@ ReadFile(IN HANDLE hFile,
 
         /* return FALSE in case of failure and pending operations! */
         if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
-          {
-             if (Status == STATUS_END_OF_FILE &&
-                 lpNumberOfBytesRead != NULL)
-               {
-                  *lpNumberOfBytesRead = 0;
-               }
+        {
+            if (Status == STATUS_END_OF_FILE && lpNumberOfBytesRead != NULL)
+                *lpNumberOfBytesRead = 0;
 
-             BaseSetLastNTError(Status);
-             return FALSE;
-          }
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
 
         if (lpNumberOfBytesRead != NULL)
-          {
-             *lpNumberOfBytesRead = lpOverlapped->InternalHigh;
-          }
-     }
-   else
-     {
+            *lpNumberOfBytesRead = lpOverlapped->InternalHigh;
+    }
+    else
+    {
         IO_STATUS_BLOCK Iosb;
 
         Status = NtReadFile(hFile,
@@ -222,58 +201,57 @@ ReadFile(IN HANDLE hFile,
                             NULL,
                             NULL);
 
-        /* wait in case operation is pending */
+        /* Wait in case operation is pending */
         if (Status == STATUS_PENDING)
-          {
-             Status = NtWaitForSingleObject(hFile,
-                                            FALSE,
-                                            NULL);
-             if (NT_SUCCESS(Status))
-               {
-                  Status = Iosb.Status;
-               }
-          }
+        {
+            Status = NtWaitForSingleObject(hFile, FALSE, NULL);
+            if (NT_SUCCESS(Status)) Status = Iosb.Status;
+        }
 
         if (Status == STATUS_END_OF_FILE)
-          {
-             /* lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
-                check that case either and crashes (only after the operation
-                completed) */
-             *lpNumberOfBytesRead = 0;
-             return TRUE;
-          }
+        {
+            /*
+             * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
+             * check that case either and crashes (only after the operation
+             * completed).
+             */
+            *lpNumberOfBytesRead = 0;
+            return TRUE;
+        }
 
         if (NT_SUCCESS(Status))
-          {
-             /* lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
-                check that case either and crashes (only after the operation
-                completed) */
-             *lpNumberOfBytesRead = Iosb.Information;
-          }
+        {
+            /*
+             * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
+             * check that case either and crashes (only after the operation
+             * completed).
+             */
+            *lpNumberOfBytesRead = Iosb.Information;
+        }
         else
-          {
-             BaseSetLastNTError(Status);
-             return FALSE;
-          }
-     }
+        {
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
+    }
 
-   TRACE("ReadFile() succeeded\n");
-   return TRUE;
+    TRACE("ReadFile() succeeded\n");
+    return TRUE;
 }
 
 VOID WINAPI
 ApcRoutine(PVOID ApcContext,
-		struct _IO_STATUS_BLOCK* IoStatusBlock,
-		ULONG Reserved)
+           PIO_STATUS_BLOCK IoStatusBlock,
+           ULONG Reserved)
 {
-   DWORD dwErrorCode;
-   LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine =
-     (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
+    DWORD dwErrorCode;
+    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine =
+        (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
 
-   dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
-   lpCompletionRoutine(dwErrorCode,
-                       IoStatusBlock->Information,
-                       (LPOVERLAPPED)IoStatusBlock);
+    dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
+    lpCompletionRoutine(dwErrorCode,
+                        IoStatusBlock->Information,
+                        (LPOVERLAPPED)IoStatusBlock);
 }
 
 
@@ -283,34 +261,34 @@ ApcRoutine(PVOID ApcContext,
 BOOL WINAPI
 WriteFileEx(IN HANDLE hFile,
             IN LPCVOID lpBuffer,
-            IN DWORD nNumberOfBytesToWrite  OPTIONAL,
+            IN DWORD nNumberOfBytesToWrite OPTIONAL,
             IN LPOVERLAPPED lpOverlapped,
             IN LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-   LARGE_INTEGER Offset;
-   NTSTATUS Status;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
 
-   Offset.u.LowPart = lpOverlapped->Offset;
-   Offset.u.HighPart = lpOverlapped->OffsetHigh;
-   lpOverlapped->Internal = STATUS_PENDING;
+    Offset.u.LowPart = lpOverlapped->Offset;
+    Offset.u.HighPart = lpOverlapped->OffsetHigh;
+    lpOverlapped->Internal = STATUS_PENDING;
 
-   Status = NtWriteFile(hFile,
-                        NULL,
-                        ApcRoutine,
-                        lpCompletionRoutine,
-                        (PIO_STATUS_BLOCK)lpOverlapped,
-                        (PVOID)lpBuffer,
-                        nNumberOfBytesToWrite,
-                        &Offset,
-                        NULL);
+    Status = NtWriteFile(hFile,
+                         NULL,
+                         ApcRoutine,
+                         lpCompletionRoutine,
+                         (PIO_STATUS_BLOCK)lpOverlapped,
+                         (PVOID)lpBuffer,
+                         nNumberOfBytesToWrite,
+                         &Offset,
+                         NULL);
 
-   if (!NT_SUCCESS(Status))
-     {
-	BaseSetLastNTError(Status);
-	return FALSE;
-     }
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-   return TRUE;
+    return TRUE;
 }
 
 
@@ -320,34 +298,34 @@ WriteFileEx(IN HANDLE hFile,
 BOOL WINAPI
 ReadFileEx(IN HANDLE hFile,
            IN LPVOID lpBuffer,
-           IN DWORD nNumberOfBytesToRead  OPTIONAL,
+           IN DWORD nNumberOfBytesToRead OPTIONAL,
            IN LPOVERLAPPED lpOverlapped,
            IN LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-   LARGE_INTEGER Offset;
-   NTSTATUS Status;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
 
-   Offset.u.LowPart = lpOverlapped->Offset;
-   Offset.u.HighPart = lpOverlapped->OffsetHigh;
-   lpOverlapped->Internal = STATUS_PENDING;
+    Offset.u.LowPart = lpOverlapped->Offset;
+    Offset.u.HighPart = lpOverlapped->OffsetHigh;
+    lpOverlapped->Internal = STATUS_PENDING;
 
-   Status = NtReadFile(hFile,
-                       NULL,
-                       ApcRoutine,
-                       lpCompletionRoutine,
-                       (PIO_STATUS_BLOCK)lpOverlapped,
-                       lpBuffer,
-                       nNumberOfBytesToRead,
-                       &Offset,
-                       NULL);
+    Status = NtReadFile(hFile,
+                        NULL,
+                        ApcRoutine,
+                        lpCompletionRoutine,
+                        (PIO_STATUS_BLOCK)lpOverlapped,
+                        lpBuffer,
+                        nNumberOfBytesToRead,
+                        &Offset,
+                        NULL);
 
-   if (!NT_SUCCESS(Status))
-     {
-	BaseSetLastNTError(Status);
-	return FALSE;
-     }
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-   return TRUE;
+    return TRUE;
 }
 
 

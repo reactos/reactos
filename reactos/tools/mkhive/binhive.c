@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
  * PURPOSE:         Binary hive export code
@@ -31,28 +32,28 @@
 
 BOOL
 ExportBinaryHive(
-	IN PCSTR FileName,
-	IN PCMHIVE Hive)
+    IN PCSTR FileName,
+    IN PCMHIVE Hive)
 {
-	FILE *File;
-	BOOL ret;
+    FILE *File;
+    BOOL ret;
 
-	printf ("  Creating binary hive: %s\n", FileName);
+    printf ("  Creating binary hive: %s\n", FileName);
 
-	/* Create new hive file */
-	File = fopen (FileName, "w+b");
-	if (File == NULL)
-	{
-		printf("    Error creating/opening file\n");
-		return FALSE;
-	}
+    /* Create new hive file */
+    File = fopen (FileName, "w+b");
+    if (File == NULL)
+    {
+        printf("    Error creating/opening file\n");
+        return FALSE;
+    }
 
-	fseek (File, 0, SEEK_SET);
+    fseek (File, 0, SEEK_SET);
 
-	Hive->FileHandles[HFILE_TYPE_PRIMARY] = (HANDLE)File;
-	ret = HvWriteHive(&Hive->Hive);
-	fclose (File);
-	return ret;
+    Hive->FileHandles[HFILE_TYPE_PRIMARY] = (HANDLE)File;
+    ret = HvWriteHive(&Hive->Hive);
+    fclose (File);
+    return ret;
 }
 
 /* EOF */

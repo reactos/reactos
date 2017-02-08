@@ -1,0 +1,73 @@
+/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 */
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
+  help command\n\
+  command /?     Untuk informasi lengkap pada perintah tertentu\n\n\
+?        Daftar semua perintah yang tersedia tanpa deskripsi.\n\
+ALIAS    Menyetel, menghapus atau menampilkan alias.\n\
+ATTRIB   Menampilkan atau mengubah atribut file.\n\
+BEEP     Membunyikan speaker.\n\
+CALL     Memanggil program batch dari yang lain.\n\
+CD       Menampilkan nama atau mengubah direktori saat ini.\n\
+CHCP     Menampilkan atau menyetel nomor halaman kode aktif.\n\
+CHOICE   Menunggu pengguna untuk memilih satu dari set pilihan.\n\
+CLS      Membersihkan layar.\n\
+CMD      Memulai instan interpreter perintah ReactOS baru.\n\
+COLOR    Menyetel warna standar latar belakang dan depan konsol.\n\
+COPY     Mengcopy satu atau lebih file ke lokasi lain.\n\
+DATE     Menampilkan atau menyetel tanggal.\n\
+DELETE   Menghapus satu atau lebih file.\n\
+DIR      Menampilkan daftar file dan subdirektori dalam sebuah direktori.\n\
+ECHO     Menampilkan pesan, atau menghidupkan/mematikan echo perintah.\n\
+ERASE    Menghapus satu atau lebih file.\n\
+EXIT     Keluar dari program CMD.EXE (interpreter perintah).\n\
+FOR      Menjalankan perintah tertentu untuk setiap file atau set  file.\n\
+FREE     (bebas) ruang disc.\n\
+GOTO     Melangsungkan interpreter perintah ReactOS ke baris berlabel dalam\n\
+         program batch.\n\
+HELP     Menyediakan informasi Bantuan untuk perintah ReactOS.\n\
+HISTORY  Mendaftarkan semua perintah yang sudah digunakan\n\
+IF       Melakukan pemrosesan kondisional dalam program batch.\n\
+LABEL    Membuat, mengubah, atau menghapus label volume disk.\n\
+MD       Membuat sebuah direktori.\n\
+MKDIR    Membuat sebuah direktori.\n\
+MKLINK   Creates a filesystem link object.\n\
+MOVE     Memindahkan satu atau lebih file dari satu direktori ke yang lainnya\n\
+         directory.\n\
+PATH     Menampilkan atau menyetel path pencarian untuk file executable.\n\
+PAUSE    Menunda proses file batch dan menampilkan pesan.\n\
+POPD     Mengembalikan nilai sebelumnya dari direktori saat ini yang\n\
+         disimpan oleh PUSHD.\n\
+PROMPT   Mengubah prompt perintah.\n\
+PUSHD    Menyimpan direktori saat ini lalu mengubahnya.\n\
+RD       Menghapus direktori.\n\
+REM      Merekam komentar (remarks) dalam file batch.\n\
+REN      Mengganti nama file.\n\
+RENAME   Mengganti nama file.\n\
+RMDIR    Menghapus direktori.\n\
+SCREEN   Memindahkan kursor dan secara opsional mencetak teks.\n\
+SET      Menampilkan, menyetel, atau menghapus variabel lingkungan ReactOS.\n\
+SHIFT    Mengangkat posisi parameter yang bisa diganti dalam file batch.\n"
+    IDS_HELP2 "START    Memulai jendela terpisah untuk menjalankan perintah atau program tertentu.\n\
+         Menjalankan perintah.\n\
+TIME     Menampilkan atau menyetel jam sistem.\n\
+TIMER    Mengijinkan penggunaan sepuluh stopwatch.\n\
+TITLE    Menyetel judul jendela untuk ses CMD.EXE.\n\
+TYPE     Menampilkan isi dari file teks.\n\
+VER      Menampilkan versi ReactOS.\n\
+VERIFY   Memberitahu ReactOS apakah memverifikasi bahwa file anda ditulis\n\
+         dengan benar ke sebuah disk.\n\
+VOL      Menampilkan label volume disk dan nomor seri.\n"
+END

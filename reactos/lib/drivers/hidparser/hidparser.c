@@ -10,6 +10,9 @@
 
 #include "parser.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 TranslateHidParserStatus(
     IN HIDPARSER_STATUS Status)
@@ -136,9 +139,9 @@ HidParser_GetCollectionDescription(
         DeviceDescription->ReportIDs[Index].FeatureLength = HidParser_GetReportLength((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_FEATURE);
 
 
-        DeviceDescription->ReportIDs[Index].InputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_INPUT) == TRUE ? 1 : 0);
-        DeviceDescription->ReportIDs[Index].OutputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_OUTPUT) == TRUE ? 1 : 0);
-        DeviceDescription->ReportIDs[Index].FeatureLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_FEATURE) == TRUE ? 1 : 0);
+        DeviceDescription->ReportIDs[Index].InputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_INPUT) ? 1 : 0);
+        DeviceDescription->ReportIDs[Index].OutputLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_OUTPUT) ? 1 : 0);
+        DeviceDescription->ReportIDs[Index].FeatureLength += (HidParser_UsesReportId((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, HID_REPORT_TYPE_FEATURE) ? 1 : 0);
 
 
         //
@@ -350,7 +353,7 @@ HidParser_GetSpecificValueCaps(
     IN USHORT  LinkCollection,
     IN USAGE  Usage,
     OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PULONG  ValueCapsLength)
+    IN OUT PUSHORT  ValueCapsLength)
 {
     HIDPARSER_STATUS ParserStatus;
 

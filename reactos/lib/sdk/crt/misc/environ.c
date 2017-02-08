@@ -214,6 +214,8 @@ int SetEnv(const wchar_t *option)
    wchar_t *woption;
    char *mboption;
    int remove, index, count, size, result = 0, found = 0;
+   wchar_t **wnewenv;
+   char **mbnewenv;
 
    if (option == NULL || (epos = wcschr(option, L'=')) == NULL)
       return -1;
@@ -261,14 +263,18 @@ int SetEnv(const wchar_t *option)
       free(*wenvptr);
       for (count = index; *wenvptr != NULL; wenvptr++, count++)
          *wenvptr = *(wenvptr + 1);
-      _wenviron = realloc(_wenviron, count * sizeof(wchar_t*));
+      wnewenv = realloc(_wenviron, count * sizeof(wchar_t*));
+      if (wnewenv != NULL)
+         _wenviron = wnewenv;
 
       /* Remove the option from multibyte environment. We assume
        * the environments are in sync and the option is at the
        * same position. */
       free(_environ[index]);
       memmove(&_environ[index], &_environ[index+1], (count - index) * sizeof(char*));
-      _environ = realloc(_environ, count * sizeof(char*));
+      mbnewenv = realloc(_environ, count * sizeof(char*));
+      if (mbnewenv != NULL)
+         _environ = mbnewenv;
 
       result = SetEnvironmentVariableW(name, NULL) ? 0 : -1;
    }
@@ -303,9 +309,6 @@ int SetEnv(const wchar_t *option)
       }
       else
       {
-         wchar_t **wnewenv;
-         char **mbnewenv;
-
          /* Get the size of the original environment. */
          for (count = index; *wenvptr != NULL; wenvptr++, count++)
             ;

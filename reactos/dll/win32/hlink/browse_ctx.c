@@ -20,16 +20,21 @@
 
 #include "hlink_private.h"
 
-#include <wine/debug.h>
+#include <wine/list.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(hlink);
+struct link_entry
+{
+    struct list entry;
+    IHlink *link;
+};
 
 typedef struct
 {
     IHlinkBrowseContext IHlinkBrowseContext_iface;
     LONG        ref;
     HLBWINFO*   BrowseWindowInfo;
-    IHlink*     CurrentPage;
+    struct link_entry *current;
+    struct list links;
 } HlinkBCImpl;
 
 static inline HlinkBCImpl *impl_from_IHlinkBrowseContext(IHlinkBrowseContext *iface)
@@ -68,18 +73,26 @@ static ULONG WINAPI IHlinkBC_fnAddRef (IHlinkBrowseContext* iface)
 static ULONG WINAPI IHlinkBC_fnRelease (IHlinkBrowseContext* iface)
 {
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
-    ULONG refCount = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(count=%u)\n", This, refCount + 1);
-    if (refCount)
-        return refCount;
+    TRACE("(%p)->(count=%u)\n", This, ref + 1);
 
-    TRACE("-- destroying IHlinkBrowseContext (%p)\n", This);
-    heap_free(This->BrowseWindowInfo);
-    if (This->CurrentPage)
-        IHlink_Release(This->CurrentPage);
-    heap_free(This);
-    return 0;
+    if (!ref)
+    {
+        struct link_entry *link, *link2;
+
+        LIST_FOR_EACH_ENTRY_SAFE(link, link2, &This->links, struct link_entry, entry)
+        {
+            list_remove(&link->entry);
+            IHlink_Release(link->link);
+            heap_free(link);
+        }
+
+        heap_free(This->BrowseWindowInfo);
+        heap_free(This);
+    }
+
+    return ref;
 }
 
 static HRESULT WINAPI IHlinkBC_Register(IHlinkBrowseContext* iface,
@@ -116,7 +129,7 @@ static HRESULT WINAPI IHlinkBC_GetObject(IHlinkBrowseContext* face,
 static HRESULT WINAPI IHlinkBC_Revoke(IHlinkBrowseContext* iface,
         DWORD dwRegister)
 {
-    HRESULT r = S_OK;
+    HRESULT r;
     IRunningObjectTable *ROT;
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
 
@@ -165,17 +178,22 @@ static HRESULT WINAPI IHlinkBC_GetBrowseWindowInfo(IHlinkBrowseContext* iface,
 static HRESULT WINAPI IHlinkBC_SetInitialHlink(IHlinkBrowseContext* iface,
         IMoniker *pimkTarget, LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName)
 {
-    HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
+    HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
+    struct link_entry *link;
 
-    FIXME("(%p)->(%p %s %s)\n", This, pimkTarget,
-            debugstr_w(pwzLocation), debugstr_w(pwzFriendlyName));
+    TRACE("(%p)->(%p %s %s)\n", This, pimkTarget, debugstr_w(pwzLocation), debugstr_w(pwzFriendlyName));
 
-    if (This->CurrentPage)
-        IHlink_Release(This->CurrentPage);
+    if (!list_empty(&This->links))
+        return CO_E_ALREADYINITIALIZED;
+
+    link = heap_alloc(sizeof(struct link_entry));
+    if (!link) return E_OUTOFMEMORY;
 
     HlinkCreateFromMoniker(pimkTarget, pwzLocation, pwzFriendlyName, NULL,
-            0, NULL, &IID_IHlink, (LPVOID*) &This->CurrentPage);
+            0, NULL, &IID_IHlink, (void**)&link->link);
 
+    list_add_head(&This->links, &link->entry);
+    This->current = LIST_ENTRY(list_head(&This->links), struct link_entry, entry);
     return S_OK;
 }
 
@@ -191,12 +209,56 @@ static HRESULT WINAPI IHlinkBC_OnNavigateHlink(IHlinkBrowseContext *iface,
     return S_OK;
 }
 
-static HRESULT WINAPI IHlinkBC_UpdateHlink(IHlinkBrowseContext* iface,
-        ULONG uHLID, IMoniker* pimkTarget, LPCWSTR pwzLocation,
-        LPCWSTR pwzFriendlyName)
+static struct link_entry *context_get_entry(HlinkBCImpl *ctxt, ULONG hlid)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    struct list *entry;
+
+    switch (hlid)
+    {
+    case HLID_PREVIOUS:
+        entry = list_prev(&ctxt->links, &ctxt->current->entry);
+        break;
+    case HLID_NEXT:
+        entry = list_next(&ctxt->links, &ctxt->current->entry);
+        break;
+    case HLID_CURRENT:
+        entry = &ctxt->current->entry;
+        break;
+    case HLID_STACKBOTTOM:
+        entry = list_tail(&ctxt->links);
+        break;
+    case HLID_STACKTOP:
+        entry = list_head(&ctxt->links);
+        break;
+    default:
+        WARN("unknown id 0x%x\n", hlid);
+        entry = NULL;
+    }
+
+    return entry ? LIST_ENTRY(entry, struct link_entry, entry) : NULL;
+}
+
+static HRESULT WINAPI IHlinkBC_UpdateHlink(IHlinkBrowseContext* iface,
+        ULONG hlid, IMoniker *target, LPCWSTR location, LPCWSTR friendly_name)
+{
+    HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
+    struct link_entry *entry = context_get_entry(This, hlid);
+    IHlink *link;
+    HRESULT hr;
+
+    TRACE("(%p)->(0x%x %p %s %s)\n", This, hlid, target, debugstr_w(location), debugstr_w(friendly_name));
+
+    if (!entry)
+        return E_INVALIDARG;
+
+    hr = HlinkCreateFromMoniker(target, location, friendly_name, NULL, 0, NULL, &IID_IHlink, (void**)&link);
+    if (FAILED(hr))
+        return hr;
+
+    IHlink_Release(entry->link);
+    entry->link = link;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IHlinkBC_EnumNavigationStack( IHlinkBrowseContext *iface,
@@ -213,29 +275,36 @@ static HRESULT WINAPI IHlinkBC_QueryHlink( IHlinkBrowseContext* iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI IHlinkBC_GetHlink( IHlinkBrowseContext* iface,
-        ULONG uHLID, IHlink** ppihl)
+static HRESULT WINAPI IHlinkBC_GetHlink(IHlinkBrowseContext* iface, ULONG hlid, IHlink **ret)
 {
-    HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
+    HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
+    struct link_entry *link;
 
-    TRACE("(%p)->(%x %p)\n", This, uHLID, ppihl);
+    TRACE("(%p)->(0x%x %p)\n", This, hlid, ret);
 
-    if(uHLID != HLID_CURRENT) {
-        FIXME("Only HLID_CURRENT implemented, given: %x\n", uHLID);
-        return E_NOTIMPL;
-    }
+    link = context_get_entry(This, hlid);
+    if (!link)
+        return E_FAIL;
 
-    *ppihl = This->CurrentPage;
-    IHlink_AddRef(*ppihl);
+    *ret = link->link;
+    IHlink_AddRef(*ret);
 
     return S_OK;
 }
 
-static HRESULT WINAPI IHlinkBC_SetCurrentHlink( IHlinkBrowseContext* iface,
-        ULONG uHLID)
+static HRESULT WINAPI IHlinkBC_SetCurrentHlink(IHlinkBrowseContext* iface, ULONG hlid)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
+    struct link_entry *link;
+
+    TRACE("(%p)->(0x%08x)\n", This, hlid);
+
+    link = context_get_entry(This, hlid);
+    if (!link)
+        return E_FAIL;
+
+    This->current = link;
+    return S_OK;
 }
 
 static HRESULT WINAPI IHlinkBC_Clone( IHlinkBrowseContext* iface,
@@ -289,6 +358,8 @@ HRESULT HLinkBrowseContext_Constructor(IUnknown *pUnkOuter, REFIID riid, void **
 
     hl->ref = 1;
     hl->IHlinkBrowseContext_iface.lpVtbl = &hlvt;
+    list_init(&hl->links);
+    hl->current = NULL;
 
     *ppv = hl;
     return S_OK;

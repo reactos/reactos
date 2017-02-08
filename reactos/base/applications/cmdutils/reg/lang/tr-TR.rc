@@ -1,0 +1,29 @@
+/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Bu komutun yazımı:\n\nREG [ ADD | DELETE | QUERY ]\nREG komut /?\n"
+    STRING_ADD_USAGE, "REG ADD dizin adı [/v değer adı | /ve] [/t tür] [/s ayırıcı] [/d veri] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE dizin adı [/v değer adı | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY dizin adı [/v değer adı | /ve] [/s]\n"
+    STRING_SUCCESS, "İşlem başarıyla bitirildi\n"
+    STRING_INVALID_KEY, "reg: Geçersiz dizin adı\n"
+    STRING_INVALID_CMDLINE, "reg: Geçersiz komut yatacı değişkenleri\n"
+    STRING_NO_REMOTE, "reg: Uzak makineye erişilemez\n"
+    STRING_CANNOT_FIND, "reg: Dizge belirtilen değer defteri dizinini ya da değerini bulamadı\n"
+    STRING_UNSUPPORTED_TYPE, "reg: Desteklenmeyen tür\n"
+    STRING_MISSING_INTEGER, "reg: [/d] seçeneği geçerli bir tamsayıyla izlenmelidir\n"
+    STRING_MISSING_HEXDATA, "reg: [/d] seçeneği geçerli bir onaltılık değerle izlenmelidir\n"
+    STRING_UNHANDLED_TYPE, "reg: Yönetilemeyen değer defteri veri türü [/t 0x%1!x!, /d %2]\n"
+    STRING_OVERWRITE_VALUE, """%1"" değer defteri değeri önceden var. Üzerine yazmak ister misiniz?"
+    STRING_YESNO, " (Evet|Hayır)"
+    STRING_YES, "E"
+    STRING_NO, "H"
+    STRING_CANCELLED, "Değer defteri işlemi iptal edildi\n"
+    STRING_DEFAULT_VALUE, "(Ön tanımlı)"
+    STRING_DELETE_VALUE, """%1"" değer defteri değerini silmek istemekten emin misiniz?"
+    STRING_DELETE_VALUEALL, "Tüm ""%1"" değer defteri değerlerini silmek istemekten emin misiniz?"
+    STRING_DELETE_SUBKEY, """%1"" değer defteri dizinini silmek istemekten emin misiniz?"
+}

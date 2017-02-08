@@ -1,6 +1,7 @@
 #define WIN32_NO_STATUS
 #include <precomp.h>
 #define NTOS_MODE_USER
+#include <setjmp.h>
 #include <ndk/umtypes.h>
 #include <ndk/extypes.h>
 #include <ndk/rtlfuncs.h>
@@ -23,23 +24,6 @@ typedef struct _MSVCRT_EXCEPTION_FRAME
   int _ebp;
   PEXCEPTION_POINTERS xpointers;
 } MSVCRT_EXCEPTION_FRAME;
-
-
-typedef struct __JUMP_BUFFER
-{
-    unsigned long Ebp;
-    unsigned long Ebx;
-    unsigned long Edi;
-    unsigned long Esi;
-    unsigned long Esp;
-    unsigned long Eip;
-    unsigned long Registration;
-    unsigned long TryLevel;
-    /* Start of new struct members */
-    unsigned long Cookie;
-    unsigned long UnwindFunc;
-    unsigned long UnwindData[6];
-} _JUMP_BUFFER;
 
 void
 _local_unwind2(MSVCRT_EXCEPTION_FRAME *RegistrationFrame,

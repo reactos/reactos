@@ -1,0 +1,8 @@
+; BusLogic 958 miniport driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ImagePath",0x00020000,"system32\drivers\buslogic.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Tag",0x00010001,0x00000020

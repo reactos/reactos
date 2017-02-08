@@ -21,7 +21,7 @@ extern "C" {
 int xmlCharEncFirstLineInt(xmlCharEncodingHandler *handler, xmlBufferPtr out,
                            xmlBufferPtr in, int len);
 int xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len);
-int xmlCharEncInput(xmlParserInputBufferPtr input);
+int xmlCharEncInput(xmlParserInputBufferPtr input, int flush);
 int xmlCharEncOutput(xmlOutputBufferPtr output, int init);
 
 #ifdef __cplusplus

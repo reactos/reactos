@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/env.c
+ * FILE:            dll/win32/kernel32/client/environ.c
  * PURPOSE:         Environment functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Emanuele Aliberti
@@ -50,7 +50,7 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
         if (nSize)
         {
             /* Keep the given size, minus a NULL-char */
-            UniSize = nSize - 1;
+            UniSize = (USHORT)(nSize - 1);
         }
         else
         {
@@ -83,10 +83,10 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
     if ((NT_SUCCESS(Status)) && !(nSize)) Status = STATUS_BUFFER_TOO_SMALL;
 
     /* Check if we didn't have enough space */
-    if (!(NT_SUCCESS(Status)) && (Status == STATUS_BUFFER_TOO_SMALL))
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
         /* Fixup the length that the API returned */
-        VarValueU.MaximumLength = VarValueU.Length + 2;
+        VarValueU.MaximumLength = VarValueU.Length + sizeof(UNICODE_NULL);
 
         /* Free old Unicode buffer */
         RtlFreeHeap(RtlGetProcessHeap(), 0, VarValueU.Buffer);
@@ -108,13 +108,14 @@ GetEnvironmentVariableA(IN LPCSTR lpName,
         {
             /* Set failure status */
             Status = STATUS_NO_MEMORY;
+            VarValueU.Buffer = NULL;
         }
     }
     else if (NT_SUCCESS(Status))
     {
         /* Check if the size is too big to fit */
         UniSize = UNICODE_STRING_MAX_BYTES - 1;
-        if (nSize <= UniSize) UniSize = nSize;
+        if (nSize <= UniSize) UniSize = (USHORT)nSize;
 
         /* Check the size */
         Result = RtlUnicodeStringToAnsiSize(&VarValueU);
@@ -169,7 +170,7 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
     {
         if (nSize)
         {
-            UniSize = nSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
+            UniSize = (USHORT)nSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
         }
         else
         {
@@ -180,7 +181,7 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
     {
         UniSize = UNICODE_STRING_MAX_BYTES - sizeof(UNICODE_NULL);
     }
-    
+
     Status = RtlInitUnicodeStringEx(&VarName, lpName);
     if (!NT_SUCCESS(Status))
     {
@@ -373,7 +374,7 @@ BOOL
 WINAPI
 FreeEnvironmentStringsA(IN LPSTR EnvironmentStrings)
 {
-    return (BOOL)RtlFreeHeap(RtlGetProcessHeap(), 0, EnvironmentStrings);
+    return RtlFreeHeap(RtlGetProcessHeap(), 0, EnvironmentStrings);
 }
 
 /*
@@ -383,7 +384,7 @@ BOOL
 WINAPI
 FreeEnvironmentStringsW(IN LPWSTR EnvironmentStrings)
 {
-    return (BOOL)RtlFreeHeap(RtlGetProcessHeap(), 0, EnvironmentStrings);
+    return RtlFreeHeap(RtlGetProcessHeap(), 0, EnvironmentStrings);
 }
 
 /*
@@ -404,11 +405,11 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
 
     /* Check if the size is too big to fit */
     UniSize = UNICODE_STRING_MAX_CHARS - 2;
-    if (nSize <= UniSize) UniSize = nSize;
-    
+    if (nSize <= UniSize) UniSize = (USHORT)nSize;
+
     /* Clear the input buffer */
     if (lpDst) *lpDst = ANSI_NULL;
-    
+
     /* Initialize all the strings */
     RtlInitAnsiString(&Source, lpSrc);
     RtlInitUnicodeString(&SourceU, NULL);
@@ -443,10 +444,10 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
     Status = RtlExpandEnvironmentStrings_U(NULL, &SourceU, &DestU, &Length);
 
     /* Check if we didn't have enough space */
-    if (!(NT_SUCCESS(Status)) && (Status == STATUS_BUFFER_TOO_SMALL))
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
         /* Fixup the length that the API returned */
-        DestU.MaximumLength = Length;
+        DestU.MaximumLength = (SHORT)Length;
 
         /* Free old Unicode buffer */
         RtlFreeHeap(RtlGetProcessHeap(), 0, DestU.Buffer);
@@ -468,13 +469,14 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
         {
             /* Set failure status */
             Status = STATUS_NO_MEMORY;
+            DestU.Buffer = NULL;
         }
     }
     else if (NT_SUCCESS(Status))
     {
         /* Check if the size is too big to fit */
         UniSize = UNICODE_STRING_MAX_BYTES - 1;
-        if (nSize <= UniSize) UniSize = nSize;
+        if (nSize <= UniSize) UniSize = (USHORT)nSize;
 
         /* Check the size */
         Result = RtlUnicodeStringToAnsiSize(&DestU);
@@ -483,7 +485,7 @@ ExpandEnvironmentStringsA(IN LPCSTR lpSrc,
             /* Convert the string */
             RtlInitEmptyAnsiString(&Dest, lpDst, UniSize);
             Status = RtlUnicodeStringToAnsiString(&Dest, &DestU, FALSE);
-            
+
             /* Write a NULL-char in case of failure only */
             if (!NT_SUCCESS(Status)) *lpDst = ANSI_NULL;
         }
@@ -517,13 +519,12 @@ ExpandEnvironmentStringsW(IN LPCWSTR lpSrc,
     UNICODE_STRING Source, Destination;
     NTSTATUS Status;
     USHORT UniSize;
-    
-    UniSize = UNICODE_STRING_MAX_CHARS - 2;
-    if (nSize <= UniSize) UniSize = nSize;
+
+    UniSize = min(nSize, UNICODE_STRING_MAX_CHARS - 2);
 
     RtlInitUnicodeString(&Source, (LPWSTR)lpSrc);
     RtlInitEmptyUnicodeString(&Destination, lpDst, UniSize * sizeof(WCHAR));
-    
+
     Status = RtlExpandEnvironmentStrings_U(NULL,
                                            &Source,
                                            &Destination,

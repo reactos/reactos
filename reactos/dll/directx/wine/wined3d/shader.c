@@ -4,7 +4,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2006 Ivan Gyurdiev
- * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2007-2008, 2013 Stefan Dösinger for CodeWeavers
  * Copyright 2009-2011 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
@@ -22,130 +22,159 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
-
-//#include <math.h>
-#include <stdio.h>
-//#include <string.h>
-
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
+/* pow, mul_high, sub_high, mul_low */
+const float wined3d_srgb_const0[] = {0.41666f, 1.055f, 0.055f, 12.92f};
+/* cmp */
+const float wined3d_srgb_const1[] = {0.0031308f, 0.0f, 0.0f, 0.0f};
+
 static const char * const shader_opcode_names[] =
 {
-    /* WINED3DSIH_ABS                   */ "abs",
-    /* WINED3DSIH_ADD                   */ "add",
-    /* WINED3DSIH_AND                   */ "and",
-    /* WINED3DSIH_BEM                   */ "bem",
-    /* WINED3DSIH_BREAK                 */ "break",
-    /* WINED3DSIH_BREAKC                */ "breakc",
-    /* WINED3DSIH_BREAKP                */ "breakp",
-    /* WINED3DSIH_CALL                  */ "call",
-    /* WINED3DSIH_CALLNZ                */ "callnz",
-    /* WINED3DSIH_CMP                   */ "cmp",
-    /* WINED3DSIH_CND                   */ "cnd",
-    /* WINED3DSIH_CRS                   */ "crs",
-    /* WINED3DSIH_CUT                   */ "cut",
-    /* WINED3DSIH_DCL                   */ "dcl",
-    /* WINED3DSIH_DCL_CONSTANT_BUFFER   */ "dcl_constantBuffer",
-    /* WINED3DSIH_DCL_INPUT_PRIMITIVE   */ "dcl_inputPrimitive",
-    /* WINED3DSIH_DCL_OUTPUT_TOPOLOGY   */ "dcl_outputTopology",
-    /* WINED3DSIH_DCL_VERTICES_OUT      */ "dcl_maxOutputVertexCount",
-    /* WINED3DSIH_DEF                   */ "def",
-    /* WINED3DSIH_DEFB                  */ "defb",
-    /* WINED3DSIH_DEFI                  */ "defi",
-    /* WINED3DSIH_DIV                   */ "div",
-    /* WINED3DSIH_DP2ADD                */ "dp2add",
-    /* WINED3DSIH_DP3                   */ "dp3",
-    /* WINED3DSIH_DP4                   */ "dp4",
-    /* WINED3DSIH_DST                   */ "dst",
-    /* WINED3DSIH_DSX                   */ "dsx",
-    /* WINED3DSIH_DSY                   */ "dsy",
-    /* WINED3DSIH_ELSE                  */ "else",
-    /* WINED3DSIH_EMIT                  */ "emit",
-    /* WINED3DSIH_ENDIF                 */ "endif",
-    /* WINED3DSIH_ENDLOOP               */ "endloop",
-    /* WINED3DSIH_ENDREP                */ "endrep",
-    /* WINED3DSIH_EQ                    */ "eq",
-    /* WINED3DSIH_EXP                   */ "exp",
-    /* WINED3DSIH_EXPP                  */ "expp",
-    /* WINED3DSIH_FRC                   */ "frc",
-    /* WINED3DSIH_FTOI                  */ "ftoi",
-    /* WINED3DSIH_GE                    */ "ge",
-    /* WINED3DSIH_IADD                  */ "iadd",
-    /* WINED3DSIH_IEQ                   */ "ieq",
-    /* WINED3DSIH_IF                    */ "if",
-    /* WINED3DSIH_IFC                   */ "ifc",
-    /* WINED3DSIH_IGE                   */ "ige",
-    /* WINED3DSIH_IMUL                  */ "imul",
-    /* WINED3DSIH_ITOF                  */ "itof",
-    /* WINED3DSIH_LABEL                 */ "label",
-    /* WINED3DSIH_LD                    */ "ld",
-    /* WINED3DSIH_LIT                   */ "lit",
-    /* WINED3DSIH_LOG                   */ "log",
-    /* WINED3DSIH_LOGP                  */ "logp",
-    /* WINED3DSIH_LOOP                  */ "loop",
-    /* WINED3DSIH_LRP                   */ "lrp",
-    /* WINED3DSIH_LT                    */ "lt",
-    /* WINED3DSIH_M3x2                  */ "m3x2",
-    /* WINED3DSIH_M3x3                  */ "m3x3",
-    /* WINED3DSIH_M3x4                  */ "m3x4",
-    /* WINED3DSIH_M4x3                  */ "m4x3",
-    /* WINED3DSIH_M4x4                  */ "m4x4",
-    /* WINED3DSIH_MAD                   */ "mad",
-    /* WINED3DSIH_MAX                   */ "max",
-    /* WINED3DSIH_MIN                   */ "min",
-    /* WINED3DSIH_MOV                   */ "mov",
-    /* WINED3DSIH_MOVA                  */ "mova",
-    /* WINED3DSIH_MOVC                  */ "movc",
-    /* WINED3DSIH_MUL                   */ "mul",
-    /* WINED3DSIH_NOP                   */ "nop",
-    /* WINED3DSIH_NRM                   */ "nrm",
-    /* WINED3DSIH_PHASE                 */ "phase",
-    /* WINED3DSIH_POW                   */ "pow",
-    /* WINED3DSIH_RCP                   */ "rcp",
-    /* WINED3DSIH_REP                   */ "rep",
-    /* WINED3DSIH_RET                   */ "ret",
-    /* WINED3DSIH_ROUND_NI              */ "round_ni",
-    /* WINED3DSIH_RSQ                   */ "rsq",
-    /* WINED3DSIH_SAMPLE                */ "sample",
-    /* WINED3DSIH_SAMPLE_GRAD           */ "sample_d",
-    /* WINED3DSIH_SAMPLE_LOD            */ "sample_l",
-    /* WINED3DSIH_SETP                  */ "setp",
-    /* WINED3DSIH_SGE                   */ "sge",
-    /* WINED3DSIH_SGN                   */ "sgn",
-    /* WINED3DSIH_SINCOS                */ "sincos",
-    /* WINED3DSIH_SLT                   */ "slt",
-    /* WINED3DSIH_SQRT                  */ "sqrt",
-    /* WINED3DSIH_SUB                   */ "sub",
-    /* WINED3DSIH_TEX                   */ "texld",
-    /* WINED3DSIH_TEXBEM                */ "texbem",
-    /* WINED3DSIH_TEXBEML               */ "texbeml",
-    /* WINED3DSIH_TEXCOORD              */ "texcrd",
-    /* WINED3DSIH_TEXDEPTH              */ "texdepth",
-    /* WINED3DSIH_TEXDP3                */ "texdp3",
-    /* WINED3DSIH_TEXDP3TEX             */ "texdp3tex",
-    /* WINED3DSIH_TEXKILL               */ "texkill",
-    /* WINED3DSIH_TEXLDD                */ "texldd",
-    /* WINED3DSIH_TEXLDL                */ "texldl",
-    /* WINED3DSIH_TEXM3x2DEPTH          */ "texm3x2depth",
-    /* WINED3DSIH_TEXM3x2PAD            */ "texm3x2pad",
-    /* WINED3DSIH_TEXM3x2TEX            */ "texm3x2tex",
-    /* WINED3DSIH_TEXM3x3               */ "texm3x3",
-    /* WINED3DSIH_TEXM3x3DIFF           */ "texm3x3diff",
-    /* WINED3DSIH_TEXM3x3PAD            */ "texm3x3pad",
-    /* WINED3DSIH_TEXM3x3SPEC           */ "texm3x3spec",
-    /* WINED3DSIH_TEXM3x3TEX            */ "texm3x3tex",
-    /* WINED3DSIH_TEXM3x3VSPEC          */ "texm3x3vspec",
-    /* WINED3DSIH_TEXREG2AR             */ "texreg2ar",
-    /* WINED3DSIH_TEXREG2GB             */ "texreg2gb",
-    /* WINED3DSIH_TEXREG2RGB            */ "texreg2rgb",
-    /* WINED3DSIH_UDIV                  */ "udiv",
-    /* WINED3DSIH_USHR                  */ "ushr",
-    /* WINED3DSIH_UTOF                  */ "utof",
-    /* WINED3DSIH_XOR                   */ "xor",
+    /* WINED3DSIH_ABS                           */ "abs",
+    /* WINED3DSIH_ADD                           */ "add",
+    /* WINED3DSIH_AND                           */ "and",
+    /* WINED3DSIH_BEM                           */ "bem",
+    /* WINED3DSIH_BREAK                         */ "break",
+    /* WINED3DSIH_BREAKC                        */ "breakc",
+    /* WINED3DSIH_BREAKP                        */ "breakp",
+    /* WINED3DSIH_CALL                          */ "call",
+    /* WINED3DSIH_CALLNZ                        */ "callnz",
+    /* WINED3DSIH_CMP                           */ "cmp",
+    /* WINED3DSIH_CND                           */ "cnd",
+    /* WINED3DSIH_CRS                           */ "crs",
+    /* WINED3DSIH_CUT                           */ "cut",
+    /* WINED3DSIH_DCL                           */ "dcl",
+    /* WINED3DSIH_DCL_CONSTANT_BUFFER           */ "dcl_constantBuffer",
+    /* WINED3DSIH_DCL_GLOBAL_FLAGS              */ "dcl_globalFlags",
+    /* WINED3DSIH_DCL_IMMEDIATE_CONSTANT_BUFFER */ "dcl_immediateConstantBuffer",
+    /* WINED3DSIH_DCL_INPUT                     */ "dcl_input",
+    /* WINED3DSIH_DCL_INPUT_PRIMITIVE           */ "dcl_inputPrimitive",
+    /* WINED3DSIH_DCL_INPUT_PS                  */ "dcl_input_ps",
+    /* WINED3DSIH_DCL_INPUT_PS_SGV              */ "dcl_input_ps_sgv",
+    /* WINED3DSIH_DCL_INPUT_PS_SIV              */ "dcl_input_ps_siv",
+    /* WINED3DSIH_DCL_INPUT_SGV                 */ "dcl_input_sgv",
+    /* WINED3DSIH_DCL_INPUT_SIV                 */ "dcl_input_siv",
+    /* WINED3DSIH_DCL_OUTPUT                    */ "dcl_output",
+    /* WINED3DSIH_DCL_OUTPUT_SIV                */ "dcl_output_siv",
+    /* WINED3DSIH_DCL_OUTPUT_TOPOLOGY           */ "dcl_outputTopology",
+    /* WINED3DSIH_DCL_SAMPLER                   */ "dcl_sampler",
+    /* WINED3DSIH_DCL_TEMPS                     */ "dcl_temps",
+    /* WINED3DSIH_DCL_VERTICES_OUT              */ "dcl_maxOutputVertexCount",
+    /* WINED3DSIH_DEF                           */ "def",
+    /* WINED3DSIH_DEFB                          */ "defb",
+    /* WINED3DSIH_DEFI                          */ "defi",
+    /* WINED3DSIH_DIV                           */ "div",
+    /* WINED3DSIH_DP2                           */ "dp2",
+    /* WINED3DSIH_DP2ADD                        */ "dp2add",
+    /* WINED3DSIH_DP3                           */ "dp3",
+    /* WINED3DSIH_DP4                           */ "dp4",
+    /* WINED3DSIH_DST                           */ "dst",
+    /* WINED3DSIH_DSX                           */ "dsx",
+    /* WINED3DSIH_DSY                           */ "dsy",
+    /* WINED3DSIH_ELSE                          */ "else",
+    /* WINED3DSIH_EMIT                          */ "emit",
+    /* WINED3DSIH_ENDIF                         */ "endif",
+    /* WINED3DSIH_ENDLOOP                       */ "endloop",
+    /* WINED3DSIH_ENDREP                        */ "endrep",
+    /* WINED3DSIH_EQ                            */ "eq",
+    /* WINED3DSIH_EXP                           */ "exp",
+    /* WINED3DSIH_EXPP                          */ "expp",
+    /* WINED3DSIH_FRC                           */ "frc",
+    /* WINED3DSIH_FTOI                          */ "ftoi",
+    /* WINED3DSIH_FTOU                          */ "ftou",
+    /* WINED3DSIH_GE                            */ "ge",
+    /* WINED3DSIH_IADD                          */ "iadd",
+    /* WINED3DSIH_IEQ                           */ "ieq",
+    /* WINED3DSIH_IF                            */ "if",
+    /* WINED3DSIH_IFC                           */ "ifc",
+    /* WINED3DSIH_IGE                           */ "ige",
+    /* WINED3DSIH_ILT                           */ "ilt",
+    /* WINED3DSIH_IMAD                          */ "imad",
+    /* WINED3DSIH_IMAX                          */ "imax",
+    /* WINED3DSIH_IMIN                          */ "imin",
+    /* WINED3DSIH_IMUL                          */ "imul",
+    /* WINED3DSIH_INE                           */ "ine",
+    /* WINED3DSIH_INEG                          */ "ineg",
+    /* WINED3DSIH_ISHL                          */ "ishl",
+    /* WINED3DSIH_ITOF                          */ "itof",
+    /* WINED3DSIH_LABEL                         */ "label",
+    /* WINED3DSIH_LD                            */ "ld",
+    /* WINED3DSIH_LIT                           */ "lit",
+    /* WINED3DSIH_LOG                           */ "log",
+    /* WINED3DSIH_LOGP                          */ "logp",
+    /* WINED3DSIH_LOOP                          */ "loop",
+    /* WINED3DSIH_LRP                           */ "lrp",
+    /* WINED3DSIH_LT                            */ "lt",
+    /* WINED3DSIH_M3x2                          */ "m3x2",
+    /* WINED3DSIH_M3x3                          */ "m3x3",
+    /* WINED3DSIH_M3x4                          */ "m3x4",
+    /* WINED3DSIH_M4x3                          */ "m4x3",
+    /* WINED3DSIH_M4x4                          */ "m4x4",
+    /* WINED3DSIH_MAD                           */ "mad",
+    /* WINED3DSIH_MAX                           */ "max",
+    /* WINED3DSIH_MIN                           */ "min",
+    /* WINED3DSIH_MOV                           */ "mov",
+    /* WINED3DSIH_MOVA                          */ "mova",
+    /* WINED3DSIH_MOVC                          */ "movc",
+    /* WINED3DSIH_MUL                           */ "mul",
+    /* WINED3DSIH_NE                            */ "ne",
+    /* WINED3DSIH_NOP                           */ "nop",
+    /* WINED3DSIH_NOT                           */ "not",
+    /* WINED3DSIH_NRM                           */ "nrm",
+    /* WINED3DSIH_OR                            */ "or",
+    /* WINED3DSIH_PHASE                         */ "phase",
+    /* WINED3DSIH_POW                           */ "pow",
+    /* WINED3DSIH_RCP                           */ "rcp",
+    /* WINED3DSIH_REP                           */ "rep",
+    /* WINED3DSIH_RESINFO                       */ "resinfo",
+    /* WINED3DSIH_RET                           */ "ret",
+    /* WINED3DSIH_ROUND_NI                      */ "round_ni",
+    /* WINED3DSIH_ROUND_PI                      */ "round_pi",
+    /* WINED3DSIH_ROUND_Z                       */ "round_z",
+    /* WINED3DSIH_RSQ                           */ "rsq",
+    /* WINED3DSIH_SAMPLE                        */ "sample",
+    /* WINED3DSIH_SAMPLE_B                      */ "sample_b",
+    /* WINED3DSIH_SAMPLE_C                      */ "sample_c",
+    /* WINED3DSIH_SAMPLE_C_LZ                   */ "sample_c_lz",
+    /* WINED3DSIH_SAMPLE_GRAD                   */ "sample_d",
+    /* WINED3DSIH_SAMPLE_LOD                    */ "sample_l",
+    /* WINED3DSIH_SETP                          */ "setp",
+    /* WINED3DSIH_SGE                           */ "sge",
+    /* WINED3DSIH_SGN                           */ "sgn",
+    /* WINED3DSIH_SINCOS                        */ "sincos",
+    /* WINED3DSIH_SLT                           */ "slt",
+    /* WINED3DSIH_SQRT                          */ "sqrt",
+    /* WINED3DSIH_SUB                           */ "sub",
+    /* WINED3DSIH_TEX                           */ "texld",
+    /* WINED3DSIH_TEXBEM                        */ "texbem",
+    /* WINED3DSIH_TEXBEML                       */ "texbeml",
+    /* WINED3DSIH_TEXCOORD                      */ "texcrd",
+    /* WINED3DSIH_TEXDEPTH                      */ "texdepth",
+    /* WINED3DSIH_TEXDP3                        */ "texdp3",
+    /* WINED3DSIH_TEXDP3TEX                     */ "texdp3tex",
+    /* WINED3DSIH_TEXKILL                       */ "texkill",
+    /* WINED3DSIH_TEXLDD                        */ "texldd",
+    /* WINED3DSIH_TEXLDL                        */ "texldl",
+    /* WINED3DSIH_TEXM3x2DEPTH                  */ "texm3x2depth",
+    /* WINED3DSIH_TEXM3x2PAD                    */ "texm3x2pad",
+    /* WINED3DSIH_TEXM3x2TEX                    */ "texm3x2tex",
+    /* WINED3DSIH_TEXM3x3                       */ "texm3x3",
+    /* WINED3DSIH_TEXM3x3DIFF                   */ "texm3x3diff",
+    /* WINED3DSIH_TEXM3x3PAD                    */ "texm3x3pad",
+    /* WINED3DSIH_TEXM3x3SPEC                   */ "texm3x3spec",
+    /* WINED3DSIH_TEXM3x3TEX                    */ "texm3x3tex",
+    /* WINED3DSIH_TEXM3x3VSPEC                  */ "texm3x3vspec",
+    /* WINED3DSIH_TEXREG2AR                     */ "texreg2ar",
+    /* WINED3DSIH_TEXREG2GB                     */ "texreg2gb",
+    /* WINED3DSIH_TEXREG2RGB                    */ "texreg2rgb",
+    /* WINED3DSIH_UDIV                          */ "udiv",
+    /* WINED3DSIH_UGE                           */ "uge",
+    /* WINED3DSIH_USHR                          */ "ushr",
+    /* WINED3DSIH_UTOF                          */ "utof",
+    /* WINED3DSIH_XOR                           */ "xor",
 };
 
 static const char * const semantic_names[] =
@@ -165,6 +194,31 @@ static const char * const semantic_names[] =
     /* WINED3D_DECL_USAGE_DEPTH         */ "DEPTH",
     /* WINED3D_DECL_USAGE_SAMPLE        */ "SAMPLE",
 };
+
+static const struct
+{
+    enum wined3d_sysval_semantic sysval_semantic;
+    const char *sysval_name;
+}
+sysval_semantic_names[] =
+{
+    {WINED3D_SV_POSITION,    "SV_Position"},
+    {WINED3D_SV_INSTANCEID,  "SV_InstanceID"},
+    {WINED3D_SV_PRIMITIVEID, "SV_PrimitiveID"},
+    {WINED3D_SV_ISFRONTFACE, "SV_IsFrontFace"},
+    {WINED3D_SV_SAMPLEINDEX, "SV_SampleIndex"},
+};
+
+static void shader_dump_src_param(struct wined3d_string_buffer *buffer,
+        const struct wined3d_shader_src_param *param, const struct wined3d_shader_version *shader_version);
+
+const char *debug_d3dshaderinstructionhandler(enum WINED3D_SHADER_INSTRUCTION_HANDLER handler_idx)
+{
+    if (handler_idx >= sizeof(shader_opcode_names) / sizeof(*shader_opcode_names))
+        return wine_dbg_sprintf("UNRECOGNIZED(%#x)", handler_idx);
+
+    return shader_opcode_names[handler_idx];
+}
 
 static const char *shader_semantic_name_from_usage(enum wined3d_decl_usage usage)
 {
@@ -235,88 +289,150 @@ static const struct wined3d_shader_frontend *shader_select_frontend(DWORD versio
     }
 }
 
-void shader_buffer_clear(struct wined3d_shader_buffer *buffer)
+void string_buffer_clear(struct wined3d_string_buffer *buffer)
 {
     buffer->buffer[0] = '\0';
-    buffer->bsize = 0;
-    buffer->lineNo = 0;
-    buffer->newline = TRUE;
+    buffer->content_size = 0;
 }
 
-BOOL shader_buffer_init(struct wined3d_shader_buffer *buffer)
+BOOL string_buffer_init(struct wined3d_string_buffer *buffer)
 {
-    buffer->buffer = HeapAlloc(GetProcessHeap(), 0, SHADER_PGMSIZE);
-    if (!buffer->buffer)
+    buffer->buffer_size = 32;
+    if (!(buffer->buffer = HeapAlloc(GetProcessHeap(), 0, buffer->buffer_size)))
     {
         ERR("Failed to allocate shader buffer memory.\n");
         return FALSE;
     }
 
-    shader_buffer_clear(buffer);
+    string_buffer_clear(buffer);
     return TRUE;
 }
 
-void shader_buffer_free(struct wined3d_shader_buffer *buffer)
+void string_buffer_free(struct wined3d_string_buffer *buffer)
 {
     HeapFree(GetProcessHeap(), 0, buffer->buffer);
 }
 
-int shader_vaddline(struct wined3d_shader_buffer *buffer, const char *format, va_list args)
+BOOL string_buffer_resize(struct wined3d_string_buffer *buffer, int rc)
 {
-    char *base = buffer->buffer + buffer->bsize;
+    char *new_buffer;
+    unsigned int new_buffer_size = buffer->buffer_size * 2;
+
+    while (rc > 0 && (unsigned int)rc >= new_buffer_size - buffer->content_size)
+        new_buffer_size *= 2;
+    if (!(new_buffer = HeapReAlloc(GetProcessHeap(), 0, buffer->buffer, new_buffer_size)))
+    {
+        ERR("Failed to grow buffer.\n");
+        buffer->buffer[buffer->content_size] = '\0';
+        return FALSE;
+    }
+    buffer->buffer = new_buffer;
+    buffer->buffer_size = new_buffer_size;
+    return TRUE;
+}
+
+int shader_vaddline(struct wined3d_string_buffer *buffer, const char *format, va_list args)
+{
+    unsigned int rem;
     int rc;
 
-    rc = vsnprintf(base, SHADER_PGMSIZE - 1 - buffer->bsize, format, args);
+    rem = buffer->buffer_size - buffer->content_size;
+    rc = vsnprintf(&buffer->buffer[buffer->content_size], rem, format, args);
+    if (rc < 0 /* C89 */ || (unsigned int)rc >= rem /* C99 */)
+        return rc;
 
-    if (rc < 0 /* C89 */ || (unsigned int)rc > SHADER_PGMSIZE - 1 - buffer->bsize /* C99 */)
-    {
-        ERR("The buffer allocated for the shader program string "
-            "is too small at %d bytes.\n", SHADER_PGMSIZE);
-        buffer->bsize = SHADER_PGMSIZE - 1;
-        return -1;
-    }
-
-    if (buffer->newline)
-    {
-        TRACE("GL HW (%u, %u) : %s", buffer->lineNo + 1, buffer->bsize, base);
-        buffer->newline = FALSE;
-    }
-    else
-    {
-        TRACE("%s", base);
-    }
-
-    buffer->bsize += rc;
-    if (buffer->buffer[buffer->bsize-1] == '\n')
-    {
-        ++buffer->lineNo;
-        buffer->newline = TRUE;
-    }
-
+    buffer->content_size += rc;
     return 0;
 }
 
-int shader_addline(struct wined3d_shader_buffer *buffer, const char *format, ...)
+int shader_addline(struct wined3d_string_buffer *buffer, const char *format, ...)
 {
     va_list args;
     int ret;
 
-    va_start(args, format);
-    ret = shader_vaddline(buffer, format, args);
-    va_end(args);
-
-    return ret;
+    for (;;)
+    {
+        va_start(args, format);
+        ret = shader_vaddline(buffer, format, args);
+        va_end(args);
+        if (!ret)
+            return ret;
+        if (!string_buffer_resize(buffer, ret))
+            return -1;
+    }
 }
 
-static void shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
-        void *parent, const struct wined3d_parent_ops *parent_ops)
+struct wined3d_string_buffer *string_buffer_get(struct wined3d_string_buffer_list *list)
 {
-    shader->ref = 1;
-    shader->device = device;
-    shader->parent = parent;
-    shader->parent_ops = parent_ops;
-    list_init(&shader->linked_programs);
-    list_add_head(&device->shaders, &shader->shader_list_entry);
+    struct wined3d_string_buffer *buffer;
+
+    if (list_empty(&list->list))
+    {
+        buffer = HeapAlloc(GetProcessHeap(), 0, sizeof(*buffer));
+        if (!buffer || !string_buffer_init(buffer))
+        {
+            ERR("Couldn't allocate buffer for temporary string.\n");
+            if (buffer)
+                HeapFree(GetProcessHeap(), 0, buffer);
+            return NULL;
+        }
+    }
+    else
+    {
+        buffer = LIST_ENTRY(list_head(&list->list), struct wined3d_string_buffer, entry);
+        list_remove(&buffer->entry);
+    }
+    string_buffer_clear(buffer);
+    return buffer;
+}
+
+static int string_buffer_vsprintf(struct wined3d_string_buffer *buffer, const char *format, va_list args)
+{
+    if (!buffer)
+        return 0;
+    string_buffer_clear(buffer);
+    return shader_vaddline(buffer, format, args);
+}
+
+void string_buffer_sprintf(struct wined3d_string_buffer *buffer, const char *format, ...)
+{
+    va_list args;
+    int ret;
+
+    for (;;)
+    {
+        va_start(args, format);
+        ret = string_buffer_vsprintf(buffer, format, args);
+        va_end(args);
+        if (!ret)
+            return;
+        if (!string_buffer_resize(buffer, ret))
+            return;
+    }
+}
+
+void string_buffer_release(struct wined3d_string_buffer_list *list, struct wined3d_string_buffer *buffer)
+{
+    if (!buffer)
+        return;
+    list_add_head(&list->list, &buffer->entry);
+}
+
+void string_buffer_list_init(struct wined3d_string_buffer_list *list)
+{
+    list_init(&list->list);
+}
+
+void string_buffer_list_cleanup(struct wined3d_string_buffer_list *list)
+{
+    struct wined3d_string_buffer *buffer, *buffer_next;
+
+    LIST_FOR_EACH_ENTRY_SAFE(buffer, buffer_next, &list->list, struct wined3d_string_buffer, entry)
+    {
+        string_buffer_free(buffer);
+        HeapFree(GetProcessHeap(), 0, buffer);
+    }
+    list_init(&list->list);
 }
 
 /* Convert floating point offset relative to a register file to an absolute
@@ -337,17 +453,91 @@ static unsigned int shader_get_float_offset(enum wined3d_shader_register_type re
 
 static void shader_delete_constant_list(struct list *clist)
 {
-    struct wined3d_shader_lconst *constant;
-    struct list *ptr;
+    struct wined3d_shader_lconst *constant, *constant_next;
 
-    ptr = list_head(clist);
-    while (ptr)
-    {
-        constant = LIST_ENTRY(ptr, struct wined3d_shader_lconst, entry);
-        ptr = list_next(clist, ptr);
+    LIST_FOR_EACH_ENTRY_SAFE(constant, constant_next, clist, struct wined3d_shader_lconst, entry)
         HeapFree(GetProcessHeap(), 0, constant);
-    }
     list_init(clist);
+}
+
+static void shader_set_limits(struct wined3d_shader *shader)
+{
+    static const struct limits_entry
+    {
+        unsigned int min_version;
+        unsigned int max_version;
+        struct wined3d_shader_limits limits;
+    }
+    vs_limits[] =
+    {
+        /* min_version, max_version, sampler, constant_int, constant_float, constant_bool, packed_output, packed_input */
+        {WINED3D_SHADER_VERSION(1, 0), WINED3D_SHADER_VERSION(1, 1), { 0,  0, 256,  0, 12,  0}},
+        {WINED3D_SHADER_VERSION(2, 0), WINED3D_SHADER_VERSION(2, 1), { 0, 16, 256, 16, 12,  0}},
+        /* DX10 cards on Windows advertise a D3D9 constant limit of 256
+         * even though they are capable of supporting much more (GL
+         * drivers advertise 1024). d3d9.dll and d3d8.dll clamp the
+         * wined3d-advertised maximum. Clamp the constant limit for <= 3.0
+         * shaders to 256. */
+        {WINED3D_SHADER_VERSION(3, 0), WINED3D_SHADER_VERSION(3, 0), { 4, 16, 256, 16, 12,  0}},
+        {WINED3D_SHADER_VERSION(4, 0), WINED3D_SHADER_VERSION(4, 0), {16,  0,   0,  0, 16,  0}},
+        {WINED3D_SHADER_VERSION(5, 0), WINED3D_SHADER_VERSION(5, 0), {16,  0,   0,  0, 32,  0}},
+        {0}
+    },
+    gs_limits[] =
+    {
+        /* min_version, max_version, sampler, constant_int, constant_float, constant_bool, packed_output, packed_input */
+        {WINED3D_SHADER_VERSION(4, 0), WINED3D_SHADER_VERSION(4, 0), {16,  0,   0,  0, 32, 16}},
+        {WINED3D_SHADER_VERSION(5, 0), WINED3D_SHADER_VERSION(5, 0), {16,  0,   0,  0, 32, 32}},
+        {0}
+    },
+    ps_limits[] =
+    {
+        /* min_version, max_version, sampler, constant_int, constant_float, constant_bool, packed_output, packed_input */
+        {WINED3D_SHADER_VERSION(1, 0), WINED3D_SHADER_VERSION(1, 3), { 4,  0,   8,  0,  0,  0}},
+        {WINED3D_SHADER_VERSION(1, 4), WINED3D_SHADER_VERSION(1, 4), { 6,  0,   8,  0,  0,  0}},
+        {WINED3D_SHADER_VERSION(2, 0), WINED3D_SHADER_VERSION(2, 0), {16,  0,  32,  0,  0,  0}},
+        {WINED3D_SHADER_VERSION(2, 1), WINED3D_SHADER_VERSION(2, 1), {16, 16,  32, 16,  0,  0}},
+        {WINED3D_SHADER_VERSION(3, 0), WINED3D_SHADER_VERSION(3, 0), {16, 16, 224, 16,  0, 12}},
+        {WINED3D_SHADER_VERSION(4, 0), WINED3D_SHADER_VERSION(5, 0), {16,  0,   0,  0,  0, 32}},
+        {0}
+    };
+    const struct limits_entry *limits_array;
+    DWORD shader_version = WINED3D_SHADER_VERSION(shader->reg_maps.shader_version.major,
+            shader->reg_maps.shader_version.minor);
+    int i = 0;
+
+    switch (shader->reg_maps.shader_version.type)
+    {
+        default:
+            FIXME("Unexpected shader type %u found.\n", shader->reg_maps.shader_version.type);
+            /* Fall-through. */
+        case WINED3D_SHADER_TYPE_VERTEX:
+            limits_array = vs_limits;
+            break;
+        case WINED3D_SHADER_TYPE_GEOMETRY:
+            limits_array = gs_limits;
+            break;
+        case WINED3D_SHADER_TYPE_PIXEL:
+            limits_array = ps_limits;
+            break;
+    }
+
+    while (limits_array[i].min_version && limits_array[i].min_version <= shader_version)
+    {
+        if (shader_version <= limits_array[i].max_version)
+        {
+            shader->limits = &limits_array[i].limits;
+            break;
+        }
+        ++i;
+    }
+    if (!shader->limits)
+    {
+        FIXME("Unexpected shader version \"%u.%u\".\n",
+                shader->reg_maps.shader_version.major,
+                shader->reg_maps.shader_version.minor);
+        shader->limits = &limits_array[max(0, i - 1)].limits;
+    }
 }
 
 static inline void set_bitmap_bit(DWORD *bitmap, DWORD bit)
@@ -355,23 +545,23 @@ static inline void set_bitmap_bit(DWORD *bitmap, DWORD bit)
     DWORD idx, shift;
     idx = bit >> 5;
     shift = bit & 0x1f;
-    bitmap[idx] |= (1 << shift);
+    bitmap[idx] |= (1u << shift);
 }
 
-static void shader_record_register_usage(struct wined3d_shader *shader, struct wined3d_shader_reg_maps *reg_maps,
-        const struct wined3d_shader_register *reg, enum wined3d_shader_type shader_type)
+static BOOL shader_record_register_usage(struct wined3d_shader *shader, struct wined3d_shader_reg_maps *reg_maps,
+        const struct wined3d_shader_register *reg, enum wined3d_shader_type shader_type, unsigned int constf_size)
 {
     switch (reg->type)
     {
         case WINED3DSPR_TEXTURE: /* WINED3DSPR_ADDR */
             if (shader_type == WINED3D_SHADER_TYPE_PIXEL)
-                reg_maps->texcoord |= 1 << reg->idx[0].offset;
+                reg_maps->texcoord |= 1u << reg->idx[0].offset;
             else
-                reg_maps->address |= 1 << reg->idx[0].offset;
+                reg_maps->address |= 1u << reg->idx[0].offset;
             break;
 
         case WINED3DSPR_TEMP:
-            reg_maps->temporary |= 1 << reg->idx[0].offset;
+            reg_maps->temporary |= 1u << reg->idx[0].offset;
             break;
 
         case WINED3DSPR_INPUT:
@@ -394,12 +584,14 @@ static void shader_record_register_usage(struct wined3d_shader *shader, struct w
                 }
             }
             else
-                reg_maps->input_registers |= 1 << reg->idx[0].offset;
+                reg_maps->input_registers |= 1u << reg->idx[0].offset;
             break;
 
         case WINED3DSPR_RASTOUT:
             if (reg->idx[0].offset == 1)
                 reg_maps->fog = 1;
+            if (reg->idx[0].offset == 2)
+                reg_maps->point_size = 1;
             break;
 
         case WINED3DSPR_MISCTYPE:
@@ -423,20 +615,44 @@ static void shader_record_register_usage(struct wined3d_shader *shader, struct w
             }
             else
             {
-                set_bitmap_bit(reg_maps->constf, reg->idx[0].offset);
+                if (reg->idx[0].offset >= min(shader->limits->constant_float, constf_size))
+                {
+                    WARN("Shader using float constant %u which is not supported.\n", reg->idx[0].offset);
+                    return FALSE;
+                }
+                else
+                {
+                    set_bitmap_bit(reg_maps->constf, reg->idx[0].offset);
+                }
             }
             break;
 
         case WINED3DSPR_CONSTINT:
-            reg_maps->integer_constants |= (1 << reg->idx[0].offset);
+            if (reg->idx[0].offset >= shader->limits->constant_int)
+            {
+                WARN("Shader using integer constant %u which is not supported.\n", reg->idx[0].offset);
+                return FALSE;
+            }
+            else
+            {
+                reg_maps->integer_constants |= (1u << reg->idx[0].offset);
+            }
             break;
 
         case WINED3DSPR_CONSTBOOL:
-            reg_maps->boolean_constants |= (1 << reg->idx[0].offset);
+            if (reg->idx[0].offset >= shader->limits->constant_bool)
+            {
+                WARN("Shader using bool constant %u which is not supported.\n", reg->idx[0].offset);
+                return FALSE;
+            }
+            else
+            {
+                reg_maps->boolean_constants |= (1u << reg->idx[0].offset);
+            }
             break;
 
         case WINED3DSPR_COLOROUT:
-            reg_maps->rt_mask |= (1 << reg->idx[0].offset);
+            reg_maps->rt_mask |= (1u << reg->idx[0].offset);
             break;
 
         default:
@@ -444,6 +660,52 @@ static void shader_record_register_usage(struct wined3d_shader *shader, struct w
                     reg->type, reg->idx[0].offset, reg->idx[1].offset);
             break;
     }
+    return TRUE;
+}
+
+static void shader_record_sample(struct wined3d_shader_reg_maps *reg_maps,
+        unsigned int resource_idx, unsigned int sampler_idx, unsigned int bind_idx)
+{
+    struct wined3d_shader_sampler_map_entry *entries, *entry;
+    struct wined3d_shader_sampler_map *map;
+    unsigned int i;
+
+    map = &reg_maps->sampler_map;
+    entries = map->entries;
+    for (i = 0; i < map->count; ++i)
+    {
+        if (entries[i].resource_idx == resource_idx && entries[i].sampler_idx == sampler_idx)
+            return;
+    }
+
+    if (!map->size)
+    {
+        if (!(entries = HeapAlloc(GetProcessHeap(), 0, sizeof(*entries) * 4)))
+        {
+            ERR("Failed to allocate sampler map entries.\n");
+            return;
+        }
+        map->size = 4;
+        map->entries = entries;
+    }
+    else if (map->count == map->size)
+    {
+        size_t new_size = map->size * 2;
+
+        if (sizeof(*entries) * new_size <= sizeof(*entries) * map->size
+                || !(entries = HeapReAlloc(GetProcessHeap(), 0, entries, sizeof(*entries) * new_size)))
+        {
+            ERR("Failed to resize sampler map entries.\n");
+            return;
+        }
+        map->size = new_size;
+        map->entries = entries;
+    }
+
+    entry = &entries[map->count++];
+    entry->resource_idx = resource_idx;
+    entry->sampler_idx = sampler_idx;
+    entry->bind_idx = bind_idx;
 }
 
 static unsigned int get_instr_extra_regcount(enum WINED3D_SHADER_INSTRUCTION_HANDLER instr, unsigned int param)
@@ -468,22 +730,29 @@ static unsigned int get_instr_extra_regcount(enum WINED3D_SHADER_INSTRUCTION_HAN
 
 /* Note that this does not count the loop register as an address register. */
 static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const struct wined3d_shader_frontend *fe,
-        struct wined3d_shader_reg_maps *reg_maps, struct wined3d_shader_signature_element *input_signature,
-        struct wined3d_shader_signature_element *output_signature, const DWORD *byte_code, DWORD constf_size)
+        struct wined3d_shader_reg_maps *reg_maps, struct wined3d_shader_signature *input_signature,
+        struct wined3d_shader_signature *output_signature, const DWORD *byte_code, DWORD constf_size)
 {
+    struct wined3d_shader_signature_element input_signature_elements[max(MAX_ATTRIBS, MAX_REG_INPUT)];
+    struct wined3d_shader_signature_element output_signature_elements[MAX_REG_OUTPUT];
     unsigned int cur_loop_depth = 0, max_loop_depth = 0;
     void *fe_data = shader->frontend_data;
     struct wined3d_shader_version shader_version;
     const DWORD *ptr = byte_code;
+    unsigned int i;
 
     memset(reg_maps, 0, sizeof(*reg_maps));
+    memset(input_signature_elements, 0, sizeof(input_signature_elements));
+    memset(output_signature_elements, 0, sizeof(output_signature_elements));
     reg_maps->min_rel_offset = ~0U;
 
     fe->shader_read_header(fe_data, &ptr, &shader_version);
     reg_maps->shader_version = shader_version;
 
+    shader_set_limits(shader);
+
     reg_maps->constf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(*reg_maps->constf) * ((constf_size + 31) / 32));
+            sizeof(*reg_maps->constf) * ((min(shader->limits->constant_float, constf_size) + 31) / 32));
     if (!reg_maps->constf)
     {
         ERR("Failed to allocate constant map memory.\n");
@@ -508,26 +777,49 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
         if (ins.handler_idx == WINED3DSIH_DCL)
         {
             struct wined3d_shader_semantic *semantic = &ins.declaration.semantic;
+            unsigned int reg_idx = semantic->reg.reg.idx[0].offset;
 
             switch (semantic->reg.reg.type)
             {
                 /* Mark input registers used. */
                 case WINED3DSPR_INPUT:
-                    reg_maps->input_registers |= 1 << semantic->reg.reg.idx[0].offset;
-                    shader_signature_from_semantic(&input_signature[semantic->reg.reg.idx[0].offset], semantic);
+                    if (reg_idx >= MAX_REG_INPUT)
+                    {
+                        ERR("Invalid input register index %u.\n", reg_idx);
+                        break;
+                    }
+                    if (shader_version.type == WINED3D_SHADER_TYPE_PIXEL && shader_version.major == 3
+                            && semantic->usage == WINED3D_DECL_USAGE_POSITION && !semantic->usage_idx)
+                        return WINED3DERR_INVALIDCALL;
+                    reg_maps->input_registers |= 1u << reg_idx;
+                    shader_signature_from_semantic(&input_signature_elements[reg_idx], semantic);
                     break;
 
                 /* Vertex shader: mark 3.0 output registers used, save token. */
                 case WINED3DSPR_OUTPUT:
-                    reg_maps->output_registers |= 1 << semantic->reg.reg.idx[0].offset;
-                    shader_signature_from_semantic(&output_signature[semantic->reg.reg.idx[0].offset], semantic);
+                    if (reg_idx >= MAX_REG_OUTPUT)
+                    {
+                        ERR("Invalid output register index %u.\n", reg_idx);
+                        break;
+                    }
+                    reg_maps->output_registers |= 1u << reg_idx;
+                    shader_signature_from_semantic(&output_signature_elements[reg_idx], semantic);
                     if (semantic->usage == WINED3D_DECL_USAGE_FOG)
                         reg_maps->fog = 1;
+                    if (semantic->usage == WINED3D_DECL_USAGE_PSIZE)
+                        reg_maps->point_size = 1;
                     break;
 
-                /* Save sampler usage token. */
                 case WINED3DSPR_SAMPLER:
-                    reg_maps->sampler_type[semantic->reg.reg.idx[0].offset] = semantic->sampler_type;
+                    shader_record_sample(reg_maps, reg_idx, reg_idx, reg_idx);
+                case WINED3DSPR_RESOURCE:
+                    if (reg_idx >= ARRAY_SIZE(reg_maps->resource_info))
+                    {
+                        ERR("Invalid resource index %u.\n", reg_idx);
+                        break;
+                    }
+                    reg_maps->resource_info[reg_idx].type = semantic->resource_type;
+                    reg_maps->resource_info[reg_idx].data_type = semantic->resource_data_type;
                     break;
 
                 default:
@@ -542,6 +834,12 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
                 ERR("Invalid CB index %u.\n", reg->idx[0].offset);
             else
                 reg_maps->cb_sizes[reg->idx[0].offset] = reg->idx[1].offset;
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_IMMEDIATE_CONSTANT_BUFFER)
+        {
+            if (reg_maps->icb)
+                FIXME("Multiple immediate constant buffers.\n");
+            reg_maps->icb = ins.declaration.icb;
         }
         else if (ins.handler_idx == WINED3DSIH_DCL_INPUT_PRIMITIVE)
         {
@@ -570,15 +868,16 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
         else if (ins.handler_idx == WINED3DSIH_DEF)
         {
             struct wined3d_shader_lconst *lconst = HeapAlloc(GetProcessHeap(), 0, sizeof(*lconst));
+            float *value;
             if (!lconst) return E_OUTOFMEMORY;
 
             lconst->idx = ins.dst[0].reg.idx[0].offset;
             memcpy(lconst->value, ins.src[0].reg.immconst_data, 4 * sizeof(DWORD));
+            value = (float *)lconst->value;
 
             /* In pixel shader 1.X shaders, the constants are clamped between [-1;1] */
             if (shader_version.major == 1 && shader_version.type == WINED3D_SHADER_TYPE_PIXEL)
             {
-                float *value = (float *)lconst->value;
                 if (value[0] < -1.0f) value[0] = -1.0f;
                 else if (value[0] > 1.0f) value[0] = 1.0f;
                 if (value[1] < -1.0f) value[1] = -1.0f;
@@ -590,6 +889,12 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
             }
 
             list_add_head(&shader->constantsF, &lconst->entry);
+
+            if (isinf(value[0]) || isnan(value[0]) || isinf(value[1]) || isnan(value[1])
+                    || isinf(value[2]) || isnan(value[2]) || isinf(value[3]) || isnan(value[3]))
+            {
+                shader->lconst_inf_or_nan = TRUE;
+            }
         }
         else if (ins.handler_idx == WINED3DSIH_DEFI)
         {
@@ -600,7 +905,7 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
             memcpy(lconst->value, ins.src[0].reg.immconst_data, 4 * sizeof(DWORD));
 
             list_add_head(&shader->constantsI, &lconst->entry);
-            reg_maps->local_int_consts |= (1 << lconst->idx);
+            reg_maps->local_int_consts |= (1u << lconst->idx);
         }
         else if (ins.handler_idx == WINED3DSIH_DEFB)
         {
@@ -611,12 +916,12 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
             memcpy(lconst->value, ins.src[0].reg.immconst_data, sizeof(DWORD));
 
             list_add_head(&shader->constantsB, &lconst->entry);
-            reg_maps->local_bool_consts |= (1 << lconst->idx);
+            reg_maps->local_bool_consts |= (1u << lconst->idx);
         }
         /* For subroutine prototypes. */
         else if (ins.handler_idx == WINED3DSIH_LABEL)
         {
-            reg_maps->labels |= 1 << ins.src[0].reg.idx[0].offset;
+            reg_maps->labels |= 1u << ins.src[0].reg.idx[0].offset;
         }
         /* Set texture, address, temporary registers. */
         else
@@ -632,68 +937,75 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
              * they are initialized (required by spec). */
             for (i = 0; i < ins.dst_count; ++i)
             {
-                shader_record_register_usage(shader, reg_maps, &ins.dst[i].reg, shader_version.type);
+                if (!shader_record_register_usage(shader, reg_maps, &ins.dst[i].reg,
+                        shader_version.type, constf_size))
+                    return WINED3DERR_INVALIDCALL;
 
-                /* WINED3DSPR_TEXCRDOUT is the same as WINED3DSPR_OUTPUT. _OUTPUT can be > MAX_REG_TEXCRD and
-                 * is used in >= 3.0 shaders. Filter 3.0 shaders to prevent overflows, and also filter pixel
-                 * shaders because TECRDOUT isn't used in them, but future register types might cause issues */
-                if (shader_version.type == WINED3D_SHADER_TYPE_VERTEX && shader_version.major < 3)
+                if (shader_version.type == WINED3D_SHADER_TYPE_VERTEX)
                 {
                     UINT idx = ins.dst[i].reg.idx[0].offset;
 
                     switch (ins.dst[i].reg.type)
                     {
                         case WINED3DSPR_RASTOUT:
+                            if (shader_version.major >= 3)
+                                break;
                             switch (idx)
                             {
                                 case 0: /* oPos */
-                                    reg_maps->output_registers |= 1 << 10;
-                                    shader_signature_from_usage(&output_signature[10],
+                                    reg_maps->output_registers |= 1u << 10;
+                                    shader_signature_from_usage(&output_signature_elements[10],
                                             WINED3D_DECL_USAGE_POSITION, 0, 10, WINED3DSP_WRITEMASK_ALL);
                                     break;
 
                                 case 1: /* oFog */
-                                    reg_maps->output_registers |= 1 << 11;
-                                    shader_signature_from_usage(&output_signature[11],
+                                    reg_maps->output_registers |= 1u << 11;
+                                    shader_signature_from_usage(&output_signature_elements[11],
                                             WINED3D_DECL_USAGE_FOG, 0, 11, WINED3DSP_WRITEMASK_0);
                                     break;
 
                                 case 2: /* oPts */
-                                    reg_maps->output_registers |= 1 << 11;
-                                    shader_signature_from_usage(&output_signature[11],
+                                    reg_maps->output_registers |= 1u << 11;
+                                    shader_signature_from_usage(&output_signature_elements[11],
                                             WINED3D_DECL_USAGE_PSIZE, 0, 11, WINED3DSP_WRITEMASK_1);
                                     break;
                             }
                             break;
 
                         case WINED3DSPR_ATTROUT:
+                            if (shader_version.major >= 3)
+                                break;
                             if (idx < 2)
                             {
                                 idx += 8;
-                                if (reg_maps->output_registers & (1 << idx))
+                                if (reg_maps->output_registers & (1u << idx))
                                 {
-                                    output_signature[idx].mask |= ins.dst[i].write_mask;
+                                    output_signature_elements[idx].mask |= ins.dst[i].write_mask;
                                 }
                                 else
                                 {
-                                    reg_maps->output_registers |= 1 << idx;
-                                    shader_signature_from_usage(&output_signature[idx],
+                                    reg_maps->output_registers |= 1u << idx;
+                                    shader_signature_from_usage(&output_signature_elements[idx],
                                             WINED3D_DECL_USAGE_COLOR, idx - 8, idx, ins.dst[i].write_mask);
                                 }
                             }
                             break;
 
                         case WINED3DSPR_TEXCRDOUT:
-
-                            reg_maps->texcoord_mask[idx] |= ins.dst[i].write_mask;
-                            if (reg_maps->output_registers & (1 << idx))
+                            if (shader_version.major >= 3)
                             {
-                                output_signature[idx].mask |= ins.dst[i].write_mask;
+                                reg_maps->u.output_registers_mask[idx] |= ins.dst[i].write_mask;
+                                break;
+                            }
+                            reg_maps->u.texcoord_mask[idx] |= ins.dst[i].write_mask;
+                            if (reg_maps->output_registers & (1u << idx))
+                            {
+                                output_signature_elements[idx].mask |= ins.dst[i].write_mask;
                             }
                             else
                             {
-                                reg_maps->output_registers |= 1 << idx;
-                                shader_signature_from_usage(&output_signature[idx],
+                                reg_maps->output_registers |= 1u << idx;
+                                shader_signature_from_usage(&output_signature_elements[idx],
                                         WINED3D_DECL_USAGE_TEXCOORD, idx, idx, ins.dst[i].write_mask);
                             }
                             break;
@@ -746,26 +1058,27 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
                             || ins.handler_idx == WINED3DSIH_TEXREG2GB
                             || ins.handler_idx == WINED3DSIH_TEXREG2RGB))
                 {
-                    /* Fake sampler usage, only set reserved bit and type. */
-                    DWORD sampler_code = ins.dst[i].reg.idx[0].offset;
+                    unsigned int reg_idx = ins.dst[i].reg.idx[0].offset;
 
-                    TRACE("Setting fake 2D sampler for 1.x pixelshader.\n");
-                    reg_maps->sampler_type[sampler_code] = WINED3DSTT_2D;
+                    TRACE("Setting fake 2D resource for 1.x pixelshader.\n");
+                    reg_maps->resource_info[reg_idx].type = WINED3D_SHADER_RESOURCE_TEXTURE_2D;
+                    reg_maps->resource_info[reg_idx].data_type = WINED3D_DATA_FLOAT;
+                    shader_record_sample(reg_maps, reg_idx, reg_idx, reg_idx);
 
                     /* texbem is only valid with < 1.4 pixel shaders */
                     if (ins.handler_idx == WINED3DSIH_TEXBEM
                             || ins.handler_idx == WINED3DSIH_TEXBEML)
                     {
-                        reg_maps->bumpmat |= 1 << ins.dst[i].reg.idx[0].offset;
+                        reg_maps->bumpmat |= 1u << reg_idx;
                         if (ins.handler_idx == WINED3DSIH_TEXBEML)
                         {
-                            reg_maps->luminanceparams |= 1 << ins.dst[i].reg.idx[0].offset;
+                            reg_maps->luminanceparams |= 1u << reg_idx;
                         }
                     }
                 }
                 else if (ins.handler_idx == WINED3DSIH_BEM)
                 {
-                    reg_maps->bumpmat |= 1 << ins.dst[i].reg.idx[0].offset;
+                    reg_maps->bumpmat |= 1u << ins.dst[i].reg.idx[0].offset;
                 }
             }
 
@@ -787,21 +1100,44 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
             }
             else if (ins.handler_idx == WINED3DSIH_ENDLOOP
                     || ins.handler_idx == WINED3DSIH_ENDREP)
+            {
                 --cur_loop_depth;
+            }
+            else if (ins.handler_idx == WINED3DSIH_SAMPLE
+                    || ins.handler_idx == WINED3DSIH_SAMPLE_B
+                    || ins.handler_idx == WINED3DSIH_SAMPLE_C_LZ
+                    || ins.handler_idx == WINED3DSIH_SAMPLE_GRAD
+                    || ins.handler_idx == WINED3DSIH_SAMPLE_LOD)
+            {
+                shader_record_sample(reg_maps, ins.src[1].reg.idx[0].offset,
+                        ins.src[2].reg.idx[0].offset, reg_maps->sampler_map.count);
+            }
+            else if (ins.handler_idx == WINED3DSIH_LD
+                    || ins.handler_idx == WINED3DSIH_RESINFO)
+            {
+                shader_record_sample(reg_maps, ins.src[1].reg.idx[0].offset,
+                        WINED3D_SAMPLER_DEFAULT, reg_maps->sampler_map.count);
+            }
 
             if (ins.predicate)
-                shader_record_register_usage(shader, reg_maps, &ins.predicate->reg, shader_version.type);
+                if (!shader_record_register_usage(shader, reg_maps, &ins.predicate->reg,
+                        shader_version.type, constf_size))
+                    return WINED3DERR_INVALIDCALL;
 
             for (i = 0; i < ins.src_count; ++i)
             {
                 unsigned int count = get_instr_extra_regcount(ins.handler_idx, i);
                 struct wined3d_shader_register reg = ins.src[i].reg;
 
-                shader_record_register_usage(shader, reg_maps, &ins.src[i].reg, shader_version.type);
+                if (!shader_record_register_usage(shader, reg_maps, &ins.src[i].reg,
+                        shader_version.type, constf_size))
+                    return WINED3DERR_INVALIDCALL;
                 while (count)
                 {
                     ++reg.idx[0].offset;
-                    shader_record_register_usage(shader, reg_maps, &reg, shader_version.type);
+                    if (!shader_record_register_usage(shader, reg_maps, &reg,
+                            shader_version.type, constf_size))
+                        return WINED3DERR_INVALIDCALL;
                     --count;
                 }
 
@@ -822,110 +1158,289 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
     /* PS before 2.0 don't have explicit color outputs. Instead the value of
      * R0 is written to the render target. */
     if (shader_version.major < 2 && shader_version.type == WINED3D_SHADER_TYPE_PIXEL)
-        reg_maps->rt_mask |= (1 << 0);
+        reg_maps->rt_mask |= (1u << 0);
 
     shader->functionLength = ((const char *)ptr - (const char *)byte_code);
+
+    if (input_signature->elements)
+    {
+        for (i = 0; i < input_signature->element_count; ++i)
+        {
+            reg_maps->input_registers |= 1u << input_signature->elements[i].register_idx;
+            if (shader_version.type == WINED3D_SHADER_TYPE_PIXEL
+                    && input_signature->elements[i].sysval_semantic == WINED3D_SV_POSITION)
+                reg_maps->vpos = 1;
+        }
+    }
+    else if (!input_signature->elements && reg_maps->input_registers)
+    {
+        unsigned int count = wined3d_popcount(reg_maps->input_registers);
+        struct wined3d_shader_signature_element *e;
+        unsigned int i;
+
+        if (!(input_signature->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*input_signature->elements) * count)))
+            return E_OUTOFMEMORY;
+        input_signature->element_count = count;
+
+        e = input_signature->elements;
+        for (i = 0; i < ARRAY_SIZE(input_signature_elements); ++i)
+        {
+            if (!(reg_maps->input_registers & (1u << i)))
+                continue;
+            input_signature_elements[i].register_idx = i;
+            *e++ = input_signature_elements[i];
+        }
+    }
+
+    if (output_signature->elements)
+    {
+        for (i = 0; i < output_signature->element_count; ++i)
+        {
+            reg_maps->output_registers |= 1u << output_signature->elements[i].register_idx;
+        }
+    }
+    else if (reg_maps->output_registers)
+    {
+        unsigned int count = wined3d_popcount(reg_maps->output_registers);
+        struct wined3d_shader_signature_element *e;
+
+        if (!(output_signature->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*output_signature->elements) * count)))
+            return E_OUTOFMEMORY;
+        output_signature->element_count = count;
+
+        e = output_signature->elements;
+        for (i = 0; i < ARRAY_SIZE(output_signature_elements); ++i)
+        {
+            if (!(reg_maps->output_registers & (1u << i)))
+                continue;
+            *e++ = output_signature_elements[i];
+        }
+    }
 
     return WINED3D_OK;
 }
 
 unsigned int shader_find_free_input_register(const struct wined3d_shader_reg_maps *reg_maps, unsigned int max)
 {
-    DWORD map = 1 << max;
+    DWORD map = 1u << max;
     map |= map - 1;
     map &= reg_maps->shader_version.major < 3 ? ~reg_maps->texcoord : ~reg_maps->input_registers;
 
     return wined3d_log2i(map);
 }
 
-static void shader_dump_decl_usage(const struct wined3d_shader_semantic *semantic,
-        const struct wined3d_shader_version *shader_version)
+static void shader_dump_global_flags(struct wined3d_string_buffer *buffer, DWORD global_flags)
 {
-    TRACE("dcl");
+    if (global_flags & WINED3DSGF_REFACTORING_ALLOWED)
+    {
+        shader_addline(buffer, "refactoringAllowed");
+        global_flags &= ~WINED3DSGF_REFACTORING_ALLOWED;
+        if (global_flags)
+            shader_addline(buffer, " | ");
+    }
+
+    if (global_flags & WINED3DSGF_ENABLE_RAW_AND_STRUCTURED_BUFFERS)
+    {
+        shader_addline(buffer, "enableRawAndStructuredBuffers");
+        global_flags &= ~WINED3DSGF_ENABLE_RAW_AND_STRUCTURED_BUFFERS;
+    }
+
+    if (global_flags)
+        shader_addline(buffer, "unknown_flags(%#x)", global_flags);
+}
+
+static void shader_dump_sysval_semantic(struct wined3d_string_buffer *buffer, enum wined3d_sysval_semantic semantic)
+{
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE(sysval_semantic_names); ++i)
+    {
+        if (sysval_semantic_names[i].sysval_semantic == semantic)
+        {
+            shader_addline(buffer, "%s", sysval_semantic_names[i].sysval_name);
+            return;
+        }
+    }
+
+    shader_addline(buffer, "unknown_sysval_semantic(%#x)", semantic);
+}
+
+static void shader_dump_decl_usage(struct wined3d_string_buffer *buffer,
+        const struct wined3d_shader_semantic *semantic, const struct wined3d_shader_version *shader_version)
+{
+    shader_addline(buffer, "dcl");
 
     if (semantic->reg.reg.type == WINED3DSPR_SAMPLER)
     {
-        switch (semantic->sampler_type)
+        switch (semantic->resource_type)
         {
-            case WINED3DSTT_2D: TRACE("_2d"); break;
-            case WINED3DSTT_CUBE: TRACE("_cube"); break;
-            case WINED3DSTT_VOLUME: TRACE("_volume"); break;
-            default: TRACE("_unknown_ttype(0x%08x)", semantic->sampler_type);
+            case WINED3D_SHADER_RESOURCE_TEXTURE_2D:
+                shader_addline(buffer, "_2d");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_3D:
+                shader_addline(buffer, "_3d");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_CUBE:
+                shader_addline(buffer, "_cube");
+                break;
+
+            default:
+                shader_addline(buffer, "_unknown_resource_type(%#x)", semantic->resource_type);
+                break;
+        }
+    }
+    else if (semantic->reg.reg.type == WINED3DSPR_RESOURCE)
+    {
+        shader_addline(buffer, "_resource_");
+        switch (semantic->resource_type)
+        {
+            case WINED3D_SHADER_RESOURCE_BUFFER:
+                shader_addline(buffer, "buffer");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_1D:
+                shader_addline(buffer, "texture1d");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_2D:
+                shader_addline(buffer, "texture2d");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_2DMS:
+                shader_addline(buffer, "texture2dms");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_3D:
+                shader_addline(buffer, "texture3d");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_CUBE:
+                shader_addline(buffer, "texturecube");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_1DARRAY:
+                shader_addline(buffer, "texture1darray");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_2DARRAY:
+                shader_addline(buffer, "texture2darray");
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_2DMSARRAY:
+                shader_addline(buffer, "texture2dmsarray");
+                break;
+
+            default:
+                shader_addline(buffer, "unknown");
+                break;
+        }
+        switch (semantic->resource_data_type)
+        {
+            case WINED3D_DATA_FLOAT:
+                shader_addline(buffer, " (float)");
+                break;
+
+            case WINED3D_DATA_INT:
+                shader_addline(buffer, " (int)");
+                break;
+
+            case WINED3D_DATA_UINT:
+                shader_addline(buffer, " (uint)");
+                break;
+
+            case WINED3D_DATA_UNORM:
+                shader_addline(buffer, " (unorm)");
+                break;
+
+            case WINED3D_DATA_SNORM:
+                shader_addline(buffer, " (snorm)");
+                break;
+
+            default:
+                shader_addline(buffer, " (unknown)");
+                break;
         }
     }
     else
     {
         /* Pixel shaders 3.0 don't have usage semantics. */
-        if (shader_version->major < 3 && shader_version->type == WINED3D_SHADER_TYPE_PIXEL) return;
-        else TRACE("_");
+        if (shader_version->major < 3 && shader_version->type == WINED3D_SHADER_TYPE_PIXEL)
+            return;
+        else
+            shader_addline(buffer, "_");
 
         switch (semantic->usage)
         {
             case WINED3D_DECL_USAGE_POSITION:
-                TRACE("position%u", semantic->usage_idx);
+                shader_addline(buffer, "position%u", semantic->usage_idx);
                 break;
 
             case WINED3D_DECL_USAGE_BLEND_INDICES:
-                TRACE("blend");
+                shader_addline(buffer, "blend");
                 break;
 
             case WINED3D_DECL_USAGE_BLEND_WEIGHT:
-                TRACE("weight");
+                shader_addline(buffer, "weight");
                 break;
 
             case WINED3D_DECL_USAGE_NORMAL:
-                TRACE("normal%u", semantic->usage_idx);
+                shader_addline(buffer, "normal%u", semantic->usage_idx);
                 break;
 
             case WINED3D_DECL_USAGE_PSIZE:
-                TRACE("psize");
+                shader_addline(buffer, "psize");
                 break;
 
             case WINED3D_DECL_USAGE_COLOR:
-                if (!semantic->usage_idx) TRACE("color");
-                else TRACE("specular%u", (semantic->usage_idx - 1));
+                if (!semantic->usage_idx)
+                    shader_addline(buffer, "color");
+                else
+                    shader_addline(buffer, "specular%u", (semantic->usage_idx - 1));
                 break;
 
             case WINED3D_DECL_USAGE_TEXCOORD:
-                TRACE("texture%u", semantic->usage_idx);
+                shader_addline(buffer, "texture%u", semantic->usage_idx);
                 break;
 
             case WINED3D_DECL_USAGE_TANGENT:
-                TRACE("tangent");
+                shader_addline(buffer, "tangent");
                 break;
 
             case WINED3D_DECL_USAGE_BINORMAL:
-                TRACE("binormal");
+                shader_addline(buffer, "binormal");
                 break;
 
             case WINED3D_DECL_USAGE_TESS_FACTOR:
-                TRACE("tessfactor");
+                shader_addline(buffer, "tessfactor");
                 break;
 
             case WINED3D_DECL_USAGE_POSITIONT:
-                TRACE("positionT%u", semantic->usage_idx);
+                shader_addline(buffer, "positionT%u", semantic->usage_idx);
                 break;
 
             case WINED3D_DECL_USAGE_FOG:
-                TRACE("fog");
+                shader_addline(buffer, "fog");
                 break;
 
             case WINED3D_DECL_USAGE_DEPTH:
-                TRACE("depth");
+                shader_addline(buffer, "depth");
                 break;
 
             case WINED3D_DECL_USAGE_SAMPLE:
-                TRACE("sample");
+                shader_addline(buffer, "sample");
                 break;
 
             default:
+                shader_addline(buffer, "<unknown_semantic(%#x)>", semantic->usage);
                 FIXME("unknown_semantics(0x%08x)", semantic->usage);
         }
     }
 }
 
-static void shader_dump_register(const struct wined3d_shader_register *reg,
-        const struct wined3d_shader_version *shader_version)
+static void shader_dump_register(struct wined3d_string_buffer *buffer,
+        const struct wined3d_shader_register *reg, const struct wined3d_shader_version *shader_version)
 {
     static const char * const rastout_reg_names[] = {"oPos", "oFog", "oPts"};
     static const char * const misctype_reg_names[] = {"vPos", "vFace"};
@@ -934,125 +1449,136 @@ static void shader_dump_register(const struct wined3d_shader_register *reg,
     switch (reg->type)
     {
         case WINED3DSPR_TEMP:
-            TRACE("r");
+            shader_addline(buffer, "r");
             break;
 
         case WINED3DSPR_INPUT:
-            TRACE("v");
+            shader_addline(buffer, "v");
             break;
 
         case WINED3DSPR_CONST:
         case WINED3DSPR_CONST2:
         case WINED3DSPR_CONST3:
         case WINED3DSPR_CONST4:
-            TRACE("c");
+            shader_addline(buffer, "c");
             offset = shader_get_float_offset(reg->type, offset);
             break;
 
         case WINED3DSPR_TEXTURE: /* vs: case WINED3DSPR_ADDR */
-            TRACE("%c", shader_version->type == WINED3D_SHADER_TYPE_PIXEL ? 't' : 'a');
+            shader_addline(buffer, "%c", shader_version->type == WINED3D_SHADER_TYPE_PIXEL ? 't' : 'a');
             break;
 
         case WINED3DSPR_RASTOUT:
-            TRACE("%s", rastout_reg_names[offset]);
+            shader_addline(buffer, "%s", rastout_reg_names[offset]);
             break;
 
         case WINED3DSPR_COLOROUT:
-            TRACE("oC");
+            shader_addline(buffer, "oC");
             break;
 
         case WINED3DSPR_DEPTHOUT:
-            TRACE("oDepth");
+            shader_addline(buffer, "oDepth");
             break;
 
         case WINED3DSPR_ATTROUT:
-            TRACE("oD");
+            shader_addline(buffer, "oD");
             break;
 
         case WINED3DSPR_TEXCRDOUT:
             /* Vertex shaders >= 3.0 use general purpose output registers
              * (WINED3DSPR_OUTPUT), which can include an address token. */
-            if (shader_version->major >= 3) TRACE("o");
-            else TRACE("oT");
+            if (shader_version->major >= 3)
+                shader_addline(buffer, "o");
+            else
+                shader_addline(buffer, "oT");
             break;
 
         case WINED3DSPR_CONSTINT:
-            TRACE("i");
+            shader_addline(buffer, "i");
             break;
 
         case WINED3DSPR_CONSTBOOL:
-            TRACE("b");
+            shader_addline(buffer, "b");
             break;
 
         case WINED3DSPR_LABEL:
-            TRACE("l");
+            shader_addline(buffer, "l");
             break;
 
         case WINED3DSPR_LOOP:
-            TRACE("aL");
+            shader_addline(buffer, "aL");
             break;
 
         case WINED3DSPR_SAMPLER:
-            TRACE("s");
+            shader_addline(buffer, "s");
             break;
 
         case WINED3DSPR_MISCTYPE:
             if (offset > 1)
+            {
                 FIXME("Unhandled misctype register %u.\n", offset);
+                shader_addline(buffer, "<unhandled misctype %#x>", offset);
+            }
             else
-                TRACE("%s", misctype_reg_names[offset]);
+            {
+                shader_addline(buffer, "%s", misctype_reg_names[offset]);
+            }
             break;
 
         case WINED3DSPR_PREDICATE:
-            TRACE("p");
+            shader_addline(buffer, "p");
             break;
 
         case WINED3DSPR_IMMCONST:
-            TRACE("l");
+            shader_addline(buffer, "l");
             break;
 
         case WINED3DSPR_CONSTBUFFER:
-            TRACE("cb");
+            shader_addline(buffer, "cb");
+            break;
+
+        case WINED3DSPR_IMMCONSTBUFFER:
+            shader_addline(buffer, "icb");
             break;
 
         case WINED3DSPR_PRIMID:
-            TRACE("primID");
+            shader_addline(buffer, "primID");
             break;
 
         case WINED3DSPR_NULL:
-            TRACE("null");
+            shader_addline(buffer, "null");
             break;
 
         case WINED3DSPR_RESOURCE:
-            TRACE("t");
+            shader_addline(buffer, "t");
             break;
 
         default:
-            TRACE("unhandled_rtype(%#x)", reg->type);
+            shader_addline(buffer, "<unhandled_rtype(%#x)>", reg->type);
             break;
     }
 
     if (reg->type == WINED3DSPR_IMMCONST)
     {
-        TRACE("(");
+        shader_addline(buffer, "(");
         switch (reg->immconst_type)
         {
             case WINED3D_IMMCONST_SCALAR:
                 switch (reg->data_type)
                 {
                     case WINED3D_DATA_FLOAT:
-                        TRACE("%.8e", *(const float *)reg->immconst_data);
+                        shader_addline(buffer, "%.8e", *(const float *)reg->immconst_data);
                         break;
                     case WINED3D_DATA_INT:
-                        TRACE("%d", reg->immconst_data[0]);
+                        shader_addline(buffer, "%d", reg->immconst_data[0]);
                         break;
                     case WINED3D_DATA_RESOURCE:
                     case WINED3D_DATA_SAMPLER:
                     case WINED3D_DATA_UINT:
-                        TRACE("%u", reg->immconst_data[0]);
+                        shader_addline(buffer, "%u", reg->immconst_data[0]);
                         break;
                     default:
-                        TRACE("<unhandled data type %#x>", reg->data_type);
+                        shader_addline(buffer, "<unhandled data type %#x>", reg->data_type);
                         break;
                 }
                 break;
@@ -1061,83 +1587,87 @@ static void shader_dump_register(const struct wined3d_shader_register *reg,
                 switch (reg->data_type)
                 {
                     case WINED3D_DATA_FLOAT:
-                        TRACE("%.8e, %.8e, %.8e, %.8e",
+                        shader_addline(buffer, "%.8e, %.8e, %.8e, %.8e",
                                 *(const float *)&reg->immconst_data[0], *(const float *)&reg->immconst_data[1],
                                 *(const float *)&reg->immconst_data[2], *(const float *)&reg->immconst_data[3]);
                         break;
                     case WINED3D_DATA_INT:
-                        TRACE("%d, %d, %d, %d",
+                        shader_addline(buffer, "%d, %d, %d, %d",
                                 reg->immconst_data[0], reg->immconst_data[1],
                                 reg->immconst_data[2], reg->immconst_data[3]);
                         break;
                     case WINED3D_DATA_RESOURCE:
                     case WINED3D_DATA_SAMPLER:
                     case WINED3D_DATA_UINT:
-                        TRACE("%u, %u, %u, %u",
+                        shader_addline(buffer, "%u, %u, %u, %u",
                                 reg->immconst_data[0], reg->immconst_data[1],
                                 reg->immconst_data[2], reg->immconst_data[3]);
                         break;
                     default:
-                        TRACE("<unhandled data type %#x>", reg->data_type);
+                        shader_addline(buffer, "<unhandled data type %#x>", reg->data_type);
                         break;
                 }
                 break;
 
             default:
-                TRACE("<unhandled immconst_type %#x>", reg->immconst_type);
+                shader_addline(buffer, "<unhandled immconst_type %#x>", reg->immconst_type);
                 break;
         }
-        TRACE(")");
+        shader_addline(buffer, ")");
     }
     else if (reg->type != WINED3DSPR_RASTOUT
             && reg->type != WINED3DSPR_MISCTYPE
             && reg->type != WINED3DSPR_NULL)
     {
-        if (offset != ~0U)
+        if (offset != ~0u)
         {
-            TRACE("[");
+            shader_addline(buffer, "[");
             if (reg->idx[0].rel_addr)
             {
-                shader_dump_src_param(reg->idx[0].rel_addr, shader_version);
-                TRACE(" + ");
+                shader_dump_src_param(buffer, reg->idx[0].rel_addr, shader_version);
+                shader_addline(buffer, " + ");
             }
-            TRACE("%u]", offset);
+            shader_addline(buffer, "%u]", offset);
 
-            if (reg->idx[1].offset != ~0U)
+            if (reg->idx[1].offset != ~0u)
             {
-                TRACE("[");
+                shader_addline(buffer, "[");
                 if (reg->idx[1].rel_addr)
                 {
-                    shader_dump_src_param(reg->idx[1].rel_addr, shader_version);
-                    TRACE(" + ");
+                    shader_dump_src_param(buffer, reg->idx[1].rel_addr, shader_version);
+                    shader_addline(buffer, " + ");
                 }
-                TRACE("%u]", reg->idx[1].offset);
+                shader_addline(buffer, "%u]", reg->idx[1].offset);
             }
         }
     }
 }
 
-void shader_dump_dst_param(const struct wined3d_shader_dst_param *param,
-        const struct wined3d_shader_version *shader_version)
+static void shader_dump_dst_param(struct wined3d_string_buffer *buffer,
+        const struct wined3d_shader_dst_param *param, const struct wined3d_shader_version *shader_version)
 {
     DWORD write_mask = param->write_mask;
 
-    shader_dump_register(&param->reg, shader_version);
+    shader_dump_register(buffer, &param->reg, shader_version);
 
     if (write_mask && write_mask != WINED3DSP_WRITEMASK_ALL)
     {
-        static const char *write_mask_chars = "xyzw";
+        static const char write_mask_chars[] = "xyzw";
 
-        TRACE(".");
-        if (write_mask & WINED3DSP_WRITEMASK_0) TRACE("%c", write_mask_chars[0]);
-        if (write_mask & WINED3DSP_WRITEMASK_1) TRACE("%c", write_mask_chars[1]);
-        if (write_mask & WINED3DSP_WRITEMASK_2) TRACE("%c", write_mask_chars[2]);
-        if (write_mask & WINED3DSP_WRITEMASK_3) TRACE("%c", write_mask_chars[3]);
+        shader_addline(buffer, ".");
+        if (write_mask & WINED3DSP_WRITEMASK_0)
+            shader_addline(buffer, "%c", write_mask_chars[0]);
+        if (write_mask & WINED3DSP_WRITEMASK_1)
+            shader_addline(buffer, "%c", write_mask_chars[1]);
+        if (write_mask & WINED3DSP_WRITEMASK_2)
+            shader_addline(buffer, "%c", write_mask_chars[2]);
+        if (write_mask & WINED3DSP_WRITEMASK_3)
+            shader_addline(buffer, "%c", write_mask_chars[3]);
     }
 }
 
-void shader_dump_src_param(const struct wined3d_shader_src_param *param,
-        const struct wined3d_shader_version *shader_version)
+static void shader_dump_src_param(struct wined3d_string_buffer *buffer,
+        const struct wined3d_shader_src_param *param, const struct wined3d_shader_version *shader_version)
 {
     enum wined3d_shader_src_modifier src_modifier = param->modifiers;
     DWORD swizzle = param->swizzle;
@@ -1147,42 +1677,39 @@ void shader_dump_src_param(const struct wined3d_shader_src_param *param,
             || src_modifier == WINED3DSPSM_SIGNNEG
             || src_modifier == WINED3DSPSM_X2NEG
             || src_modifier == WINED3DSPSM_ABSNEG)
-        TRACE("-");
+        shader_addline(buffer, "-");
     else if (src_modifier == WINED3DSPSM_COMP)
-        TRACE("1-");
+        shader_addline(buffer, "1-");
     else if (src_modifier == WINED3DSPSM_NOT)
-        TRACE("!");
+        shader_addline(buffer, "!");
 
     if (src_modifier == WINED3DSPSM_ABS || src_modifier == WINED3DSPSM_ABSNEG)
-        TRACE("abs(");
+        shader_addline(buffer, "abs(");
 
-    shader_dump_register(&param->reg, shader_version);
+    shader_dump_register(buffer, &param->reg, shader_version);
 
-    if (src_modifier)
+    switch (src_modifier)
     {
-        switch (src_modifier)
-        {
-            case WINED3DSPSM_NONE:    break;
-            case WINED3DSPSM_NEG:     break;
-            case WINED3DSPSM_NOT:     break;
-            case WINED3DSPSM_BIAS:    TRACE("_bias"); break;
-            case WINED3DSPSM_BIASNEG: TRACE("_bias"); break;
-            case WINED3DSPSM_SIGN:    TRACE("_bx2"); break;
-            case WINED3DSPSM_SIGNNEG: TRACE("_bx2"); break;
-            case WINED3DSPSM_COMP:    break;
-            case WINED3DSPSM_X2:      TRACE("_x2"); break;
-            case WINED3DSPSM_X2NEG:   TRACE("_x2"); break;
-            case WINED3DSPSM_DZ:      TRACE("_dz"); break;
-            case WINED3DSPSM_DW:      TRACE("_dw"); break;
-            case WINED3DSPSM_ABSNEG:  TRACE(")"); break;
-            case WINED3DSPSM_ABS:     TRACE(")"); break;
-            default:                  TRACE("_unknown_modifier(%#x)", src_modifier);
-        }
+        case WINED3DSPSM_NONE:    break;
+        case WINED3DSPSM_NEG:     break;
+        case WINED3DSPSM_NOT:     break;
+        case WINED3DSPSM_BIAS:    shader_addline(buffer, "_bias"); break;
+        case WINED3DSPSM_BIASNEG: shader_addline(buffer, "_bias"); break;
+        case WINED3DSPSM_SIGN:    shader_addline(buffer, "_bx2"); break;
+        case WINED3DSPSM_SIGNNEG: shader_addline(buffer, "_bx2"); break;
+        case WINED3DSPSM_COMP:    break;
+        case WINED3DSPSM_X2:      shader_addline(buffer, "_x2"); break;
+        case WINED3DSPSM_X2NEG:   shader_addline(buffer, "_x2"); break;
+        case WINED3DSPSM_DZ:      shader_addline(buffer, "_dz"); break;
+        case WINED3DSPSM_DW:      shader_addline(buffer, "_dw"); break;
+        case WINED3DSPSM_ABSNEG:  shader_addline(buffer, ")"); break;
+        case WINED3DSPSM_ABS:     shader_addline(buffer, ")"); break;
+        default:                  shader_addline(buffer, "_unknown_modifier(%#x)", src_modifier);
     }
 
     if (swizzle != WINED3DSP_NOSWIZZLE)
     {
-        static const char *swizzle_chars = "xyzw";
+        static const char swizzle_chars[] = "xyzw";
         DWORD swizzle_x = swizzle & 0x03;
         DWORD swizzle_y = (swizzle >> 2) & 0x03;
         DWORD swizzle_z = (swizzle >> 4) & 0x03;
@@ -1192,11 +1719,11 @@ void shader_dump_src_param(const struct wined3d_shader_src_param *param,
                 && swizzle_x == swizzle_z
                 && swizzle_x == swizzle_w)
         {
-            TRACE(".%c", swizzle_chars[swizzle_x]);
+            shader_addline(buffer, ".%c", swizzle_chars[swizzle_x]);
         }
         else
         {
-            TRACE(".%c%c%c%c", swizzle_chars[swizzle_x], swizzle_chars[swizzle_y],
+            shader_addline(buffer, ".%c%c%c%c", swizzle_chars[swizzle_x], swizzle_chars[swizzle_y],
                     swizzle_chars[swizzle_z], swizzle_chars[swizzle_w]);
         }
     }
@@ -1204,7 +1731,7 @@ void shader_dump_src_param(const struct wined3d_shader_src_param *param,
 
 /* Shared code in order to generate the bulk of the shader string.
  * NOTE: A description of how to parse tokens can be found on MSDN. */
-void shader_generate_main(const struct wined3d_shader *shader, struct wined3d_shader_buffer *buffer,
+void shader_generate_main(const struct wined3d_shader *shader, struct wined3d_string_buffer *buffer,
         const struct wined3d_shader_reg_maps *reg_maps, const DWORD *byte_code, void *backend_ctx)
 {
     struct wined3d_device *device = shader->device;
@@ -1253,69 +1780,103 @@ void shader_generate_main(const struct wined3d_shader *shader, struct wined3d_sh
     }
 }
 
-static void shader_dump_ins_modifiers(const struct wined3d_shader_dst_param *dst)
+static void shader_dump_ins_modifiers(struct wined3d_string_buffer *buffer,
+        const struct wined3d_shader_dst_param *dst)
 {
     DWORD mmask = dst->modifiers;
 
     switch (dst->shift)
     {
         case 0: break;
-        case 13: TRACE("_d8"); break;
-        case 14: TRACE("_d4"); break;
-        case 15: TRACE("_d2"); break;
-        case 1: TRACE("_x2"); break;
-        case 2: TRACE("_x4"); break;
-        case 3: TRACE("_x8"); break;
-        default: TRACE("_unhandled_shift(%d)", dst->shift); break;
+        case 13: shader_addline(buffer, "_d8"); break;
+        case 14: shader_addline(buffer, "_d4"); break;
+        case 15: shader_addline(buffer, "_d2"); break;
+        case 1: shader_addline(buffer, "_x2"); break;
+        case 2: shader_addline(buffer, "_x4"); break;
+        case 3: shader_addline(buffer, "_x8"); break;
+        default: shader_addline(buffer, "_unhandled_shift(%d)", dst->shift); break;
     }
 
-    if (mmask & WINED3DSPDM_SATURATE)         TRACE("_sat");
-    if (mmask & WINED3DSPDM_PARTIALPRECISION) TRACE("_pp");
-    if (mmask & WINED3DSPDM_MSAMPCENTROID)    TRACE("_centroid");
+    if (mmask & WINED3DSPDM_SATURATE)         shader_addline(buffer, "_sat");
+    if (mmask & WINED3DSPDM_PARTIALPRECISION) shader_addline(buffer, "_pp");
+    if (mmask & WINED3DSPDM_MSAMPCENTROID)    shader_addline(buffer, "_centroid");
 
     mmask &= ~(WINED3DSPDM_SATURATE | WINED3DSPDM_PARTIALPRECISION | WINED3DSPDM_MSAMPCENTROID);
     if (mmask) FIXME("_unrecognized_modifier(%#x)", mmask);
 }
 
-static void shader_dump_primitive_type(enum wined3d_primitive_type primitive_type)
+static void shader_dump_primitive_type(struct wined3d_string_buffer *buffer,
+        enum wined3d_primitive_type primitive_type)
 {
     switch (primitive_type)
     {
         case WINED3D_PT_UNDEFINED:
-            TRACE("undefined");
+            shader_addline(buffer, "undefined");
             break;
         case WINED3D_PT_POINTLIST:
-            TRACE("pointlist");
+            shader_addline(buffer, "pointlist");
             break;
         case WINED3D_PT_LINELIST:
-            TRACE("linelist");
+            shader_addline(buffer, "linelist");
             break;
         case WINED3D_PT_LINESTRIP:
-            TRACE("linestrip");
+            shader_addline(buffer, "linestrip");
             break;
         case WINED3D_PT_TRIANGLELIST:
-            TRACE("trianglelist");
+            shader_addline(buffer, "trianglelist");
             break;
         case WINED3D_PT_TRIANGLESTRIP:
-            TRACE("trianglestrip");
+            shader_addline(buffer, "trianglestrip");
             break;
         case WINED3D_PT_TRIANGLEFAN:
-            TRACE("trianglefan");
+            shader_addline(buffer, "trianglefan");
             break;
         case WINED3D_PT_LINELIST_ADJ:
-            TRACE("linelist_adj");
+            shader_addline(buffer, "linelist_adj");
             break;
         case WINED3D_PT_LINESTRIP_ADJ:
-            TRACE("linestrip_adj");
+            shader_addline(buffer, "linestrip_adj");
             break;
         case WINED3D_PT_TRIANGLELIST_ADJ:
-            TRACE("trianglelist_adj");
+            shader_addline(buffer, "trianglelist_adj");
             break;
         case WINED3D_PT_TRIANGLESTRIP_ADJ:
-            TRACE("trianglestrip_adj");
+            shader_addline(buffer, "trianglestrip_adj");
             break;
         default:
-            TRACE("<unrecognized_primitive_type %#x>", primitive_type);
+            shader_addline(buffer, "<unrecognized_primitive_type %#x>", primitive_type);
+            break;
+    }
+}
+
+static void shader_dump_interpolation_mode(struct wined3d_string_buffer *buffer,
+        enum wined3d_shader_interpolation_mode interpolation_mode)
+{
+    switch (interpolation_mode)
+    {
+        case WINED3DSIM_CONSTANT:
+            shader_addline(buffer, "constant");
+            break;
+        case WINED3DSIM_LINEAR:
+            shader_addline(buffer, "linear");
+            break;
+        case WINED3DSIM_LINEAR_CENTROID:
+            shader_addline(buffer, "linear centroid");
+            break;
+        case WINED3DSIM_LINEAR_NOPERSPECTIVE:
+            shader_addline(buffer, "linear noperspective");
+            break;
+        case WINED3DSIM_LINEAR_SAMPLE:
+            shader_addline(buffer, "linear sample");
+            break;
+        case WINED3DSIM_LINEAR_NOPERSPECTIVE_CENTROID:
+            shader_addline(buffer, "linear noperspective centroid");
+            break;
+        case WINED3DSIM_LINEAR_NOPERSPECTIVE_SAMPLE:
+            shader_addline(buffer, "linear noperspective sample");
+            break;
+        default:
+            shader_addline(buffer, "<unrecognized_interpolation_mode %#x>", interpolation_mode);
             break;
     }
 }
@@ -1323,9 +1884,17 @@ static void shader_dump_primitive_type(enum wined3d_primitive_type primitive_typ
 static void shader_trace_init(const struct wined3d_shader_frontend *fe, void *fe_data, const DWORD *byte_code)
 {
     struct wined3d_shader_version shader_version;
+    struct wined3d_string_buffer buffer;
     const DWORD *ptr = byte_code;
     const char *type_prefix;
+    const char *p, *q;
     DWORD i;
+
+    if (!string_buffer_init(&buffer))
+    {
+        ERR("Failed to initialize string buffer.\n");
+        return;
+    }
 
     TRACE("Parsing %p.\n", byte_code);
 
@@ -1351,7 +1920,7 @@ static void shader_trace_init(const struct wined3d_shader_frontend *fe, void *fe
             break;
     }
 
-    TRACE("%s_%u_%u\n", type_prefix, shader_version.major, shader_version.minor);
+    shader_addline(&buffer, "%s_%u_%u\n", type_prefix, shader_version.major, shader_version.minor);
 
     while (!fe->shader_is_end(fe_data, &ptr))
     {
@@ -1360,36 +1929,96 @@ static void shader_trace_init(const struct wined3d_shader_frontend *fe, void *fe
         fe->shader_read_instruction(fe_data, &ptr, &ins);
         if (ins.handler_idx == WINED3DSIH_TABLE_SIZE)
         {
-            TRACE("Skipping unrecognized instruction.\n");
+            WARN("Skipping unrecognized instruction.\n");
+            shader_addline(&buffer, "<unrecognized instruction>\n");
             continue;
         }
 
         if (ins.handler_idx == WINED3DSIH_DCL)
         {
-            shader_dump_decl_usage(&ins.declaration.semantic, &shader_version);
-            shader_dump_ins_modifiers(&ins.declaration.semantic.reg);
-            TRACE(" ");
-            shader_dump_dst_param(&ins.declaration.semantic.reg, &shader_version);
+            shader_dump_decl_usage(&buffer, &ins.declaration.semantic, &shader_version);
+            shader_dump_ins_modifiers(&buffer, &ins.declaration.semantic.reg);
+            shader_addline(&buffer, " ");
+            shader_dump_dst_param(&buffer, &ins.declaration.semantic.reg, &shader_version);
         }
         else if (ins.handler_idx == WINED3DSIH_DCL_CONSTANT_BUFFER)
         {
-            TRACE("%s ", shader_opcode_names[ins.handler_idx]);
-            shader_dump_src_param(&ins.declaration.src, &shader_version);
-            TRACE(", %s", ins.flags & WINED3DSI_INDEXED_DYNAMIC ? "dynamicIndexed" : "immediateIndexed");
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_src_param(&buffer, &ins.declaration.src, &shader_version);
+            shader_addline(&buffer, ", %s",
+                    ins.flags & WINED3DSI_INDEXED_DYNAMIC ? "dynamicIndexed" : "immediateIndexed");
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_GLOBAL_FLAGS)
+        {
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_global_flags(&buffer, ins.flags);
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_IMMEDIATE_CONSTANT_BUFFER)
+        {
+            shader_addline(&buffer, "%s {\n", shader_opcode_names[ins.handler_idx]);
+            for (i = 0; i < ins.declaration.icb->element_count / 4; ++i)
+            {
+                shader_addline(&buffer, "    {0x%08x, 0x%08x, 0x%08x, 0x%08x},\n",
+                        ins.declaration.icb->data[4 * i + 0],
+                        ins.declaration.icb->data[4 * i + 1],
+                        ins.declaration.icb->data[4 * i + 2],
+                        ins.declaration.icb->data[4 * i + 3]);
+            }
+            shader_addline(&buffer, "}");
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_INPUT_PS)
+        {
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_interpolation_mode(&buffer, ins.flags);
+            shader_addline(&buffer, " ");
+            shader_dump_dst_param(&buffer, &ins.declaration.dst, &shader_version);
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_INPUT_PS_SGV
+                || ins.handler_idx == WINED3DSIH_DCL_INPUT_SGV
+                || ins.handler_idx == WINED3DSIH_DCL_INPUT_SIV
+                || ins.handler_idx == WINED3DSIH_DCL_OUTPUT_SIV)
+        {
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_dst_param(&buffer, &ins.declaration.register_semantic.reg, &shader_version);
+            shader_addline(&buffer, ", ");
+            shader_dump_sysval_semantic(&buffer, ins.declaration.register_semantic.sysval_semantic);
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_INPUT_PS_SIV)
+        {
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_interpolation_mode(&buffer, ins.flags);
+            shader_addline(&buffer, " ");
+            shader_dump_dst_param(&buffer, &ins.declaration.register_semantic.reg, &shader_version);
+            shader_addline(&buffer, ", ");
+            shader_dump_sysval_semantic(&buffer, ins.declaration.register_semantic.sysval_semantic);
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_INPUT
+                || ins.handler_idx == WINED3DSIH_DCL_OUTPUT)
+        {
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_dst_param(&buffer, &ins.declaration.dst, &shader_version);
         }
         else if (ins.handler_idx == WINED3DSIH_DCL_INPUT_PRIMITIVE
                 || ins.handler_idx == WINED3DSIH_DCL_OUTPUT_TOPOLOGY)
         {
-            TRACE("%s ", shader_opcode_names[ins.handler_idx]);
-            shader_dump_primitive_type(ins.declaration.primitive_type);
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_primitive_type(&buffer, ins.declaration.primitive_type);
         }
-        else if (ins.handler_idx == WINED3DSIH_DCL_VERTICES_OUT)
+        else if (ins.handler_idx == WINED3DSIH_DCL_SAMPLER)
         {
-            TRACE("%s %u", shader_opcode_names[ins.handler_idx], ins.declaration.count);
+            shader_addline(&buffer, "%s ", shader_opcode_names[ins.handler_idx]);
+            shader_dump_dst_param(&buffer, &ins.declaration.dst, &shader_version);
+            if (ins.flags == WINED3DSI_SAMPLER_COMPARISON_MODE)
+                shader_addline(&buffer, ", comparisonMode");
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_TEMPS
+                || ins.handler_idx == WINED3DSIH_DCL_VERTICES_OUT)
+        {
+            shader_addline(&buffer, "%s %u", shader_opcode_names[ins.handler_idx], ins.declaration.count);
         }
         else if (ins.handler_idx == WINED3DSIH_DEF)
         {
-            TRACE("def c%u = %f, %f, %f, %f", shader_get_float_offset(ins.dst[0].reg.type,
+            shader_addline(&buffer, "def c%u = %.8e, %.8e, %.8e, %.8e", shader_get_float_offset(ins.dst[0].reg.type,
                     ins.dst[0].reg.idx[0].offset),
                     *(const float *)&ins.src[0].reg.immconst_data[0],
                     *(const float *)&ins.src[0].reg.immconst_data[1],
@@ -1398,7 +2027,7 @@ static void shader_trace_init(const struct wined3d_shader_frontend *fe, void *fe
         }
         else if (ins.handler_idx == WINED3DSIH_DEFI)
         {
-            TRACE("defi i%u = %d, %d, %d, %d", ins.dst[0].reg.idx[0].offset,
+            shader_addline(&buffer, "defi i%u = %d, %d, %d, %d", ins.dst[0].reg.idx[0].offset,
                     ins.src[0].reg.immconst_data[0],
                     ins.src[0].reg.immconst_data[1],
                     ins.src[0].reg.immconst_data[2],
@@ -1406,65 +2035,96 @@ static void shader_trace_init(const struct wined3d_shader_frontend *fe, void *fe
         }
         else if (ins.handler_idx == WINED3DSIH_DEFB)
         {
-            TRACE("defb b%u = %s", ins.dst[0].reg.idx[0].offset, ins.src[0].reg.immconst_data[0] ? "true" : "false");
+            shader_addline(&buffer, "defb b%u = %s",
+                    ins.dst[0].reg.idx[0].offset, ins.src[0].reg.immconst_data[0] ? "true" : "false");
         }
         else
         {
             if (ins.predicate)
             {
-                TRACE("(");
-                shader_dump_src_param(ins.predicate, &shader_version);
-                TRACE(") ");
+                shader_addline(&buffer, "(");
+                shader_dump_src_param(&buffer, ins.predicate, &shader_version);
+                shader_addline(&buffer, ") ");
             }
 
             /* PixWin marks instructions with the coissue flag with a '+' */
-            if (ins.coissue) TRACE("+");
+            if (ins.coissue)
+                shader_addline(&buffer, "+");
 
-            TRACE("%s", shader_opcode_names[ins.handler_idx]);
+            shader_addline(&buffer, "%s", shader_opcode_names[ins.handler_idx]);
 
             if (ins.handler_idx == WINED3DSIH_IFC
                     || ins.handler_idx == WINED3DSIH_BREAKC)
             {
                 switch (ins.flags)
                 {
-                    case WINED3D_SHADER_REL_OP_GT: TRACE("_gt"); break;
-                    case WINED3D_SHADER_REL_OP_EQ: TRACE("_eq"); break;
-                    case WINED3D_SHADER_REL_OP_GE: TRACE("_ge"); break;
-                    case WINED3D_SHADER_REL_OP_LT: TRACE("_lt"); break;
-                    case WINED3D_SHADER_REL_OP_NE: TRACE("_ne"); break;
-                    case WINED3D_SHADER_REL_OP_LE: TRACE("_le"); break;
-                    default: TRACE("_(%u)", ins.flags);
+                    case WINED3D_SHADER_REL_OP_GT: shader_addline(&buffer, "_gt"); break;
+                    case WINED3D_SHADER_REL_OP_EQ: shader_addline(&buffer, "_eq"); break;
+                    case WINED3D_SHADER_REL_OP_GE: shader_addline(&buffer, "_ge"); break;
+                    case WINED3D_SHADER_REL_OP_LT: shader_addline(&buffer, "_lt"); break;
+                    case WINED3D_SHADER_REL_OP_NE: shader_addline(&buffer, "_ne"); break;
+                    case WINED3D_SHADER_REL_OP_LE: shader_addline(&buffer, "_le"); break;
+                    default: shader_addline(&buffer, "_(%u)", ins.flags);
                 }
             }
             else if (ins.handler_idx == WINED3DSIH_TEX
                     && shader_version.major >= 2
                     && (ins.flags & WINED3DSI_TEXLD_PROJECT))
             {
-                TRACE("p");
+                shader_addline(&buffer, "p");
+            }
+            else if (ins.handler_idx == WINED3DSIH_RESINFO
+                    && ins.flags)
+            {
+                switch (ins.flags)
+                {
+                    case WINED3DSI_RESINFO_RCP_FLOAT: shader_addline(&buffer, "_rcpFloat"); break;
+                    case WINED3DSI_RESINFO_UINT: shader_addline(&buffer, "_uint"); break;
+                    default: shader_addline(&buffer, "_unrecognized(%#x)", ins.flags);
+                }
             }
 
             for (i = 0; i < ins.dst_count; ++i)
             {
-                shader_dump_ins_modifiers(&ins.dst[i]);
-                TRACE(!i ? " " : ", ");
-                shader_dump_dst_param(&ins.dst[i], &shader_version);
+                shader_dump_ins_modifiers(&buffer, &ins.dst[i]);
+                shader_addline(&buffer, !i ? " " : ", ");
+                shader_dump_dst_param(&buffer, &ins.dst[i], &shader_version);
             }
 
             /* Other source tokens */
             for (i = ins.dst_count; i < (ins.dst_count + ins.src_count); ++i)
             {
-                TRACE(!i ? " " : ", ");
-                shader_dump_src_param(&ins.src[i - ins.dst_count], &shader_version);
+                shader_addline(&buffer, !i ? " " : ", ");
+                shader_dump_src_param(&buffer, &ins.src[i - ins.dst_count], &shader_version);
             }
         }
-        TRACE("\n");
+        shader_addline(&buffer, "\n");
     }
+
+    for (p = buffer.buffer; *p; p = q)
+    {
+        if (!(q = strstr(p, "\n")))
+            q = p + strlen(p);
+        else
+            ++q;
+        TRACE("    %.*s", (int)(q - p), p);
+    }
+
+    string_buffer_free(&buffer);
 }
 
+#if defined(STAGING_CSMT)
+void shader_cleanup(struct wined3d_shader *shader)
+#else  /* STAGING_CSMT */
 static void shader_cleanup(struct wined3d_shader *shader)
+#endif /* STAGING_CSMT */
 {
+    HeapFree(GetProcessHeap(), 0, shader->output_signature.elements);
+    HeapFree(GetProcessHeap(), 0, shader->input_signature.elements);
+    HeapFree(GetProcessHeap(), 0, shader->signature_strings);
     shader->device->shader_backend->shader_destroy(shader);
     HeapFree(GetProcessHeap(), 0, shader->reg_maps.constf);
+    HeapFree(GetProcessHeap(), 0, shader->reg_maps.sampler_map.entries);
     HeapFree(GetProcessHeap(), 0, shader->function);
     shader_delete_constant_list(&shader->constantsF);
     shader_delete_constant_list(&shader->constantsB);
@@ -1477,52 +2137,80 @@ static void shader_cleanup(struct wined3d_shader *shader)
 
 struct shader_none_priv
 {
+    const struct wined3d_vertex_pipe_ops *vertex_pipe;
     const struct fragment_pipeline *fragment_pipe;
     BOOL ffp_proj_control;
 };
 
 static void shader_none_handle_instruction(const struct wined3d_shader_instruction *ins) {}
 static void shader_none_select_depth_blt(void *shader_priv, const struct wined3d_gl_info *gl_info,
-        enum tex_types tex_type, const SIZE *ds_mask_size) {}
+        enum wined3d_gl_resource_type tex_type, const SIZE *ds_mask_size) {}
 static void shader_none_deselect_depth_blt(void *shader_priv, const struct wined3d_gl_info *gl_info) {}
 static void shader_none_update_float_vertex_constants(struct wined3d_device *device, UINT start, UINT count) {}
 static void shader_none_update_float_pixel_constants(struct wined3d_device *device, UINT start, UINT count) {}
-static void shader_none_load_constants(const struct wined3d_context *context, BOOL usePS, BOOL useVS) {}
-static void shader_none_load_np2fixup_constants(void *shader_priv,
-        const struct wined3d_gl_info *gl_info, const struct wined3d_state *state) {}
+static void shader_none_load_constants(void *shader_priv, struct wined3d_context *context,
+        const struct wined3d_state *state) {}
 static void shader_none_destroy(struct wined3d_shader *shader) {}
-static void shader_none_context_destroyed(void *shader_priv, const struct wined3d_context *context) {}
+static void shader_none_free_context_data(struct wined3d_context *context) {}
+static void shader_none_init_context_state(struct wined3d_context *context) {}
 
-static void shader_none_select(const struct wined3d_context *context, enum wined3d_shader_mode vertex_mode,
-        enum wined3d_shader_mode fragment_mode)
+/* Context activation is done by the caller. */
+static void shader_none_select(void *shader_priv, struct wined3d_context *context,
+        const struct wined3d_state *state)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_device *device = context->swapchain->device;
-    struct shader_none_priv *priv = device->shader_priv;
+    struct shader_none_priv *priv = shader_priv;
 
-    priv->fragment_pipe->enable_extension(gl_info, fragment_mode == WINED3D_SHADER_MODE_FFP);
+    priv->vertex_pipe->vp_enable(gl_info, !use_vs(state));
+    priv->fragment_pipe->enable_extension(gl_info, !use_ps(state));
 }
 
-static HRESULT shader_none_alloc(struct wined3d_device *device, const struct fragment_pipeline *fragment_pipe)
+/* Context activation is done by the caller. */
+static void shader_none_disable(void *shader_priv, struct wined3d_context *context)
+{
+    struct shader_none_priv *priv = shader_priv;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
+    priv->vertex_pipe->vp_enable(gl_info, FALSE);
+    priv->fragment_pipe->enable_extension(gl_info, FALSE);
+
+    context->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
+            | (1u << WINED3D_SHADER_TYPE_VERTEX)
+            | (1u << WINED3D_SHADER_TYPE_GEOMETRY);
+}
+
+static HRESULT shader_none_alloc(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
+        const struct fragment_pipeline *fragment_pipe)
 {
     struct fragment_caps fragment_caps;
+    void *vertex_priv, *fragment_priv;
     struct shader_none_priv *priv;
-    void *fragment_priv;
 
     if (!(priv = HeapAlloc(GetProcessHeap(), 0, sizeof(*priv))))
         return E_OUTOFMEMORY;
 
-    if (!(fragment_priv = fragment_pipe->alloc_private(&none_shader_backend, priv)))
+    if (!(vertex_priv = vertex_pipe->vp_alloc(&none_shader_backend, priv)))
     {
-        ERR("Failed to initialize fragment pipe.\n");
+        ERR("Failed to initialize vertex pipe.\n");
         HeapFree(GetProcessHeap(), 0, priv);
         return E_FAIL;
     }
 
+    if (!(fragment_priv = fragment_pipe->alloc_private(&none_shader_backend, priv)))
+    {
+        ERR("Failed to initialize fragment pipe.\n");
+        vertex_pipe->vp_free(device);
+        HeapFree(GetProcessHeap(), 0, priv);
+        return E_FAIL;
+    }
+
+    priv->vertex_pipe = vertex_pipe;
+    priv->fragment_pipe = fragment_pipe;
     fragment_pipe->get_caps(&device->adapter->gl_info, &fragment_caps);
     priv->ffp_proj_control = fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_PROJ_CONTROL;
+
+    device->vertex_priv = vertex_priv;
     device->fragment_priv = fragment_priv;
-    priv->fragment_pipe = fragment_pipe;
     device->shader_priv = priv;
 
     return WINED3D_OK;
@@ -1533,7 +2221,13 @@ static void shader_none_free(struct wined3d_device *device)
     struct shader_none_priv *priv = device->shader_priv;
 
     priv->fragment_pipe->free_private(device);
+    priv->vertex_pipe->vp_free(device);
     HeapFree(GetProcessHeap(), 0, priv);
+}
+
+static BOOL shader_none_allocate_context_data(struct wined3d_context *context)
+{
+    return TRUE;
 }
 
 static void shader_none_get_caps(const struct wined3d_gl_info *gl_info, struct shader_caps *caps)
@@ -1545,6 +2239,7 @@ static void shader_none_get_caps(const struct wined3d_gl_info *gl_info, struct s
     caps->vs_uniform_count = 0;
     caps->ps_uniform_count = 0;
     caps->ps_1x_max_value = 0.0f;
+    caps->varying_count = 0;
     caps->wined3d_caps = 0;
 }
 
@@ -1566,16 +2261,18 @@ const struct wined3d_shader_backend_ops none_shader_backend =
 {
     shader_none_handle_instruction,
     shader_none_select,
+    shader_none_disable,
     shader_none_select_depth_blt,
     shader_none_deselect_depth_blt,
     shader_none_update_float_vertex_constants,
     shader_none_update_float_pixel_constants,
     shader_none_load_constants,
-    shader_none_load_np2fixup_constants,
     shader_none_destroy,
     shader_none_alloc,
     shader_none_free,
-    shader_none_context_destroyed,
+    shader_none_allocate_context_data,
+    shader_none_free_context_data,
+    shader_none_init_context_state,
     shader_none_get_caps,
     shader_none_color_fixup_supported,
     shader_none_has_ffp_proj_control,
@@ -1589,9 +2286,15 @@ static HRESULT shader_set_function(struct wined3d_shader *shader, const DWORD *b
     const struct wined3d_shader_frontend *fe;
     HRESULT hr;
     unsigned int backend_version;
+    const struct wined3d_d3d_info *d3d_info = &shader->device->adapter->d3d_info;
 
-    TRACE("shader %p, byte_code %p, output_signature %p, float_const_count %u.\n",
-            shader, byte_code, output_signature, float_const_count);
+    TRACE("shader %p, byte_code %p, output_signature %p, float_const_count %u, type %#x, max_version %u.\n",
+            shader, byte_code, output_signature, float_const_count, type, max_version);
+
+    list_init(&shader->constantsF);
+    list_init(&shader->constantsB);
+    list_init(&shader->constantsI);
+    shader->lconst_inf_or_nan = FALSE;
 
     fe = shader_select_frontend(*byte_code);
     if (!fe)
@@ -1611,16 +2314,10 @@ static HRESULT shader_set_function(struct wined3d_shader *shader, const DWORD *b
     if (TRACE_ON(d3d_shader))
         shader_trace_init(fe, shader->frontend_data, byte_code);
 
-    /* Initialize immediate constant lists. */
-    list_init(&shader->constantsF);
-    list_init(&shader->constantsB);
-    list_init(&shader->constantsI);
-
     /* Second pass: figure out which registers are used, what the semantics are, etc. */
-    hr = shader_get_registers_used(shader, fe,
-            reg_maps, shader->input_signature, shader->output_signature,
-            byte_code, float_const_count);
-    if (FAILED(hr)) return hr;
+    if (FAILED(hr = shader_get_registers_used(shader, fe, reg_maps, &shader->input_signature,
+            &shader->output_signature, byte_code, float_const_count)))
+        return hr;
 
     if (reg_maps->shader_version.type != type)
     {
@@ -1635,13 +2332,13 @@ static HRESULT shader_set_function(struct wined3d_shader *shader, const DWORD *b
     switch (type)
     {
         case WINED3D_SHADER_TYPE_VERTEX:
-            backend_version = shader->device->vs_version;
+            backend_version = d3d_info->limits.vs_version;
             break;
         case WINED3D_SHADER_TYPE_GEOMETRY:
-            backend_version = shader->device->gs_version;
+            backend_version = d3d_info->limits.gs_version;
             break;
         case WINED3D_SHADER_TYPE_PIXEL:
-            backend_version = shader->device->ps_version;
+            backend_version = d3d_info->limits.ps_version;
             break;
         default:
             FIXME("No backend version-checking for this shader type\n");
@@ -1671,7 +2368,6 @@ ULONG CDECL wined3d_shader_incref(struct wined3d_shader *shader)
     return refcount;
 }
 
-/* Do not call while under the GL lock. */
 ULONG CDECL wined3d_shader_decref(struct wined3d_shader *shader)
 {
     ULONG refcount = InterlockedDecrement(&shader->ref);
@@ -1680,9 +2376,16 @@ ULONG CDECL wined3d_shader_decref(struct wined3d_shader *shader)
 
     if (!refcount)
     {
+#if defined(STAGING_CSMT)
+        const struct wined3d_device *device = shader->device;
+
+        shader->parent_ops->wined3d_object_destroyed(shader->parent);
+        wined3d_cs_emit_shader_cleanup(device->cs, shader);
+#else  /* STAGING_CSMT */
         shader_cleanup(shader);
         shader->parent_ops->wined3d_object_destroyed(shader->parent);
         HeapFree(GetProcessHeap(), 0, shader);
+#endif /* STAGING_CSMT */
     }
 
     return refcount;
@@ -1728,35 +2431,49 @@ HRESULT CDECL wined3d_shader_set_local_constants_float(struct wined3d_shader *sh
 
     TRACE("shader %p, start_idx %u, src_data %p, count %u.\n", shader, start_idx, src_data, count);
 
-    if (end_idx > shader->limits.constant_float)
+    if (end_idx > shader->limits->constant_float)
     {
         WARN("end_idx %u > float constants limit %u.\n",
-                end_idx, shader->limits.constant_float);
-        end_idx = shader->limits.constant_float;
+                end_idx, shader->limits->constant_float);
+        end_idx = shader->limits->constant_float;
     }
 
     for (i = start_idx; i < end_idx; ++i)
     {
         struct wined3d_shader_lconst *lconst = HeapAlloc(GetProcessHeap(), 0, sizeof(*lconst));
+        float *value;
         if (!lconst)
             return E_OUTOFMEMORY;
 
         lconst->idx = i;
-        memcpy(lconst->value, src_data + (i - start_idx) * 4 /* 4 components */, 4 * sizeof(float));
+        value = (float *)lconst->value;
+        memcpy(value, src_data + (i - start_idx) * 4 /* 4 components */, 4 * sizeof(float));
         list_add_head(&shader->constantsF, &lconst->entry);
+
+        if (isinf(value[0]) || isnan(value[0]) || isinf(value[1]) || isnan(value[1])
+                || isinf(value[2]) || isnan(value[2]) || isinf(value[3]) || isnan(value[3]))
+        {
+            shader->lconst_inf_or_nan = TRUE;
+        }
     }
 
     return WINED3D_OK;
 }
 
-void find_vs_compile_args(const struct wined3d_state *state,
-        const struct wined3d_shader *shader, struct vs_compile_args *args)
+void find_vs_compile_args(const struct wined3d_state *state, const struct wined3d_shader *shader,
+        WORD swizzle_map, struct vs_compile_args *args, const struct wined3d_d3d_info *d3d_info)
 {
     args->fog_src = state->render_states[WINED3D_RS_FOGTABLEMODE]
             == WINED3D_FOG_NONE ? VS_FOG_COORD : VS_FOG_Z;
     args->clip_enabled = state->render_states[WINED3D_RS_CLIPPING]
             && state->render_states[WINED3D_RS_CLIPPLANEENABLE];
-    args->swizzle_map = shader->device->strided_streams.swizzle_map;
+    args->point_size = state->gl_primitive_type == GL_POINTS;
+    args->per_vertex_point_size = shader->reg_maps.point_size;
+    args->swizzle_map = swizzle_map;
+    if (d3d_info->emulated_flatshading)
+        args->flatshading = state->render_states[WINED3D_RS_SHADEMODE] == WINED3D_SHADE_FLAT;
+    else
+        args->flatshading = FALSE;
 }
 
 static BOOL match_usage(BYTE usage1, BYTE usage_idx1, BYTE usage2, BYTE usage_idx2)
@@ -1793,195 +2510,180 @@ BOOL vshader_get_input(const struct wined3d_shader *shader,
     return FALSE;
 }
 
-static void vertexshader_set_limits(struct wined3d_shader *shader)
+static HRESULT shader_signature_copy(struct wined3d_shader_signature *dst,
+        const struct wined3d_shader_signature *src, char **signature_strings)
 {
-    DWORD shader_version = WINED3D_SHADER_VERSION(shader->reg_maps.shader_version.major,
-            shader->reg_maps.shader_version.minor);
-    struct wined3d_device *device = shader->device;
+    struct wined3d_shader_signature_element *e;
+    unsigned int i;
+    SIZE_T len;
+    char *ptr;
 
-    shader->limits.packed_input = 0;
+    ptr = *signature_strings;
 
-    switch (shader_version)
+    dst->element_count = src->element_count;
+    if (!(dst->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*dst->elements) * dst->element_count)))
+        return E_OUTOFMEMORY;
+
+    for (i = 0; i < src->element_count; ++i)
     {
-        case WINED3D_SHADER_VERSION(1, 0):
-        case WINED3D_SHADER_VERSION(1, 1):
-            shader->limits.constant_bool = 0;
-            shader->limits.constant_int = 0;
-            shader->limits.packed_output = 12;
-            shader->limits.sampler = 0;
-            /* TODO: vs_1_1 has a minimum of 96 constants. What happens when
-             * a vs_1_1 shader is used on a vs_3_0 capable card that has 256
-             * constants? */
-            shader->limits.constant_float = min(256, device->d3d_vshader_constantF);
-            break;
+        e = &src->elements[i];
+        dst->elements[i] = *e;
 
-        case WINED3D_SHADER_VERSION(2, 0):
-        case WINED3D_SHADER_VERSION(2, 1):
-            shader->limits.constant_bool = 16;
-            shader->limits.constant_int = 16;
-            shader->limits.packed_output = 12;
-            shader->limits.sampler = 0;
-            shader->limits.constant_float = min(256, device->d3d_vshader_constantF);
-            break;
-
-        case WINED3D_SHADER_VERSION(3, 0):
-            shader->limits.constant_bool = 16;
-            shader->limits.constant_int = 16;
-            shader->limits.packed_output = 12;
-            shader->limits.sampler = 4;
-            /* DX10 cards on Windows advertise a d3d9 constant limit of 256
-             * even though they are capable of supporting much more (GL
-             * drivers advertise 1024). d3d9.dll and d3d8.dll clamp the
-             * wined3d-advertised maximum. Clamp the constant limit for <= 3.0
-             * shaders to 256. */
-            shader->limits.constant_float = min(256, device->d3d_vshader_constantF);
-            break;
-
-        case WINED3D_SHADER_VERSION(4, 0):
-            shader->limits.sampler = 16; /* FIXME: 128 resources, 16 sampler states */
-            shader->limits.constant_int = 0;
-            shader->limits.constant_float = 0;
-            shader->limits.constant_bool = 0;
-            shader->limits.packed_output = 16;
-            shader->limits.packed_input = 0;
-            break;
-
-        default:
-            shader->limits.constant_bool = 16;
-            shader->limits.constant_int = 16;
-            shader->limits.packed_output = 12;
-            shader->limits.sampler = 0;
-            shader->limits.constant_float = min(256, device->d3d_vshader_constantF);
-            FIXME("Unrecognized vertex shader version \"%u.%u\".\n",
-                    shader->reg_maps.shader_version.major,
-                    shader->reg_maps.shader_version.minor);
+        len = strlen(e->semantic_name);
+        memcpy(ptr, e->semantic_name, len + 1);
+        dst->elements[i].semantic_name = ptr;
+        ptr += len + 1;
     }
+
+    *signature_strings = ptr;
+
+    return WINED3D_OK;
+}
+
+static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
+        const struct wined3d_shader_desc *desc, DWORD float_const_count, enum wined3d_shader_type type,
+        void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    struct wined3d_shader_signature_element *e;
+    SIZE_T total, len;
+    unsigned int i;
+    HRESULT hr;
+    char *ptr;
+
+    if (!desc->byte_code)
+        return WINED3DERR_INVALIDCALL;
+
+    shader->ref = 1;
+    shader->device = device;
+    shader->parent = parent;
+    shader->parent_ops = parent_ops;
+
+    total = 0;
+    if (desc->input_signature)
+    {
+        for (i = 0; i < desc->input_signature->element_count; ++i)
+        {
+            e = &desc->input_signature->elements[i];
+            len = strlen(e->semantic_name);
+            if (len >= ~(SIZE_T)0 - total)
+                return E_OUTOFMEMORY;
+
+            total += len + 1;
+        }
+    }
+    if (desc->output_signature)
+    {
+        for (i = 0; i < desc->output_signature->element_count; ++i)
+        {
+            e = &desc->output_signature->elements[i];
+            len = strlen(e->semantic_name);
+            if (len >= ~(SIZE_T)0 - total)
+                return E_OUTOFMEMORY;
+
+            total += len + 1;
+        }
+    }
+    if (!(shader->signature_strings = HeapAlloc(GetProcessHeap(), 0, total)))
+        return E_OUTOFMEMORY;
+    ptr = shader->signature_strings;
+
+    if (desc->input_signature && FAILED(hr = shader_signature_copy(&shader->input_signature,
+            desc->input_signature, &ptr)))
+    {
+        HeapFree(GetProcessHeap(), 0, shader->signature_strings);
+        return hr;
+    }
+    if (desc->output_signature && FAILED(hr = shader_signature_copy(&shader->output_signature,
+            desc->output_signature, &ptr)))
+    {
+        HeapFree(GetProcessHeap(), 0, shader->input_signature.elements);
+        HeapFree(GetProcessHeap(), 0, shader->signature_strings);
+        return hr;
+    }
+
+    list_init(&shader->linked_programs);
+    list_add_head(&device->shaders, &shader->shader_list_entry);
+
+    if (FAILED(hr = shader_set_function(shader, desc->byte_code, desc->output_signature,
+            float_const_count, type, desc->max_version)))
+    {
+        WARN("Failed to set function, hr %#x.\n", hr);
+        shader_cleanup(shader);
+    }
+
+    return hr;
 }
 
 static HRESULT vertexshader_init(struct wined3d_shader *shader, struct wined3d_device *device,
-        const DWORD *byte_code, const struct wined3d_shader_signature *output_signature,
-        void *parent, const struct wined3d_parent_ops *parent_ops, unsigned int max_version)
+        const struct wined3d_shader_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     unsigned int i;
     HRESULT hr;
-    WORD map;
 
-    if (!byte_code) return WINED3DERR_INVALIDCALL;
-
-    shader_init(shader, device, parent, parent_ops);
-    hr = shader_set_function(shader, byte_code, output_signature, device->d3d_vshader_constantF,
-            WINED3D_SHADER_TYPE_VERTEX, max_version);
-    if (FAILED(hr))
-    {
-        WARN("Failed to set function, hr %#x.\n", hr);
-        shader_cleanup(shader);
+    if (FAILED(hr = shader_init(shader, device, desc, device->adapter->d3d_info.limits.vs_uniform_count,
+            WINED3D_SHADER_TYPE_VERTEX, parent, parent_ops)))
         return hr;
-    }
 
-    map = reg_maps->input_registers;
-    for (i = 0; map; map >>= 1, ++i)
+    for (i = 0; i < shader->input_signature.element_count; ++i)
     {
-        if (!(map & 1) || !shader->input_signature[i].semantic_name)
+        const struct wined3d_shader_signature_element *input = &shader->input_signature.elements[i];
+
+        if (!(reg_maps->input_registers & (1u << input->register_idx)) || !input->semantic_name)
             continue;
 
-        shader->u.vs.attributes[i].usage =
-                shader_usage_from_semantic_name(shader->input_signature[i].semantic_name);
-        shader->u.vs.attributes[i].usage_idx = shader->input_signature[i].semantic_idx;
+        shader->u.vs.attributes[input->register_idx].usage =
+                shader_usage_from_semantic_name(input->semantic_name);
+        shader->u.vs.attributes[input->register_idx].usage_idx = input->semantic_idx;
     }
 
-    if (output_signature)
-    {
-        for (i = 0; i < output_signature->element_count; ++i)
-        {
-            struct wined3d_shader_signature_element *e = &output_signature->elements[i];
-            reg_maps->output_registers |= 1 << e->register_idx;
-            shader->output_signature[e->register_idx] = *e;
-        }
-    }
-
-    vertexshader_set_limits(shader);
-
-    shader->load_local_constsF = reg_maps->usesrelconstF
-            && !list_empty(&shader->constantsF);
+    shader->load_local_constsF = (reg_maps->usesrelconstF && !list_empty(&shader->constantsF)) ||
+            shader->lconst_inf_or_nan;
 
     return WINED3D_OK;
-}
-
-static void geometryshader_set_limits(struct wined3d_shader *shader)
-{
-    DWORD shader_version = WINED3D_SHADER_VERSION(shader->reg_maps.shader_version.major,
-            shader->reg_maps.shader_version.minor);
-
-    switch (shader_version)
-    {
-        case WINED3D_SHADER_VERSION(4, 0):
-            shader->limits.sampler = 16; /* FIXME: 128 resources, 16 sampler states */
-            shader->limits.constant_int = 0;
-            shader->limits.constant_float = 0;
-            shader->limits.constant_bool = 0;
-            shader->limits.packed_output = 32;
-            shader->limits.packed_input = 16;
-            break;
-
-        default:
-            memset(&shader->limits, 0, sizeof(shader->limits));
-            FIXME("Unhandled geometry shader version \"%u.%u\".\n",
-                    shader->reg_maps.shader_version.major,
-                    shader->reg_maps.shader_version.minor);
-    }
 }
 
 static HRESULT geometryshader_init(struct wined3d_shader *shader, struct wined3d_device *device,
-        const DWORD *byte_code, const struct wined3d_shader_signature *output_signature,
-        void *parent, const struct wined3d_parent_ops *parent_ops, unsigned int max_version)
+        const struct wined3d_shader_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     HRESULT hr;
 
-    shader_init(shader, device, parent, parent_ops);
-    hr = shader_set_function(shader, byte_code, output_signature, 0,
-            WINED3D_SHADER_TYPE_GEOMETRY, max_version);
-    if (FAILED(hr))
-    {
-        WARN("Failed to set function, hr %#x.\n", hr);
-        shader_cleanup(shader);
+    if (FAILED(hr = shader_init(shader, device, desc, 0,
+            WINED3D_SHADER_TYPE_GEOMETRY, parent, parent_ops)))
         return hr;
-    }
 
-    geometryshader_set_limits(shader);
-
-    shader->load_local_constsF = FALSE;
+    shader->load_local_constsF = shader->lconst_inf_or_nan;
 
     return WINED3D_OK;
 }
 
-void find_ps_compile_args(const struct wined3d_state *state,
-        const struct wined3d_shader *shader, struct ps_compile_args *args)
+void find_ps_compile_args(const struct wined3d_state *state, const struct wined3d_shader *shader,
+        BOOL position_transformed, struct ps_compile_args *args, const struct wined3d_context *context)
 {
-    struct wined3d_device *device = shader->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     const struct wined3d_texture *texture;
     UINT i;
 
     memset(args, 0, sizeof(*args)); /* FIXME: Make sure all bits are set. */
-    if (!gl_info->supported[ARB_FRAMEBUFFER_SRGB] && state->render_states[WINED3D_RS_SRGBWRITEENABLE])
+#if defined(STAGING_CSMT)
+    if (!gl_info->supported[ARB_FRAMEBUFFER_SRGB] && needs_srgb_write(context, state, &state->fb))
+#else  /* STAGING_CSMT */
+    if (!gl_info->supported[ARB_FRAMEBUFFER_SRGB] && needs_srgb_write(context, state, state->fb))
+#endif /* STAGING_CSMT */
     {
-        const struct wined3d_surface *rt = state->fb->render_targets[0];
-        if (rt->resource.format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
-        {
-            static unsigned int warned = 0;
+        static unsigned int warned = 0;
 
-            args->srgb_correction = 1;
-            if (state->render_states[WINED3D_RS_ALPHABLENDENABLE] && !warned++)
-                WARN("Blending into a sRGB render target with no GL_ARB_framebuffer_sRGB "
-                        "support, expect rendering artifacts.\n");
-        }
+        args->srgb_correction = 1;
+        if (state->render_states[WINED3D_RS_ALPHABLENDENABLE] && !warned++)
+            WARN("Blending into a sRGB render target with no GL_ARB_framebuffer_sRGB "
+                    "support, expect rendering artifacts.\n");
     }
 
     if (shader->reg_maps.shader_version.major == 1
             && shader->reg_maps.shader_version.minor <= 3)
     {
-        for (i = 0; i < 4; ++i)
+        for (i = 0; i < shader->limits->sampler; ++i)
         {
             DWORD flags = state->texture_states[i][WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS];
 
@@ -1989,12 +2691,12 @@ void find_ps_compile_args(const struct wined3d_state *state,
             {
                 DWORD tex_transform = flags & ~WINED3D_TTFF_PROJECTED;
 
-                if (!state->vertex_shader)
+                if (!state->shader[WINED3D_SHADER_TYPE_VERTEX])
                 {
+                    enum wined3d_shader_resource_type resource_type = shader->reg_maps.resource_info[i].type;
                     unsigned int j;
                     unsigned int index = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
                     DWORD max_valid = WINED3D_TTFF_COUNT4;
-                    enum wined3d_sampler_texture_type sampler_type = shader->reg_maps.sampler_type[i];
 
                     for (j = 0; j < state->vertex_declaration->element_count; ++j)
                     {
@@ -2014,15 +2716,17 @@ void find_ps_compile_args(const struct wined3d_state *state,
                                 tex_transform, max_valid);
                         tex_transform = max_valid;
                     }
-                    if ((sampler_type == WINED3DSTT_1D && tex_transform > WINED3D_TTFF_COUNT1)
-                            || (sampler_type == WINED3DSTT_2D && tex_transform > WINED3D_TTFF_COUNT2)
-                            || (sampler_type == WINED3DSTT_VOLUME && tex_transform > WINED3D_TTFF_COUNT3))
+                    if ((resource_type == WINED3D_SHADER_RESOURCE_TEXTURE_1D && tex_transform > WINED3D_TTFF_COUNT1)
+                            || (resource_type == WINED3D_SHADER_RESOURCE_TEXTURE_2D
+                            && tex_transform > WINED3D_TTFF_COUNT2)
+                            || (resource_type == WINED3D_SHADER_RESOURCE_TEXTURE_3D
+                            && tex_transform > WINED3D_TTFF_COUNT3))
                         tex_transform |= WINED3D_PSARGS_PROJECTED;
                     else
                     {
                         WARN("Application requested projected texture with unsuitable texture coordinates.\n");
                         WARN("(texture unit %u, transform flags %#x, sampler type %u).\n",
-                                i, tex_transform, sampler_type);
+                                i, tex_transform, resource_type);
                     }
                 }
                 else
@@ -2032,10 +2736,43 @@ void find_ps_compile_args(const struct wined3d_state *state,
             }
         }
     }
+    if (shader->reg_maps.shader_version.major == 1
+            && shader->reg_maps.shader_version.minor <= 4)
+    {
+        for (i = 0; i < shader->limits->sampler; ++i)
+        {
+            const struct wined3d_texture *texture = state->textures[i];
+
+            if (!shader->reg_maps.resource_info[i].type)
+                continue;
+
+            /* Treat unbound textures as 2D. The dummy texture will provide
+             * the proper sample value. The tex_types bitmap defaults to
+             * 2D because of the memset. */
+            if (!texture)
+                continue;
+
+            switch (texture->target)
+            {
+                /* RECT textures are distinguished from 2D textures via np2_fixup */
+                case GL_TEXTURE_RECTANGLE_ARB:
+                case GL_TEXTURE_2D:
+                    break;
+
+                case GL_TEXTURE_3D:
+                    args->tex_types |= WINED3D_SHADER_TEX_3D << i * WINED3D_PSARGS_TEXTYPE_SHIFT;
+                    break;
+
+                case GL_TEXTURE_CUBE_MAP_ARB:
+                    args->tex_types |= WINED3D_SHADER_TEX_CUBE << i * WINED3D_PSARGS_TEXTYPE_SHIFT;
+                    break;
+            }
+        }
+    }
 
     for (i = 0; i < MAX_FRAGMENT_SAMPLERS; ++i)
     {
-        if (!shader->reg_maps.sampler_type[i])
+        if (!shader->reg_maps.resource_info[i].type)
             continue;
 
         texture = state->textures[i];
@@ -2046,28 +2783,22 @@ void find_ps_compile_args(const struct wined3d_state *state,
         }
         args->color_fixup[i] = texture->resource.format->color_fixup;
 
-        if (texture->resource.format->flags & WINED3DFMT_FLAG_SHADOW)
-            args->shadow |= 1 << i;
+        if (texture->resource.format_flags & WINED3DFMT_FLAG_SHADOW)
+            args->shadow |= 1u << i;
 
         /* Flag samplers that need NP2 texcoord fixup. */
         if (!(texture->flags & WINED3D_TEXTURE_POW2_MAT_IDENT))
-            args->np2_fixup |= (1 << i);
+            args->np2_fixup |= (1u << i);
     }
     if (shader->reg_maps.shader_version.major >= 3)
     {
-        if (device->strided_streams.position_transformed)
-        {
+        if (position_transformed)
             args->vp_mode = pretransformed;
-        }
         else if (use_vs(state))
-        {
             args->vp_mode = vertexshader;
-        }
         else
-        {
             args->vp_mode = fixedfunction;
-        }
-        args->fog = FOG_OFF;
+        args->fog = WINED3D_FFP_PS_FOG_OFF;
     }
     else
     {
@@ -2077,127 +2808,78 @@ void find_ps_compile_args(const struct wined3d_state *state,
             switch (state->render_states[WINED3D_RS_FOGTABLEMODE])
             {
                 case WINED3D_FOG_NONE:
-                    if (device->strided_streams.position_transformed || use_vs(state))
+                    if (position_transformed || use_vs(state))
                     {
-                        args->fog = FOG_LINEAR;
+                        args->fog = WINED3D_FFP_PS_FOG_LINEAR;
                         break;
                     }
 
                     switch (state->render_states[WINED3D_RS_FOGVERTEXMODE])
                     {
                         case WINED3D_FOG_NONE: /* Fall through. */
-                        case WINED3D_FOG_LINEAR: args->fog = FOG_LINEAR; break;
-                        case WINED3D_FOG_EXP:    args->fog = FOG_EXP;    break;
-                        case WINED3D_FOG_EXP2:   args->fog = FOG_EXP2;   break;
+                        case WINED3D_FOG_LINEAR: args->fog = WINED3D_FFP_PS_FOG_LINEAR; break;
+                        case WINED3D_FOG_EXP:    args->fog = WINED3D_FFP_PS_FOG_EXP;    break;
+                        case WINED3D_FOG_EXP2:   args->fog = WINED3D_FFP_PS_FOG_EXP2;   break;
                     }
                     break;
 
-                case WINED3D_FOG_LINEAR: args->fog = FOG_LINEAR; break;
-                case WINED3D_FOG_EXP:    args->fog = FOG_EXP;    break;
-                case WINED3D_FOG_EXP2:   args->fog = FOG_EXP2;   break;
+                case WINED3D_FOG_LINEAR: args->fog = WINED3D_FFP_PS_FOG_LINEAR; break;
+                case WINED3D_FOG_EXP:    args->fog = WINED3D_FFP_PS_FOG_EXP;    break;
+                case WINED3D_FOG_EXP2:   args->fog = WINED3D_FFP_PS_FOG_EXP2;   break;
             }
         }
         else
         {
-            args->fog = FOG_OFF;
+            args->fog = WINED3D_FFP_PS_FOG_OFF;
         }
     }
-}
 
-static void pixelshader_set_limits(struct wined3d_shader *shader)
-{
-    DWORD shader_version = WINED3D_SHADER_VERSION(shader->reg_maps.shader_version.major,
-            shader->reg_maps.shader_version.minor);
-
-    shader->limits.packed_output = 0;
-
-    switch (shader_version)
+    if (context->d3d_info->limits.varying_count < wined3d_max_compat_varyings(context->gl_info))
     {
-        case WINED3D_SHADER_VERSION(1, 0):
-        case WINED3D_SHADER_VERSION(1, 1):
-        case WINED3D_SHADER_VERSION(1, 2):
-        case WINED3D_SHADER_VERSION(1, 3):
-            shader->limits.constant_float = 8;
-            shader->limits.constant_int = 0;
-            shader->limits.constant_bool = 0;
-            shader->limits.sampler = 4;
-            shader->limits.packed_input = 0;
-            break;
+        const struct wined3d_shader *vs = state->shader[WINED3D_SHADER_TYPE_VERTEX];
 
-        case WINED3D_SHADER_VERSION(1, 4):
-            shader->limits.constant_float = 8;
-            shader->limits.constant_int = 0;
-            shader->limits.constant_bool = 0;
-            shader->limits.sampler = 6;
-            shader->limits.packed_input = 0;
-            break;
+        args->texcoords_initialized = 0;
+        for (i = 0; i < MAX_TEXTURES; ++i)
+        {
+            if (vs)
+            {
+                if (state->shader[WINED3D_SHADER_TYPE_VERTEX]->reg_maps.output_registers & (1u << i))
+                    args->texcoords_initialized |= 1u << i;
+            }
+            else
+            {
+                const struct wined3d_stream_info *si = &context->stream_info;
+                unsigned int coord_idx = state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX];
 
-        /* FIXME: Temporaries must match D3DPSHADERCAPS2_0.NumTemps. */
-        case WINED3D_SHADER_VERSION(2, 0):
-            shader->limits.constant_float = 32;
-            shader->limits.constant_int = 16;
-            shader->limits.constant_bool = 16;
-            shader->limits.sampler = 16;
-            shader->limits.packed_input = 0;
-            break;
-
-        case WINED3D_SHADER_VERSION(2, 1):
-            shader->limits.constant_float = 32;
-            shader->limits.constant_int = 16;
-            shader->limits.constant_bool = 16;
-            shader->limits.sampler = 16;
-            shader->limits.packed_input = 0;
-            break;
-
-        case WINED3D_SHADER_VERSION(3, 0):
-            shader->limits.constant_float = 224;
-            shader->limits.constant_int = 16;
-            shader->limits.constant_bool = 16;
-            shader->limits.sampler = 16;
-            shader->limits.packed_input = 12;
-            break;
-
-        case WINED3D_SHADER_VERSION(4, 0):
-            shader->limits.sampler = 16; /* FIXME: 128 resources, 16 sampler states */
-            shader->limits.constant_int = 0;
-            shader->limits.constant_float = 0;
-            shader->limits.constant_bool = 0;
-            shader->limits.packed_input = 32;
-            break;
-
-        default:
-            shader->limits.constant_float = 32;
-            shader->limits.constant_int = 16;
-            shader->limits.constant_bool = 16;
-            shader->limits.sampler = 16;
-            shader->limits.packed_input = 0;
-            FIXME("Unrecognized pixel shader version %u.%u\n",
-                    shader->reg_maps.shader_version.major,
-                    shader->reg_maps.shader_version.minor);
+                if ((state->texture_states[i][WINED3D_TSS_TEXCOORD_INDEX] >> WINED3D_FFP_TCI_SHIFT)
+                        & WINED3D_FFP_TCI_MASK
+                        || (coord_idx < MAX_TEXTURES && (si->use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx)))))
+                    args->texcoords_initialized |= 1u << i;
+            }
+        }
     }
+    else
+    {
+        args->texcoords_initialized = (1u << MAX_TEXTURES) - 1;
+    }
+
+    args->pointsprite = state->render_states[WINED3D_RS_POINTSPRITEENABLE]
+            && state->gl_primitive_type == GL_POINTS;
+
+    if (d3d_info->emulated_flatshading)
+        args->flatshading = state->render_states[WINED3D_RS_SHADEMODE] == WINED3D_SHADE_FLAT;
 }
 
 static HRESULT pixelshader_init(struct wined3d_shader *shader, struct wined3d_device *device,
-        const DWORD *byte_code, const struct wined3d_shader_signature *output_signature,
-        void *parent, const struct wined3d_parent_ops *parent_ops, unsigned int max_version)
+        const struct wined3d_shader_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     unsigned int i, highest_reg_used = 0, num_regs_used = 0;
     HRESULT hr;
 
-    if (!byte_code) return WINED3DERR_INVALIDCALL;
-
-    shader_init(shader, device, parent, parent_ops);
-    hr = shader_set_function(shader, byte_code, output_signature, device->d3d_pshader_constantF,
-            WINED3D_SHADER_TYPE_PIXEL, max_version);
-    if (FAILED(hr))
-    {
-        WARN("Failed to set function, hr %#x.\n", hr);
-        shader_cleanup(shader);
+    if (FAILED(hr = shader_init(shader, device, desc, device->adapter->d3d_info.limits.ps_uniform_count,
+            WINED3D_SHADER_TYPE_PIXEL, parent, parent_ops)))
         return hr;
-    }
-
-    pixelshader_set_limits(shader);
 
     for (i = 0; i < MAX_REG_INPUT; ++i)
     {
@@ -2239,71 +2921,56 @@ static HRESULT pixelshader_init(struct wined3d_shader *shader, struct wined3d_de
         }
     }
 
-    shader->load_local_constsF = FALSE;
+    shader->load_local_constsF = shader->lconst_inf_or_nan;
 
     return WINED3D_OK;
 }
 
-void pixelshader_update_samplers(struct wined3d_shader_reg_maps *reg_maps, struct wined3d_texture * const *textures)
+void pixelshader_update_resource_types(struct wined3d_shader *shader, WORD tex_types)
 {
-    enum wined3d_sampler_texture_type *sampler_type = reg_maps->sampler_type;
+    struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
+    struct wined3d_shader_resource_info *resource_info = reg_maps->resource_info;
     unsigned int i;
 
     if (reg_maps->shader_version.major != 1) return;
 
-    for (i = 0; i < max(MAX_FRAGMENT_SAMPLERS, MAX_VERTEX_SAMPLERS); ++i)
+    for (i = 0; i < shader->limits->sampler; ++i)
     {
         /* We don't sample from this sampler. */
-        if (!sampler_type[i]) continue;
-
-        if (!textures[i])
-        {
-            WARN("No texture bound to sampler %u, using 2D.\n", i);
-            sampler_type[i] = WINED3DSTT_2D;
+        if (!resource_info[i].type)
             continue;
-        }
 
-        switch (textures[i]->target)
+        switch ((tex_types >> i * WINED3D_PSARGS_TEXTYPE_SHIFT) & WINED3D_PSARGS_TEXTYPE_MASK)
         {
-            case GL_TEXTURE_RECTANGLE_ARB:
-            case GL_TEXTURE_2D:
-                /* We have to select between texture rectangles and 2D
-                 * textures later because 2.0 and 3.0 shaders only have
-                 * WINED3DSTT_2D as well. */
-                sampler_type[i] = WINED3DSTT_2D;
+            case WINED3D_SHADER_TEX_2D:
+                resource_info[i].type = WINED3D_SHADER_RESOURCE_TEXTURE_2D;
                 break;
 
-            case GL_TEXTURE_3D:
-                sampler_type[i] = WINED3DSTT_VOLUME;
+            case WINED3D_SHADER_TEX_3D:
+                resource_info[i].type = WINED3D_SHADER_RESOURCE_TEXTURE_3D;
                 break;
 
-            case GL_TEXTURE_CUBE_MAP_ARB:
-                sampler_type[i] = WINED3DSTT_CUBE;
+            case WINED3D_SHADER_TEX_CUBE:
+                resource_info[i].type = WINED3D_SHADER_RESOURCE_TEXTURE_CUBE;
                 break;
-
-            default:
-                FIXME("Unrecognized texture type %#x, using 2D.\n", textures[i]->target);
-                sampler_type[i] = WINED3DSTT_2D;
         }
     }
 }
 
-HRESULT CDECL wined3d_shader_create_gs(struct wined3d_device *device, const DWORD *byte_code,
-        const struct wined3d_shader_signature *output_signature, void *parent,
-        const struct wined3d_parent_ops *parent_ops, struct wined3d_shader **shader, unsigned int max_version)
+HRESULT CDECL wined3d_shader_create_gs(struct wined3d_device *device, const struct wined3d_shader_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_shader **shader)
 {
     struct wined3d_shader *object;
     HRESULT hr;
 
-    TRACE("device %p, byte_code %p, output_signature %p, parent %p, parent_ops %p, shader %p.\n",
-            device, byte_code, output_signature, parent, parent_ops, shader);
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
+            device, desc, parent, parent_ops, shader);
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
-    hr = geometryshader_init(object, device, byte_code, output_signature, parent, parent_ops, max_version);
-    if (FAILED(hr))
+    if (FAILED(hr = geometryshader_init(object, device, desc, parent, parent_ops)))
     {
         WARN("Failed to initialize geometry shader, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);
@@ -2316,22 +2983,20 @@ HRESULT CDECL wined3d_shader_create_gs(struct wined3d_device *device, const DWOR
     return WINED3D_OK;
 }
 
-HRESULT CDECL wined3d_shader_create_ps(struct wined3d_device *device, const DWORD *byte_code,
-        const struct wined3d_shader_signature *output_signature, void *parent,
-        const struct wined3d_parent_ops *parent_ops, struct wined3d_shader **shader, unsigned int max_version)
+HRESULT CDECL wined3d_shader_create_ps(struct wined3d_device *device, const struct wined3d_shader_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_shader **shader)
 {
     struct wined3d_shader *object;
     HRESULT hr;
 
-    TRACE("device %p, byte_code %p, output_signature %p, parent %p, parent_ops %p, shader %p.\n",
-            device, byte_code, output_signature, parent, parent_ops, shader);
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
+            device, desc, parent, parent_ops, shader);
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
-    hr = pixelshader_init(object, device, byte_code, output_signature, parent, parent_ops, max_version);
-    if (FAILED(hr))
+    if (FAILED(hr = pixelshader_init(object, device, desc, parent, parent_ops)))
     {
         WARN("Failed to initialize pixel shader, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);
@@ -2344,22 +3009,20 @@ HRESULT CDECL wined3d_shader_create_ps(struct wined3d_device *device, const DWOR
     return WINED3D_OK;
 }
 
-HRESULT CDECL wined3d_shader_create_vs(struct wined3d_device *device, const DWORD *byte_code,
-        const struct wined3d_shader_signature *output_signature, void *parent,
-        const struct wined3d_parent_ops *parent_ops, struct wined3d_shader **shader, unsigned int max_version)
+HRESULT CDECL wined3d_shader_create_vs(struct wined3d_device *device, const struct wined3d_shader_desc *desc,
+        void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_shader **shader)
 {
     struct wined3d_shader *object;
     HRESULT hr;
 
-    TRACE("device %p, byte_code %p, output_signature %p, parent %p, parent_ops %p, shader %p.\n",
-            device, byte_code, output_signature, parent, parent_ops, shader);
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, shader %p.\n",
+            device, desc, parent, parent_ops, shader);
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
-    hr = vertexshader_init(object, device, byte_code, output_signature, parent, parent_ops, max_version);
-    if (FAILED(hr))
+    if (FAILED(hr = vertexshader_init(object, device, desc, parent, parent_ops)))
     {
         WARN("Failed to initialize vertex shader, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);

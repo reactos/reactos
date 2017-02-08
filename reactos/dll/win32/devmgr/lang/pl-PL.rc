@@ -1,11 +1,11 @@
-﻿/*
- *         translated by (Sebastian Gasiorek,Wiktor Maryniowski, 2005-12-12)
- *         xxrogers@users.sourceforge.net
- *         https://sourceforge.net/projects/reactospl
- *         updated by xrogers (13.04.2007)
- *         updated by Caemyr - Olaf Siejka (Jan 2008, Jan 2010)
- *         UTF-8 conversion by Caemyr (May, 2011)
- *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
+/*
+ *    Translated by (Sebastian Gasiorek,Wiktor Maryniowski, 2005-12-12)
+ *    xxrogers@users.sourceforge.net
+ *    https://sourceforge.net/projects/reactospl
+ *    Updated by xrogers (13.04.2007)
+ *    Updated by Caemyr - Olaf Siejka (Jan 2008, Jan 2010)
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -35,6 +35,12 @@ BEGIN
     IDS_NOTAVAILABLE "Niedostępne"
     IDS_NOTDIGITALLYSIGNED "Niepodpisany cyfrowo"
     IDS_NODRIVERS "Żadne pliki sterownika nie są potrzebne albo nie zostały załadowane dla tego urządzenia."
+    IDS_RESOURCE_COLUMN "Typ zasobu"
+    IDS_SETTING_COLUMN "Ustawienie"
+    IDS_RESOURCE_MEMORY_RANGE "Zakres pamięci"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "Zakres I/O"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -68,8 +74,8 @@ BEGIN
     IDS_DEV_DISABLED "Urządzenie nie zostało uruchomione."
     IDS_DEV_DISABLED2 "Urządzenie jest wyłączone."
     IDS_DEV_DEVLOADER_NOT_READY "Systemy ładowania sprzętu nie mógły załadować wymaganego sterownika."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Karta graficzna działa prawidłowo."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Systemy ładowania sprzętu nie mógły załadować wymaganego sterownika."
+    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Urządzenie nie jest obecne, nie działa poprawnie lub nie wszystkie sterowniki urządzenia zostały zainstalowane."
     IDS_DEV_MOVED "ReactOS jest w trakcie konfigurowania tego urządzenia."
     IDS_DEV_TOO_EARLY "ReactOS jest w trakcie konfigurowania tego urządzenia."
@@ -127,63 +133,63 @@ BEGIN
     IDS_PROP_POWERSTATEMAPPINGS "Mapowania stanu zasilania"
 END
 
-IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Urządzenia:",IDC_DEVICES,7,6,196,10
-    CONTROL         "",IDC_LV_DEVICES,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
-                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,16,196,50
-    GROUPBOX        "Właściwości urządzenia",IDC_PROPERTIESGROUP,7,76,196,105
-    LTEXT           "",IDC_MANUFACTURER,14,88,183,10,SS_ENDELLIPSIS
-    LTEXT           "",IDC_LOCATION,14,100,183,10,SS_ENDELLIPSIS
-    LTEXT           "",IDC_STATUS,14,112,183,30
-    PUSHBUTTON      "&Rozwiązywanie problemów...",IDC_TROUBLESHOOT,85,140,54,14,
-                    BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON      "Właściwości",IDC_PROPERTIES,146,140,50,14
+    LTEXT "&Urządzenia:", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "Właściwości urządzenia", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "&Rozwiązywanie problemów...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Właściwości", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
-IDD_DEVICEGENERAL DIALOGEX DISCARDABLE  0, 0, 252, 218
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-     ICON "", IDC_DEVICON, 7, 7, 20, 20
-     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Typ urządzenia:", -1, 37, 39, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Producent:", -1, 37, 53, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Lokalizacja:", -1, 37, 67, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     GROUPBOX "Stan urządzenia", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
-     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-     PUSHBUTTON "&Rozwiązywanie problemów...", IDC_DEVPROBLEM, 148, 163, 90, 15
-     LTEXT "&Użycie urządzenia:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
-     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Typ urządzenia:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Producent:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Lokalizacja:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "Stan urządzenia", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "&Rozwiązywanie problemów...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "&Użycie urządzenia:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
-IDD_DEVICEDRIVER DIALOGEX DISCARDABLE  0, 0, 252, 218
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sterownik"
 FONT 8, "MS Shell Dlg"
 BEGIN
-     ICON "", IDC_DEVICON, 7, 7, 20, 20
-     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Dostawca sterownika:", -1, 37, 39, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Data sterownika:", -1, 37, 53, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Wersja sterownika:", -1, 37, 67, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Podpis cyfrowy:", -1, 37, 81, 60, 8, SS_NOPREFIX
-     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     PUSHBUTTON "&Szczegóły sterownika...", IDC_DRIVERDETAILS, 7, 106, 70, 15
-     LTEXT "Wyświetla informacje szczegółowe.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Dostawca sterownika:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Data sterownika:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Wersja sterownika:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Podpis cyfrowy:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "&Szczegóły sterownika...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Wyświetla informacje szczegółowe.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "Akt&ualizuj sterownik...", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Aktualizuje oprogramowanie sterownika.", -1, 91, 130, 154, 17, SS_NOPREFIX
 END
 
-IDD_DRIVERDETAILS DIALOGEX DISCARDABLE  0, 0, 224, 230
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Szczegóły pliku sterownika"
 FONT 8, "MS Shell Dlg"
@@ -205,7 +211,7 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
 END
 
-IDD_DEVICEDETAILS DIALOGEX DISCARDABLE  0, 0, 252, 218
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Szczegóły"
 FONT 8, "MS Shell Dlg"
@@ -213,25 +219,114 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL  "",IDC_DETAILSPROPVALUE,"SysListView32",LVS_REPORT | LVS_NOCOLUMNHEADER |
-             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
-             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
 END
 
-IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zasoby"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Ustawienia zasobów:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
 
-IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zasilanie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END
+
+
+
+
+/*
+ This code relates to the device manager GUI
+ */
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&File"
+  BEGIN
+    MENUITEM "E&xit",                       IDC_EXIT
+  END
+  MENUITEM "Action",                        IDC_ACTIONMENU
+  POPUP "View"
+  BEGIN
+    MENUITEM "Devices by type",             IDC_DEVBYTYPE
+    MENUITEM "Devices by connection",       IDC_DEVBYCONN
+    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+  END
+  POPUP "Help"
+  BEGIN
+    MENUITEM "About",                       IDC_ABOUT
+  END
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME               "ReactOS Device Manager"
+  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
+  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+END
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_MENU_UPDATE           "Update driver software..."
+  IDS_MENU_ENABLE           "Enable"
+  IDS_MENU_DISABLE          "Disable"
+  IDS_MENU_UNINSTALL        "Uninstall"
+  IDS_MENU_SCAN             "Scan for hardware changes"
+  IDS_MENU_ADD              "Add hardware"
+  IDS_MENU_PROPERTIES       "Properties"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROPERTIES    "Properties"
+  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
+  IDS_TOOLTIP_ENABLE        "Enable"
+  IDS_TOOLTIP_DISABLE       "Disable"
+  IDS_TOOLTIP_UPDATE        "Update Driver Software"
+  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
+  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
+  IDS_HINT_ENABLE       " Enables the selected device."
+  IDS_HINT_DISABLE      " Disables the selected device."
+  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
+  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
+  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
+  IDS_HINT_ABOUT        " About ReactOS Device Manager."
+  IDS_HINT_EXIT         " Exits the program."
+
+  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
+  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
+  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
+  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
+  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
 END

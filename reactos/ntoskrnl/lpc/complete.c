@@ -55,6 +55,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     PEPROCESS ClientProcess;
     PETHREAD ClientThread;
     LARGE_INTEGER SectionOffset;
+    CLIENT_ID ClientId;
+    ULONG MessageId;
     PAGED_CODE();
     LPCTRACE(LPC_COMPLETE_DEBUG,
              "Context: %p. Message: %p. Accept: %lx. Views: %p/%p\n",
@@ -64,22 +66,81 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
              ClientView,
              ServerView);
 
-    /* Validate the size of the server view */
-    if ((ServerView) && (ServerView->Length != sizeof(PORT_VIEW)))
+    /* Check if the call comes from user mode */
+    if (PreviousMode != KernelMode)
     {
-        /* Invalid size */
-        return STATUS_INVALID_PARAMETER;
-    }
+        /* Enter SEH for probing the parameters */
+        _SEH2_TRY
+        {
+            ProbeForWriteHandle(PortHandle);
 
-    /* Validate the size of the client view */
-    if ((ClientView) && (ClientView->Length != sizeof(REMOTE_PORT_VIEW)))
+            /* Probe the basic ReplyMessage structure */
+            ProbeForRead(ReplyMessage, sizeof(PORT_MESSAGE), sizeof(ULONG));
+
+            /* Grab some values */
+            ClientId = ReplyMessage->ClientId;
+            MessageId = ReplyMessage->MessageId;
+            ConnectionInfoLength = ReplyMessage->u1.s1.DataLength;
+
+            /* Probe the connection info */
+            ProbeForRead(ReplyMessage + 1, ConnectionInfoLength, 1);
+
+            /* The following parameters are optional */
+            if (ServerView != NULL)
+            {
+                ProbeForWrite(ServerView, sizeof(PORT_VIEW), sizeof(ULONG));
+
+                /* Validate the size of the server view */
+                if (ServerView->Length != sizeof(PORT_VIEW))
+                {
+                    /* Invalid size */
+                    _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
+                }
+            }
+
+            if (ClientView != NULL)
+            {
+                ProbeForWrite(ClientView, sizeof(REMOTE_PORT_VIEW), sizeof(ULONG));
+
+                /* Validate the size of the client view */
+                if (ClientView->Length != sizeof(REMOTE_PORT_VIEW))
+                {
+                    /* Invalid size */
+                    _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
+                }
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* There was an exception, return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
     {
-        /* Invalid size */
-        return STATUS_INVALID_PARAMETER;
+        /* Grab some values */
+        ClientId = ReplyMessage->ClientId;
+        MessageId = ReplyMessage->MessageId;
+        ConnectionInfoLength = ReplyMessage->u1.s1.DataLength;
+
+        /* Validate the size of the server view */
+        if ((ServerView) && (ServerView->Length != sizeof(PORT_VIEW)))
+        {
+            /* Invalid size */
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Validate the size of the client view */
+        if ((ClientView) && (ClientView->Length != sizeof(REMOTE_PORT_VIEW)))
+        {
+            /* Invalid size */
+            return STATUS_INVALID_PARAMETER;
+        }
     }
 
     /* Get the client process and thread */
-    Status = PsLookupProcessThreadByCid(&ReplyMessage->ClientId,
+    Status = PsLookupProcessThreadByCid(&ClientId,
                                         &ClientProcess,
                                         &ClientThread);
     if (!NT_SUCCESS(Status)) return Status;
@@ -89,8 +150,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
 
     /* Make sure that the client wants a reply, and this is the right one */
     if (!(LpcpGetMessageFromThread(ClientThread)) ||
-        !(ReplyMessage->MessageId) ||
-        (ClientThread->LpcReplyMessageId != ReplyMessage->MessageId))
+        !(MessageId) ||
+        (ClientThread->LpcReplyMessageId != MessageId))
     {
         /* Not the reply asked for, or no reply wanted, fail */
         KeReleaseGuardedMutex(&LpcpLock);
@@ -125,8 +186,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     ConnectMessage->ClientPort = NULL;
     KeReleaseGuardedMutex(&LpcpLock);
 
-    /* Get the connection information length */
-    ConnectionInfoLength = ReplyMessage->u1.s1.DataLength;
+    /* Check the connection information length */
     if (ConnectionInfoLength > ConnectionPort->MaxConnectionInfoLength)
     {
         /* Normalize it since it's too large */
@@ -142,16 +202,26 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     /* Setup the reply message */
     Message->Request.u2.s2.Type = LPC_REPLY;
     Message->Request.u2.s2.DataInfoOffset = 0;
-    Message->Request.ClientId = ReplyMessage->ClientId;
-    Message->Request.MessageId = ReplyMessage->MessageId;
+    Message->Request.ClientId = ClientId;
+    Message->Request.MessageId = MessageId;
     Message->Request.ClientViewSize = 0;
-    RtlCopyMemory(ConnectMessage + 1, ReplyMessage + 1, ConnectionInfoLength);
+
+    _SEH2_TRY
+    {
+        RtlCopyMemory(ConnectMessage + 1, ReplyMessage + 1, ConnectionInfoLength);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(goto Cleanup);
+    }
+    _SEH2_END;
 
     /* At this point, if the caller refused the connection, go to cleanup */
     if (!AcceptConnection)
     {
         DPRINT1("LPC connection was refused\n");
-        goto Cleanup;   
+        goto Cleanup;
     }
 
     /* Otherwise, create the actual port */
@@ -227,7 +297,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
             /* Otherwise, quit */
             ObDereferenceObject(ServerPort);
             DPRINT1("Client section mapping failed: %lx\n", Status);
-            DPRINT1("View base, offset, size: %lx %lx %lx\n",
+            DPRINT1("View base, offset, size: %p %lx %p\n",
                     ServerPort->ClientSectionBase,
                     ConnectMessage->ClientView.ViewSize,
                     SectionOffset);
@@ -259,18 +329,32 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
         goto Cleanup;
     }
 
-    /* Check if the caller gave a client view */
-    if (ClientView)
+    /* Enter SEH to write back the results */
+    _SEH2_TRY
     {
-        /* Fill it out */
-        ClientView->ViewBase = ConnectMessage->ClientView.ViewRemoteBase;
-        ClientView->ViewSize = ConnectMessage->ClientView.ViewSize;
-    }
+        /* Check if the caller gave a client view */
+        if (ClientView)
+        {
+            /* Fill it out */
+            ClientView->ViewBase = ConnectMessage->ClientView.ViewRemoteBase;
+            ClientView->ViewSize = ConnectMessage->ClientView.ViewSize;
+        }
 
-    /* Return the handle to user mode */
-    *PortHandle = Handle;
+        /* Return the handle to user mode */
+        *PortHandle = Handle;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Cleanup and return the exception code */
+        ObCloseHandle(Handle, UserMode);
+        ObDereferenceObject(ServerPort);
+        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(goto Cleanup);
+    }
+    _SEH2_END;
+
     LPCTRACE(LPC_COMPLETE_DEBUG,
-             "Handle: %lx. Messages: %p/%p. Ports: %p/%p/%p\n",
+             "Handle: %p. Messages: %p/%p. Ports: %p/%p/%p\n",
              Handle,
              Message,
              ConnectMessage,
@@ -327,7 +411,7 @@ NtCompleteConnectPort(IN HANDLE PortHandle)
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD Thread;
     PAGED_CODE();
-    LPCTRACE(LPC_COMPLETE_DEBUG, "Handle: %lx\n", PortHandle);
+    LPCTRACE(LPC_COMPLETE_DEBUG, "Handle: %p\n", PortHandle);
 
     /* Get the Port Object */
     Status = ObReferenceObjectByHandle(PortHandle,

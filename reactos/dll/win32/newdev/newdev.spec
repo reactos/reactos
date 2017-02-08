@@ -1,6 +1,6 @@
-@ stdcall ClientSideInstallW(ptr long wstr)
+@ stdcall ClientSideInstallW(ptr ptr wstr long)
 @ stdcall DevInstallW(ptr ptr wstr long)
-@ stub InstallDevInst
+@ stdcall InstallDevInst(ptr wstr long ptr)
 @ stub InstallDevInstEx
 @ stdcall InstallNewDevice(ptr ptr ptr)
 @ stub InstallSelectedDevice
@@ -9,3 +9,4 @@
 @ stub RollbackDriver
 @ stdcall UpdateDriverForPlugAndPlayDevicesA(ptr str str long ptr)
 @ stdcall UpdateDriverForPlugAndPlayDevicesW(ptr wstr wstr long ptr)
+@ stdcall DiShowUpdateDevice(ptr ptr ptr long ptr)

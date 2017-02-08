@@ -4,7 +4,7 @@
  * FILE:            dll/directx/ksproxy/basicaudio.cpp
  * PURPOSE:         IBasicAudio interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

@@ -44,7 +44,7 @@ _onexit_t CDECL __dllonexit(_onexit_t func, _onexit_t **start, _onexit_t **end)
   if (++len <= 0)
     return NULL;
 
-  tmp = realloc(*start, len * sizeof(tmp));
+  tmp = realloc(*start, len * sizeof(_onexit_t));
   if (!tmp)
     return NULL;
   *start = tmp;

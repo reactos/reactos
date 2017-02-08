@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+typedef BOOL (WINAPI *ISWOW64PROC) (HANDLE, PBOOL);
+
 BOOL
 GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR Result, DWORD Size)
 {
@@ -27,7 +29,7 @@ GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR R
     if (res != ERROR_SUCCESS)
         return FALSE;
 
-	if (dwType != Type)
+    if (dwType != Type)
         return FALSE;
 
     if (Size == sizeof(DWORD))
@@ -95,105 +97,60 @@ GetDirectXVersion(WCHAR * szBuffer)
     return TRUE;
 }
 
-#if 0
-static
-BOOL
-GetVistaVersion(WCHAR * szBuffer)
+VOID GetSystemCPU(WCHAR *szBuffer)
 {
-     DWORD Length;
+    SYSTEM_INFO archInfo;
+    ISWOW64PROC fnIsWow64Process;
+    BOOL isWow64 = FALSE;
 
-     if (GetProductInfo(6, 0, 0, 0, &Length))
-     {
-         switch(Length)
-         {
-             case PRODUCT_ULTIMATE:
-                 wsprintfW(szBuffer, L"Windows Vista Ultimate (6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-             case PRODUCT_HOME_BASIC:
-                 wsprintfW(szBuffer, L"Windows Vista Home Basic (6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-             case PRODUCT_HOME_PREMIUM:
-                 wsprintfW(szBuffer, L"Windows Vista Home Premimum (6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-             case PRODUCT_ENTERPRISE:
-                 wsprintfW(szBuffer, L"Windows Vista Enterprise (6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-             case PRODUCT_HOME_BASIC_N:
-                 wsprintfW(szBuffer, L"Windows Vista Home Basic N(6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-             case PRODUCT_BUSINESS:
-                 wsprintfW(szBuffer, L"Windows Vista Business(6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-            case PRODUCT_STARTER:
-                 wsprintfW(szBuffer, L"Windows Vista Starter(6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-            case PRODUCT_BUSINESS_N:
-                 wsprintfW(szBuffer, L"Windows Vista Business N(6.0, Build %04u)", info.dwBuildNumber);
-                 return TRUE;
-            default:
-                 return FALSE;
-                }
-            }
-}
+    /* Find out if the program is running through WOW64 or not. Apparently,
+    IsWow64Process() is not available on all versions of Windows, so the function
+    has to be imported at runtime. If the function cannot be found, then assume
+    the program is not running in WOW64. */
+    fnIsWow64Process = (ISWOW64PROC)GetProcAddress(
+        GetModuleHandleW(L"kernel32"), "IsWow64Process");
+    
+    if (fnIsWow64Process != NULL)
+        fnIsWow64Process(GetCurrentProcess(), &isWow64);
 
-#endif
+    /* If the program is compiled as 32-bit, but is running in WOW64, it will
+    automatically report as 32-bit regardless of the actual system architecture.
+    It detects whether or not the program is using WOW64 or not, and then
+    uses GetNativeSystemInfo(). If it is, it will properly report the actual
+    system architecture to the user. */
+    if (isWow64)
+        GetNativeSystemInfo(&archInfo);
+    else
+        GetSystemInfo(&archInfo);
 
-
-static
-BOOL
-GetOSVersion(WCHAR * szBuffer)
-{
-    OSVERSIONINFOEXW info;
-
-    ZeroMemory(&info, sizeof(info));
-    info.dwOSVersionInfoSize = sizeof(info);
-    if (GetVersionExW((LPOSVERSIONINFO)&info))
+    /* Now check to see what the system architecture is */
+    if(archInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
     {
-        /* FIXME retrieve ReactOS version*/
-        if (info.dwMajorVersion == 4)
+        switch(archInfo.wProcessorArchitecture)
         {
-            wcscpy(szBuffer, L"Windows NT 4.0");
-            if (info.szCSDVersion[0])
-            {
-                wcscat(szBuffer, L" ");
-                wcscat(szBuffer, info.szCSDVersion);
-            }
-            return TRUE;
+        case PROCESSOR_ARCHITECTURE_INTEL:
+        {
+            wsprintfW(szBuffer, L"32-bit");
+            break;
         }
-
-        if (info.dwMajorVersion == 5 && info.dwMinorVersion == 0)
+        case PROCESSOR_ARCHITECTURE_AMD64:
         {
-            wcscpy(szBuffer, L"Windows 2000");
-            if (info.szCSDVersion[0])
-            {
-                wcscat(szBuffer, L" ");
-                wcscat(szBuffer, info.szCSDVersion);
-            }
-            return TRUE;
+            wsprintfW(szBuffer, L"64-bit");
+            break;
         }
-
-        if (info.dwMajorVersion == 5 && info.dwMinorVersion == 1)
+        case PROCESSOR_ARCHITECTURE_IA64:
         {
-            wcscpy(szBuffer, L"Windows XP");
-            if (info.szCSDVersion[0])
-            {
-                wcscat(szBuffer, L" ");
-                wcscat(szBuffer, info.szCSDVersion);
-            }
-            return TRUE;
+            wsprintfW(szBuffer, L"Itanium");
+            break;
         }
-
-        if (info.dwMajorVersion == 6 && info.dwMinorVersion == 0)
+        case PROCESSOR_ARCHITECTURE_ARM:
         {
-//            if (GetVistaVersion(szBuffer))
-//                return TRUE;
-
-            wsprintfW(szBuffer, L"Windows Vista (6.0, Build %04u)", info.dwBuildNumber);
-            return TRUE;
+            wsprintfW(szBuffer, L"ARM");
+            break;
+        }
+        default:break;
         }
     }
-
-    return FALSE;
 }
 
 static
@@ -201,12 +158,14 @@ VOID
 InitializeSystemPage(HWND hwndDlg)
 {
     WCHAR szTime[200];
+    WCHAR szOSName[50];
     DWORD Length;
     DWORDLONG AvailableBytes, UsedBytes;
     MEMORYSTATUSEX mem;
     WCHAR szFormat[40];
     WCHAR szDesc[50];
     SYSTEM_INFO SysInfo;
+    OSVERSIONINFO VersionInfo;
 
     /* set date/time */
     szTime[0] = L'\0';
@@ -227,9 +186,31 @@ InitializeSystemPage(HWND hwndDlg)
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_COMPUTER, WM_SETTEXT, 0, (LPARAM)szTime);
 
     /* set product name */
-    if (GetOSVersion(szTime))
+    if (GetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"ProductName", REG_SZ, szOSName, sizeof(szOSName)))
     {
-        SendDlgItemMessage(hwndDlg, IDC_STATIC_OS, WM_SETTEXT, 0, (LPARAM)szTime);
+        if (LoadStringW(hInst, IDS_OS_VERSION, szFormat, sizeof(szFormat) / sizeof(WCHAR)))
+        {
+            WCHAR szCpuName[50];
+
+            ZeroMemory(&VersionInfo, sizeof(OSVERSIONINFO));
+            VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+            GetSystemCPU(szCpuName);
+
+            if (GetVersionEx(&VersionInfo))
+            {
+                szTime[(sizeof(szTime) / sizeof(WCHAR))-1] = L'\0';
+                wsprintfW(szTime, szFormat, szOSName, szCpuName, VersionInfo.dwMajorVersion, VersionInfo.dwMinorVersion, VersionInfo.dwBuildNumber);
+                SendDlgItemMessageW(hwndDlg, IDC_STATIC_OS, WM_SETTEXT, 0, (LPARAM)szTime);
+            }
+            else
+            {
+                /* If the version of the OS cannot be retrieved for some reason, then just give the OS Name and Architecture */
+                szTime[(sizeof(szTime) / sizeof(WCHAR))-1] = L'\0';
+                wsprintfW(szTime, L"%s %s", szOSName, szCpuName);
+                SendDlgItemMessageW(hwndDlg, IDC_STATIC_OS, WM_SETTEXT, 0, (LPARAM)szTime);
+            }
+        }
     }
     else
     {

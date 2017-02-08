@@ -6,621 +6,320 @@
  * PURPOSE:     Win32 interfaces for PSAPI
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
  *              Thomas Weidenmueller <w3seek@reactos.com>
+ *              Pierre Schweitzer <pierre@reactos.org>
  * UPDATE HISTORY:
  *              10/06/2002: Created
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+
+#include <psapi.h>
+
+#include <pseh/pseh2.h>
 
 #define NDEBUG
 #include <debug.h>
 
+#define MAX_MODULES 0x2710      // Matches 10.000 modules
+#define INIT_MEMORY_SIZE 0x1000 // Matches 4kB
+
+/* INTERNAL *******************************************************************/
+
+/*
+ * @implemented
+ */
+static BOOL NTAPI
+FindDeviceDriver(IN PVOID ImageBase,
+                 OUT PRTL_PROCESS_MODULE_INFORMATION MatchingModule)
+{
+    NTSTATUS Status;
+    DWORD NewSize, Count;
+    PRTL_PROCESS_MODULES Information;
+    RTL_PROCESS_MODULE_INFORMATION Module;
+    /* By default, to prevent too many reallocations, we already make room for 4 modules */
+    DWORD Size = sizeof(RTL_PROCESS_MODULES) + 3 * sizeof(RTL_PROCESS_MODULE_INFORMATION);
+
+    do
+    {
+        /* Allocate a buffer to hold modules information */
+        Information = LocalAlloc(LMEM_FIXED, Size);
+        if (!Information)
+        {
+            SetLastError(ERROR_NO_SYSTEM_RESOURCES);
+            return FALSE;
+        }
+
+        /* Query information */
+        Status = NtQuerySystemInformation(SystemModuleInformation, Information, Size, &Count);
+        /* In case of an error */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Save the amount of output modules */
+            NewSize = Information->NumberOfModules;
+            /* And free buffer */
+            LocalFree(Information);
+
+            /* If it was not a length mismatch (ie, buffer too small), just leave */
+            if (Status != STATUS_INFO_LENGTH_MISMATCH)
+            {
+                SetLastError(RtlNtStatusToDosError(Status));
+                return FALSE;
+            }
+
+            /* Compute new size length */
+            ASSERT(Size >= sizeof(RTL_PROCESS_MODULES));
+            NewSize *= sizeof(RTL_PROCESS_MODULE_INFORMATION);
+            NewSize += sizeof(ULONG);
+            ASSERT(NewSize >= sizeof(RTL_PROCESS_MODULES));
+            /* Check whether it is really bigger - otherwise, leave */
+            if (NewSize < Size)
+            {
+                ASSERT(NewSize > Size);
+                SetLastError(RtlNtStatusToDosError(STATUS_INFO_LENGTH_MISMATCH));
+                return FALSE;
+            }
+
+            /* Loop again with that new buffer */
+            Size = NewSize;
+            continue;
+        }
+
+        /* No modules returned? Leave */
+        if (Information->NumberOfModules == 0)
+        {
+            break;
+        }
+
+        /* Try to find which module matches the base address given */
+        for (Count = 0; Count < Information->NumberOfModules; ++Count)
+        {
+            Module = Information->Modules[Count];
+            if (Module.ImageBase == ImageBase)
+            {
+                /* Copy the matching module and leave */
+                memcpy(MatchingModule, &Module, sizeof(Module));
+                LocalFree(Information);
+                return TRUE;
+            }
+        }
+
+        /* If we arrive here, it means we were not able to find matching base address */
+        break;
+    } while (TRUE);
+
+    /* Release and leave */
+    LocalFree(Information);
+    SetLastError(ERROR_INVALID_HANDLE);
+
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+static BOOL NTAPI
+FindModule(IN HANDLE hProcess,
+           IN HMODULE hModule OPTIONAL,
+           OUT PLDR_DATA_TABLE_ENTRY Module)
+{
+    DWORD Count;
+    NTSTATUS Status;
+    PPEB_LDR_DATA LoaderData;
+    PLIST_ENTRY ListHead, ListEntry;
+    PROCESS_BASIC_INFORMATION ProcInfo;
+
+    /* Query the process information to get its PEB address */
+    Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &ProcInfo, sizeof(ProcInfo), NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    /* If no module was provided, get base as module */
+    if (hModule == NULL)
+    {
+        if (!ReadProcessMemory(hProcess, &ProcInfo.PebBaseAddress->ImageBaseAddress, &hModule, sizeof(hModule), NULL))
+        {
+            return FALSE;
+        }
+    }
+
+    /* Read loader data address from PEB */
+    if (!ReadProcessMemory(hProcess, &ProcInfo.PebBaseAddress->Ldr, &LoaderData, sizeof(LoaderData), NULL))
+    {
+        return FALSE;
+    }
+
+    if (LoaderData == NULL)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* Store list head address */
+    ListHead = &(LoaderData->InMemoryOrderModuleList);
+
+    /* Read first element in the modules list */
+    if (!ReadProcessMemory(hProcess,
+                           &(LoaderData->InMemoryOrderModuleList.Flink),
+                           &ListEntry,
+                           sizeof(ListEntry),
+                           NULL))
+    {
+        return FALSE;
+    }
+
+    Count = 0;
+
+    /* Loop on the modules */
+    while (ListEntry != ListHead)
+    {
+        /* Load module data */
+        if (!ReadProcessMemory(hProcess,
+                               CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks),
+                               Module,
+                               sizeof(*Module),
+                               NULL))
+        {
+            return FALSE;
+        }
+
+        /* Does that match the module we're looking for? */
+        if (Module->DllBase == hModule)
+        {
+            return TRUE;
+        }
+
+        ++Count;
+        if (Count > MAX_MODULES)
+        {
+            break;
+        }
+
+        /* Get to next listed module */
+        ListEntry = Module->InMemoryOrderLinks.Flink;
+    }
+
+    SetLastError(ERROR_INVALID_HANDLE);
+    return FALSE;
+}
+
+typedef struct _INTERNAL_ENUM_PAGE_FILES_CONTEXT
+{
+    LPVOID lpContext;
+    PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine;
+    DWORD dwErrCode;
+} INTERNAL_ENUM_PAGE_FILES_CONTEXT, *PINTERNAL_ENUM_PAGE_FILES_CONTEXT;
+
+/*
+ * @implemented
+ */
+static BOOL CALLBACK
+CallBackConvertToAscii(LPVOID pContext,
+                       PENUM_PAGE_FILE_INFORMATION pPageFileInfo,
+                       LPCWSTR lpFilename)
+{
+    BOOL Ret;
+    DWORD Len;
+    LPSTR AnsiFileName;
+    PINTERNAL_ENUM_PAGE_FILES_CONTEXT Context = (PINTERNAL_ENUM_PAGE_FILES_CONTEXT)pContext;
+
+    Len = wcslen(lpFilename);
+
+    /* Alloc space for the ANSI string */
+    AnsiFileName = LocalAlloc(LMEM_FIXED, (Len * sizeof(CHAR)) + sizeof(ANSI_NULL));
+    if (AnsiFileName == NULL)
+    {
+        Context->dwErrCode = RtlNtStatusToDosError(STATUS_INSUFFICIENT_RESOURCES);
+        return FALSE;
+    }
+
+    /* Convert string to ANSI */
+    if (WideCharToMultiByte(CP_ACP, 0, lpFilename, -1, AnsiFileName, (Len * sizeof(CHAR)) + sizeof(ANSI_NULL), NULL, NULL) == 0)
+    {
+        Context->dwErrCode = GetLastError();
+        LocalFree(AnsiFileName);
+        return FALSE;
+    }
+
+    /* And finally call "real" callback */
+    Ret = Context->pCallbackRoutine(Context->lpContext, pPageFileInfo, AnsiFileName);
+    LocalFree(AnsiFileName);
+
+    return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+static VOID NTAPI
+PsParseCommandLine(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+static VOID NTAPI
+PsInitializeAndStartProfile(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+static VOID NTAPI
+PsStopAndAnalyzeProfile(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+/* PUBLIC *********************************************************************/
+
+/*
+ * @implemented
+ */
 BOOLEAN
 WINAPI
 DllMain(HINSTANCE hDllHandle,
         DWORD nReason,
         LPVOID Reserved)
 {
-  switch(nReason)
-  {
-    case DLL_PROCESS_ATTACH:
-      DisableThreadLibraryCalls(hDllHandle);
-      break;
+    switch(nReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hDllHandle);
+            if (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PROFILE_USER)
+            {
+                PsParseCommandLine();
+                PsInitializeAndStartProfile();
+            }
+            break;
+
+        case DLL_PROCESS_DETACH:
+            if (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PROFILE_USER)
+            {
+                PsStopAndAnalyzeProfile();
+            }
+            break;  
   }
 
   return TRUE;
 }
 
-/* INTERNAL *******************************************************************/
-
-typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
-{
-  LPVOID *lpImageBase;
-  DWORD nCount;
-  DWORD nTotal;
-} ENUM_DEVICE_DRIVERS_CONTEXT, *PENUM_DEVICE_DRIVERS_CONTEXT;
-
-NTSTATUS WINAPI
-EnumDeviceDriversCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
-                          IN OUT PVOID CallbackContext)
-{
-  PENUM_DEVICE_DRIVERS_CONTEXT Context = (PENUM_DEVICE_DRIVERS_CONTEXT)CallbackContext;
-
-  /* check if more buffer space is available */
-  if(Context->nCount != 0)
-  {
-    /* return current module */
-    *Context->lpImageBase = CurrentModule->ImageBase;
-
-    /* go to next array slot */
-    Context->lpImageBase++;
-    Context->nCount--;
-  }
-
-  Context->nTotal++;
-  return STATUS_SUCCESS;
-}
-
-
-typedef struct _ENUM_PROCESSES_CONTEXT
-{
-  DWORD *lpidProcess;
-  DWORD nCount;
-} ENUM_PROCESSES_CONTEXT, *PENUM_PROCESSES_CONTEXT;
-
-NTSTATUS WINAPI
-EnumProcessesCallback(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
-                      IN OUT PVOID CallbackContext)
-{
-  PENUM_PROCESSES_CONTEXT Context = (PENUM_PROCESSES_CONTEXT)CallbackContext;
-
-  /* no more buffer space */
-  if(Context->nCount == 0)
-  {
-    return STATUS_INFO_LENGTH_MISMATCH;
-  }
-
-  /* return current process */
-  *Context->lpidProcess = (DWORD_PTR)CurrentProcess->UniqueProcessId;
-
-  /* go to next array slot */
-  Context->lpidProcess++;
-  Context->nCount--;
-
-  return STATUS_SUCCESS;
-}
-
-
-typedef struct _ENUM_PROCESS_MODULES_CONTEXT
-{
-  HMODULE *lphModule;
-  DWORD nCount;
-  DWORD nTotal;
-} ENUM_PROCESS_MODULES_CONTEXT, *PENUM_PROCESS_MODULES_CONTEXT;
-
-NTSTATUS WINAPI
-EnumProcessModulesCallback(IN HANDLE ProcessHandle,
-                           IN PLDR_DATA_TABLE_ENTRY CurrentModule,
-                           IN OUT PVOID CallbackContext)
-{
-  PENUM_PROCESS_MODULES_CONTEXT Context = (PENUM_PROCESS_MODULES_CONTEXT)CallbackContext;
-
-  /* check if more buffer space is available */
-  if(Context->nCount != 0)
-  {
-    /* return current process */
-    *Context->lphModule = CurrentModule->DllBase;
-
-    /* go to next array slot */
-    Context->lphModule++;
-    Context->nCount--;
-  }
-
-  Context->nTotal++;
-  return STATUS_SUCCESS;
-}
-
-
-typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
-{
-  LPVOID ImageBase;
-  struct
-  {
-    ULONG bFullName : sizeof(ULONG) * 8 / 2;
-    ULONG bUnicode : sizeof(ULONG) * 8 / 2;
-  };
-  DWORD nSize;
-  union
-  {
-    LPVOID lpName;
-    LPSTR lpAnsiName;
-    LPWSTR lpUnicodeName;
-  };
-} GET_DEVICE_DRIVER_NAME_CONTEXT, *PGET_DEVICE_DRIVER_NAME_CONTEXT;
-
-NTSTATUS WINAPI
-GetDeviceDriverNameCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
-                            IN OUT PVOID CallbackContext)
-{
-  PGET_DEVICE_DRIVER_NAME_CONTEXT Context = (PGET_DEVICE_DRIVER_NAME_CONTEXT)CallbackContext;
-
-  /* module found */
-  if(Context->ImageBase == CurrentModule->ImageBase)
-  {
-    PCHAR pcModuleName;
-    ULONG l;
-
-    /* get the full name or just the filename part */
-    if(Context->bFullName)
-      pcModuleName = &CurrentModule->FullPathName[0];
-    else
-      pcModuleName = &CurrentModule->FullPathName[CurrentModule->OffsetToFileName];
-
-    /* get the length of the name */
-    l = strlen(pcModuleName);
-
-    if(Context->nSize <= l)
-    {
-      /* use the user buffer's length */
-      l = Context->nSize;
-    }
-    else
-    {
-      /* enough space for the null terminator */
-      Context->nSize = ++l;
-    }
-
-    /* copy the string */
-    if(Context->bUnicode)
-    {
-      ANSI_STRING AnsiString;
-      UNICODE_STRING UnicodeString;
-
-      UnicodeString.Length = 0;
-      UnicodeString.MaximumLength = l * sizeof(WCHAR);
-      UnicodeString.Buffer = Context->lpUnicodeName;
-
-      RtlInitAnsiString(&AnsiString, pcModuleName);
-      /* driver names should always be in language-neutral ASCII, so we don't
-         bother calling AreFileApisANSI() */
-      RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
-    }
-    else
-    {
-      memcpy(Context->lpAnsiName, pcModuleName, l);
-    }
-
-    /* terminate the enumeration */
-    return STATUS_NO_MORE_FILES;
-  }
-  else
-  {
-    /* continue searching */
-    return STATUS_SUCCESS;
-  }
-}
-
-
-static DWORD
-InternalGetDeviceDriverName(BOOLEAN bUnicode,
-                            BOOLEAN bFullName,
-                            LPVOID ImageBase,
-                            LPVOID lpName,
-                            DWORD nSize)
-{
-  GET_DEVICE_DRIVER_NAME_CONTEXT Context;
-  NTSTATUS Status;
-
-  if(lpName == NULL || nSize == 0)
-  {
-    return 0;
-  }
-
-  if(ImageBase == NULL)
-  {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return 0;
-  }
-
-  Context.ImageBase = ImageBase;
-  Context.bFullName = bFullName;
-  Context.bUnicode = bUnicode;
-  Context.nSize = nSize;
-  Context.lpName = lpName;
-
-  /* start the enumeration */
-  Status = PsaEnumerateSystemModules(GetDeviceDriverNameCallback, &Context);
-
-  if(Status == STATUS_NO_MORE_FILES)
-  {
-    /* module was found, return string size */
-    return Context.nSize;
-  }
-  else if(NT_SUCCESS(Status))
-  {
-    /* module was not found */
-    SetLastError(ERROR_INVALID_HANDLE);
-  }
-  else
-  {
-    /* an error occurred */
-    SetLastErrorByStatus(Status);
-  }
-  return 0;
-}
-
-
-static DWORD
-InternalGetMappedFileName(BOOLEAN bUnicode,
-                          HANDLE hProcess,
-                          LPVOID lpv,
-                          LPVOID lpName,
-                          DWORD nSize)
-{
-  PMEMORY_SECTION_NAME pmsnName;
-  ULONG nBufSize;
-  NTSTATUS Status;
-
-  if(nSize == 0 || lpName == NULL)
-  {
-    return 0;
-  }
-
-  if(nSize > (0xFFFF / sizeof(WCHAR)))
-  {
-    /* if the user buffer contains more characters than would fit in an
-       UNICODE_STRING, limit the buffer size. RATIONALE: we don't limit buffer
-       size elsewhere because here superfluous buffer size will mean a larger
-       temporary buffer */
-    nBufSize = 0xFFFF / sizeof(WCHAR);
-  }
-  else
-  {
-    nBufSize = nSize * sizeof(WCHAR);
-  }
-
-  /* allocate the memory */
-  pmsnName = PsaiMalloc(nBufSize + sizeof(MEMORY_SECTION_NAME));
-
-  if(pmsnName == NULL)
-  {
-    SetLastError(ERROR_OUTOFMEMORY);
-    return 0;
-  }
-
-   /* initialize the destination buffer */
-   pmsnName->SectionFileName.Length = 0;
-   pmsnName->SectionFileName.Length = nBufSize;
-
-#if 0
-   __try
-   {
-#endif
-   /* query the name */
-   Status = NtQueryVirtualMemory(hProcess,
-                                 lpv,
-                                 MemorySectionName,
-                                 pmsnName,
-                                 nBufSize,
-                                 NULL);
-   if(!NT_SUCCESS(Status))
-   {
-     PsaiFree(pmsnName);
-     SetLastErrorByStatus(Status);
-     return 0;
-   }
-
-   if(bUnicode)
-   {
-     /* destination is an Unicode string: direct copy */
-     memcpy((LPWSTR)lpName, pmsnName + 1, pmsnName->SectionFileName.Length);
-
-     PsaiFree(pmsnName);
-
-     if(pmsnName->SectionFileName.Length < nSize)
-     {
-       /* null-terminate the string */
-       ((LPWSTR)lpName)[pmsnName->SectionFileName.Length] = 0;
-       return pmsnName->SectionFileName.Length + 1;
-     }
-
-     return pmsnName->SectionFileName.Length;
-   }
-   else
-   {
-     ANSI_STRING AnsiString;
-
-     AnsiString.Length = 0;
-     AnsiString.MaximumLength = nSize;
-     AnsiString.Buffer = (LPSTR)lpName;
-
-     if(AreFileApisANSI())
-       RtlUnicodeStringToAnsiString(&AnsiString, &pmsnName->SectionFileName, FALSE);
-     else
-       RtlUnicodeStringToOemString(&AnsiString, &pmsnName->SectionFileName, FALSE);
-
-     PsaiFree(pmsnName);
-
-     if(AnsiString.Length < nSize)
-     {
-       /* null-terminate the string */
-       ((LPSTR)lpName)[AnsiString.Length] = 0;
-       return AnsiString.Length + 1;
-     }
-
-     return AnsiString.Length;
-   }
-
-#if 0
-   }
-   __finally
-   {
-     PsaiFree(pmsnName);
-   }
-#endif
-}
-
-
-typedef struct _GET_MODULE_INFORMATION_FLAGS
-{
-  ULONG bWantName : sizeof(ULONG) * 8 / 4;
-  ULONG bUnicode : sizeof(ULONG) * 8 / 4;
-  ULONG bFullName : sizeof(ULONG) * 8 / 4;
-} GET_MODULE_INFORMATION_FLAGS, *PGET_MODULE_INFORMATION_FLAGS;
-
-typedef struct _GET_MODULE_INFORMATION_CONTEXT
-{
-  HMODULE hModule;
-  GET_MODULE_INFORMATION_FLAGS Flags;
-  DWORD nBufSize;
-  union
-  {
-    LPWSTR lpUnicodeName;
-    LPSTR lpAnsiName;
-    LPMODULEINFO lpmodinfo;
-    LPVOID lpBuffer;
-  };
-} GET_MODULE_INFORMATION_CONTEXT, *PGET_MODULE_INFORMATION_CONTEXT;
-
-NTSTATUS WINAPI
-GetModuleInformationCallback(IN HANDLE ProcessHandle,
-                             IN PLDR_DATA_TABLE_ENTRY CurrentModule,
-                             IN OUT PVOID CallbackContext)
-{
-  PGET_MODULE_INFORMATION_CONTEXT Context = (PGET_MODULE_INFORMATION_CONTEXT)CallbackContext;
-
-  /* found the module we were looking for */
-  if(CurrentModule->DllBase == Context->hModule)
-  {
-    /* we want the module name */
-    if(Context->Flags.bWantName)
-    {
-      PUNICODE_STRING SourceString;
-      ULONG l;
-      NTSTATUS Status;
-
-      if(Context->Flags.bFullName)
-        SourceString = &(CurrentModule->FullDllName);
-      else
-        SourceString = &(CurrentModule->BaseDllName);
-
-      SourceString->Length -= SourceString->Length % sizeof(WCHAR);
-
-      /* l is the byte size of the user buffer */
-      l = Context->nBufSize * sizeof(WCHAR);
-
-      /* if the user buffer has room for the string and a null terminator */
-      if(l >= (SourceString->Length + sizeof(WCHAR)))
-      {
-        /* limit the buffer size */
-        l = SourceString->Length;
-
-        /* null-terminate the string */
-        if(Context->Flags.bUnicode)
-          Context->lpUnicodeName[l / sizeof(WCHAR)] = 0;
-        else
-          Context->lpAnsiName[l / sizeof(WCHAR)] = 0;
-      }
-
-      if(Context->Flags.bUnicode)
-      {
-        /* Unicode: direct copy */
-        /* NOTE: I've chosen not to check for ProcessHandle == NtCurrentProcess(),
-                 this function is complicated enough as it is */
-        Status = NtReadVirtualMemory(ProcessHandle,
-                                     SourceString->Buffer,
-                                     Context->lpUnicodeName,
-                                     l,
-                                     NULL);
-
-        if(!NT_SUCCESS(Status))
-        {
-          Context->nBufSize = 0;
-          return Status;
-        }
-
-        Context->nBufSize = l / sizeof(WCHAR);
-      }
-      else
-      {
-        /* ANSI/OEM: convert and copy */
-        LPWSTR pwcUnicodeBuf;
-        ANSI_STRING AnsiString;
-        UNICODE_STRING UnicodeString;
-
-        AnsiString.Length = 0;
-        AnsiString.MaximumLength = Context->nBufSize;
-        AnsiString.Buffer = Context->lpAnsiName;
-
-        /* allocate the local buffer */
-        pwcUnicodeBuf = PsaiMalloc(SourceString->Length);
-
-#if 0
-        __try
-        {
-#endif
-        if(pwcUnicodeBuf == NULL)
-        {
-          Status = STATUS_NO_MEMORY;
-          goto exitWithStatus;
-        }
-
-        /* copy the string in the local buffer */
-        Status = NtReadVirtualMemory(ProcessHandle,
-                                     SourceString->Buffer,
-                                     pwcUnicodeBuf,
-                                     l,
-                                     NULL);
-
-        if(!NT_SUCCESS(Status))
-        {
-          goto exitWithStatus;
-        }
-
-        /* initialize Unicode string buffer */
-        UnicodeString.Length = UnicodeString.MaximumLength = l;
-        UnicodeString.Buffer = pwcUnicodeBuf;
-
-        /* convert and copy */
-        if(AreFileApisANSI())
-          RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
-        else
-          RtlUnicodeStringToOemString(&AnsiString, &UnicodeString, FALSE);
-
-        /* return the string size */
-        Context->nBufSize = AnsiString.Length;
-#if 0
-        }
-        __finally
-        {
-          /* free the buffer */
-          PsaiFree(pwcUnicodeBuf);
-        }
-#else
-        Status = STATUS_NO_MORE_FILES;
-
-exitWithStatus:
-        /* free the buffer */
-        PsaiFree(pwcUnicodeBuf);
-        return Status;
-#endif
-      }
-    }
-    else
-    {
-      /* we want other module information */
-      ULONG nSize = Context->nBufSize;
-
-      /* base address */
-      if(nSize >= sizeof(CurrentModule->DllBase))
-      {
-        Context->lpmodinfo->lpBaseOfDll = CurrentModule->DllBase;
-        nSize -= sizeof(CurrentModule->DllBase);
-      }
-
-      /* image size */
-      if(nSize >= sizeof(CurrentModule->SizeOfImage))
-      {
-        Context->lpmodinfo->SizeOfImage = CurrentModule->SizeOfImage;
-        nSize -= sizeof(CurrentModule->SizeOfImage);
-      }
-
-      /* entry point */
-      if(nSize >= sizeof(CurrentModule->EntryPoint))
-      {
-        /* ??? FIXME? is "EntryPoint" just the offset, or the real address? */
-        Context->lpmodinfo->EntryPoint = (PVOID)CurrentModule->EntryPoint;
-      }
-
-      Context->nBufSize = TRUE;
-    }
-
-    return STATUS_NO_MORE_FILES;
-  }
-
-  return STATUS_SUCCESS;
-}
-
-
-static DWORD
-InternalGetModuleInformation(HANDLE hProcess,
-                             HMODULE hModule,
-                             GET_MODULE_INFORMATION_FLAGS Flags,
-                             LPVOID lpBuffer,
-                             DWORD nBufSize)
-{
-  GET_MODULE_INFORMATION_CONTEXT Context;
-  NTSTATUS Status;
-
-  Context.hModule = hModule;
-  Context.Flags = Flags;
-  Context.nBufSize = nBufSize;
-  Context.lpBuffer = lpBuffer;
-
-  Status = PsaEnumerateProcessModules(hProcess, GetModuleInformationCallback, &Context);
-
-  if(Status == STATUS_NO_MORE_FILES)
-  {
-    /* module was found, return string size */
-    return Context.nBufSize;
-  }
-  else if(NT_SUCCESS(Status))
-  {
-    /* module was not found */
-    SetLastError(ERROR_INVALID_HANDLE);
-  }
-  else
-  {
-    /* an error occurred */
-    SetLastErrorByStatus(Status);
-  }
-  return 0;
-}
-
-
-typedef struct _INTERNAL_ENUM_PAGE_FILES_CONTEXT
-{
-  PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine;
-  LPVOID lpContext;
-} INTERNAL_ENUM_PAGE_FILES_CONTEXT, *PINTERNAL_ENUM_PAGE_FILES_CONTEXT;
-
-
-static BOOL CALLBACK
-InternalAnsiPageFileCallback(LPVOID pContext,
-                             PENUM_PAGE_FILE_INFORMATION pPageFileInfo,
-                             LPCWSTR lpFilename)
-{
-  size_t slen;
-  LPSTR AnsiFileName;
-  PINTERNAL_ENUM_PAGE_FILES_CONTEXT Context = (PINTERNAL_ENUM_PAGE_FILES_CONTEXT)pContext;
-
-  slen = wcslen(lpFilename);
-
-  AnsiFileName = (LPSTR)LocalAlloc(LMEM_FIXED, (slen + 1) * sizeof(CHAR));
-  if(AnsiFileName != NULL)
-  {
-    BOOL Ret;
-
-    WideCharToMultiByte(CP_ACP,
-                        0,
-                        lpFilename,
-                        -1, /* only works if the string is NULL-terminated!!! */
-                        AnsiFileName,
-                        (slen + 1) * sizeof(CHAR),
-                        NULL,
-                        NULL);
-
-    Ret = Context->pCallbackRoutine(Context->lpContext, pPageFileInfo, AnsiFileName);
-
-    LocalFree((HLOCAL)AnsiFileName);
-
-    return Ret;
-  }
-
-  return FALSE;
-}
-
-/* PUBLIC *********************************************************************/
 
 /*
  * @implemented
@@ -629,38 +328,41 @@ BOOL
 WINAPI
 EmptyWorkingSet(HANDLE hProcess)
 {
-  QUOTA_LIMITS QuotaLimits;
-  NTSTATUS Status;
+    SYSTEM_INFO SystemInfo;
+    QUOTA_LIMITS QuotaLimits;
+    NTSTATUS Status;
 
-  /* query the working set */
-  Status = NtQueryInformationProcess(hProcess,
+    GetSystemInfo(&SystemInfo);
+
+    /* Query the working set */
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessQuotaLimits,
+                                       &QuotaLimits,
+                                       sizeof(QuotaLimits),
+                                       NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    /* Empty the working set */
+    QuotaLimits.MinimumWorkingSetSize = -1;
+    QuotaLimits.MaximumWorkingSetSize = -1;
+
+    /* Set the working set */
+    Status = NtSetInformationProcess(hProcess,
                                      ProcessQuotaLimits,
                                      &QuotaLimits,
-                                     sizeof(QuotaLimits),
-                                     NULL);
+                                     sizeof(QuotaLimits));
+    if (!NT_SUCCESS(Status) && Status != STATUS_PRIVILEGE_NOT_HELD)
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-
-  /* empty the working set */
-  QuotaLimits.MinimumWorkingSetSize = -1;
-  QuotaLimits.MaximumWorkingSetSize = -1;
-
-  /* set the working set */
-  Status = NtSetInformationProcess(hProcess,
-                                   ProcessQuotaLimits,
-                                   &QuotaLimits,
-                                   sizeof(QuotaLimits));
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -673,27 +375,78 @@ EnumDeviceDrivers(LPVOID *lpImageBase,
                   DWORD cb,
                   LPDWORD lpcbNeeded)
 {
-  ENUM_DEVICE_DRIVERS_CONTEXT Context;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    DWORD NewSize, Count;
+    PRTL_PROCESS_MODULES Information;
+    /* By default, to prevent too many reallocations, we already make room for 4 modules */
+    DWORD Size = sizeof(RTL_PROCESS_MODULES) + 3 * sizeof(RTL_PROCESS_MODULE_INFORMATION);
 
-  cb /= sizeof(PVOID);
+    do
+    {
+        /* Allocate a buffer to hold modules information */
+        Information = LocalAlloc(LMEM_FIXED, Size);
+        if (!Information)
+        {
+            SetLastError(ERROR_NO_SYSTEM_RESOURCES);
+            return FALSE;
+        }
 
-  Context.lpImageBase = lpImageBase;
-  Context.nCount = cb;
-  Context.nTotal = 0;
+        /* Query information */
+        Status = NtQuerySystemInformation(SystemModuleInformation, Information, Size, &Count);
+        /* In case of an error */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Save the amount of output modules */
+            NewSize = Information->NumberOfModules;
+            /* And free buffer */
+            LocalFree(Information);
 
-  Status = PsaEnumerateSystemModules(EnumDeviceDriversCallback, &Context);
+            /* If it was not a length mismatch (ie, buffer too small), just leave */
+            if (Status != STATUS_INFO_LENGTH_MISMATCH)
+            {
+                SetLastError(RtlNtStatusToDosError(Status));
+                return FALSE;
+            }
 
-  /* return the count of bytes that would be needed for a complete enumeration */
-  *lpcbNeeded = Context.nTotal * sizeof(PVOID);
+            /* Compute new size length */
+            ASSERT(Size >= sizeof(RTL_PROCESS_MODULES));
+            NewSize *= sizeof(RTL_PROCESS_MODULE_INFORMATION);
+            NewSize += sizeof(ULONG);
+            ASSERT(NewSize >= sizeof(RTL_PROCESS_MODULES));
+            /* Check whether it is really bigger - otherwise, leave */
+            if (NewSize < Size)
+            {
+                ASSERT(NewSize > Size);
+                SetLastError(RtlNtStatusToDosError(STATUS_INFO_LENGTH_MISMATCH));
+                return FALSE;
+            }
 
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+            /* Loop again with that new buffer */
+            Size = NewSize;
+            continue;
+        }
 
-  return TRUE;
+        /* End of allocation loop */
+        break;
+    } while (TRUE);
+
+    _SEH2_TRY
+    {
+        for (Count = 0; Count < Information->NumberOfModules && Count < cb / sizeof(LPVOID); ++Count)
+        {
+            lpImageBase[Count] = Information->Modules[Count].ImageBase;
+        }
+
+        *lpcbNeeded = Information->NumberOfModules * sizeof(LPVOID);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    return TRUE;
 }
 
 
@@ -706,32 +459,78 @@ EnumProcesses(DWORD *lpidProcess,
               DWORD cb,
               LPDWORD lpcbNeeded)
 {
-  ENUM_PROCESSES_CONTEXT Context;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    DWORD Size = MAXSHORT, Count;
+    PSYSTEM_PROCESS_INFORMATION ProcInfo;
+    PSYSTEM_PROCESS_INFORMATION ProcInfoArray;
 
-  cb /= sizeof(DWORD);
+    /* First of all, query all the processes */
+    do
+    {
+        ProcInfoArray = LocalAlloc(LMEM_FIXED, Size);
+        if (ProcInfoArray == NULL)
+        {
+            return FALSE;
+        }
 
-  if(cb == 0 || lpidProcess == NULL)
-  {
-    *lpcbNeeded = 0;
+        Status = NtQuerySystemInformation(SystemProcessInformation, ProcInfoArray, Size, NULL);
+        if (Status == STATUS_INFO_LENGTH_MISMATCH)
+        {
+            LocalFree(ProcInfoArray);
+            Size += MAXSHORT;
+            continue;
+        }
+
+        break;
+    }
+    while (TRUE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        LocalFree(ProcInfoArray);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    /* Then, loop to output data */
+    Count = 0;
+    ProcInfo = ProcInfoArray;
+
+    _SEH2_TRY
+    {
+        do
+        {
+            /* It may sound weird, but actually MS only updated Count on
+             * successful write. So, it cannot measure the amount of space needed!
+             * This is really tricky.
+             */
+            if (Count < cb / sizeof(DWORD))
+            {
+                lpidProcess[Count] = (DWORD)ProcInfo->UniqueProcessId;
+                Count++;
+            }
+
+            if (ProcInfo->NextEntryOffset == 0)
+            {
+                break;
+            }
+
+            ProcInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)ProcInfo + ProcInfo->NextEntryOffset);
+        }
+        while (TRUE);
+
+        *lpcbNeeded = Count * sizeof(DWORD);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+        LocalFree(ProcInfoArray);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    LocalFree(ProcInfoArray);
     return TRUE;
-  }
-
-  Context.lpidProcess = lpidProcess;
-  Context.nCount = cb;
-
-  /* enumerate the process ids */
-  Status = PsaEnumerateProcesses(EnumProcessesCallback, &Context);
-
-  *lpcbNeeded = (cb - Context.nCount) * sizeof(DWORD);
-
-  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 
@@ -745,27 +544,96 @@ EnumProcessModules(HANDLE hProcess,
                    DWORD cb,
                    LPDWORD lpcbNeeded)
 {
-  ENUM_PROCESS_MODULES_CONTEXT Context;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    DWORD NbOfModules, Count;
+    PPEB_LDR_DATA LoaderData;
+    PLIST_ENTRY ListHead, ListEntry;
+    PROCESS_BASIC_INFORMATION ProcInfo;
+    LDR_DATA_TABLE_ENTRY CurrentModule;
 
-  cb /= sizeof(HMODULE);
+    /* Query the process information to get its PEB address */
+    Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &ProcInfo, sizeof(ProcInfo), NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  Context.lphModule = lphModule;
-  Context.nCount = cb;
-  Context.nTotal = 0;
+    if (ProcInfo.PebBaseAddress == NULL)
+    {
+        SetLastError(RtlNtStatusToDosError(STATUS_PARTIAL_COPY));
+        return FALSE;
+    }
 
-  /* enumerate the process modules */
-  Status = PsaEnumerateProcessModules(hProcess, EnumProcessModulesCallback, &Context);
+    /* Read loader data address from PEB */
+    if (!ReadProcessMemory(hProcess, &ProcInfo.PebBaseAddress->Ldr, &LoaderData, sizeof(LoaderData), NULL))
+    {
+        return FALSE;
+    }
 
-  *lpcbNeeded = Context.nTotal * sizeof(HMODULE);
+    /* Store list head address */
+    ListHead = &LoaderData->InLoadOrderModuleList;
 
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+    /* Read first element in the modules list */
+    if (!ReadProcessMemory(hProcess, &LoaderData->InLoadOrderModuleList.Flink, &ListEntry, sizeof(ListEntry), NULL))
+    {
+        return FALSE;
+    }
 
-  return TRUE;
+    NbOfModules = cb / sizeof(HMODULE);
+    Count = 0;
+
+    /* Loop on the modules */
+    while (ListEntry != ListHead)
+    {
+        /* Load module data */
+        if (!ReadProcessMemory(hProcess,
+                               CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks),
+                               &CurrentModule,
+                               sizeof(CurrentModule),
+                               NULL))
+        {
+            return FALSE;
+        }
+
+        /* Check if we can output module, do it if so */
+        if (Count < NbOfModules)
+        {
+            _SEH2_TRY
+            {
+                lphModule[Count] = CurrentModule.DllBase;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+                _SEH2_YIELD(return FALSE);
+            }
+            _SEH2_END;
+        }
+
+        ++Count;
+        if (Count > MAX_MODULES)
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+
+        /* Get to next listed module */
+        ListEntry = CurrentModule.InLoadOrderLinks.Flink;
+    }
+
+    _SEH2_TRY
+    {
+        *lpcbNeeded = Count * sizeof(HMODULE);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    return TRUE;
 }
 
 
@@ -778,7 +646,33 @@ GetDeviceDriverBaseNameA(LPVOID ImageBase,
                          LPSTR lpBaseName,
                          DWORD nSize)
 {
-  return InternalGetDeviceDriverName(FALSE, FALSE, ImageBase, lpBaseName, nSize);
+    DWORD Len, LenWithNull;
+    RTL_PROCESS_MODULE_INFORMATION Module;
+
+    /* Get the associated device driver to the base address */
+    if (!FindDeviceDriver(ImageBase, &Module))
+    {
+        return 0;
+    }
+
+    /* And copy as much as possible to output buffer.
+     * Try to add 1 to the len, to copy the null char as well.
+     */
+    Len =
+    LenWithNull = strlen(&Module.FullPathName[Module.OffsetToFileName]) + 1;
+    if (Len > nSize)
+    {
+        Len = nSize;
+    }
+
+    memcpy(lpBaseName, &Module.FullPathName[Module.OffsetToFileName], Len);
+    /* In case we copied null char, remove it from final len */
+    if (Len == LenWithNull)
+    {
+        --Len;
+    }
+
+    return Len;
 }
 
 
@@ -791,7 +685,33 @@ GetDeviceDriverFileNameA(LPVOID ImageBase,
                          LPSTR lpFilename,
                          DWORD nSize)
 {
-  return InternalGetDeviceDriverName(FALSE, TRUE, ImageBase, lpFilename, nSize);
+    DWORD Len, LenWithNull;
+    RTL_PROCESS_MODULE_INFORMATION Module;
+
+    /* Get the associated device driver to the base address */
+    if (!FindDeviceDriver(ImageBase, &Module))
+    {
+        return 0;
+    }
+
+    /* And copy as much as possible to output buffer.
+     * Try to add 1 to the len, to copy the null char as well.
+     */
+    Len =
+    LenWithNull = strlen(Module.FullPathName) + 1;
+    if (Len > nSize)
+    {
+        Len = nSize;
+    }
+
+    memcpy(lpFilename, Module.FullPathName, Len);
+    /* In case we copied null char, remove it from final len */
+    if (Len == LenWithNull)
+    {
+        --Len;
+    }
+
+    return Len;
 }
 
 
@@ -804,7 +724,33 @@ GetDeviceDriverBaseNameW(LPVOID ImageBase,
                          LPWSTR lpBaseName,
                          DWORD nSize)
 {
-  return InternalGetDeviceDriverName(TRUE, FALSE, ImageBase, lpBaseName, nSize);
+    DWORD Len;
+    LPSTR BaseName;
+
+    /* Allocate internal buffer for conversion */
+    BaseName = LocalAlloc(LMEM_FIXED, nSize);
+    if (BaseName == 0)
+    {
+        return 0;
+    }
+
+    /* Call A API */
+    Len = GetDeviceDriverBaseNameA(ImageBase, BaseName, nSize);
+    if (Len == 0)
+    {
+        LocalFree(BaseName);
+        return 0;
+    }
+
+    /* And convert output */
+    if (MultiByteToWideChar(CP_ACP, 0, BaseName, (Len < nSize) ? Len + 1 : Len, lpBaseName, nSize) == 0)
+    {
+        LocalFree(BaseName);
+        return 0;
+    }
+
+    LocalFree(BaseName);
+    return Len;
 }
 
 
@@ -817,7 +763,33 @@ GetDeviceDriverFileNameW(LPVOID ImageBase,
                          LPWSTR lpFilename,
                          DWORD nSize)
 {
-  return InternalGetDeviceDriverName(TRUE, TRUE, ImageBase, lpFilename, nSize);
+    DWORD Len;
+    LPSTR FileName;
+
+    /* Allocate internal buffer for conversion */
+    FileName = LocalAlloc(LMEM_FIXED, nSize);
+    if (FileName == 0)
+    {
+        return 0;
+    }
+
+    /* Call A API */
+    Len = GetDeviceDriverFileNameA(ImageBase, FileName, nSize);
+    if (Len == 0)
+    {
+        LocalFree(FileName);
+        return 0;
+    }
+
+    /* And convert output */
+    if (MultiByteToWideChar(CP_ACP, 0, FileName, (Len < nSize) ? Len + 1 : Len, lpFilename, nSize) == 0)
+    {
+        LocalFree(FileName);
+        return 0;
+    }
+
+    LocalFree(FileName);
+    return Len;
 }
 
 
@@ -831,7 +803,29 @@ GetMappedFileNameA(HANDLE hProcess,
                    LPSTR lpFilename,
                    DWORD nSize)
 {
-  return InternalGetMappedFileName(FALSE, hProcess, lpv, lpFilename, nSize);
+    DWORD Len;
+    LPWSTR FileName;
+
+    DPRINT("GetMappedFileNameA(%p, %p, %p, %lu)\n", hProcess, lpv, lpFilename, nSize);
+
+    /* Allocate internal buffer for conversion */
+    FileName = LocalAlloc(LMEM_FIXED, nSize * sizeof(WCHAR));
+    if (FileName == NULL)
+    {
+        return 0;
+    }
+
+    /* Call W API */
+    Len = GetMappedFileNameW(hProcess, lpv, FileName, nSize);
+
+    /* And convert output */
+    if (WideCharToMultiByte(CP_ACP, 0, FileName, (Len < nSize) ? Len + 1 : Len, lpFilename, nSize, NULL, NULL) == 0)
+    {
+        Len = 0;
+    }
+
+    LocalFree(FileName);
+    return Len;
 }
 
 
@@ -845,7 +839,52 @@ GetMappedFileNameW(HANDLE hProcess,
                    LPWSTR lpFilename,
                    DWORD nSize)
 {
-  return InternalGetMappedFileName(TRUE, hProcess, lpv, lpFilename, nSize);
+    DWORD Len;
+    DWORD OutSize;
+    NTSTATUS Status;
+    struct
+    {
+        MEMORY_SECTION_NAME;
+        WCHAR CharBuffer[MAX_PATH];
+    } SectionName;
+
+    DPRINT("GetMappedFileNameW(%p, %p, %p, %lu)\n", hProcess, lpv, lpFilename, nSize);
+
+    /* If no buffer, no need to keep going on */
+    if (nSize == 0)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    /* Query section name */
+    Status = NtQueryVirtualMemory(hProcess, lpv, MemorySectionName,
+                                  &SectionName, sizeof(SectionName), &OutSize);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return 0;
+    }
+
+    /* Prepare to copy file name */
+    Len =
+    OutSize = SectionName.SectionFileName.Length / sizeof(WCHAR);
+    if (OutSize + 1 > nSize)
+    {
+        Len = nSize - 1;
+        OutSize = nSize;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
+    else
+    {
+        SetLastError(ERROR_SUCCESS);
+    }
+
+    /* Copy, zero and return */
+    memcpy(lpFilename, SectionName.SectionFileName.Buffer, Len * sizeof(WCHAR));
+    lpFilename[Len] = 0;
+
+    return OutSize;
 }
 
 
@@ -859,8 +898,27 @@ GetModuleBaseNameA(HANDLE hProcess,
                    LPSTR lpBaseName,
                    DWORD nSize)
 {
-  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, FALSE, FALSE};
-  return InternalGetModuleInformation(hProcess, hModule, Flags, lpBaseName, nSize);
+    DWORD Len;
+    PWSTR BaseName;
+
+    /* Allocate internal buffer for conversion */
+    BaseName = LocalAlloc(LMEM_FIXED, nSize * sizeof(WCHAR));
+    if (BaseName == NULL)
+    {
+        return 0;
+    }
+
+    /* Call W API */
+    Len = GetModuleBaseNameW(hProcess, hModule, BaseName, nSize);
+    /* And convert output */
+    if (WideCharToMultiByte(CP_ACP, 0, BaseName, (Len < nSize) ? Len + 1 : Len, lpBaseName, nSize, NULL, NULL) == 0)
+    {
+        Len = 0;
+    }
+
+    LocalFree(BaseName);
+
+    return Len;
 }
 
 
@@ -874,8 +932,51 @@ GetModuleBaseNameW(HANDLE hProcess,
                    LPWSTR lpBaseName,
                    DWORD nSize)
 {
-  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, TRUE, FALSE};
-  return InternalGetModuleInformation(hProcess, hModule, Flags, lpBaseName, nSize);
+    DWORD Len;
+    LDR_DATA_TABLE_ENTRY Module;
+
+    /* Get the matching module */
+    if (!FindModule(hProcess, hModule, &Module))
+    {
+        return 0;
+    }
+
+    /* Get the maximum len we have/can write in given size */
+    Len = Module.BaseDllName.Length + sizeof(UNICODE_NULL);
+    if (nSize * sizeof(WCHAR) < Len)
+    {
+        Len = nSize * sizeof(WCHAR);
+    }
+
+    /* Read string */
+    if (!ReadProcessMemory(hProcess, (&Module.BaseDllName)->Buffer, lpBaseName, Len, NULL))
+    {
+        return 0;
+    }
+
+    /* If we are at the end of the string, prepare to override to nullify string */
+    if (Len == Module.BaseDllName.Length + sizeof(UNICODE_NULL))
+    {
+        Len -= sizeof(UNICODE_NULL);
+    }
+
+    /* Nullify at the end if needed */
+    if (Len >= nSize * sizeof(WCHAR))
+    {
+        if (nSize)
+        {
+            ASSERT(nSize >= sizeof(UNICODE_NULL));
+            lpBaseName[nSize - 1] = UNICODE_NULL;
+        }
+    }
+    /* Otherwise, nullify at last writen char */
+    else
+    {
+        ASSERT(Len + sizeof(UNICODE_NULL) <= nSize * sizeof(WCHAR));
+        lpBaseName[Len / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    return Len / sizeof(WCHAR);
 }
 
 
@@ -889,8 +990,27 @@ GetModuleFileNameExA(HANDLE hProcess,
                      LPSTR lpFilename,
                      DWORD nSize)
 {
-  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, FALSE, TRUE};
-  return InternalGetModuleInformation(hProcess, hModule, Flags, lpFilename, nSize);
+    DWORD Len;
+    PWSTR Filename;
+
+    /* Allocate internal buffer for conversion */
+    Filename = LocalAlloc(LMEM_FIXED, nSize * sizeof(WCHAR));
+    if (Filename == NULL)
+    {
+        return 0;
+    }
+
+    /* Call W API */
+    Len = GetModuleFileNameExW(hProcess, hModule, Filename, nSize);
+    /* And convert output */
+    if (WideCharToMultiByte(CP_ACP, 0, Filename, (Len < nSize) ? Len + 1 : Len, lpFilename, nSize, NULL, NULL) == 0)
+    {
+        Len = 0;
+    }
+
+    LocalFree(Filename);
+
+    return Len;
 }
 
 
@@ -904,8 +1024,51 @@ GetModuleFileNameExW(HANDLE hProcess,
                      LPWSTR lpFilename,
                      DWORD nSize)
 {
-  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, TRUE, TRUE};
-  return InternalGetModuleInformation(hProcess, hModule, Flags, lpFilename, nSize);
+    DWORD Len;
+    LDR_DATA_TABLE_ENTRY Module;
+
+    /* Get the matching module */
+    if (!FindModule(hProcess, hModule, &Module))
+    {
+        return 0;
+    }
+
+    /* Get the maximum len we have/can write in given size */
+    Len = Module.FullDllName.Length + sizeof(UNICODE_NULL);
+    if (nSize * sizeof(WCHAR) < Len)
+    {
+        Len = nSize * sizeof(WCHAR);
+    }
+
+    /* Read string */
+    if (!ReadProcessMemory(hProcess, (&Module.FullDllName)->Buffer, lpFilename, Len, NULL))
+    {
+        return 0;
+    }
+
+    /* If we are at the end of the string, prepare to override to nullify string */
+    if (Len == Module.FullDllName.Length + sizeof(UNICODE_NULL))
+    {
+        Len -= sizeof(UNICODE_NULL);
+    }
+
+    /* Nullify at the end if needed */
+    if (Len >= nSize * sizeof(WCHAR))
+    {
+        if (nSize)
+        {
+            ASSERT(nSize >= sizeof(UNICODE_NULL));
+            lpFilename[nSize - 1] = UNICODE_NULL;
+        }
+    }
+    /* Otherwise, nullify at last writen char */
+    else
+    {
+        ASSERT(Len + sizeof(UNICODE_NULL) <= nSize * sizeof(WCHAR));
+        lpFilename[Len / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    return Len / sizeof(WCHAR);
 }
 
 
@@ -919,14 +1082,40 @@ GetModuleInformation(HANDLE hProcess,
                      LPMODULEINFO lpmodinfo,
                      DWORD cb)
 {
-  GET_MODULE_INFORMATION_FLAGS Flags = {FALSE, FALSE, FALSE};
+    MODULEINFO LocalInfo;
+    LDR_DATA_TABLE_ENTRY Module;
 
-  if (cb < sizeof(MODULEINFO)) 
-  {
-    SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    return FALSE;
-  }
-  return (BOOL)InternalGetModuleInformation(hProcess, hModule, Flags, lpmodinfo, cb);
+    /* Check output size */
+    if (cb < sizeof(MODULEINFO))
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    /* Get the matching module */
+    if (!FindModule(hProcess, hModule, &Module))
+    {
+        return FALSE;
+    }
+
+    /* Get a local copy first, to check for valid pointer once */
+    LocalInfo.lpBaseOfDll = hModule;
+    LocalInfo.SizeOfImage = Module.SizeOfImage;
+    LocalInfo.EntryPoint = Module.EntryPoint;
+
+    /* Attempt to copy to output */
+    _SEH2_TRY
+    {
+        memcpy(lpmodinfo, &LocalInfo, sizeof(LocalInfo));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    return TRUE;
 }
 
 
@@ -937,19 +1126,21 @@ BOOL
 WINAPI
 InitializeProcessForWsWatch(HANDLE hProcess)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtSetInformationProcess(hProcess,
-                                   ProcessWorkingSetWatch,
-                                   NULL,
-                                   0);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
+    /* Simply forward the call */
+    Status = NtSetInformationProcess(hProcess,
+                                     ProcessWorkingSetWatch,
+                                     NULL,
+                                     0);
+    /* In case the function returns this, MS considers the call as a success */
+    if (NT_SUCCESS(Status) || Status == STATUS_PORT_ALREADY_SET || Status == STATUS_ACCESS_DENIED)
+    {
+        return TRUE;
+    }
+
+    SetLastError(RtlNtStatusToDosError(Status));
     return FALSE;
-  }
-
-  return TRUE;
 }
 
 
@@ -962,20 +1153,21 @@ GetWsChanges(HANDLE hProcess,
              PPSAPI_WS_WATCH_INFORMATION lpWatchInfo,
              DWORD cb)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtQueryInformationProcess(hProcess,
-                                     ProcessWorkingSetWatch,
-                                     (PVOID)lpWatchInfo,
-                                     cb,
-                                     NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+    /* Simply forward the call */
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessWorkingSetWatch,
+                                       lpWatchInfo,
+                                       cb,
+                                       NULL);
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -988,43 +1180,47 @@ GetProcessImageFileNameW(HANDLE hProcess,
                          LPWSTR lpImageFileName,
                          DWORD nSize)
 {
-  PUNICODE_STRING ImageFileName;
-  SIZE_T BufferSize;
-  NTSTATUS Status;
-  DWORD Ret = 0;
+    PUNICODE_STRING ImageFileName;
+    SIZE_T BufferSize;
+    NTSTATUS Status;
+    DWORD Len;
 
-  BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
+    /* Allocate string big enough to hold name */
+    BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
+    ImageFileName = LocalAlloc(LMEM_FIXED, BufferSize);
+    if (ImageFileName == NULL)
+    {
+        return 0;
+    }
 
-  ImageFileName = (PUNICODE_STRING)LocalAlloc(LMEM_FIXED, BufferSize);
-  if(ImageFileName != NULL)
-  {
+    /* Query name */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
                                        ImageFileName,
                                        BufferSize,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    /* Len mismatch => buffer too small */
+    if (Status == STATUS_INFO_LENGTH_MISMATCH)
     {
-      memcpy(lpImageFileName, ImageFileName->Buffer, ImageFileName->Length);
-
-      /* make sure the string is null-terminated! */
-      lpImageFileName[ImageFileName->Length / sizeof(WCHAR)] = L'\0';
-      Ret = ImageFileName->Length / sizeof(WCHAR);
+        Status = STATUS_BUFFER_TOO_SMALL;
     }
-    else if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    if (!NT_SUCCESS(Status))
     {
-      /* XP sets this error code for some reason if the buffer is too small */
-      SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    }
-    else
-    {
-      SetLastErrorByStatus(Status);
+        SetLastError(RtlNtStatusToDosError(Status));
+        LocalFree(ImageFileName);
+        return 0;
     }
 
-    LocalFree((HLOCAL)ImageFileName);
-  }
+    /* Copy name and null-terminate if possible */
+    memcpy(lpImageFileName, ImageFileName->Buffer, ImageFileName->Length);
+    Len = ImageFileName->Length / sizeof(WCHAR);
+    if (Len < nSize)
+    {
+        lpImageFileName[Len] = UNICODE_NULL;
+    }
 
-  return Ret;
+    LocalFree(ImageFileName);
+    return Len;
 }
 
 
@@ -1037,50 +1233,48 @@ GetProcessImageFileNameA(HANDLE hProcess,
                          LPSTR lpImageFileName,
                          DWORD nSize)
 {
-  PUNICODE_STRING ImageFileName;
-  SIZE_T BufferSize;
-  NTSTATUS Status;
-  DWORD Ret = 0;
+    PUNICODE_STRING ImageFileName;
+    SIZE_T BufferSize;
+    NTSTATUS Status;
+    DWORD Len;
 
-  BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
+    /* Allocate string big enough to hold name */
+    BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
+    ImageFileName = LocalAlloc(LMEM_FIXED, BufferSize);
+    if (ImageFileName == NULL)
+    {
+        return 0;
+    }
 
-  ImageFileName = (PUNICODE_STRING)LocalAlloc(LMEM_FIXED, BufferSize);
-  if(ImageFileName != NULL)
-  {
+    /* Query name */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
                                        ImageFileName,
                                        BufferSize,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    /* Len mismatch => buffer too small */
+    if (Status == STATUS_INFO_LENGTH_MISMATCH)
     {
-      WideCharToMultiByte(CP_ACP,
-                          0,
-                          ImageFileName->Buffer,
-                          ImageFileName->Length / sizeof(WCHAR),
-                          lpImageFileName,
-                          nSize,
-                          NULL,
-                          NULL);
-
-      /* make sure the string is null-terminated! */
-      lpImageFileName[ImageFileName->Length / sizeof(WCHAR)] = '\0';
-      Ret = ImageFileName->Length / sizeof(WCHAR);
+        Status = STATUS_BUFFER_TOO_SMALL;
     }
-    else if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    if (!NT_SUCCESS(Status))
     {
-      /* XP sets this error code for some reason if the buffer is too small */
-      SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    }
-    else
-    {
-      SetLastErrorByStatus(Status);
+        SetLastError(RtlNtStatusToDosError(Status));
+        LocalFree(ImageFileName);
+        return 0;
     }
 
-    LocalFree((HLOCAL)ImageFileName);
-  }
+    /* Copy name */
+    Len = WideCharToMultiByte(CP_ACP, 0, ImageFileName->Buffer,
+                              ImageFileName->Length, lpImageFileName, nSize, NULL, NULL);
+    /* If conversion was successfull, don't return len with added \0 */
+    if (Len != 0)
+    {
+        Len -= sizeof(ANSI_NULL);
+    }
 
-  return Ret;
+    LocalFree(ImageFileName);
+    return Len;
 }
 
 
@@ -1092,12 +1286,23 @@ WINAPI
 EnumPageFilesA(PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine,
                LPVOID lpContext)
 {
-  INTERNAL_ENUM_PAGE_FILES_CONTEXT Context;
+    BOOL Ret;
+    INTERNAL_ENUM_PAGE_FILES_CONTEXT Context;
 
-  Context.pCallbackRoutine = pCallbackRoutine;
-  Context.lpContext = lpContext;
+    Context.dwErrCode = ERROR_SUCCESS;
+    Context.lpContext = lpContext;
+    Context.pCallbackRoutine = pCallbackRoutine;
 
-  return EnumPageFilesW(InternalAnsiPageFileCallback, &Context);
+    /* Call W with our own callback for W -> A conversions */
+    Ret = EnumPageFilesW(CallBackConvertToAscii, &Context);
+    /* If we succeed but we have error code, fail and set error */
+    if (Ret && Context.dwErrCode != ERROR_SUCCESS)
+    {
+        Ret = FALSE;
+        SetLastError(Context.dwErrCode);
+    }
+
+    return Ret;
 }
 
 
@@ -1109,83 +1314,91 @@ WINAPI
 EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
                LPVOID lpContext)
 {
-  NTSTATUS Status;
-  PVOID Buffer;
-  ULONG BufferSize = 0;
-  BOOL Ret = FALSE;
-
-  for(;;)
-  {
-    BufferSize += 0x1000;
-    Buffer = LocalAlloc(LMEM_FIXED, BufferSize);
-    if(Buffer == NULL)
-    {
-      return FALSE;
-    }
-
-    Status = NtQuerySystemInformation(SystemPageFileInformation,
-                                      Buffer,
-                                      BufferSize,
-                                      NULL);
-    if(Status == STATUS_INFO_LENGTH_MISMATCH)
-    {
-      LocalFree((HLOCAL)Buffer);
-    }
-    else
-    {
-      break;
-    }
-  }
-
-  if(NT_SUCCESS(Status))
-  {
+    PWSTR Colon;
+    NTSTATUS Status;
+    DWORD Size = INIT_MEMORY_SIZE, Needed;
     ENUM_PAGE_FILE_INFORMATION Information;
-    PSYSTEM_PAGEFILE_INFORMATION pfi = (PSYSTEM_PAGEFILE_INFORMATION)Buffer;
-    ULONG Offset = 0;
+    PSYSTEM_PAGEFILE_INFORMATION PageFileInfoArray, PageFileInfo;
 
+    /* First loop till we have all the information about page files */
     do
     {
-      PWCHAR Colon;
+        PageFileInfoArray = LocalAlloc(LMEM_FIXED, Size);
+        if (PageFileInfoArray == NULL)
+        {
+            SetLastError(RtlNtStatusToDosError(STATUS_INSUFFICIENT_RESOURCES));
+            return FALSE;
+        }
 
-      pfi = (PSYSTEM_PAGEFILE_INFORMATION)((ULONG_PTR)pfi + Offset);
+        Status = NtQuerySystemInformation(SystemPageFileInformation, PageFileInfoArray, Size, &Needed);
+        if (NT_SUCCESS(Status))
+        {
+            break;
+        }
 
-      Information.cb = sizeof(Information);
-      Information.Reserved = 0;
-      Information.TotalSize = pfi->TotalSize;
-      Information.TotalInUse = pfi->TotalInUse;
-      Information.PeakUsage = pfi->PeakUsage;
+        LocalFree(PageFileInfoArray);
 
-      /* strip the \??\ prefix from the file name. We do this by searching for the first
-         : character and then just change Buffer to point to the previous character. */
+        /* In case we have unexpected status, quit */
+        if (Status != STATUS_INFO_LENGTH_MISMATCH)
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
 
-      Colon = wcschr(pfi->PageFileName.Buffer, L':');
-      if(Colon != NULL)
-      {
-        pfi->PageFileName.Buffer = --Colon;
-      }
+        /* If needed size is smaller than actual size, guess it's something to add to our current size */
+        if (Needed <= Size)
+        {
+            Size += Needed;
+        }
+        /* Otherwise, take it as size to allocate */
+        else
+        {
+            Size = Needed;
+        }
+    }
+    while (TRUE);
 
-      /* FIXME - looks like the PageFileName string is always NULL-terminated on win.
-                 At least I haven't encountered a different case so far, we should
-                 propably manually NULL-terminate the string here... */
+    /* Start browsing all our entries */
+    PageFileInfo = PageFileInfoArray;
+    do
+    {
+        /* Ensure we really have an entry */
+        if (Needed < sizeof(SYSTEM_PAGEFILE_INFORMATION))
+        {
+            break;
+        }
 
-      if(!pCallbackRoutine(lpContext, &Information, pfi->PageFileName.Buffer))
-      {
-        break;
-      }
+        /* Prepare structure to hand to the user */
+        Information.Reserved = 0;
+        Information.cb = sizeof(Information);
+        Information.TotalSize = PageFileInfo->TotalSize;
+        Information.TotalInUse = PageFileInfo->TotalInUse;
+        Information.PeakUsage = PageFileInfo->PeakUsage;
 
-      Offset = pfi->NextEntryOffset;
-    } while(Offset != 0);
+        /* Search for colon */
+        Colon = wcschr(PageFileInfo->PageFileName.Buffer, L':');
+        /* If it's found and not at the begin of the string */
+        if (Colon != 0 && Colon != PageFileInfo->PageFileName.Buffer)
+        {
+            /* We can call the user callback routine with the colon */
+            --Colon;
+            pCallbackRoutine(lpContext, &Information, Colon);
+        }
 
-    Ret = TRUE;
-  }
-  else
-  {
-    SetLastErrorByStatus(Status);
-  }
+        /* If no next entry, then, it's over */
+        if (PageFileInfo->NextEntryOffset == 0 || PageFileInfo->NextEntryOffset > Needed)
+        {
+            break;
+        }
 
-  LocalFree((HLOCAL)Buffer);
+        /* Jump to next entry while keeping accurate bytes left count */
+        Needed -= PageFileInfo->NextEntryOffset;
+        PageFileInfo = (PSYSTEM_PAGEFILE_INFORMATION)((ULONG_PTR)PageFileInfo + PageFileInfo->NextEntryOffset);
+    }
+    while (TRUE);
 
-  return Ret;
+    LocalFree(PageFileInfoArray);
+    return TRUE;
 }
 
 
@@ -1197,119 +1410,140 @@ WINAPI
 GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
                    DWORD cb)
 {
-  SYSTEM_PERFORMANCE_INFORMATION spi;
-  SYSTEM_BASIC_INFORMATION sbi;
-  SYSTEM_HANDLE_INFORMATION shi;
-  PSYSTEM_PROCESS_INFORMATION ProcessInfo;
-  ULONG BufferSize, ProcOffset, ProcessCount, ThreadCount;
-  PVOID Buffer;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    SYSTEM_BASIC_INFORMATION SystemBasicInfo;
+    SYSTEM_PERFORMANCE_INFORMATION SystemPerfInfo;
+    SYSTEM_FILECACHE_INFORMATION SystemFileCacheInfo;
+    PSYSTEM_PROCESS_INFORMATION ProcInfoArray, SystemProcInfo;
+    DWORD Size = INIT_MEMORY_SIZE, Needed, ProcCount, ThreadsCount, HandleCount;
 
-  Status = NtQuerySystemInformation(SystemPerformanceInformation,
-                                    &spi,
-                                    sizeof(spi),
-                                    NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-
-  Status = NtQuerySystemInformation(SystemBasicInformation,
-                                    &sbi,
-                                    sizeof(sbi),
-                                    NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-
-  /*
-   * allocate enough memory to get a dump of all processes and threads
-   */
-  BufferSize = 0;
-  for(;;)
-  {
-    BufferSize += 0x10000;
-    Buffer = (PVOID)LocalAlloc(LMEM_FIXED, BufferSize);
-    if(Buffer == NULL)
+    /* Validate output buffer */
+    if (cb < sizeof(PERFORMANCE_INFORMATION))
     {
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(STATUS_INFO_LENGTH_MISMATCH));
+        return FALSE;
     }
 
-    Status = NtQuerySystemInformation(SystemProcessInformation,
-                                      Buffer,
-                                      BufferSize,
+    /* First, gather as many information about the system as possible */
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &SystemBasicInfo,
+                                      sizeof(SystemBasicInfo),
                                       NULL);
-    if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    if (!NT_SUCCESS(Status))
     {
-      LocalFree((HLOCAL)Buffer);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
-    else
+
+    Status = NtQuerySystemInformation(SystemPerformanceInformation,
+                                      &SystemPerfInfo,
+                                      sizeof(SystemPerfInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
     {
-      break;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
-  }
 
-  if(!NT_SUCCESS(Status))
-  {
-    LocalFree((HLOCAL)Buffer);
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+    Status = NtQuerySystemInformation(SystemFileCacheInformation,
+                                      &SystemFileCacheInfo,
+                                      sizeof(SystemFileCacheInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  /*
-   * determine the process and thread count
-   */
-  ProcessCount = ThreadCount = ProcOffset = 0;
-  ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)Buffer;
-  do
-  {
-    ProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)ProcessInfo + ProcOffset);
-    ProcessCount++;
-    ThreadCount += ProcessInfo->NumberOfThreads;
+    /* Then loop till we have all the information about processes */
+    do
+    {
+        ProcInfoArray = LocalAlloc(LMEM_FIXED, Size);
+        if (ProcInfoArray == NULL)
+        {
+            SetLastError(RtlNtStatusToDosError(STATUS_INSUFFICIENT_RESOURCES));
+            return FALSE;
+        }
 
-    ProcOffset = ProcessInfo->NextEntryOffset;
-  } while(ProcOffset != 0);
+        Status = NtQuerySystemInformation(SystemProcessInformation,
+                                          ProcInfoArray,
+                                          Size,
+                                          &Needed);
+        if (NT_SUCCESS(Status))
+        {
+            break;
+        }
 
-  LocalFree((HLOCAL)Buffer);
+        LocalFree(ProcInfoArray);
 
-  /*
-   * it's enough to supply a SYSTEM_HANDLE_INFORMATION structure as buffer. Even
-   * though it returns STATUS_INFO_LENGTH_MISMATCH, it already sets the NumberOfHandles
-   * field which is all we're looking for anyway.
-   */
-  Status = NtQuerySystemInformation(SystemHandleInformation,
-                                    &shi,
-                                    sizeof(shi),
-                                    NULL);
-  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+        /* In case we have unexpected status, quit */
+        if (Status != STATUS_INFO_LENGTH_MISMATCH)
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
 
-  /*
-   * all required information collected, fill the structure
-   */
+        /* If needed size is smaller than actual size, guess it's something to add to our current size */
+        if (Needed <= Size)
+        {
+            Size += Needed;
+        }
+        /* Otherwise, take it as size to allocate */
+        else
+        {
+            Size = Needed;
+        }
+    } while (TRUE);
 
-  pPerformanceInformation->cb = sizeof(PERFORMANCE_INFORMATION);
-  pPerformanceInformation->CommitTotal = spi.CommittedPages;
-  pPerformanceInformation->CommitLimit = spi.CommitLimit;
-  pPerformanceInformation->CommitPeak = spi.PeakCommitment;
-  pPerformanceInformation->PhysicalTotal = sbi.NumberOfPhysicalPages;
-  pPerformanceInformation->PhysicalAvailable = spi.AvailablePages;
-  pPerformanceInformation->SystemCache = 0; /* FIXME - where to get this information from? */
-  pPerformanceInformation->KernelTotal = spi.PagedPoolPages + spi.NonPagedPoolPages;
-  pPerformanceInformation->KernelPaged = spi.PagedPoolPages;
-  pPerformanceInformation->KernelNonpaged = spi.NonPagedPoolPages;
-  pPerformanceInformation->PageSize = sbi.PageSize;
-  pPerformanceInformation->HandleCount = shi.NumberOfHandles;
-  pPerformanceInformation->ProcessCount = ProcessCount;
-  pPerformanceInformation->ThreadCount = ThreadCount;
+    /* Start browsing all our entries */
+    ProcCount = 0;
+    HandleCount = 0;
+    ThreadsCount = 0;
+    SystemProcInfo = ProcInfoArray;
+    do
+    {
+        /* Ensure we really have an entry */
+        if (Needed < sizeof(SYSTEM_PROCESS_INFORMATION))
+        {
+            break;
+        }
 
-  return TRUE;
+        /* Sum procs, threads and handles */
+        ++ProcCount;
+        ThreadsCount += SystemProcInfo->NumberOfThreads;
+        HandleCount += SystemProcInfo->HandleCount;
+
+        /* If no next entry, then, it's over */
+        if (SystemProcInfo->NextEntryOffset == 0 || SystemProcInfo->NextEntryOffset > Needed)
+        {
+            break;
+        }
+
+        /* Jump to next entry while keeping accurate bytes left count */
+        Needed -= SystemProcInfo->NextEntryOffset;
+        SystemProcInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)SystemProcInfo + SystemProcInfo->NextEntryOffset);
+    }
+    while (TRUE);
+
+    LocalFree(ProcInfoArray);
+
+    /* Output data */
+    pPerformanceInformation->CommitTotal = SystemPerfInfo.CommittedPages;
+    pPerformanceInformation->CommitLimit = SystemPerfInfo.CommitLimit;
+    pPerformanceInformation->CommitPeak = SystemPerfInfo.PeakCommitment;
+    pPerformanceInformation->PhysicalTotal = SystemBasicInfo.NumberOfPhysicalPages;
+    pPerformanceInformation->PhysicalAvailable = SystemPerfInfo.AvailablePages;
+    pPerformanceInformation->SystemCache = SystemFileCacheInfo.CurrentSizeIncludingTransitionInPages;
+    pPerformanceInformation->KernelNonpaged = SystemPerfInfo.NonPagedPoolPages;
+    pPerformanceInformation->PageSize = SystemBasicInfo.PageSize;
+    pPerformanceInformation->cb = sizeof(PERFORMANCE_INFORMATION);
+    pPerformanceInformation->KernelTotal = SystemPerfInfo.PagedPoolPages + SystemPerfInfo.NonPagedPoolPages;
+    pPerformanceInformation->KernelPaged = SystemPerfInfo.PagedPoolPages;
+    pPerformanceInformation->HandleCount = HandleCount;
+    pPerformanceInformation->ProcessCount = ProcCount;
+    pPerformanceInformation->ThreadCount = ThreadsCount;
+
+    return TRUE;
 }
 
 
@@ -1322,57 +1556,68 @@ GetProcessMemoryInfo(HANDLE Process,
                      PPROCESS_MEMORY_COUNTERS ppsmemCounters,
                      DWORD cb)
 {
-  NTSTATUS Status;
-  VM_COUNTERS vmc;
-  BOOL Ret = FALSE;
+    NTSTATUS Status;
+    VM_COUNTERS_EX Counters;
 
-  /* XP's implementation secures access to ppsmemCounters in SEH, we should behave
-     similar so we can return the proper error codes when bad pointers are passed
-     to this function! */
-
-  _SEH2_TRY
-  {
-    if(cb < sizeof(PROCESS_MEMORY_COUNTERS))
+    /* Validate output size
+     * It can be either PROCESS_MEMORY_COUNTERS or PROCESS_MEMORY_COUNTERS_EX
+     */
+    if (cb < sizeof(PROCESS_MEMORY_COUNTERS))
     {
-      SetLastError(ERROR_INSUFFICIENT_BUFFER);
-      _SEH2_LEAVE;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
     }
 
-    /* ppsmemCounters->cb isn't checked at all! */
-
-    Status = NtQueryInformationProcess(Process,
-                                       ProcessVmCounters,
-                                       &vmc,
-                                       sizeof(vmc),
-                                       NULL);
-    if(!NT_SUCCESS(Status))
+    _SEH2_TRY
     {
-      SetLastErrorByStatus(Status);
-      _SEH2_LEAVE;
+        ppsmemCounters->PeakPagefileUsage = 0;
+
+        /* Query counters */
+        Status = NtQueryInformationProcess(Process,
+                                           ProcessVmCounters,
+                                           &Counters,
+                                           sizeof(Counters),
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            _SEH2_YIELD(return FALSE);
+        }
+
+        /* Properly set cb, according to what we received */
+        if (cb >= sizeof(PROCESS_MEMORY_COUNTERS_EX))
+        {
+            ppsmemCounters->cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
+        }
+        else
+        {
+            ppsmemCounters->cb = sizeof(PROCESS_MEMORY_COUNTERS);
+        }
+
+        /* Output data */
+        ppsmemCounters->PageFaultCount = Counters.PageFaultCount;
+        ppsmemCounters->PeakWorkingSetSize = Counters.PeakWorkingSetSize;
+        ppsmemCounters->WorkingSetSize = Counters.WorkingSetSize;
+        ppsmemCounters->QuotaPeakPagedPoolUsage = Counters.QuotaPeakPagedPoolUsage;
+        ppsmemCounters->QuotaPagedPoolUsage = Counters.QuotaPagedPoolUsage;
+        ppsmemCounters->QuotaPeakNonPagedPoolUsage = Counters.QuotaPeakNonPagedPoolUsage;
+        ppsmemCounters->QuotaNonPagedPoolUsage = Counters.QuotaNonPagedPoolUsage;
+        ppsmemCounters->PagefileUsage = Counters.PagefileUsage;
+        ppsmemCounters->PeakPagefileUsage = Counters.PeakPagefileUsage;
+        /* And if needed, additionnal field for _EX version */
+        if (cb >= sizeof(PROCESS_MEMORY_COUNTERS_EX))
+        {
+            ((PPROCESS_MEMORY_COUNTERS_EX)ppsmemCounters)->PrivateUsage = Counters.PrivateUsage;
+        }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
 
-    /* fill the structure with the collected information, in case of bad pointers
-       SEH will catch the exception and set the appropriate error code */
-    ppsmemCounters->cb = sizeof(PROCESS_MEMORY_COUNTERS);
-    ppsmemCounters->PageFaultCount = vmc.PageFaultCount;
-    ppsmemCounters->PeakWorkingSetSize = vmc.PeakWorkingSetSize;
-    ppsmemCounters->WorkingSetSize = vmc.WorkingSetSize;
-    ppsmemCounters->QuotaPeakPagedPoolUsage = vmc.QuotaPeakPagedPoolUsage;
-    ppsmemCounters->QuotaPagedPoolUsage = vmc.QuotaPagedPoolUsage;
-    ppsmemCounters->QuotaPeakNonPagedPoolUsage = vmc.QuotaPeakNonPagedPoolUsage;
-    ppsmemCounters->QuotaNonPagedPoolUsage = vmc.QuotaNonPagedPoolUsage;
-    ppsmemCounters->PagefileUsage = vmc.PagefileUsage;
-    ppsmemCounters->PeakPagefileUsage = vmc.PeakPagefileUsage;
-
-    Ret = TRUE;
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-    SetLastErrorByStatus(_SEH2_GetExceptionCode());
-  }
-  _SEH2_END;
-
-  return Ret;
+    return TRUE;
 }
 
 
@@ -1385,25 +1630,26 @@ QueryWorkingSet(HANDLE hProcess,
                 PVOID pv,
                 DWORD cb)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtQueryVirtualMemory(hProcess,
-                                NULL,
-                                MemoryWorkingSetList,
-                                pv,
-                                cb,
-                                NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
+    /* Simply forward the call */
+    Status = NtQueryVirtualMemory(hProcess,
+                                  NULL,
+                                  MemoryWorkingSetList,
+                                  pv,
+                                  cb,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1411,8 +1657,22 @@ QueryWorkingSetEx(IN HANDLE hProcess,
                   IN OUT PVOID pv,
                   IN DWORD cb)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    NTSTATUS Status;
+
+    /* Simply forward the call */
+    Status = NtQueryVirtualMemory(hProcess,
+                                  NULL,
+                                  MemoryWorkingSetExList,
+                                  pv,
+                                  cb,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */

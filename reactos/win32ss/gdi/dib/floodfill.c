@@ -2,7 +2,7 @@
 * COPYRIGHT:         See COPYING in the top level directory
 * PROJECT:           ReactOS win32 subsystem
 * PURPOSE:           Flood filling support
-* FILE:              subsystems/win32/win32k/dib/floodfill.c
+* FILE:              win32ss/gdi/dib/floodfill.c
 * PROGRAMMER:        Gregor Schneider, <grschneider AT gmail DOT com>
 */
 
@@ -61,7 +61,7 @@ static __inline VOID addItemFlood(FLOODINFO *info,
 {
   if (RECTL_bPointInRect(DstRect,x,y))
   {
-    if (isSurf == TRUE && 
+    if (isSurf &&
       DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != Color)
     {
       return;

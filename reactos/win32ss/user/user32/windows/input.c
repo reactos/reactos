@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/input.c
+ * FILE:            win32ss/user/user32/windows/input.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -28,6 +28,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+
+#include <strsafe.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
@@ -112,7 +114,9 @@ EnableWindow(HWND hWnd, BOOL bEnable)
 /*
  * @implemented
  */
-SHORT WINAPI
+SHORT
+WINAPI
+DECLSPEC_HOTPATCH
 GetAsyncKeyState(int vKey)
 {
     if (vKey < 0 || vKey > 256)
@@ -183,7 +187,9 @@ GetKeyNameTextW(LONG lParam,
 /*
  * @implemented
  */
-SHORT WINAPI
+SHORT
+WINAPI
+DECLSPEC_HOTPATCH
 GetKeyState(int nVirtKey)
 {
     return (SHORT)NtUserGetKeyState((DWORD)nVirtKey);

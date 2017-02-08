@@ -6,7 +6,7 @@
  * PROGRAMMER:        Eric Kohl
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <rtl.h>
 #define NDEBUG
@@ -59,6 +59,162 @@ RtlpConvertToAutoInheritSecurityObject(IN PSECURITY_DESCRIPTOR ParentDescriptor,
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlDefaultNpAcl(OUT PACL *pAcl)
+{
+    NTSTATUS Status;
+    HANDLE TokenHandle;
+    PTOKEN_OWNER OwnerSid;
+    ULONG ReturnLength = 0;
+    ULONG AclSize;
+    SID_IDENTIFIER_AUTHORITY NtAuthority    = {SECURITY_NT_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+
+    /*
+     * Temporary buffer large enough to hold a maximum of two SIDs.
+     * An alternative is to call RtlAllocateAndInitializeSid many times...
+     */
+    UCHAR SidBuffer[16];
+    PSID Sid = (PSID)&SidBuffer;
+
+    ASSERT(RtlLengthRequiredSid(2) == 16);
+
+    /* Initialize the user ACL pointer */
+    *pAcl = NULL;
+
+    /*
+     * Try to retrieve the SID of the current owner. For that,
+     * we first attempt to get the current thread level token.
+     */
+    Status = NtOpenThreadToken(NtCurrentThread(),
+                               TOKEN_QUERY,
+                               TRUE,
+                               &TokenHandle);
+    if (Status == STATUS_NO_TOKEN)
+    {
+        /*
+         * No thread level token, so use the process level token.
+         * This is the common case since the only time a thread
+         * has a token is when it is impersonating.
+         */
+        Status = NtOpenProcessToken(NtCurrentProcess(),
+                                    TOKEN_QUERY,
+                                    &TokenHandle);
+    }
+    /* Fail if we didn't succeed in retrieving a handle to the token */
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /*
+     * Retrieve the owner SID from the token.
+     */
+
+    /* Query the needed size... */
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenOwner,
+                                     NULL, 0,
+                                     &ReturnLength);
+    /* ... so that we must fail with STATUS_BUFFER_TOO_SMALL error */
+    if (Status != STATUS_BUFFER_TOO_SMALL) goto Cleanup1;
+
+    /* Allocate space for the owner SID */
+    OwnerSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, ReturnLength);
+    if (OwnerSid == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup1;
+    }
+
+    /* Retrieve the owner SID; we must succeed */
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenOwner,
+                                     OwnerSid,
+                                     ReturnLength,
+                                     &ReturnLength);
+    if (!NT_SUCCESS(Status)) goto Cleanup2;
+
+    /*
+     * Allocate one ACL with 5 ACEs.
+     *
+     * NOTE: sizeof(ACE) == sizeof(ACCESS_ALLOWED_ACE) - sizeof(((ACCESS_ALLOWED_ACE*)NULL)->SidStart)
+     * (see kernel32/client/debugger.c line 54).
+     */
+    AclSize = sizeof(ACL) +                     // Header
+              5 * sizeof(ACE /*ACCESS_ALLOWED_ACE*/) +  // 5 ACEs:
+              RtlLengthRequiredSid(1) +         // LocalSystem
+              RtlLengthRequiredSid(2) +         // Administrators
+              RtlLengthRequiredSid(1) +         // Anonymous
+              RtlLengthRequiredSid(1) +         // World
+              RtlLengthSid(OwnerSid->Owner);    // Owner
+
+    *pAcl = RtlAllocateHeap(RtlGetProcessHeap(), 0, AclSize);
+    if (*pAcl == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup2;
+    }
+
+    /*
+     * Build the ACL and add the five ACEs.
+     */
+    Status = RtlCreateAcl(*pAcl, AclSize, ACL_REVISION2);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Local System SID - Generic All */
+    Status = RtlInitializeSid(Sid, &NtAuthority, 1);
+    ASSERT(NT_SUCCESS(Status));
+    *RtlSubAuthoritySid(Sid, 0) = SECURITY_LOCAL_SYSTEM_RID;
+    Status = RtlAddAccessAllowedAce(*pAcl, ACL_REVISION2, GENERIC_ALL, Sid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Administrators SID - Generic All */
+    Status = RtlInitializeSid(Sid, &NtAuthority, 2);
+    ASSERT(NT_SUCCESS(Status));
+    *RtlSubAuthoritySid(Sid, 0) = SECURITY_BUILTIN_DOMAIN_RID;
+    *RtlSubAuthoritySid(Sid, 1) = DOMAIN_ALIAS_RID_ADMINS;
+    Status = RtlAddAccessAllowedAce(*pAcl, ACL_REVISION2, GENERIC_ALL, Sid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Owner SID - Generic All */
+    RtlAddAccessAllowedAce(*pAcl, ACL_REVISION2, GENERIC_ALL, OwnerSid->Owner);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Anonymous SID - Generic Read */
+    Status = RtlInitializeSid(Sid, &NtAuthority, 1);
+    ASSERT(NT_SUCCESS(Status));
+    *RtlSubAuthoritySid(Sid, 0) = SECURITY_ANONYMOUS_LOGON_RID;
+    Status = RtlAddAccessAllowedAce(*pAcl, ACL_REVISION2, GENERIC_READ, Sid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* World SID - Generic Read */
+    Status = RtlInitializeSid(Sid, &WorldAuthority, 1);
+    ASSERT(NT_SUCCESS(Status));
+    *RtlSubAuthoritySid(Sid, 0) = SECURITY_WORLD_RID;
+    Status = RtlAddAccessAllowedAce(*pAcl, ACL_REVISION2, GENERIC_READ, Sid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* If some problem happened, cleanup everything */
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *pAcl);
+        *pAcl = NULL;
+    }
+
+Cleanup2:
+    /* Get rid of the owner SID */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, OwnerSid);
+
+Cleanup1:
+    /* Close the token handle */
+    NtClose(TokenHandle);
+
+    /* Done */
+    return Status;
+}
 
 /*
  * @unimplemented

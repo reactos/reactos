@@ -40,20 +40,7 @@
  * 	-- CCS_VERT (defaults to RIGHT)
  */
 
-#include <stdarg.h>
-#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wine/unicode.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <winnls.h>
-#include <commctrl.h>
 #include "comctl32.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(statusbar);
 
@@ -700,10 +687,12 @@ STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
     if (infoPtr->hwndToolTip) {
 	INT nTipCount;
 	TTTOOLINFOW ti;
+	WCHAR wEmpty = 0;
 
 	ZeroMemory (&ti, sizeof(TTTOOLINFOW));
 	ti.cbSize = sizeof(TTTOOLINFOW);
 	ti.hwnd = infoPtr->Self;
+	ti.lpszText = &wEmpty;
 
 	nTipCount = SendMessageW (infoPtr->hwndToolTip, TTM_GETTOOLCOUNT, 0, 0);
 	if (nTipCount < infoPtr->numParts) {

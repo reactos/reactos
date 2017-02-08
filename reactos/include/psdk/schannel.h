@@ -26,12 +26,20 @@ extern "C" {
 #define SCHANNEL_ALERT       2
 #define SCHANNEL_SESSION     3
 
-#define SP_PROT_TLS1_CLIENT 128
-#define SP_PROT_TLS1_SERVER 64
-#define SP_PROT_SSL3_CLIENT 32
-#define SP_PROT_SSL3_SERVER 16
-#define SP_PROT_SSL2_CLIENT 8
-#define SP_PROT_SSL2_SERVER 4
+#define SP_PROT_SSL2_CLIENT   8
+#define SP_PROT_SSL3_CLIENT   32
+#define SP_PROT_TLS1_CLIENT   128
+#define SP_PROT_TLS1_0_CLIENT SP_PROT_TLS1_CLIENT
+#define SP_PROT_TLS1_1_CLIENT 512
+#define SP_PROT_TLS1_2_CLIENT 2048
+
+#define SP_PROT_SSL2_SERVER   4
+#define SP_PROT_SSL3_SERVER   16
+#define SP_PROT_TLS1_SERVER   64
+#define SP_PROT_TLS1_0_SERVER SP_PROT_TLS1_SERVER
+#define SP_PROT_TLS1_1_SERVER 256
+#define SP_PROT_TLS1_2_SERVER 1024
+
 #define SP_PROT_PCT1_CLIENT 2
 #define SP_PROT_PCT1_SERVER 1
 
@@ -39,6 +47,8 @@ extern "C" {
 #define SP_PROT_SSL3 (SP_PROT_SSL3_CLIENT | SP_PROT_SSL3_SERVER)
 #define SP_PROT_SSL2 (SP_PROT_SSL2_CLIENT | SP_PROT_SSL2_SERVER)
 #define SP_PROT_PCT1 (SP_PROT_PCT1_CLIENT | SP_PROT_PCT1_SERVER)
+
+#define SP_PROT_TLS1_1PLUS_CLIENT (SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT)
 
 #define SCH_CRED_NO_SYSTEM_MAPPER                    2
 #define SCH_CRED_NO_SERVERNAME_CHECK                 4
@@ -85,9 +95,9 @@ typedef struct _SCHANNEL_CRED
     DWORD grbitEnabledProtocols;
     DWORD dwMinimumCipherStrength;
     DWORD dwMaximumCipherStrength;
-    DWORD dwSessionLength;
+    DWORD dwSessionLifespan;
     DWORD dwFlags;
-    DWORD reserved;
+    DWORD dwCredFormat;
 } SCHANNEL_CRED, *PSCHANNEL_CRED;
 
 typedef struct _SecPkgCred_SupportedAlgs

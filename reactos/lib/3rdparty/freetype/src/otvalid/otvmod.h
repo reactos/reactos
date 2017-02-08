@@ -5,7 +5,7 @@
 /*    FreeType's OpenType validation module implementation                 */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2004 by                                                      */
+/*  Copyright 2004-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __OTVMOD_H__
-#define __OTVMOD_H__
+#ifndef OTVMOD_H_
+#define OTVMOD_H_
 
 
 #include <ft2build.h>
@@ -29,7 +29,7 @@ FT_BEGIN_HEADER
 
 #ifdef FT_CONFIG_OPTION_PIC
 #error "this module does not support PIC yet"
-#endif 
+#endif
 
 
   FT_EXPORT_VAR( const FT_Module_Class )  otv_module_class;
@@ -37,7 +37,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __OTVMOD_H__ */
+#endif /* OTVMOD_H_ */
 
 
 /* END */

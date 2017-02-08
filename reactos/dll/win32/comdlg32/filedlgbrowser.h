@@ -22,22 +22,6 @@
 #ifndef SHBROWSER_H
 #define SHBROWSER_H
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#ifndef RC_INVOKED
-//#include <stdarg.h>
-//#endif
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-#include "wincon.h"
-#include <shlobj.h>
-//#include "objbase.h"
-//#include "commdlg.h"
-
 /***********************************************************************
  * Defines and global variables
  */
@@ -110,6 +94,7 @@ typedef struct
 #define IDS_INVALID_FILENAME		121
 #define IDS_PATHNOTEXISTING		122
 #define IDS_FILENOTEXISTING		123
+#define IDS_INVALID_FOLDERNAME		124
 
 /* File Dialog Tooltips string IDs */
 

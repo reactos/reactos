@@ -25,6 +25,8 @@
 #define WINE_UNICODE_INLINE  /* nothing */
 #include "wine/unicode.h"
 
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+
 int strcmpiW( const WCHAR *str1, const WCHAR *str2 )
 {
     for (;;)
@@ -300,7 +302,7 @@ noconv:
 
 
 /* format a WCHAR string according to a printf format; helper for vsnprintfW */
-static int format_string( WCHAR *buffer, size_t len, const char *format, const WCHAR *str, int str_len )
+static size_t format_string( WCHAR *buffer, size_t len, const char *format, const WCHAR *str, int str_len )
 {
     size_t count = 0;
     int i, left_align = 0, width = 0, max = 0;
@@ -331,18 +333,25 @@ static int format_string( WCHAR *buffer, size_t len, const char *format, const W
 
     if (!left_align && width > max)
     {
-        if ((count += width - max) >= len) return -1;
-        for (i = 0; i < width - max; i++) *buffer++ = ' ';
+        for (i = 0; i < width - max; i++)
+        {
+            if (count++ < len)
+                *buffer++ = ' ';
+        }
     }
 
-    if ((count += max) >= len) return -1;
-    memcpy( buffer, str, max * sizeof(WCHAR) );
+    if (count < len)
+        memcpy( buffer, str, min( max, len - count ) * sizeof(WCHAR) );
+    count += max;
     buffer += max;
 
     if (left_align && width > max)
     {
-        if ((count += width - max) >= len) return -1;
-        for (i = 0; i < width - max; i++) *buffer++ = ' ';
+        for (i = 0; i < width - max; i++)
+        {
+            if (count++ < len)
+                *buffer++ = ' ';
+        }
     }
     return count;
 }
@@ -357,17 +366,16 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
     {
         while (*iter && *iter != '%')
         {
-            if (written++ >= len)
-                return -1;
-            *str++ = *iter++;
+            if (written++ < len)
+                *str++ = *iter;
+            iter++;
         }
         if (*iter == '%')
         {
             if (iter[1] == '%')
             {
-                if (written++ >= len)
-                    return -1;
-                *str++ = '%'; /* "%%"->'%' */
+                if (written++ < len)
+                    *str++ = '%'; /* "%%"->'%' */
                 iter += 2;
                 continue;
             }
@@ -422,13 +430,13 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
             {
                 static const WCHAR none[] = { '(','n','u','l','l',')',0 };
                 const WCHAR *wstr = va_arg(valist, const WCHAR *);
-                int count;
+                size_t remaining = written < len ? len - written : 0;
+                size_t count;
 
                 *fmta++ = 's';
                 *fmta = 0;
-                count = format_string( str, len - written, fmtbufa, wstr ? wstr : none, -1 );
-                if (count == -1) return -1;
-                str += count;
+                count = format_string( str, remaining, fmtbufa, wstr ? wstr : none, -1 );
+                str += min( count, remaining );
                 written += count;
                 iter++;
                 break;
@@ -437,14 +445,14 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
             case 'c':
             {
                 WCHAR wstr;
-                int count;
+                size_t remaining = written < len ? len - written : 0;
+                size_t count;
 
                 wstr = va_arg(valist, int);
                 *fmta++ = 's';
                 *fmta = 0;
-                count = format_string( str, len - written, fmtbufa, &wstr, 1 );
-                if (count == -1) return -1;
-                str += count;
+                count = format_string( str, remaining, fmtbufa, &wstr, 1 );
+                str += min( count, remaining );
                 written += count;
                 iter++;
                 break;
@@ -475,9 +483,9 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
                 }
                 while (*bufaiter)
                 {
-                    if (written++ >= len)
-                        return -1;
-                    *str++ = *bufaiter++;
+                    if (written++ < len)
+                        *str++ = *bufaiter;
+                    bufaiter++;
                 }
                 iter++;
                 break;
@@ -485,10 +493,15 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
             }
         }
     }
-    if (written >= len)
-        return -1;
-    *str++ = 0;
-    return (int)written;
+    if (len)
+    {
+        if (written >= len)
+            str--;
+        *str++ = 0;
+    }
+
+    /* FIXME: POSIX [v]snprintf() returns the equivalent of written, not -1, on short buffer. */
+    return written < len ? (int)written : -1;
 }
 
 int vsprintfW( WCHAR *str, const WCHAR *format, va_list valist )

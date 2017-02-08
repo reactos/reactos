@@ -22,6 +22,8 @@
 
 #include "precomp.h"
 
+#include <math.h>
+
 WNDPROC OldGraphCtrlWndProc;
 
 static void GraphCtrl_Init(TGraphCtrl* this)
@@ -118,17 +120,15 @@ void GraphCtrl_Dispose(TGraphCtrl* this)
     if (this->m_brushBack     != NULL) DeleteObject(this->m_brushBack);
 }
 
-BOOL GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID)
+void GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID)
 {
-    BOOL result = 0;
-
     GraphCtrl_Init(this);
     this->m_hParentWnd = hParentWnd;
     this->m_hWnd = hWnd;
+
     GraphCtrl_Resize(this);
-    if (result != 0)
-        GraphCtrl_InvalidateCtrl(this, FALSE);
-    return result;
+
+    return;
 }
 
 void GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double dUpper, int nDecimalPlaces)
@@ -634,5 +634,5 @@ GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     /*
      *  We pass on all non-handled messages
      */
-    return CallWindowProcW((WNDPROC)OldGraphCtrlWndProc, hWnd, message, wParam, lParam);
+    return CallWindowProcW(OldGraphCtrlWndProc, hWnd, message, wParam, lParam);
 }

@@ -1,11 +1,3 @@
-/*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/he-IL.rc
- * PURPOSE:     Hebrew Language resource file
- * TRANSLATORS: first times touched from en-US.rc file
- */
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 ID_MENU MENU
@@ -17,13 +9,16 @@ BEGIN
         MENUITEM "&שמור\tCtrl+S", IDM_FILESAVE
         MENUITEM "שמור בש&ם...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "קבע כרקע שולחן העבודה (פרוש)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "קבע כרקע שולחן העבודה (מרכז)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "קבע כרקע שולחן העבודה (מלא)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "י&ציאה\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&עריכה"
     BEGIN
         MENUITEM "בטל\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +34,6 @@ BEGIN
         MENUITEM "העתק ל...", IDM_EDITCOPYTO
         MENUITEM "הדבק מ...", IDM_EDITPASTEFROM
     END
-
     POPUP "&תצוגה"
     BEGIN
         MENUITEM "ערכת כלים\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,24 +59,24 @@ BEGIN
         END
         MENUITEM "מסך מלא\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "ת&מונה"
     BEGIN
         MENUITEM "סובב/הפוך...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "שנה גודל...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "חתוך", IDM_IMAGECROP
         MENUITEM "הפוך צבעים\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "תכונות...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "מחק תמונה\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "צביעה אטומה", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&צבעים"
     BEGIN
         MENUITEM "עריכת ערכה...", IDM_COLORSEDITPALETTE
+        MENUITEM SEPARATOR
+        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
+        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
-    POPUP "&?"
+    POPUP "&עזרה"
     BEGIN
         MENUITEM "נושאי עזרה", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
@@ -107,7 +101,7 @@ BEGIN
     "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
-    "^W", IDM_IMAGECHANGESIZE
+    "^W", IDM_IMAGESTRETCHSKEW
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
@@ -156,51 +150,65 @@ BEGIN
     PUSHBUTTON "ברירת מחדל", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
-IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
+IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "שינוי גודל"
+CAPTION "Stretch and skew image"
 BEGIN
-    GROUPBOX "שנה גודל", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
-    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "אופקי", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
-    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "מאוזן", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
+    LTEXT "אופקי:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
+    LTEXT "מאוזן:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
+    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
+    LTEXT "אופקי:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
+    LTEXT "מאוזן:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "אישור", IDOK, 170, 8, 48, 14
     PUSHBUTTON "ביטול", IDCANCEL, 170, 24, 48, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "צייר"
-    IDS_WINDOWTITLE, "%s - צייר"
-    IDS_INFOTITLE, "צייר עבור ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "האם ברצונך לשמור את השינויים של %s?"
-    IDS_DEFAULTFILENAME, "ללא שם.bmp"
-    IDS_MINIATURETITLE, "ממוזער"
-    IDS_TOOLTIP1, "בחירה חופשית"
-    IDS_TOOLTIP2, "בחירה"
-    IDS_TOOLTIP3, "מחק"
-    IDS_TOOLTIP4, "מלא עם צבע"
-    IDS_TOOLTIP5, "בחירת צבע"
-    IDS_TOOLTIP6, "זכוכית מגדלת"
-    IDS_TOOLTIP7, "עפרון"
-    IDS_TOOLTIP8, "מברשת"
-    IDS_TOOLTIP9, "מברשת אוויר"
-    IDS_TOOLTIP10, "טקסט"
-    IDS_TOOLTIP11, "קו"
-    IDS_TOOLTIP12, "Bezier curve"
-    IDS_TOOLTIP13, "מרובע"
-    IDS_TOOLTIP14, "מצולע"
-    IDS_TOOLTIP15, "אליפסה"
-    IDS_TOOLTIP16, "מרובע עם קודקודים מרובעים"
-    IDS_OPENFILTER, "קבצי מפת סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "קבצי מפת סיביות של 24 סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d בתים"
+    IDS_PROGRAMNAME "צייר"
+    IDS_WINDOWTITLE "%s - צייר"
+    IDS_INFOTITLE "צייר עבור ReactOS"
+    IDS_INFOTEXT "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "האם ברצונך לשמור את השינויים של %s?"
+    IDS_DEFAULTFILENAME "ללא שם.bmp"
+    IDS_MINIATURETITLE "ממוזער"
+    IDS_TOOLTIP1 "בחירה חופשית"
+    IDS_TOOLTIP2 "בחירה"
+    IDS_TOOLTIP3 "מחק"
+    IDS_TOOLTIP4 "מלא עם צבע"
+    IDS_TOOLTIP5 "בחירת צבע"
+    IDS_TOOLTIP6 "זכוכית מגדלת"
+    IDS_TOOLTIP7 "עפרון"
+    IDS_TOOLTIP8 "מברשת"
+    IDS_TOOLTIP9 "מברשת אוויר"
+    IDS_TOOLTIP10 "טקסט"
+    IDS_TOOLTIP11 "קו"
+    IDS_TOOLTIP12 "Bezier curve"
+    IDS_TOOLTIP13 "מרובע"
+    IDS_TOOLTIP14 "מצולע"
+    IDS_TOOLTIP15 "אליפסה"
+    IDS_TOOLTIP16 "מרובע עם קודקודים מרובעים"
+    IDS_OPENFILTER "קבצי מפת סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER "קבצי מפת סיביות של 24 סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d בתים"
     IDS_PRINTRES, "%d x %d פיקסלים למטר"
+    IDS_INTNUMBERS, "Please enter integral numbers only!"
+    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
+    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT, "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

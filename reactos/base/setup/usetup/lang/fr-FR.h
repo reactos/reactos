@@ -42,8 +42,8 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer  F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer  F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -64,7 +64,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         6,
         8,
-        "Bienvenue Ö l'installation de ReactOS",
+        "Bienvenue dans l'installation de ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -118,8 +118,8 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer  R = RÇparer F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer  R = RÇparer  L = Licence  F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -140,7 +140,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de dÇveloppement.",
+        "L'installation de ReactOS est en phase de dÇveloppement.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -164,42 +164,12 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         13,
-        "- L'installation ne peut gÇrer plus d'une partition primaire par disque.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- L'installation ne peut effacer une partition primaire d'un disque",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  tant que des partitions secondaires existent sur ce disque.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- L'installation ne peut effacer la premiäre partition secondaire",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  tant que des autres partitions secondaires existent sur ce disque.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- L'installation supporte uniquement le systäme de fichiers FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Les vÇrifications de systäme de fichers ne sont pas implÇmentÇes.",
         TEXT_STYLE_NORMAL
     },
@@ -218,8 +188,8 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -342,8 +312,8 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Retour",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Retour",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -435,8 +405,8 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -457,7 +427,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de dÇveloppement.",
+        "L'installation de ReactOS est en phase de dÇveloppement.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -505,8 +475,8 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         0,
         0,
-        "   êCHAP = Page principale  ENTRêE = RedÇmarrer",
-        TEXT_TYPE_STATUS
+        "êCHAP = Page principale  ENTRêE = RedÇmarrer",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -515,6 +485,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY frFRComputerPageEntries[] =
 {
     {
@@ -556,8 +527,8 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -596,8 +567,8 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         0,
         0,
-        "   Vidage du cache",
-        TEXT_TYPE_STATUS
+        "Vidage du cache",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -642,8 +613,8 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         0,
         0,
-        "   Veuillez attendre ...",
-        TEXT_TYPE_STATUS,
+        "Veuillez attendre ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -693,8 +664,8 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -739,8 +710,8 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = RedÇmarrer l'ordinateur",
-        TEXT_TYPE_STATUS
+        "ENTRêE = RedÇmarrer l'ordinateur",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -785,8 +756,8 @@ static MUI_ENTRY frFRBootPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -814,13 +785,13 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         6,
         9,
-        "l'espace disque non utilise pour de nouvelles partitions.",
+        "l'espace disque non utilisÇ pour de nouvelles partitions.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Appuyer sur HAUT ou BAS pour sÇlectionner une entree de la liste.",
+        "\x07  Appuyer sur HAUT ou BAS pour sÇlectionner une entrÇe de la liste.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -832,20 +803,138 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur C pour creer une nouvelle partition.",
+        "\x07  Appuyer sur P pour crÇer une partition primaire.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Appuyer sur E pour crÇer une partition Çtendue.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Appuyer sur L pour crÇer une partition logique.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Patienter...",
-        TEXT_TYPE_STATUS
+        "Patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY frFRConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "Vous avez choisi de supprimer la partition systäme.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "La partition systäme peut contenir des programmes de diagnostic, de",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "configuration du matÇriel, des programmes pour dÇmarrer un systäme",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "d'exploitation (comme ReactOS) ou d'autres programmes fournis par le",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        13,
+        "constructeur du matÇriel.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Ne supprimez la partition systäme que si vous àtes sñr qu'il n'y a aucun",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "programme dans la partition, ou bien si vous souhaitez les supprimer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "Lorsque vous supprimez la partition systäme, vous ne pourrez peut-àtre",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "plus dÇmarrer votre ordinateur depuis le disque dur jusqu'Ö ce que vous",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "finissiez l'installation de ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        22,
+        "\x07  Appuyer sur ENTRêE pour supprimer la partition systäme. Il vous sera",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        23,
+        "   demandÇ de confirmer la suppression de la partition plus tard.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        26,
+        "\x07  Appuyer sur êCHAP pour retourner Ö la page principale. La partition",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "   ne sera pas supprimÇe.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTRêE = Continuer  êCHAP = Annuler",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -878,8 +967,8 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -930,8 +1019,8 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -998,13 +1087,13 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         8,
         12,
-        "Installer le chargeur de dÇmarrage sur le disque (MBR et VBR).",
+        "Installer le chargeur de dÇmarrage sur le disque dur (MBR et VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Installer le chargeur de dÇmarrage sur le disque (VBR seulement).",
+        "Installer le chargeur de dÇmarrage sur le disque dur (VBR seulement).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1022,8 +1111,8 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1062,7 +1151,7 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur êCHAP pour revenir a la page prÇcÇdente sans changer",
+        "\x07  Appuyez sur êCHAP pour revenir Ö la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1074,8 +1163,8 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1114,7 +1203,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur êCHAP pour revenir a la page prÇcÇdente sans changer",
+        "\x07  Appuyez sur êCHAP pour revenir Ö la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1126,8 +1215,8 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1155,8 +1244,8 @@ static MUI_ENTRY frFRPrepareCopyEntries[] =
     {
         0,
         0,
-        "   PrÇpare la liste de fichiers Ö copier...",
-        TEXT_TYPE_STATUS
+        "PrÇpare la liste de fichiers Ö copier...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1202,8 +1291,8 @@ static MUI_ENTRY frFRSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1249,8 +1338,8 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Supprimer la Partition   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "D = Supprimer la Partition   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1277,8 +1366,8 @@ static MUI_ENTRY frFRRegistryEntries[] =
     {
         0,
         0,
-        "   En train de crÇer la base de registres...",
-        TEXT_TYPE_STATUS
+        "En train de crÇer la base de registres...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1292,6 +1381,10 @@ static MUI_ENTRY frFRRegistryEntries[] =
 MUI_ERROR frFRErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Succäs\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS n'est pas complätement installÇ sur votre\n"
         "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
@@ -1299,7 +1392,7 @@ MUI_ERROR frFRErrorEntries[] =
         "\n"
         "  \x07  Appuyer sur ENTRêE pour continuer Setup.\n"
         "  \x07  Appuyer sur F3 pour quitter Setup.",
-        "F3= Quitter  ENTRêE = Continuer"
+        "F3 = Quitter  ENTRêE = Continuer"
     },
     {
         //ERROR_NO_HDD
@@ -1363,9 +1456,9 @@ MUI_ERROR frFRErrorEntries[] =
         "\n"
         "CrÇer ou effacer des partitions peut dÇtruire la table de partition.\n"
         "\n"
-        "  \x07  Appuyer sur F3 pour quitter Setup."
+        "  \x07  Appuyer sur F3 pour quitter Setup.\n"
         "  \x07  Appuyer sur ENTRêE pour continuer Setup.",
-        "F3= Quitter  ENTRêE = Continuer"
+        "F3 = Quitter  ENTRêE = Continuer"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1496,17 +1589,44 @@ MUI_ERROR frFRErrorEntries[] =
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Pas assez d'espace libre dans la partition sÇlectionnÇe.\n"
-        "  * Appuyez sur n'importe quelle touche pour continuer.",
+        //ERROR_DIRECTORY_NAME,
+        "Nom de rÇpertoire invalide.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "Impossible de crÇer une nouvelle partition primaire ou Çtendue\n"
+        "sur ce disque parce que sa table de partition est pleine.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "Impossible de crÇer plus d'une partition Çtendue par disque.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE frFRPages[] =
 {
@@ -1549,6 +1669,10 @@ MUI_PAGE frFRPages[] =
     {
         SELECT_PARTITION_PAGE,
         frFRSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        frFRConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1613,13 +1737,21 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTRêE = Installer   C = CrÇer Partition   F3 = Quitter"},
+     "   ENTRêE = Installer   P/E = CrÇer Partition Primaire/êtendue   F3 = Quitter"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTRêE = Installer   L = CrÇer Partition Logique   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTRêE = Installer   D = Supprimer Partition   F3 = Quitter"},
+    {STRING_DELETEPARTITION,
+     "   D = Supprimer Partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
     {STRING_CHOOSENEWPARTITION,
-     "Vous avez choisi de crÇer une nouvelle partition sur"},
+     "Vous avez choisi de crÇer une partition primaire sur"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "Vous avez choisi de crÇer une partition Çtendue sur"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "Vous avez choisi de crÇer une partition logique sur"},
     {STRING_HDDSIZE,
     "Veuillez entrer la taille de la nouvelle partition en mÇgaoctets."},
     {STRING_CREATEPARTITION,
@@ -1628,12 +1760,18 @@ MUI_STRING frFRStrings[] =
     "Cette Partition sera ensuite formatÇe."},
     {STRING_NONFORMATTEDPART,
     "Vous avez choisi d'installer ReactOS sur une nouvelle partition."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installe ReactOS sur la partition"},
     {STRING_CHECKINGPART,
     "Setup vÇrifie la partition sÇlectionnÇe."},
+    {STRING_CONTINUE,
+    "ENTRêE = Continuer"},
     {STRING_QUITCONTINUE,
-    "F3= Quitter  ENTRêE = Continuer"},
+    "F3 = Quitter  ENTRêE = Continuer"},
     {STRING_REBOOTCOMPUTER,
     "ENTRêE = RedÇmarrer l'ordinateur"},
     {STRING_TXTSETUPFAILED,
@@ -1659,11 +1797,11 @@ MUI_STRING frFRStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTRêE = RedÇmarrer l'ordinateur"},
     {STRING_CONSOLEFAIL1,
-    "Impossible d'ouvrir la console\n\n"},
+    "Impossible d'ouvrir la console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "La cause propbable est l'utilisation d'un clavier USB\n"},
+    "La cause probable est l'utilisation d'un clavier USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Les claviers USB ne sont pas complätement supportÇs actuellement\n"},
+    "Les claviers USB ne sont pas complätement supportÇs actuellement\r\n"},
     {STRING_FORMATTINGDISK,
     "Setup formate votre disque"},
     {STRING_CHECKINGDISK,
@@ -1679,7 +1817,7 @@ MUI_STRING frFRStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1687,11 +1825,11 @@ MUI_STRING frFRStrings[] =
     {STRING_HDINFOPARTZEROED,
     "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Type %lu    %I64u %s"},
+    "%c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %S"},
     {STRING_HDDINFOUNK6,
@@ -1699,9 +1837,11 @@ MUI_STRING frFRStrings[] =
     {STRING_NEWPARTITION,
     "Setup a crÇÇ une nouvelle partition sur"},
     {STRING_UNPSPACE,
-    "    Espace non partitionnÇ              %6lu %s"},
+    "    %sEspace non partitionnÇ%s            %6lu %s"},
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
+    {STRING_EXTENDED_PARTITION,
+    "Partition êtendue"},
     {STRING_UNFORMATTED,
     "Nouveau (non formatÇ)"},
     {STRING_FORMATUNUSED,

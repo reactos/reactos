@@ -1,7 +1,7 @@
 /*
  *
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            dll/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/voice.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>

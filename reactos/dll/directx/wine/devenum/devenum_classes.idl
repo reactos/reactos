@@ -1,0 +1,92 @@
+/*
+ * COM Classes for devenum
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+[
+    helpstring("System Device Enum"),
+    threading(both),
+    uuid(62be5d10-60eb-11d0-bd3b-00a0c911ce86)
+]
+coclass SystemDeviceEnum { interface ICreateDevEnum; }
+
+[
+    threading(both),
+    progid("device.1"),
+    vi_progid("device"),
+    uuid(4315d437-5b8c-11d0-bd3b-00a0c911ce86)
+]
+coclass DeviceMoniker { interface IParseDisplayName; }
+
+[
+    helpstring("ACM Class Manager"),
+    threading(both),
+    uuid(33d9a761-90c8-11d0-bd43-00a0c911ce86)
+]
+coclass AudioCompressorCategory { }
+
+[
+    helpstring("ICM Class Manager"),
+    threading(both),
+    uuid(33d9a760-90c8-11d0-bd43-00a0c911ce86)
+]
+coclass VideoCompressorCategory { }
+
+[
+    helpstring("ActiveMovie Filter Class Manager"),
+    threading(both),
+    uuid(083863f1-70de-11d0-bd40-00a0c911ce86)
+]
+coclass LegacyAmFilterCategory { }
+
+[
+    helpstring("VFW Capture Class Manager"),
+    threading(both),
+    uuid(860bb310-5d01-11d0-bd3b-00a0c911ce86)
+]
+coclass VideoInputDeviceCategory { }
+
+[
+    helpstring("WaveIn Class Manager"),
+    threading(both),
+    uuid(33d9a762-90c8-11d0-bd43-00a0c911ce86)
+]
+coclass AudioInputDeviceCategory { }
+
+[
+    helpstring("WaveOut and DSound Class Manager"),
+    threading(both),
+    uuid(e0f158e1-cb04-11d0-bd4e-00a0c911ce86)
+]
+coclass AudioRendererCategory { }
+
+[
+    helpstring("MidiOut Class Manager"),
+    threading(both),
+    uuid(4efe2452-168a-11d1-bc76-00c04fb9453b)
+]
+coclass MidiRendererCategory { }
+
+[
+    helpstring("ActiveMovie Filter Categories"),
+    threading(both),
+    uuid(da4e3da0-d07d-11d0-bd50-00a0c911ce86)
+]
+coclass ActiveMovieCategories { }

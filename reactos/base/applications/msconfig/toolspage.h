@@ -6,4 +6,4 @@ extern HWND hToolsListCtrl;
 
 INT_PTR CALLBACK ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-#endif
+#endif /* _TOOLSPAGE_H_ */

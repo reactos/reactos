@@ -17,15 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "hhctrl.h"
-#include "stream.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 /* Fill the TreeView object corresponding to the Index items */
 static void fill_index_tree(HWND hwnd, IndexItem *item)

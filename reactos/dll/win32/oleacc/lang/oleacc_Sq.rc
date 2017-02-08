@@ -1,0 +1,123 @@
+/*
+ * English resources for oleacc
+ *
+ * Copyright 2008 Nikolay Sivov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "titull tabele"
+    ROLE_SYSTEM_MENUBAR     "tabele menuje"
+    ROLE_SYSTEM_SCROLLBAR   "tabele liste"
+    ROLE_SYSTEM_GRIP        "kapje"
+    ROLE_SYSTEM_SOUND       "yëri"
+    ROLE_SYSTEM_CURSOR      "kursori"
+    ROLE_SYSTEM_CARET       "shenjë"
+    ROLE_SYSTEM_ALERT       "alarm"
+    ROLE_SYSTEM_WINDOW      "dritare"
+    ROLE_SYSTEM_CLIENT      "klient"
+    ROLE_SYSTEM_MENUPOPUP   "menu dales"
+    ROLE_SYSTEM_MENUITEM    "pjesë menuje"
+    ROLE_SYSTEM_TOOLTIP     "maje mjeti"
+    ROLE_SYSTEM_APPLICATION "aplikacion"
+    ROLE_SYSTEM_DOCUMENT    "dokument"
+    ROLE_SYSTEM_PANE        "anë"
+    ROLE_SYSTEM_CHART       "tabelë"
+    ROLE_SYSTEM_DIALOG      "dialog"
+    ROLE_SYSTEM_BORDER      "kufi"
+    ROLE_SYSTEM_GROUPING    "grupim"
+    ROLE_SYSTEM_SEPARATOR   "ndarës"
+    ROLE_SYSTEM_TOOLBAR     "tabelë mjeti"
+    ROLE_SYSTEM_STATUSBAR   "tabele gjëndje"
+    ROLE_SYSTEM_TABLE        "tabelë"
+    ROLE_SYSTEM_COLUMNHEADER "kokë kolone"
+    ROLE_SYSTEM_ROWHEADER    "kokë rreshti"
+    ROLE_SYSTEM_COLUMN       "kolonë"
+    ROLE_SYSTEM_ROW          "rresht"
+    ROLE_SYSTEM_CELL         "qelizë"
+    ROLE_SYSTEM_LINK         "link"
+    ROLE_SYSTEM_HELPBALLOON  "ndihmë tullumbace"
+    ROLE_SYSTEM_CHARACTER    "karakter"
+    ROLE_SYSTEM_LIST         "listë"
+    ROLE_SYSTEM_LISTITEM     "lista artikuj"
+    ROLE_SYSTEM_OUTLINE      "plan"
+    ROLE_SYSTEM_OUTLINEITEM  "plan artikujsh"
+    ROLE_SYSTEM_PAGETAB      "tabelë faqeje"
+    ROLE_SYSTEM_PROPERTYPAGE "karakteristika faqe"
+    ROLE_SYSTEM_INDICATOR    "tregues"
+    ROLE_SYSTEM_GRAPHIC      "grafike"
+    ROLE_SYSTEM_STATICTEXT   "tekst statik"
+    ROLE_SYSTEM_TEXT         "tekst"
+    ROLE_SYSTEM_PUSHBUTTON   "buton shtztje"
+    ROLE_SYSTEM_CHECKBUTTON  "buton kontrolli"
+    ROLE_SYSTEM_RADIOBUTTON  "buton radioje"
+    ROLE_SYSTEM_COMBOBOX     "kuti kombo"
+    ROLE_SYSTEM_DROPLIST     "ul poshtë"
+    ROLE_SYSTEM_PROGRESSBAR  "tabelë progresi"
+    ROLE_SYSTEM_DIAL         "bjeri"
+    ROLE_SYSTEM_HOTKEYFIELD  "butona të nxehtë"
+    ROLE_SYSTEM_SLIDER       "tregues"
+    ROLE_SYSTEM_SPINBUTTON   "kuti sjellse"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "animacion"
+    ROLE_SYSTEM_EQUATION     "ekuacion"
+    ROLE_SYSTEM_BUTTONDROPDOWN "buton ul poshtë"
+    ROLE_SYSTEM_BUTTONMENU   "buton menuje"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "buton ul poshtë rrjetin"
+    ROLE_SYSTEM_WHITESPACE   "hapësire bardhë"
+    ROLE_SYSTEM_PAGETABLIST  "tabelë liste faqeje"
+    ROLE_SYSTEM_CLOCK        "orë"
+    ROLE_SYSTEM_SPLITBUTTON  "buton ndarës"
+    ROLE_SYSTEM_IPADDRESS    "adresa IP"
+    ROLE_SYSTEM_OUTLINEBUTTON "buton plani"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystem/win32/win32k/objects/device.c
+ * FILE:              win32ss/gdi/ntgdi/device.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -28,12 +28,8 @@ IntGdiUnreferencePdev(PPDEVOBJ ppdev, DWORD CleanUpType)
 BOOL FASTCALL
 IntCreatePrimarySurface(VOID)
 {
-    SIZEL SurfSize;
-    SURFOBJ *pso;
-
     /* Create surface */
-    pso = &PDEVOBJ_pSurface(gppdevPrimary)->SurfObj;
-    SurfSize = pso->sizlBitmap;
+    PDEVOBJ_pSurface(gppdevPrimary);
 
     DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
         gppdevPrimary, gppdevPrimary->pSurface);

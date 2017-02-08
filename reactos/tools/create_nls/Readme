@@ -12,10 +12,10 @@ site into the unicode.org subdirectory and create_nls will build the .nls
 files.
 
 Makefile targets:
-	'make':            builds create_nls tool.
-	'make clean':      deletes all executable and object files
-	'make nls':        generates binary .nls files.
-	'make clean_nls':  deletes binary .nls files.
+    'make':            builds create_nls tool.
+    'make clean':      deletes all executable and object files
+    'make nls':        generates binary .nls files.
+    'make clean_nls':  deletes binary .nls files.
 
 Since the binary .nls files are part of the ReactOS source tree it is not
 necessary to build these files yourself. Therefore create_nls is not

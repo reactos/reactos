@@ -3,17 +3,21 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/rapps/misc.c
  * PURPOSE:         Misc functions
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
+ *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
 #include "rapps.h"
-
+#include <sha1.h>
 
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
 #define EXTRACT_EXTRACTFILES  0x00000002
 
 static HANDLE hLog = NULL;
+WCHAR szCachedINISectionLocale[MAX_PATH] = L"Section.";
+WCHAR szCachedINISectionLocaleNeutral[MAX_PATH] = {0};
+BYTE bCachedSectionStatus = FALSE;
 
 typedef struct
 {
@@ -112,18 +116,23 @@ GetClientWindowHeight(HWND hwnd)
 VOID
 CopyTextToClipboard(LPCWSTR lpszText)
 {
-    if(OpenClipboard(NULL))
+    HRESULT hr;
+
+    if (OpenClipboard(NULL))
     {
         HGLOBAL ClipBuffer;
         WCHAR *Buffer;
+        DWORD cchBuffer;
 
         EmptyClipboard();
-        ClipBuffer = GlobalAlloc(GMEM_DDESHARE, (wcslen(lpszText) + 1) * sizeof(TCHAR));
-        Buffer = (WCHAR*)GlobalLock(ClipBuffer);
-        wcscpy(Buffer, lpszText);
+        cchBuffer = wcslen(lpszText) + 1;
+        ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
+        Buffer = GlobalLock(ClipBuffer);
+        hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
         GlobalUnlock(ClipBuffer);
 
-        SetClipboardData(CF_UNICODETEXT, ClipBuffer);
+        if (SUCCEEDED(hr))
+            SetClipboardData(CF_UNICODETEXT, ClipBuffer);
 
         CloseClipboard();
     }
@@ -145,17 +154,36 @@ SetWelcomeText(VOID)
 }
 
 VOID
-ShowPopupMenu(HWND hwnd, UINT MenuID)
+ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 {
-    HMENU hPopupMenu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(MenuID)), 0);
+    HMENU hMenu = NULL;
+    HMENU hPopupMenu;
+    MENUITEMINFO mii;
     POINT pt;
+
+    if (MenuID)
+    {
+        hMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(MenuID));
+        hPopupMenu = GetSubMenu(hMenu, 0);
+    }
+    else
+        hPopupMenu = GetMenu(hwnd);
+
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STATE;
+    GetMenuItemInfo(hPopupMenu, DefaultItem, FALSE, &mii);
+
+    if (!(mii.fState & MFS_GRAYED))
+        SetMenuDefaultItem(hPopupMenu, DefaultItem, FALSE);
 
     GetCursorPos(&pt);
 
     SetForegroundWindow(hwnd);
     TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hMainWnd, NULL);
 
-    DestroyMenu(hPopupMenu);
+    if (hMenu)
+        DestroyMenu(hMenu);
 }
 
 BOOL
@@ -209,6 +237,26 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
     return TRUE;
 }
 
+BOOL
+GetStorageDirectory(PWCHAR lpDirectory, DWORD cch)
+{
+    if (cch < MAX_PATH)
+        return FALSE;
+
+    if (!SHGetSpecialFolderPathW(NULL, lpDirectory, CSIDL_LOCAL_APPDATA, TRUE))
+        return FALSE;
+
+    if (FAILED(StringCchCatW(lpDirectory, cch, L"\\rapps")))
+        return FALSE;
+
+    if (!CreateDirectoryW(lpDirectory, NULL) &&
+        GetLastError() != ERROR_ALREADY_EXISTS)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 BOOL
 ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
@@ -251,7 +299,7 @@ ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
 VOID
 InitLogs(VOID)
 {
-    WCHAR szBuf[MAX_PATH] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\ReactOS Application Manager\\ReactOS Application Manager";
+    WCHAR szBuf[MAX_PATH] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager";
     WCHAR szPath[MAX_PATH];
     DWORD dwCategoryNum = 1;
     DWORD dwDisp, dwData;
@@ -262,13 +310,13 @@ InitLogs(VOID)
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                         szBuf, 0, NULL,
                         REG_OPTION_NON_VOLATILE,
-                        KEY_WRITE, NULL, &hKey, &dwDisp) != ERROR_SUCCESS) 
+                        KEY_WRITE, NULL, &hKey, &dwDisp) != ERROR_SUCCESS)
     {
         return;
     }
 
-    if (!GetCurrentDirectoryW(MAX_PATH, szPath)) return;
-    wcscat(szPath, L"\\rapps.exe");
+    if (!GetModuleFileName(NULL, szPath, sizeof(szPath) / sizeof(szPath[0])))
+        return;
 
     if (RegSetValueExW(hKey,
                        L"EventMessageFile",
@@ -277,13 +325,13 @@ InitLogs(VOID)
                        (LPBYTE)szPath,
                        (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
-    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | 
-             EVENTLOG_INFORMATION_TYPE; 
- 
+    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
+             EVENTLOG_INFORMATION_TYPE;
+
     if (RegSetValueExW(hKey,
                        L"TypesSupported",
                        0,
@@ -291,7 +339,7 @@ InitLogs(VOID)
                        (LPBYTE)&dwData,
                        sizeof(DWORD)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
@@ -302,7 +350,7 @@ InitLogs(VOID)
                        (LPBYTE)szPath,
                        (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
@@ -313,7 +361,7 @@ InitLogs(VOID)
                        (LPBYTE)&dwCategoryNum,
                        sizeof(DWORD)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
@@ -349,4 +397,161 @@ WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg)
     }
 
     return TRUE;
+}
+
+
+LPWSTR GetINIFullPath(LPCWSTR lpFileName)
+{
+           WCHAR szDir[MAX_PATH];
+    static WCHAR szBuffer[MAX_PATH];
+
+    GetStorageDirectory(szDir, _countof(szDir));
+    StringCbPrintfW(szBuffer, sizeof(szBuffer), L"%ls\\rapps\\%ls", szDir, lpFileName);
+
+    return szBuffer;
+}
+
+
+UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName)
+{
+    PWSTR lpFullFileName = GetINIFullPath(lpFileName);
+    DWORD dwResult;
+
+    /* we don't have cached section strings for the current system language, create them */
+    if(bCachedSectionStatus == FALSE)
+    {
+        WCHAR szLocale[4 + 1];
+        DWORD len;
+
+        /* find out what is the current system lang code (e.g. "0a") and append it to SectionLocale */
+        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
+                       szLocale, _countof(szLocale));
+
+        StringCbCatW(szCachedINISectionLocale, sizeof(szCachedINISectionLocale), szLocale);
+
+        /* copy the locale-dependent string into the buffer of the future neutral one */
+        StringCbCopyW(szCachedINISectionLocaleNeutral,
+                      sizeof(szCachedINISectionLocaleNeutral),
+                      szCachedINISectionLocale);
+
+        /* turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part */
+        len = wcslen(szCachedINISectionLocale);
+
+        memmove((szCachedINISectionLocaleNeutral + len) - 4,
+                (szCachedINISectionLocaleNeutral + len) - 2,
+                (2 * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+
+        /* finally, mark us as cache-friendly for the next time */
+        bCachedSectionStatus = TRUE;
+    }
+
+    /* 1st - find localized strings (e.g. "Section.0c0a") */
+    dwResult = GetPrivateProfileStringW(szCachedINISectionLocale,
+                                        lpKeyName,
+                                        NULL,
+                                        lpReturnedString,
+                                        nSize,
+                                        lpFullFileName);
+
+    if (dwResult != 0)
+        return TRUE;
+
+    /* 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a") */
+    dwResult = GetPrivateProfileStringW(szCachedINISectionLocaleNeutral,
+                                        lpKeyName,
+                                        NULL,
+                                        lpReturnedString,
+                                        nSize,
+                                        lpFullFileName);
+
+    if (dwResult != 0)
+        return TRUE;
+
+    /* 3rd - if they weren't present fallback to standard english strings (just "Section") */
+    dwResult = GetPrivateProfileStringW(L"Section",
+                                        lpKeyName,
+                                        NULL,
+                                        lpReturnedString,
+                                        nSize,
+                                        lpFullFileName);
+
+    return (dwResult != 0 ? TRUE : FALSE);
+}
+
+UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
+{
+    WCHAR Buffer[30];
+    UNICODE_STRING BufferW;
+    ULONG Result;
+
+    /* grab the text version of our entry */
+    if (!ParserGetString(lpKeyName, Buffer, _countof(Buffer), lpFileName))
+        return FALSE;
+
+    if (!Buffer[0])
+        return FALSE;
+
+    /* convert it to an actual integer */
+    RtlInitUnicodeString(&BufferW, Buffer);
+    RtlUnicodeStringToInteger(&BufferW, 0, &Result);
+
+    return Result;
+}
+
+BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName)
+{
+    BOOL ret = FALSE;
+    const unsigned char *file_map;
+    HANDLE file, map;
+
+    ULONG sha[5];
+    WCHAR buf[40 + 1];
+    SHA_CTX ctx;
+
+    LARGE_INTEGER size;
+    UINT i;
+
+    /* first off, does it exist at all? */
+    file = CreateFileW(lpFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+
+    if (file == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    /* let's grab the actual file size to organize the mmap'ing rounds */
+    GetFileSizeEx(file, &size);
+
+    /* retrieve a handle to map the file contents to memory */
+    map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (!map)
+        goto cleanup;
+
+    /* initialize the SHA-1 context */
+    A_SHAInit(&ctx);
+
+    /* map that thing in address space */
+    file_map = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
+    if (!file_map)
+        goto cleanup;
+
+    /* feed the data to the cookie monster */
+    A_SHAUpdate(&ctx, file_map, size.LowPart);
+
+    /* cool, we don't need this anymore */
+    UnmapViewOfFile(file_map);
+
+    /* we're done, compute the final hash */
+    A_SHAFinal(&ctx, sha);
+
+    for (i = 0; i < sizeof(sha); i++)
+        swprintf(buf + 2 * i, L"%02x", ((unsigned char *)sha)[i]);
+
+    /* does the resulting SHA1 match with the provided one? */
+    if (!_wcsicmp(buf, lpSHA1Hash))
+        ret = TRUE;
+
+cleanup:
+    CloseHandle(map);
+    CloseHandle(file);
+
+    return ret;
 }

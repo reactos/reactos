@@ -10,6 +10,8 @@
 
 #include "ndissys.h"
 
+#include <atm.h>
+
 /*
  * @unimplemented
  */

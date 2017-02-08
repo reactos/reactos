@@ -15,31 +15,7 @@
  * daniel@veillard.com
  */
 
-#define IN_LIBXSLT
-#include "libxslt.h"
-
-#include <string.h>
-
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/valid.h>
-#include <libxml/hash.h>
-#include <libxml/uri.h>
-#include <libxml/encoding.h>
-#include <libxml/xmlerror.h>
-#include "xslt.h"
-#include "xsltutils.h"
-#include "xsltInternals.h"
-#include "transform.h"
-#include "templates.h"
-#include "variables.h"
-#include "numbersInternals.h"
-#include "preproc.h"
-#include "extra.h"
-#include "imports.h"
-#include "extensions.h"
-#include "pattern.h"
+#include "precomp.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_PREPROC

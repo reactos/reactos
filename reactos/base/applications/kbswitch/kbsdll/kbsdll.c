@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Keyboard Layout Switcher
- * FILE:            kbswitch/kbsdll/kbsdll.c
+ * FILE:            base/applications/kbswitch/kbsdll/kbsdll.c
  * PROGRAMMER:      Dmitry Chapyshev <dmitry@reactos.org>
  *
  */

@@ -14,6 +14,7 @@
 #include <debug.h>
 
 #define TAG_ATMT 'TotA' /* Atom table */
+#define TAG_RTHL 'LHtR' /* Heap Lock */
 
 extern ULONG NtGlobalFlag;
 
@@ -91,7 +92,7 @@ RtlpClearInDbgPrint(VOID)
 
 KPROCESSOR_MODE
 NTAPI
-RtlpGetMode()
+RtlpGetMode(VOID)
 {
    return KernelMode;
 }
@@ -159,7 +160,7 @@ NTAPI
 RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     ExDeleteResourceLite(&Lock->Resource);
-    ExFreePool(Lock);
+    ExFreePoolWithTag(Lock, TAG_RTHL);
 
     return STATUS_SUCCESS;
 }
@@ -178,11 +179,31 @@ RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
     return STATUS_SUCCESS;
 }
 
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
+{
+    BOOLEAN Success;
+    KeEnterCriticalRegion();
+
+    if (Exclusive)
+        Success = ExAcquireResourceExclusiveLite(&Lock->Resource, FALSE);
+    else
+        Success = ExAcquireResourceSharedLite(&Lock->Resource, FALSE);
+
+    if (!Success)
+        KeLeaveCriticalRegion();
+
+    return Success;
+}
+
 NTSTATUS
 NTAPI
 RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
 {
-    PHEAP_LOCK HeapLock = ExAllocatePool(NonPagedPool, sizeof(HEAP_LOCK));
+    PHEAP_LOCK HeapLock = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(HEAP_LOCK),
+                                                TAG_RTHL);
     if (HeapLock == NULL)
         return STATUS_NO_MEMORY;
 
@@ -229,11 +250,22 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
 {
   if(KeGetCurrentIrql() > APC_LEVEL)
   {
-    DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%d)\n", file, line, KeGetCurrentIrql());
+    DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%u)\n", file, line, KeGetCurrentIrql());
     ASSERT(FALSE);
   }
 }
 #endif
+
+VOID
+NTAPI
+RtlpSetHeapParameters(IN PRTL_HEAP_PARAMETERS Parameters)
+{
+    /* Apply defaults for non-set parameters */
+    if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
+    if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
+    if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
+    if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+}
 
 VOID
 NTAPI
@@ -407,7 +439,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 #endif
 
             /* Validate them */
-            if (StackEnd <= StackBegin) return 0;
+            if (StackEnd <= StackBegin) _SEH2_YIELD(return 0);
             ProbeForRead((PVOID)StackBegin,
                          StackEnd - StackBegin,
                          sizeof(CHAR));
@@ -474,7 +506,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
 #endif
 
-#ifdef _AMD64_
+#if defined(_M_AMD64) || defined(_M_ARM)
 VOID
 NTAPI
 RtlpGetStackLimits(
@@ -524,14 +556,25 @@ RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
    return (AtomTable->ExHandleTable != NULL);
 }
 
+BOOLEAN
+NTAPI
+RtlpCloseHandleCallback(
+    IN PHANDLE_TABLE_ENTRY HandleTableEntry,
+    IN HANDLE Handle,
+    IN PVOID HandleTable)
+{
+    /* Destroy and unlock the handle entry */
+    return ExDestroyHandle(HandleTable, Handle, HandleTableEntry);
+}
+
 VOID
 RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->ExHandleTable)
    {
       ExSweepHandleTable(AtomTable->ExHandleTable,
-                         NULL,
-                         NULL);
+                         RtlpCloseHandleCallback,
+                         AtomTable->ExHandleTable);
       ExDestroyHandleTable(AtomTable->ExHandleTable, NULL);
       AtomTable->ExHandleTable = NULL;
    }
@@ -540,8 +583,9 @@ RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 PRTL_ATOM_TABLE
 RtlpAllocAtomTable(ULONG Size)
 {
-   PRTL_ATOM_TABLE Table = ExAllocatePool(NonPagedPool,
-                                          Size);
+   PRTL_ATOM_TABLE Table = ExAllocatePoolWithTag(NonPagedPool,
+                                                 Size,
+                                                 TAG_ATMT);
    if (Table != NULL)
    {
       RtlZeroMemory(Table,
@@ -554,7 +598,7 @@ RtlpAllocAtomTable(ULONG Size)
 VOID
 RtlpFreeAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   ExFreePool(AtomTable);
+   ExFreePoolWithTag(AtomTable, TAG_ATMT);
 }
 
 PRTL_ATOM_TABLE_ENTRY
@@ -673,6 +717,7 @@ NTSTATUS find_entry( PVOID BaseAddress, LDR_RESOURCE_INFO *info,
 
     root = RtlImageDirectoryEntryToData( BaseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &size );
     if (!root) return STATUS_RESOURCE_DATA_NOT_FOUND;
+    if (size < sizeof(*resdirptr)) return STATUS_RESOURCE_DATA_NOT_FOUND;
     resdirptr = root;
 
     if (!level--) goto done;
@@ -719,12 +764,20 @@ RtlpSafeCopyMemory(
 
 BOOLEAN
 NTAPI
-RtlCallVectoredExceptionHandlers(
-    _In_ PEXCEPTION_RECORD ExceptionRecord,
-    _In_ PCONTEXT Context)
+RtlCallVectoredExceptionHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
+                                 _In_ PCONTEXT Context)
 {
     /* In the kernel we don't have vectored exception handlers */
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
+                                _In_ PCONTEXT Context)
+{
+    /* No vectored continue handlers either in kernel mode */
+    return;
 }
 
 /* EOF */

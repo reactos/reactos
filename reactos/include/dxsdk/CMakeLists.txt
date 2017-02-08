@@ -19,7 +19,6 @@ list(APPEND SOURCE
     mmstream.idl
     qedit.idl
     regbag.idl
-    strmif.idl
     tvratings.idl
     vidcap.idl
     videoacc.idl

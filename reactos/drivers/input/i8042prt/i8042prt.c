@@ -11,15 +11,22 @@
 
 /* INCLUDES ******************************************************************/
 
-#define INITGUID
 #include "i8042prt.h"
+
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_STARTIO i8042StartIo;
 static DRIVER_DISPATCH IrpStub;
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
 static DRIVER_DISPATCH i8042DeviceControl;
+_Dispatch_type_(IRP_MJ_INTERNAL_DEVICE_CONTROL)
 static DRIVER_DISPATCH i8042InternalDeviceControl;
+_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
+static DRIVER_DISPATCH i8042SystemControl;
+_Dispatch_type_(IRP_MJ_POWER)
+static DRIVER_DISPATCH i8042Power;
 DRIVER_INITIALIZE DriverEntry;
 
 NTSTATUS NTAPI
@@ -465,6 +472,27 @@ i8042InternalDeviceControl(
 	return Status;
 }
 
+static NTSTATUS NTAPI
+i8042Power(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	PFDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+	PDEVICE_OBJECT LowerDevice = DeviceExtension->LowerDevice;
+
+	PoStartNextPowerIrp(Irp);
+	IoSkipCurrentIrpStackLocation(Irp);
+	return PoCallDriver(LowerDevice, Irp);
+}
+
+static NTSTATUS NTAPI
+i8042SystemControl(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	return ForwardIrpAndForget(DeviceObject, Irp);
+}
+
 NTSTATUS NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
@@ -528,7 +556,11 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_CLOSE]   = i8042Close;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = i8042DeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = i8042InternalDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_POWER]   = i8042Power;
+	DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = i8042SystemControl;
 	DriverObject->MajorFunction[IRP_MJ_PNP]     = i8042Pnp;
+
+    i8042InitializeHwHacks();
 
 	return STATUS_SUCCESS;
 }

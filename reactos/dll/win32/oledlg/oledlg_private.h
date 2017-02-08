@@ -21,18 +21,39 @@
 #ifndef __OLEDLG_PRIVATE_H__
 #define __OLEDLG_PRIVATE_H__
 
-extern HINSTANCE OLEDLG_hInstance;
+#include <stdarg.h>
 
-extern UINT cf_embed_source;
-extern UINT cf_embedded_object;
-extern UINT cf_link_source;
-extern UINT cf_object_descriptor;
-extern UINT cf_link_src_descriptor;
-extern UINT cf_ownerlink;
-extern UINT cf_filename;
-extern UINT cf_filenamew;
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-extern UINT oleui_msg_help;
-extern UINT oleui_msg_enddialog;
+#define COBJMACROS
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <oledlg.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+#include "resource.h"
+
+extern HINSTANCE OLEDLG_hInstance DECLSPEC_HIDDEN;
+
+extern UINT cf_embed_source DECLSPEC_HIDDEN;
+extern UINT cf_embedded_object DECLSPEC_HIDDEN;
+extern UINT cf_link_source DECLSPEC_HIDDEN;
+extern UINT cf_object_descriptor DECLSPEC_HIDDEN;
+extern UINT cf_link_src_descriptor DECLSPEC_HIDDEN;
+extern UINT cf_ownerlink DECLSPEC_HIDDEN;
+extern UINT cf_filename DECLSPEC_HIDDEN;
+extern UINT cf_filenamew DECLSPEC_HIDDEN;
+
+extern UINT oleui_msg_help DECLSPEC_HIDDEN;
+extern UINT oleui_msg_enddialog DECLSPEC_HIDDEN;
 
 #endif /* __OLEDLG_PRIVATE_H__ */

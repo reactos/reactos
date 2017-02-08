@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 ddraw/ddraw/ddraw_displaymode.c
+ * FILE:                 dll/directx/ddraw/Ddraw/ddraw_displaymode.c
  * PURPOSE:              IDirectDraw7 Implementation
  * PROGRAMMER:           Maarten Bosma, Magnus Olsen (add seh support)
  *

@@ -1,0 +1,86 @@
+/*
+ * wininet.dll (Ukrainian resources)
+ *
+ * Copyright 2006 Artem Reznikov
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_LANCONNECTION "LAN Connection"
+  IDS_CERT_CA_INVALID   "The certificate is issued by an unknown or untrusted publisher."
+  IDS_CERT_DATE_INVALID "The date on the certificate is invalid."
+  IDS_CERT_CN_INVALID   "The name on the certificate does not match the site."
+  IDS_CERT_ERRORS       "There is at least one unspecified security problem with this certificate."
+}
+
+IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Введіть Мережний Пароль"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Будь ласка, введіть Ваші ім'я та пароль:", -1, 6, 6, 210, 15
+ LTEXT "Проксі", -1, 6, 26, 50, 18
+ LTEXT "Область", -1, 6, 46, 50, 18
+ LTEXT "Користувач", -1, 6, 66, 50, 18
+ LTEXT "Пароль", -1, 6, 86, 50, 18
+ LTEXT "", IDC_PROXY, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Зберегти цей пароль (небезпечно)", IDC_SAVEPASSWORD,
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Скасувати", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Необхідна авторизація"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Будь ласка, введіть Ваші ім'я та пароль:", -1, 6, 6, 210, 15
+ LTEXT "Сервер", -1, 6, 26, 50, 18
+ LTEXT "Область", -1, 6, 46, 50, 18
+ LTEXT "Користувач", -1, 6, 66, 50, 18
+ LTEXT "Пароль", -1, 6, 86, 50, 18
+ LTEXT "", IDC_SERVER, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Зберегти цей пароль (небезпечно)", IDC_SAVEPASSWORD,
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Скасувати", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Warning"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "There is a problem with the certificate for this site.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Do you want to continue anyway?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Yes", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "No", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
+}

@@ -19,25 +19,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <config.h>
+
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+#endif
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 
 #define COBJMACROS
 
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-#endif
-
 #include <windef.h>
 #include <winbase.h>
-//#include "winuser.h"
 #include <ole2.h>
-//#include "msxml.h"
 #include <msxml2.h>
+
 #include "xmlparser.h"
 
 /* undef the #define in msxml2 so that we can access the v.2 version
@@ -50,8 +47,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
-typedef HRESULT (*ClassFactoryCreateInstanceFunc)(IUnknown*, void**);
-typedef HRESULT (*DOMFactoryCreateInstanceFunc)(MSXML_VERSION, IUnknown*, void**);
+typedef HRESULT (*ClassFactoryCreateInstanceFunc)(void**);
+typedef HRESULT (*DOMFactoryCreateInstanceFunc)(MSXML_VERSION, void**);
 
 struct clsid_version_t
 {
@@ -178,7 +175,7 @@ static HRESULT WINAPI ClassFactory_CreateInstance(
     if (pOuter)
         return CLASS_E_NOAGGREGATION;
 
-    r = This->pCreateInstance( pOuter, (void**) &punk );
+    r = This->pCreateInstance( (void**) &punk );
     if (FAILED(r))
         return r;
 
@@ -236,7 +233,7 @@ static HRESULT WINAPI DOMClassFactory_CreateInstance(
     if (pOuter)
         return CLASS_E_NOAGGREGATION;
 
-    r = This->pCreateInstance( This->version, pOuter, (void**) &punk );
+    r = This->pCreateInstance( This->version, (void**) &punk );
     if (FAILED(r))
         return r;
 

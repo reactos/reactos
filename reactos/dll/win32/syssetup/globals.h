@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#pragma once
 
 typedef struct _TZ_INFO
 {
@@ -44,9 +45,10 @@ typedef struct _SETUPDATA
     WCHAR OwnerName[51];
     WCHAR OwnerOrganization[51];
     WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];  /* max. 15 characters */
-    WCHAR AdminPassword[15];              /* max. 14 characters */
+    WCHAR AdminPassword[128];              /* max. 127 characters */
     BOOL  UnattendSetup;
     BOOL  DisableVmwInst;
+    BOOL  DisableGeckoInst;
 
     SYSTEMTIME SystemTime;
     PTIMEZONE_ENTRY TimeZoneListHead;
@@ -54,17 +56,32 @@ typedef struct _SETUPDATA
     DWORD TimeZoneIndex;
     DWORD DisableAutoDaylightTimeSet;
     LCID LocaleID;
+
+    HINF hUnattendedInf;
 } SETUPDATA, *PSETUPDATA;
 
+typedef struct _ADMIN_INFO
+{
+    LPWSTR Name;
+    LPWSTR Domain;
+    LPWSTR Password;
+} ADMIN_INFO, *PADMIN_INFO;
 
 extern HINSTANCE hDllInstance;
 extern HINF hSysSetupInf;
-extern SETUPDATA SetupData;
+extern ADMIN_INFO AdminInfo;
+
+BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);
 
 /* security.c */
 NTSTATUS SetAccountDomain(LPCWSTR DomainName,
                           PSID DomainSid);
 VOID InstallSecurity(VOID);
+NTSTATUS
+SetAdministratorPassword(LPCWSTR Password);
+
+VOID
+SetAutoAdminLogon(VOID);
 
 /* wizard.c */
 VOID InstallWizard (VOID);

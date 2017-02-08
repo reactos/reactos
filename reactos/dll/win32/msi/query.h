@@ -21,18 +21,6 @@
 #ifndef __WINE_MSI_QUERY_H
 #define __WINE_MSI_QUERY_H
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "objbase.h"
-//#include "objidl.h"
-//#include "msi.h"
-//#include "msiquery.h"
-#include "msipriv.h"
-//#include "wine/list.h"
-
-
 #define OP_EQ       1
 #define OP_AND      2
 #define OP_OR       3
@@ -95,6 +83,19 @@ struct expr
         union ext_column column;
     } u;
 };
+
+typedef struct
+{
+    MSIDATABASE *db;
+    LPCWSTR command;
+    DWORD n, len;
+    UINT r;
+    MSIVIEW **view;  /* View structure for the resulting query.  This value
+                      * tracks the view currently being created so we can free
+                      * this view on syntax error.
+                      */
+    struct list *mem;
+} SQL_input;
 
 UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
                    struct list *mem ) DECLSPEC_HIDDEN;

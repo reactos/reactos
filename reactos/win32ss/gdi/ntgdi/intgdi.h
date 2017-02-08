@@ -1,5 +1,14 @@
 #pragma once
 
+/* Convert WIN32 ROP into an ENG ROP */
+#define WIN32_ROP3_TO_ENG_ROP4(dwRop4) ((((dwRop4) & 0x00FF0000) >> 16) | (((dwRop4) & 0x00FF0000) >> 8))
+#define WIN32_ROP4_TO_ENG_ROP4(dwRop4) ((dwRop4) >> 16)
+
+#define WIN32_ROP4_USES_SOURCE(Rop)  ((((Rop) & 0xCCCC0000) >> 2) != ((Rop) & 0x33330000))
+
+/* The range of valid ROP2 values is 1 .. 16 */
+#define FIXUP_ROP2(rop2) ((((rop2) - 1) & 0xF) + 1)
+
 /* Brush functions */
 
 extern HDC hSystemBM;
@@ -45,6 +54,12 @@ IntGdiPolylineTo(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count);
 
+BOOL FASTCALL
+GreMoveTo( HDC hdc,
+           INT x,
+           INT y,
+           LPPOINT pptOut);
+
 /* Shape functions */
 
 BOOL
@@ -79,11 +94,24 @@ IntGetSysColor(INT nIndex);
 
 /* Other Stuff */
 
+NTSTATUS
+APIENTRY
+NtGdiFlushUserBatch(
+    VOID);
+    
+DWORD
+APIENTRY
+NtDxEngGetRedirectionBitmap(
+    DWORD Unknown0);
+
 HBITMAP
 FASTCALL
-IntCreateCompatibleBitmap(PDC Dc,
-                          INT Width,
-                          INT Height);
+IntCreateCompatibleBitmap(
+    _In_ PDC Dc,
+    _In_ INT Width,
+    _In_ INT Height,
+    _In_ UINT Bpp,
+    _In_ UINT Planes);
 
 WORD APIENTRY IntGdiSetHookFlags(HDC hDC, WORD Flags);
 
@@ -106,7 +134,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
 VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);
 
-PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
+PPOINT GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
 BOOL FASTCALL IntFillArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype);
 BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, double StartArc, double EndArc, ARCTYPE arctype, PBRUSH pbrush);

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS nslookup utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        applications/network/nslookup/utility.c
+ * FILE:        base/applications/network/nslookup/utility.c
  * PURPOSE:     Support functions for nslookup.c
  * COPYRIGHT:   Copyright 2009 Lucas Suggs <lucas.suggs@gmail.com>
  */
@@ -32,6 +32,9 @@ BOOL SendRequest( PCHAR pInBuffer,
 
     /* Create the sockets for both send and receive. */
     s = socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+
+    if (s == INVALID_SOCKET)
+        return FALSE;
 
     /* Set up the structure to tell it where we are going. */
     RecAddr.sin_family = AF_INET;
@@ -130,6 +133,7 @@ BOOL SendRequest( PCHAR pInBuffer,
             _tprintf( _T("sendto() failed with unknown error\n") );
         }
 
+        closesocket( s );
         return FALSE;
     }
 
@@ -221,6 +225,7 @@ BOOL SendRequest( PCHAR pInBuffer,
                 _tprintf( _T("recvfrom() failed with unknown error\n") );
             }
 
+            closesocket( s );
             return FALSE;
         }
 

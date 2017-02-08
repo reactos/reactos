@@ -1,39 +1,27 @@
-/*
- * Russian language support
- *
- * Copyright 2008 Vitaliy Margolen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "reg.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Использование программы:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
-    STRING_ADD_USAGE, "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <разделитель>] [/d данные] [/f]\n"
-    STRING_DELETE_USAGE, "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE, "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"
+    STRING_USAGE, "Использование:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
+    STRING_ADD_USAGE, "REG ADD <имя_раздела> [/v <имя_параметра> | /ve] [/t <тип>] [/s <разделитель>] [/d <данные>] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE <имя_раздела> [/v <имя_параметра> | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY <имя_раздела> [/v [имя_параметра] | /ve] [/s]\n"
     STRING_SUCCESS, "Операция успешно завершена\n"
-    STRING_INVALID_KEY, "Ошибка: неправильное имя ключа\n"
-    STRING_INVALID_CMDLINE, "Ошибка: неправильные параметры командной строки\n"
-    STRING_NO_REMOTE, "Ошибка: невозможно добавить ключи на удаленной машине\n"
-    STRING_CANNOT_FIND, "Ошибка: не удалось найти указанный ключ реестра или значение\n"
+    STRING_INVALID_KEY, "Ошибка: Неправильное имя ключа\n"
+    STRING_INVALID_CMDLINE, "Ошибка: Неправильные параметры командной строки\n"
+    STRING_NO_REMOTE, "Ошибка: Невозможно добавить ключи на удаленной машине\n"
+    STRING_CANNOT_FIND, "Ошибка: Не удалось найти указанный ключ реестра или значение\n"
+    STRING_UNSUPPORTED_TYPE, "Ошибка: Неподдерживаемый тип\n"
+    STRING_MISSING_INTEGER, "reg: The option [/d] must be followed by a valid integer\n"
+    STRING_MISSING_HEXDATA, "reg: The option [/d] must be followed by a valid hexadecimal value\n"
+    STRING_UNHANDLED_TYPE, "reg: Unhandled registry data type [/t 0x%1!x!, /d %2]\n"
+    STRING_OVERWRITE_VALUE, "The registry value '%1' already exists. Do you want to overwrite it?"
+    STRING_YESNO, " (Yes|No)"
+    STRING_YES, "Y"
+    STRING_NO, "N"
+    STRING_CANCELLED, "The registry operation was cancelled\n"
+    STRING_DEFAULT_VALUE, "(Default)"
+    STRING_DELETE_VALUE, "Are you sure you want to delete the registry value '%1'?"
+    STRING_DELETE_VALUEALL, "Are you sure you want to delete all registry values in '%1'?"
+    STRING_DELETE_SUBKEY, "Are you sure you want to delete the registry key '%1'?"
 }

@@ -29,9 +29,10 @@ DisplayClassInstaller(
     HKEY hServicesKey = NULL;
     HKEY hServiceKey = NULL;
     HKEY hDeviceSubKey = NULL;
-    DWORD disposition;
+    DWORD disposition, cchMax, cbData;
     BOOL result;
     LONG rc;
+    HRESULT hr;
 
     if (InstallFunction != DIF_INSTALLDEVICE)
         return ERROR_DI_DO_DEFAULT;
@@ -95,16 +96,25 @@ DisplayClassInstaller(
         goto cleanup;
     }
 
-    result = SetupDiGetActualSectionToInstall(
-        hInf, DriverInfoDetailData.SectionName,
-        SectionName, MAX_PATH - _tcslen(_T(".SoftwareSettings")), NULL, NULL);
+    cchMax = MAX_PATH - (sizeof(_T(".SoftwareSettings")) / sizeof(TCHAR));
+    result = SetupDiGetActualSectionToInstall(hInf,
+                                              DriverInfoDetailData.SectionName,
+                                              SectionName,
+                                              cchMax,
+                                              NULL,
+                                              NULL);
     if (!result)
     {
         rc = GetLastError();
         DPRINT("SetupDiGetActualSectionToInstall() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
-    _tcscat(SectionName, _T(".SoftwareSettings"));
+    hr = StringCbCat(SectionName, sizeof(SectionName), _T(".SoftwareSettings"));
+    if (FAILED(hr))
+    {
+        rc = ERROR_INSUFFICIENT_BUFFER;
+        goto cleanup;
+    }
 
     /* Open driver registry key and create Settings subkey */
     hDriverKey = SetupDiOpenDevRegKey(
@@ -203,6 +213,20 @@ DisplayClassInstaller(
     {
         rc = GetLastError();
         DPRINT("SetupInstallFromInfSection() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+
+    /* Add Device Description string */
+    cbData = (DWORD)(_tcslen(DriverInfoData.Description) + 1) * sizeof(TCHAR);
+    rc = RegSetValueEx(hDeviceSubKey,
+                       _T("Device Description"),
+                       0,
+                       REG_SZ,
+                       (const BYTE*)DriverInfoData.Description,
+                       cbData);
+    if (rc != ERROR_SUCCESS)
+    {
+        DPRINT("RegSetValueEx() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 

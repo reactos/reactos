@@ -1,0 +1,40 @@
+/*
+ * cryptdlg dll French resources
+ *
+ * Copyright 2008 Jonathan Ernst
+ * Copyright 2009 Frédéric Delanoy
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_CERT_POLICY "Politique de certificat"
+    IDS_POLICY_ID "Identifiant de politique : "
+    IDS_POLICY_QUALIFIER_INFO "Informations sur le qualificateur de politique"
+    IDS_POLICY_QUALIFIER_ID "Id de qualificateur de politique ="
+    IDS_CPS "Énoncé des pratiques de certification (CPS)"
+    IDS_USER_NOTICE "Avis utilisateur"
+    IDS_QUALIFIER "Qualificateur"
+    IDS_NOTICE_REF "Référence à l'avis"
+    IDS_ORGANIZATION "Organisation ="
+    IDS_NOTICE_NUM "Numéro de l'avis ="
+    IDS_NOTICE_TEXT "Texte de l'avis ="
+}

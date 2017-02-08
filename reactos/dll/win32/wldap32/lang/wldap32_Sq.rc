@@ -1,0 +1,122 @@
+/*
+ * Albanian resources for WLDAP32
+ *
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    0 "Sukses"
+    1 "Gabim operacioni"
+    2 "Gabim protokolli"
+    3 "Limiti Kohor Tejkaluar"
+    4 "Limiti Masës Tejkaluar"
+    5 "Krahasim i Rremë"
+    6 "Krahasim i Vërtetë"
+    7 "Metoda Vërtetuese jo e Mbështetur"
+    8 "Vërtetim i Fortë Nevojitet"
+    9 "Referim (v2)"
+    10 "Referim"
+    11 "Limiti Administrimit Tejkaluar"
+    12 "Zgjerim i Padiskutueshëm Kritik"
+    13 "Konfidencialiteti i kërkuar"
+    14 ""
+    15 ""
+    16 "Nuk ka atribut të tillë"
+    17 "Lloji i papërcaktuar"
+    18 "Përshtatshmërisë pa kriter"
+    19 "Shkelje Detyrimi"
+    20 "Atribut Ose Vlera Ekziston"
+    21 "Sintaks Pavlefshëm"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "Nuk ka Objekt tillë"
+    33 "​​Problem Pseudonimi"
+    34 "Sintaksa DN PavlefshëmSyntax"
+    35 "A është Fletë"
+    36 "Problem Diference Pseudonimi"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "Vërtetim pa kriter"
+    49 "Kredenciale të pavlefshme"
+    50 "Drejtat e pamjaftueshme"
+    51 "Zënë"
+    52 "Pa-disponueshëm"
+    53 "Duke mos dashur që të kryejnë"
+    54 "Loop zbuluar"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "Rendit Kontrollit Zhdukur"
+    61 "Gabim në vargun e indeksit"
+    62 ""
+    63 ""
+    64 "Emërtimi Shkeljeve"
+    65 "Klasa Objektiv Shkelje"
+    66 "Nuk lejohet në jo-fletë"
+    67 "Nuk lejohet në RDN"
+    68 "Tashmë Ekziston"
+    69 "Nuk ka Objekt Klasa Mods"
+    70 "Rezultatet Të mëdha"
+    71 "Ndikon Disa DSAs"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "Tjetër"
+    81 "Serveri Ra"
+    82 "Gabim Vendorë"
+    83 "Gabim Kodim"
+    84 "Gabim Ç'kodim"
+    85 "Mbaroj"
+    86 "Verf Panjohur"
+    87 "Gabim Filtri"
+    88 "Ndaluar nga Përdoruesi"
+    89 "Gabim Parametri"
+    90 "Ska Memie"
+    91 "Nuk mund të lidheni me serverin LDAP"
+    92 "Operacioni nuk përkrahet nga ky version i protokollit LDAP"
+    93 "Kontrolli i specifikuar nuk u gjet në mesazh"
+    94 "Asnjë rezultat i pranishëm në mesazh"
+    95 "Më shumë rezultate kthyen"
+    96 "Pusho ndërsa trajton referimet"
+    97 "Kufiri i Referimit hop tejkaluar"
+}

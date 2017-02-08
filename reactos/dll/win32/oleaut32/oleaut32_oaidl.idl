@@ -20,6 +20,9 @@
    including oaidl.h at some point.  This will cause all sorts of errors
    so the easiest thing to do is just comment out our entire header.  */
 
+#pragma makedep proxy
+#pragma makedep register
+
 cpp_quote("#if 0    /* oleaut32_oaidl.idl hack */")
 #include "oaidl.idl"
 cpp_quote("#endif   /* oleaut32_oaidl.idl hack */")

@@ -18,30 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include "precomp.h"
 
 #ifdef HAVE_LIBXML2
 
@@ -55,7 +32,7 @@ typedef struct _domcomment
 static const tid_t domcomment_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMComment_tid,
-    0
+    NULL_tid
 };
 
 static inline domcomment *impl_from_IXMLDOMComment( IXMLDOMComment *iface )
@@ -335,7 +312,7 @@ static HRESULT WINAPI domcomment_hasChildNodes(
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
     TRACE("(%p)->(%p)\n", This, ret);
-    return node_has_childnodes(&This->node, ret);
+    return return_var_false(ret);
 }
 
 static HRESULT WINAPI domcomment_get_ownerDocument(

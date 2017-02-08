@@ -1,0 +1,127 @@
+/*
+ * Italian resources for oleacc
+ *
+ * Copyright 2008 Nikolay Sivov
+ * Copyright 2010 Luca Bennati
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    0 "oggetto sconosciuto" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "barra del titolo"
+    ROLE_SYSTEM_MENUBAR     "barra dei menù"
+    ROLE_SYSTEM_SCROLLBAR   "barra dello scorrimento"
+    ROLE_SYSTEM_GRIP        "maniglia"
+    ROLE_SYSTEM_SOUND       "suono"
+    ROLE_SYSTEM_CURSOR      "cursore"
+    ROLE_SYSTEM_CARET       "cursore di testo"
+    ROLE_SYSTEM_ALERT       "allarme"
+    ROLE_SYSTEM_WINDOW      "finestra"
+    ROLE_SYSTEM_CLIENT      "client"
+    ROLE_SYSTEM_MENUPOPUP   "menù a comparsa"
+    ROLE_SYSTEM_MENUITEM    "elemento del menù"
+    ROLE_SYSTEM_TOOLTIP     "tooltip"
+    ROLE_SYSTEM_APPLICATION "applicazione"
+    ROLE_SYSTEM_DOCUMENT    "documento"
+    ROLE_SYSTEM_PANE        "pannello"
+    ROLE_SYSTEM_CHART       "diagramma"
+    ROLE_SYSTEM_DIALOG      "dialogo"
+    ROLE_SYSTEM_BORDER      "bordo"
+    ROLE_SYSTEM_GROUPING    "raggruppamento"
+    ROLE_SYSTEM_SEPARATOR   "separatore"
+    ROLE_SYSTEM_TOOLBAR     "barra degli strumenti"
+    ROLE_SYSTEM_STATUSBAR   "barra dello stato"
+    ROLE_SYSTEM_TABLE        "tabella"
+    ROLE_SYSTEM_COLUMNHEADER "intestazione di colonna"
+    ROLE_SYSTEM_ROWHEADER    "intestazione di riga"
+    ROLE_SYSTEM_COLUMN       "colonna"
+    ROLE_SYSTEM_ROW          "riga"
+    ROLE_SYSTEM_CELL         "cella"
+    ROLE_SYSTEM_LINK         "collegamento"
+    ROLE_SYSTEM_HELPBALLOON  "balloon d'aiuto"
+    ROLE_SYSTEM_CHARACTER    "carattere"
+    ROLE_SYSTEM_LIST         "lista"
+    ROLE_SYSTEM_LISTITEM     "elemento della lista"
+    ROLE_SYSTEM_OUTLINE      "schema"
+    ROLE_SYSTEM_OUTLINEITEM  "elemento dello schema"
+    ROLE_SYSTEM_PAGETAB      "linguetta di pagina"
+    ROLE_SYSTEM_PROPERTYPAGE "pagina delle proprietà"
+    ROLE_SYSTEM_INDICATOR    "indicatore"
+    ROLE_SYSTEM_GRAPHIC      "immagine"
+    ROLE_SYSTEM_STATICTEXT   "testo statico"
+    ROLE_SYSTEM_TEXT         "testo"
+    ROLE_SYSTEM_PUSHBUTTON   "pulsante"
+    ROLE_SYSTEM_CHECKBUTTON  "pulsante di controllo"
+    ROLE_SYSTEM_RADIOBUTTON  "pulsante radio"
+    ROLE_SYSTEM_COMBOBOX     "casella combinata"
+    ROLE_SYSTEM_DROPLIST     "lista a discesa"
+    ROLE_SYSTEM_PROGRESSBAR  "barra del progresso"
+    ROLE_SYSTEM_DIAL         "quadrante"
+    ROLE_SYSTEM_HOTKEYFIELD  "campo con scorciatoia da tastiera"
+    ROLE_SYSTEM_SLIDER       "diapositiva"
+    ROLE_SYSTEM_SPINBUTTON   "casella di selezione"
+    ROLE_SYSTEM_DIAGRAM      "diagramma"
+    ROLE_SYSTEM_ANIMATION    "animazione"
+    ROLE_SYSTEM_EQUATION     "equazione"
+    ROLE_SYSTEM_BUTTONDROPDOWN "pulsante a discesa"
+    ROLE_SYSTEM_BUTTONMENU   "bottone menù"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "griglia con pulsante a discesa"
+    ROLE_SYSTEM_WHITESPACE   "spazio bianco"
+    ROLE_SYSTEM_PAGETABLIST  "lista delle linguette di pagina"
+    ROLE_SYSTEM_CLOCK        "orologio"
+    ROLE_SYSTEM_SPLITBUTTON  "pulsante di menù combinato"
+    ROLE_SYSTEM_IPADDRESS    "indirizzo IP"
+    ROLE_SYSTEM_OUTLINEBUTTON "pulsante dello schema"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

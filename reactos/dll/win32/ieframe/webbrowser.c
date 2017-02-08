@@ -21,13 +21,6 @@
 
 #include "ieframe.h"
 
-#include <exdispid.h>
-//#include "mshtml.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
-
 static inline WebBrowser *impl_from_IWebBrowser2(IWebBrowser2 *iface)
 {
     return CONTAINING_RECORD(iface, WebBrowser, IWebBrowser2_iface);
@@ -167,6 +160,9 @@ static ULONG WINAPI WebBrowser_Release(IWebBrowser2 *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
+        if(This->sink)
+            IAdviseSink_Release(This->sink);
+
         if(This->doc_host.document)
             IUnknown_Release(This->doc_host.document);
 
@@ -259,8 +255,8 @@ static HRESULT WINAPI WebBrowser_GoBack(IWebBrowser2 *iface)
 static HRESULT WINAPI WebBrowser_GoForward(IWebBrowser2 *iface)
 {
     WebBrowser *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    TRACE("(%p)\n", This);
+    return go_forward(&This->doc_host);
 }
 
 static HRESULT WINAPI WebBrowser_GoHome(IWebBrowser2 *iface)
@@ -296,14 +292,16 @@ static HRESULT WINAPI WebBrowser_Refresh(IWebBrowser2 *iface)
 
     TRACE("(%p)\n", This);
 
-    return refresh_document(&This->doc_host);
+    return refresh_document(&This->doc_host, NULL);
 }
 
 static HRESULT WINAPI WebBrowser_Refresh2(IWebBrowser2 *iface, VARIANT *Level)
 {
     WebBrowser *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(Level));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(Level));
+
+    return refresh_document(&This->doc_host, Level);
 }
 
 static HRESULT WINAPI WebBrowser_Stop(IWebBrowser2 *iface)
@@ -565,7 +563,7 @@ static HRESULT WINAPI WebBrowser_get_Name(IWebBrowser2 *iface, BSTR *Name)
     return S_OK;
 }
 
-static HRESULT WINAPI WebBrowser_get_HWND(IWebBrowser2 *iface, LONG *pHWND)
+static HRESULT WINAPI WebBrowser_get_HWND(IWebBrowser2 *iface, SHANDLE_PTR *pHWND)
 {
     WebBrowser *This = impl_from_IWebBrowser2(iface);
 
@@ -941,7 +939,12 @@ static HRESULT WINAPI WebBrowser_get_RegisterAsDropTarget(IWebBrowser2 *iface,
         VARIANT_BOOL *pbRegister)
 {
     WebBrowser *This = impl_from_IWebBrowser2(iface);
+
     FIXME("(%p)->(%p)\n", This, pbRegister);
+
+    if(!pbRegister)
+        return E_INVALIDARG;
+
     *pbRegister=0;
     return S_OK;
 }
@@ -1187,60 +1190,31 @@ static ULONG WebBrowser_release(DocHost *iface)
     return IWebBrowser2_Release(&This->IWebBrowser2_iface);
 }
 
-static void WINAPI DocHostContainer_GetDocObjRect(DocHost* This, RECT* rc)
+static void DocHostContainer_get_docobj_rect(DocHost *This, RECT *rc)
 {
     GetClientRect(This->frame_hwnd, rc);
 }
 
-static HRESULT WINAPI DocHostContainer_SetStatusText(DocHost* This, LPCWSTR text)
+static HRESULT DocHostContainer_set_status_text(DocHost *This, const WCHAR *text)
 {
     return E_NOTIMPL;
 }
 
-static void WINAPI DocHostContainer_SetURL(DocHost* This, LPCWSTR url)
+static void DocHostContainer_on_command_state_change(DocHost *This, LONG command, BOOL enable)
 {
-
 }
 
-static HRESULT DocHostContainer_exec(DocHost *doc_host, const GUID *cmd_group, DWORD cmdid, DWORD execopt, VARIANT *in,
-        VARIANT *out)
+static void DocHostContainer_set_url(DocHost *This, const WCHAR *url)
 {
-    WebBrowser *This = impl_from_DocHost(doc_host);
-    IOleCommandTarget *cmdtrg = NULL;
-    HRESULT hres;
-
-    if(This->client) {
-        hres = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget, (void**)&cmdtrg);
-        if(FAILED(hres))
-            cmdtrg = NULL;
-    }
-
-    if(!cmdtrg && This->container) {
-        hres = IOleContainer_QueryInterface(This->container, &IID_IOleCommandTarget, (void**)&cmdtrg);
-        if(FAILED(hres))
-            cmdtrg = NULL;
-    }
-
-    if(!cmdtrg)
-        return E_NOTIMPL;
-
-    hres = IOleCommandTarget_Exec(cmdtrg, cmd_group, cmdid, execopt, in, out);
-    IOleCommandTarget_Release(cmdtrg);
-    if(SUCCEEDED(hres))
-        TRACE("Exec returned %08x %s\n", hres, debugstr_variant(out));
-    else
-        FIXME("Exec failed\n");
-
-    return hres;
 }
 
 static const IDocHostContainerVtbl DocHostContainerVtbl = {
     WebBrowser_addref,
     WebBrowser_release,
-    DocHostContainer_GetDocObjRect,
-    DocHostContainer_SetStatusText,
-    DocHostContainer_SetURL,
-    DocHostContainer_exec
+    DocHostContainer_get_docobj_rect,
+    DocHostContainer_set_status_text,
+    DocHostContainer_on_command_state_change,
+    DocHostContainer_set_url
 };
 
 static HRESULT create_webbrowser(int version, IUnknown *outer, REFIID riid, void **ppv)

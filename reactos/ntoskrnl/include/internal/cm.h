@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/cm/cm.h
+ * FILE:            ntoskrnl/include/internal/cm.h
  * PURPOSE:         Internal header for the Configuration Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -49,7 +49,7 @@
 #define CM_KCB_INVALID_SIGNATURE                        '4FmC'
 
 //
-// CM_KEY_CONTROL_BLOCK Flags
+// CM_KEY_CONTROL_BLOCK ExtFlags
 //
 #define CM_KCB_NO_SUBKEY                                0x01
 #define CM_KCB_SUBKEY_ONE                               0x02
@@ -59,6 +59,11 @@
 #define CM_KCB_NO_DELAY_CLOSE                           0x20
 #define CM_KCB_INVALID_CACHED_INFO                      0x40
 #define CM_KCB_READ_ONLY_KEY                            0x80
+
+//
+// CM_KEY_BODY Types
+//
+#define CM_KEY_BODY_TYPE                                0x6B793032
 
 //
 // CM_KEY_VALUE Types
@@ -253,8 +258,7 @@ typedef struct _CM_NAME_CONTROL_BLOCK
 typedef struct _CM_KEY_CONTROL_BLOCK
 {
     ULONG Signature;
-    USHORT RefCount;
-    USHORT Flags;
+    ULONG RefCount;
     struct
     {
         ULONG ExtFlags:8;
@@ -295,6 +299,13 @@ typedef struct _CM_KEY_CONTROL_BLOCK
     USHORT KcbMaxNameLen;
     USHORT KcbMaxValueNameLen;
     ULONG KcbMaxValueDataLen;
+    struct
+    {
+         ULONG KcbUserFlags : 4;
+         ULONG KcbVirtControlFlags : 4;
+         ULONG KcbDebug : 8;
+         ULONG Flags : 16;
+    };
     ULONG InDelayClose;
 } CM_KEY_CONTROL_BLOCK, *PCM_KEY_CONTROL_BLOCK;
 
@@ -541,12 +552,24 @@ CmpInitHiveViewList(
     IN PCMHIVE Hive
 );
 
+VOID
+NTAPI
+CmpDestroyHiveViewList(
+    IN PCMHIVE Hive
+);
+
 //
 // Security Cache Functions
 //
 VOID
 NTAPI
 CmpInitSecurityCache(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpDestroySecurityCache(
     IN PCMHIVE Hive
 );
 
@@ -769,8 +792,8 @@ NTSTATUS
 NTAPI
 CmpInitializeHive(
     OUT PCMHIVE *CmHive,
-    IN ULONG Operation,
-    IN ULONG Flags,
+    IN ULONG OperationType,
+    IN ULONG HiveFlags,
     IN ULONG FileType,
     IN PVOID HiveData OPTIONAL,
     IN HANDLE Primary,
@@ -778,6 +801,12 @@ CmpInitializeHive(
     IN HANDLE External,
     IN PCUNICODE_STRING FileName OPTIONAL,
     IN ULONG CheckFlags
+);
+
+NTSTATUS
+NTAPI
+CmpDestroyHive(
+    IN PCMHIVE CmHive
 );
 
 PSECURITY_DESCRIPTOR
@@ -809,6 +838,12 @@ CmpOpenHiveFiles(
     IN BOOLEAN MarkAsSystemHive,
     IN BOOLEAN NoBuffering,
     OUT PULONG ClusterSize OPTIONAL
+);
+
+VOID
+NTAPI
+CmpCloseHiveFiles(
+    IN PCMHIVE Hive
 );
 
 NTSTATUS
@@ -1024,14 +1059,6 @@ DelistKeyBodyFromKCB(
     IN BOOLEAN LockHeld
 );
 
-NTSTATUS
-NTAPI
-CmpFreeKeyByCell(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell,
-    IN BOOLEAN Unlink
-);
-
 VOID
 NTAPI
 CmpAcquireTwoKcbLocksExclusiveByKey(
@@ -1051,58 +1078,6 @@ NTAPI
 CmpFlushNotifiesOnKeyBodyList(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN BOOLEAN LockHeld
-);
-
-//
-// Name Functions
-//
-LONG
-NTAPI
-CmpCompareCompressedName(
-    IN PCUNICODE_STRING SearchName,
-    IN PWCHAR CompressedName,
-    IN ULONG NameLength
-);
-
-USHORT
-NTAPI
-CmpNameSize(
-    IN PHHIVE Hive,
-    IN PUNICODE_STRING Name
-);
-
-USHORT
-NTAPI
-CmpCompressedNameSize(
-    IN PWCHAR Name,
-    IN ULONG Length
-);
-
-VOID
-NTAPI
-CmpCopyCompressedName(
-    IN PWCHAR Destination,
-    IN ULONG DestinationLength,
-    IN PWCHAR Source,
-    IN ULONG SourceLength
-);
-
-USHORT
-NTAPI
-CmpCopyName(
-    IN PHHIVE Hive,
-    IN PWCHAR Destination,
-    IN PUNICODE_STRING Source
-);
-
-BOOLEAN
-NTAPI
-CmpFindNameInList(
-    IN PHHIVE Hive,
-    IN PCHILD_LIST ChildList,
-    IN PUNICODE_STRING Name,
-    IN PULONG ChildIndex,
-    IN PHCELL_INDEX CellIndex
 );
 
 //
@@ -1184,139 +1159,6 @@ CmpCreateLinkNode(
 );
 
 //
-// Cell Index Routines
-//
-
-HCELL_INDEX
-NTAPI
-CmpFindSubKeyByName(
-    IN PHHIVE Hive,
-    IN PCM_KEY_NODE Parent,
-    IN PCUNICODE_STRING SearchName
-);
-
-HCELL_INDEX
-NTAPI
-CmpFindSubKeyByNumber(
-    IN PHHIVE Hive,
-    IN PCM_KEY_NODE Node,
-    IN ULONG Number
-);
-
-ULONG
-NTAPI
-CmpComputeHashKey(
-    IN ULONG Hash,
-    IN PCUNICODE_STRING Name,
-    IN BOOLEAN AllowSeparators
-);
-
-BOOLEAN
-NTAPI
-CmpAddSubKey(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Parent,
-    IN HCELL_INDEX Child
-);
-
-BOOLEAN
-NTAPI
-CmpRemoveSubKey(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX ParentKey,
-    IN HCELL_INDEX TargetKey
-);
-
-BOOLEAN
-NTAPI
-CmpMarkIndexDirty(
-    IN PHHIVE Hive,
-    HCELL_INDEX ParentKey,
-    HCELL_INDEX TargetKey
-);
-
-//
-// Cell Value Routines
-//
-HCELL_INDEX
-NTAPI
-CmpFindValueByName(
-    IN PHHIVE Hive,
-    IN PCM_KEY_NODE KeyNode,
-    IN PUNICODE_STRING Name
-);
-
-PCELL_DATA
-NTAPI
-CmpValueToData(
-    IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value,
-    OUT PULONG Length
-);
-
-NTSTATUS
-NTAPI
-CmpSetValueDataNew(
-    IN PHHIVE Hive,
-    IN PVOID Data,
-    IN ULONG DataSize,
-    IN ULONG StorageType,
-    IN HCELL_INDEX ValueCell,
-    OUT PHCELL_INDEX DataCell
-);
-
-NTSTATUS
-NTAPI
-CmpAddValueToList(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX ValueCell,
-    IN ULONG Index,
-    IN ULONG Type,
-    IN OUT PCHILD_LIST ChildList
-);
-
-BOOLEAN
-NTAPI
-CmpFreeValue(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell
-);
-
-BOOLEAN
-NTAPI
-CmpMarkValueDataDirty(
-    IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value
-);
-
-BOOLEAN
-NTAPI
-CmpFreeValueData(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX DataCell,
-    IN ULONG DataLength
-);
-
-NTSTATUS
-NTAPI
-CmpRemoveValueFromList(
-    IN PHHIVE Hive,
-    IN ULONG Index,
-    IN OUT PCHILD_LIST ChildList
-);
-
-BOOLEAN
-NTAPI
-CmpGetValueData(
-    IN PHHIVE Hive,
-    IN PCM_KEY_VALUE Value,
-    IN PULONG Length,
-    OUT PVOID *Buffer,
-    OUT PBOOLEAN BufferAllocated,
-    OUT PHCELL_INDEX CellToRelease
-);
-
-//
 // Boot Routines
 //
 HCELL_INDEX
@@ -1334,7 +1176,6 @@ CmGetSystemControlValues(
     IN PVOID SystemHiveData,
     IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
 );
-
 
 //
 // Hardware Configuration Routines
@@ -1521,6 +1362,41 @@ CmCountOpenSubKeys(
     IN BOOLEAN RemoveEmptyCacheEntries
 );
 
+HCELL_INDEX
+NTAPI
+CmpCopyCell(
+    IN PHHIVE SourceHive,
+    IN HCELL_INDEX SourceCell,
+    IN PHHIVE DestinationHive,
+    IN HSTORAGE_TYPE StorageType
+);
+
+NTSTATUS
+NTAPI
+CmpDeepCopyKey(
+    IN PHHIVE SourceHive,
+    IN HCELL_INDEX SrcKeyCell,
+    IN PHHIVE DestinationHive,
+    IN HSTORAGE_TYPE StorageType,
+    OUT PHCELL_INDEX DestKeyCell OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+CmSaveKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN HANDLE FileHandle,
+    IN ULONG Flags
+);
+
+NTSTATUS
+NTAPI
+CmSaveMergedKeys(
+    IN PCM_KEY_CONTROL_BLOCK HighKcb,
+    IN PCM_KEY_CONTROL_BLOCK LowKcb,
+    IN HANDLE FileHandle
+);
+
 //
 // Startup and Shutdown
 //
@@ -1597,6 +1473,7 @@ extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern BOOLEAN CmpShareSystemHives;
 extern BOOLEAN CmpMiniNTBoot;
+extern BOOLEAN CmpNoVolatileCreates;
 extern EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 extern LIST_ENTRY CmpHiveListHead;
 extern POBJECT_TYPE CmpKeyObjectType;

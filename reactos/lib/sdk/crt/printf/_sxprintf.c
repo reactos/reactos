@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/swprintf.c
+ * FILE:            lib/sdk/crt/printf/_sxprintf.c
  * PURPOSE:         Implementation of swprintf
  * PROGRAMMER:      Timo Kreuzer
  */
@@ -22,13 +22,13 @@
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
-int _cdecl _tstreamout(FILE *stream, const TCHAR *format, va_list argptr);
+int __cdecl _tstreamout(FILE *stream, const TCHAR *format, va_list argptr);
 
 int
 #if defined(USER32_WSPRINTF) && defined(_M_IX86)
-_stdcall
+__stdcall
 #else
-_cdecl
+__cdecl
 #endif
 _sxprintf(
     TCHAR *buffer,
@@ -56,12 +56,6 @@ _sxprintf(
 #endif
     int result;
     FILE stream;
-
-    /* Check trivial case */
-    if ((buffer == NULL) && (count == 0) && (sizeOfBuffer == 0))
-    {
-        return 0;
-    }
 
 #if IS_SECAPI
     /* Validate parameters */
@@ -104,7 +98,7 @@ _sxprintf(
         if (count != _TRUNCATE)
         {
             /* We can't, invoke invalid parameter handler */
-            MSVCRT_INVALID_PMT("Buffer is too small");
+            MSVCRT_INVALID_PMT("Buffer is too small", ERANGE);
 
             /* If we came back, set the buffer to an empty string */
             *buffer = 0;
@@ -118,7 +112,8 @@ _sxprintf(
     buffer[result] = _T('\0');
 #else
     /* Only zero terminate if there is enough space left */
-    if (stream._cnt >= sizeof(TCHAR)) *(TCHAR*)stream._ptr = _T('\0');
+    if ((stream._cnt >= sizeof(TCHAR)) && (stream._ptr))
+        *(TCHAR*)stream._ptr = _T('\0');
 #endif
 
     return result;

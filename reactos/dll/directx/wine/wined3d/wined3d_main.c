@@ -22,11 +22,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
-
-//#include "initguid.h"
 #include "wined3d_private.h"
+
+#include <winreg.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(winediag);
@@ -72,9 +70,9 @@ static CRITICAL_SECTION wined3d_wndproc_cs = {&wined3d_wndproc_cs_debug, -1, 0, 
  * where appropriate. */
 struct wined3d_settings wined3d_settings =
 {
+    MAKEDWORD_VERSION(1, 0), /* Default to legacy OpenGL */
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
-    RTL_READTEX,    /* Default render target locking method */
     PCI_VENDOR_NONE,/* PCI Vendor ID */
     PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in init_driver_info */
@@ -85,10 +83,14 @@ struct wined3d_settings wined3d_settings =
     ~0U,            /* No VS shader model limit by default. */
     ~0U,            /* No GS shader model limit by default. */
     ~0U,            /* No PS shader model limit by default. */
+    FALSE,          /* 3D support enabled by default. */
+#if defined(STAGING_CSMT)
+    TRUE,           /* Multithreaded CS by default. */
+    FALSE,          /* Do not ignore render target maps. */
+#endif /* STAGING_CSMT */
 };
 
-/* Do not call while under the GL lock. */
-struct wined3d * CDECL wined3d_create(UINT version, DWORD flags)
+struct wined3d * CDECL wined3d_create(DWORD flags)
 {
     struct wined3d *object;
     HRESULT hr;
@@ -100,7 +102,10 @@ struct wined3d * CDECL wined3d_create(UINT version, DWORD flags)
         return NULL;
     }
 
-    hr = wined3d_init(object, version, flags);
+    if (wined3d_settings.no_3d)
+        flags |= WINED3D_NO3D;
+
+    hr = wined3d_init(object, flags);
     if (FAILED(hr))
     {
         WARN("Failed to initialize wined3d object, hr %#x.\n", hr);
@@ -108,7 +113,7 @@ struct wined3d * CDECL wined3d_create(UINT version, DWORD flags)
         return NULL;
     }
 
-    TRACE("Created wined3d object %p for d3d%d support.\n", object, version);
+    TRACE("Created wined3d object %p.\n", object);
 
     return object;
 }
@@ -156,8 +161,8 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
     wc.cbClsExtra           = 0;
     wc.cbWndExtra           = 0;
     wc.hInstance            = hInstDLL;
-    wc.hIcon                = LoadIconA(NULL, (LPCSTR)IDI_WINLOGO);
-    wc.hCursor              = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
+    wc.hIcon                = LoadIconA(NULL, (const char *)IDI_WINLOGO);
+    wc.hCursor              = LoadCursorA(NULL, (const char *)IDC_ARROW);
     wc.hbrBackground        = NULL;
     wc.lpszMenuName         = NULL;
     wc.lpszClassName        = WINED3D_OPENGL_WINDOW_CLASS_NAME;
@@ -197,6 +202,15 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 
     if (hkey || appkey)
     {
+        if (!get_config_key_dword(hkey, appkey, "MaxVersionGL", &tmpvalue))
+        {
+            if (tmpvalue != wined3d_settings.max_gl_version)
+            {
+                ERR_(winediag)("Setting maximum allowed wined3d GL version to %u.%u.\n",
+                        tmpvalue >> 16, tmpvalue & 0xffff);
+                wined3d_settings.max_gl_version = tmpvalue;
+            }
+        }
         if ( !get_config_key( hkey, appkey, "UseGLSL", buffer, size) )
         {
             if (!strcmp(buffer,"disabled"))
@@ -217,19 +231,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             {
                 TRACE("Using FBOs for offscreen rendering\n");
                 wined3d_settings.offscreen_rendering_mode = ORM_FBO;
-            }
-        }
-        if ( !get_config_key( hkey, appkey, "RenderTargetLockMode", buffer, size) )
-        {
-            if (!strcmp(buffer,"readdraw"))
-            {
-                TRACE("Using glReadPixels for render target reading and glDrawPixels for writing\n");
-                wined3d_settings.rendertargetlock_mode = RTL_READDRAW;
-            }
-            else if (!strcmp(buffer,"readtex"))
-            {
-                TRACE("Using glReadPixels for render target reading and textures for writing\n");
-                wined3d_settings.rendertargetlock_mode = RTL_READTEX;
             }
         }
         if ( !get_config_key_dword( hkey, appkey, "VideoPciDeviceID", &tmpvalue) )
@@ -267,10 +268,10 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             int TmpVideoMemorySize = atoi(buffer);
             if(TmpVideoMemorySize > 0)
             {
-                wined3d_settings.emulated_textureram = TmpVideoMemorySize *1024*1024;
-                TRACE("Use %iMB = %d byte for emulated_textureram\n",
+                wined3d_settings.emulated_textureram = (UINT64)TmpVideoMemorySize *1024*1024;
+                TRACE("Use %iMiB = 0x%s bytes for emulated_textureram\n",
                         TmpVideoMemorySize,
-                        wined3d_settings.emulated_textureram);
+                        wine_dbgstr_longlong(wined3d_settings.emulated_textureram));
             }
             else
                 ERR("VideoMemorySize is %i but must be >0\n", TmpVideoMemorySize);
@@ -309,10 +310,37 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             TRACE("Limiting GS shader model to %u.\n", wined3d_settings.max_sm_gs);
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelPS", &wined3d_settings.max_sm_ps))
             TRACE("Limiting PS shader model to %u.\n", wined3d_settings.max_sm_ps);
+        if (!get_config_key(hkey, appkey, "DirectDrawRenderer", buffer, size)
+                && !strcmp(buffer, "gdi"))
+        {
+            TRACE("Disabling 3D support.\n");
+            wined3d_settings.no_3d = TRUE;
+        }
+#if defined(STAGING_CSMT)
+        if (!get_config_key(hkey, appkey, "CSMT", buffer, size)
+                && !strcmp(buffer,"disabled"))
+        {
+            TRACE("Disabling multithreaded command stream.\n");
+            wined3d_settings.cs_multithreaded = FALSE;
+        }
+        if (!get_config_key(hkey, appkey, "ignore_rt_map", buffer, size)
+                && !strcmp(buffer,"enabled"))
+        {
+            TRACE("Ignoring render target maps.\n");
+            wined3d_settings.ignore_rt_map = TRUE;
+        }
     }
+
+    FIXME_(winediag)("Experimental wined3d CSMT feature is currently %s.\n",
+        wined3d_settings.cs_multithreaded ? "enabled" : "disabled");
+#else  /* STAGING_CSMT */
+    }
+#endif /* STAGING_CSMT */
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
+
+    wined3d_dxtn_init();
 
     return TRUE;
 }
@@ -345,6 +373,9 @@ static BOOL wined3d_dll_destroy(HINSTANCE hInstDLL)
 
     DeleteCriticalSection(&wined3d_wndproc_cs);
     DeleteCriticalSection(&wined3d_cs);
+
+    wined3d_dxtn_free();
+
     return TRUE;
 }
 
@@ -510,29 +541,30 @@ void wined3d_unregister_window(HWND window)
     wined3d_wndproc_mutex_unlock();
 }
 
-/* At process attach */
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+void CDECL wined3d_strictdrawing_set(int value)
 {
-    TRACE("WineD3D DLLMain Reason=%u\n", fdwReason);
+    wined3d_settings.strict_draw_ordering = value;
+}
 
-    switch (fdwReason)
+/* At process attach */
+BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
+{
+    switch (reason)
     {
         case DLL_PROCESS_ATTACH:
-            return wined3d_dll_init(hInstDLL);
+            return wined3d_dll_init(inst);
 
         case DLL_PROCESS_DETACH:
-            return wined3d_dll_destroy(hInstDLL);
+            if (!reserved)
+                return wined3d_dll_destroy(inst);
+            break;
 
         case DLL_THREAD_DETACH:
-        {
             if (!context_set_current(NULL))
             {
                 ERR("Failed to clear current context.\n");
             }
             return TRUE;
-        }
-
-        default:
-            return TRUE;
     }
+    return TRUE;
 }

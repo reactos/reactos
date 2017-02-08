@@ -19,11 +19,8 @@
  */
 
 #include "objsel_private.h"
+
 #include <rpcproxy.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(objsel);
 
 LONG dll_refs = 0;
 static HINSTANCE hInstance;

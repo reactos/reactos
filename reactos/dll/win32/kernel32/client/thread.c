@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/thread/thread.c
+ * FILE:            dll/win32/kernel32/client/thread.c
  * PURPOSE:         Thread functions
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Ariadne (ariadne@xs4all.nl)
  *
  */
 
@@ -131,6 +131,7 @@ BaseDispatchApc(IN PAPCFUNC ApcRoutine,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateThread(IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
              IN DWORD dwStackSize,
              IN LPTHREAD_START_ROUTINE lpStartAddress,
@@ -175,8 +176,8 @@ CreateRemoteThread(IN HANDLE hProcess,
     ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
     ULONG_PTR Cookie;
     ULONG ReturnLength;
-    DPRINT("CreateRemoteThread: hProcess: %ld dwStackSize: %ld lpStartAddress"
-            ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess,
+    DPRINT("CreateRemoteThread: hProcess: %p dwStackSize: %lu lpStartAddress"
+            ": %p lpParameter: %p, dwCreationFlags: %lx\n", hProcess,
             dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
 
     /* Clear the Context */
@@ -260,8 +261,7 @@ CreateRemoteThread(IN HANDLE hProcess,
         Teb->ActivationContextStackPointer = ActivationContextStack;
 
         /* Query the Context */
-        // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
-        Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+        Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT,
                                                       NULL,
                                                       0,
                                                       ActivationContextBasicInformation,
@@ -572,8 +572,10 @@ TerminateThread(IN HANDLE hThread,
                 IN DWORD dwExitCode)
 {
     NTSTATUS Status;
+#if DBG
     PRTL_CRITICAL_SECTION LoaderLock;
     THREAD_BASIC_INFORMATION ThreadInfo;
+#endif /* DBG */
 
     /* Check for invalid thread handle */
     if (!hThread)
@@ -583,6 +585,7 @@ TerminateThread(IN HANDLE hThread,
         return FALSE;
     }
 
+#if DBG
     /* Get the loader lock */
     LoaderLock = NtCurrentPeb()->LoaderLock;
     if (LoaderLock)
@@ -593,13 +596,14 @@ TerminateThread(IN HANDLE hThread,
                                           &ThreadInfo,
                                           sizeof(ThreadInfo),
                                           NULL);
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            /* Assert that we don't hold the loader lock */
-            ASSERT(NtCurrentTeb()->ClientId.UniqueThread != ThreadInfo.ClientId.UniqueThread);
-            ASSERT(NtCurrentTeb()->ClientId.UniqueThread != LoaderLock->OwningThread);
+            /* If terminating the current thread, we must not hold the loader lock */
+            if (NtCurrentTeb()->ClientId.UniqueThread == ThreadInfo.ClientId.UniqueThread)
+                ASSERT(NtCurrentTeb()->ClientId.UniqueThread != LoaderLock->OwningThread);
         }
     }
+#endif /* DBG */
 
     /* Now terminate the thread */
     Status = NtTerminateThread(hThread, dwExitCode);
@@ -917,7 +921,7 @@ WINAPI
 SetThreadUILanguage(IN LANGID LangId)
 {
     UNIMPLEMENTED;
-    return NtCurrentTeb()->CurrentLocale;
+    return (LANGID)NtCurrentTeb()->CurrentLocale;
 }
 
 /*
@@ -934,8 +938,7 @@ QueueUserAPC(IN PAPCFUNC pfnAPC,
 
     /* Zero the activation context and query information on it */
     RtlZeroMemory(&ActCtxInfo, sizeof(ActCtxInfo));
-    // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
-    Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+    Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT,
                                                   NULL,
                                                   0,
                                                   ActivationContextBasicInformation,

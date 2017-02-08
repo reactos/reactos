@@ -4,11 +4,14 @@
  * FILE:             drivers/filesystems/fs_rec/ext2.c
  * PURPOSE:          EXT2 Recognizer
  * PROGRAMMER:       Eric Kohl
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "fs_rec.h"
+#include "ext2.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -16,11 +19,10 @@
 
 BOOLEAN
 NTAPI
-FsRecIsExt2Volume(IN PVOID PackedBootSector)
+FsRecIsExt2Volume(IN PEXT2_SUPER_BLOCK SuperBlock)
 {
-    UNREFERENCED_PARAMETER(PackedBootSector);
-    /* For now, always return failure... */
-    return FALSE;
+    /* Just check for magic */
+    return (SuperBlock->Magic == EXT2_SUPER_MAGIC);
 }
 
 NTSTATUS
@@ -31,9 +33,9 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
     PDEVICE_OBJECT MountDevice;
-    PVOID Bpb = NULL;
+    PEXT2_SUPER_BLOCK Spb = NULL;
     ULONG SectorSize;
-    LARGE_INTEGER Offset = {{0, 0}};
+    LARGE_INTEGER Offset;
     BOOLEAN DeviceError = FALSE;
     PAGED_CODE();
 
@@ -50,16 +52,17 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
             MountDevice = Stack->Parameters.MountVolume.DeviceObject;
             if (FsRecGetDeviceSectorSize(MountDevice, &SectorSize))
             {
-                /* Try to read the BPB */
+                /* Try to read the superblock */
+                Offset.QuadPart = EXT2_SB_OFFSET;
                 if (FsRecReadBlock(MountDevice,
                                    &Offset,
-                                   512,
+                                   EXT2_SB_SIZE,
                                    SectorSize,
-                                   (PVOID)&Bpb,
+                                   (PVOID)&Spb,
                                    &DeviceError))
                 {
                     /* Check if it's an actual EXT2 volume */
-                    if (FsRecIsExt2Volume(Bpb))
+                    if (FsRecIsExt2Volume(Spb))
                     {
                         /* It is! */
                         Status = STATUS_FS_DRIVER_REQUIRED;
@@ -67,7 +70,7 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 /* Free the boot sector if we have one */
-                ExFreePool(Bpb);
+                ExFreePool(Spb);
             }
             else
             {
@@ -92,7 +95,7 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
 
             /* Load the file system */
             Status = FsRecLoadFileSystem(DeviceObject,
-                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ext2");
+                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ext2fs");
             break;
 
         default:

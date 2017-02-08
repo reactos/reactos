@@ -16,7 +16,6 @@
 /* PRIVATE FUNCTIONS **********************************************************/
 
 HANDLE
-FASTCALL
 TranslateStdHandle(IN HANDLE hHandle)
 {
     PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
@@ -50,10 +49,7 @@ GetHandleInformation(IN HANDLE hObject,
 
     if (IsConsoleHandle(hObject))
     {
-        /* FIXME: GetConsoleHandleInformation required */
-        UNIMPLEMENTED;
-        BaseSetLastNTError(STATUS_NOT_IMPLEMENTED);
-        return FALSE;
+        return GetConsoleHandleInformation(hObject, lpdwFlags);
     }
 
     Status = NtQueryObject(hObject,
@@ -91,10 +87,7 @@ SetHandleInformation(IN HANDLE hObject,
 
     if (IsConsoleHandle(hObject))
     {
-        /* FIXME: SetConsoleHandleInformation required */
-        UNIMPLEMENTED;
-        BaseSetLastNTError(STATUS_NOT_IMPLEMENTED);
-        return FALSE;
+        return SetConsoleHandleInformation(hObject, dwMask, dwFlags);
     }
 
     Status = NtQueryObject(hObject,
@@ -170,7 +163,11 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         ((hSourceHandle != NtCurrentProcess()) &&
          (hSourceHandle != NtCurrentThread())))
     {
-        if ((hSourceProcessHandle != NtCurrentProcess()) &&
+        /*
+         * We can duplicate console handles only if both the source
+         * and the target processes are in fact the current process.
+         */
+        if ((hSourceProcessHandle != NtCurrentProcess()) ||
             (hTargetProcessHandle != NtCurrentProcess()))
         {
             BaseSetLastNTError(STATUS_INVALID_PARAMETER);

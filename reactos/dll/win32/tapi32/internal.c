@@ -18,21 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <string.h>
-//#include <stdlib.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winreg.h"
-//#include "winnls.h"
-//#include "winerror.h"
-//#include "objbase.h"
-//#include "tapi.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(tapi);
+#include "precomp.h"
 
 /***********************************************************************
  *		internalConfig (TAPI32.@)

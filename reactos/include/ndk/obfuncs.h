@@ -74,7 +74,7 @@ NTAPI
 ObCreateObjectType(
     _In_ PUNICODE_STRING TypeName,
     _In_ POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
-    _In_ PVOID Reserved,
+    _Reserved_ PVOID Reserved,
     _Out_ POBJECT_TYPE *ObjectType
 );
 
@@ -111,7 +111,7 @@ ObOpenObjectByName(
     _In_ KPROCESSOR_MODE AccessMode,
     _In_opt_ PACCESS_STATE PassedAccessState,
     _In_ ACCESS_MASK DesiredAccess,
-    _Inout_ PVOID ParseContext,
+    _Inout_opt_ PVOID ParseContext,
     _Out_ PHANDLE Handle
 );
 
@@ -153,8 +153,8 @@ ObFindHandleForObject(
     _In_ PEPROCESS Process,
     _In_ PVOID Object,
     _In_ POBJECT_TYPE ObjectType,
-    _In_ POBJECT_HANDLE_INFORMATION HandleInformation,
-    _Out_ PHANDLE Handle
+    _In_opt_ POBJECT_HANDLE_INFORMATION HandleInformation,
+    _Out_opt_ PHANDLE Handle
 );
 
 NTKERNELAPI
@@ -373,7 +373,7 @@ NTAPI
 NtWaitForSingleObject(
     _In_ HANDLE Object,
     _In_ BOOLEAN Alertable,
-    _In_opt_ PLARGE_INTEGER Time
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSAPI

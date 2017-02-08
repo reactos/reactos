@@ -37,12 +37,10 @@
  *        audio is played... still should be stopped ASAP
  */
 
-//#include <string.h>
 #include "private_mciavi.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
+#include <mciavi.h>
+#include <wine/unicode.h>
 
 static DWORD MCIAVI_mciStop(UINT, DWORD, LPMCI_GENERIC_PARMS);
 
@@ -87,7 +85,6 @@ static	DWORD	MCIAVI_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
 
     InitializeCriticalSection(&wma->cs);
     wma->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": WINE_MCIAVI.cs");
-    wma->ack_event = CreateEventW(NULL, FALSE, FALSE, NULL);
     wma->hStopEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     wma->wDevID = modp->wDeviceID;
     wma->wCommandTable = mciLoadCommandResource(MCIAVI_hInstance, mciAviWStr, 0);
@@ -121,7 +118,6 @@ static	DWORD	MCIAVI_drvClose(DWORD dwDevID)
 	mciSetDriverData(dwDevID, 0);
 	mciFreeCommandResource(wma->wCommandTable);
 
-        CloseHandle(wma->ack_event);
         CloseHandle(wma->hStopEvent);
 
         LeaveCriticalSection(&wma->cs);
@@ -336,148 +332,33 @@ DWORD MCIAVI_mciClose(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms)
     return dwRet;
 }
 
-static DWORD MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms);
-
-struct MCIAVI_play_data
+static double currenttime_us(void)
 {
-    MCIDEVICEID wDevID;
-    DWORD flags;
-    MCI_PLAY_PARMS params;
-};
-
-/*
- * MCIAVI_mciPlay_thread
- *
- * FIXME: probably should use a common worker thread created at the driver
- * load time and queue all async commands to it.
- */
-static DWORD WINAPI MCIAVI_mciPlay_thread(LPVOID arg)
-{
-    struct MCIAVI_play_data *data = (struct MCIAVI_play_data *)arg;
-    DWORD ret;
-
-    TRACE("In thread before async play command (id %08x, flags %08x)\n", data->wDevID, data->flags);
-    ret = MCIAVI_mciPlay(data->wDevID, data->flags | MCI_WAIT, &data->params);
-    TRACE("In thread after async play command (id %08x, flags %08x)\n", data->wDevID, data->flags);
-
-    HeapFree(GetProcessHeap(), 0, data);
-    return ret;
-}
-
-/*
- * MCIAVI_mciPlay_async
- */
-static DWORD MCIAVI_mciPlay_async(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpParams)
-{
-    HANDLE handle, ack_event = wma->ack_event;
-    struct MCIAVI_play_data *data = HeapAlloc(GetProcessHeap(), 0, sizeof(struct MCIAVI_play_data));
-
-    if (!data) return MCIERR_OUT_OF_MEMORY;
-
-    data->wDevID = wma->wDevID;
-    data->flags = dwFlags;
-    data->params = *lpParams;
-
-    if (!(handle = CreateThread(NULL, 0, MCIAVI_mciPlay_thread, data, 0, NULL)))
-    {
-        WARN("Couldn't create thread for async play, playing synchronously\n");
-        return MCIAVI_mciPlay_thread(data);
-    }
-    SetThreadPriority(handle, THREAD_PRIORITY_TIME_CRITICAL);
-    CloseHandle(handle);
-    /* wait until the thread starts up, so the app could see a changed status */
-    WaitForSingleObject(ack_event, INFINITE);
-    TRACE("Async play has started\n");
-    return 0;
+    LARGE_INTEGER lc, lf;
+    QueryPerformanceCounter(&lc);
+    QueryPerformanceFrequency(&lf);
+    return (lc.QuadPart * 1000000) / lf.QuadPart;
 }
 
 /***************************************************************************
- * 				MCIAVI_mciPlay			[internal]
+ * 				MCIAVI_player			[internal]
  */
-static	DWORD	MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
+static	DWORD	MCIAVI_player(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
 {
-    WINE_MCIAVI *wma;
-    DWORD		frameTime;
     DWORD		dwRet;
     LPWAVEHDR		waveHdr = NULL;
     unsigned		i, nHdr = 0;
-    DWORD		dwFromFrame, dwToFrame;
     DWORD		numEvents = 1;
     HANDLE		events[2];
-
-    TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
-
-    if (lpParms == NULL)	return MCIERR_NULL_PARAMETER_BLOCK;
-
-    wma = MCIAVI_mciGetOpenDev(wDevID);
-    if (wma == NULL)		return MCIERR_INVALID_DEVICE_ID;
-    if (dwFlags & MCI_DGV_PLAY_REVERSE) return MCIERR_UNSUPPORTED_FUNCTION;
-    if (dwFlags & MCI_TEST)	return 0;
+    double next_frame_us;
 
     EnterCriticalSection(&wma->cs);
-
-    if (!wma->hFile)
-    {
-        LeaveCriticalSection(&wma->cs);
-        return MCIERR_FILE_NOT_FOUND;
-    }
-    if (!wma->hWndPaint)
-    {
-        LeaveCriticalSection(&wma->cs);
-        return MCIERR_NO_WINDOW;
-    }
-
-    LeaveCriticalSection(&wma->cs);
-
-    if (!(dwFlags & MCI_WAIT))
-        return MCIAVI_mciPlay_async(wma, dwFlags, lpParms);
-
-    if (!(GetWindowLongW(wma->hWndPaint, GWL_STYLE) & WS_VISIBLE))
-        ShowWindow(wma->hWndPaint, SW_SHOWNA);
-
-    EnterCriticalSection(&wma->cs);
-
-    dwFromFrame = wma->dwCurrVideoFrame;
-    dwToFrame = wma->dwPlayableVideoFrames - 1;
-
-    if (dwFlags & MCI_FROM) {
-	dwFromFrame = MCIAVI_ConvertTimeFormatToFrame(wma, lpParms->dwFrom);
-    }
-    if (dwFlags & MCI_TO) {
-	dwToFrame = MCIAVI_ConvertTimeFormatToFrame(wma, lpParms->dwTo);
-    }
-    if (dwToFrame >= wma->dwPlayableVideoFrames)
-	dwToFrame = wma->dwPlayableVideoFrames - 1;
-
-    TRACE("Playing from frame=%u to frame=%u\n", dwFromFrame, dwToFrame);
-
-    wma->dwCurrVideoFrame = dwFromFrame;
-    wma->dwToVideoFrame = dwToFrame;
-
-    /* if already playing exit */
-    if (wma->dwStatus == MCI_MODE_PLAY)
-    {
-        LeaveCriticalSection(&wma->cs);
-        SetEvent(wma->ack_event);
-        return 0;
-    }
 
     if (wma->dwToVideoFrame <= wma->dwCurrVideoFrame)
     {
         dwRet = 0;
-        SetEvent(wma->ack_event);
         goto mci_play_done;
     }
-
-    wma->dwStatus = MCI_MODE_PLAY;
-    /* signal the state change */
-    SetEvent(wma->ack_event);
-
-    if (dwFlags & (MCI_DGV_PLAY_REPEAT|MCI_MCIAVI_PLAY_WINDOW|MCI_MCIAVI_PLAY_FULLSCREEN))
-	FIXME("Unsupported flag %08x\n", dwFlags);
-
-    /* time is in microseconds, we should convert it to milliseconds */
-    frameTime = (wma->mah.dwMicroSecPerFrame + 500) / 1000;
 
     events[0] = wma->hStopEvent;
     if (wma->lpWaveFormat) {
@@ -496,39 +377,50 @@ static	DWORD	MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
        }
     }
 
+    next_frame_us = currenttime_us();
     while (wma->dwStatus == MCI_MODE_PLAY)
     {
         HDC hDC;
-        DWORD tc, delta;
+        double tc, delta;
         DWORD ret;
 
-	tc = GetTickCount();
+        tc = currenttime_us();
 
         hDC = wma->hWndPaint ? GetDC(wma->hWndPaint) : 0;
         if (hDC)
         {
-            MCIAVI_PaintFrame(wma, hDC);
+            while(next_frame_us <= tc && wma->dwCurrVideoFrame < wma->dwToVideoFrame){
+                double dur;
+                dur = MCIAVI_PaintFrame(wma, hDC);
+                ++wma->dwCurrVideoFrame;
+                if(!dur)
+                    break;
+                next_frame_us += dur;
+                TRACE("next_frame: %f\n", next_frame_us);
+            }
             ReleaseDC(wma->hWndPaint, hDC);
+        }
+        if (wma->dwCurrVideoFrame >= wma->dwToVideoFrame)
+        {
+            if (!(dwFlags & MCI_DGV_PLAY_REPEAT))
+                break;
+            TRACE("repeat media as requested\n");
+            wma->dwCurrVideoFrame = wma->dwCurrAudioBlock = 0;
         }
 
         if (wma->lpWaveFormat)
-	    MCIAVI_PlayAudioBlocks(wma, nHdr, waveHdr);
+            MCIAVI_PlayAudioBlocks(wma, nHdr, waveHdr);
 
-	delta = GetTickCount() - tc;
-	if (delta < frameTime)
-            delta = frameTime - delta;
+        tc = currenttime_us();
+        if (tc < next_frame_us)
+            delta = next_frame_us - tc;
         else
             delta = 0;
 
         LeaveCriticalSection(&wma->cs);
-        ret = WaitForMultipleObjects(numEvents, events, FALSE, delta);
+        ret = WaitForMultipleObjects(numEvents, events, FALSE, delta / 1000);
         EnterCriticalSection(&wma->cs);
         if (ret == WAIT_OBJECT_0 || wma->dwStatus != MCI_MODE_PLAY) break;
-
-       if (wma->dwCurrVideoFrame < dwToFrame)
-           wma->dwCurrVideoFrame++;
-        else
-            break;
     }
 
     if (wma->lpWaveFormat) {
@@ -568,9 +460,142 @@ mci_play_done:
     if (dwFlags & MCI_NOTIFY) {
 	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
 	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-                       wDevID, MCI_NOTIFY_SUCCESSFUL);
+                       wma->wDevID, MCI_NOTIFY_SUCCESSFUL);
     }
     LeaveCriticalSection(&wma->cs);
+    return dwRet;
+}
+
+struct MCIAVI_play_data
+{
+    WINE_MCIAVI *wma;
+    DWORD flags;
+    MCI_PLAY_PARMS params; /* FIXME: notify via wma->hCallback like the other MCI drivers */
+};
+
+/*
+ * MCIAVI_mciPlay_thread
+ *
+ * FIXME: probably should use a common worker thread created at the driver
+ * load time and queue all async commands to it.
+ */
+static DWORD WINAPI MCIAVI_mciPlay_thread(LPVOID arg)
+{
+    struct MCIAVI_play_data *data = (struct MCIAVI_play_data *)arg;
+    DWORD ret;
+
+    TRACE("In thread before async play command (id %u, flags %08x)\n", data->wma->wDevID, data->flags);
+    ret = MCIAVI_player(data->wma, data->flags, &data->params);
+    TRACE("In thread after async play command (id %u, flags %08x)\n", data->wma->wDevID, data->flags);
+
+    HeapFree(GetProcessHeap(), 0, data);
+    return ret;
+}
+
+/*
+ * MCIAVI_mciPlay_async
+ */
+static DWORD MCIAVI_mciPlay_async(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpParams)
+{
+    HANDLE handle;
+    struct MCIAVI_play_data *data = HeapAlloc(GetProcessHeap(), 0, sizeof(struct MCIAVI_play_data));
+
+    if (!data) return MCIERR_OUT_OF_MEMORY;
+
+    data->wma = wma;
+    data->flags = dwFlags;
+    if (dwFlags & MCI_NOTIFY)
+        data->params.dwCallback = lpParams->dwCallback;
+
+    if (!(handle = CreateThread(NULL, 0, MCIAVI_mciPlay_thread, data, 0, NULL)))
+    {
+        WARN("Couldn't create thread for async play, playing synchronously\n");
+        return MCIAVI_mciPlay_thread(data);
+    }
+    SetThreadPriority(handle, THREAD_PRIORITY_TIME_CRITICAL);
+    CloseHandle(handle);
+    return 0;
+}
+
+/***************************************************************************
+ * 				MCIAVI_mciPlay			[internal]
+ */
+static	DWORD	MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
+{
+    WINE_MCIAVI *wma;
+    DWORD		dwRet;
+    DWORD		dwFromFrame, dwToFrame;
+
+    TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    if (lpParms == NULL)	return MCIERR_NULL_PARAMETER_BLOCK;
+
+    wma = MCIAVI_mciGetOpenDev(wDevID);
+    if (wma == NULL)		return MCIERR_INVALID_DEVICE_ID;
+    if (dwFlags & MCI_DGV_PLAY_REVERSE) return MCIERR_UNSUPPORTED_FUNCTION;
+    if (dwFlags & MCI_TEST)	return 0;
+
+    if (dwFlags & (MCI_MCIAVI_PLAY_WINDOW|MCI_MCIAVI_PLAY_FULLSCREEN|MCI_MCIAVI_PLAY_FULLBY2))
+	FIXME("Unsupported flag %08x\n", dwFlags);
+
+    EnterCriticalSection(&wma->cs);
+
+    if (!wma->hFile)
+    {
+        LeaveCriticalSection(&wma->cs);
+        return MCIERR_FILE_NOT_FOUND;
+    }
+    if (!wma->hWndPaint)
+    {
+        LeaveCriticalSection(&wma->cs);
+        return MCIERR_NO_WINDOW;
+    }
+
+    dwFromFrame = wma->dwCurrVideoFrame;
+    dwToFrame = wma->dwPlayableVideoFrames - 1;
+
+    if (dwFlags & MCI_FROM) {
+	dwFromFrame = MCIAVI_ConvertTimeFormatToFrame(wma, lpParms->dwFrom);
+    }
+    if (dwFlags & MCI_TO) {
+	dwToFrame = MCIAVI_ConvertTimeFormatToFrame(wma, lpParms->dwTo);
+    }
+    if (dwToFrame >= wma->dwPlayableVideoFrames)
+	dwToFrame = wma->dwPlayableVideoFrames - 1;
+
+    TRACE("Playing from frame=%u to frame=%u\n", dwFromFrame, dwToFrame);
+
+    wma->dwCurrVideoFrame = dwFromFrame;
+    wma->dwToVideoFrame = dwToFrame;
+
+    LeaveCriticalSection(&wma->cs);
+
+    if (!(GetWindowLongW(wma->hWndPaint, GWL_STYLE) & WS_VISIBLE))
+        ShowWindow(wma->hWndPaint, SW_SHOWNA);
+
+    EnterCriticalSection(&wma->cs);
+
+    /* if already playing exit */
+    if (wma->dwStatus == MCI_MODE_PLAY)
+    {
+        LeaveCriticalSection(&wma->cs);
+        return 0;
+    }
+
+    wma->dwStatus = MCI_MODE_PLAY;
+
+    LeaveCriticalSection(&wma->cs);
+
+    if (dwFlags & MCI_WAIT)
+        return MCIAVI_player(wma, dwFlags, lpParms);
+
+    dwRet = MCIAVI_mciPlay_async(wma, dwFlags, lpParms);
+
+    if (dwRet) {
+        EnterCriticalSection(&wma->cs);
+        wma->dwStatus = MCI_MODE_STOP;
+        LeaveCriticalSection(&wma->cs);
+    }
     return dwRet;
 }
 

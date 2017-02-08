@@ -1,0 +1,9 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nEntrez ""CLIP /?"" pour afficher la syntaxe.\n"
+    IDS_HELP "\nRedirige la sortie des programmes en ligne de commande vers le Presse-Papiers.\n\n\
+CLIP [/?]\n\n\
+    /?  Affiche ce message d'aide.\n"
+END

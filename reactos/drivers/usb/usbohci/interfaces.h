@@ -1,12 +1,9 @@
-
 #ifndef INTERFACES_HPP
 #define INTERFACES_HPP
 
 struct _OHCI_ENDPOINT_DESCRIPTOR;
 struct IDMAMemoryManager;
 struct IUSBQueue;
-
-#include "libusb.h"
 
 //=========================================================================================
 //
@@ -134,4 +131,4 @@ DECLARE_INTERFACE_(IOHCIQueue, IUSBQueue)
 
 typedef IOHCIQueue *POHCIQUEUE;
 
-#endif
+#endif /* INTERFACES_HPP */

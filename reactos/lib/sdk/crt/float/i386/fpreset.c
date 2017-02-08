@@ -1,11 +1,8 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
+ * COPYRIGHT:   See COPYING.LIB in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
- * PURPOSE:     Unknown
- * PROGRAMER:   Unknown
- * UPDATE HISTORY:
- *              25/11/05: Added license header
+ * PURPOSE:     Resets FPU state to the default
+ * PROGRAMER:   Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <precomp.h>
@@ -15,9 +12,20 @@
  */
 void CDECL _fpreset(void)
 {
-#if defined(__GNUC__)
-  __asm__ __volatile__( "fninit" );
+    const unsigned int x86_cw = 0x27f;
+#ifdef _MSC_VER
+    __asm { fninit }
+    __asm { fldcw [x86_cw] }
 #else
-  __asm fninit;
+    __asm__ __volatile__( "fninit; fldcw %0" : : "m" (x86_cw) );
 #endif
+    if (IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE))
+    {
+          const unsigned long sse2_cw = 0x1f80;
+#ifdef _MSC_VER
+        __asm { ldmxcsr [sse2_cw] }
+#else
+        __asm__ __volatile__( "ldmxcsr %0" : : "m" (sse2_cw) );
+#endif
+    }
 }

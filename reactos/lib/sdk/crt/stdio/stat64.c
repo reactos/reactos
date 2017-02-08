@@ -27,14 +27,25 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
   DWORD dw;
   WIN32_FILE_ATTRIBUTE_DATA hfi;
   unsigned short mode = ALL_S_IREAD;
-  size_t plen;
+  int plen;
 
   TRACE(":file (%s) buf(%p)\n",path,buf);
+
+  plen = _tcslen(path);
+  while (plen && path[plen-1]==' ')
+    plen--;
+
+  if (plen && (plen<2 || path[plen-2]!=':') &&
+          (path[plen-1]==':' || path[plen-1]=='\\' || path[plen-1]=='/'))
+  {
+    *_errno() = ENOENT;
+    return -1;
+  }
 
   if (!GetFileAttributesEx(path, GetFileExInfoStandard, &hfi))
   {
       TRACE("failed (%d)\n",GetLastError());
-      _dosmaperr(ERROR_FILE_NOT_FOUND);
+      *_errno() = ENOENT;
       return -1;
   }
 
@@ -45,16 +56,13 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
                  Also a letter as first char isn't enough to be classified
 		 as a drive letter
   */
-  if (isalpha((unsigned char)*path)&& (*(path+1)==':'))
-    buf->st_dev = buf->st_rdev = _totupper(*path) - 'A'; /* drive num */
+  if (isalpha(*path)&& (*(path+1)==':'))
+    buf->st_dev = buf->st_rdev = toupper(*path) - 'A'; /* drive num */
   else
     buf->st_dev = buf->st_rdev = _getdrive() - 1;
 
-  plen = _tcslen(path);
-
   /* Dir, or regular file? */
-  if ((hfi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-      (path[plen-1] == '\\'))
+  if (hfi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     mode |= (_S_IFDIR | ALL_S_IEXEC);
   else
   {
@@ -62,8 +70,8 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
     /* executable? */
     if (plen > 6 && path[plen-4] == '.')  /* shortest exe: "\x.exe" */
     {
-      TCHAR4 ext = _totlower(path[plen-1]) | (_totlower(path[plen-2]) << TCSIZE) |
-                                 (_totlower(path[plen-3]) << (2*TCSIZE));
+      unsigned int ext = tolower(path[plen-1]) | (tolower(path[plen-2]) << 8) |
+                                 (tolower(path[plen-3]) << 16);
       if (ext == EXE || ext == BAT || ext == CMD || ext == COM)
           mode |= ALL_S_IEXEC;
     }
@@ -79,9 +87,9 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
   buf->st_atime = dw;
   RtlTimeToSecondsSince1970((LARGE_INTEGER *)&hfi.ftLastWriteTime, &dw);
   buf->st_mtime = buf->st_ctime = dw;
-  TRACE("%d %d 0x%08lx%08lx %ld %ld %ld\n", buf->st_mode,buf->st_nlink,
-        (long)(buf->st_size >> 32),(long)buf->st_size,
-        (long)buf->st_atime,(long)buf->st_mtime,(long)buf->st_ctime);
+  TRACE("%d %d 0x%08x%08x %d %d %d\n", buf->st_mode,buf->st_nlink,
+        (int)(buf->st_size >> 32),(int)buf->st_size,
+        (int)buf->st_atime,(int)buf->st_mtime,(int)buf->st_ctime);
   return 0;
 }
 

@@ -29,7 +29,8 @@
  *
  * Directory Write Support Routines.
  */
-#include "tiffiop.h"
+
+#include <precomp.h>
 
 #ifdef HAVE_IEEEFP
 #define TIFFCvtNativeToIEEEFloat(tif, n, fp)

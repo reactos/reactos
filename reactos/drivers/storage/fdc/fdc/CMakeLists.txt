@@ -1,11 +1,13 @@
 
-add_library(fdc SHARED
+list(APPEND SOURCE
     fdc.c
     fdo.c
+    misc.c
     pdo.c
-    fdc.rc)
+    fdc.h)
 
+add_library(fdc SHARED ${SOURCE} fdc.rc)
 set_module_type(fdc kernelmodedriver)
 add_importlibs(fdc hal ntoskrnl)
-
-add_cd_file(TARGET fdc DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_pch(fdc fdc.h SOURCE)
+add_cd_file(TARGET fdc DESTINATION reactos/system32/drivers FOR all)

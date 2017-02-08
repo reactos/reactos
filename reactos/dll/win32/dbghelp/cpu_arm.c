@@ -19,18 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <assert.h>
-
-//#include "ntstatus.h"
-#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
-//#include "winternl.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static unsigned arm_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                             enum cpu_addr ca, ADDRESS64* addr)
+static BOOL arm_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                         enum cpu_addr ca, ADDRESS64* addr)
 {
     addr->Mode    = AddrModeFlat;
     addr->Segment = 0; /* don't need segment */
@@ -99,13 +93,6 @@ static BOOL arm_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
 
     if (curr_mode == stm_start)
     {
-        if ((frame->AddrPC.Mode == AddrModeFlat) &&
-            (frame->AddrFrame.Mode != AddrModeFlat))
-        {
-            WARN("Bad AddrPC.Mode / AddrFrame.Mode combination\n");
-            goto done_err;
-        }
-
         /* Init done */
         set_curr_mode(stm_arm);
         frame->AddrReturn.Mode = frame->AddrStack.Mode = AddrModeFlat;
@@ -157,7 +144,7 @@ static BOOL arm_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
 }
 #endif
 
-static unsigned arm_map_dwarf_register(unsigned regno)
+static unsigned arm_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     if (regno <= 15) return CV_ARM_R0 + regno;
     if (regno == 128) return CV_ARM_CPSR;
@@ -222,8 +209,30 @@ static const char* arm_fetch_regname(unsigned regno)
     return NULL;
 }
 
+static BOOL arm_fetch_minidump_thread(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx)
+{
+    if (ctx->ContextFlags && (flags & ThreadWriteInstructionWindow))
+    {
+        /* FIXME: crop values across module boundaries, */
+#ifdef __arm__
+        ULONG base = ctx->Pc <= 0x80 ? 0 : ctx->Pc - 0x80;
+        minidump_add_memory_block(dc, base, ctx->Pc + 0x80 - base, 0);
+#endif
+    }
+
+    return TRUE;
+}
+
+static BOOL arm_fetch_minidump_module(struct dump_context* dc, unsigned index, unsigned flags)
+{
+    /* FIXME: actually, we should probably take care of FPO data, unless it's stored in
+     * function table minidump stream
+     */
+    return FALSE;
+}
+
 DECLSPEC_HIDDEN struct cpu cpu_arm = {
-    IMAGE_FILE_MACHINE_ARMV7,
+    IMAGE_FILE_MACHINE_ARMNT,
     4,
     CV_ARM_R0 + 11,
     arm_get_addr,
@@ -232,4 +241,6 @@ DECLSPEC_HIDDEN struct cpu cpu_arm = {
     arm_map_dwarf_register,
     arm_fetch_context_reg,
     arm_fetch_regname,
+    arm_fetch_minidump_thread,
+    arm_fetch_minidump_module,
 };

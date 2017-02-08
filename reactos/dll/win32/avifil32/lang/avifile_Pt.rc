@@ -1,0 +1,51 @@
+/*
+ * Top level resource file for avifil32.dll
+ *
+ * Copyright 2002 Michael Günnewig
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_WAVESTREAMFORMAT	"Formato wave: %s"
+  IDS_WAVEFILETYPE	"Formato wave"
+  IDS_ALLMULTIMEDIA	"Todos os ficheiros multimédia"
+  IDS_ALLFILES		"Todos os ficheiros (*.*)"
+  IDS_VIDEO		"vídeo"
+  IDS_AUDIO		"áudio"
+  IDS_AVIFILETYPE	"Manipulador AVI Wine predefinido"
+  IDS_UNCOMPRESSED      "sem compressão"
+}
+
+IDD_SAVEOPTIONS DIALOGEX  43, 37, 226, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Opções de compressão"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Escolha a stream:",-1,5,5,154,10
+    COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Opções...",IDC_OPTIONS,170,17,50,14
+    AUTOCHECKBOX    "&Interlaçar a todos os",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
+    EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
+    LTEXT           "molduras",-1,129,43,36,9
+    LTEXT           "Formato actual:",-1,5,56,73,9
+    LTEXT           "",IDC_FORMATTEXT,80,56,88,26
+    DEFPUSHBUTTON   "OK",IDOK,170,42,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,170,61,50,14
+END

@@ -1,0 +1,195 @@
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 80
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Lütfen Bekleyiniz..."
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    LTEXT "", IDC_STATUSLABEL, 7, 62, 261, 12, SS_WORDELLIPSIS
+END
+
+IDD_NOTICE_DLG DIALOGEX 0, 0, 275, 80
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "ReactOS'a Hoşgeldiniz"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_LOCKICON, IDC_STATIC, 7, 55, 32, 32
+    LTEXT "Başlamak için Denetim, Seçenek ve Silme düğmelerine birlikte basınız.",IDC_STATIC, 38, 60, 144, 14
+END
+
+IDD_LOGGEDOUT_DLG DIALOGEX 0, 0, 275, 147
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Oturum Aç"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    LTEXT "Kullanıcı Adı:", IDC_STATIC, 6, 60, 59, 8
+    EDITTEXT IDC_USERNAME, 67, 57, 148, 14, ES_AUTOHSCROLL
+    LTEXT "Şifre:", IDC_STATIC, 6, 78, 59, 8
+    EDITTEXT IDC_PASSWORD, 67, 76, 148, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Üzerinde Oturum Aç:", IDC_STATIC, 6, 96, 59, 8
+    COMBOBOX IDC_LOGON_TO, 67, 95, 148, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Tamam", IDOK, 91, 122, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "İptal", IDCANCEL, 145, 122, 50, 14
+    PUSHBUTTON "Bilgisayarı Kapat", IDC_SHUTDOWN, 199, 122, 65, 14
+END
+
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Güvenlik"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    GROUPBOX "Oturum Açma Bilgisi", IDC_STATIC, 7, 61, 261, 52
+    LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
+    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
+    CTEXT "Ne yapmak istersiniz?", IDC_STATIC, 10, 119, 255, 8
+    PUSHBUTTON "Bilgisayarı Kilitle", IDC_LOCK, 10, 135, 76, 14
+    PUSHBUTTON "Oturumu Kapat...", IDC_LOGOFF, 100, 135, 75, 14
+    PUSHBUTTON "Bilgisayarı Kapat", IDC_SHUTDOWN, 189, 135, 76, 14
+    PUSHBUTTON "Şifre Değiştir", IDC_CHANGEPWD, 10, 154, 76, 14
+    PUSHBUTTON "Görev Yöneticisi", IDC_TASKMGR, 100, 154, 75, 14
+    PUSHBUTTON "İptal", IDCANCEL, 189, 154, 76, 14
+END
+
+IDD_LOCKED_DLG DIALOGEX 0, 0, 275, 121
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Bilgisayar Kilitli"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_LOCKICON, -1, 7, 59, 20, 20
+    LTEXT "Bu bilgisayar kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "İleti", IDC_LOCKMSG, 37, 75, 231, 26
+    LTEXT "Bu bilgisayarın kilidini açmak için Denetim, Seçenek ve Silme düğmelerine birlikte basınız.", IDC_STATIC, 36, 106, 232, 8
+END
+
+IDD_UNLOCK_DLG DIALOGEX 0, 0, 275, 179
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Bilgisayarın Kilidini Aç"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_LOCKICON, -1, 7, 59, 20, 20
+    LTEXT "Bu bilgisayar kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "İleti", IDC_LOCKMSG, 36, 75, 232, 26
+    LTEXT "Kullanıcı Adı:", IDC_STATIC, 36, 107, 40, 8
+    EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
+    LTEXT "Şifre:", IDC_STATIC, 36, 125, 42, 8
+    EDITTEXT IDC_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    PUSHBUTTON "Tamam", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "İptal", IDCANCEL, 144, 154, 50, 14
+END
+
+IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 275, 166
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Şifre Değiştir"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    LTEXT "Kullanıcı Adı:", IDC_STATIC, 7, 61, 78, 8
+    EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
+    LTEXT "Üzerinde Oturum Aç:", IDC_STATIC, 7, 78, 78, 8
+    COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
+    LTEXT "Eski Şifre:", IDC_STATIC, 7, 95, 78, 8
+    EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Yeni Şifre:", IDC_STATIC, 7, 111, 78, 8
+    EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Yeni Şifreyi Doğrula:", IDC_STATIC, 7, 127, 78, 8
+    EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
+    PUSHBUTTON "Tamam", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "İptal", IDCANCEL, 218, 145, 50, 14
+END
+
+IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
+CAPTION "Oturumu Kapat"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    ICON IDI_LOCKICON, -1, 7, 7, 20, 20
+    LTEXT "Oturumu kapatmayı istediğinizden emin misiniz?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Evet", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Hayır", IDNO, 95, 39, 50, 14
+END
+
+IDD_SHUTDOWN_DLG DIALOGEX 0, 0, 275, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Bilgisayarı Kapat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
+    LTEXT "&Bilgisayarın ne yapmasını istiyorsunuz?", IDC_STATIC, 39, 57, 167, 10
+    COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
+    DEFPUSHBUTTON "Tamam", IDOK, 143, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "İptal", IDCANCEL, 204, 122, 55, 14
+END
+
+IDD_LEGALNOTICE_DLG DIALOGEX 0, 0, 280, 200
+STYLE DS_MODALFRAME | DS_SHELLFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_LEGALNOTICE_TEXT, 7, 7, 266, 165, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "Tamam", IDOK, 115, 179, 50, 14
+END
+
+IDD_SHUTDOWN_SHELL DIALOGEX 0, 0, 275, 146
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Oturumu Kapat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
+    LTEXT "&Bilgisayarınızın ne yapmasını istiyorsunuz?", IDC_STATIC, 39, 57, 167, 10
+    COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
+    DEFPUSHBUTTON "Tamam", IDOK, 80, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "İptal", IDCANCEL, 143, 122, 55, 14
+    PUSHBUTTON "&Yardım", IDHELP, 204, 122, 55, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LOGGEDOUTSAS "Hoşgeldiniz!"
+    IDS_LOCKEDSAS "Bu bilgisayar şimdilik kilitli."
+    IDS_PRESSCTRLALTDELETE "Oturum açmak için Denetim, Seçenek ve Silme düğmelerine birlikte basınız."
+    IDS_ASKFORUSER "Kullanıcı Adı: "
+    IDS_ASKFORPASSWORD "Şifre: "
+    IDS_FORCELOGOFF "Bu, şimdiki kullanıcının oturumunu kapatacak ve tüm saklanmış bilgiler yitirilecek. Sürdürülsün mü?"
+    IDS_LOCKMSG "Yalnızca %s ve bir yönetici bu bilgisayarın kilidini açabilir."
+    IDS_LOGONMSG "%s olarak oturum açtınız."
+    IDS_LOGONDATE "Oturum Açma Zamânı: %s %s"
+    IDS_COMPUTERLOCKED "Bilgisayar kilitlendi."
+    IDS_LOCKEDWRONGPASSWORD "Şifre yanlış. Lütfen şifrenizi yeniden giriniz. Şifrelerdeki harfler doğru büyük-küçük ayrımı kullanılarak yazılmalıdır."
+    IDS_LOCKEDWRONGUSER "Bu bilgisayar kilitli. Yalnızca %s\\%s ve bir yönetici bu bilgisayarın kilidini açabilir."
+    IDS_CHANGEPWDTITLE "Şifre Değştirme"
+    IDS_NONMATCHINGPASSWORDS "Yazıdığınız şifreler birbiriyle uyuşmuyor. İki metin kutusunda aynı şifreyi yazınız."
+    IDS_PASSWORDCHANGED "Şifreniz değiştirildi."
+    IDS_LOGONTITLE "Oturum Açma İletisi"
+    IDS_LOGONWRONGUSERORPWD "Dizge oturumunuzu açamadı. Kullanıcı adınızın ve etki alanının doğru olduğundan emin olunuz, sonra şifrenizi yeniden yazınız. Şifrelerdeki harfler doğru büyük-küçük ayrımı kullanılarak yazılmalıdır."
+    IDS_LOGONUSERDISABLED "Hesâbınız edilginleştirildi. Lütfen dizge yöneticinizi görünüz."
+    IDS_PASSWORDMUSTCHANGE "İlk oturum açmada şifrenizi değiştirmeniz gerekir."
+    IDS_PASSWORDEXPIRED "Şifrenizin süresi doldu ve şifreniz değiştirilmelidir."
+END
+
+/* Shutdown Dialog Strings */
+STRINGTABLE
+BEGIN
+    IDS_SHUTDOWN_LOGOFF """%s"" Oturumunu Kapat"
+    IDS_SHUTDOWN_SHUTDOWN "Bilgisayarı Kapat"
+    IDS_SHUTDOWN_RESTART "Yeniden Başlat"
+    IDS_SHUTDOWN_SLEEP "Uykuya Geçir"
+    IDS_SHUTDOWN_HIBERNATE "Anıkta Beklet"
+    /* Shut down descriptions */
+    IDS_SHUTDOWN_LOGOFF_DESC "Şimdiki oturumunuzu sonlandırır ve başka kullanıcılara dizgede oturum açmaya olanak sağlar."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Şimdiki oturumunuzu sonlandırır ve dizgeyi kapatır, böylece gücü güvenli olarak kapatbilirsiniz."
+    IDS_SHUTDOWN_RESTART_DESC "Şimdiki oturumunuzu sonlandırır dizgeyi yeniden başlatır."
+    IDS_SHUTDOWN_SLEEP_DESC "Dizgeyi uyku kipine geçirir."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Şimdiki oturumu saklar ve bilgisayarı kapatır."
+END

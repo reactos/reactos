@@ -2,89 +2,101 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
- *  FILE:             subsystems/win32/win32k/ntuser/ntuser.c
+ *  FILE:             win32ss/user/ntuser/ntuser.c
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-/* GLOBALS *******************************************************************/
+BOOL FASTCALL RegisterControlAtoms(VOID);
+
+/* GLOBALS ********************************************************************/
 
 PTHREADINFO gptiCurrent = NULL;
 PPROCESSINFO gppiInputProvider = NULL;
 ERESOURCE UserLock;
-ATOM AtomMessage; // Window Message atom.
-ATOM AtomWndObj;  // Window Object atom.
-ATOM AtomLayer;   // Window Layer atom.
+ATOM AtomMessage;       // Window Message atom.
+ATOM AtomWndObj;        // Window Object atom.
+ATOM AtomLayer;         // Window Layer atom.
 ATOM AtomFlashWndState; // Window Flash State atom.
-BOOL gbInitialized;
+ATOM AtomDDETrack;      // Window DDE Tracking atom.
+ATOM AtomQOS;           // Window DDE Quality of Service atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
-PEPROCESS gpepCSRSS = NULL;
 ATOM gaGuiConsoleWndClass;
 
-/* PRIVATE FUNCTIONS *********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 static
 NTSTATUS FASTCALL
 InitUserAtoms(VOID)
 {
+    RegisterControlAtoms();
 
-  gpsi->atomSysClass[ICLS_MENU]      = 32768;
-  gpsi->atomSysClass[ICLS_DESKTOP]   = 32769;
-  gpsi->atomSysClass[ICLS_DIALOG]    = 32770;
-  gpsi->atomSysClass[ICLS_SWITCH]    = 32771;
-  gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
-  gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
+    gpsi->atomSysClass[ICLS_MENU]      = 32768;
+    gpsi->atomSysClass[ICLS_DESKTOP]   = 32769;
+    gpsi->atomSysClass[ICLS_DIALOG]    = 32770;
+    gpsi->atomSysClass[ICLS_SWITCH]    = 32771;
+    gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
+    gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
 
-  /* System Message Atom */
-  AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
-  gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
+    /* System Message Atom */
+    AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
+    gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
 
-  /* System Context Help Id Atom */
-  gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
+    /* System Context Help Id Atom */
+    gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
-  gpsi->atomIconSmProp = IntAddGlobalAtom(L"SysICS", TRUE);
-  gpsi->atomIconProp = IntAddGlobalAtom(L"SysIC", TRUE);
+    gpsi->atomIconSmProp = IntAddGlobalAtom(L"SysICS", TRUE);
+    gpsi->atomIconProp   = IntAddGlobalAtom(L"SysIC", TRUE);
 
-  gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
+    gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
 
-  AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
-  AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
-  AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
+    AtomDDETrack = IntAddGlobalAtom(L"SysDT", TRUE);
+    AtomQOS      = IntAddGlobalAtom(L"SysQOS", TRUE);
 
-  return STATUS_SUCCESS;
+    /*
+     * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use
+     * the win32k atom table for this one. What is the right thing to do ?
+     */
+    // AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
+    NtAddAtom(L"SysWNDO", 14, &AtomWndObj);
+
+    AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
+    AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
+
+    return STATUS_SUCCESS;
 }
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitUserImpl(VOID)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   ExInitializeResourceLite(&UserLock);
+    ExInitializeResourceLite(&UserLock);
 
-   if (!UserCreateHandleTable())
-   {
-      ERR("Failed creating handle table\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
+    if (!UserCreateHandleTable())
+    {
+        ERR("Failed creating handle table\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-   Status = InitSessionImpl();
-   if (!NT_SUCCESS(Status))
-   {
-      ERR("Error init session impl.\n");
-      return Status;
-   }
+    Status = InitSessionImpl();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Error init session impl.\n");
+        return Status;
+    }
 
-   InitUserAtoms();
+    InitUserAtoms();
 
-   InitSysParams();
+    InitSysParams();
 
-   return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -93,9 +105,7 @@ InitVideo();
 
 NTSTATUS
 NTAPI
-UserInitialize(
-  HANDLE  hPowerRequestEvent,
-  HANDLE  hMediaRequestEvent)
+UserInitialize(VOID)
 {
     static const DWORD wPattern55AA[] = /* 32 bit aligned */
     { 0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa,
@@ -103,13 +113,14 @@ UserInitialize(
     HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
 
-// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
-// Create Event for Diconnect Desktop.
+    NT_ASSERT(PsGetCurrentThreadWin32Thread() != NULL);
+
+// Create Event for Disconnect Desktop.
 
     Status = UserCreateWinstaDirectory();
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Initialize Video. */
+    /* Initialize Video */
     Status = InitVideo();
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -119,18 +130,7 @@ UserInitialize(
 //     Update Shared Device Caps.
 //     Initialize User Screen.
 // }
-// Create ThreadInfo for this Thread!
-// {
 
-    /* Initialize the current thread. */
-    Status = UserCreateThreadInfo(PsGetCurrentThread());
-    if (!NT_SUCCESS(Status)) return Status;
-
-//    Callback to User32 Client Thread Setup
-
-    co_IntClientThreadSetup();
-
-// }
 // Set Global SERVERINFO Error flags.
 // Load Resources.
 
@@ -138,51 +138,55 @@ UserInitialize(
 
     if (gpsi->hbrGray == NULL)
     {
-       hPattern55AABitmap = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)wPattern55AA);
-       gpsi->hbrGray = IntGdiCreatePatternBrush(hPattern55AABitmap);
-       GreDeleteObject(hPattern55AABitmap);
-       GreSetBrushOwner(gpsi->hbrGray, GDI_OBJ_HMGR_PUBLIC);
+        hPattern55AABitmap = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)wPattern55AA);
+        if (hPattern55AABitmap == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        //NT_VERIFY(GreSetBitmapOwner(hPattern55AABitmap, GDI_OBJ_HMGR_PUBLIC));
+        gpsi->hbrGray = IntGdiCreatePatternBrush(hPattern55AABitmap);
+        GreDeleteObject(hPattern55AABitmap);
+        if (gpsi->hbrGray == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     return STATUS_SUCCESS;
 }
 
 /*
-    Called from win32csr.
+ * Called from usersrv.
  */
 NTSTATUS
 APIENTRY
 NtUserInitialize(
-  DWORD   dwWinVersion,
-  HANDLE  hPowerRequestEvent,
-  HANDLE  hMediaRequestEvent)
+    DWORD  dwWinVersion,
+    HANDLE hPowerRequestEvent,
+    HANDLE hMediaRequestEvent)
 {
     NTSTATUS Status;
 
-    ERR("Enter NtUserInitialize(%lx, %p, %p)\n",
-            dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
+    TRACE("Enter NtUserInitialize(%lx, %p, %p)\n",
+          dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
 
-    /* Check the Windows version */
-    if (dwWinVersion != 0)
+    /* Check if we are already initialized */
+    if (gpepCSRSS)
+        return STATUS_UNSUCCESSFUL;
+
+    /* Check Windows USER subsystem version */
+    if (dwWinVersion != USER_VERSION)
     {
+        // FIXME: Should bugcheck!
         return STATUS_UNSUCCESSFUL;
     }
 
     /* Acquire exclusive lock */
     UserEnterExclusive();
 
-    /* Check if we are already initialized */
-    if (gbInitialized)
-    {
-        UserLeave();
-        return STATUS_UNSUCCESSFUL;
-    }
+    /* Save the EPROCESS of CSRSS */
+    InitCsrProcess(/*PsGetCurrentProcess()*/);
 
-    /* Save EPROCESS of CSRSS */
-    gpepCSRSS = PsGetCurrentProcess();
+// Initialize Power Request List (use hPowerRequestEvent).
+// Initialize Media Change (use hMediaRequestEvent).
 
-// Initialize Power Request List.
-// Initialize Media Change.
 // InitializeGreCSRSS();
 // {
 //    Startup DxGraphics.
@@ -191,10 +195,7 @@ NtUserInitialize(
 // }
 
     /* Initialize USER */
-    Status = UserInitialize(hPowerRequestEvent, hMediaRequestEvent);
-
-    /* Set us as initialized */
-    gbInitialized = TRUE;
+    Status = UserInitialize();
 
     /* Return */
     UserLeave();
@@ -208,37 +209,40 @@ RETURN
 */
 BOOL FASTCALL UserIsEntered(VOID)
 {
-   return ExIsResourceAcquiredExclusiveLite(&UserLock)
-      || ExIsResourceAcquiredSharedLite(&UserLock);
+    return ExIsResourceAcquiredExclusiveLite(&UserLock) ||
+           ExIsResourceAcquiredSharedLite(&UserLock);
 }
 
 BOOL FASTCALL UserIsEnteredExclusive(VOID)
 {
-   return ExIsResourceAcquiredExclusiveLite(&UserLock);
+    return ExIsResourceAcquiredExclusiveLite(&UserLock);
 }
 
 VOID FASTCALL CleanupUserImpl(VOID)
 {
-   ExDeleteResourceLite(&UserLock);
+    ExDeleteResourceLite(&UserLock);
 }
 
 VOID FASTCALL UserEnterShared(VOID)
 {
-   KeEnterCriticalRegion();
-   ExAcquireResourceSharedLite(&UserLock, TRUE);
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&UserLock, TRUE);
 }
 
 VOID FASTCALL UserEnterExclusive(VOID)
 {
-   ASSERT_NOGDILOCKS();
-   KeEnterCriticalRegion();
-   ExAcquireResourceExclusiveLite(&UserLock, TRUE);
-   gptiCurrent = PsGetCurrentThreadWin32Thread();
+    ASSERT_NOGDILOCKS();
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
+    gptiCurrent = PsGetCurrentThreadWin32Thread();
 }
 
 VOID FASTCALL UserLeave(VOID)
 {
-   ASSERT_NOGDILOCKS();
-   ExReleaseResourceLite(&UserLock);
-   KeLeaveCriticalRegion();
+    ASSERT_NOGDILOCKS();
+    ASSERT(UserIsEntered());
+    ExReleaseResourceLite(&UserLock);
+    KeLeaveCriticalRegion();
 }
+
+/* EOF */

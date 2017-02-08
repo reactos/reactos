@@ -138,7 +138,7 @@ static	DWORD	ADPCM_GetFormatIndex(const WAVEFORMATEX *wfx)
 
 static void     init_wfx_ima_adpcm(IMAADPCMWAVEFORMAT* awfx/*, DWORD nba*/)
 {
-    register WAVEFORMATEX*      pwfx = &awfx->wfx;
+    WAVEFORMATEX* pwfx = &awfx->wfx;
 
     /* we assume wFormatTag, nChannels, nSamplesPerSec and wBitsPerSample
      * have been initialized... */
@@ -509,8 +509,8 @@ static	LRESULT ADPCM_DriverDetails(PACMDRIVERDETAILSW add)
 {
     add->fccType = ACMDRIVERDETAILS_FCCTYPE_AUDIOCODEC;
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
-    add->wMid = 0x1;
-    add->wPid = 0x22;
+    add->wMid = MM_MICROSOFT;
+    add->wPid = MM_MSFT_ACM_IMAADPCM;
     add->vdwACM = 0x3320000;
     add->vdwDriver = 0x04000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
@@ -550,7 +550,7 @@ static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
             aftd->dwFormatTagIndex = 1; /* WAVE_FORMAT_IMA_ADPCM is bigger than PCM */
 	    break;
 	}
-	/* fall thru */
+	/* fall through */
     case ACM_FORMATTAGDETAILSF_FORMATTAG:
 	switch (aftd->dwFormatTag)
         {

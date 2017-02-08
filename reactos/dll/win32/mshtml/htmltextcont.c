@@ -16,156 +16,139 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
-
-#define HTMLTEXTCONT_THIS(iface) DEFINE_THIS(HTMLTextContainer, HTMLTextContainer, iface)
+static inline HTMLTextContainer *impl_from_IHTMLTextContainer(IHTMLTextContainer *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLTextContainer, IHTMLTextContainer_iface);
+}
 
 static HRESULT WINAPI HTMLTextContainer_QueryInterface(IHTMLTextContainer *iface,
                                                        REFIID riid, void **ppv)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IHTMLElement_QueryInterface(HTMLELEM(&This->element), riid, ppv);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IHTMLElement_QueryInterface(&This->element.IHTMLElement_iface, riid, ppv);
 }
 
 static ULONG WINAPI HTMLTextContainer_AddRef(IHTMLTextContainer *iface)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IHTMLElement_AddRef(HTMLELEM(&This->element));
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IHTMLElement_AddRef(&This->element.IHTMLElement_iface);
 }
 
 static ULONG WINAPI HTMLTextContainer_Release(IHTMLTextContainer *iface)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IHTMLElement_Release(HTMLELEM(&This->element));
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IHTMLElement_Release(&This->element.IHTMLElement_iface);
 }
 
 static HRESULT WINAPI HTMLTextContainer_GetTypeInfoCount(IHTMLTextContainer *iface, UINT *pctinfo)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLTextContainer_GetTypeInfo(IHTMLTextContainer *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
+            ppTInfo);
 }
 
 static HRESULT WINAPI HTMLTextContainer_GetIDsOfNames(IHTMLTextContainer *iface, REFIID riid,
                                                 LPOLESTR *rgszNames, UINT cNames,
                                                 LCID lcid, DISPID *rgDispId)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
+            cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLTextContainer_Invoke(IHTMLTextContainer *iface, DISPID dispIdMember,
                             REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
-    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
-            pVarResult, pExcepInfo, puArgErr);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLTextContainer_createControlRange(IHTMLTextContainer *iface,
                                                            IDispatch **range)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
     FIXME("(%p)->(%p)\n", This, range);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLTextContainer_get_scrollHeight(IHTMLTextContainer *iface, LONG *p)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return IHTMLElement2_get_scrollHeight(HTMLELEM2(&This->element), p);
+    return IHTMLElement2_get_scrollHeight(&This->element.IHTMLElement2_iface, p);
 }
 
 static HRESULT WINAPI HTMLTextContainer_get_scrollWidth(IHTMLTextContainer *iface, LONG *p)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return IHTMLElement2_get_scrollWidth(HTMLELEM2(&This->element), p);
+    return IHTMLElement2_get_scrollWidth(&This->element.IHTMLElement2_iface, p);
 }
 
 static HRESULT WINAPI HTMLTextContainer_put_scrollTop(IHTMLTextContainer *iface, LONG v)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
 
     TRACE("(%p)->(%d)\n", This, v);
 
-    return IHTMLElement2_put_scrollTop(HTMLELEM2(&This->element), v);
+    return IHTMLElement2_put_scrollTop(&This->element.IHTMLElement2_iface, v);
 }
 
 static HRESULT WINAPI HTMLTextContainer_get_scrollTop(IHTMLTextContainer *iface, LONG *p)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return IHTMLElement2_get_scrollTop(HTMLELEM2(&This->element), p);
+    return IHTMLElement2_get_scrollTop(&This->element.IHTMLElement2_iface, p);
 }
 
 static HRESULT WINAPI HTMLTextContainer_put_scrollLeft(IHTMLTextContainer *iface, LONG v)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
 
     TRACE("(%p)->(%d)\n", This, v);
 
-    return IHTMLElement2_put_scrollLeft(HTMLELEM2(&This->element), v);
+    return IHTMLElement2_put_scrollLeft(&This->element.IHTMLElement2_iface, v);
 }
 
 static HRESULT WINAPI HTMLTextContainer_get_scrollLeft(IHTMLTextContainer *iface, LONG *p)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return IHTMLElement2_get_scrollLeft(HTMLELEM2(&This->element), p);
+    return IHTMLElement2_get_scrollLeft(&This->element.IHTMLElement2_iface, p);
 }
 
 static HRESULT WINAPI HTMLTextContainer_put_onscroll(IHTMLTextContainer *iface, VARIANT v)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
     FIXME("(%p)->()\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLTextContainer_get_onscroll(IHTMLTextContainer *iface, VARIANT *p)
 {
-    HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
+    HTMLTextContainer *This = impl_from_IHTMLTextContainer(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
-
-#undef HTMLTEXTCONT_THIS
 
 static const IHTMLTextContainerVtbl HTMLTextContainerVtbl = {
     HTMLTextContainer_QueryInterface,
@@ -189,9 +172,7 @@ static const IHTMLTextContainerVtbl HTMLTextContainerVtbl = {
 void HTMLTextContainer_Init(HTMLTextContainer *This, HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem,
         dispex_static_data_t *dispex_data)
 {
-    This->lpHTMLTextContainerVtbl = &HTMLTextContainerVtbl;
+    This->IHTMLTextContainer_iface.lpVtbl = &HTMLTextContainerVtbl;
 
     HTMLElement_Init(&This->element, doc, nselem, dispex_data);
-
-    ConnectionPoint_Init(&This->cp, &This->element.cp_container, &DIID_HTMLTextContainerEvents, NULL);
 }

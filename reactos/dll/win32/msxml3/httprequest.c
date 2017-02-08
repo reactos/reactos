@@ -19,40 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-//# include <libxml/encoding.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
 #include <wingdi.h>
-#include <wininet.h>
-#include <winreg.h>
-//#include "winuser.h"
-#include <ole2.h>
 #include <mshtml.h>
-#include <msxml6.h>
 #include <objsafe.h>
 #include <docobj.h>
-#include <shlwapi.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
-#include <wine/list.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef HAVE_LIBXML2
 
@@ -178,6 +150,19 @@ static void free_response_headers(httprequest *This)
 
     SysFreeString(This->raw_respheaders);
     This->raw_respheaders = NULL;
+}
+
+static void free_request_headers(httprequest *This)
+{
+    struct httpheader *header, *header2;
+
+    LIST_FOR_EACH_ENTRY_SAFE(header, header2, &This->reqheaders, struct httpheader, entry)
+    {
+        list_remove(&header->entry);
+        SysFreeString(header->header);
+        SysFreeString(header->value);
+        heap_free(header);
+    }
 }
 
 struct BindStatusCallback
@@ -461,9 +446,11 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
 {
     static const WCHAR content_type_utf8W[] = {'C','o','n','t','e','n','t','-','T','y','p','e',':',' ',
         't','e','x','t','/','p','l','a','i','n',';','c','h','a','r','s','e','t','=','u','t','f','-','8','\r','\n',0};
+    static const WCHAR refererW[] = {'R','e','f','e','r','e','r',':',' ',0};
 
     BindStatusCallback *This = impl_from_IHttpNegotiate(iface);
     const struct httpheader *entry;
+    BSTR base_uri = NULL;
     WCHAR *buff, *ptr;
     int size = 0;
 
@@ -477,16 +464,39 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
     if (!list_empty(&This->request->reqheaders))
         size += This->request->reqheader_size*sizeof(WCHAR);
 
-    if (!size) return S_OK;
+    if (This->request->base_uri)
+    {
+        IUri_GetRawUri(This->request->base_uri, &base_uri);
+        size += SysStringLen(base_uri)*sizeof(WCHAR) + sizeof(refererW) + sizeof(crlfW);
+    }
+
+    if (!size)
+    {
+        SysFreeString(base_uri);
+        return S_OK;
+    }
 
     buff = CoTaskMemAlloc(size);
-    if (!buff) return E_OUTOFMEMORY;
+    if (!buff)
+    {
+        SysFreeString(base_uri);
+        return E_OUTOFMEMORY;
+    }
 
     ptr = buff;
     if (This->request->use_utf8_content)
     {
         lstrcpyW(ptr, content_type_utf8W);
         ptr += sizeof(content_type_utf8W)/sizeof(WCHAR)-1;
+    }
+
+    if (base_uri)
+    {
+        strcpyW(ptr, refererW);
+        strcatW(ptr, base_uri);
+        strcatW(ptr, crlfW);
+        ptr += strlenW(refererW) + SysStringLen(base_uri) + strlenW(crlfW);
+        SysFreeString(base_uri);
     }
 
     /* user headers */
@@ -622,8 +632,27 @@ static HRESULT WINAPI Authenticate_Authenticate(IAuthenticate *iface,
     HWND *hwnd, LPWSTR *username, LPWSTR *password)
 {
     BindStatusCallback *This = impl_from_IAuthenticate(iface);
-    FIXME("(%p)->(%p %p %p)\n", This, hwnd, username, password);
-    return E_NOTIMPL;
+    httprequest *request = This->request;
+
+    TRACE("(%p)->(%p %p %p)\n", This, hwnd, username, password);
+
+    if (request->user && *request->user)
+    {
+        if (hwnd) *hwnd = NULL;
+        *username = CoTaskMemAlloc(SysStringByteLen(request->user)+sizeof(WCHAR));
+        *password = CoTaskMemAlloc(SysStringByteLen(request->password)+sizeof(WCHAR));
+        if (!*username || !*password)
+        {
+            CoTaskMemFree(*username);
+            CoTaskMemFree(*password);
+            return E_OUTOFMEMORY;
+        }
+
+        memcpy(*username, request->user, SysStringByteLen(request->user)+sizeof(WCHAR));
+        memcpy(*password, request->password, SysStringByteLen(request->password)+sizeof(WCHAR));
+    }
+
+    return S_OK;
 }
 
 static const IAuthenticateVtbl AuthenticateVtbl = {
@@ -706,7 +735,7 @@ static HRESULT BindStatusCallback_create(httprequest* This, BindStatusCallback *
                 heap_free(bsc);
                 return hr;
             }
-            if ((hr = SafeArrayGetUBound(sa, 1, &size) != S_OK))
+            if ((hr = SafeArrayGetUBound(sa, 1, &size)) != S_OK)
             {
                 SafeArrayUnaccessData(sa);
                 heap_free(bsc);
@@ -720,26 +749,30 @@ static HRESULT BindStatusCallback_create(httprequest* This, BindStatusCallback *
             /* fall through */
         case VT_EMPTY:
         case VT_ERROR:
+        case VT_NULL:
             ptr = NULL;
             size = 0;
             break;
         }
 
-        bsc->body = GlobalAlloc(GMEM_FIXED, size);
-        if (!bsc->body)
+        if (size)
         {
-            if (V_VT(body) == VT_BSTR)
-                heap_free(ptr);
-            else if (V_VT(body) == (VT_ARRAY|VT_UI1))
-                SafeArrayUnaccessData(sa);
+            bsc->body = GlobalAlloc(GMEM_FIXED, size);
+            if (!bsc->body)
+            {
+                if (V_VT(body) == VT_BSTR)
+                    heap_free(ptr);
+                else if (V_VT(body) == (VT_ARRAY|VT_UI1))
+                    SafeArrayUnaccessData(sa);
 
-            heap_free(bsc);
-            return E_OUTOFMEMORY;
+                heap_free(bsc);
+                return E_OUTOFMEMORY;
+            }
+
+            send_data = GlobalLock(bsc->body);
+            memcpy(send_data, ptr, size);
+            GlobalUnlock(bsc->body);
         }
-
-        send_data = GlobalLock(bsc->body);
-        memcpy(send_data, ptr, size);
-        GlobalUnlock(bsc->body);
 
         if (V_VT(body) == VT_BSTR)
             heap_free(ptr);
@@ -844,6 +877,7 @@ static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
     SysFreeString(This->user);
     SysFreeString(This->password);
     This->user = This->password = NULL;
+    free_request_headers(This);
 
     if (!strcmpiW(method, MethodGetW))
     {
@@ -885,12 +919,6 @@ static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
         return hr;
     }
 
-    This->uri = uri;
-
-    VariantInit(&is_async);
-    hr = VariantChangeType(&is_async, &async, 0, VT_BOOL);
-    This->async = hr == S_OK && V_BOOL(&is_async);
-
     VariantInit(&str);
     hr = VariantChangeType(&str, &user, 0, VT_BSTR);
     if (hr == S_OK)
@@ -900,6 +928,38 @@ static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
     hr = VariantChangeType(&str, &password, 0, VT_BSTR);
     if (hr == S_OK)
         This->password = V_BSTR(&str);
+
+    /* add authentication info */
+    if (This->user && *This->user)
+    {
+        IUriBuilder *builder;
+
+        hr = CreateIUriBuilder(uri, 0, 0, &builder);
+        if (hr == S_OK)
+        {
+            IUri *full_uri;
+
+            IUriBuilder_SetUserName(builder, This->user);
+            IUriBuilder_SetPassword(builder, This->password);
+            hr = IUriBuilder_CreateUri(builder, -1, 0, 0, &full_uri);
+            if (hr == S_OK)
+            {
+                IUri_Release(uri);
+                uri = full_uri;
+            }
+            else
+                WARN("failed to create modified uri, 0x%08x\n", hr);
+            IUriBuilder_Release(builder);
+        }
+        else
+            WARN("IUriBuilder creation failed, 0x%08x\n", hr);
+    }
+
+    This->uri = uri;
+
+    VariantInit(&is_async);
+    hr = VariantChangeType(&is_async, &async, 0, VT_BOOL);
+    This->async = hr == S_OK && V_BOOL(&is_async);
 
     httprequest_setreadystate(This, READYSTATE_LOADING);
 
@@ -1095,7 +1155,7 @@ static HRESULT httprequest_get_responseXML(httprequest *This, IDispatch **body)
     if (!body) return E_INVALIDARG;
     if (This->state != READYSTATE_COMPLETE) return E_FAIL;
 
-    hr = DOMDocument_create(MSXML_DEFAULT, NULL, (void**)&doc);
+    hr = DOMDocument_create(MSXML_DEFAULT, (void**)&doc);
     if (hr != S_OK) return hr;
 
     hr = httprequest_get_responseText(This, &str);
@@ -1203,8 +1263,6 @@ static HRESULT httprequest_put_onreadystatechange(httprequest *This, IDispatch *
 
 static void httprequest_release(httprequest *This)
 {
-    struct httpheader *header, *header2;
-
     if (This->site)
         IUnknown_Release( This->site );
     if (This->uri)
@@ -1216,15 +1274,8 @@ static void httprequest_release(httprequest *This)
     SysFreeString(This->user);
     SysFreeString(This->password);
 
-    /* request headers */
-    LIST_FOR_EACH_ENTRY_SAFE(header, header2, &This->reqheaders, struct httpheader, entry)
-    {
-        list_remove(&header->entry);
-        SysFreeString(header->header);
-        SysFreeString(header->value);
-        heap_free(header);
-    }
-    /* response headers */
+    /* cleanup headers lists */
+    free_request_headers(This);
     free_response_headers(This);
     SysFreeString(This->status_text);
 
@@ -1525,6 +1576,8 @@ static void get_base_uri(httprequest *This)
         return;
 
     hr = IServiceProvider_QueryService(provider, &SID_SContainerDispatch, &IID_IHTMLDocument2, (void**)&doc);
+    if(FAILED(hr))
+        hr = IServiceProvider_QueryService(provider, &SID_SInternetHostSecurityManager, &IID_IHTMLDocument2, (void**)&doc);
     IServiceProvider_Release(provider);
     if(FAILED(hr))
         return;
@@ -1934,11 +1987,11 @@ static void init_httprequest(httprequest *req)
     req->safeopt = 0;
 }
 
-HRESULT XMLHTTPRequest_create(IUnknown *outer, void **obj)
+HRESULT XMLHTTPRequest_create(void **obj)
 {
     httprequest *req;
 
-    TRACE("(%p, %p)\n", outer, obj);
+    TRACE("(%p)\n", obj);
 
     req = heap_alloc( sizeof (*req) );
     if( !req )
@@ -1952,11 +2005,11 @@ HRESULT XMLHTTPRequest_create(IUnknown *outer, void **obj)
     return S_OK;
 }
 
-HRESULT ServerXMLHTTP_create(IUnknown *outer, void **obj)
+HRESULT ServerXMLHTTP_create(void **obj)
 {
     serverhttp *req;
 
-    TRACE("(%p, %p)\n", outer, obj);
+    TRACE("(%p)\n", obj);
 
     req = heap_alloc( sizeof (*req) );
     if( !req )
@@ -1975,14 +2028,14 @@ HRESULT ServerXMLHTTP_create(IUnknown *outer, void **obj)
 
 #else
 
-HRESULT XMLHTTPRequest_create(IUnknown *pUnkOuter, void **ppObj)
+HRESULT XMLHTTPRequest_create(void **ppObj)
 {
     MESSAGE("This program tried to use a XMLHTTPRequest object, but\n"
             "libxml2 support was not present at compile time.\n");
     return E_NOTIMPL;
 }
 
-HRESULT ServerXMLHTTP_create(IUnknown *outer, void **obj)
+HRESULT ServerXMLHTTP_create(void **obj)
 {
     MESSAGE("This program tried to use a ServerXMLHTTP object, but\n"
             "libxml2 support was not present at compile time.\n");

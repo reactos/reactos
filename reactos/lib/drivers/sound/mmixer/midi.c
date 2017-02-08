@@ -6,7 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
+
+#define YDEBUG
+#include <debug.h>
 
 MIXER_STATUS
 MMixerGetPinDataFlowAndCommunication(
@@ -69,7 +72,7 @@ MMixerAddMidiPin(
     MidiInfo->PinId = PinId;
 
     /* sanity check */
-    ASSERT(wcslen(DeviceName) + 1 < MAXPNAMELEN);
+    ASSERT(!DeviceName || (wcslen(DeviceName) + 1 < MAXPNAMELEN));
 
     /* copy device name */
     if (bInput && DeviceName)

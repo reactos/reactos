@@ -18,25 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-//#include "wine/port.h"
-#include <wine/debug.h>
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-
-#ifdef HAVE_LDAP_H
-#include <ldap.h>
-#endif
-
 #include "winldap_private.h"
-//#include "wldap32.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      ldap_searchA     (WLDAP32.@)
@@ -243,7 +225,7 @@ ULONG CDECL ldap_search_extW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope,
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
-    struct timeval tv;
+    struct timeval tv, *tvp = NULL;
 
     ret = WLDAP32_LDAP_NO_MEMORY;
 
@@ -274,11 +256,15 @@ ULONG CDECL ldap_search_extW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope,
         if (!clientctrlsU) goto exit;
     }
 
-    tv.tv_sec = timelimit;
-    tv.tv_usec = 0;
+    if (timelimit)
+    {
+        tv.tv_sec = timelimit;
+        tv.tv_usec = 0;
+        tvp = &tv;
+    }
 
     ret = map_error( ldap_search_ext( ld, baseU, scope, filterU, attrsU, attrsonly,
-                                      serverctrlsU, clientctrlsU, &tv, sizelimit, (int *)message ));
+                                      serverctrlsU, clientctrlsU, tvp, sizelimit, (int *)message ));
 
 exit:
     strfreeU( baseU );

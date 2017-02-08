@@ -1,15 +1,18 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        addrinfo.c
+ * FILE:        dll/win32/ws2_32_new/src/addrinfo.c
  * PURPOSE:     Protocol-Independent Address Resolution
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
 
-//#define NDEBUG
+#include <ws2tcpip.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /* DEFINES *******************************************************************/
@@ -87,15 +90,18 @@ WINAPI
 ParseV4Address(IN PCWSTR AddressString,
                OUT PDWORD pAddress)
 {
-    DWORD Address;
-    LPWSTR Ip = 0;
+    IN_ADDR Address;
+    PCWSTR Terminator;
+    NTSTATUS Status;
 
-    /* Do the conversion, don't accept wildcard */
-    RtlIpv4StringToAddressW((LPWSTR)AddressString, 0, &Ip, (IN_ADDR *)&Address);
+    *pAddress = 0;
+    Status = RtlIpv4StringToAddressW(AddressString, FALSE, &Terminator, &Address);
 
-    /* Return the address and success */
-    *pAddress = Address;
-    return FALSE;
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    *pAddress = Address.S_un.S_addr;
+    return TRUE;
 }
 
 static
@@ -126,7 +132,8 @@ NewAddrInfo(IN INT SocketType,
     SockAddress->sin_family = AF_INET;
     SockAddress->sin_port = Port;
     SockAddress->sin_addr.s_addr = Address;
-    
+    ZeroMemory(SockAddress->sin_zero, sizeof(SockAddress->sin_zero));
+
     /* Fill out the addrinfo */
     AddrInfo->ai_family = PF_INET;
     AddrInfo->ai_socktype = SocketType;
@@ -912,7 +919,7 @@ getnameinfo(const struct sockaddr FAR *sa,
     WCHAR ServiceBuffer[17];
     DWORD HostLength = 0, ServLength = 0;
     PWCHAR ServiceString = NULL, HostString = NULL;
-    DPRINT("getaddrinfo: %p, %p, %p, %lx\n", host, serv, sa, salen);
+    DPRINT("getnameinfo: %p, %p, %p, %lx\n", host, serv, sa, salen);
 
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) != ERROR_SUCCESS) return ErrorCode;

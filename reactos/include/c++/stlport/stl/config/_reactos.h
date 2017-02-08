@@ -214,7 +214,7 @@
 // Uncomment to indicate that the compiler do not like static constant
 // definition.
 // Meaningfull only if  _STLP_STATIC_CONST_INIT_BUG is not defined.
-// # define _STLP_NO_STATIC_CONST_DEFINITION
+# define _STLP_NO_STATIC_CONST_DEFINITION
 
 // Define if default constructor for builtin integer type fails to initialize it to 0
 // In expression like new(&char) char():

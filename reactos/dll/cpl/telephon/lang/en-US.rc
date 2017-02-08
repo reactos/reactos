@@ -2,6 +2,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Phone and Modem Options"
-	IDS_CPLSYSTEMDESCRIPTION "Configure your telephone dialing rules and modem settings."
+    IDS_CPLSYSTEMNAME "Phone and Modem Options"
+    IDS_CPLSYSTEMDESCRIPTION "Configure your telephone dialing rules and modem settings."
 END

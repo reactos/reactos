@@ -2,17 +2,27 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "ReactOS-Bild- und Faxansicht"
+    IDS_APPTITLE "ReactOS-Bild- und Faxansicht"
     IDS_SETASDESKBG "Als Desktophintergrund setzen"
-    IDS_PREVIEW     "Vorschau"
-
+    IDS_PREVIEW "Vorschau"
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Nächstes Bild"
-    IDS_TOOLTIP_PREV_PIC   "Vorheriges Bild"
-    IDS_TOOLTIP_ZOOM_IN    "Vergrößern (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Verkleinern (-)"
+    IDS_TOOLTIP_NEXT_PIC "Nächstes Bild"
+    IDS_TOOLTIP_PREV_PIC "Vorheriges Bild"
+    IDS_TOOLTIP_ZOOM_IN "Vergrößern (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Verkleinern (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Drehen im Uhrzeigersinn (Strg+K)"
     IDS_TOOLTIP_ROT_COUNCW "Drehen gegen den Uhrzeigersinn (Strg+L)"
-    IDS_TOOLTIP_PRINT      "Drucken (Strg+P)"
-    IDS_TOOLTIP_SAVEAS     "Speichern unter... (Strg+S)"
+    IDS_TOOLTIP_PRINT "Drucken (Strg+P)"
+    IDS_TOOLTIP_SAVEAS "Speichern unter... (Strg+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF-Bilddatei"
+    IDS_GIF_FILE    "GIF-Bilddatei"
+    IDS_JPG_FILE    "JPEG-Bilddatei"
+    IDS_BMP_FILE    "Bitmap-Bilddatei"
+    IDS_PNG_FILE    "PNG-Bilddatei"
+    IDS_TIF_FILE    "TIF-Bilddatei"
+    IDS_WMF_FILE    "WMF-Bilddatei"
 END

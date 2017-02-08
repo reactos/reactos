@@ -183,23 +183,6 @@
 
 		return intgr ;
 	}
-#else
-	static __inline long int
-	lrint (double flt)
-	{
-		int intgr ;
-		__asm__ __volatile__ ("fldl %1; fistpl %0;" : "=m" (intgr) : "m" (flt));
-		return intgr ;
-	}
-
-	static __inline long int
-	lrintf (float flt)
-	{
-		int intgr ;
-
-		__asm__ __volatile__ ("flds %1; fistpl %0;" : "=m" (intgr) : "m" (flt));
-		return intgr ;
-	}
 #endif
 
 #elif (defined (__MWERKS__) && defined (macintosh))

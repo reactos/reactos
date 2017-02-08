@@ -2,53 +2,77 @@ LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Informazioni su reactOS_sndrec32"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Informazioni su ReactOS Registratore Audio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "ReactOS registratore audio, versione 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2009",IDC_STATIC,55,25,114,8
-    DEFPUSHBUTTON   "OK",IDOK,139,54,50,14,WS_GROUP
+    ICON IDI_SNDREC32, -1, 19, 14, 21, 20
+    LTEXT "ReactOS Registratore Audio, versione 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2009", IDC_STATIC, 56, 25, 114, 8
+    DEFPUSHBUTTON "OK", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
     POPUP "File"
     BEGIN
-        MENUITEM "Nuovo",                       ID_NEW
-        MENUITEM "Apri...",                     ID_FILE_OPEN
-        MENUITEM "Salva",                       ID_FILE_SAVE, GRAYED
-        MENUITEM "Salva con nome...",           ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Nuovo", ID_FILE_NEW
+        MENUITEM "Apri...", ID_FILE_OPEN
+        MENUITEM "Salva", ID_FILE_SAVE, GRAYED
+        MENUITEM "Salva con nome...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Ripristina...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Proprietà", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Esci",                        ID_EXIT
+        MENUITEM "Esci", ID_FILE_EXIT
     END
-    MENUITEM "todo1",                       0
-    MENUITEM "todo2",                       0
-    POPUP "?"
+    POPUP "&Modifica"
     BEGIN
-        MENUITEM "Informazioni...",             ID__ABOUT
+        MENUITEM "&Copia", ID_EDIT_COPY
+        MENUITEM "&Incolla inserito", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Incolla mi&xato", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "I&nserisci file...", ID_EDIT_INSERTFILE
+        MENUITEM "&Mixaggio con file...", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Cancella &prima della posizione corrente",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Cancella &dopo la posizione corrente",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Proprietà a&udio", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "&Effetti"
+    BEGIN
+        MENUITEM "&Incrementa il volume (del 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Diminuisce il volume", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "I&ncrementa la velocità (del 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "D&iminuisce la velocità", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "&Aggiunge eco", ID_EFFECTS_ECHO
+        MENUITEM "&Riproduce al contrario", ID_EFFECTS_REVERSE
+    END
+    POPUP "?"
+    BEGIN        MENUITEM "Informazioni...", ID_ABOUT
     END
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Registratore di suoni"
-    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+    IDS_APP_TITLE "Registratore Audio"
+    IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_STRPOS              "Posizione: %.2f s"
-    IDS_STRDUR              "Durata: %.2f s"
-    IDS_STRBUF              "Buffer: %.2f kb"
-    IDS_STRFMT              "%.1f kHz %u bits"
-    IDS_STRMONO             "mono"
-    IDS_STRSTEREO           "stereo"
-    IDS_STRCHAN             "%s"
+    IDS_STRPOS "Posizione: %.2f s"
+    IDS_STRDUR "Durata: %.2f s"
+    IDS_STRBUF "Buffer: %.2f kb"
+    IDS_STRFMT "%.1f kHz %u bits"
+    IDS_STRMONO "mono"
+    IDS_STRSTEREO "stereo"
+    IDS_STRCHAN "%s"
 END

@@ -43,6 +43,7 @@
 #include <ntstatus.h>
 #include <kernelspecs.h>
 #include <ntiologc.h>
+#include <suppress.h>
 
 #ifndef GUID_DEFINED
 #include <guiddef.h>
@@ -75,6 +76,10 @@ __drv_Mode_impl(WDM_INCLUDED)
 extern "C" {
 #endif
 
+$define(UCHAR=UCHAR)
+$define(ULONG=ULONG)
+$define(USHORT=USHORT)
+
 #if !defined(_NTHALDLL_) && !defined(_BLDR_)
 #define NTHALAPI DECLSPEC_IMPORT
 #else
@@ -82,10 +87,13 @@ extern "C" {
 #endif
 
 /* For ReactOS */
-#if !defined(_NTOSKRNL_) && !defined(_BLDR_)
+#if !defined(_NTOSKRNL_) && !defined(_BLDR_) && !defined(_NTSYSTEM_)
 #define NTKERNELAPI DECLSPEC_IMPORT
 #else
 #define NTKERNELAPI
+#ifndef _NTSYSTEM_
+#define _NTSYSTEM_
+#endif
 #endif
 
 #if defined(_X86_) && !defined(_NTHAL_)
@@ -129,6 +137,29 @@ extern "C" {
 #define ALLOC_DATA_PRAGMA 1
 #endif
 
+#endif /* _MSC_VER */
+
+/* These macros are used to create aliases for imported data. We need to do
+   this to have declarations that are compatible with MS DDK */
+#ifdef _M_IX86
+#define __SYMBOL(_Name) "_"#_Name
+#define __IMPORTSYMBOL(_Name) "__imp__"#_Name
+#define __IMPORTNAME(_Name) __imp__##_Name
+#else
+#define __SYMBOL(_Name) #_Name
+#define __IMPORTSYMBOL(_Name) "__imp_"#_Name
+#define __IMPORTNAME(_Name) __imp_##_Name
+#endif
+#ifdef _MSC_VER
+#define __CREATE_NTOS_DATA_IMPORT_ALIAS(_Name) \
+    __pragma(comment(linker, "/alternatename:"__SYMBOL(_Name) "=" __IMPORTSYMBOL(_Name)))
+#else /* !_MSC_VER */
+#ifndef __STRINGIFY
+#define __STRINGIFY(_exp) #_exp
+#endif
+#define _Pragma_redefine_extname(_Name, _Target) _Pragma(__STRINGIFY(redefine_extname _Name _Target))
+#define __CREATE_NTOS_DATA_IMPORT_ALIAS(_Name) \
+    _Pragma_redefine_extname(_Name,__IMPORTNAME(_Name))
 #endif
 
 #if defined(_WIN64)
@@ -220,8 +251,8 @@ $include (obtypes.h)
 $include (pstypes.h)
 $include (wmitypes.h)
 
-$include (rtlfuncs.h)
 $include (kefuncs.h)
+$include (rtlfuncs.h)
 $include (mmfuncs.h)
 $include (sefuncs.h)
 $include (cmfuncs.h)

@@ -25,24 +25,7 @@
  *  Please submit a test case if you find a difference.
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-
-//#include <string.h>
-//#include <stdlib.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-//#include "windef.h"
-//#include "winbase.h"
-#include <wine/unicode.h>
-//#include "winerror.h"
-#include "variant.h"
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
@@ -55,15 +38,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(variant);
 static const WCHAR szPercent_d[] = { '%','d','\0' };
 static const WCHAR szPercentZeroTwo_d[] = { '%','0','2','d','\0' };
 static const WCHAR szPercentZeroStar_d[] = { '%','0','*','d','\0' };
-
-#if 0
-#define dump_tokens(rgb) do { \
-  int i_; TRACE("Tokens->{\n"); \
-  for (i_ = 0; i_ < rgb[0]; i_++) \
-    TRACE("%s0x%02x", i_?",":"",rgb[i_]); \
-  TRACE(" }\n"); \
-  } while(0)
-#endif
 
 /******************************************************************************
  * Variant-Formats {OLEAUT32}
@@ -287,8 +261,6 @@ typedef struct tagFMT_DATE_HEADER
 #define FMT_NUM_ON_OFF      0x3F /* Convert to "On" or "Off"  */
 #define FMT_STR_COPY_SPACE  0x40 /* Copy len chars with space if no char */
 #define FMT_STR_COPY_SKIP   0x41 /* Copy len chars or skip if no char */
-/* Wine additions */
-#define FMT_WINE_HOURS_12   0x81 /* Hours using 12 hour clock */
 
 /* Named Formats and their tokenised values */
 static const WCHAR szGeneralDate[] = { 'G','e','n','e','r','a','l',' ','D','a','t','e','\0' };
@@ -1204,9 +1176,8 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   const BYTE* pToken = NULL;
   HRESULT hRes = S_OK;
 
-  TRACE("(%p->(%s%s),%s,%p,0x%08x,%p,0x%08x)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), debugstr_w(lpszFormat), rgbTok, dwFlags, pbstrOut,
-        lcid);
+  TRACE("(%s,%s,%p,0x%08x,%p,0x%08x)\n", debugstr_variant(pVarIn), debugstr_w(lpszFormat),
+        rgbTok, dwFlags, pbstrOut, lcid);
 
   V_VT(&vString) = VT_EMPTY;
   V_VT(&vBool) = VT_BOOL;
@@ -1220,13 +1191,13 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   else
   {
     /* Get a number string from pVarIn, and parse it */
-    hRes = VariantChangeTypeEx(&vString, pVarIn, LCID_US, VARIANT_NOUSEROVERRIDE, VT_BSTR);
+    hRes = VariantChangeTypeEx(&vString, pVarIn, lcid, VARIANT_NOUSEROVERRIDE, VT_BSTR);
     if (FAILED(hRes))
       return hRes;
 
     np.cDig = sizeof(rgbDig);
     np.dwInFlags = NUMPRS_STD;
-    hRes = VarParseNumFromStr(V_BSTR(&vString), LCID_US, 0, &np, rgbDig);
+    hRes = VarParseNumFromStr(V_BSTR(&vString), lcid, 0, &np, rgbDig);
     if (FAILED(hRes))
       return hRes;
 
@@ -1615,9 +1586,8 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   const BYTE* pToken = NULL;
   HRESULT hRes;
 
-  TRACE("(%p->(%s%s),%s,%p,0x%08x,%p,0x%08x)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), debugstr_w(lpszFormat), rgbTok, dwFlags, pbstrOut,
-        lcid);
+  TRACE("(%s,%s,%p,0x%08x,%p,0x%08x)\n", debugstr_variant(pVarIn),
+        debugstr_w(lpszFormat), rgbTok, dwFlags, pbstrOut, lcid);
 
   V_VT(&vDate) = VT_EMPTY;
 
@@ -1630,7 +1600,7 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   {
     USHORT usFlags = dwFlags & VARIANT_CALENDAR_HIJRI ? VAR_CALENDAR_HIJRI : 0;
 
-    hRes = VariantChangeTypeEx(&vDate, pVarIn, LCID_US, usFlags, VT_DATE);
+    hRes = VariantChangeTypeEx(&vDate, pVarIn, lcid, usFlags, VT_DATE);
     if (FAILED(hRes))
       return hRes;
     dateHeader = (FMT_DATE_HEADER*)(rgbTok + FmtGetPositive(header));
@@ -1957,9 +1927,8 @@ static HRESULT VARIANT_FormatString(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   BOOL bUpper = FALSE;
   HRESULT hRes = S_OK;
 
-  TRACE("(%p->(%s%s),%s,%p,0x%08x,%p,0x%08x)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), debugstr_w(lpszFormat), rgbTok, dwFlags, pbstrOut,
-        lcid);
+  TRACE("%s,%s,%p,0x%08x,%p,0x%08x)\n", debugstr_variant(pVarIn), debugstr_w(lpszFormat),
+        rgbTok, dwFlags, pbstrOut, lcid);
 
   V_VT(&vStr) = VT_EMPTY;
 
@@ -1970,7 +1939,7 @@ static HRESULT VARIANT_FormatString(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   }
   else
   {
-    hRes = VariantChangeTypeEx(&vStr, pVarIn, LCID_US, VARIANT_NOUSEROVERRIDE, VT_BSTR);
+    hRes = VariantChangeTypeEx(&vStr, pVarIn, lcid, VARIANT_NOUSEROVERRIDE, VT_BSTR);
     if (FAILED(hRes))
       return hRes;
 
@@ -2171,9 +2140,8 @@ HRESULT WINAPI VarFormat(LPVARIANT pVarIn, LPOLESTR lpszFormat,
   BYTE buff[256];
   HRESULT hres;
 
-  TRACE("(%p->(%s%s),%s,%d,%d,0x%08x,%p)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), debugstr_w(lpszFormat), nFirstDay, nFirstWeek,
-        dwFlags, pbstrOut);
+  TRACE("(%s,%s,%d,%d,0x%08x,%p)\n", debugstr_variant(pVarIn), debugstr_w(lpszFormat),
+        nFirstDay, nFirstWeek, dwFlags, pbstrOut);
 
   if (!pbstrOut)
     return E_INVALIDARG;
@@ -2222,8 +2190,7 @@ HRESULT WINAPI VarFormatDateTime(LPVARIANT pVarIn, INT nFormat, ULONG dwFlags, B
   static WCHAR szEmpty[] = { '\0' };
   const BYTE* lpFmt = NULL;
 
-  TRACE("(%p->(%s%s),%d,0x%08x,%p)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), nFormat, dwFlags, pbstrOut);
+  TRACE("%s,%d,0x%08x,%p)\n", debugstr_variant(pVarIn), nFormat, dwFlags, pbstrOut);
 
   if (!pVarIn || !pbstrOut || nFormat < 0 || nFormat > 4)
     return E_INVALIDARG;
@@ -2275,8 +2242,8 @@ HRESULT WINAPI VarFormatNumber(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT 
   HRESULT hRet;
   VARIANT vStr;
 
-  TRACE("(%p->(%s%s),%d,%d,%d,%d,0x%08x,%p)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), nDigits, nLeading, nParens, nGrouping, dwFlags, pbstrOut);
+  TRACE("(%s,%d,%d,%d,%d,0x%08x,%p)\n", debugstr_variant(pVarIn), nDigits, nLeading,
+        nParens, nGrouping, dwFlags, pbstrOut);
 
   if (!pVarIn || !pbstrOut || nDigits > 9)
     return E_INVALIDARG;
@@ -2334,7 +2301,7 @@ HRESULT WINAPI VarFormatNumber(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT 
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal,
                    sizeof(decimal)/sizeof(WCHAR));
     numfmt.lpThousandSep = thousands;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, thousands,
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousands,
                    sizeof(thousands)/sizeof(WCHAR));
 
     if (GetNumberFormatW(LOCALE_USER_DEFAULT, 0, V_BSTR(&vStr), &numfmt,
@@ -2386,9 +2353,8 @@ HRESULT WINAPI VarFormatPercent(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT
   HRESULT hRet;
   VARIANT vDbl;
 
-  TRACE("(%p->(%s%s),%d,%d,%d,%d,0x%08x,%p)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), nDigits, nLeading, nParens, nGrouping,
-        dwFlags, pbstrOut);
+  TRACE("(%s,%d,%d,%d,%d,0x%08x,%p)\n", debugstr_variant(pVarIn), nDigits, nLeading,
+        nParens, nGrouping, dwFlags, pbstrOut);
 
   if (!pVarIn || !pbstrOut || nDigits > 9)
     return E_INVALIDARG;
@@ -2414,7 +2380,7 @@ HRESULT WINAPI VarFormatPercent(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT
       if (SUCCEEDED(hRet))
       {
         DWORD dwLen = strlenW(*pbstrOut);
-        BOOL bBracket = (*pbstrOut)[dwLen] == ')' ? TRUE : FALSE;
+        BOOL bBracket = (*pbstrOut)[dwLen] == ')';
 
         dwLen -= bBracket;
         memcpy(buff, *pbstrOut, dwLen * sizeof(WCHAR));
@@ -2460,8 +2426,8 @@ HRESULT WINAPI VarFormatCurrency(LPVARIANT pVarIn, INT nDigits, INT nLeading,
   HRESULT hRet;
   VARIANT vStr;
 
-  TRACE("(%p->(%s%s),%d,%d,%d,%d,0x%08x,%p)\n", pVarIn, debugstr_VT(pVarIn),
-        debugstr_VF(pVarIn), nDigits, nLeading, nParens, nGrouping, dwFlags, pbstrOut);
+  TRACE("(%s,%d,%d,%d,%d,0x%08x,%p)\n", debugstr_variant(pVarIn), nDigits, nLeading,
+        nParens, nGrouping, dwFlags, pbstrOut);
 
   if (!pVarIn || !pbstrOut || nDigits > 9)
     return E_INVALIDARG;

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/partlist.h
+ * FILE:            base/setup/usetup/progress.h
  * PURPOSE:         Partition list functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -28,49 +28,54 @@
 
 typedef struct _PROGRESS
 {
-  SHORT Left;
-  SHORT Top;
-  SHORT Right;
-  SHORT Bottom;
-  SHORT TextTop;
-  SHORT TextRight;
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
+    SHORT TextTop;
+    SHORT TextRight;
 
-  SHORT Width;
+    SHORT Width;
 
-  ULONG Percent;
-  SHORT Pos;
+    ULONG Percent;
+    SHORT Pos;
 
-  ULONG StepCount;
-  ULONG CurrentStep;
+    ULONG StepCount;
+    ULONG CurrentStep;
 
-  BOOLEAN Double;
-  CHAR *Text;
+    BOOLEAN Double;
+    CHAR *Text;
 } PROGRESSBAR, *PPROGRESSBAR;
 
 /* FUNCTIONS ****************************************************************/
 
 PPROGRESSBAR
-CreateProgressBar(SHORT Left,
-		  SHORT Top,
-		  SHORT Right,
-		  SHORT Bottom,
-          SHORT TextTop,
-          SHORT TextRight,
-          BOOLEAN DoubleEdge,
-          char* Text);
+CreateProgressBar(
+    SHORT Left,
+    SHORT Top,
+    SHORT Right,
+    SHORT Bottom,
+    SHORT TextTop,
+    SHORT TextRight,
+    BOOLEAN DoubleEdge,
+    CHAR *Text);
 
 VOID
-DestroyProgressBar(PPROGRESSBAR Bar);
+DestroyProgressBar(
+    PPROGRESSBAR Bar);
 
 VOID
-ProgressSetStepCount(PPROGRESSBAR Bar,
-		     ULONG StepCount);
+ProgressSetStepCount(
+    PPROGRESSBAR Bar,
+    ULONG StepCount);
 
 VOID
-ProgressNextStep(PPROGRESSBAR Bar);
+ProgressNextStep(
+    PPROGRESSBAR Bar);
 
 VOID
-ProgressSetStep (PPROGRESSBAR Bar,
-		 ULONG Step);
+ProgressSetStep(
+    PPROGRESSBAR Bar,
+    ULONG Step);
 
 /* EOF */

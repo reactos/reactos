@@ -1,0 +1,71 @@
+/*
+ * Hungarian resource állomány for CMD
+ * Translation by Robert Horvath (talley at cubeclub.hu) 2005
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Támogatott parancsok megjelenítése\n\n\
+  help parancs\n\
+  parancs /?     Több (részletes) információ megtekintéséhez használd ezt.\n\n\
+?        Minden támogatott parancs megjelenítése (részletek nélkül).\n\
+ALIAS    Megjeleníti, vagy megváltoztatja az aliasokat.\n\
+ATTRIB   Megjeleníti vagy megváltoztatja az állományok attribútumát.\n\
+BEEP     Megszólaltatja a hangszórót.\n\
+CALL     Batch állományból egy másik batch állomány meghívása.\n\
+CD       Megjeleníti vagy átvált egy másik mappába.\n\
+CHCP     Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\
+CHOICE   Vár a felhasználóra, hogy válasszon a felkínált lehetõségek közül.\n\
+CLS      Letörli a képernyõt.\n\
+CMD      Egy új példányt indít a ReactOS parancsértelmezõjébõl.\n\
+COLOR    A konzol elõ- és háttérszínét állítja be.\n\
+COPY     Egy vagy több állományt másol a megadott helyre.\n\
+DATE     Megjeleníti vagy beállítja a rendszerdátumot.\n\
+DELETE   Eltávolít egy vagy több állományt.\n\
+DIR      Megjeleníti a mappában található almappákat és állományokat.\n\
+ECHO     Megjelenít egy szöveget, vagy beállítja a visszhangot.\n\
+ERASE    Eltávolít egy vagy több fájlt.\n\
+EXIT     Kilép a parancssor értelmezõbõl.\n\
+FOR      Végrehajt egy parancsot az összes fájlban a megadott mappákban.\n\
+FREE     Megjeleníti a szabad hely méretét.\n\
+GOTO     Átirányít egy másik címkére a batch állományban.\n\
+HELP     Segítséget ad a ReactOS parancsairól.\n\
+HISTORY  Megjeleníti az ebben az ablakban kiadott parancsok listáját.\n\
+IF       Feltételes végrehajtás batch állományokban.\n\
+LABEL    Beállítja egy kötet címkéjét.\n\
+MD       Létrehoz egy új mappát.\n\
+MKDIR    Létrehoz egy új mappát.\n\
+MKLINK   Creates a filesystem link object.\n\
+MOVE     Áthelyez egy vagy több állományt az egyik mappából a másikba.\n\
+PATH     Megjeleníti vagy beállítja a keresési útvonalakat.\n\
+PAUSE    Felfüggeszti a futást, és vár a felhasználóra.\n\
+POPD     Visszalép a PUSHD által megjegyzett mappába.\n\
+PROMPT   Parancssor beállítása.\n\
+PUSHD    Megjegyzi az aktuális mappát, majd átvált egy máasikra.\n\
+RD       Töröl egy mappát.\n\
+REM      Megjegyzést jelölõ sor batch fájlokban.\n\
+REN      Átnevez egy állományt.\n\
+RENAME   Átnevez egy állományt.\n\
+RMDIR    Töröl egy mappát.\n\
+SCREEN   Megváltoztatja a kurzos pozícióját, vagy megjelenít adott pozícióban egy szöveget.\n\
+SET      Megjeleníti vagy beállítja a környezeti változókat.\n\
+SHIFT    Eltolja a helyettesíthetõ paraméterek pozícióját a batch állományban.\n"
+    IDS_HELP2 "START    Egy új ablakban hajtha végre a parancsot.\n\
+TIME     Megjeleníti vagy beállítja a rendszeridõt.\n\
+TIMER    Idõzítõk kezelését teszi lehetõve.\n\
+TITLE    Beállítja az ablak címsorának szövegét.\n\
+TYPE     Megjeleníti egy állomány tartalmát.\n\
+VER      Megjeleníti a ReactOS verzió információját.\n\
+VERIFY   Írási mûveletek ellenõrzését vezérli\n\
+VOL      Megjeleníti egy kötet címkéjét és sorozatszámát.\n"
+END

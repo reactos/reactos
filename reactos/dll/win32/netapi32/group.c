@@ -22,12 +22,69 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
-/*
-@ stub NetGroupAdd
-@ stub NetGroupAddUser
-@ stub NetGroupDel
-@ stub NetGroupDelUser
-*/
+/************************************************************
+ * NetGroupAdd  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupAdd(IN LPCWSTR servername,
+            IN DWORD level,
+            IN LPBYTE buf,
+            OUT LPDWORD parm_err)
+{
+    FIXME("(%s, %d, %p, %p) stub!\n", debugstr_w(servername),
+          level, buf, parm_err);
+    return ERROR_ACCESS_DENIED;
+}
+
+
+/************************************************************
+ * NetGroupAddUser  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupAddUser(IN LPCWSTR servername,
+                IN LPCWSTR groupname,
+                IN LPCWSTR username)
+{
+    FIXME("(%s, %s, %s) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname), debugstr_w(username));
+    return ERROR_ACCESS_DENIED;
+}
+
+
+/************************************************************
+ * NetGroupDel  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupDel(IN LPCWSTR servername,
+            IN LPCWSTR groupname)
+{
+    FIXME("(%s, %s) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname));
+    return ERROR_ACCESS_DENIED;
+}
+
+
+/************************************************************
+ * NetGroupDelUser  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupDelUser(IN LPCWSTR servername,
+                IN LPCWSTR groupname,
+                IN LPCWSTR username)
+{
+    FIXME("(%s, %s, %s) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname), debugstr_w(username));
+    return ERROR_ACCESS_DENIED;
+}
+
 
 /************************************************************
  * NetGroupEnum  (NETAPI32.@)
@@ -35,18 +92,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
  */
 NET_API_STATUS
 WINAPI
-NetGroupEnum(LPCWSTR servername,
-             DWORD level,
-             LPBYTE *bufptr,
-             DWORD prefmaxlen,
-             LPDWORD entriesread,
-             LPDWORD totalentries,
-             LPDWORD resume_handle)
+NetGroupEnum(IN LPCWSTR servername,
+             IN DWORD level,
+             OUT LPBYTE *bufptr,
+             IN DWORD prefmaxlen,
+             OUT LPDWORD entriesread,
+             OUT LPDWORD totalentries,
+             IN OUT PDWORD_PTR resume_handle)
 {
     FIXME("(%s, %d, %p, %d, %p, %p, %p) stub!\n", debugstr_w(servername),
           level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
     return ERROR_ACCESS_DENIED;
 }
+
 
 /************************************************************
  * NetGroupGetInfo  (NETAPI32.@)
@@ -54,17 +112,72 @@ NetGroupEnum(LPCWSTR servername,
  */
 NET_API_STATUS
 WINAPI
-NetGroupGetInfo(LPCWSTR servername,
-                LPCWSTR groupname,
-                DWORD level,
-                LPBYTE *bufptr)
+NetGroupGetInfo(IN LPCWSTR servername,
+                IN LPCWSTR groupname,
+                IN DWORD level,
+                OUT LPBYTE *bufptr)
 {
-    FIXME("(%s, %s, %d, %p) stub!\n", debugstr_w(servername), debugstr_w(groupname), level, bufptr);
+    FIXME("(%s, %s, %d, %p) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname), level, bufptr);
     return ERROR_ACCESS_DENIED;
 }
 
-/*
-@ stub NetGroupGetUsers
-@ stub NetGroupSetInfo
-@ stub NetGroupSetUsers
-*/
+
+/************************************************************
+ * NetGroupGetUsers  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupGetUsers(IN LPCWSTR servername,
+                 IN LPCWSTR groupname,
+                 IN DWORD level,
+                 OUT LPBYTE *bufptr,
+                 IN DWORD prefmaxlen,
+                 OUT LPDWORD entriesread,
+                 OUT LPDWORD totalentries,
+                 IN OUT PDWORD_PTR resume_handle)
+{
+    FIXME("(%s, %s, %d, %p, %d, %p, %p, %p) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname), level, bufptr, prefmaxlen, entriesread,
+          totalentries, resume_handle);
+    return ERROR_ACCESS_DENIED;
+}
+
+
+/************************************************************
+ * NetGroupSetInfo  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupSetInfo(IN LPCWSTR servername,
+                IN LPCWSTR groupname,
+                IN DWORD level,
+                IN LPBYTE buf,
+                OUT LPDWORD parm_err)
+{
+    FIXME("(%s, %s, %d, %p, %p) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname), level, buf, parm_err);
+    return ERROR_ACCESS_DENIED;
+}
+
+
+/************************************************************
+ * NetGroupSetUsers  (NETAPI32.@)
+ *
+ */
+NET_API_STATUS
+WINAPI
+NetGroupSetUsers(IN LPCWSTR servername,
+                 IN LPCWSTR groupname,
+                 IN DWORD level,
+                 IN LPBYTE buf,
+                 IN DWORD totalentries)
+{
+    FIXME("(%s, %s, %d, %p, %d) stub!\n", debugstr_w(servername),
+          debugstr_w(groupname), level, buf, totalentries);
+    return ERROR_ACCESS_DENIED;
+}
+
+/* EOF */

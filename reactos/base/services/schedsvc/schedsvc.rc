@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "Scheduler Service"
+#define REACTOS_STR_INTERNAL_NAME     "schedsvc"
+#define REACTOS_STR_ORIGINAL_FILENAME "schedsvc.dll"
+#include <reactos/version.rc>

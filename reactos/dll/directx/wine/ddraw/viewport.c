@@ -2,8 +2,6 @@
  * Copyright (c) 1998 Lionel ULMER
  * Copyright (c) 2006-2007 Stefan DÖSINGER
  *
- * This file contains the implementation of Direct3DViewport2.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -19,12 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /*****************************************************************************
  * Helper functions
@@ -428,10 +421,10 @@ static HRESULT WINAPI d3d_viewport_TransformVertices(IDirect3DViewport3 *iface,
     outH = lpData->lpHOut;
     for(i = 0; i < dwVertexCount; i++)
     {
-        x = (in[0] * mat._11) + (in[1] * mat._21) + (in[2] * mat._31) + (1.0 * mat._41);
-        y = (in[0] * mat._12) + (in[1] * mat._22) + (in[2] * mat._32) + (1.0 * mat._42);
-        z = (in[0] * mat._13) + (in[1] * mat._23) + (in[2] * mat._33) + (1.0 * mat._43);
-        w = (in[0] * mat._14) + (in[1] * mat._24) + (in[2] * mat._34) + (1.0 * mat._44);
+        x = (in[0] * mat._11) + (in[1] * mat._21) + (in[2] * mat._31) + mat._41;
+        y = (in[0] * mat._12) + (in[1] * mat._22) + (in[2] * mat._32) + mat._42;
+        z = (in[0] * mat._13) + (in[1] * mat._23) + (in[2] * mat._33) + mat._43;
+        w = (in[0] * mat._14) + (in[1] * mat._24) + (in[2] * mat._34) + mat._44;
 
         if(dwFlags & D3DTRANSFORM_CLIPPED)
         {
@@ -524,39 +517,18 @@ static HRESULT WINAPI d3d_viewport_LightElements(IDirect3DViewport3 *iface,
     return DDERR_UNSUPPORTED;
 }
 
-/*****************************************************************************
- * IDirect3DViewport3::SetBackground
- *
- * Sets the background material
- *
- * Params:
- *  hMat: Handle from a IDirect3DMaterial interface
- *
- * Returns:
- *  D3D_OK on success
- *
- *****************************************************************************/
-static HRESULT WINAPI d3d_viewport_SetBackground(IDirect3DViewport3 *iface, D3DMATERIALHANDLE hMat)
+static HRESULT WINAPI d3d_viewport_SetBackground(IDirect3DViewport3 *iface, D3DMATERIALHANDLE material)
 {
     struct d3d_viewport *viewport = impl_from_IDirect3DViewport3(iface);
     struct d3d_material *m;
 
-    TRACE("iface %p, material %#x.\n", iface, hMat);
+    TRACE("iface %p, material %#x.\n", iface, material);
 
     wined3d_mutex_lock();
 
-    if (!hMat)
+    if (!(m = ddraw_get_object(&viewport->ddraw->d3ddevice->handle_table, material - 1, DDRAW_HANDLE_MATERIAL)))
     {
-        viewport->background = NULL;
-        TRACE("Setting background to NULL\n");
-        wined3d_mutex_unlock();
-        return D3D_OK;
-    }
-
-    m = ddraw_get_object(&viewport->ddraw->d3ddevice->handle_table, hMat - 1, DDRAW_HANDLE_MATERIAL);
-    if (!m)
-    {
-        WARN("Invalid material handle.\n");
+        WARN("Invalid material handle %#x.\n", material);
         wined3d_mutex_unlock();
         return DDERR_INVALIDPARAMS;
     }
@@ -677,7 +649,7 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
     }
 
     if (This->active_device == NULL) {
-        ERR(" Trying to clear a viewport not attached to a device !\n");
+        ERR(" Trying to clear a viewport not attached to a device!\n");
         return D3DERR_VIEWPORTHASNODEVICE;
     }
     d3d_device3 = &This->active_device->IDirect3DDevice3_iface;
@@ -686,20 +658,17 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
 
     if (flags & D3DCLEAR_TARGET)
     {
-        if (This->background == NULL) {
-            ERR(" Trying to clear the color buffer without background material !\n");
-        }
+        if (!This->background)
+            WARN("No background material set.\n");
         else
-        {
-            color = ((int)((This->background->mat.u.diffuse.u1.r) * 255) << 16)
-                    | ((int) ((This->background->mat.u.diffuse.u2.g) * 255) <<  8)
-                    | ((int) ((This->background->mat.u.diffuse.u3.b) * 255) <<  0)
-                    | ((int) ((This->background->mat.u.diffuse.u4.a) * 255) << 24);
-        }
+            color = D3DRGBA(This->background->mat.u.diffuse.u1.r,
+                    This->background->mat.u.diffuse.u2.g,
+                    This->background->mat.u.diffuse.u3.b,
+                    This->background->mat.u.diffuse.u4.a);
     }
 
-    /* Need to temporarily activate viewport to clear it. Previously active one will be restored
-        afterwards. */
+    /* Need to temporarily activate the viewport to clear it. The previously
+     * active one will be restored afterwards. */
     viewport_activate(This, TRUE);
 
     hr = IDirect3DDevice7_Clear(&This->active_device->IDirect3DDevice7_iface, rect_count, rects,
@@ -766,8 +735,12 @@ static HRESULT WINAPI d3d_viewport_AddLight(IDirect3DViewport3 *iface, IDirect3D
     light_impl->active_viewport = This;
 
     /* If active, activate the light */
-    if (This->active_device)
+    if (This->active_device && light_impl->light.dwFlags & D3DLIGHT_ACTIVE)
+    {
+        /* Disable the flag so that light_activate actually does its job. */
+        light_impl->light.dwFlags &= ~D3DLIGHT_ACTIVE;
         light_activate(light_impl);
+    }
 
     wined3d_mutex_unlock();
 

@@ -2,10 +2,9 @@
 /*                                                                         */
 /*  ft2build.h                                                             */
 /*                                                                         */
-/*    FreeType 2 build and setup macros.                                   */
-/*    (Generic version)                                                    */
+/*    FreeType 2 build and setup macros (development version).             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2006 by                                     */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,24 +17,24 @@
 
 
  /*
-  *  This is a development version of <ft2build.h> that is used
-  *  to build the library in debug mode.  Its only difference with
-  *  the reference is that it forces the use of the local `ftoption.h'
-  *  which contains different settings for all configuration macros.
+  *  This is a development version of <ft2build.h> to build the library in
+  *  debug mode.  Its only difference to the default version is that it
+  *  includes a local `ftoption.h' header file with different settings for
+  *  many configuration macros.
   *
-  *  To use it, you must define the environment variable FT2_BUILD_INCLUDE
-  *  to point to the directory containing these two files (`ft2build.h' and
-  *  `ftoption.h'), then invoke Jam as usual.
+  *  To use it, simply ensure that the directory containing this file is
+  *  scanned by the compiler before the default FreeType header directory.
+  *
   */
 
-#ifndef __FT2_BUILD_DEVEL_H__
-#define __FT2_BUILD_DEVEL_H__
+#ifndef FT2BUILD_H_
+#define FT2BUILD_H_
 
-#define  FT_CONFIG_OPTIONS_H   <ftoption.h>
+#define FT_CONFIG_OPTIONS_H  <ftoption.h>
 
 #include <freetype/config/ftheader.h>
 
-#endif /* __FT2_BUILD_DEVEL_H__ */
+#endif /* FT2BUILD_H_ */
 
 
 /* END */

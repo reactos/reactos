@@ -16,18 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdarg.h>
-#define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "snmp.h"
-
-#include "wine/debug.h"
-#include "wine/exception.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -603,20 +591,20 @@ typedef struct _CMSG_SIGNER_ENCODE_INFO_WITH_CMS
     CERT_ID                    SignerId;
     CRYPT_ALGORITHM_IDENTIFIER HashEncryptionAlgorithm;
     void                      *pvHashEncryptionAuxInfo;
-} CMSG_SIGNER_ENCODE_INFO_WITH_CMS, *PCMSG_SIGNER_ENCODE_INFO_WITH_CMS;
+} CMSG_SIGNER_ENCODE_INFO_WITH_CMS;
 
 typedef struct _CMSG_SIGNED_ENCODE_INFO_WITH_CMS
 {
     DWORD                             cbSize;
     DWORD                             cSigners;
-    PCMSG_SIGNER_ENCODE_INFO_WITH_CMS rgSigners;
+    CMSG_SIGNER_ENCODE_INFO_WITH_CMS *rgSigners;
     DWORD                             cCertEncoded;
     PCERT_BLOB                        rgCertEncoded;
     DWORD                             cCrlEncoded;
     PCRL_BLOB                         rgCrlEncoded;
     DWORD                             cAttrCertEncoded;
     PCERT_BLOB                        rgAttrCertEncoded;
-} CMSG_SIGNED_ENCODE_INFO_WITH_CMS, *PCMSG_SIGNED_ENCODE_INFO_WITH_CMS;
+} CMSG_SIGNED_ENCODE_INFO_WITH_CMS;
 
 static BOOL CRYPT_IsValidSigner(const CMSG_SIGNER_ENCODE_INFO_WITH_CMS *signer)
 {
@@ -1474,7 +1462,7 @@ typedef struct _CMSG_ENVELOPED_ENCODE_INFO_WITH_CMS
     PCERT_BLOB                  rgAttrCertEncoded;
     DWORD                       cUnprotectedAttr;
     PCRYPT_ATTRIBUTE            rgUnprotectedAttr;
-} CMSG_ENVELOPED_ENCODE_INFO_WITH_CMS, *PCMSG_ENVELOPED_ENCODE_INFO_WITH_CMS;
+} CMSG_ENVELOPED_ENCODE_INFO_WITH_CMS;
 
 typedef struct _CEnvelopedEncodeMsg
 {
@@ -2071,7 +2059,7 @@ typedef struct _CDecodeMsg
     } u;
     CRYPT_DATA_BLOB        msg_data;
     CRYPT_DATA_BLOB        detached_data;
-    PCONTEXT_PROPERTY_LIST properties;
+    CONTEXT_PROPERTY_LIST *properties;
 } CDecodeMsg;
 
 static void CDecodeMsg_Close(HCRYPTMSG hCryptMsg)

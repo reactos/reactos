@@ -4,7 +4,7 @@
  * FILE:            dll/directx/msdvbnp/ethernetfilter.cpp
  * PURPOSE:         IBDA_EthernetFilter interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

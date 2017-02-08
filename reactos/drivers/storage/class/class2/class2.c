@@ -137,6 +137,8 @@ DriverEntry(
 /* The following hack to assign drive letters with a non-PnP storage stack */
 
 typedef struct _CLASS_DEVICE_INFO {
+  ULONG Signature;
+  ULONG DeviceType;
   ULONG Partitions;
   ULONG DeviceNumber;
   ULONG DriveNumber;
@@ -205,7 +207,15 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
     do
     {
         /* Check that the disk exists */
-        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\HardDisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        if (DeviceInfo->DeviceType == FILE_DEVICE_DISK)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\HardDisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        }
+        else if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\CdRom%d", DeviceNumber) * sizeof(WCHAR);
+        }
+
         InitializeObjectAttributes(&ObjectAttributes,
                                    &PartitionU,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -233,7 +243,14 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
     do
     {
         /* Check that the drive exists */
-        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+        if (DeviceInfo->DeviceType == FILE_DEVICE_DISK)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+        }
+        else if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\??\\%C:", ('C' + DriveNumber)) * sizeof(WCHAR);
+        }
         InitializeObjectAttributes(&ObjectAttributes,
                                    &PartitionU,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -252,18 +269,36 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
         }
     } while (Status == STATUS_SUCCESS);
 
-    /* Create the symbolic link to PhysicalDriveX */
-    PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\Harddisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
-    DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+    if (DeviceInfo->DeviceType == FILE_DEVICE_DISK)
+    {
+        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\Harddisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+    }
+    else if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+    {
+        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\CdRom%d", DeviceNumber) * sizeof(WCHAR);
+        DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\%C:", ('C' + DriveNumber)) * sizeof(WCHAR);
+    }
 
+    /* Create the symbolic link to PhysicalDriveX */
     Status = IoCreateSymbolicLink(&DriveLetterU, &PartitionU);
     if (!NT_SUCCESS(Status))
     {
         /* Failed to create symbolic link */
+        DbgPrint("Failed to create symbolic link %wZ -> %wZ with %lx\n", &PartitionU, &DriveLetterU, Status);
         return Status;
     }
 
     DbgPrint("HACK: Created symbolic link %wZ -> %wZ\n", &PartitionU, &DriveLetterU);
+
+    DeviceInfo->DeviceNumber = DeviceNumber;
+    DeviceInfo->DriveNumber = DriveNumber;
+
+    if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+    {
+        /* done for cdroms */
+        return STATUS_SUCCESS;
+    }
 
     while (TRUE)
     {
@@ -303,9 +338,6 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
         }
     }
 
-    DeviceInfo->DeviceNumber = DeviceNumber;
-    DeviceInfo->DriveNumber = DriveNumber;
-
     return STATUS_SUCCESS;
 }
 
@@ -315,18 +347,21 @@ ScsiClassPlugPlay(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PCLASS_DEVICE_INFO DeviceInfo = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     if (IrpSp->MinorFunction == IRP_MN_START_DEVICE)
     {
+        ASSERT(DeviceInfo->Signature == '2slc');
         IoSkipCurrentIrpStackLocation(Irp);
-        return STATUS_SUCCESS;
+        return IoCallDriver(DeviceInfo->LowerDevice, Irp);
     }
     else if (IrpSp->MinorFunction == IRP_MN_REMOVE_DEVICE)
     {
-        PCLASS_DEVICE_INFO DeviceInfo = DeviceObject->DeviceExtension;
-
+        ASSERT(DeviceInfo->Signature == '2slc');
         ScsiClassRemoveDriveLetter(DeviceInfo);
+
+        IoForwardIrpSynchronously(DeviceInfo->LowerDevice, Irp);
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -337,6 +372,12 @@ ScsiClassPlugPlay(
     }
     else
     {
+        if (DeviceInfo->Signature == '2slc')
+        {
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceInfo->LowerDevice, Irp);
+        }
+
         Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_SUPPORTED;
@@ -361,7 +402,7 @@ ScsiClassAddDevice(
         Status = IoCreateDevice(DriverObject,
                                 sizeof(CLASS_DEVICE_INFO),
                                 NULL,
-                                FILE_DEVICE_DISK,
+                                DriverExtension->InitializationData.DeviceType,
                                 0,
                                 FALSE,
                                 &DeviceObject);
@@ -372,9 +413,11 @@ ScsiClassAddDevice(
 
         DeviceInfo = DeviceObject->DeviceExtension;
         RtlZeroMemory(DeviceInfo, sizeof(CLASS_DEVICE_INFO));
+        DeviceInfo->Signature = '2slc';
 
         /* Attach it to the PDO */
         DeviceInfo->LowerDevice = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+        DeviceInfo->DeviceType = DriverExtension->InitializationData.DeviceType;
 
         /* Check that the kernel has already assigned drive letters */
         if (KeLoaderBlock == NULL)
@@ -439,7 +482,7 @@ Return Value:
     UNICODE_STRING  unicodeDeviceName;
     PFILE_OBJECT    fileObject;
     CCHAR           deviceNameBuffer[256];
-    BOOLEAN         deviceFound = FALSE;
+    /* BOOLEAN         deviceFound = FALSE; See note at the end */
     PCLASS_DRIVER_EXTENSION DriverExtension;
     PUNICODE_STRING RegistryPath = Argument2;
 
@@ -546,7 +589,7 @@ Return Value:
             if (InitializationData->ClassFindDevices(DriverObject, Argument2, InitializationData,
                                                      portDeviceObject, DriverExtension->PortNumber)) {
 
-                deviceFound = TRUE;
+                /* deviceFound = TRUE; See note at the end */
             }
         }
 
@@ -591,6 +634,8 @@ Return Value:
 
 {
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Invoke the device-specific routine, if one exists. Otherwise complete
@@ -645,6 +690,8 @@ Return Value:
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
     ULONG               maximumTransferLength = deviceExtension->PortCapabilities->MaximumTransferLength;
     NTSTATUS            status;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     if (DeviceObject->Flags & DO_VERIFY_VOLUME &&
         !(currentIrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME)) {
@@ -1009,6 +1056,8 @@ Return Value:
     SCSI_REQUEST_BLOCK  srb;
     NTSTATUS            status;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Allocate read capacity buffer from nonpaged pool.
     //
@@ -1232,6 +1281,8 @@ Return Value:
     PSCSI_REQUEST_BLOCK srb;
     KIRQL currentIrql;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Allocate context from nonpaged pool.
     //
@@ -1376,6 +1427,8 @@ Return Value:
     PSCSI_REQUEST_BLOCK srb;
     PCOMPLETION_CONTEXT context;
     PCDB cdb;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Allocate Srb from nonpaged pool.
@@ -1601,6 +1654,8 @@ Return Value:
     DebugPrint((2, "ScsiClassSplitRequest: Requires %d IRPs\n", irpCount));
     DebugPrint((2, "ScsiClassSplitRequest: Original IRP %lx\n", Irp));
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // If all partial transfers complete successfully then the status and
     // bytes transferred are already set up. Failing a partial-transfer IRP
@@ -1785,6 +1840,8 @@ Return Value:
     NTSTATUS status;
     BOOLEAN retry;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Check SRB status for success of completing request.
     //
@@ -1936,6 +1993,8 @@ Return Value:
     LONG                irpCount;
     NTSTATUS            status;
     BOOLEAN             retry;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Check SRB status for success of completing request.
@@ -2157,6 +2216,8 @@ Return Value:
     LARGE_INTEGER dummy;
 
     PAGED_CODE();
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     dummy.QuadPart = 0;
 
@@ -2449,6 +2510,7 @@ Return Value:
     ULONG             i;
 #endif
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Check that request sense buffer is valid.
@@ -3129,6 +3191,8 @@ Return Value:
     PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
     ULONG transferByteCount;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Determine the transfer count of the request.  If this is a read or a
     // write then the transfer count is in the Irp stack.  Otherwise assume
@@ -3259,6 +3323,8 @@ Return Value:
     PCDB                cdb;
     ULONG               logicalBlockAddress;
     USHORT              transferBlocks;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Calculate relative sector address.
@@ -3479,6 +3545,8 @@ Return Value:
     ULONG retries = 1;
     NTSTATUS status;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     RtlZeroMemory(&srb, sizeof(SCSI_REQUEST_BLOCK));
 
     //
@@ -3655,6 +3723,8 @@ Return Value:
 
     PAGED_CODE();
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     //
     // Write length to SRB.
     //
@@ -3828,6 +3898,7 @@ Return Value:
 
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Call the class specific driver DeviceControl routine.
@@ -3876,6 +3947,8 @@ Return Value:
     PCDB cdb;
     NTSTATUS status;
     ULONG modifiedIoControlCode;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     if (irpStack->Parameters.DeviceIoControl.IoControlCode ==
         IOCTL_STORAGE_RESET_DEVICE) {
@@ -4424,6 +4497,8 @@ Return Value:
 {
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
 
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+
     if (deviceExtension->ClassShutdownFlush) {
 
         //
@@ -4576,6 +4651,8 @@ Return Value:
     } else {
 
         PDEVICE_EXTENSION deviceExtension = deviceObject->DeviceExtension;
+
+        ASSERT(*(PULONG)deviceExtension != '2slc');
 
         //
         // Fill in entry points
@@ -4749,7 +4826,7 @@ Return Value:
 
     if (Release) {
 
-        ObDereferenceObject(PortDeviceObject);
+        //ObDereferenceObject(PortDeviceObject);
         return STATUS_SUCCESS;
     }
 
@@ -4773,6 +4850,7 @@ Return Value:
 
         return status;
     }
+    ObDereferenceObject(srb.DataBuffer);
 
     //
     // Return the new port device object pointer.
@@ -4821,6 +4899,8 @@ Return Value:
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
     PSCSI_REQUEST_BLOCK srb;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
 
     //
     // Get a pointer to the SRB.
@@ -5075,6 +5155,9 @@ Return Value:
     PDEVICE_EXTENSION physicalExtension =
                         deviceExtension->PhysicalDevice->DeviceExtension;
     PIRP originalIrp;
+
+    ASSERT(*(PULONG)deviceExtension != '2slc');
+    ASSERT(*(PULONG)physicalExtension != '2slc');
 
     originalIrp = irpStack->Parameters.Others.Argument1;
 

@@ -76,184 +76,22 @@ _KiCallUserMode@8:
     ret 8
 
 
-/*++
- * @name NtCallbackReturn
- *
- *     The NtCallbackReturn routine returns to kernel mode after a user-mode
- *     callback was done through KeUserModeCallback. It uses the callback frame
- *     which was setup in order to return the information, restores the stack,
- *     and resumes execution where it was left off.
- *
- * @param Result
- *        Pointer to a caller-allocated buffer where the return data
- *               from the user-mode function is located.
- *
- * @param ResultLength
- *        Size of the Output Buffer described above.
- *
- * @param CallbackStatus
- *        Status code of the callback operation.
- *
- * @return Status code of the callback operation.
- *
- * @remark This call MUST be paired with KeUserModeCallback.
- *
- *--*/
-PUBLIC _NtCallbackReturn@12
-_NtCallbackReturn@12:
 
-    /* Get the current thread and make sure we have a callback stack */
-    mov eax, fs:[KPCR_CURRENT_THREAD]
-    mov ecx, [eax+KTHREAD_CALLBACK_STACK]
-    test ecx, ecx
-    jz NoStack
+PUBLIC @KiCallbackReturn@8
+@KiCallbackReturn@8:
 
-    /* Get the trap frame */
-    mov ebx, [eax+KTHREAD_TRAP_FRAME]
-
-    /* Restore the exception list */
-    mov edx, [ebx+KTRAP_FRAME_EXCEPTION_LIST]
-    mov fs:[KPCR_EXCEPTION_LIST], edx
-
-    /* Get the result, the result length and the status */
-    mov edi, [esp+4]
-    mov esi, [esp+8]
-    mov ebp, [esp+12]
-
-    /* Store the results in the callback stack */
-    mov ebx, [ecx+CBSTACK_RESULT]
-    mov [ebx], edi
-    mov ebx, [ecx+CBSTACK_RESULT_LENGTH]
-    mov [ebx], esi
-
-    /* Get the previous stack */
-    mov ebx, [ecx]
-
-    /* Disable interrupts for NPX save and stack switch */
-    cli
-
-    /* Get the initial stack and restore it */
-    mov esi, [eax+KTHREAD_INITIAL_STACK]
-    mov [eax+KTHREAD_INITIAL_STACK], ebx
-
-    /* Set desination and origin NPX Frames */
-    sub esi, NPX_FRAME_LENGTH
-    sub ebx, NPX_FRAME_LENGTH
-
-    /* Copy NPX Data */
-    mov edx, [esi+FP_CONTROL_WORD]
-    mov [ebx+FP_CONTROL_WORD], edx
-    mov edx, [esi+FP_STATUS_WORD]
-    mov [ebx+FP_STATUS_WORD], edx
-    mov edx, [esi+FP_TAG_WORD]
-    mov [ebx+FP_TAG_WORD], edx
-    mov edx, [esi+FP_DATA_SELECTOR]
-    mov [ebx+FP_DATA_SELECTOR], edx
-    mov edx, [esi+FN_CR0_NPX_STATE]
-    mov [ebx+FN_CR0_NPX_STATE], edx
-
-    /* Check if we failed in user mode */
-    cmp ebp, STATUS_CALLBACK_POP_STACK
-    mov edi, [ecx+CBSTACK_TRAP_FRAME]
-    jz UserFault
-
-CheckDebug:
-
-    /* Clear DR7 */
-    and dword ptr [edi+KTRAP_FRAME_DR7], 0
-
-    /* Check if debugging was active */
-    test byte ptr [eax+KTHREAD_DEBUG_ACTIVE], HEX(0FF)
-    jnz RestoreDebug
-
-RestoreStack:
-
-    /* Get TSS */
-    mov edx, fs:[KPCR_TSS]
-
-    /* Restore stack pointer */
-    lea esp, [ecx+CBSTACK_CALLBACK_STACK]
-
-    /* Check if we were in V86 mode */
-    test dword ptr [edi+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86Ret
-    sub ebx, 16
-
-V86Ret:
-    /* Restore the ESP in TSS */
-    mov [edx+KTSS_ESP0], ebx
-
-    /* Restore the trap frame */
-    mov [eax+KTHREAD_TRAP_FRAME], edi
-
-    /* Bring interrupts back */
-    sti
-
-    /* Restore the callback stack*/
-    pop [eax+KTHREAD_CALLBACK_STACK]
+    /* Restore the stack */
+    mov esp, ecx
 
     /* Set status and return */
-    mov eax, ebp
+    mov eax, edx
     pop edi
     pop esi
     pop ebx
     pop ebp
-    pop edx
 
-    /* Clean stack and jump back */
-    add esp, 8
-    jmp edx
-
-UserFault:
-    /* Set size to copy */
-    mov ecx, (KTRAP_FRAME_V86_ES - KTRAP_FRAME_FS) / 4
-
-    /* Check if this was V86 mode */
-    mov esi, [eax+KTHREAD_TRAP_FRAME]
-    test dword ptr [esi+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-
-    /* Save EDI and load destination */
-    mov edx, edi
-    lea edi, [edi+KTRAP_FRAME_FS]
-    jz NotV86
-    add ecx, 16 / 4
-
-NotV86:
-    /* Set source and copy */
-    lea esi, [esi+KTRAP_FRAME_FS]
-    rep movsd
-
-    /* Restore ECX and ECX */
-    mov ecx, [eax+KTHREAD_CALLBACK_STACK]
-    mov edi, edx
-    jmp CheckDebug
-
-RestoreDebug:
-    /* Get a pointer to thread's trap frame */
-    mov esi, [eax+KTHREAD_TRAP_FRAME]
-
-    /* Copy debug registers data from it */
-    mov edx, [esi+KTRAP_FRAME_DR0]
-    mov [edi+KTRAP_FRAME_DR0], edx
-    mov edx, [esi+KTRAP_FRAME_DR1]
-    mov [edi+KTRAP_FRAME_DR1], edx
-    mov edx, [esi+KTRAP_FRAME_DR2]
-    mov [edi+KTRAP_FRAME_DR2], edx
-    mov edx, [esi+KTRAP_FRAME_DR3]
-    mov [edi+KTRAP_FRAME_DR3], edx
-    mov edx, [esi+KTRAP_FRAME_DR6]
-    mov [edi+KTRAP_FRAME_DR6], edx
-    mov edx, [esi+KTRAP_FRAME_DR7]
-    mov [edi+KTRAP_FRAME_DR7], edx
-
-    /* Jump back */
-    jmp RestoreStack
-
-NoStack:
-
-    /* Return failure */
-    mov eax, STATUS_NO_CALLBACK_ACTIVE
-    ret 12
+    /* Clean stack and return */
+    ret 8
 
 /*++
  * @name KeSwitchKernelStack

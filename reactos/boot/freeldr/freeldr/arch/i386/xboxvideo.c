@@ -227,13 +227,13 @@ XboxVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
 }
 
 VOID
-XboxVideoSync()
+XboxVideoSync(VOID)
 {
   /* Not supported */
 }
 
 VOID
-XboxBeep()
+XboxBeep(VOID)
 {
     /* Call PC version */
     PcBeep();

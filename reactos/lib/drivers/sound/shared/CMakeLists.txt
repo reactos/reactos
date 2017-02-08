@@ -8,4 +8,4 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
 add_library(audio time.c)
-add_dependencies(audio bugcodes)
+add_dependencies(audio bugcodes xdk)

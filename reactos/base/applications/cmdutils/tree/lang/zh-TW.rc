@@ -1,0 +1,14 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "直觀地顯示磁碟機或路徑的資料夾結構。\n\n\
+TREE [磁碟機:][路徑] [/F] [/A]\n\n\
+\t/F   在每個資料夾中顯示的檔的名稱。\n\
+\t/A   使用 ASCII 擴充字元代替。\n"
+    IDS_NO_SUBDIRECTORIES "不存在子目錄"
+    IDS_FOLDER_PATH "資料夾路徑清單\n"
+    IDS_VOL_SERIAL "磁碟區序號是 %x:%x\n"
+END

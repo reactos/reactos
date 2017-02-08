@@ -15,13 +15,13 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+
+
+#include "precomp.h"
+
 #ifndef lint
 static char sccsid[] = "@(#)domacro.c	1.6 (Berkeley) 2/28/89";
 #endif /* not lint */
-
-#include "precomp.h"
-//#include <errno.h>
-//#include <sys/ttychars.h>
 
 void domacro(int argc, const char *argv[])
 {

@@ -1,0 +1,190 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+* DATE OF TR: 05-12-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E Re\tCtrl+N", CMD_NEW
+        MENUITEM "Hap...\tCtrl+O", CMD_OPEN
+        MENUITEM "Ruaj\tCtrl+S", CMD_SAVE
+        MENUITEM "Ruaj si...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Konfigurim Faqes...", CMD_PAGE_SETUP
+        MENUITEM "&Printo\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Dil", CMD_EXIT
+    END
+    POPUP "Modifiko"
+    BEGIN
+        MENUITEM "Rikthe\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Prej\tCtrl+X", CMD_CUT
+        MENUITEM "Kopjo\tCtrl+C", CMD_COPY
+        MENUITEM "Ngjit\tCtrl+V", CMD_PASTE
+        MENUITEM "Fshi\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Gjej...\tCtrl+F", CMD_SEARCH
+        MENUITEM "Gjej Tjetren\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Ndrysho\tCtrl+H", CMD_REPLACE
+        MENUITEM "Shko tek...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Perzgjidh te gjith\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Ora/Data\tF5", CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "Paketo linjat e gjata", CMD_WRAP
+        MENUITEM "&Font...", CMD_FONT
+    END
+    POPUP "&Vëzhgo"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "Ndihmë"
+    BEGIN
+        MENUITEM "përmbajtje", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "Rreth", CMD_ABOUT
+        MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION "Page Setup"
+BEGIN
+    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
+  PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+BEGIN
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Encoding:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Endlines:", 0x156, 5, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Shko tek linja"
+BEGIN
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Numri i linjes:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Rreth ReactOS Notepad"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "Mbyll", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    STRING_LICENSE "Ky program është software falas, ju mund ta shpërndani dhe/ose modifikoni sipas kushteve të GNU General Public License të publikuar nga Fondacioni Free Software;. Sipas versionit 2 të Liçencës, ose (sipas opinionit tuaj) çdo versioni të mëvonshëm\r\n\r\nKy program shpërndahet me shpresën që do t'ju jetë i dobishëm, por PA ASNJË GARANCI; madje edhe pa garancinë preçize të SHITJES apo PËRDORIMIT PËR NJË QËLLIM TË CAKTUAR. Shiko Liçencën Publike të Përgjithshme GNU për hollësi\r\n\r\nJu duhet të keni marrë një kopje të Liçensës së Përgjithshme Publike GNU së bashku me këtë program, nëse jo, shkruani në Free Software Foundation, Inc, 51 Franklin Rruga , kati i pestë, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Faqe &s" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "Notepad"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "KUJDES"
+    STRING_INFO "Info"
+    STRING_UNTITLED "Pa emer"
+    STRING_ALL_FILES "Te gjith dokumentat (*.*)"
+    STRING_TEXT_FILES_TXT "Dokumenta teksti (*.txt)"
+    STRING_TOOLARGE "Dokumenti '%s' është shume i madh për notepad.\n \
+Ju lutem perdorni editor tjeter."
+    STRING_NOTEXT "Nuk keni shkruaj ndonje tekst. \
+\nJu lutem shkruani diqka dhe provoni perseri"
+    STRING_DOESNOTEXIST "Dokumenti '%s'\nnuk ekziston\n\n \
+Doni te krijoni nje dokument te ri ?"
+    STRING_NOTSAVED "Dokumenti '%s'\nështë modifikuar\n\n \
+Doni te ruani ndryshimet ?"
+    STRING_NOTFOUND "'%s' nuk gjindet."
+    STRING_OUT_OF_MEMORY "Nuk ka memorie te mjaftueshme per te kompletuar kete \
+detyrë. \nMbyll nje ose me shume programe te rrisesh shumën e \nmemories."
+    STRING_CANNOTFIND "Nuk u gjet '%s'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "Linje %d, kolonë %d"
+    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+
+    STRING_TEXT_DOCUMENT "Text Document"
+END

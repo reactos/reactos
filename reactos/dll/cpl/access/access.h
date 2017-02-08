@@ -1,12 +1,14 @@
-#define WIN32_NO_STATUS
+#ifndef _ACCESS_H
+#define _ACCESS_H
+
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <wingdi.h>
 #include <winuser.h>
 #include <commctrl.h>
-#include <cpl.h>
 #include <tchar.h>
 
 #include "resource.h"
@@ -69,4 +71,4 @@ INT_PTR CALLBACK KeyboardPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 INT_PTR CALLBACK MousePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SoundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-/* EOF */
+#endif /* _ACCESS_H */

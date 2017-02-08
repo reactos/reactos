@@ -52,23 +52,7 @@
  *     o PSP_USEREFPARENT
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
-//#include "prsht.h"
 #include "comctl32.h"
-#include <uxtheme.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
 /******************************************************************************
  * Data structures
@@ -172,6 +156,7 @@ static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psI
 static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheetInfo* psInfo);
 static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID);
 static BOOL PROPSHEET_RemovePage(HWND hwndDlg, int index, HPROPSHEETPAGE hpage);
+static BOOL PROPSHEET_InsertPage(HWND hwndDlg, HPROPSHEETPAGE hpageInsertAfter, HPROPSHEETPAGE hpage);
 
 static INT_PTR CALLBACK
 PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1888,7 +1873,7 @@ static void PROPSHEET_UnChanged(HWND hwndDlg, HWND hwndCleanPage)
     if (psInfo->proppage[i].hwndPage == hwndCleanPage)
       psInfo->proppage[i].isDirty = FALSE;
 
-    /* look to see if there's any dirty pages */
+    /* look to see if there are any dirty pages */
     if (psInfo->proppage[i].isDirty)
       noPageDirty = FALSE;
   }
@@ -2259,60 +2244,9 @@ static LRESULT PROPSHEET_QuerySiblings(HWND hwndDlg,
 static BOOL PROPSHEET_AddPage(HWND hwndDlg,
                               HPROPSHEETPAGE hpage)
 {
-  PropPageInfo * ppi;
   PropSheetInfo * psInfo = GetPropW(hwndDlg, PropSheetInfoStr);
-  HWND hwndTabControl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
-  TCITEMW item;
-  LPCPROPSHEETPAGEW ppsp = (LPCPROPSHEETPAGEW)hpage;
-
   TRACE("hpage %p\n", hpage);
-  /*
-   * Allocate and fill in a new PropPageInfo entry.
-   */
-  ppi = ReAlloc(psInfo->proppage, sizeof(PropPageInfo) * (psInfo->nPages + 1));
-  if (!ppi)
-      return FALSE;
-
-  psInfo->proppage = ppi;
-  if (!PROPSHEET_CollectPageInfo(ppsp, psInfo, psInfo->nPages, FALSE))
-      return FALSE;
-
-  psInfo->proppage[psInfo->nPages].hpage = hpage;
-
-  if (ppsp->dwFlags & PSP_PREMATURE)
-  {
-     /* Create the page but don't show it */
-     if(!PROPSHEET_CreatePage(hwndDlg, psInfo->nPages, psInfo, ppsp))
-         return FALSE;
-  }
-
-  /*
-   * Add a new tab to the tab control.
-   */
-  item.mask = TCIF_TEXT;
-  item.pszText = (LPWSTR) psInfo->proppage[psInfo->nPages].pszText;
-  item.cchTextMax = MAX_TABTEXT_LENGTH;
-
-  if (psInfo->hImageList)
-  {
-    SendMessageW(hwndTabControl, TCM_SETIMAGELIST, 0, (LPARAM)psInfo->hImageList);
-  }
-
-  if ( psInfo->proppage[psInfo->nPages].hasIcon )
-  {
-    item.mask |= TCIF_IMAGE;
-    item.iImage = psInfo->nPages;
-  }
-
-  SendMessageW(hwndTabControl, TCM_INSERTITEMW, psInfo->nPages + 1,
-               (LPARAM)&item);
-
-  psInfo->nPages++;
-
-  /* If it is the only page - show it */
-  if(psInfo->nPages == 1)
-     PROPSHEET_SetCurSel(hwndDlg, 0, 1, 0);
-  return TRUE;
+  return PROPSHEET_InsertPage(hwndDlg, (HPROPSHEETPAGE)(ULONG_PTR)psInfo->nPages, hpage);
 }
 
 /******************************************************************************
@@ -2430,21 +2364,31 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
+  BOOL enable_finish = ((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH);
+
+#ifdef __REACTOS__
   HWND hwndCancel = GetDlgItem(hwndDlg, IDCANCEL);
   INT iDefItem = 0;
   HWND hwndFocus;
+#endif
 
   TRACE("%d\n", dwFlags);
 
-  EnableWindow(hwndBack, FALSE);
-  EnableWindow(hwndNext, FALSE);
-  EnableWindow(hwndFinish, FALSE);
+  EnableWindow(hwndBack, dwFlags & PSWIZB_BACK);
+  EnableWindow(hwndNext, dwFlags & PSWIZB_NEXT);
+  EnableWindow(hwndFinish, enable_finish);
 
-  if (dwFlags & PSWIZB_BACK)
-    EnableWindow(hwndBack, TRUE);
-
-  if (dwFlags & PSWIZB_NEXT)
-    EnableWindow(hwndNext, TRUE);
+#ifndef __REACTOS__
+  /* set the default pushbutton to an enabled button */
+  if (enable_finish)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
+  else if (dwFlags & PSWIZB_NEXT)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
+  else if (dwFlags & PSWIZB_BACK)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
+  else
+    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
+#endif
 
   if (!psInfo->hasFinish)
   {
@@ -2455,9 +2399,6 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
       
       /* Show the Finish button */
       ShowWindow(hwndFinish, SW_SHOW);
-
-      if (!(dwFlags & PSWIZB_DISABLEDFINISH))
-        EnableWindow(hwndFinish, TRUE);
     }
     else
     {
@@ -2467,9 +2408,8 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
       ShowWindow(hwndNext, SW_SHOW);
     }
   }
-  else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
-    EnableWindow(hwndFinish, TRUE);
 
+#ifdef __REACTOS__
   /* set the default pushbutton to an enabled button */
   if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
     iDefItem = IDC_FINISH_BUTTON;
@@ -2485,6 +2425,8 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   hwndFocus = GetFocus();
   if (!hwndFocus || hwndFocus == hwndCancel)
     SetFocus(GetDlgItem(hwndDlg, iDefItem));
+#endif
+
 }
 
 /******************************************************************************
@@ -2492,11 +2434,99 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
  */
 static BOOL PROPSHEET_InsertPage(HWND hwndDlg, HPROPSHEETPAGE hpageInsertAfter, HPROPSHEETPAGE hpage)
 {
-    if (IS_INTRESOURCE(hpageInsertAfter))
-        FIXME("(%p, %d, %p): stub\n", hwndDlg, LOWORD(hpageInsertAfter), hpage);
-    else
-        FIXME("(%p, %p, %p): stub\n", hwndDlg, hpageInsertAfter, hpage);
-    return FALSE;
+  PropSheetInfo * psInfo = GetPropW(hwndDlg, PropSheetInfoStr);
+  PropPageInfo * ppi, * prev_ppi = psInfo->proppage;
+  HWND hwndTabControl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
+  LPCPROPSHEETPAGEW ppsp = (LPCPROPSHEETPAGEW)hpage;
+  TCITEMW item;
+  int index;
+
+  TRACE("hwndDlg %p, hpageInsertAfter %p, hpage %p\n", hwndDlg, hpageInsertAfter, hpage);
+
+  if (IS_INTRESOURCE(hpageInsertAfter))
+    index = LOWORD(hpageInsertAfter);
+  else
+  {
+    index = PROPSHEET_GetPageIndex(hpageInsertAfter, psInfo, -1);
+    if (index < 0)
+    {
+      TRACE("Could not find page to insert after!\n");
+      return FALSE;
+    }
+    index++;
+  }
+
+  if (index > psInfo->nPages)
+    index = psInfo->nPages;
+
+  /*
+   * Allocate a new PropPageInfo entry.
+   */
+  ppi = Alloc(sizeof(PropPageInfo) * (psInfo->nPages + 1));
+  if (!ppi)
+      return FALSE;
+
+  /*
+   * Fill in a new PropPageInfo entry.
+   */
+  if (index > 0)
+    memcpy(ppi, prev_ppi, index * sizeof(PropPageInfo));
+  memset(&ppi[index], 0, sizeof(PropPageInfo));
+  if (index < psInfo->nPages)
+    memcpy(&ppi[index + 1], &prev_ppi[index], (psInfo->nPages - index) * sizeof(PropPageInfo));
+  psInfo->proppage = ppi;
+
+  if (!PROPSHEET_CollectPageInfo(ppsp, psInfo, index, FALSE))
+  {
+     psInfo->proppage = prev_ppi;
+     Free(ppi);
+     return FALSE;
+  }
+
+  psInfo->proppage[index].hpage = hpage;
+
+  if (ppsp->dwFlags & PSP_PREMATURE)
+  {
+     /* Create the page but don't show it */
+     if(!PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppsp))
+     {
+        psInfo->proppage = prev_ppi;
+        Free(ppi);
+        return FALSE;
+     }
+  }
+
+  Free(prev_ppi);
+  psInfo->nPages++;
+  if (index <= psInfo->active_page)
+    psInfo->active_page++;
+
+  /*
+   * Add a new tab to the tab control.
+   */
+  item.mask = TCIF_TEXT;
+  item.pszText = (LPWSTR) psInfo->proppage[index].pszText;
+  item.cchTextMax = MAX_TABTEXT_LENGTH;
+
+  if (psInfo->hImageList)
+  {
+    SendMessageW(hwndTabControl, TCM_SETIMAGELIST, 0, (LPARAM)psInfo->hImageList);
+  }
+
+  if (psInfo->proppage[index].hasIcon)
+  {
+    item.mask |= TCIF_IMAGE;
+    item.iImage = index;
+  }
+
+  SendMessageW(hwndTabControl, TCM_INSERTITEMW, index,
+               (LPARAM)&item);
+
+  /* If it is the only page - show it */
+  if (psInfo->nPages == 1)
+     PROPSHEET_SetCurSel(hwndDlg, 0, 1, 0);
+
+  return TRUE;
 }
 
 /******************************************************************************
@@ -2725,6 +2755,7 @@ static INT do_loop(const PropSheetInfo *psInfo)
     MSG msg;
     INT ret = -1;
     HWND hwnd = psInfo->hwnd;
+    HWND parent = psInfo->ppshheader.hwndParent;
 
     while(IsWindow(hwnd) && !psInfo->ended && (ret = GetMessageW(&msg, NULL, 0, 0)))
     {
@@ -2746,6 +2777,9 @@ static INT do_loop(const PropSheetInfo *psInfo)
 
     if(ret != -1)
         ret = psInfo->result;
+
+    if(parent)
+        EnableWindow(parent, TRUE);
 
     DestroyWindow(hwnd);
     return ret;
@@ -2773,10 +2807,7 @@ static INT_PTR PROPSHEET_PropertySheet(PropSheetInfo* psInfo, BOOL unicode)
   }
   bRet = PROPSHEET_CreateDialog(psInfo);
   if(!psInfo->isModeless)
-  {
       bRet = do_loop(psInfo);
-      if (parent) EnableWindow(parent, TRUE);
-  }
   return bRet;
 }
 

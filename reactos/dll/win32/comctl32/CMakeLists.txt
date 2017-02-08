@@ -41,28 +41,24 @@ list(APPEND SOURCE
     theme_dialog.c
     theme_edit.c
     theme_listbox.c
+    theme_scrollbar.c
     theming.c
     toolbar.c
     tooltips.c
     trackbar.c
     treeview.c
     updown.c
+    comctl32.h)
+
+add_library(comctl32 SHARED
+    ${SOURCE}
     stubs.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
-add_library(comctl32 SHARED ${SOURCE})
 set_module_type(comctl32 win32dll UNICODE)
 target_link_libraries(comctl32 uuid wine ${PSEH_LIB})
 add_delay_importlibs(comctl32 winmm uxtheme)
-
-add_importlibs(comctl32
-    user32
-    gdi32
-    advapi32
-    msvcrt
-    kernel32
-    ntdll)
-
-add_pch(comctl32 comctl32.h)
+add_importlibs(comctl32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_pch(comctl32 comctl32.h SOURCE)
 add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)

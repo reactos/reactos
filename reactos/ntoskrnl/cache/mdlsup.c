@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/cache/logsup.c
+ * FILE:            ntoskrnl/cache/mdlsup.c
  * PURPOSE:         Logging and configuration routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -80,8 +80,8 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
 
 VOID
 NTAPI
-CcMdlReadComplete2(IN PMDL MdlChain,
-                   IN PFILE_OBJECT FileObject)
+CcMdlReadComplete2(IN PFILE_OBJECT FileObject,
+                   IN PMDL MdlChain)
 {
     UNIMPLEMENTED
 }

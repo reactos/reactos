@@ -4,10 +4,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4820)
 #endif
+
 #define WNNC_NET_MSNET      0x00010000
 #define WNNC_NET_LANMAN     0x00020000
 #define WNNC_NET_NETWARE    0x00030000
@@ -160,6 +162,7 @@ extern "C" {
 #define WNCON_DYNAMIC 8
 
 #ifndef RC_INVOKED
+
 typedef struct _NETRESOURCEA {
 	DWORD dwScope;
 	DWORD dwType;
@@ -225,7 +228,7 @@ typedef struct _NETINFOSTRUCT{
 	DWORD dwProviderVersion;
 	DWORD dwStatus;
 	DWORD dwCharacteristics;
-	DWORD dwHandle;
+	ULONG_PTR dwHandle;
 	WORD wNetType;
 	DWORD dwPrinters;
 	DWORD dwDrives;
@@ -244,49 +247,299 @@ typedef struct _NETCONNECTINFOSTRUCT{
 	DWORD dwOptDataSize;
 } NETCONNECTINFOSTRUCT,*LPNETCONNECTINFOSTRUCT;
 
-DWORD APIENTRY WNetAddConnectionA(LPCSTR,LPCSTR,LPCSTR);
-DWORD APIENTRY WNetAddConnectionW(LPCWSTR,LPCWSTR,LPCWSTR);
-DWORD APIENTRY WNetAddConnection2A(LPNETRESOURCEA,LPCSTR,LPCSTR,DWORD);
-DWORD APIENTRY WNetAddConnection2W(LPNETRESOURCEW,LPCWSTR,LPCWSTR,DWORD);
-DWORD APIENTRY WNetAddConnection3A(HWND,LPNETRESOURCEA,LPCSTR,LPCSTR,DWORD);
-DWORD APIENTRY WNetAddConnection3W(HWND,LPNETRESOURCEW,LPCWSTR,LPCWSTR,DWORD);
-DWORD APIENTRY WNetCancelConnectionA(LPCSTR,BOOL);
-DWORD APIENTRY WNetCancelConnectionW(LPCWSTR,BOOL);
-DWORD APIENTRY WNetCancelConnection2A(LPCSTR,DWORD,BOOL);
-DWORD APIENTRY WNetCancelConnection2W(LPCWSTR,DWORD,BOOL);
-DWORD APIENTRY WNetGetConnectionA(LPCSTR,LPSTR,PDWORD);
-DWORD APIENTRY WNetGetConnectionW(LPCWSTR,LPWSTR,PDWORD);
-DWORD APIENTRY WNetUseConnectionA(HWND,LPNETRESOURCEA,LPCSTR,LPCSTR,DWORD,LPSTR,PDWORD,PDWORD);
-DWORD APIENTRY WNetUseConnectionW(HWND,LPNETRESOURCEW,LPCWSTR,LPCWSTR,DWORD,LPWSTR,PDWORD,PDWORD);
+_Check_return_
+DWORD
+APIENTRY
+WNetAddConnectionA(
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetAddConnectionW(
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetAddConnection2A(
+  _In_ LPNETRESOURCEA,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetAddConnection2W(
+  _In_ LPNETRESOURCEW,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetAddConnection3A(
+  _In_opt_ HWND,
+  _In_ LPNETRESOURCEA,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetAddConnection3W(
+  _In_opt_ HWND,
+  _In_ LPNETRESOURCEW,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD);
+
+_Check_return_ DWORD APIENTRY WNetCancelConnectionA(_In_ LPCSTR, _In_ BOOL);
+_Check_return_ DWORD APIENTRY WNetCancelConnectionW(_In_ LPCWSTR, _In_ BOOL);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetCancelConnection2A(
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_ BOOL);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetCancelConnection2W(
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_ BOOL);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetConnectionA(
+  _In_ LPCSTR lpLocalName,
+  _Out_writes_opt_(*lpnLength) LPSTR lpRemoteName,
+  _Inout_ LPDWORD lpnLength);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetConnectionW(
+  _In_ LPCWSTR lpLocalName,
+  _Out_writes_opt_(*lpnLength) LPWSTR lpRemoteName,
+  _Inout_ LPDWORD lpnLength);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetUseConnectionA(
+  _In_opt_ HWND hwndOwner,
+  _In_ LPNETRESOURCEA lpNetResource,
+  _In_opt_ LPCSTR lpPassword,
+  _In_opt_ LPCSTR lpUserId,
+  _In_ DWORD dwFlags,
+  _Out_writes_opt_(*lpBufferSize) LPSTR lpAccessName,
+  _Inout_opt_ LPDWORD lpBufferSize,
+  _Out_opt_ LPDWORD lpResult);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetUseConnectionW(
+  _In_opt_ HWND hwndOwner,
+  _In_ LPNETRESOURCEW lpNetResource,
+  _In_opt_ LPCWSTR lpPassword,
+  _In_opt_ LPCWSTR lpUserId,
+  _In_ DWORD dwFlags,
+  _Out_writes_opt_(*lpBufferSize) LPWSTR lpAccessName,
+  _Inout_opt_ LPDWORD lpBufferSize,
+  _Out_opt_ LPDWORD lpResult);
+
 DWORD APIENTRY WNetSetConnectionA(LPCSTR,DWORD,PVOID);
 DWORD APIENTRY WNetSetConnectionW(LPCWSTR,DWORD,PVOID);
-DWORD APIENTRY WNetConnectionDialog(HWND,DWORD);
-DWORD APIENTRY WNetDisconnectDialog(HWND,DWORD);
-DWORD APIENTRY WNetConnectionDialog1A(LPCONNECTDLGSTRUCTA);
-DWORD APIENTRY WNetConnectionDialog1W(LPCONNECTDLGSTRUCTW);
-DWORD APIENTRY WNetDisconnectDialog1A(LPDISCDLGSTRUCTA);
-DWORD APIENTRY WNetDisconnectDialog1W(LPDISCDLGSTRUCTW);
-DWORD APIENTRY WNetOpenEnumA(DWORD,DWORD,DWORD,LPNETRESOURCEA,LPHANDLE);
-DWORD APIENTRY WNetOpenEnumW(DWORD,DWORD,DWORD,LPNETRESOURCEW,LPHANDLE);
-DWORD APIENTRY WNetEnumResourceA(HANDLE,PDWORD,PVOID,PDWORD);
-DWORD APIENTRY WNetEnumResourceW(HANDLE,PDWORD,PVOID,PDWORD);
-DWORD APIENTRY WNetCloseEnum(HANDLE);
-DWORD APIENTRY WNetGetUniversalNameA(LPCSTR,DWORD,PVOID,PDWORD);
-DWORD APIENTRY WNetGetUniversalNameW(LPCWSTR,DWORD,PVOID,PDWORD);
-DWORD APIENTRY WNetGetUserA(LPCSTR,LPSTR,PDWORD);
-DWORD APIENTRY WNetGetUserW(LPCWSTR,LPWSTR,PDWORD);
-DWORD APIENTRY WNetGetProviderNameA(DWORD,LPSTR,PDWORD);
-DWORD APIENTRY WNetGetProviderNameW(DWORD,LPWSTR,PDWORD);
-DWORD APIENTRY WNetGetNetworkInformationA(LPCSTR,LPNETINFOSTRUCT);
-DWORD APIENTRY WNetGetNetworkInformationW(LPCWSTR,LPNETINFOSTRUCT);
-DWORD APIENTRY WNetGetResourceInformationA(LPNETRESOURCEA,LPVOID,LPDWORD,LPSTR*);
-DWORD APIENTRY WNetGetResourceInformationW(LPNETRESOURCEW,LPVOID,LPDWORD,LPWSTR*);
-DWORD APIENTRY WNetGetLastErrorA(PDWORD,LPSTR,DWORD,LPSTR,DWORD);
-DWORD APIENTRY WNetGetLastErrorW(PDWORD,LPWSTR,DWORD,LPWSTR,DWORD);
+_Check_return_ DWORD APIENTRY WNetConnectionDialog(_In_ HWND, _In_ DWORD);
+_Check_return_ DWORD APIENTRY WNetDisconnectDialog(_In_opt_ HWND, _In_ DWORD);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetConnectionDialog1A(
+  _Inout_ LPCONNECTDLGSTRUCTA);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetConnectionDialog1W(
+  _Inout_ LPCONNECTDLGSTRUCTW);
+
+_Check_return_ DWORD APIENTRY WNetDisconnectDialog1A(_In_ LPDISCDLGSTRUCTA);
+_Check_return_ DWORD APIENTRY WNetDisconnectDialog1W(_In_ LPDISCDLGSTRUCTW);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetOpenEnumA(
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ LPNETRESOURCEA,
+  _Out_ LPHANDLE);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetOpenEnumW(
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ LPNETRESOURCEW,
+  _Out_ LPHANDLE);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetEnumResourceA(
+  _In_ HANDLE hEnum,
+  _Inout_ LPDWORD lpcCount,
+  _Out_writes_bytes_(*lpBufferSize) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpBufferSize);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetEnumResourceW(
+  _In_ HANDLE hEnum,
+  _Inout_ LPDWORD lpcCount,
+  _Out_writes_bytes_(*lpBufferSize) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpBufferSize);
+
+_Check_return_ DWORD APIENTRY WNetCloseEnum(_In_ HANDLE);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetUniversalNameA(
+  _In_ LPCSTR lpLocalPath,
+  _In_ DWORD dwInfoLevel,
+  _Out_writes_bytes_(*lpBufferSize) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpBufferSize);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetUniversalNameW(
+  _In_ LPCWSTR lpLocalPath,
+  _In_ DWORD dwInfoLevel,
+  _Out_writes_bytes_(*lpBufferSize) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpBufferSize);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetUserA(
+  _In_opt_ LPCSTR lpName,
+  _Out_writes_(*lpnLength) LPSTR lpUserName,
+  _Inout_ LPDWORD lpnLength);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetUserW(
+  _In_opt_ LPCWSTR lpName,
+  _Out_writes_(*lpnLength) LPWSTR lpUserName,
+  _Inout_ LPDWORD lpnLength);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetProviderNameA(
+  _In_ DWORD dwNetType,
+  _Out_writes_(*lpBufferSize) LPSTR lpProviderName,
+  _Inout_ LPDWORD lpBufferSize);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetProviderNameW(
+  _In_ DWORD dwNetType,
+  _Out_writes_(*lpBufferSize) LPWSTR lpProviderName,
+  _Inout_ LPDWORD lpBufferSize);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetNetworkInformationA(
+  _In_ LPCSTR,
+  _Out_ LPNETINFOSTRUCT);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetNetworkInformationW(
+  _In_ LPCWSTR,
+  _Out_ LPNETINFOSTRUCT);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetResourceInformationA(
+  _In_ LPNETRESOURCEA lpNetResource,
+  _Out_writes_bytes_(*lpcbBuffer) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpcbBuffer,
+  _Outptr_ LPSTR *lplpSystem);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetResourceInformationW(
+  _In_ LPNETRESOURCEW lpNetResource,
+  _Out_writes_bytes_(*lpcbBuffer) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpcbBuffer,
+  _Outptr_ LPWSTR *lplpSystem);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetLastErrorA(
+  _Out_ LPDWORD lpError,
+  _Out_writes_(nErrorBufSize) LPSTR lpErrorBuf,
+  _In_ DWORD nErrorBufSize,
+  _Out_writes_(nNameBufSize) LPSTR lpNameBuf,
+  _In_ DWORD nNameBufSize);
+
+_Check_return_
+DWORD
+APIENTRY
+WNetGetLastErrorW(
+  _Out_ LPDWORD lpError,
+  _Out_writes_(nErrorBufSize) LPWSTR lpErrorBuf,
+  _In_ DWORD nErrorBufSize,
+  _Out_writes_(nNameBufSize) LPWSTR lpNameBuf,
+  _In_ DWORD nNameBufSize);
+
 DWORD WINAPI WNetRestoreConnectionA(HWND,LPCSTR);
 DWORD WINAPI WNetRestoreConnectionW(HWND,LPCWSTR);
-DWORD APIENTRY MultinetGetConnectionPerformanceA(LPNETRESOURCEA,LPNETCONNECTINFOSTRUCT);
-DWORD APIENTRY MultinetGetConnectionPerformanceW(LPNETRESOURCEW,LPNETCONNECTINFOSTRUCT);
+
+_Check_return_
+DWORD
+APIENTRY
+MultinetGetConnectionPerformanceA(
+  _In_ LPNETRESOURCEA,
+  _Out_ LPNETCONNECTINFOSTRUCT);
+
+_Check_return_
+DWORD
+APIENTRY
+MultinetGetConnectionPerformanceW(
+  _In_ LPNETRESOURCEW,
+  _Out_ LPNETCONNECTINFOSTRUCT);
 
 #ifdef _WINE
 typedef struct tagPASSWORD_CACHE_ENTRY
@@ -362,11 +615,15 @@ typedef REMOTE_NAME_INFOA REMOTE_NAME_INFO,*LPREMOTE_NAME_INFO;
 #define WNetGetLastError WNetGetLastErrorA
 #define MultinetGetConnectionPerformance MultinetGetConnectionPerformanceA
 #endif
-#endif
+
+#endif /* !RC_INVOKED */
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* _WINNETWK_ */

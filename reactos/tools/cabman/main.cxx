@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/main.cpp
+ * FILE:        tools/cabman/main.cxx
  * PURPOSE:     Main program
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>
@@ -173,6 +173,7 @@ CCABManager::CCABManager()
     InfFileOnly = false;
     Mode = CM_MODE_DISPLAY;
     FileName[0] = 0;
+    Verbose = false;
 }
 
 
@@ -215,7 +216,8 @@ void CCABManager::Usage()
     printf("  -RC       Specify file to put in cabinet reserved area\n");
     printf("            (size must be less than 64KB).\n");
     printf("  -S        Create simple cabinet.\n");
-    printf("  -P dir    Files in the .dff are relative to this directory\n");
+    printf("  -P dir    Files in the .dff are relative to this directory.\n");
+    printf("  -V        Verbose mode (prints more messages).\n");
 }
 
 bool CCABManager::ParseCmdline(int argc, char* argv[])
@@ -309,7 +311,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                                 i++;
                                 if (!SetCabinetReservedFile(&argv[i][0]))
                                 {
-                                    printf("Cannot open cabinet reserved area file.\n");
+                                    printf("ERROR: Cannot open cabinet reserved area file.\n");
                                     return false;
                                 }
                             }
@@ -317,14 +319,14 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                             {
                                 if (!SetCabinetReservedFile(&argv[i][3]))
                                 {
-                                    printf("Cannot open cabinet reserved area file.\n");
+                                    printf("ERROR: Cannot open cabinet reserved area file.\n");
                                     return false;
                                 }
                             }
                             break;
 
                         default:
-                            printf("Bad parameter %s.\n", argv[i]);
+                            printf("ERROR: Bad parameter %s.\n", argv[i]);
                             return false;
                     }
                     break;
@@ -345,8 +347,12 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
 
                     break;
 
+                case 'V':
+                    Verbose = true;
+                    break;
+
                 default:
-                    printf("Bad parameter %s.\n", argv[i]);
+                    printf("ERROR: Bad parameter %s.\n", argv[i]);
                     return false;
             }
         }
@@ -356,7 +362,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
             {
                 if(FileName[0])
                 {
-                    printf("You may only specify one directive file!\n");
+                    printf("ERROR: You may only specify one directive file!\n");
                     return false;
                 }
                 else
@@ -391,7 +397,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
     // Search criteria (= the filename argument) is necessary for creating a simple cabinet
     if( Mode == CM_MODE_CREATE_SIMPLE && !HasSearchCriteria())
     {
-        printf("You have to enter input file names!\n");
+        printf("ERROR: You have to enter input file names!\n");
         return false;
     }
 
@@ -409,7 +415,7 @@ bool CCABManager::CreateCabinet()
     Status = Load(FileName);
     if (Status != CAB_STATUS_SUCCESS)
     {
-        printf("Specified directive file could not be found: %s.\n", FileName);
+        printf("ERROR: Specified directive file could not be found: %s.\n", FileName);
         return false;
     }
 
@@ -430,7 +436,10 @@ bool CCABManager::DisplayCabinet()
 
     if (Open() == CAB_STATUS_SUCCESS)
     {
-        printf("Cabinet %s\n\n", GetCabinetName());
+        if (Verbose)
+        {
+            printf("Cabinet %s\n\n", GetCabinetName());
+        }
 
         if (FindFirst(&Search) == CAB_STATUS_SUCCESS)
         {
@@ -473,12 +482,12 @@ bool CCABManager::DisplayCabinet()
         else
         {
             /* There should be at least one file in a cabinet */
-            printf("No files in cabinet.");
+            printf("WARNING: No files in cabinet.");
         }
         return true;
     }
     else
-        printf("Cannot open file: %s\n", GetCabinetName());
+        printf("ERROR: Cannot open file: %s\n", GetCabinetName());
 
     return false;
 }
@@ -495,7 +504,10 @@ bool CCABManager::ExtractFromCabinet()
 
     if (Open() == CAB_STATUS_SUCCESS)
     {
-        printf("Cabinet %s\n\n", GetCabinetName());
+        if (Verbose)
+        {
+            printf("Cabinet %s\n\n", GetCabinetName());
+        }
 
         if (FindFirst(&Search) == CAB_STATUS_SUCCESS)
         {
@@ -507,22 +519,22 @@ bool CCABManager::ExtractFromCabinet()
                         break;
 
                     case CAB_STATUS_INVALID_CAB:
-                        printf("Cabinet contains errors.\n");
+                        printf("ERROR: Cabinet contains errors.\n");
                         bRet = false;
                         break;
 
                     case CAB_STATUS_UNSUPPCOMP:
-                        printf("Cabinet uses unsupported compression type.\n");
+                        printf("ERROR: Cabinet uses unsupported compression type.\n");
                         bRet = false;
                         break;
 
                     case CAB_STATUS_CANNOT_WRITE:
-                        printf("You've run out of free space on the destination volume or the volume is damaged.\n");
+                        printf("ERROR: You've run out of free space on the destination volume or the volume is damaged.\n");
                         bRet = false;
                         break;
 
                     default:
-                        printf("Unspecified error code (%u).\n", (UINT)Status);
+                        printf("ERROR: Unspecified error code (%u).\n", (UINT)Status);
                         bRet = false;
                         break;
                 }
@@ -537,7 +549,7 @@ bool CCABManager::ExtractFromCabinet()
         return bRet;
     }
     else
-        printf("Cannot open file: %s.\n", GetCabinetName());
+        printf("ERROR: Cannot open file: %s.\n", GetCabinetName());
 
     return false;
 }
@@ -548,7 +560,10 @@ bool CCABManager::Run()
  * FUNCTION: Process cabinet
  */
 {
-    printf("ReactOS Cabinet Manager\n\n");
+    if (Verbose)
+    {
+        printf("ReactOS Cabinet Manager\n\n");
+    }
 
     switch (Mode)
     {
@@ -601,21 +616,27 @@ void CCABManager::OnExtract(PCFFILE File,
  *     FileName = Pointer to buffer with name of file (full path)
  */
 {
-    printf("Extracting %s\n", GetFileName(FileName));
+    if (Verbose)
+    {
+        printf("Extracting %s\n", GetFileName(FileName));
+    }
 }
 
 
 
 void CCABManager::OnDiskChange(char* CabinetName,
-                               char* DiskLabel)
-/*
- * FUNCTION: Called when a new disk is to be processed
- * ARGUMENTS:
- *     CabinetName = Pointer to buffer with name of cabinet
- *     DiskLabel   = Pointer to buffer with label of disk
- */
+    char* DiskLabel)
+    /*
+     * FUNCTION: Called when a new disk is to be processed
+     * ARGUMENTS:
+     *     CabinetName = Pointer to buffer with name of cabinet
+     *     DiskLabel   = Pointer to buffer with label of disk
+     */
 {
-    printf("\nChanging to cabinet %s - %s\n\n", CabinetName, DiskLabel);
+    if (Verbose)
+    {
+        printf("\nChanging to cabinet %s - %s\n\n", CabinetName, DiskLabel);
+    }
 }
 
 
@@ -628,9 +649,13 @@ void CCABManager::OnAdd(PCFFILE File,
  *     FileName = Pointer to buffer with name of file (full path)
  */
 {
-    printf("Adding %s\n", GetFileName(FileName));
+    if (Verbose)
+    {
+        printf("Adding %s\n", GetFileName(FileName));
+    }
 }
 
+CCABManager CABMgr;
 
 int main(int argc, char * argv[])
 /*
@@ -640,11 +665,9 @@ int main(int argc, char * argv[])
  *     argv = Pointer to list of command line arguments
  */
 {
-    CCABManager CABMgr;
     bool status = false;
 
-    if (CABMgr.ParseCmdline(argc, argv))
-        status = CABMgr.Run();
+    if (CABMgr.ParseCmdline(argc, argv))        status = CABMgr.Run();
 
     return (status ? 0 : 1);
 }

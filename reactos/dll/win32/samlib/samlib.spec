@@ -21,7 +21,7 @@
 @ stdcall SamFreeMemory(ptr)
 @ stdcall SamGetAliasMembership(ptr long ptr ptr ptr)
 @ stdcall SamGetCompatibilityMode(ptr ptr)
-@ stub SamGetDisplayEnumerationIndex
+@ stdcall SamGetDisplayEnumerationIndex(ptr long ptr ptr)
 @ stdcall SamGetGroupsForUser(ptr ptr ptr)
 @ stdcall SamGetMembersInAlias(ptr ptr ptr)
 @ stdcall SamGetMembersInGroup(ptr ptr ptr ptr)
@@ -32,7 +32,7 @@
 @ stdcall SamOpenDomain(ptr long ptr ptr)
 @ stdcall SamOpenGroup(ptr long long ptr)
 @ stdcall SamOpenUser(ptr long long ptr)
-@ stub SamQueryDisplayInformation
+@ stdcall SamQueryDisplayInformation(ptr long long long long ptr ptr ptr ptr)
 @ stdcall SamQueryInformationAlias(ptr long ptr)
 @ stdcall SamQueryInformationDomain(ptr long ptr)
 @ stdcall SamQueryInformationGroup(ptr long ptr)

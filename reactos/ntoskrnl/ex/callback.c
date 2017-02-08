@@ -221,7 +221,7 @@ ExCompareExchangeCallBack(IN OUT PEX_CALLBACK CallBack,
         /* It failed, check if we had a block */
         if (NewBlock)
         {
-            /* We did, remove the refernces that we had added */
+            /* We did, remove the references that we had added */
             ExfReleaseRundownProtectionEx(&NewBlock->RundownProtect,
                                           MAX_FAST_REFS + 1);
         }
@@ -333,7 +333,7 @@ ExpInitializeCallbacks(VOID)
  * @implemented
  *
  * Opens or creates a Callback Object. Creates only if Create is true.
- * Allows multiple Callback Functions to be registred only if
+ * Allows multiple Callback Functions to be registered only if
  * AllowMultipleCallbacks is true.
  * See: http://www.osronline.com/ddkx/kmarch/k102_967m.htm
  *      http://www.osronline.com/article.cfm?id=24

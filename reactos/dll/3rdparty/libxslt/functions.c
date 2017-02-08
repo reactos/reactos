@@ -10,37 +10,9 @@
  * Bjorn Reese <breese@users.sourceforge.net> for number formatting
  */
 
-#define IN_LIBXSLT
-#include "libxslt.h"
+#include "precomp.h"
 
-#include <string.h>
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/valid.h>
-#include <libxml/hash.h>
-#include <libxml/xmlerror.h>
-#include <libxml/xpath.h>
-#include <libxml/xpathInternals.h>
-#include <libxml/parserInternals.h>
-#include <libxml/uri.h>
 #include <libxml/xpointer.h>
-#include "xslt.h"
-#include "xsltInternals.h"
-#include "xsltutils.h"
-#include "functions.h"
-#include "extensions.h"
-#include "numbersInternals.h"
-#include "keys.h"
-#include "documents.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_FUNCTION

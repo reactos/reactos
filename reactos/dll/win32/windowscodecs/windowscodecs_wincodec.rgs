@@ -203,6 +203,10 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
+        '{3692CA39-E082-4350-9E1F-3704CB083CD5}' = s 'WIC Png gAMA Metadata Reader'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
         '{4B59AFCC-B8C3-408A-B670-89E5FAB6FDA7}' = s 'WIC Png tEXt Metadata Reader'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }

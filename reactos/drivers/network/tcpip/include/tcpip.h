@@ -65,7 +65,7 @@
 #define NDIS_BUFFER_TAG FOURCC('n','b','u','f')
 #define NDIS_PACKET_TAG FOURCC('n','p','k','t')
 
-#ifdef i386
+#if defined(i386) || defined(_AMD64_) || defined(_ARM_)
 
 /* DWORD network to host byte order conversion for i386 */
 #define DN2H(dw) \
@@ -91,7 +91,9 @@
 	((((w) & 0xFF00) >> 8) | \
 	 (((w) & 0x00FF) << 8))
 
-#else /* i386 */
+#else /* defined(i386) || defined(_AMD64_) || defined(_ARM_) */
+
+#error Unsupported architecture
 
 /* DWORD network to host byte order conversion for other architectures */
 #define DN2H(dw) \
@@ -109,7 +111,7 @@
 #define WH2N(w) \
     (w)
 
-#endif /* i386 */
+#endif /* defined(i386) || defined(_AMD64_) || defined(_ARM_) */
 
 /* AF_INET and other things Arty likes to use ;) */
 #define AF_INET 2
@@ -148,7 +150,7 @@ typedef struct {
 } TDIEntityInfo;
 
 #ifndef htons
-#define htons(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
+#define htons(x) WH2N(x)
 #endif
 
 /* Global variable */

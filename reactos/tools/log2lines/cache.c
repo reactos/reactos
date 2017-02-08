@@ -69,9 +69,9 @@ unpack_iso(char *dir, char *iso)
 int
 cleanable(char *path)
 {
-	if (strcmp(basename(path),DEF_OPT_DIR) == 0)
-		return 1;
-	return 0;
+    if (strcmp(basename(path),DEF_OPT_DIR) == 0)
+        return 1;
+    return 0;
 }
 
 int
@@ -144,10 +144,10 @@ check_directory(int force)
     cache_name = malloc(PATH_MAX);
     tmp_name = malloc(PATH_MAX);
     strcpy(cache_name, opt_dir);
-	if (cleanable(opt_dir))
-		strcat(cache_name, ALT_PATH_STR CACHEFILE);
-	else
-		strcat(cache_name, PATH_STR CACHEFILE);
+    if (cleanable(opt_dir))
+        strcat(cache_name, ALT_PATH_STR CACHEFILE);
+    else
+        strcat(cache_name, PATH_STR CACHEFILE);
     strcpy(tmp_name, cache_name);
     strcat(tmp_name, "~");
     return 0;

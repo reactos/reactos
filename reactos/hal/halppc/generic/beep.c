@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/beep.c
+ * FILE:            hal/halppc/generic/beep.c
  * PURPOSE:         Speaker function (it's only one)
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:

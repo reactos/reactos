@@ -1,0 +1,9 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "电话和调制解调器选项"
+    IDS_CPLSYSTEMDESCRIPTION "配置您的电话拨号规则和调制解调器设置。"
+END

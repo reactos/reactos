@@ -20,38 +20,48 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <winreg.h>
-#include <ole2.h>
-#include <advpub.h>
-//#include "shlwapi.h"
-#include <optary.h>
-#include <shlguid.h>
-
-//#include "wine/unicode.h"
-#include <wine/debug.h>
-
-#define INIT_GUID
 #include "mshtml_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+#include <advpub.h>
+#include <rpcproxy.h>
+#include <mlang.h>
+#include <initguid.h>
 
 HINSTANCE hInst;
 DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
 static HINSTANCE shdoclc = NULL;
 static HDC display_dc;
+static WCHAR *status_strings[IDS_STATUS_LAST-IDS_STATUS_FIRST+1];
+static IMultiLanguage2 *mlang;
+
+UINT cp_from_charset_string(BSTR charset)
+{
+    MIMECSETINFO info;
+    HRESULT hres;
+
+    if(!mlang) {
+        IMultiLanguage2 *new_mlang;
+
+        hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
+                &IID_IMultiLanguage2, (void**)&new_mlang);
+        if(FAILED(hres)) {
+            ERR("Could not create CMultiLanguage instance\n");
+            return CP_UTF8;
+        }
+
+        if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
+            IMultiLanguage2_Release(new_mlang);
+    }
+
+    hres = IMultiLanguage2_GetCharsetInfo(mlang, charset, &info);
+    if(FAILED(hres)) {
+        FIXME("GetCharsetInfo failed: %08x\n", hres);
+        return CP_UTF8;
+    }
+
+    return info.uiInternetEncoding;
+}
 
 static void thread_detach(void)
 {
@@ -67,6 +77,13 @@ static void thread_detach(void)
     heap_free(thread_data);
 }
 
+static void free_strings(void)
+{
+    unsigned int i;
+    for(i = 0; i < sizeof(status_strings)/sizeof(*status_strings); i++)
+        heap_free(status_strings[i]);
+}
+
 static void process_detach(void)
 {
     close_gecko();
@@ -78,6 +95,61 @@ static void process_detach(void)
         TlsFree(mshtml_tls);
     if(display_dc)
         DeleteObject(display_dc);
+    if(mlang)
+        IMultiLanguage2_Release(mlang);
+
+    free_strings();
+}
+
+void set_statustext(HTMLDocumentObj* doc, INT id, LPCWSTR arg)
+{
+    int index = id - IDS_STATUS_FIRST;
+    WCHAR *p = status_strings[index];
+    DWORD len;
+
+    if(!doc->frame)
+        return;
+
+    if(!p) {
+        len = 255;
+        p = heap_alloc(len * sizeof(WCHAR));
+        len = LoadStringW(hInst, id, p, len) + 1;
+        p = heap_realloc(p, len * sizeof(WCHAR));
+        if(InterlockedCompareExchangePointer((void**)&status_strings[index], p, NULL)) {
+            heap_free(p);
+            p = status_strings[index];
+        }
+    }
+
+    if(arg) {
+        WCHAR *buf;
+
+        len = lstrlenW(p) + lstrlenW(arg) - 1;
+        buf = heap_alloc(len * sizeof(WCHAR));
+
+        snprintfW(buf, len, p, arg);
+
+        p = buf;
+    }
+
+    IOleInPlaceFrame_SetStatusText(doc->frame, p);
+
+    if(arg)
+        heap_free(p);
+}
+
+HRESULT do_query_service(IUnknown *unk, REFGUID guid_service, REFIID riid, void **ppv)
+{
+    IServiceProvider *sp;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(unk, &IID_IServiceProvider, (void**)&sp);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IServiceProvider_QueryService(sp, guid_service, riid, ppv);
+    IServiceProvider_Release(sp);
+    return hres;
 }
 
 HINSTANCE get_shdoclc(void)
@@ -106,13 +178,14 @@ HDC get_display_dc(void)
     return display_dc;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
 {
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
         hInst = hInstDLL;
         break;
     case DLL_PROCESS_DETACH:
+        if (reserved) break;
         process_detach();
         break;
     case DLL_THREAD_DETACH:
@@ -127,10 +200,15 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  */
 typedef HRESULT (*CreateInstanceFunc)(IUnknown*,REFIID,void**);
 typedef struct {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
     LONG ref;
     CreateInstanceFunc fnCreateInstance;
 } ClassFactory;
+
+static inline ClassFactory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactory, IClassFactory_iface);
+}
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFGUID riid, void **ppvObject)
 {
@@ -140,14 +218,14 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFGUID 
         return S_OK;
     }
 
-    WARN("not supported iid %s\n", debugstr_guid(riid));
+    WARN("not supported iid %s\n", debugstr_mshtml_guid(riid));
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref = %u\n", This, ref);
     return ref;
@@ -155,7 +233,7 @@ static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 
 static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref = %u\n", This, ref);
@@ -170,7 +248,7 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter,
         REFIID riid, void **ppvObject)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     return This->fnCreateInstance(pUnkOuter, riid, ppvObject);
 }
 
@@ -195,11 +273,11 @@ static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc f
     ClassFactory *ret = heap_alloc(sizeof(ClassFactory));
     HRESULT hres;
 
-    ret->lpVtbl = &HTMLClassFactoryVtbl;
+    ret->IClassFactory_iface.lpVtbl = &HTMLClassFactoryVtbl;
     ret->ref = 0;
     ret->fnCreateInstance = fnCreateInstance;
 
-    hres = IClassFactory_QueryInterface((IClassFactory*)ret, riid, ppv);
+    hres = IClassFactory_QueryInterface(&ret->IClassFactory_iface, riid, ppv);
     if(FAILED(hres)) {
         heap_free(ret);
         *ppv = NULL;
@@ -213,25 +291,25 @@ static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc f
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     if(IsEqualGUID(&CLSID_HTMLDocument, rclsid)) {
-        TRACE("(CLSID_HTMLDocument %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_HTMLDocument %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ClassFactory_Create(riid, ppv, HTMLDocument_Create);
     }else if(IsEqualGUID(&CLSID_AboutProtocol, rclsid)) {
-        TRACE("(CLSID_AboutProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_AboutProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_JSProtocol, rclsid)) {
-        TRACE("(CLSID_JSProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_JSProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_MailtoProtocol, rclsid)) {
-        TRACE("(CLSID_MailtoProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_MailtoProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_ResProtocol, rclsid)) {
-        TRACE("(CLSID_ResProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_ResProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_SysimageProtocol, rclsid)) {
-        TRACE("(CLSID_SysimageProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_SysimageProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_HTMLLoadOptions, rclsid)) {
-        TRACE("(CLSID_HTMLLoadOptions %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_HTMLLoadOptions %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ClassFactory_Create(riid, ppv, HTMLLoadOptions_Create);
     }
 
@@ -289,6 +367,14 @@ HRESULT WINAPI ShowHTMLDialog(HWND hwndParent, IMoniker *pMk, VARIANT *pvarArgIn
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *          PrintHTML (MSHTML.@)
+ */
+void WINAPI PrintHTML(HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show)
+{
+    FIXME("(%p %p %s %x)\n", hwnd, handle, debugstr_a(cmdline), show);
+}
+
 DEFINE_GUID(CLSID_CBackgroundPropertyPage, 0x3050F232, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_CCDAnchorPropertyPage, 0x3050F1FC, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_CCDGenericPropertyPage, 0x3050F17F, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
@@ -310,7 +396,6 @@ DEFINE_GUID(CLSID_IImageDecodeFilter, 0x607FD4E8, 0x0A03, 0x11D1, 0xAB,0x1D, 0x0
 DEFINE_GUID(CLSID_IImgCtx, 0x3050F3D6, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_IntDitherer, 0x05F6FE1A, 0xECEF, 0x11D0, 0xAA,0xE7, 0x00,0xC0,0x4F,0xC9,0xB3,0x04);
 DEFINE_GUID(CLSID_MHTMLDocument, 0x3050F3D9, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
-DEFINE_GUID(CLSID_Scriptlet, 0xAE24FDAE, 0x03C6, 0x11D1, 0x8B,0x76, 0x00,0x80,0xC7,0x44,0xF3,0x89);
 DEFINE_GUID(CLSID_TridentAPI, 0x429AF92C, 0xA51F, 0x11D2, 0x86,0x1E, 0x00,0xC0,0x4F,0xA3,0x5C,0x89);
 
 #define INF_SET_ID(id)            \
@@ -390,6 +475,8 @@ static HRESULT register_server(BOOL do_register)
 
     hres = pRegInstall(hInst, do_register ? "RegisterDll" : "UnregisterDll", &strtable);
 
+    FreeLibrary(hAdvpack);
+
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
         heap_free(pse[i].pszValue);
 
@@ -426,9 +513,11 @@ HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT hres;
 
-    hres = register_server(TRUE);
+    hres = __wine_register_resources( hInst );
     if(SUCCEEDED(hres))
-        load_gecko(FALSE);
+        hres = register_server(TRUE);
+    if(SUCCEEDED(hres))
+        load_gecko();
 
     return hres;
 }
@@ -438,32 +527,76 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    return register_server(FALSE);
+    HRESULT hres = __wine_unregister_resources( hInst );
+    if(SUCCEEDED(hres)) hres = register_server(FALSE);
+    return hres;
 }
 
-const char *debugstr_variant(const VARIANT *v)
+const char *debugstr_mshtml_guid(const GUID *iid)
 {
-    if(!v)
-        return "(null)";
+#define X(x) if(IsEqualGUID(iid, &x)) return #x
+    X(DIID_HTMLDocumentEvents);
+    X(DIID_HTMLDocumentEvents2);
+    X(DIID_HTMLTableEvents);
+    X(DIID_HTMLTextContainerEvents);
+    X(IID_HTMLPluginContainer);
+    X(IID_IConnectionPoint);
+    X(IID_IConnectionPointContainer);
+    X(IID_ICustomDoc);
+    X(IID_IDispatch);
+    X(IID_IDispatchEx);
+    X(IID_IDispatchJS);
+    X(IID_UndocumentedScriptIface);
+    X(IID_IEnumConnections);
+    X(IID_IEnumVARIANT);
+    X(IID_IHlinkTarget);
+    X(IID_IHTMLDocument6);
+    X(IID_IHTMLDocument7);
+    X(IID_IHTMLEditServices);
+    X(IID_IHTMLFramesCollection2);
+    X(IID_IHTMLPrivateWindow);
+    X(IID_IHtmlLoadOptions);
+    X(IID_IInternetHostSecurityManager);
+    X(IID_IMonikerProp);
+    X(IID_IObjectIdentity);
+    X(IID_IObjectSafety);
+    X(IID_IObjectWithSite);
+    X(IID_IOleContainer);
+    X(IID_IOleCommandTarget);
+    X(IID_IOleControl);
+    X(IID_IOleDocument);
+    X(IID_IOleDocumentView);
+    X(IID_IOleInPlaceActiveObject);
+    X(IID_IOleInPlaceFrame);
+    X(IID_IOleInPlaceObject);
+    X(IID_IOleInPlaceObjectWindowless);
+    X(IID_IOleInPlaceUIWindow);
+    X(IID_IOleObject);
+    X(IID_IOleWindow);
+    X(IID_IOptionArray);
+    X(IID_IPersist);
+    X(IID_IPersistFile);
+    X(IID_IPersistHistory);
+    X(IID_IPersistMoniker);
+    X(IID_IPersistStreamInit);
+    X(IID_IPropertyNotifySink);
+    X(IID_IProvideClassInfo);
+    X(IID_IServiceProvider);
+    X(IID_ISupportErrorInfo);
+    X(IID_ITargetContainer);
+    X(IID_ITravelLogClient);
+    X(IID_IUnknown);
+    X(IID_IViewObject);
+    X(IID_IViewObject2);
+    X(IID_IViewObjectEx);
+    X(IID_nsCycleCollectionISupports);
+    X(IID_nsXPCOMCycleCollectionParticipant);
+#define XIID(x) X(IID_##x);
+#define XDIID(x) X(DIID_##x);
+    TID_LIST
+#undef XIID
+#undef XDIID
+#undef X
 
-    switch(V_VT(v)) {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
-    case VT_R8:
-        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
-    case VT_BSTR:
-        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
-    case VT_DISPATCH:
-        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
-    case VT_BOOL:
-        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
-    case VT_UINT:
-        return wine_dbg_sprintf("{VT_UINT: %u}", V_UINT(v));
-    default:
-        return wine_dbg_sprintf("{vt %d}", V_VT(v));
-    }
+    return debugstr_guid(iid);
 }

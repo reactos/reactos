@@ -36,7 +36,7 @@
 #define SEC_CACHE                           (0x20000000)
 
 #define MiWaitForPageEvent(Process,Address) do {                         \
-    DPRINT("MiWaitForPageEvent %p:%Ix #\n", Process, Address);            \
+    DPRINT("MiWaitForPageEvent %p:%p #\n", Process, Address);            \
     KeWaitForSingleObject(&MmWaitPageEvent, 0, KernelMode, FALSE, NULL); \
 } while(0)
 
@@ -261,12 +261,6 @@ MiCowCacheSectionPage (
     _In_ PVOID Address,
     _In_ BOOLEAN Locked,
     _Inout_ PMM_REQUIRED_RESOURCES Required);
-
-NTSTATUS
-NTAPI
-MiZeroFillSection(PVOID Address,
-                  PLARGE_INTEGER FileOffsetPtr,
-                  ULONG Length);
 
 VOID
 MmPageOutDeleteMapping(PVOID Context,

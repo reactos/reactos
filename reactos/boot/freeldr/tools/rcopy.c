@@ -19,19 +19,19 @@ char* convert_path(char* origpath)
    while (newpath[i] != 0)
      {
 #ifdef UNIX_PATHS
-	if (newpath[i] == '\\')
-	  {
-	     newpath[i] = '/';
-	  }
+    if (newpath[i] == '\\')
+      {
+         newpath[i] = '/';
+      }
 #else
 #ifdef DOS_PATHS
-	if (newpath[i] == '/')
-	  {
-	     newpath[i] = '\\';
-	  }
+    if (newpath[i] == '/')
+      {
+         newpath[i] = '\\';
+      }
 #endif
 #endif
-	i++;
+    i++;
      }
    return(newpath);
 }
@@ -50,8 +50,8 @@ int main(int argc, char* argv[])
 
    if (argc != 3)
      {
-	fprintf(stderr, "Too many arguments\n");
-	exit(1);
+    fprintf(stderr, "Too many arguments\n");
+    exit(1);
      }
 
    path1 = convert_path(argv[1]);
@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
    in = fopen(path1, "rb");
    if (in == NULL)
      {
-	perror("Cannot open input file");
-	exit(1);
+    perror("Cannot open input file");
+    exit(1);
      }
 
 
@@ -69,25 +69,25 @@ int main(int argc, char* argv[])
    out = fopen(path2, "wb");
    if (out == NULL)
      {
-	perror("Cannot open output file");
-	fclose(in);
-	exit(1);
+    perror("Cannot open output file");
+    fclose(in);
+    exit(1);
      }
 
    buf = malloc(TRANSFER_SIZE);
 
    while (!feof(in))
      {
-	n_in = fread(buf, 1, TRANSFER_SIZE, in);
-	n_out = fwrite(buf, 1, n_in, out);
-	if (n_in != n_out)
-	  {
-	     perror("Failed to write to output file\n");
-	     free(buf);
-	     fclose(in);
-	     fclose(out);
-	     exit(1);
-	  }
+    n_in = fread(buf, 1, TRANSFER_SIZE, in);
+    n_out = fwrite(buf, 1, n_in, out);
+    if (n_in != n_out)
+      {
+         perror("Failed to write to output file\n");
+         free(buf);
+         fclose(in);
+         fclose(out);
+         exit(1);
+      }
      }
    exit(0);
 }

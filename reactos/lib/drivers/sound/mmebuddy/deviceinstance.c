@@ -306,15 +306,16 @@ DestroyAllSoundDeviceInstances(
     IN  PSOUND_DEVICE SoundDevice)
 {
     MMRESULT Result;
-    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance, NextDeviceInstance;
 
     SoundDeviceInstance = SoundDevice->HeadInstance;
 
     while ( SoundDeviceInstance )
     {
+        NextDeviceInstance = SoundDeviceInstance->Next;
         Result = DestroySoundDeviceInstance(SoundDeviceInstance);
         SND_ASSERT( MMSUCCESS(Result) );
-        SoundDeviceInstance = SoundDeviceInstance->Next;
+        SoundDeviceInstance = NextDeviceInstance;
     }
 
     return MMSYSERR_NOERROR;

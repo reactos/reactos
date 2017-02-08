@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/fslist.h
+ * FILE:            base/setup/usetup/fslist.h
  * PURPOSE:         Filesystem list functions
  * PROGRAMMER:      Eric Kohl
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -30,34 +30,45 @@
 
 typedef struct _FILE_SYSTEM_ITEM
 {
-	LIST_ENTRY ListEntry;
-	LPCWSTR FileSystem; /* Not owned by the item */
-	FORMATEX FormatFunc;
-	CHKDSKEX ChkdskFunc;
-	BOOLEAN QuickFormat;
+    LIST_ENTRY ListEntry;
+    LPCWSTR FileSystemName; /* Not owned by the item */
+    FORMATEX FormatFunc;
+    CHKDSKEX ChkdskFunc;
+    BOOLEAN QuickFormat;
 } FILE_SYSTEM_ITEM, *PFILE_SYSTEM_ITEM;
 
 typedef struct _FILE_SYSTEM_LIST
 {
-	SHORT Left;
-	SHORT Top;
-	PFILE_SYSTEM_ITEM Selected;
-	LIST_ENTRY ListHead; /* List of FILE_SYSTEM_ITEM */
+    SHORT Left;
+    SHORT Top;
+    PFILE_SYSTEM_ITEM Selected;
+    LIST_ENTRY ListHead; /* List of FILE_SYSTEM_ITEM */
 } FILE_SYSTEM_LIST, *PFILE_SYSTEM_LIST;
 
 VOID
 FS_AddProvider(
-	IN OUT PFILE_SYSTEM_LIST List,
-	IN LPCWSTR FileSystem,
-	IN FORMATEX FormatFunc,
-	IN CHKDSKEX ChkdskFunc);
+    IN OUT PFILE_SYSTEM_LIST List,
+    IN LPCWSTR FileSystemName,
+    IN FORMATEX FormatFunc,
+    IN CHKDSKEX ChkdskFunc);
+
+PFILE_SYSTEM_ITEM
+GetFileSystemByName(
+    IN PFILE_SYSTEM_LIST List,
+    IN LPWSTR FileSystemName);
+
+struct _PARTENTRY; // Defined in partlist.h
+PFILE_SYSTEM_ITEM
+GetFileSystem(
+    IN PFILE_SYSTEM_LIST FileSystemList,
+    IN struct _PARTENTRY* PartEntry);
 
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
-	IN SHORT Left,
-	IN SHORT Top,
-	IN BOOLEAN ForceFormat,
-	IN LPCWSTR ForceFileSystem);
+    IN SHORT Left,
+    IN SHORT Top,
+    IN BOOLEAN ForceFormat,
+    IN LPCWSTR ForceFileSystem);
 
 VOID
 DestroyFileSystemList(

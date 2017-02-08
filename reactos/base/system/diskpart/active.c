@@ -8,18 +8,9 @@
 
 #include "diskpart.h"
 
-BOOL active_main(INT argc, WCHAR **argv)
+BOOL active_main(INT argc, LPWSTR *argv)
 {
     printf("\nActive\n");
 
     return TRUE;
-}
-
-/*
- * help_active():
- * Shows the description and explains each argument type of the active command
- */
-VOID help_active(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_ACTIVE);
 }

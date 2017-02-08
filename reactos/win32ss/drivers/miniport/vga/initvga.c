@@ -1,5 +1,7 @@
 #include "vgamp.h"
 
+#include "vgavideo.h"
+
 static VGA_REGISTERS Mode12Regs =
 {
    /* CRT Controller Registers */
@@ -105,7 +107,7 @@ vgaSetRegisters(PVGA_REGISTERS Registers)
 }
 
 VOID
-InitVGAMode()
+InitVGAMode(VOID)
 {
    vgaSaveRegisters(&TextModeRegs);
    vgaSetRegisters(&Mode12Regs);

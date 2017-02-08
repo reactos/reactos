@@ -4,114 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef __ACTYPES_H__
 #define __ACTYPES_H__
@@ -126,8 +54,6 @@
 #ifndef ACPI_MACHINE_WIDTH
 #error ACPI_MACHINE_WIDTH not defined
 #endif
-
-/*! [Begin] no source code translation */
 
 /*
  * Data type ranges
@@ -196,13 +122,16 @@
  *
  ******************************************************************************/
 
-//typedef unsigned char                   BOOLEAN;
-//typedef unsigned char                   UINT8;
-//typedef unsigned short                  UINT16;
-//typedef COMPILER_DEPENDENT_UINT64       UINT64;
-//typedef COMPILER_DEPENDENT_INT64        INT64;
+#ifndef ACPI_USE_SYSTEM_INTTYPES
 
-/*! [End] no source code translation !*/
+typedef unsigned char                   BOOLEAN;
+typedef unsigned char                   UINT8;
+typedef unsigned short                  UINT16;
+typedef short                           INT16;
+typedef COMPILER_DEPENDENT_UINT64       UINT64;
+typedef COMPILER_DEPENDENT_INT64        INT64;
+
+#endif /* ACPI_USE_SYSTEM_INTTYPES */
 
 /*
  * Value returned by AcpiOsGetThreadId. There is no standard "thread_id"
@@ -223,12 +152,12 @@
 
 #if ACPI_MACHINE_WIDTH == 64
 
-/*! [Begin] no source code translation (keep the typedefs as-is) */
+#ifndef ACPI_USE_SYSTEM_INTTYPES
 
-//typedef unsigned int                    UINT32;
-//typedef int                             INT32;
+typedef unsigned int                    UINT32;
+typedef int                             INT32;
 
-/*! [End] no source code translation !*/
+#endif /* ACPI_USE_SYSTEM_INTTYPES */
 
 
 typedef INT64                           ACPI_NATIVE_INT;
@@ -262,18 +191,38 @@ typedef UINT64                          ACPI_PHYSICAL_ADDRESS;
 
 #elif ACPI_MACHINE_WIDTH == 32
 
-/*! [Begin] no source code translation (keep the typedefs as-is) */
+#ifndef ACPI_USE_SYSTEM_INTTYPES
 
-//typedef unsigned int                    UINT32;
-//typedef int                             INT32;
+typedef unsigned int                    UINT32;
+typedef int                             INT32;
 
-/*! [End] no source code translation !*/
+#endif /* ACPI_USE_SYSTEM_INTTYPES */
 
 
 typedef INT32                           ACPI_NATIVE_INT;
 typedef UINT32                          ACPI_SIZE;
+
+#ifdef ACPI_32BIT_PHYSICAL_ADDRESS
+
+/*
+ * OSPMs can define this to shrink the size of the structures for 32-bit
+ * none PAE environment. ASL compiler may always define this to generate
+ * 32-bit OSPM compliant tables.
+ */
 typedef UINT32                          ACPI_IO_ADDRESS;
 typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
+
+#else /* ACPI_32BIT_PHYSICAL_ADDRESS */
+
+/*
+ * It is reported that, after some calculations, the physical addresses can
+ * wrap over the 32-bit boundary on 32-bit PAE environment.
+ * https://bugzilla.kernel.org/show_bug.cgi?id=87971
+ */
+typedef UINT64                          ACPI_IO_ADDRESS;
+typedef UINT64                          ACPI_PHYSICAL_ADDRESS;
+
+#endif /* ACPI_32BIT_PHYSICAL_ADDRESS */
 
 #define ACPI_MAX_PTR                    ACPI_UINT32_MAX
 #define ACPI_SIZE_MAX                   ACPI_UINT32_MAX
@@ -367,7 +316,7 @@ typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
 /*
  * Some compilers complain about unused variables. Sometimes we don't want to
  * use all the variables (for example, _AcpiModuleName). This allows us
- * to to tell the compiler in a per-variable manner that a variable
+ * to tell the compiler in a per-variable manner that a variable
  * is unused
  */
 #ifndef ACPI_UNUSED_VAR
@@ -375,12 +324,68 @@ typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
 #endif
 
 /*
- * All ACPICA functions that are available to the rest of the kernel are
- * tagged with this macro which can be defined as appropriate for the host.
+ * All ACPICA external functions that are available to the rest of the kernel
+ * are tagged with thes macros which can be defined as appropriate for the host.
+ *
+ * Notes:
+ * ACPI_EXPORT_SYMBOL_INIT is used for initialization and termination
+ * interfaces that may need special processing.
+ * ACPI_EXPORT_SYMBOL is used for all other public external functions.
  */
+#ifndef ACPI_EXPORT_SYMBOL_INIT
+#define ACPI_EXPORT_SYMBOL_INIT(Symbol)
+#endif
+
 #ifndef ACPI_EXPORT_SYMBOL
 #define ACPI_EXPORT_SYMBOL(Symbol)
 #endif
+
+/*
+ * Compiler/Clibrary-dependent debug initialization. Used for ACPICA
+ * utilities only.
+ */
+#ifndef ACPI_DEBUG_INITIALIZE
+#define ACPI_DEBUG_INITIALIZE()
+#endif
+
+
+/*******************************************************************************
+ *
+ * Configuration
+ *
+ ******************************************************************************/
+
+#ifdef ACPI_NO_MEM_ALLOCATIONS
+
+#define ACPI_ALLOCATE(a)                NULL
+#define ACPI_ALLOCATE_ZEROED(a)         NULL
+#define ACPI_FREE(a)
+#define ACPI_MEM_TRACKING(a)
+
+#else /* ACPI_NO_MEM_ALLOCATIONS */
+
+#ifdef ACPI_DBG_TRACK_ALLOCATIONS
+/*
+ * Memory allocation tracking (used by AcpiExec to detect memory leaks)
+ */
+#define ACPI_MEM_PARAMETERS             _COMPONENT, _AcpiModuleName, __LINE__
+#define ACPI_ALLOCATE(a)                AcpiUtAllocateAndTrack ((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
+#define ACPI_ALLOCATE_ZEROED(a)         AcpiUtAllocateZeroedAndTrack ((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
+#define ACPI_FREE(a)                    AcpiUtFreeAndTrack (a, ACPI_MEM_PARAMETERS)
+#define ACPI_MEM_TRACKING(a)            a
+
+#else
+/*
+ * Normal memory allocation directly via the OS services layer
+ */
+#define ACPI_ALLOCATE(a)                AcpiOsAllocate ((ACPI_SIZE) (a))
+#define ACPI_ALLOCATE_ZEROED(a)         AcpiOsAllocateZeroed ((ACPI_SIZE) (a))
+#define ACPI_FREE(a)                    AcpiOsFree (a)
+#define ACPI_MEM_TRACKING(a)
+
+#endif /* ACPI_DBG_TRACK_ALLOCATIONS */
+
+#endif /* ACPI_NO_MEM_ALLOCATIONS */
 
 
 /******************************************************************************
@@ -399,6 +404,7 @@ typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
 #define ACPI_PM1_REGISTER_WIDTH         16
 #define ACPI_PM2_REGISTER_WIDTH         8
 #define ACPI_PM_TIMER_WIDTH             32
+#define ACPI_RESET_REGISTER_WIDTH       8
 
 /* Names within the namespace are 4 bytes long */
 
@@ -418,7 +424,7 @@ typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
 
 /* PM Timer ticks per second (HZ) */
 
-#define PM_TIMER_FREQUENCY              3579545
+#define ACPI_PM_TIMER_FREQUENCY         3579545
 
 
 /*******************************************************************************
@@ -451,6 +457,22 @@ typedef UINT32                          ACPI_STATUS;    /* All ACPI Exceptions *
 typedef UINT32                          ACPI_NAME;      /* 4-byte ACPI name */
 typedef char *                          ACPI_STRING;    /* Null terminated ASCII string */
 typedef void *                          ACPI_HANDLE;    /* Actually a ptr to a NS Node */
+
+
+/* Time constants for timer calculations */
+
+#define ACPI_MSEC_PER_SEC               1000L
+
+#define ACPI_USEC_PER_MSEC              1000L
+#define ACPI_USEC_PER_SEC               1000000L
+
+#define ACPI_100NSEC_PER_USEC           10L
+#define ACPI_100NSEC_PER_MSEC           10000L
+#define ACPI_100NSEC_PER_SEC            10000000L
+
+#define ACPI_NSEC_PER_USEC              1000L
+#define ACPI_NSEC_PER_MSEC              1000000L
+#define ACPI_NSEC_PER_SEC               1000000000L
 
 
 /* Owner IDs are used to track namespace nodes for selective deletion */
@@ -516,21 +538,31 @@ typedef UINT64                          ACPI_INTEGER;
 #define ACPI_CAST_PTR(t, p)             ((t *) (ACPI_UINTPTR_T) (p))
 #define ACPI_CAST_INDIRECT_PTR(t, p)    ((t **) (ACPI_UINTPTR_T) (p))
 #define ACPI_ADD_PTR(t, a, b)           ACPI_CAST_PTR (t, (ACPI_CAST_PTR (UINT8, (a)) + (ACPI_SIZE)(b)))
+#define ACPI_SUB_PTR(t, a, b)           ACPI_CAST_PTR (t, (ACPI_CAST_PTR (UINT8, (a)) - (ACPI_SIZE)(b)))
 #define ACPI_PTR_DIFF(a, b)             (ACPI_SIZE) (ACPI_CAST_PTR (UINT8, (a)) - ACPI_CAST_PTR (UINT8, (b)))
 
 /* Pointer/Integer type conversions */
 
 #define ACPI_TO_POINTER(i)              ACPI_ADD_PTR (void, (void *) NULL,(ACPI_SIZE) i)
 #define ACPI_TO_INTEGER(p)              ACPI_PTR_DIFF (p, (void *) NULL)
-#define ACPI_OFFSET(d, f)               (ACPI_SIZE) ACPI_PTR_DIFF (&(((d *)0)->f), (void *) NULL)
+#define ACPI_OFFSET(d, f)               ACPI_PTR_DIFF (&(((d *) 0)->f), (void *) NULL)
 #define ACPI_PHYSADDR_TO_PTR(i)         ACPI_TO_POINTER(i)
 #define ACPI_PTR_TO_PHYSADDR(i)         ACPI_TO_INTEGER(i)
 
+/* Optimizations for 4-character (32-bit) ACPI_NAME manipulation */
+
 #ifndef ACPI_MISALIGNMENT_NOT_SUPPORTED
 #define ACPI_COMPARE_NAME(a,b)          (*ACPI_CAST_PTR (UINT32, (a)) == *ACPI_CAST_PTR (UINT32, (b)))
+#define ACPI_MOVE_NAME(dest,src)        (*ACPI_CAST_PTR (UINT32, (dest)) = *ACPI_CAST_PTR (UINT32, (src)))
 #else
-#define ACPI_COMPARE_NAME(a,b)          (!ACPI_STRNCMP (ACPI_CAST_PTR (char, (a)), ACPI_CAST_PTR (char, (b)), ACPI_NAME_SIZE))
+#define ACPI_COMPARE_NAME(a,b)          (!strncmp (ACPI_CAST_PTR (char, (a)), ACPI_CAST_PTR (char, (b)), ACPI_NAME_SIZE))
+#define ACPI_MOVE_NAME(dest,src)        (strncpy (ACPI_CAST_PTR (char, (dest)), ACPI_CAST_PTR (char, (src)), ACPI_NAME_SIZE))
 #endif
+
+/* Support for the special RSDP signature (8 characters) */
+
+#define ACPI_VALIDATE_RSDP_SIG(a)       (!strncmp (ACPI_CAST_PTR (char, (a)), ACPI_SIG_RSDP, 8))
+#define ACPI_MAKE_RSDP_SIG(dest)        (memcpy (ACPI_CAST_PTR (char, (dest)), ACPI_SIG_RSDP, 8))
 
 
 /*******************************************************************************
@@ -550,6 +582,7 @@ typedef UINT64                          ACPI_INTEGER;
 #define ACPI_NO_ACPI_ENABLE             0x10
 #define ACPI_NO_DEVICE_INIT             0x20
 #define ACPI_NO_OBJECT_INIT             0x40
+#define ACPI_NO_FACS_INIT               0x80
 
 /*
  * Initialization state
@@ -606,8 +639,11 @@ typedef UINT64                          ACPI_INTEGER;
 #define ACPI_NOTIFY_DEVICE_PLD_CHECK    (UINT8) 0x09
 #define ACPI_NOTIFY_RESERVED            (UINT8) 0x0A
 #define ACPI_NOTIFY_LOCALITY_UPDATE     (UINT8) 0x0B
+#define ACPI_NOTIFY_SHUTDOWN_REQUEST    (UINT8) 0x0C
+#define ACPI_NOTIFY_AFFINITY_UPDATE     (UINT8) 0x0D
 
-#define ACPI_NOTIFY_MAX                 0x0B
+#define ACPI_GENERIC_NOTIFY_MAX         0x0D
+#define ACPI_SPECIFIC_NOTIFY_MAX        0x84
 
 /*
  * Types associated with ACPI names and objects. The first group of
@@ -639,6 +675,7 @@ typedef UINT32                          ACPI_OBJECT_TYPE;
 #define ACPI_TYPE_DEBUG_OBJECT          0x10
 
 #define ACPI_TYPE_EXTERNAL_MAX          0x10
+#define ACPI_NUM_TYPES                  (ACPI_TYPE_EXTERNAL_MAX + 1)
 
 /*
  * These are object types that do not map directly to the ACPI
@@ -660,10 +697,11 @@ typedef UINT32                          ACPI_OBJECT_TYPE;
 #define ACPI_TYPE_LOCAL_SCOPE           0x1B  /* 1 Name, multiple ObjectList Nodes */
 
 #define ACPI_TYPE_NS_NODE_MAX           0x1B  /* Last typecode used within a NS Node */
+#define ACPI_TOTAL_TYPES                (ACPI_TYPE_NS_NODE_MAX + 1)
 
 /*
  * These are special object types that never appear in
- * a Namespace node, only in an ACPI_OPERAND_OBJECT
+ * a Namespace node, only in an object of ACPI_OPERAND_OBJECT
  */
 #define ACPI_TYPE_LOCAL_EXTRA           0x1C
 #define ACPI_TYPE_LOCAL_DATA            0x1D
@@ -707,28 +745,26 @@ typedef UINT32                          ACPI_EVENT_TYPE;
  * The encoding of ACPI_EVENT_STATUS is illustrated below.
  * Note that a set bit (1) indicates the property is TRUE
  * (e.g. if bit 0 is set then the event is enabled).
- * +-------------+-+-+-+
- * |   Bits 31:3 |2|1|0|
- * +-------------+-+-+-+
- *          |     | | |
- *          |     | | +- Enabled?
- *          |     | +--- Enabled for wake?
- *          |     +----- Set?
- *          +----------- <Reserved>
+ * +-------------+-+-+-+-+-+
+ * |   Bits 31:5 |4|3|2|1|0|
+ * +-------------+-+-+-+-+-+
+ *          |     | | | | |
+ *          |     | | | | +- Enabled?
+ *          |     | | | +--- Enabled for wake?
+ *          |     | | +----- Status bit set?
+ *          |     | +------- Enable bit set?
+ *          |     +--------- Has a handler?
+ *          +--------------- <Reserved>
  */
 typedef UINT32                          ACPI_EVENT_STATUS;
 
 #define ACPI_EVENT_FLAG_DISABLED        (ACPI_EVENT_STATUS) 0x00
 #define ACPI_EVENT_FLAG_ENABLED         (ACPI_EVENT_STATUS) 0x01
 #define ACPI_EVENT_FLAG_WAKE_ENABLED    (ACPI_EVENT_STATUS) 0x02
-#define ACPI_EVENT_FLAG_SET             (ACPI_EVENT_STATUS) 0x04
-
-/*
- * General Purpose Events (GPE)
- */
-#define ACPI_GPE_INVALID                0xFF
-#define ACPI_GPE_MAX                    0xFF
-#define ACPI_NUM_GPE                    256
+#define ACPI_EVENT_FLAG_STATUS_SET      (ACPI_EVENT_STATUS) 0x04
+#define ACPI_EVENT_FLAG_ENABLE_SET      (ACPI_EVENT_STATUS) 0x08
+#define ACPI_EVENT_FLAG_HAS_HANDLER     (ACPI_EVENT_STATUS) 0x10
+#define ACPI_EVENT_FLAG_SET             ACPI_EVENT_FLAG_STATUS_SET
 
 /* Actions for AcpiSetGpe, AcpiGpeWakeup, AcpiHwLowSetGpe */
 
@@ -739,7 +775,7 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 /*
  * GPE info flags - Per GPE
  * +-------+-+-+---+
- * |  7:4  |3|2|1:0|
+ * |  7:5  |4|3|2:0|
  * +-------+-+-+---+
  *     |    | |  |
  *     |    | |  +-- Type of dispatch:to method, handler, notify, or none
@@ -751,13 +787,15 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 #define ACPI_GPE_DISPATCH_METHOD        (UINT8) 0x01
 #define ACPI_GPE_DISPATCH_HANDLER       (UINT8) 0x02
 #define ACPI_GPE_DISPATCH_NOTIFY        (UINT8) 0x03
-#define ACPI_GPE_DISPATCH_MASK          (UINT8) 0x03
+#define ACPI_GPE_DISPATCH_RAW_HANDLER   (UINT8) 0x04
+#define ACPI_GPE_DISPATCH_MASK          (UINT8) 0x07
+#define ACPI_GPE_DISPATCH_TYPE(flags)   ((UINT8) ((flags) & ACPI_GPE_DISPATCH_MASK))
 
-#define ACPI_GPE_LEVEL_TRIGGERED        (UINT8) 0x04
+#define ACPI_GPE_LEVEL_TRIGGERED        (UINT8) 0x08
 #define ACPI_GPE_EDGE_TRIGGERED         (UINT8) 0x00
-#define ACPI_GPE_XRUPT_TYPE_MASK        (UINT8) 0x04
+#define ACPI_GPE_XRUPT_TYPE_MASK        (UINT8) 0x08
 
-#define ACPI_GPE_CAN_WAKE               (UINT8) 0x08
+#define ACPI_GPE_CAN_WAKE               (UINT8) 0x10
 
 /*
  * Flags for GPE and Lock interfaces
@@ -772,8 +810,13 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 #define ACPI_DEVICE_NOTIFY              0x2
 #define ACPI_ALL_NOTIFY                 (ACPI_SYSTEM_NOTIFY | ACPI_DEVICE_NOTIFY)
 #define ACPI_MAX_NOTIFY_HANDLER_TYPE    0x3
+#define ACPI_NUM_NOTIFY_TYPES           2
 
-#define ACPI_MAX_SYS_NOTIFY             0x7f
+#define ACPI_MAX_SYS_NOTIFY             0x7F
+#define ACPI_MAX_DEVICE_SPECIFIC_NOTIFY 0xBF
+
+#define ACPI_SYSTEM_HANDLER_LIST        0 /* Used as index, must be SYSTEM_NOTIFY -1 */
+#define ACPI_DEVICE_HANDLER_LIST        1 /* Used as index, must be DEVICE_NOTIFY -1 */
 
 
 /* Address Space (Operation Region) Types */
@@ -788,8 +831,11 @@ typedef UINT8                           ACPI_ADR_SPACE_TYPE;
 #define ACPI_ADR_SPACE_CMOS             (ACPI_ADR_SPACE_TYPE) 5
 #define ACPI_ADR_SPACE_PCI_BAR_TARGET   (ACPI_ADR_SPACE_TYPE) 6
 #define ACPI_ADR_SPACE_IPMI             (ACPI_ADR_SPACE_TYPE) 7
+#define ACPI_ADR_SPACE_GPIO             (ACPI_ADR_SPACE_TYPE) 8
+#define ACPI_ADR_SPACE_GSBUS            (ACPI_ADR_SPACE_TYPE) 9
+#define ACPI_ADR_SPACE_PLATFORM_COMM    (ACPI_ADR_SPACE_TYPE) 10
 
-#define ACPI_NUM_PREDEFINED_REGIONS     8
+#define ACPI_NUM_PREDEFINED_REGIONS     11
 
 /*
  * Special Address Spaces
@@ -860,6 +906,19 @@ typedef UINT8                           ACPI_ADR_SPACE_TYPE;
 
 #define ACPI_ENABLE_EVENT                       1
 #define ACPI_DISABLE_EVENT                      0
+
+
+/* Sleep function dispatch */
+
+typedef ACPI_STATUS (*ACPI_SLEEP_FUNCTION) (
+    UINT8                   SleepState);
+
+typedef struct acpi_sleep_functions
+{
+    ACPI_SLEEP_FUNCTION     LegacyFunction;
+    ACPI_SLEEP_FUNCTION     ExtendedFunction;
+
+} ACPI_SLEEP_FUNCTIONS;
 
 
 /*
@@ -940,8 +999,18 @@ typedef struct acpi_object_list
  * Miscellaneous common Data Structures used by the interfaces
  */
 #define ACPI_NO_BUFFER              0
-#define ACPI_ALLOCATE_BUFFER        (ACPI_SIZE) (-1)
-#define ACPI_ALLOCATE_LOCAL_BUFFER  (ACPI_SIZE) (-2)
+
+#ifdef ACPI_NO_MEM_ALLOCATIONS
+
+#define ACPI_ALLOCATE_BUFFER        (ACPI_SIZE) (0)
+#define ACPI_ALLOCATE_LOCAL_BUFFER  (ACPI_SIZE) (0)
+
+#else /* ACPI_NO_MEM_ALLOCATIONS */
+
+#define ACPI_ALLOCATE_BUFFER        (ACPI_SIZE) (-1)    /* Let ACPICA allocate buffer */
+#define ACPI_ALLOCATE_LOCAL_BUFFER  (ACPI_SIZE) (-2)    /* For internal use only (enables tracking) */
+
+#endif /* ACPI_NO_MEM_ALLOCATIONS */
 
 typedef struct acpi_buffer
 {
@@ -956,7 +1025,8 @@ typedef struct acpi_buffer
  */
 #define ACPI_FULL_PATHNAME              0
 #define ACPI_SINGLE_NAME                1
-#define ACPI_NAME_TYPE_MAX              1
+#define ACPI_FULL_PATHNAME_NO_TRAILING  2
+#define ACPI_NAME_TYPE_MAX              2
 
 
 /*
@@ -964,7 +1034,7 @@ typedef struct acpi_buffer
  */
 typedef struct acpi_predefined_names
 {
-    char                            *Name;
+    const char                      *Name;
     UINT8                           Type;
     char                            *Val;
 
@@ -1030,6 +1100,10 @@ typedef void
 /*
  * Various handlers and callback procedures
  */
+typedef
+UINT32 (*ACPI_SCI_HANDLER) (
+    void                            *Context);
+
 typedef
 void (*ACPI_GBL_EVENT_HANDLER) (
     UINT32                          EventType,
@@ -1102,6 +1176,17 @@ ACPI_STATUS (*ACPI_ADR_SPACE_HANDLER) (
 
 #define ACPI_DEFAULT_HANDLER            NULL
 
+/* Special Context data for GenericSerialBus/GeneralPurposeIo (ACPI 5.0) */
+
+typedef struct acpi_connection_info
+{
+    UINT8                           *Connection;
+    UINT16                          Length;
+    UINT8                           AccessLength;
+
+} ACPI_CONNECTION_INFO;
+
+
 typedef
 ACPI_STATUS (*ACPI_ADR_SPACE_SETUP) (
     ACPI_HANDLE                     RegionHandle,
@@ -1143,23 +1228,27 @@ UINT32 (*ACPI_INTERFACE_HANDLER) (
 
 #define ACPI_UUID_LENGTH                16
 
+/* Length of 3-byte PCI class code values when converted back to a string */
+
+#define ACPI_PCICLS_STRING_SIZE         7   /* Includes null terminator */
+
 
 /* Structures used for device/processor HID, UID, CID */
 
-typedef struct acpi_device_id
+typedef struct acpi_pnp_device_id
 {
     UINT32                          Length;             /* Length of string + null */
     char                            *String;
 
-} ACPI_DEVICE_ID;
+} ACPI_PNP_DEVICE_ID;
 
-typedef struct acpi_device_id_list
+typedef struct acpi_pnp_device_id_list
 {
     UINT32                          Count;              /* Number of IDs in Ids array */
     UINT32                          ListSize;           /* Size of list, including ID strings */
-    ACPI_DEVICE_ID                  Ids[1];             /* ID array */
+    ACPI_PNP_DEVICE_ID              Ids[1];             /* ID array */
 
-} ACPI_DEVICE_ID_LIST;
+} ACPI_PNP_DEVICE_ID_LIST;
 
 /*
  * Structure returned from AcpiGetObjectInfo.
@@ -1171,15 +1260,16 @@ typedef struct acpi_device_info
     UINT32                          Name;               /* ACPI object Name */
     ACPI_OBJECT_TYPE                Type;               /* ACPI object Type */
     UINT8                           ParamCount;         /* If a method, required parameter count */
-    UINT8                           Valid;              /* Indicates which optional fields are valid */
+    UINT16                          Valid;              /* Indicates which optional fields are valid */
     UINT8                           Flags;              /* Miscellaneous info */
     UINT8                           HighestDstates[4];  /* _SxD values: 0xFF indicates not valid */
     UINT8                           LowestDstates[5];   /* _SxW values: 0xFF indicates not valid */
     UINT32                          CurrentStatus;      /* _STA value */
     UINT64                          Address;            /* _ADR value */
-    ACPI_DEVICE_ID                  HardwareId;         /* _HID value */
-    ACPI_DEVICE_ID                  UniqueId;           /* _UID value */
-    ACPI_DEVICE_ID_LIST             CompatibleIdList;   /* _CID list <must be last> */
+    ACPI_PNP_DEVICE_ID              HardwareId;         /* _HID value */
+    ACPI_PNP_DEVICE_ID              UniqueId;           /* _UID value */
+    ACPI_PNP_DEVICE_ID              ClassCode;          /* _CLS value */
+    ACPI_PNP_DEVICE_ID_LIST         CompatibleIdList;   /* _CID list <must be last> */
 
 } ACPI_DEVICE_INFO;
 
@@ -1189,13 +1279,14 @@ typedef struct acpi_device_info
 
 /* Flags for Valid field above (AcpiGetObjectInfo) */
 
-#define ACPI_VALID_STA                  0x01
-#define ACPI_VALID_ADR                  0x02
-#define ACPI_VALID_HID                  0x04
-#define ACPI_VALID_UID                  0x08
-#define ACPI_VALID_CID                  0x10
-#define ACPI_VALID_SXDS                 0x20
-#define ACPI_VALID_SXWS                 0x40
+#define ACPI_VALID_STA                  0x0001
+#define ACPI_VALID_ADR                  0x0002
+#define ACPI_VALID_HID                  0x0004
+#define ACPI_VALID_UID                  0x0008
+#define ACPI_VALID_CID                  0x0020
+#define ACPI_VALID_CLS                  0x0040
+#define ACPI_VALID_SXDS                 0x0100
+#define ACPI_VALID_SXWS                 0x0200
 
 /* Flags for _STA method */
 
@@ -1234,12 +1325,11 @@ typedef struct acpi_mem_space_context
  */
 typedef struct acpi_memory_list
 {
-    char                            *ListName;
+    const char                      *ListName;
     void                            *ListHead;
     UINT16                          ObjectSize;
     UINT16                          MaxDepth;
     UINT16                          CurrentDepth;
-    UINT16                          LinkOffset;
 
 #ifdef ACPI_DBG_TRACK_ALLOCATIONS
 
@@ -1255,6 +1345,61 @@ typedef struct acpi_memory_list
 #endif
 
 } ACPI_MEMORY_LIST;
+
+
+/* Definitions of trace event types */
+
+typedef enum
+{
+    ACPI_TRACE_AML_METHOD,
+    ACPI_TRACE_AML_OPCODE,
+    ACPI_TRACE_AML_REGION
+
+} ACPI_TRACE_EVENT_TYPE;
+
+
+/* Definitions of _OSI support */
+
+#define ACPI_VENDOR_STRINGS                 0x01
+#define ACPI_FEATURE_STRINGS                0x02
+#define ACPI_ENABLE_INTERFACES              0x00
+#define ACPI_DISABLE_INTERFACES             0x04
+
+#define ACPI_DISABLE_ALL_VENDOR_STRINGS     (ACPI_DISABLE_INTERFACES | ACPI_VENDOR_STRINGS)
+#define ACPI_DISABLE_ALL_FEATURE_STRINGS    (ACPI_DISABLE_INTERFACES | ACPI_FEATURE_STRINGS)
+#define ACPI_DISABLE_ALL_STRINGS            (ACPI_DISABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
+#define ACPI_ENABLE_ALL_VENDOR_STRINGS      (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS)
+#define ACPI_ENABLE_ALL_FEATURE_STRINGS     (ACPI_ENABLE_INTERFACES | ACPI_FEATURE_STRINGS)
+#define ACPI_ENABLE_ALL_STRINGS             (ACPI_ENABLE_INTERFACES | ACPI_VENDOR_STRINGS | ACPI_FEATURE_STRINGS)
+
+#define ACPI_OSI_WIN_2000               0x01
+#define ACPI_OSI_WIN_XP                 0x02
+#define ACPI_OSI_WIN_XP_SP1             0x03
+#define ACPI_OSI_WINSRV_2003            0x04
+#define ACPI_OSI_WIN_XP_SP2             0x05
+#define ACPI_OSI_WINSRV_2003_SP1        0x06
+#define ACPI_OSI_WIN_VISTA              0x07
+#define ACPI_OSI_WINSRV_2008            0x08
+#define ACPI_OSI_WIN_VISTA_SP1          0x09
+#define ACPI_OSI_WIN_VISTA_SP2          0x0A
+#define ACPI_OSI_WIN_7                  0x0B
+#define ACPI_OSI_WIN_8                  0x0C
+#define ACPI_OSI_WIN_10                 0x0D
+
+
+/* Definitions of file IO */
+
+#define ACPI_FILE_READING               0x01
+#define ACPI_FILE_WRITING               0x02
+#define ACPI_FILE_BINARY                0x04
+
+#define ACPI_FILE_BEGIN                 0x01
+#define ACPI_FILE_END                   0x02
+
+
+/* Definitions of getopt */
+
+#define ACPI_OPT_END                    -1
 
 
 #endif /* __ACTYPES_H__ */

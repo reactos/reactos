@@ -601,8 +601,10 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 /* Decrease the queue depth */
                 DpcData->DpcQueueDepth--;
 
+#if DBG
                 /* Clear DPC Time */
                 Prcb->DebugDpcTime = 0;
+#endif
 
                 /* Release the lock */
                 KeReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);

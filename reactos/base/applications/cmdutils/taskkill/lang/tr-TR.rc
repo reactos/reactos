@@ -1,0 +1,21 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Kullanım: taskkill [/?] [/f] [/im işlem adı | /pid işlem kimliği]\n"
+    STRING_INVALID_OPTION, "Yanlışlık: Bilinmeyen veyâ geçersiz komut yatacı seçeneği belirtildi.\n"
+    STRING_INVALID_PARAM, "Yanlışlık: Geçersiz komut yatacı değişkeni belirtildi.\n"
+    STRING_MISSING_OPTION, "Yanlışlık: /im ve /pid seçeneklerinden biri belirtilmeli.\n"
+    STRING_MISSING_PARAM, "Yanlışlık: %1 seçeneği bir komut yatacı değişkeni bekler.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Yanlışlık: /im ve /pid seçenekleri birbirini dışlayandır.\n"
+    STRING_CLOSE_PID_SEARCH, "PID'i %1!u! olan işlemin üst düzey penceresine kapatma iletisi gönderildi.\n"
+    STRING_CLOSE_PROC_SRCH, "PID'i %2!u! olan ""%1"" işleminin üst düzey penceresine kapatma iletisi gönderildi.\n"
+    STRING_TERM_PID_SEARCH, "PID'i %1!u! olan işlem zorla sonlandırıldı.\n"
+    STRING_TERM_PROC_SEARCH, "PID'i %2!u! olan ""%1"" işlemi zorla sonlandırıldı.\n"
+    STRING_SEARCH_FAILED, "Yanlışlık: ""%1"" işlemi bulunamadı.\n"
+    STRING_ENUM_FAILED, "Yanlışlık: İşlem dizelgesi numaralandırılamaz.\n"
+    STRING_TERMINATE_FAILED, "Yanlışlık: ""%1"" işlemi sonlandırılamaz.\n"
+    STRING_SELF_TERMINATION, "Yanlışlık: İşlemi kendi kendine sonlandırmaya izin verilmedi.\n"
+}

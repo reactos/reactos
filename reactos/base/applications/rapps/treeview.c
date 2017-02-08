@@ -10,7 +10,6 @@
 
 HWND hTreeView;
 
-
 HTREEITEM
 TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam)
 {

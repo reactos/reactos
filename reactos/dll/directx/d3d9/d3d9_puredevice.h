@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS ReactX
- * FILE:            dll/directx/d3d9/d3d9_haldevice.h
+ * FILE:            dll/directx/d3d9/d3d9_puredevice.h
  * PURPOSE:         d3d9.dll internal device structures
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>
  */

@@ -11,6 +11,8 @@
 
 #include "mmdrv.h"
 
+#define NDEBUG
+#include <debug.h>
 
 /*
     Nothing particularly special happens here.

@@ -106,7 +106,7 @@ RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
     {
         /* Compute the cutover time of the first day of the current month */
         AdjustedTimeFields.Year = CurrentTimeFields.Year;
-        if (NextYearsCutover == TRUE)
+        if (NextYearsCutover)
             AdjustedTimeFields.Year++;
 
         AdjustedTimeFields.Month = CutoverTimeFields->Month;
@@ -146,8 +146,8 @@ RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
         if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
             return FALSE;
 
-        if (ThisYearsCutoverOnly == TRUE ||
-            NextYearsCutover == TRUE ||
+        if (ThisYearsCutoverOnly ||
+            NextYearsCutover ||
             CutoverSystemTime.QuadPart >= CurrentTime->QuadPart)
         {
             break;

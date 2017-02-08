@@ -18,85 +18,90 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wineacm.h"
+#include <windef.h>
+#include <winuser.h>
+#include <msacmdlg.h>
 
-#ifdef LANGUAGE_BG_BG
-    #include "msacm_Bg.rc"
-#endif
-#ifdef LANGUAGE_CS_CZ
-    #include "msacm_Cs.rc"
-#endif
-#ifdef LANGUAGE_DA_DK
-    #include "msacm_Da.rc"
-#endif
-#ifdef LANGUAGE_EL_GR
-    #include "msacm_El.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "msacm_En.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "msacm_Es.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "msacm_Hu.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "msacm_It.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "msacm_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "msacm_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "msacm_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "msacm_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "msacm_Sv.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "msacm_Tr.rc"
-#endif
+#include <reactos/manifest_dll.rc>
 
 /* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_BG_BG
+    #include "lang/msacm_Bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/msacm_Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/msacm_Da.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
-    #include "msacm_De.rc"
+    #include "lang/msacm_De.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "lang/msacm_El.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/msacm_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/msacm_Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "msacm_Fr.rc"
+    #include "lang/msacm_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "msacm_He.rc"
+    #include "lang/msacm_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/msacm_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/msacm_It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "msacm_Ja.rc"
+    #include "lang/msacm_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/msacm_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "msacm_Lt.rc"
+    #include "lang/msacm_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/msacm_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/msacm_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/msacm_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "msacm_Pt.rc"
+    #include "lang/msacm_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "msacm_Ro.rc"
+    #include "lang/msacm_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "msacm_Ru.rc"
+    #include "lang/msacm_Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "msacm_Si.rc"
+    #include "lang/msacm_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/msacm_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/msacm_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/msacm_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "msacm_Uk.rc"
+    #include "lang/msacm_Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "msacm_Zh.rc"
+    #include "lang/msacm_Zh.rc"
 #endif

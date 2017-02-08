@@ -227,9 +227,9 @@ ExpInitLuid(VOID)
 }
 
 
-NTSTATUS
+VOID
 NTAPI
-ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
+ExAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
     LARGE_INTEGER NewLuid, PrevLuid;
 
@@ -246,26 +246,24 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 
     LocallyUniqueId->LowPart = NewLuid.u.LowPart;
     LocallyUniqueId->HighPart = NewLuid.u.HighPart;
-
-    return STATUS_SUCCESS;
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
     LUID NewLuid;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status;
-
     PAGED_CODE();
 
+    /* Probe if user mode */
     PreviousMode = ExGetPreviousMode();
-
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -280,18 +278,20 @@ NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
         _SEH2_END;
     }
 
-    Status = ExpAllocateLocallyUniqueId(&NewLuid);
+    /* Do the allocation */
+    ExAllocateLocallyUniqueId(&NewLuid);
+    Status = STATUS_SUCCESS;
 
+    /* Write back LUID to caller */
     _SEH2_TRY
     {
         *LocallyUniqueId = NewLuid;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
-
     return Status;
 }
 

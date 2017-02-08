@@ -28,9 +28,9 @@
 static HWND hwndEnum = NULL;
 
 static BOOL CALLBACK
-TimeFormatEnumProc(LPTSTR lpTimeFormatString)
+TimeFormatEnumProc(PWSTR lpTimeFormatString)
 {
-    SendMessage(hwndEnum,
+    SendMessageW(hwndEnum,
                 CB_ADDSTRING,
                 0,
                 (LPARAM)lpTimeFormatString);
@@ -39,17 +39,19 @@ TimeFormatEnumProc(LPTSTR lpTimeFormatString)
 }
 
 static VOID
-UpdateTimeSample(HWND hWnd, LCID lcid)
+UpdateTimeSample(HWND hWnd, PGLOBALDATA pGlobalData)
 {
-    TCHAR szBuffer[80];
+    WCHAR szBuffer[MAX_SAMPLES_STR_SIZE];
 
-    GetTimeFormat(lcid, 0, NULL, NULL, szBuffer, 80);
-    SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)szBuffer);
+    GetTimeFormatW(pGlobalData->UserLCID, 0, NULL,
+                   pGlobalData->szTimeFormat, szBuffer,
+                   MAX_SAMPLES_STR_SIZE);
+    SendDlgItemMessageW(hWnd, IDC_TIMESAMPLE, WM_SETTEXT, 0, (LPARAM)szBuffer);
 }
 
 
 static VOID
-GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, TCHAR *Buffer, UINT uSize)
+GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, WCHAR *Buffer, UINT uSize)
 {
     int nIndex;
     HWND hChildWnd;
@@ -57,26 +59,131 @@ GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, TCHAR *Buffer, UINT uSize)
     /* Get handle to time format control */
     hChildWnd = GetDlgItem(hwndDlg, dwIdc);
     /* Get index to selected time format */
-    nIndex = SendMessage(hChildWnd, CB_GETCURSEL, 0, 0);
+    nIndex = SendMessageW(hChildWnd, CB_GETCURSEL, 0, 0);
     if (nIndex == CB_ERR)
         /* No selection? Get content of the edit control */
-        SendMessage(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
+        SendMessageW(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
     else {
-        LPTSTR tmp;
+        PWSTR tmp;
         UINT   uReqSize;
 
         /* Get requested size, including the null terminator;
          * it shouldn't be required because the previous CB_LIMITTEXT,
          * but it would be better to check it anyways */
-        uReqSize = SendMessage(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
+        uReqSize = SendMessageW(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
         /* Allocate enough space to be more safe */
-        tmp = (LPTSTR)_alloca(uReqSize*sizeof(TCHAR));
+        tmp = (PWSTR)_alloca(uReqSize*sizeof(WCHAR));
         /* Get selected time format text */
-        SendMessage(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
+        SendMessageW(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
         /* Finally, copy the result into the output */
-        _tcsncpy(Buffer, tmp, uSize);
+        wcsncpy(Buffer, tmp, uSize);
     }
 }
+
+
+static
+VOID
+InitTimeFormatCB(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    /* Get the time format */
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEFORMAT,
+                        CB_LIMITTEXT, MAX_TIMEFORMAT, 0);
+
+    /* Add available time formats to the list */
+    hwndEnum = GetDlgItem(hwndDlg, IDC_TIMEFORMAT);
+    EnumTimeFormatsW(TimeFormatEnumProc, pGlobalData->UserLCID, 0);
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEFORMAT,
+                        CB_SELECTSTRING,
+                        -1,
+                        (LPARAM)pGlobalData->szTimeFormat);
+}
+
+static
+VOID
+InitTimeSeparatorCB(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    SendDlgItemMessageW(hwndDlg, IDC_TIMESEPARATOR,
+                        CB_LIMITTEXT, MAX_TIMESEPARATOR, 0);
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMESEPARATOR,
+                        CB_ADDSTRING,
+                        0,
+                        (LPARAM)pGlobalData->szTimeSep);
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMESEPARATOR,
+                        CB_SETCURSEL,
+                        0, /* Index */
+                        0);
+}
+
+
+static
+VOID
+InitAmSymbol(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    int nLen;
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEAMSYMBOL,
+                        CB_LIMITTEXT, MAX_TIMEAMSYMBOL, 0);
+
+    nLen = wcslen(pGlobalData->szTimeAM);
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEAMSYMBOL,
+                        CB_ADDSTRING,
+                        0,
+                        (LPARAM)pGlobalData->szTimeAM);
+    if (nLen != 0)
+    {
+        SendDlgItemMessageW(hwndDlg, IDC_TIMEAMSYMBOL,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)L"");
+    }
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEAMSYMBOL,
+                        CB_SETCURSEL,
+                        0, /* Index */
+                        0);
+}
+
+
+static
+VOID
+InitPmSymbol(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    int nLen;
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEPMSYMBOL,
+                        CB_LIMITTEXT, MAX_TIMEPMSYMBOL, 0);
+
+    nLen = wcslen(pGlobalData->szTimeAM);
+
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEPMSYMBOL,
+                        CB_ADDSTRING,
+                        0,
+                        (LPARAM)pGlobalData->szTimePM);
+    if (nLen != 0)
+    {
+        SendDlgItemMessageW(hwndDlg, IDC_TIMEPMSYMBOL,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)L"");
+    }
+    SendDlgItemMessageW(hwndDlg, IDC_TIMEPMSYMBOL,
+                        CB_SETCURSEL,
+                        0, /* Index */
+                        0);
+}
+
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -92,84 +199,24 @@ TimePageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            TCHAR Buffer[80];
-            int nLen;
-
             pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            /* Update the time format sample */
-            UpdateTimeSample(GetDlgItem(hwndDlg, IDC_TIMESAMPLE), pGlobalData->lcid);
-
             /* Get the time format */
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
-                        CB_LIMITTEXT, MAX_TIMEFORMAT, 0);
-
-            /* Add available time formats to the list */
-            hwndEnum = GetDlgItem(hwndDlg, IDC_TIMEFORMAT);
-            EnumTimeFormats(TimeFormatEnumProc, pGlobalData->lcid, 0);
-
-            GetLocaleInfo(pGlobalData->lcid, LOCALE_STIMEFORMAT, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
-                        CB_SELECTSTRING,
-                        -1,
-                        (LPARAM)Buffer);
+            InitTimeFormatCB(hwndDlg, pGlobalData);
 
             /* Get the time separator */
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
-                        CB_LIMITTEXT, MAX_TIMESEPARATOR, 0);
-            GetLocaleInfo(pGlobalData->lcid, LOCALE_STIME, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)Buffer);
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
-                        CB_SETCURSEL,
-                        0, /* Index */
-                        0);
+            InitTimeSeparatorCB(hwndDlg, pGlobalData);
 
             /* Get the AM symbol */
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
-                        CB_LIMITTEXT, MAX_TIMEAMSYMBOL, 0);
-            nLen = GetLocaleInfo(pGlobalData->lcid, LOCALE_S1159, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)Buffer);
-            if (nLen != 0)
-            {
-                SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)_T(""));
-            }
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
-                        CB_SETCURSEL,
-                        0, /* Index */
-                        0);
+            InitAmSymbol(hwndDlg, pGlobalData);
 
             /* Get the PM symbol */
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
-                        CB_LIMITTEXT, MAX_TIMEPMSYMBOL, 0);
-            nLen = GetLocaleInfo(pGlobalData->lcid, LOCALE_S2359, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)Buffer);
-            if (nLen != 0)
-            {
-                SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
-                           CB_ADDSTRING,
-                           0,
-                           (LPARAM)_T(""));
-            }
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
-                        CB_SETCURSEL,
-                        0, /* Index */
-                        0);
-        }
-        break;
+            InitPmSymbol(hwndDlg, pGlobalData);
+
+            /* Update the time format sample */
+            UpdateTimeSample(hwndDlg, pGlobalData);
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -183,47 +230,39 @@ TimePageProc(HWND hwndDlg,
                     {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
-                break;
+                    break;
             }
             break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-
-            if (lpnm->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                TCHAR Buffer[80];
-
                 /* Get selected/typed time format text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMEFORMAT, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-
-                /* Set time format */
-                SetLocaleInfo(pGlobalData->lcid, LOCALE_STIMEFORMAT, Buffer);
+                GetSelectedComboEntry(hwndDlg, IDC_TIMEFORMAT,
+                                      pGlobalData->szTimeFormat, 
+                                      MAX_TIMEFORMAT);
 
                 /* Get selected/typed time separator text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMESEPARATOR, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-
-                /* Set time separator */
-                SetLocaleInfo(pGlobalData->lcid, LOCALE_STIME, Buffer);
+                GetSelectedComboEntry(hwndDlg, IDC_TIMESEPARATOR,
+                                      pGlobalData->szTimeSep,
+                                      MAX_TIMESEPARATOR);
 
                 /* Get selected/typed AM symbol text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMEAMSYMBOL, Buffer, sizeof(Buffer)/sizeof(TCHAR));
-
-                /* Set the AM symbol */
-                SetLocaleInfo(pGlobalData->lcid, LOCALE_S1159, Buffer);
+                GetSelectedComboEntry(hwndDlg, IDC_TIMEAMSYMBOL,
+                                      pGlobalData->szTimeAM,
+                                      MAX_TIMEAMSYMBOL);
 
                 /* Get selected/typed PM symbol text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMEPMSYMBOL, Buffer, sizeof(Buffer)/sizeof(TCHAR));
+                GetSelectedComboEntry(hwndDlg, IDC_TIMEPMSYMBOL,
+                                      pGlobalData->szTimePM,
+                                      MAX_TIMEPMSYMBOL);
 
-                /* Set the PM symbol */
-                SetLocaleInfo(pGlobalData->lcid, LOCALE_S2359, Buffer);
+                pGlobalData->fUserLocaleChanged = TRUE;
 
                 /* Update the time format sample */
-                UpdateTimeSample(GetDlgItem(hwndDlg, IDC_TIMESAMPLE), pGlobalData->lcid);
+                UpdateTimeSample(hwndDlg, pGlobalData);
             }
-        }
-        break;
+            break;
     }
 
     return FALSE;

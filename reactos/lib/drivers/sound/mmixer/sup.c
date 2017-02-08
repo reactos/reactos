@@ -6,9 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#include "precomp.h"
 
-
-#include "priv.h"
+#define YDEBUG
+#include <debug.h>
 
 const GUID KSNODETYPE_SUM = {0xDA441A60L, 0xC556, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_DAC = {0x507AE360L, 0xC554, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
@@ -674,7 +675,8 @@ MMixerSetGetVolumeControlDetails(
     LPMIXERLINE_EXT MixerLine)
 {
     LPMIXERCONTROLDETAILS_UNSIGNED Input;
-    LONG Value, Index, Channel = 0;
+    LONG Value;
+    ULONG Index, Channel = 0;
     ULONG dwValue;
     MIXER_STATUS Status;
     LPMIXERVOLUME_DATA VolumeData;
@@ -864,4 +866,3 @@ MMixerInitializePinConnect(
     PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
     PinConnect->Priority.PrioritySubClass = 1;
 }
-

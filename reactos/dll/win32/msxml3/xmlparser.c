@@ -17,34 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
 
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-//# include <libxml/HTMLtree.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include "msxml_private.h"
+#include "precomp.h"
 
 #include <initguid.h>
 #include "xmlparser.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 typedef struct _xmlparser
 {
@@ -436,14 +413,11 @@ static const struct IXMLParserVtbl xmlparser_vtbl =
     xmlparser_GetSecureBaseURL
 };
 
-HRESULT XMLParser_create(IUnknown* pUnkOuter, void**ppObj)
+HRESULT XMLParser_create(void **ppObj)
 {
     xmlparser *This;
 
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
-
-    if (pUnkOuter)
-        FIXME("support aggregation, outer\n");
+    TRACE("(%p)\n", ppObj);
 
     This = heap_alloc( sizeof(xmlparser) );
     if(!This)

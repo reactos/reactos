@@ -16,28 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <wincodec.h>
-
 #include "wincodecs_private.h"
-
-#include <wine/debug.h>
-//#include "wine/library.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #include "pshpack1.h"
 
@@ -296,7 +275,7 @@ static HRESULT WINAPI TgaDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     This->image_offset = This->colormap_offset + This->colormap_length;
 
     /* Read footer if there is one */
-    seek.QuadPart = -sizeof(tga_footer);
+    seek.QuadPart = -(LONGLONG)sizeof(tga_footer);
     hr = IStream_Seek(pIStream, seek, STREAM_SEEK_END, NULL);
 
     if (SUCCEEDED(hr)) {
@@ -955,16 +934,14 @@ static const IWICBitmapFrameDecodeVtbl TgaDecoder_Frame_Vtbl = {
     TgaDecoder_Frame_GetThumbnail
 };
 
-HRESULT TgaDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TgaDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     TgaDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(TgaDecoder));
     if (!This) return E_OUTOFMEMORY;

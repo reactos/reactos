@@ -203,14 +203,10 @@ GroupNew(HWND hwndDlg)
                        NewGroupDlgProc,
                        (LPARAM)&group) == IDOK)
     {
-#if 0
         status = NetLocalGroupAdd(NULL,
                                   1,
                                   (LPBYTE)&group,
                                   NULL);
-#else
-        status = NERR_Success;
-#endif
         if (status != NERR_Success)
         {
             TCHAR szText[256];
@@ -281,11 +277,7 @@ GroupDelete(HWND hwndDlg)
         return FALSE;
 
     /* Delete the group */
-#if 0
     status = NetLocalGroupDel(NULL, szGroupName);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
@@ -346,7 +338,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldGroupName[UNLEN];
     TCHAR szNewGroupName[UNLEN];
-    //LOCALGROUP_INFO_0 lgrpi0;
+    LOCALGROUP_INFO_0 lgrpi0;
     NET_API_STATUS status;
 
     /* Leave, if there is no valid listview item */
@@ -375,13 +367,9 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
         return FALSE;
 
     /* Change the user name */
-    //lgrpi0.lgrpi0_name = szNewGroupName;
+    lgrpi0.lgrpi0_name = szNewGroupName;
 
-#if 0
     status = NetLocalGroupSetInfo(NULL, szOldGroupName, 0, (LPBYTE)&lgrpi0, NULL);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
@@ -477,6 +465,7 @@ GroupsPageProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDM_GROUP_NEW:
+                case IDC_GROUPS_ADD:
                     GroupNew(hwndDlg);
                     break;
 
@@ -485,10 +474,12 @@ GroupsPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_GROUP_DELETE:
+                case IDC_GROUPS_REMOVE:
                     GroupDelete(hwndDlg);
                     break;
 
                 case IDM_GROUP_PROPERTIES:
+                case IDC_GROUPS_PROPERTIES:
                     if (GroupProperties(hwndDlg) == IDOK)
                         UpdateGroupProperties(hwndDlg);
                     break;

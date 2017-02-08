@@ -366,7 +366,7 @@ DWORD getNumRoutes(void)
 
     TRACE("called.\n");
 
-    status = openTcpFile( &tcpFile );
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
 
     if( !NT_SUCCESS(status) ) {
         TRACE("failure: %08x\n", (int)status );
@@ -421,7 +421,7 @@ RouteTable *getRouteTable(void)
     DWORD numRoutes = getNumRoutes(), routesAdded = 0;
     TDIEntityID ent;
     HANDLE tcpFile;
-    NTSTATUS status = openTcpFile( &tcpFile );
+    NTSTATUS status = openTcpFile( &tcpFile, FILE_READ_DATA );
     int i;
 
     if( !NT_SUCCESS(status) )
@@ -498,7 +498,7 @@ DWORD getNumArpEntries(void)
 
     TRACE("called.\n");
 
-    status = openTcpFile( &tcpFile );
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
 
     if( !NT_SUCCESS(status) ) {
         TRACE("failure: %08x\n", (int)status );
@@ -550,7 +550,7 @@ PMIB_IPNETTABLE getArpTable(void)
 
     totalNumber = getNumArpEntries();
 
-    status = openTcpFile( &tcpFile );
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
 
     if( !NT_SUCCESS(status) ) {
         TRACE("failure: %08x\n", (int)status );

@@ -32,9 +32,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include <typedefs.h>
 #include "widl.h"
 #include "utils.h"
@@ -46,16 +43,6 @@
 #include "typetree.h"
 
 static typelib_t *typelib;
-
-int is_ptr(const type_t *t)
-{
-    return type_get_type(t) == TYPE_POINTER;
-}
-
-int is_array(const type_t *t)
-{
-    return type_get_type(t) == TYPE_ARRAY;
-}
 
 /* List of oleauto types that should be recognized by name.
  * (most of) these seem to be intrinsic types in mktyplib.

@@ -16,48 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
-
-//#include <math.h>
-#include <assert.h>
-
 #include "jscript.h"
-//#include "engine.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 WINE_DECLARE_DEBUG_CHANNEL(heap);
-
-const char *debugstr_variant(const VARIANT *v)
-{
-    if(!v)
-        return "(null)";
-
-    switch(V_VT(v)) {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
-    case VT_UI4:
-        return wine_dbg_sprintf("{VT_UI4: %u}", V_UI4(v));
-    case VT_R8:
-        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
-    case VT_BSTR:
-        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
-    case VT_DISPATCH:
-        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
-    case VT_BOOL:
-        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
-    case VT_ARRAY|VT_VARIANT:
-        return "{VT_ARRAY|VT_VARIANT: ...}";
-    default:
-        return wine_dbg_sprintf("{vt %d}", V_VT(v));
-    }
-}
 
 const char *debugstr_jsval(const jsval_t v)
 {
@@ -80,6 +41,11 @@ const char *debugstr_jsval(const jsval_t v)
 
     assert(0);
     return NULL;
+}
+
+BOOL is_finite(double n)
+{
+    return !isnan(n) && !isinf(n);
 }
 
 #define MIN_BLOCK_SIZE  128
@@ -275,6 +241,9 @@ HRESULT jsval_copy(jsval_t v, jsval_t *r)
 
 HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
 {
+    if(V_VT(var) == (VT_VARIANT|VT_BYREF))
+        var = V_VARIANTREF(var);
+
     switch(V_VT(var)) {
     case VT_EMPTY:
         *r = jsval_undefined();
@@ -294,11 +263,13 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
     case VT_BSTR: {
         jsstr_t *str;
 
-        str = jsstr_alloc_len(V_BSTR(var), SysStringLen(V_BSTR(var)));
-        if(!str)
-            return E_OUTOFMEMORY;
-        if(!V_BSTR(var))
-            str->length_flags |= JSSTR_FLAG_NULLBSTR;
+        if(V_BSTR(var)) {
+            str = jsstr_alloc_len(V_BSTR(var), SysStringLen(V_BSTR(var)));
+            if(!str)
+                return E_OUTOFMEMORY;
+        }else {
+            str = jsstr_null_bstr();
+        }
 
         *r = jsval_string(str);
         return S_OK;
@@ -315,6 +286,9 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
     case VT_INT:
         *r = jsval_number(V_INT(var));
         return S_OK;
+    case VT_UI4:
+        *r = jsval_number(V_UI4(var));
+        return S_OK;
     case VT_UNKNOWN:
         if(V_UNKNOWN(var)) {
             IDispatch *disp;
@@ -325,6 +299,9 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
                 *r = jsval_disp(disp);
                 return S_OK;
             }
+        }else {
+            *r = jsval_disp(NULL);
+            return S_OK;
         }
         /* fall through */
     default:
@@ -351,7 +328,7 @@ HRESULT jsval_to_variant(jsval_t val, VARIANT *retv)
         jsstr_t *str = get_string(val);
 
         V_VT(retv) = VT_BSTR;
-        if(str->length_flags & JSSTR_FLAG_NULLBSTR) {
+        if(is_null_bstr(str)) {
             V_BSTR(retv) = NULL;
         }else {
             V_BSTR(retv) = SysAllocStringLen(NULL, jsstr_length(str));
@@ -502,16 +479,15 @@ static int hex_to_int(WCHAR c)
 /* ECMA-262 3rd Edition    9.3.1 */
 static HRESULT str_to_number(jsstr_t *str, double *ret)
 {
-    const WCHAR *ptr = str->str;
+    const WCHAR *ptr;
     BOOL neg = FALSE;
     DOUBLE d = 0.0;
 
     static const WCHAR infinityW[] = {'I','n','f','i','n','i','t','y'};
 
-    if(!ptr) {
-        *ret = 0;
-        return S_OK;
-    }
+    ptr = jsstr_flatten(str);
+    if(!ptr)
+        return E_OUTOFMEMORY;
 
     while(isspaceW(*ptr))
         ptr++;
@@ -660,7 +636,7 @@ HRESULT to_int32(script_ctx_t *ctx, jsval_t v, INT *ret)
     if(FAILED(hres))
         return hres;
 
-    *ret = isnan(n) || isinf(n) ? 0 : n;
+    *ret = is_finite(n) ? n : 0;
     return S_OK;
 }
 
@@ -775,6 +751,23 @@ HRESULT to_string(script_ctx_t *ctx, jsval_t val, jsstr_t **str)
     }
 
     return *str ? S_OK : E_OUTOFMEMORY;
+}
+
+HRESULT to_flat_string(script_ctx_t *ctx, jsval_t val, jsstr_t **str, const WCHAR **ret_str)
+{
+    HRESULT hres;
+
+    hres = to_string(ctx, val, str);
+    if(FAILED(hres))
+        return hres;
+
+    *ret_str = jsstr_flatten(*str);
+    if(!*ret_str) {
+        jsstr_release(*str);
+        return E_OUTOFMEMORY;
+    }
+
+    return S_OK;
 }
 
 /* ECMA-262 3rd Edition    9.9 */
@@ -897,7 +890,7 @@ HRESULT variant_change_type(script_ctx_t *ctx, VARIANT *dst, VARIANT *src, VARTY
         if(FAILED(hres))
             break;
 
-        if(str->length_flags & JSSTR_FLAG_NULLBSTR) {
+        if(is_null_bstr(str)) {
             V_BSTR(dst) = NULL;
             break;
         }

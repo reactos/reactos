@@ -1,0 +1,80 @@
+/* Slovak translation for CMD
+ * TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 21-03-2009
+ * LastChange: 10-08-2010
+ * _________________________________________________________________
+ * NOTE: This file is not fully translated
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Zoznam všetkých dostupných príkazov (+ popis)\n\n\
+  help príkaz\n\
+  príkaz /?     Pre viac informácií o konkrétnom príkaze\n\n\
+?        Zoznam všetkých dostupných príkazov (bez popisu).\n\
+ALIAS    Sets, removes or shows aliases.\n\
+ATTRIB   Displays or changes file attributes.\n\
+BEEP     Pípnutie reproduktora.\n\
+CALL     Calls one batch program from another.\n\
+CD       Displays the name of or changes the current directory.\n\
+CHCP     Displays or sets the active code page number.\n\
+CHOICE   Waits for the user to choose one of a set of choices.\n\
+CLS      Vymaže obrazovku.\n\
+CMD      Starts a new instance of the ReactOS command interpreter.\n\
+COLOR    Sets the default console foreground and background colors.\n\
+COPY     Skopíruje jeden alebo viac súborov na iné umiestnenie.\n\
+DATE     Zobrazí alebo nastaví dátum.\n\
+DELETE   Deletes one or more files.\n\
+DIR      Displays a list of files and subdirectories in a directory.\n\
+ECHO     Displays messages, or turns command echoing on or off.\n\
+ERASE    Deletes one or more files.\n\
+EXIT     Quits the CMD.EXE program (command interpreter).\n\
+FOR      Runs a specified command for each file in a set of files.\n\
+FREE     (free) disc space.\n\
+GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
+         a batch program.\n\
+HELP     Provides Help information for ReactOS commands.\n\
+HISTORY  List all commands which has been used\n\
+IF       Performs conditional processing in batch programs.\n\
+LABEL    Creates, changes, or deletes the volume label of a disk.\n\
+MD       Vytvorí adresár.\n\
+MKDIR    Vytvorí adresár.\n\
+MKLINK   Creates a filesystem link object.\n\
+MOVE     Moves one or more files from one directory to another\n\
+         directory.\n\
+PATH     Displays or sets a search path for executable files.\n\
+PAUSE    Suspends processing of a batch file and displays a message.\n\
+POPD     Restores the previous value of the current directory saved by\n\
+         PUSHD.\n\
+PROMPT   Changes the command prompt.\n\
+PUSHD    Saves the current directory then changes it.\n\
+RD       Removes a directory.\n\
+REM      Records comments (remarks) in batch files.\n\
+REN      Premenuje súbor alebo súbory.\n\
+RENAME   Premenuje súbor alebo súbory.\n\
+REPLACE  Replaces files.\n\
+RMDIR    Removes a directory.\n\
+SCREEN   Move cursor and optionally print text.\n\
+SET      Displays, sets, or removes ReactOS environment variables.\n\
+SHIFT    Shifts the position of replaceable parameters in batch files.\n"
+    IDS_HELP2 "START    Starts a separate window to run a specified program or command.\n\
+         Executes command.\n\
+TIME     Zobrazí alebo nastaví systémový čas.\n\
+TIMER    Allow the use of ten stopwatches.\n\
+TITLE    Sets the window title for a CMD.EXE session.\n\
+TYPE     Displays the contents of a text file.\n\
+VER      Displays the ReactOS version.\n\
+VERIFY   Tells ReactOS whether to verify that your files are written\n\
+         correctly to a disk.\n\
+VOL      Displays a disk volume label and serial number.\n"
+END

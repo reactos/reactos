@@ -2,15 +2,14 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Brush Functions
- * FILE:              subsystem/win32/win32k/eng/engbrush.c
+ * FILE:              win32ss/gdi/eng/engbrush.c
  * PROGRAMER:         Jason Filby
  *                    Timo Kreuzer
  */
 
 #include <win32k.h>
 
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(EngBrush);
 
 static const ULONG gaulHatchBrushes[HS_DDI_MAX][8] =
 {
@@ -65,6 +64,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo,
     pebo->pbrush = pbrush;
     pebo->pengbrush = NULL;
     pebo->flattrs = pbrush->flAttrs;
+    pebo->psoMask = NULL;
 
     /* Initialize 1 bpp fore and back colors */
     pebo->crCurrentBack = crBackgroundClr;
@@ -128,6 +128,7 @@ EBRUSHOBJ_vSetSolidRGBColor(EBRUSHOBJ *pebo, COLORREF crColor)
     ASSERT(pebo->flattrs & BR_IS_SOLID);
 
     /* Set the RGB color */
+    crColor &= 0xFFFFFF;
     pebo->crRealize = crColor;
     pebo->ulRGBColor = crColor;
 
@@ -167,6 +168,12 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
         pebo->BrushObject.pvRbrush = NULL;
     }
 
+    if (pebo->psoMask != NULL)
+    {
+        SURFACE_ShareUnlockSurface(pebo->psoMask);
+        pebo->psoMask = NULL;
+    }
+
     /* Dereference the palettes */
     PALETTE_ShareUnlockPalette(pebo->ppalSurf);
     PALETTE_ShareUnlockPalette(pebo->ppalDC);
@@ -175,7 +182,8 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
 
 VOID
 NTAPI
-EBRUSHOBJ_vUpdateFromDC(EBRUSHOBJ *pebo,
+EBRUSHOBJ_vUpdateFromDC(
+    EBRUSHOBJ *pebo,
     PBRUSH pbrush,
     PDC pdc)
 {
@@ -263,6 +271,11 @@ FixupDIBBrushPalette(
                                    0,
                                    0,
                                    0);
+    if (ppalNew == NULL)
+    {
+        ERR("Failed to allcate palette for brush\n");
+        return NULL;
+    }
 
     /* Loop all colors */
     for (i = 0; i < ppalDIB->NumColors; i++)
@@ -288,7 +301,8 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 {
     BOOL bResult;
     PFN_DrvRealizeBrush pfnRealizeBrush = NULL;
-    PSURFACE psurfPattern, psurfMask;
+    PSURFACE psurfPattern;
+    SURFOBJ *psoMask;
     PPDEVOBJ ppdev;
     EXLATEOBJ exlo;
     PPALETTE ppalPattern;
@@ -300,20 +314,37 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     ASSERT(pebo->psurfTrg);
 
     ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
-    if (!ppdev) ppdev = gppdevPrimary;
+    if (!ppdev)
+        ppdev = gppdevPrimary;
 
     if (bCallDriver)
+    {
+        /* Get the Drv function */
         pfnRealizeBrush = ppdev->DriverFunctions.RealizeBrush;
+        if (pfnRealizeBrush == NULL)
+        {
+            ERR("No DrvRealizeBrush. Cannot realize brush\n");
+            return FALSE;
+        }
 
-    if (!pfnRealizeBrush)
+        /* Get the mask */
+        psoMask = EBRUSHOBJ_psoMask(pebo);
+    }
+    else
+    {
+        /* Use the Eng function */
         pfnRealizeBrush = EngRealizeBrush;
+
+        /* We don't handle the mask bitmap here. We do this only on demand */
+        psoMask = NULL;
+    }
 
     /* Check if this is a hatch brush */
     if (pbr->flAttrs & BR_IS_HATCH)
     {
         /* Get the hatch brush pattern from the PDEV */
-        hbmPattern = (HBITMAP)ppdev->ahsurf[pbr->ulStyle];
-        iHatch = pbr->ulStyle;
+        hbmPattern = (HBITMAP)ppdev->ahsurf[pbr->iHatch];
+        iHatch = pbr->iHatch;
     }
     else
     {
@@ -326,14 +357,17 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     ASSERT(psurfPattern);
     ASSERT(psurfPattern->ppal);
 
-    /* FIXME: implement mask */
-    psurfMask = NULL;
-
     /* DIB brushes with DIB_PAL_COLORS usage need a new palette */
     if (pbr->flAttrs & BR_IS_DIBPALCOLORS)
     {
         /* Create a palette with the colors from the DC */
         ppalPattern = FixupDIBBrushPalette(psurfPattern->ppal, pebo->ppalDC);
+        if (ppalPattern == NULL)
+        {
+            ERR("FixupDIBBrushPalette() failed.\n");
+            return FALSE;
+        }
+
         pebo->ppalDIB = ppalPattern;
     }
     else
@@ -354,18 +388,15 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     bResult = pfnRealizeBrush(&pebo->BrushObject,
                               &pebo->psurfTrg->SurfObj,
                               &psurfPattern->SurfObj,
-                              psurfMask ? &psurfMask->SurfObj : NULL,
+                              psoMask,
                               &exlo.xlo,
                               iHatch);
 
     /* Cleanup the XLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);
 
-    /* Unlock surfaces */
-    if (psurfPattern)
-        SURFACE_ShareUnlockSurface(psurfPattern);
-    if (psurfMask)
-        SURFACE_ShareUnlockSurface(psurfMask);
+    /* Unlock surface */
+    SURFACE_ShareUnlockSurface(psurfPattern);
 
     return bResult;
 }
@@ -401,6 +432,42 @@ EBRUSHOBJ_psoPattern(EBRUSHOBJ *pebo)
     return psurfPattern ? &psurfPattern->SurfObj : NULL;
 }
 
+SURFOBJ*
+NTAPI
+EBRUSHOBJ_psoMask(EBRUSHOBJ *pebo)
+{
+    HBITMAP hbmMask;
+    PSURFACE psurfMask;
+    PPDEVOBJ ppdev;
+
+    /* Check if we don't have a mask yet */
+    if (pebo->psoMask == NULL)
+    {
+        /* Check if this is a hatch brush */
+        if (pebo->flattrs & BR_IS_HATCH)
+        {
+            /* Get the PDEV */
+            ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
+            if (!ppdev)
+                ppdev = gppdevPrimary;
+
+            /* Use the hatch bitmap as the mask */
+            hbmMask = (HBITMAP)ppdev->ahsurf[pebo->pbrush->iHatch];
+            psurfMask = SURFACE_ShareLockSurface(hbmMask);
+            if (psurfMask == NULL)
+            {
+                ERR("Failed to lock hatch brush for PDEV %p, iHatch %lu\n",
+                    ppdev, pebo->pbrush->iHatch);
+                return NULL;
+            }
+
+            NT_ASSERT(psurfMask->SurfObj.iBitmapFormat == BMF_1BPP);
+            pebo->psoMask = &psurfMask->SurfObj;
+        }
+    }
+
+    return pebo->psoMask;
+}
 
 /** Exported DDI functions ****************************************************/
 

@@ -1,0 +1,27 @@
+<MSCONFIGTOOLFILE>
+
+<_locDefinition>
+  <_locDefault _loc="locNone"/>
+  <_locTag _locAttrData="NAME,HELP">TOOL</_locTag>
+</_locDefinition>
+
+<MSCONFIGTOOLS>
+  <TOOL _locID="About ReactOS" NAME="À propos de ReactOS" PATH="%windir%\system32\winver.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Afficher les informations de la version de ReactOS."/>
+  <TOOL _locID="Action Center" NAME="Centre de maintenance" PATH="%windir%\System32\wscui.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="Ouvrir le Centre de maintenance."/>
+  <TOOL _locID="Computer Management" NAME="Gestion de l’ordinateur" PATH="%windir%\System32\compmgmt.msc" DEFAULT_OPT="" ADV_OPT="" HELP="Afficher et configurer les paramètres et composants du système."/>
+  <TOOL _locID="System Information" NAME="Informations système" PATH="%windir%\System32\msinfo32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Afficher les informations avancées sur les paramètres matériels et logiciels."/>
+  <TOOL _locID="Event Viewer" NAME="Observateur d’événements" PATH="%windir%\System32\eventvwr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Afficher des messages d’analyse et de dépannage."/>
+  <TOOL _locID="Programs" NAME="Programmes" PATH="%windir%\System32\appwiz.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="Lancer, ajouter ou supprimer des programmes et des composants ReactOS."/>
+  <TOOL _locID="System Properties" NAME="Propriétés système" PATH="%windir%\System32\control.exe" DEFAULT_OPT="system" ADV_OPT="" HELP="Afficher les informations de base sur les paramètres système de votre ordinateur."/>
+  <TOOL _locID="Internet Options" NAME="Options Internet" PATH="%windir%\System32\inetcpl.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="Afficher les propriétés Internet."/>
+  <TOOL _locID="Internet Protocol Configuration" NAME="Configuration du protocole Internet" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="/k %windir%\system32\ipconfig.exe" ADV_OPT="/k %windir%\system32\ipconfig.exe /all" HELP="Afficher et configurer les paramètres d’adresse réseau."/>
+  <TOOL _locID="Performance Monitor" NAME="Analyseur de performances" PATH="%windir%\System32\perfmon.exe" DEFAULT_OPT="" ADV_OPT="/sys" HELP="Analyser les performances des ordinateurs locaux ou distants."/>
+  <TOOL _locID="Resource Monitor" NAME="Moniteur de ressource" PATH="%windir%\System32\resmon.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Surveiller les performances et l’utilisation des ressources de l’ordinateur local."/>
+  <TOOL _locID="Task Manager" NAME="Gestionnaire des tâches" PATH="%windir%\System32\taskmgr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Afficher des informations détaillées sur les programmes et les processus qui s’exécutent sur votre ordinateur."/>
+  <TOOL _locID="Command Prompt" NAME="Invite de commandes" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Ouvrir une fenêtre d’invite de commandes."/>
+  <TOOL _locID="Registry Editor" NAME="Éditeur du Registre" PATH="%windir%\System32\regedt32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Apporter des modifications au Registre de ReactOS."/>
+  <TOOL _locID="Remote Assistance" NAME="Assistance à distance" PATH="%windir%\System32\msra.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Recevoir de l’aide d’un ami (ou lui proposer de l’aide) via Internet."/>
+  <TOOL _locID="System Restore" NAME="Restaurer le système" PATH="%windir%\System32\rstrui.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Restaurer le système de l’ordinateur à un état antérieur."/>
+</MSCONFIGTOOLS>
+
+</MSCONFIGTOOLFILE>

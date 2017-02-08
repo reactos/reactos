@@ -27,38 +27,39 @@
 #define D3DX_PI    ((FLOAT)3.141592654)
 #define D3DX_1BYPI ((FLOAT)0.318309886)
 
+#define D3DXSH_MINORDER 2
+#define D3DXSH_MAXORDER 6
+
 #define D3DXToRadian(degree) ((degree) * (D3DX_PI / 180.0f))
 #define D3DXToDegree(radian) ((radian) * (180.0f / D3DX_PI))
-
-
 
 typedef struct D3DXVECTOR2
 {
 #ifdef __cplusplus
     D3DXVECTOR2();
-    D3DXVECTOR2(CONST FLOAT *pf);
+    D3DXVECTOR2(const FLOAT *pf);
     D3DXVECTOR2(FLOAT fx, FLOAT fy);
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
-    D3DXVECTOR2& operator += (CONST D3DXVECTOR2&);
-    D3DXVECTOR2& operator -= (CONST D3DXVECTOR2&);
+    D3DXVECTOR2& operator += (const D3DXVECTOR2&);
+    D3DXVECTOR2& operator -= (const D3DXVECTOR2&);
     D3DXVECTOR2& operator *= (FLOAT);
     D3DXVECTOR2& operator /= (FLOAT);
 
     D3DXVECTOR2 operator + () const;
     D3DXVECTOR2 operator - () const;
 
-    D3DXVECTOR2 operator + (CONST D3DXVECTOR2&) const;
-    D3DXVECTOR2 operator - (CONST D3DXVECTOR2&) const;
+    D3DXVECTOR2 operator + (const D3DXVECTOR2&) const;
+    D3DXVECTOR2 operator - (const D3DXVECTOR2&) const;
     D3DXVECTOR2 operator * (FLOAT) const;
     D3DXVECTOR2 operator / (FLOAT) const;
 
-    friend D3DXVECTOR2 operator * (FLOAT, CONST D3DXVECTOR2&);
+    friend D3DXVECTOR2 operator * (FLOAT, const D3DXVECTOR2&);
 
-    BOOL operator == (CONST D3DXVECTOR2&) const;
-    BOOL operator != (CONST D3DXVECTOR2&) const;
+    BOOL operator == (const D3DXVECTOR2&) const;
+    BOOL operator != (const D3DXVECTOR2&) const;
 #endif /* __cplusplus */
     FLOAT x, y;
 } D3DXVECTOR2, *LPD3DXVECTOR2;
@@ -67,30 +68,30 @@ typedef struct D3DXVECTOR2
 typedef struct D3DXVECTOR3 : public D3DVECTOR
 {
     D3DXVECTOR3();
-    D3DXVECTOR3(CONST FLOAT *pf);
-    D3DXVECTOR3(CONST D3DVECTOR& v);
+    D3DXVECTOR3(const FLOAT *pf);
+    D3DXVECTOR3(const D3DVECTOR& v);
     D3DXVECTOR3(FLOAT fx, FLOAT fy, FLOAT fz);
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
-    D3DXVECTOR3& operator += (CONST D3DXVECTOR3&);
-    D3DXVECTOR3& operator -= (CONST D3DXVECTOR3&);
+    D3DXVECTOR3& operator += (const D3DXVECTOR3&);
+    D3DXVECTOR3& operator -= (const D3DXVECTOR3&);
     D3DXVECTOR3& operator *= (FLOAT);
     D3DXVECTOR3& operator /= (FLOAT);
 
     D3DXVECTOR3 operator + () const;
     D3DXVECTOR3 operator - () const;
 
-    D3DXVECTOR3 operator + (CONST D3DXVECTOR3&) const;
-    D3DXVECTOR3 operator - (CONST D3DXVECTOR3&) const;
+    D3DXVECTOR3 operator + (const D3DXVECTOR3&) const;
+    D3DXVECTOR3 operator - (const D3DXVECTOR3&) const;
     D3DXVECTOR3 operator * (FLOAT) const;
     D3DXVECTOR3 operator / (FLOAT) const;
 
-    friend D3DXVECTOR3 operator * (FLOAT, CONST struct D3DXVECTOR3&);
+    friend D3DXVECTOR3 operator * (FLOAT, const struct D3DXVECTOR3&);
 
-    BOOL operator == (CONST D3DXVECTOR3&) const;
-    BOOL operator != (CONST D3DXVECTOR3&) const;
+    BOOL operator == (const D3DXVECTOR3&) const;
+    BOOL operator != (const D3DXVECTOR3&) const;
 } D3DXVECTOR3, *LPD3DXVECTOR3;
 #else /* !__cplusplus */
 typedef struct _D3DVECTOR D3DXVECTOR3, *LPD3DXVECTOR3;
@@ -100,29 +101,29 @@ typedef struct D3DXVECTOR4
 {
 #ifdef __cplusplus
     D3DXVECTOR4();
-    D3DXVECTOR4(CONST FLOAT *pf);
+    D3DXVECTOR4(const FLOAT *pf);
     D3DXVECTOR4(FLOAT fx, FLOAT fy, FLOAT fz, FLOAT fw);
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
-    D3DXVECTOR4& operator += (CONST D3DXVECTOR4&);
-    D3DXVECTOR4& operator -= (CONST D3DXVECTOR4&);
+    D3DXVECTOR4& operator += (const D3DXVECTOR4&);
+    D3DXVECTOR4& operator -= (const D3DXVECTOR4&);
     D3DXVECTOR4& operator *= (FLOAT);
     D3DXVECTOR4& operator /= (FLOAT);
 
     D3DXVECTOR4 operator + () const;
     D3DXVECTOR4 operator - () const;
 
-    D3DXVECTOR4 operator + (CONST D3DXVECTOR4&) const;
-    D3DXVECTOR4 operator - (CONST D3DXVECTOR4&) const;
+    D3DXVECTOR4 operator + (const D3DXVECTOR4&) const;
+    D3DXVECTOR4 operator - (const D3DXVECTOR4&) const;
     D3DXVECTOR4 operator * (FLOAT) const;
     D3DXVECTOR4 operator / (FLOAT) const;
 
-    friend D3DXVECTOR4 operator * (FLOAT, CONST D3DXVECTOR4&);
+    friend D3DXVECTOR4 operator * (FLOAT, const D3DXVECTOR4&);
 
-    BOOL operator == (CONST D3DXVECTOR4&) const;
-    BOOL operator != (CONST D3DXVECTOR4&) const;
+    BOOL operator == (const D3DXVECTOR4&) const;
+    BOOL operator != (const D3DXVECTOR4&) const;
 #endif /* __cplusplus */
     FLOAT x, y, z, w;
 } D3DXVECTOR4, *LPD3DXVECTOR4;
@@ -131,8 +132,8 @@ typedef struct D3DXVECTOR4
 typedef struct D3DXMATRIX : public D3DMATRIX
 {
     D3DXMATRIX();
-    D3DXMATRIX(CONST FLOAT *pf);
-    D3DXMATRIX(CONST D3DMATRIX& mat);
+    D3DXMATRIX(const FLOAT *pf);
+    D3DXMATRIX(const D3DMATRIX& mat);
     D3DXMATRIX(FLOAT f11, FLOAT f12, FLOAT f13, FLOAT f14,
                FLOAT f21, FLOAT f22, FLOAT f23, FLOAT f24,
                FLOAT f31, FLOAT f32, FLOAT f33, FLOAT f34,
@@ -142,27 +143,27 @@ typedef struct D3DXMATRIX : public D3DMATRIX
     FLOAT operator () (UINT row, UINT col) const;
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
-    D3DXMATRIX& operator *= (CONST D3DXMATRIX&);
-    D3DXMATRIX& operator += (CONST D3DXMATRIX&);
-    D3DXMATRIX& operator -= (CONST D3DXMATRIX&);
+    D3DXMATRIX& operator *= (const D3DXMATRIX&);
+    D3DXMATRIX& operator += (const D3DXMATRIX&);
+    D3DXMATRIX& operator -= (const D3DXMATRIX&);
     D3DXMATRIX& operator *= (FLOAT);
     D3DXMATRIX& operator /= (FLOAT);
 
     D3DXMATRIX operator + () const;
     D3DXMATRIX operator - () const;
 
-    D3DXMATRIX operator * (CONST D3DXMATRIX&) const;
-    D3DXMATRIX operator + (CONST D3DXMATRIX&) const;
-    D3DXMATRIX operator - (CONST D3DXMATRIX&) const;
+    D3DXMATRIX operator * (const D3DXMATRIX&) const;
+    D3DXMATRIX operator + (const D3DXMATRIX&) const;
+    D3DXMATRIX operator - (const D3DXMATRIX&) const;
     D3DXMATRIX operator * (FLOAT) const;
     D3DXMATRIX operator / (FLOAT) const;
 
-    friend D3DXMATRIX operator * (FLOAT, CONST D3DXMATRIX&);
+    friend D3DXMATRIX operator * (FLOAT, const D3DXMATRIX&);
 
-    BOOL operator == (CONST D3DXMATRIX&) const;
-    BOOL operator != (CONST D3DXMATRIX&) const;
+    BOOL operator == (const D3DXMATRIX&) const;
+    BOOL operator != (const D3DXMATRIX&) const;
 } D3DXMATRIX, *LPD3DXMATRIX;
 #else /* !__cplusplus */
 typedef struct _D3DMATRIX D3DXMATRIX, *LPD3DXMATRIX;
@@ -172,31 +173,31 @@ typedef struct D3DXQUATERNION
 {
 #ifdef __cplusplus
     D3DXQUATERNION();
-    D3DXQUATERNION(CONST FLOAT *pf);
+    D3DXQUATERNION(const FLOAT *pf);
     D3DXQUATERNION(FLOAT fx, FLOAT fy, FLOAT fz, FLOAT fw);
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
-    D3DXQUATERNION& operator += (CONST D3DXQUATERNION&);
-    D3DXQUATERNION& operator -= (CONST D3DXQUATERNION&);
-    D3DXQUATERNION& operator *= (CONST D3DXQUATERNION&);
+    D3DXQUATERNION& operator += (const D3DXQUATERNION&);
+    D3DXQUATERNION& operator -= (const D3DXQUATERNION&);
+    D3DXQUATERNION& operator *= (const D3DXQUATERNION&);
     D3DXQUATERNION& operator *= (FLOAT);
     D3DXQUATERNION& operator /= (FLOAT);
 
     D3DXQUATERNION  operator + () const;
     D3DXQUATERNION  operator - () const;
 
-    D3DXQUATERNION operator + (CONST D3DXQUATERNION&) const;
-    D3DXQUATERNION operator - (CONST D3DXQUATERNION&) const;
-    D3DXQUATERNION operator * (CONST D3DXQUATERNION&) const;
+    D3DXQUATERNION operator + (const D3DXQUATERNION&) const;
+    D3DXQUATERNION operator - (const D3DXQUATERNION&) const;
+    D3DXQUATERNION operator * (const D3DXQUATERNION&) const;
     D3DXQUATERNION operator * (FLOAT) const;
     D3DXQUATERNION operator / (FLOAT) const;
 
-    friend D3DXQUATERNION operator * (FLOAT, CONST D3DXQUATERNION&);
+    friend D3DXQUATERNION operator * (FLOAT, const D3DXQUATERNION&);
 
-    BOOL operator == (CONST D3DXQUATERNION&) const;
-    BOOL operator != (CONST D3DXQUATERNION&) const;
+    BOOL operator == (const D3DXQUATERNION&) const;
+    BOOL operator != (const D3DXQUATERNION&) const;
 #endif /* __cplusplus */
     FLOAT x, y, z, w;
 } D3DXQUATERNION, *LPD3DXQUATERNION;
@@ -205,17 +206,17 @@ typedef struct D3DXPLANE
 {
 #ifdef __cplusplus
     D3DXPLANE();
-    D3DXPLANE(CONST FLOAT *pf);
+    D3DXPLANE(const FLOAT *pf);
     D3DXPLANE(FLOAT fa, FLOAT fb, FLOAT fc, FLOAT fd);
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
     D3DXPLANE operator + () const;
     D3DXPLANE operator - () const;
 
-    BOOL operator == (CONST D3DXPLANE&) const;
-    BOOL operator != (CONST D3DXPLANE&) const;
+    BOOL operator == (const D3DXPLANE&) const;
+    BOOL operator != (const D3DXPLANE&) const;
 #endif /* __cplusplus */
     FLOAT a, b, c, d;
 } D3DXPLANE, *LPD3DXPLANE;
@@ -225,64 +226,80 @@ typedef struct D3DXCOLOR
 #ifdef __cplusplus
     D3DXCOLOR();
     D3DXCOLOR(DWORD col);
-    D3DXCOLOR(CONST FLOAT *pf);
-    D3DXCOLOR(CONST D3DCOLORVALUE& col);
+    D3DXCOLOR(const FLOAT *pf);
+    D3DXCOLOR(const D3DCOLORVALUE& col);
     D3DXCOLOR(FLOAT fr, FLOAT fg, FLOAT fb, FLOAT fa);
 
     operator DWORD () const;
 
     operator FLOAT* ();
-    operator CONST FLOAT* () const;
+    operator const FLOAT* () const;
 
     operator D3DCOLORVALUE* ();
-    operator CONST D3DCOLORVALUE* () const;
+    operator const D3DCOLORVALUE* () const;
 
     operator D3DCOLORVALUE& ();
-    operator CONST D3DCOLORVALUE& () const;
+    operator const D3DCOLORVALUE& () const;
 
-    D3DXCOLOR& operator += (CONST D3DXCOLOR&);
-    D3DXCOLOR& operator -= (CONST D3DXCOLOR&);
+    D3DXCOLOR& operator += (const D3DXCOLOR&);
+    D3DXCOLOR& operator -= (const D3DXCOLOR&);
     D3DXCOLOR& operator *= (FLOAT);
     D3DXCOLOR& operator /= (FLOAT);
 
     D3DXCOLOR operator + () const;
     D3DXCOLOR operator - () const;
 
-    D3DXCOLOR operator + (CONST D3DXCOLOR&) const;
-    D3DXCOLOR operator - (CONST D3DXCOLOR&) const;
+    D3DXCOLOR operator + (const D3DXCOLOR&) const;
+    D3DXCOLOR operator - (const D3DXCOLOR&) const;
     D3DXCOLOR operator * (FLOAT) const;
     D3DXCOLOR operator / (FLOAT) const;
 
-    friend D3DXCOLOR operator * (FLOAT, CONST D3DXCOLOR&);
+    friend D3DXCOLOR operator * (FLOAT, const D3DXCOLOR&);
 
-    BOOL operator == (CONST D3DXCOLOR&) const;
-    BOOL operator != (CONST D3DXCOLOR&) const;
+    BOOL operator == (const D3DXCOLOR&) const;
+    BOOL operator != (const D3DXCOLOR&) const;
 #endif /* __cplusplus */
     FLOAT r, g, b, a;
 } D3DXCOLOR, *LPD3DXCOLOR;
+
+typedef struct D3DXFLOAT16
+{
+#ifdef __cplusplus
+    D3DXFLOAT16();
+    D3DXFLOAT16(FLOAT f);
+    D3DXFLOAT16(const D3DXFLOAT16 &f);
+
+    operator FLOAT ();
+
+    BOOL operator == (const D3DXFLOAT16 &) const;
+    BOOL operator != (const D3DXFLOAT16 &) const;
+#endif /* __cplusplus */
+    WORD value;
+} D3DXFLOAT16, *LPD3DXFLOAT16;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-D3DXCOLOR* WINAPI D3DXColorAdjustContrast(D3DXCOLOR *pout, CONST D3DXCOLOR *pc, FLOAT s);
-D3DXCOLOR* WINAPI D3DXColorAdjustSaturation(D3DXCOLOR *pout, CONST D3DXCOLOR *pc, FLOAT s);
+D3DXCOLOR* WINAPI D3DXColorAdjustContrast(D3DXCOLOR *pout, const D3DXCOLOR *pc, FLOAT s);
+D3DXCOLOR* WINAPI D3DXColorAdjustSaturation(D3DXCOLOR *pout, const D3DXCOLOR *pc, FLOAT s);
 
 FLOAT WINAPI D3DXFresnelTerm(FLOAT costheta, FLOAT refractionindex);
 
-D3DXMATRIX* WINAPI D3DXMatrixAffineTransformation(D3DXMATRIX *pout, FLOAT scaling, CONST D3DXVECTOR3 *rotationcenter, CONST D3DXQUATERNION *rotation, CONST D3DXVECTOR3 *translation);
-D3DXMATRIX* WINAPI D3DXMatrixAffineTransformation2D(D3DXMATRIX *pout, FLOAT scaling, CONST D3DXVECTOR2 *protationcenter, FLOAT rotation, CONST D3DXVECTOR2 *ptranslation);
-HRESULT WINAPI D3DXMatrixDecompose(D3DXVECTOR3 *poutscale, D3DXQUATERNION *poutrotation, D3DXVECTOR3 *pouttranslation, CONST D3DXMATRIX *pm);
-FLOAT WINAPI D3DXMatrixDeterminant(CONST D3DXMATRIX *pm);
-D3DXMATRIX* WINAPI D3DXMatrixInverse(D3DXMATRIX *pout, FLOAT *pdeterminant, CONST D3DXMATRIX *pm);
-D3DXMATRIX* WINAPI D3DXMatrixLookAtLH(D3DXMATRIX *pout, CONST D3DXVECTOR3 *peye, CONST D3DXVECTOR3 *pat, CONST D3DXVECTOR3 *pup);
-D3DXMATRIX* WINAPI D3DXMatrixLookAtRH(D3DXMATRIX *pout, CONST D3DXVECTOR3 *peye, CONST D3DXVECTOR3 *pat, CONST D3DXVECTOR3 *pup);
-D3DXMATRIX* WINAPI D3DXMatrixMultiply(D3DXMATRIX *pout, CONST D3DXMATRIX *pm1, CONST D3DXMATRIX *pm2);
-D3DXMATRIX* WINAPI D3DXMatrixMultiplyTranspose(D3DXMATRIX *pout, CONST D3DXMATRIX *pm1, CONST D3DXMATRIX *pm2);
+D3DXMATRIX* WINAPI D3DXMatrixAffineTransformation(D3DXMATRIX *pout, FLOAT scaling, const D3DXVECTOR3 *rotationcenter, const D3DXQUATERNION *rotation,
+    const D3DXVECTOR3 *translation);
+D3DXMATRIX* WINAPI D3DXMatrixAffineTransformation2D(D3DXMATRIX *pout, FLOAT scaling, const D3DXVECTOR2 *protationcenter, FLOAT rotation,
+    const D3DXVECTOR2 *ptranslation);
+HRESULT WINAPI D3DXMatrixDecompose(D3DXVECTOR3 *poutscale, D3DXQUATERNION *poutrotation, D3DXVECTOR3 *pouttranslation, const D3DXMATRIX *pm);
+FLOAT WINAPI D3DXMatrixDeterminant(const D3DXMATRIX *pm);
+D3DXMATRIX* WINAPI D3DXMatrixInverse(D3DXMATRIX *pout, FLOAT *pdeterminant, const D3DXMATRIX *pm);
+D3DXMATRIX* WINAPI D3DXMatrixLookAtLH(D3DXMATRIX *pout, const D3DXVECTOR3 *peye, const D3DXVECTOR3 *pat, const D3DXVECTOR3 *pup);
+D3DXMATRIX* WINAPI D3DXMatrixLookAtRH(D3DXMATRIX *pout, const D3DXVECTOR3 *peye, const D3DXVECTOR3 *pat, const D3DXVECTOR3 *pup);
+D3DXMATRIX* WINAPI D3DXMatrixMultiply(D3DXMATRIX *pout, const D3DXMATRIX *pm1, const D3DXMATRIX *pm2);
+D3DXMATRIX* WINAPI D3DXMatrixMultiplyTranspose(D3DXMATRIX *pout, const D3DXMATRIX *pm1, const D3DXMATRIX *pm2);
 D3DXMATRIX* WINAPI D3DXMatrixOrthoLH(D3DXMATRIX *pout, FLOAT w, FLOAT h, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixOrthoOffCenterLH(D3DXMATRIX *pout, FLOAT l, FLOAT r, FLOAT b, FLOAT t, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixOrthoOffCenterRH(D3DXMATRIX *pout, FLOAT l, FLOAT r, FLOAT b, FLOAT t, FLOAT zn, FLOAT zf);
-D3DXMATRIX* WINAPI D3DXMatrixOrthoLH(D3DXMATRIX *pout, FLOAT w, FLOAT h, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixOrthoRH(D3DXMATRIX *pout, FLOAT w, FLOAT h, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pout, FLOAT fovy, FLOAT aspect, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixPerspectiveFovRH(D3DXMATRIX *pout, FLOAT fovy, FLOAT aspect, FLOAT zn, FLOAT zf);
@@ -290,73 +307,98 @@ D3DXMATRIX* WINAPI D3DXMatrixPerspectiveLH(D3DXMATRIX *pout, FLOAT w, FLOAT h, F
 D3DXMATRIX* WINAPI D3DXMatrixPerspectiveOffCenterLH(D3DXMATRIX *pout, FLOAT l, FLOAT r, FLOAT b, FLOAT t, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixPerspectiveOffCenterRH(D3DXMATRIX *pout, FLOAT l, FLOAT r, FLOAT b, FLOAT t, FLOAT zn, FLOAT zf);
 D3DXMATRIX* WINAPI D3DXMatrixPerspectiveRH(D3DXMATRIX *pout, FLOAT w, FLOAT h, FLOAT zn, FLOAT zf);
-D3DXMATRIX* WINAPI D3DXMatrixReflect(D3DXMATRIX *pout, CONST D3DXPLANE *pplane);
-D3DXMATRIX* WINAPI D3DXMatrixRotationAxis(D3DXMATRIX *pout, CONST D3DXVECTOR3 *pv, FLOAT angle);
-D3DXMATRIX* WINAPI D3DXMatrixRotationQuaternion(D3DXMATRIX *pout, CONST D3DXQUATERNION *pq);
+D3DXMATRIX* WINAPI D3DXMatrixReflect(D3DXMATRIX *pout, const D3DXPLANE *pplane);
+D3DXMATRIX* WINAPI D3DXMatrixRotationAxis(D3DXMATRIX *pout, const D3DXVECTOR3 *pv, FLOAT angle);
+D3DXMATRIX* WINAPI D3DXMatrixRotationQuaternion(D3DXMATRIX *pout, const D3DXQUATERNION *pq);
 D3DXMATRIX* WINAPI D3DXMatrixRotationX(D3DXMATRIX *pout, FLOAT angle);
 D3DXMATRIX* WINAPI D3DXMatrixRotationY(D3DXMATRIX *pout, FLOAT angle);
 D3DXMATRIX* WINAPI D3DXMatrixRotationYawPitchRoll(D3DXMATRIX *pout, FLOAT yaw, FLOAT pitch, FLOAT roll);
 D3DXMATRIX* WINAPI D3DXMatrixRotationZ(D3DXMATRIX *pout, FLOAT angle);
 D3DXMATRIX* WINAPI D3DXMatrixScaling(D3DXMATRIX *pout, FLOAT sx, FLOAT sy, FLOAT sz);
-D3DXMATRIX* WINAPI D3DXMatrixShadow(D3DXMATRIX *pout, CONST D3DXVECTOR4 *plight, CONST D3DXPLANE *pPlane);
-D3DXMATRIX* WINAPI D3DXMatrixTransformation(D3DXMATRIX *pout, CONST D3DXVECTOR3 *pscalingcenter, CONST D3DXQUATERNION *pscalingrotation, CONST D3DXVECTOR3 *pscaling, CONST D3DXVECTOR3 *protationcenter, CONST D3DXQUATERNION *protation, CONST D3DXVECTOR3 *ptranslation);
-D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(D3DXMATRIX *pout, CONST D3DXVECTOR2 *pscalingcenter, FLOAT scalingrotation, CONST D3DXVECTOR2 *pscaling, CONST D3DXVECTOR2 *protationcenter, FLOAT rotation, CONST D3DXVECTOR2 *ptranslation);
+D3DXMATRIX* WINAPI D3DXMatrixShadow(D3DXMATRIX *pout, const D3DXVECTOR4 *plight, const D3DXPLANE *pPlane);
+D3DXMATRIX* WINAPI D3DXMatrixTransformation(D3DXMATRIX *pout, const D3DXVECTOR3 *pscalingcenter, const D3DXQUATERNION *pscalingrotation, const D3DXVECTOR3 *pscaling, const D3DXVECTOR3 *protationcenter,
+    const D3DXQUATERNION *protation, const D3DXVECTOR3 *ptranslation);
+D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(D3DXMATRIX *pout, const D3DXVECTOR2 *pscalingcenter, FLOAT scalingrotation, const D3DXVECTOR2 *pscaling,
+    const D3DXVECTOR2 *protationcenter, FLOAT rotation, const D3DXVECTOR2 *ptranslation);
 D3DXMATRIX* WINAPI D3DXMatrixTranslation(D3DXMATRIX *pout, FLOAT x, FLOAT y, FLOAT z);
-D3DXMATRIX* WINAPI D3DXMatrixTranspose(D3DXMATRIX *pout, CONST D3DXMATRIX *pm);
+D3DXMATRIX* WINAPI D3DXMatrixTranspose(D3DXMATRIX *pout, const D3DXMATRIX *pm);
 
-D3DXPLANE* WINAPI D3DXPlaneFromPointNormal(D3DXPLANE *pout, CONST D3DXVECTOR3 *pvpoint, CONST D3DXVECTOR3 *pvnormal);
-D3DXPLANE* WINAPI D3DXPlaneFromPoints(D3DXPLANE *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2, CONST D3DXVECTOR3 *pv3);
-D3DXVECTOR3* WINAPI D3DXPlaneIntersectLine(D3DXVECTOR3 *pout, CONST D3DXPLANE *pp, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2);
-D3DXPLANE* WINAPI D3DXPlaneNormalize(D3DXPLANE *pout, CONST D3DXPLANE *pp);
-D3DXPLANE* WINAPI D3DXPlaneTransform(D3DXPLANE *pout, CONST D3DXPLANE *pplane, CONST D3DXMATRIX *pm);
-D3DXPLANE* WINAPI D3DXPlaneTransformArray(D3DXPLANE *pout, UINT outstride, CONST D3DXPLANE *pplane, UINT pstride, CONST D3DXMATRIX *pm, UINT n);
+D3DXPLANE* WINAPI D3DXPlaneFromPointNormal(D3DXPLANE *pout, const D3DXVECTOR3 *pvpoint, const D3DXVECTOR3 *pvnormal);
+D3DXPLANE* WINAPI D3DXPlaneFromPoints(D3DXPLANE *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2, const D3DXVECTOR3 *pv3);
+D3DXVECTOR3* WINAPI D3DXPlaneIntersectLine(D3DXVECTOR3 *pout, const D3DXPLANE *pp, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2);
+D3DXPLANE* WINAPI D3DXPlaneNormalize(D3DXPLANE *pout, const D3DXPLANE *pp);
+D3DXPLANE* WINAPI D3DXPlaneTransform(D3DXPLANE *pout, const D3DXPLANE *pplane, const D3DXMATRIX *pm);
+D3DXPLANE* WINAPI D3DXPlaneTransformArray(D3DXPLANE *pout, UINT outstride, const D3DXPLANE *pplane, UINT pstride, const D3DXMATRIX *pm, UINT n);
 
-D3DXQUATERNION* WINAPI D3DXQuaternionBaryCentric(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq1, CONST D3DXQUATERNION *pq2, CONST D3DXQUATERNION *pq3, FLOAT f, FLOAT g);
-D3DXQUATERNION* WINAPI D3DXQuaternionExp(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq);
-D3DXQUATERNION* WINAPI D3DXQuaternionInverse(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq);
-D3DXQUATERNION* WINAPI D3DXQuaternionLn(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq);
-D3DXQUATERNION* WINAPI D3DXQuaternionMultiply(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq1, CONST D3DXQUATERNION *pq2);
-D3DXQUATERNION* WINAPI D3DXQuaternionNormalize(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq);
-D3DXQUATERNION* WINAPI D3DXQuaternionRotationAxis(D3DXQUATERNION *pout, CONST D3DXVECTOR3 *pv, FLOAT angle);
-D3DXQUATERNION* WINAPI D3DXQuaternionRotationMatrix(D3DXQUATERNION *pout, CONST D3DXMATRIX *pm);
+D3DXQUATERNION* WINAPI D3DXQuaternionBaryCentric(D3DXQUATERNION *pout, const D3DXQUATERNION *pq1, const D3DXQUATERNION *pq2, const D3DXQUATERNION *pq3, FLOAT f, FLOAT g);
+D3DXQUATERNION* WINAPI D3DXQuaternionExp(D3DXQUATERNION *pout, const D3DXQUATERNION *pq);
+D3DXQUATERNION* WINAPI D3DXQuaternionInverse(D3DXQUATERNION *pout, const D3DXQUATERNION *pq);
+D3DXQUATERNION* WINAPI D3DXQuaternionLn(D3DXQUATERNION *pout, const D3DXQUATERNION *pq);
+D3DXQUATERNION* WINAPI D3DXQuaternionMultiply(D3DXQUATERNION *pout, const D3DXQUATERNION *pq1, const D3DXQUATERNION *pq2);
+D3DXQUATERNION* WINAPI D3DXQuaternionNormalize(D3DXQUATERNION *pout, const D3DXQUATERNION *pq);
+D3DXQUATERNION* WINAPI D3DXQuaternionRotationAxis(D3DXQUATERNION *pout, const D3DXVECTOR3 *pv, FLOAT angle);
+D3DXQUATERNION* WINAPI D3DXQuaternionRotationMatrix(D3DXQUATERNION *pout, const D3DXMATRIX *pm);
 D3DXQUATERNION* WINAPI D3DXQuaternionRotationYawPitchRoll(D3DXQUATERNION *pout, FLOAT yaw, FLOAT pitch, FLOAT roll);
-D3DXQUATERNION* WINAPI D3DXQuaternionSlerp(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq1, CONST D3DXQUATERNION *pq2, FLOAT t);
-D3DXQUATERNION* WINAPI D3DXQuaternionSquad(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq1, CONST D3DXQUATERNION *pq2, CONST D3DXQUATERNION *pq3, CONST D3DXQUATERNION *pq4, FLOAT t);
-void WINAPI D3DXQuaternionToAxisAngle(CONST D3DXQUATERNION *pq, D3DXVECTOR3 *paxis, FLOAT *pangle);
+D3DXQUATERNION* WINAPI D3DXQuaternionSlerp(D3DXQUATERNION *pout, const D3DXQUATERNION *pq1, const D3DXQUATERNION *pq2, FLOAT t);
+D3DXQUATERNION* WINAPI D3DXQuaternionSquad(D3DXQUATERNION *pout, const D3DXQUATERNION *pq1, const D3DXQUATERNION *pq2, const D3DXQUATERNION *pq3,
+    const D3DXQUATERNION *pq4, FLOAT t);
+void WINAPI D3DXQuaternionSquadSetup(D3DXQUATERNION *paout, D3DXQUATERNION *pbout, D3DXQUATERNION *pcout, const D3DXQUATERNION *pq0,
+    const D3DXQUATERNION *pq1, const D3DXQUATERNION *pq2, const D3DXQUATERNION *pq3);
+void WINAPI D3DXQuaternionToAxisAngle(const D3DXQUATERNION *pq, D3DXVECTOR3 *paxis, FLOAT *pangle);
 
-D3DXVECTOR2* WINAPI D3DXVec2BaryCentric(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2, CONST D3DXVECTOR2 *pv3, FLOAT f, FLOAT g);
-D3DXVECTOR2* WINAPI D3DXVec2CatmullRom(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv0, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2, CONST D3DXVECTOR2 *pv3, FLOAT s);
-D3DXVECTOR2* WINAPI D3DXVec2Hermite(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pt1, CONST D3DXVECTOR2 *pv2, CONST D3DXVECTOR2 *pt2, FLOAT s);
-D3DXVECTOR2* WINAPI D3DXVec2Normalize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv);
-D3DXVECTOR4* WINAPI D3DXVec2Transform(D3DXVECTOR4 *pout, CONST D3DXVECTOR2 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR4* WINAPI D3DXVec2TransformArray(D3DXVECTOR4 *pout, UINT outstride, CONST D3DXVECTOR2 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
-D3DXVECTOR2* WINAPI D3DXVec2TransformCoord(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR2* WINAPI D3DXVec2TransformCoordArray(D3DXVECTOR2 *pout, UINT outstride, CONST D3DXVECTOR2 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
-D3DXVECTOR2* WINAPI D3DXVec2TransformNormal(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR2* WINAPI D3DXVec2TransformNormalArray(D3DXVECTOR2 *pout, UINT outstride, CONST D3DXVECTOR2 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
+D3DXVECTOR2* WINAPI D3DXVec2BaryCentric(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2, const D3DXVECTOR2 *pv3, FLOAT f, FLOAT g);
+D3DXVECTOR2* WINAPI D3DXVec2CatmullRom(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv0, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2, const D3DXVECTOR2 *pv3, FLOAT s);
+D3DXVECTOR2* WINAPI D3DXVec2Hermite(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pt1, const D3DXVECTOR2 *pv2, const D3DXVECTOR2 *pt2, FLOAT s);
+D3DXVECTOR2* WINAPI D3DXVec2Normalize(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv);
+D3DXVECTOR4* WINAPI D3DXVec2Transform(D3DXVECTOR4 *pout, const D3DXVECTOR2 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR4* WINAPI D3DXVec2TransformArray(D3DXVECTOR4 *pout, UINT outstride, const D3DXVECTOR2 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
+D3DXVECTOR2* WINAPI D3DXVec2TransformCoord(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR2* WINAPI D3DXVec2TransformCoordArray(D3DXVECTOR2 *pout, UINT outstride, const D3DXVECTOR2 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
+D3DXVECTOR2* WINAPI D3DXVec2TransformNormal(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR2* WINAPI D3DXVec2TransformNormalArray(D3DXVECTOR2 *pout, UINT outstride, const D3DXVECTOR2 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
 
-D3DXVECTOR3* WINAPI D3DXVec3BaryCentric(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2, CONST D3DXVECTOR3 *pv3, FLOAT f, FLOAT g);
-D3DXVECTOR3* WINAPI D3DXVec3CatmullRom( D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv0, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2, CONST D3DXVECTOR3 *pv3, FLOAT s);
-D3DXVECTOR3* WINAPI D3DXVec3Hermite(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pt1, CONST D3DXVECTOR3 *pv2, CONST D3DXVECTOR3 *pt2, FLOAT s);
-D3DXVECTOR3* WINAPI D3DXVec3Normalize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv);
-D3DXVECTOR3* WINAPI D3DXVec3Project(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv, CONST D3DVIEWPORT9 *pviewport, CONST D3DXMATRIX *pprojection, CONST D3DXMATRIX *pview, CONST D3DXMATRIX *pworld);
-D3DXVECTOR3* WINAPI D3DXVec3ProjectArray(D3DXVECTOR3 *pout, UINT outstride, CONST D3DXVECTOR3 *pv, UINT vstride, CONST D3DVIEWPORT9 *pviewport, CONST D3DXMATRIX *pprojection, CONST D3DXMATRIX *pview, CONST D3DXMATRIX *pworld, UINT n);
-D3DXVECTOR4* WINAPI D3DXVec3Transform(D3DXVECTOR4 *pout, CONST D3DXVECTOR3 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR4* WINAPI D3DXVec3TransformArray(D3DXVECTOR4 *pout, UINT outstride, CONST D3DXVECTOR3 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
-D3DXVECTOR3* WINAPI D3DXVec3TransformCoord(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR3* WINAPI D3DXVec3TransformCoordArray(D3DXVECTOR3 *pout, UINT outstride, CONST D3DXVECTOR3 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
-D3DXVECTOR3* WINAPI D3DXVec3TransformNormal(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR3* WINAPI D3DXVec3TransformNormalArray(D3DXVECTOR3 *pout, UINT outstride, CONST D3DXVECTOR3 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
-D3DXVECTOR3* WINAPI D3DXVec3Unproject(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv, CONST D3DVIEWPORT9 *pviewport, CONST D3DXMATRIX *pprojection, CONST D3DXMATRIX *pview, CONST D3DXMATRIX *pworld);
-D3DXVECTOR3* WINAPI D3DXVec3UnprojectArray(D3DXVECTOR3 *pout, UINT outstride, CONST D3DXVECTOR3 *pv, UINT vstride, CONST D3DVIEWPORT9 *pviewport, CONST D3DXMATRIX *pprojection, CONST D3DXMATRIX *pview, CONST D3DXMATRIX *pworld, UINT n);
+D3DXVECTOR3* WINAPI D3DXVec3BaryCentric(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2, const D3DXVECTOR3 *pv3, FLOAT f, FLOAT g);
+D3DXVECTOR3* WINAPI D3DXVec3CatmullRom( D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv0, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2, const D3DXVECTOR3 *pv3, FLOAT s);
+D3DXVECTOR3* WINAPI D3DXVec3Hermite(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pt1, const D3DXVECTOR3 *pv2, const D3DXVECTOR3 *pt2, FLOAT s);
+D3DXVECTOR3* WINAPI D3DXVec3Normalize(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv);
+D3DXVECTOR3* WINAPI D3DXVec3Project(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv, const D3DVIEWPORT9 *pviewport, const D3DXMATRIX *pprojection,
+    const D3DXMATRIX *pview, const D3DXMATRIX *pworld);
+D3DXVECTOR3* WINAPI D3DXVec3ProjectArray(D3DXVECTOR3 *pout, UINT outstride, const D3DXVECTOR3 *pv, UINT vstride, const D3DVIEWPORT9 *pviewport,
+    const D3DXMATRIX *pprojection, const D3DXMATRIX *pview, const D3DXMATRIX *pworld, UINT n);
+D3DXVECTOR4* WINAPI D3DXVec3Transform(D3DXVECTOR4 *pout, const D3DXVECTOR3 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR4* WINAPI D3DXVec3TransformArray(D3DXVECTOR4 *pout, UINT outstride, const D3DXVECTOR3 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
+D3DXVECTOR3* WINAPI D3DXVec3TransformCoord(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR3* WINAPI D3DXVec3TransformCoordArray(D3DXVECTOR3 *pout, UINT outstride, const D3DXVECTOR3 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
+D3DXVECTOR3* WINAPI D3DXVec3TransformNormal(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR3* WINAPI D3DXVec3TransformNormalArray(D3DXVECTOR3 *pout, UINT outstride, const D3DXVECTOR3 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
+D3DXVECTOR3* WINAPI D3DXVec3Unproject(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv, const D3DVIEWPORT9 *pviewport, const D3DXMATRIX *pprojection,
+    const D3DXMATRIX *pview, const D3DXMATRIX *pworld);
+D3DXVECTOR3* WINAPI D3DXVec3UnprojectArray(D3DXVECTOR3 *pout, UINT outstride, const D3DXVECTOR3 *pv, UINT vstride, const D3DVIEWPORT9 *pviewport,
+    const D3DXMATRIX *pprojection, const D3DXMATRIX *pview, const D3DXMATRIX *pworld, UINT n);
+D3DXVECTOR4* WINAPI D3DXVec4BaryCentric(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2, const D3DXVECTOR4 *pv3, FLOAT f, FLOAT g);
+D3DXVECTOR4* WINAPI D3DXVec4CatmullRom(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv0, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2, const D3DXVECTOR4 *pv3, FLOAT s);
+D3DXVECTOR4* WINAPI D3DXVec4Cross(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2, const D3DXVECTOR4 *pv3);
+D3DXVECTOR4* WINAPI D3DXVec4Hermite(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pt1, const D3DXVECTOR4 *pv2, const D3DXVECTOR4 *pt2, FLOAT s);
+D3DXVECTOR4* WINAPI D3DXVec4Normalize(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv);
+D3DXVECTOR4* WINAPI D3DXVec4Transform(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv, const D3DXMATRIX *pm);
+D3DXVECTOR4* WINAPI D3DXVec4TransformArray(D3DXVECTOR4 *pout, UINT outstride, const D3DXVECTOR4 *pv, UINT vstride, const D3DXMATRIX *pm, UINT n);
 
-D3DXVECTOR4* WINAPI D3DXVec4BaryCentric(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2, CONST D3DXVECTOR4 *pv3, FLOAT f, FLOAT g);
-D3DXVECTOR4* WINAPI D3DXVec4CatmullRom(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv0, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2, CONST D3DXVECTOR4 *pv3, FLOAT s);
-D3DXVECTOR4* WINAPI D3DXVec4Cross(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2, CONST D3DXVECTOR4 *pv3);
-D3DXVECTOR4* WINAPI D3DXVec4Hermite(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pt1, CONST D3DXVECTOR4 *pv2, CONST D3DXVECTOR4 *pt2, FLOAT s);
-D3DXVECTOR4* WINAPI D3DXVec4Normalize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv);
-D3DXVECTOR4* WINAPI D3DXVec4Transform(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv, CONST D3DXMATRIX *pm);
-D3DXVECTOR4* WINAPI D3DXVec4TransformArray(D3DXVECTOR4 *pout, UINT outstride, CONST D3DXVECTOR4 *pv, UINT vstride, CONST D3DXMATRIX *pm, UINT n);
+D3DXFLOAT16 *WINAPI D3DXFloat32To16Array(D3DXFLOAT16 *pout, const FLOAT *pin, UINT n);
+FLOAT *WINAPI D3DXFloat16To32Array(FLOAT *pout, const D3DXFLOAT16 *pin, UINT n);
+
+FLOAT* WINAPI D3DXSHAdd(FLOAT *out, UINT order, const FLOAT *a, const FLOAT *b);
+FLOAT WINAPI D3DXSHDot(UINT order, const FLOAT *a, const FLOAT *b);
+HRESULT WINAPI D3DXSHEvalConeLight(UINT order, const D3DXVECTOR3 *dir, FLOAT radius, FLOAT Rintensity, FLOAT Gintensity, FLOAT Bintensity, FLOAT *rout, FLOAT *gout, FLOAT *bout);
+FLOAT* WINAPI D3DXSHEvalDirection(FLOAT *out, UINT order, const D3DXVECTOR3 *dir);
+HRESULT WINAPI D3DXSHEvalDirectionalLight(UINT order, const D3DXVECTOR3 *dir, FLOAT Rintensity, FLOAT Gintensity, FLOAT Bintensity, FLOAT *rout, FLOAT *gout, FLOAT *bout);
+HRESULT WINAPI D3DXSHEvalHemisphereLight(UINT order, const D3DXVECTOR3 *dir, D3DXCOLOR top, D3DXCOLOR bottom, FLOAT *rout, FLOAT *gout, FLOAT *bout);
+HRESULT WINAPI D3DXSHEvalSphericalLight(UINT order, const D3DXVECTOR3 *dir, FLOAT radius, FLOAT Rintensity, FLOAT Gintensity, FLOAT Bintensity, FLOAT *rout, FLOAT *gout, FLOAT *bout);
+FLOAT* WINAPI D3DXSHMultiply2(FLOAT *out, const FLOAT *a, const FLOAT *b);
+FLOAT* WINAPI D3DXSHMultiply3(FLOAT *out, const FLOAT *a, const FLOAT *b);
+FLOAT* WINAPI D3DXSHMultiply4(FLOAT *out, const FLOAT *a, const FLOAT *b);
+FLOAT* WINAPI D3DXSHRotate(FLOAT *out, UINT order, const D3DXMATRIX *matrix, const FLOAT *in);
+FLOAT* WINAPI D3DXSHRotateZ(FLOAT *out, UINT order, FLOAT angle, const FLOAT *in);
+FLOAT* WINAPI D3DXSHScale(FLOAT *out, UINT order, const FLOAT *a, const FLOAT scale);
 
 #ifdef __cplusplus
 }
@@ -372,17 +414,17 @@ DEFINE_GUID(IID_ID3DXMatrixStack,
 
 DECLARE_INTERFACE_(ID3DXMatrixStack, IUnknown)
 {
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     STDMETHOD(Pop)(THIS) PURE;
     STDMETHOD(Push)(THIS) PURE;
     STDMETHOD(LoadIdentity)(THIS) PURE;
-    STDMETHOD(LoadMatrix)(THIS_ CONST D3DXMATRIX* pM ) PURE;
-    STDMETHOD(MultMatrix)(THIS_ CONST D3DXMATRIX* pM ) PURE;
-    STDMETHOD(MultMatrixLocal)(THIS_ CONST D3DXMATRIX* pM ) PURE;
-    STDMETHOD(RotateAxis)(THIS_ CONST D3DXVECTOR3* pV, FLOAT Angle) PURE;
-    STDMETHOD(RotateAxisLocal)(THIS_ CONST D3DXVECTOR3* pV, FLOAT Angle) PURE;
+    STDMETHOD(LoadMatrix)(THIS_ const D3DXMATRIX* pM ) PURE;
+    STDMETHOD(MultMatrix)(THIS_ const D3DXMATRIX* pM ) PURE;
+    STDMETHOD(MultMatrixLocal)(THIS_ const D3DXMATRIX* pM ) PURE;
+    STDMETHOD(RotateAxis)(THIS_ const D3DXVECTOR3* pV, FLOAT Angle) PURE;
+    STDMETHOD(RotateAxisLocal)(THIS_ const D3DXVECTOR3* pV, FLOAT Angle) PURE;
     STDMETHOD(RotateYawPitchRoll)(THIS_ FLOAT Yaw, FLOAT Pitch, FLOAT Roll) PURE;
     STDMETHOD(RotateYawPitchRollLocal)(THIS_ FLOAT Yaw, FLOAT Pitch, FLOAT Roll) PURE;
     STDMETHOD(Scale)(THIS_ FLOAT x, FLOAT y, FLOAT z) PURE;
@@ -421,7 +463,7 @@ DECLARE_INTERFACE_(ID3DXMatrixStack, IUnknown)
 extern "C" {
 #endif
 
-HRESULT WINAPI D3DXCreateMatrixStack(DWORD flags, LPD3DXMATRIXSTACK* ppstack);
+HRESULT WINAPI D3DXCreateMatrixStack(DWORD flags, ID3DXMatrixStack **stack);
 
 #ifdef __cplusplus
 }

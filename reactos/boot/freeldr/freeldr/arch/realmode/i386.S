@@ -58,50 +58,50 @@ RealModeEntryPoint:
 /* This is the entry point from protected mode */
 switch_to_real16:
 
-	/* Restore segment registers to correct limit */
-	mov ax, RMODE_DS
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	mov ss, ax
+    /* Restore segment registers to correct limit */
+    mov ax, RMODE_DS
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
 
-	/* Disable Protected Mode */
-	mov	eax, cr0
-	and eax, CR0_PE_CLR
-	mov	cr0, eax
+    /* Disable Protected Mode */
+    mov eax, cr0
+    and eax, CR0_PE_CLR
+    mov cr0, eax
 
-	/* Clear prefetch queue & correct CS */
-	ljmp16 0, inrmode
+    /* Clear prefetch queue & correct CS */
+    ljmp16 0, inrmode
 
 inrmode:
     /* Set real mode segments */
-	xor ax, ax
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	mov ss, ax
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
 
-	/* Clear out the high 16-bits of ESP */
-	/* This is needed because I have one */
-	/* machine that hangs when booted to dos if */
-	/* anything other than 0x0000 is in the high */
-	/* 16-bits of ESP. Even though real-mode */
-	/* code should only use SP and not ESP. */
-	xor esp, esp
+    /* Clear out the high 16-bits of ESP */
+    /* This is needed because I have one */
+    /* machine that hangs when booted to dos if */
+    /* anything other than 0x0000 is in the high */
+    /* 16-bits of ESP. Even though real-mode */
+    /* code should only use SP and not ESP. */
+    xor esp, esp
 
     /* Restore real mode stack */
-	mov sp, word ptr ds:[stack16]
+    mov sp, word ptr ds:[stack16]
 
-	/* Load IDTR with real mode value */
+    /* Load IDTR with real mode value */
 #ifdef _USE_ML
     lidt fword ptr rmode_idtptr
 #else
-	lidt rmode_idtptr
+    lidt rmode_idtptr
 #endif
 
-	sti		/* These are ok now */
+    sti /* These are ok now */
 
     /* Do the callback, specified by bx */
     shl bx, 1
@@ -155,47 +155,47 @@ stack16:
     .word    STACK16ADDR
 
 
-.align 4	/* force 4-byte alignment */
+.align 4    /* force 4-byte alignment */
 gdt:
-	/* NULL Descriptor */
-	.word HEX(0000)
-	.word HEX(0000)
-	.word HEX(0000)
-	.word HEX(0000)
+    /* NULL Descriptor */
+    .word HEX(0000)
+    .word HEX(0000)
+    .word HEX(0000)
+    .word HEX(0000)
 
-	/* 32-bit flat CS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9A00)
-	.word HEX(00CF)
+    /* 32-bit flat CS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9A00)
+    .word HEX(00CF)
 
-	/* 32-bit flat DS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9200)
-	.word HEX(00CF)
+    /* 32-bit flat DS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9200)
+    .word HEX(00CF)
 
-	/* 16-bit real mode CS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9E00)
-	.word HEX(0000)
+    /* 16-bit real mode CS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9E00)
+    .word HEX(0000)
 
-	/* 16-bit real mode DS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9200)
-	.word HEX(0000)
+    /* 16-bit real mode DS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9200)
+    .word HEX(0000)
 
 /* GDT table pointer */
 gdtptr:
-	.word HEX(27)		/* Limit */
+    .word HEX(27)       /* Limit */
     .word gdt, 0        /* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
-	.word HEX(3ff)		/* Limit */
-	.long 0			/* Base Address */
+    .word HEX(3ff)      /* Limit */
+    .long 0             /* Base Address */
 
 #include "int386.inc"
 #include "pxe.inc"

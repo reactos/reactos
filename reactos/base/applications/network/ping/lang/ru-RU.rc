@@ -1,0 +1,36 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nИспользование:\n    ping [-t] [-n <число>] [-l <размер>] [-w <тайм-аут>] конечный_узел\n\n\
+Параметры:\n\
+    -t               Проверка связи с указанным узлом до прекращения.\n\
+                     Для прекращения нажмите CTRL+C.\n\
+    -n <число>       Число отправляемых запросов эха.\n\
+    -l <размер>      Размер буфера отправки.\n\
+    -w <тайм-аут>    Тайм-аут для каждого ответа (в миллисекундах)\n\n\0"
+
+    IDS_PING_WITH_BYTES "\nОбмен пакетами с %1 [%2] по %3!d! байта данных:\n\n\0"
+    IDS_PING_STATISTICS "\nСтатистика Ping для %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST "    Пакетов: отправлено = %1!d!, получено = %2!d!, потеряно = %3!d! (%4!d!%% потерь),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP "Приблизительное время приема-передачи в мс:\n\0"
+    IDS_MIN_MAX_AVERAGE "    Минимальное = %1, Максимальное = %2, Среднее = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES "Невозможно выделить требуемую память.\n\0"
+    IDS_UNKNOWN_HOST "Unknown host %1.\n\0"
+    IDS_SETSOCKOPT_FAILED "setsockopt failed (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET "Не удалось создать сокет (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "Не удается инициализировать интерфейс ReactOS Sockets.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "Необходимо указать адрес IP.\n\0"
+    IDS_BAD_PARAMETER "Неверный параметр %1.\n\0"
+    IDS_BAD_OPTION_FORMAT "Bad option format %1.\n\0"
+    IDS_BAD_OPTION "Bad option %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L "Недопустимое значение параметра -l, допустимый диапазон с 0 по %1!d!.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Недопустимое значение параметра -n, допустимый диапазон с 1 по %1!u!.\n\0"
+    IDS_REPLY_FROM "Ответ от %1: число байт=%2!d! время%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE "Destination host unreachable.\n\0"
+    IDS_COULD_NOT_TRANSMIT "Could not transmit data (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV "Could not receive data (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT "Превышен интервал ожидания для запроса.\n\0"
+    IDS_MS "мсек\0"
+    IDS_1MS "1мсек\0"
+END

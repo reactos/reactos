@@ -23,6 +23,8 @@ Revision History:
 
 #include "classp.h"
 
+#include <wmistr.h>
+
 NTSTATUS
 NTAPI
 ClassSystemControl(
@@ -562,17 +564,14 @@ ClassWmiCompleteRequest(
     IN CCHAR PriorityBoost
     )
 {
-    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
     //UCHAR MinorFunction;
     PUCHAR buffer;
     ULONG retSize;
     UCHAR minorFunction;
-    ULONG bufferSize;
 
     minorFunction = irpStack->MinorFunction;
     buffer = (PUCHAR)irpStack->Parameters.WMI.Buffer;
-    bufferSize = irpStack->Parameters.WMI.BufferSize;
 
     switch(minorFunction)
     {

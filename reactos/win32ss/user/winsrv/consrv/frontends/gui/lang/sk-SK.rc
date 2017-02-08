@@ -1,0 +1,35 @@
+/* TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 29-05-2008
+ * LastChange: 12-04-2011
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Upraviť"
+    IDS_MARK "Označiť"
+    IDS_COPY "Kopírovať\tEnter"
+    IDS_PASTE "Vložiť"
+    IDS_SELECTALL "Vybrať všetko"
+    IDS_SCROLL "Rolovať"
+    IDS_FIND "Find..."
+    IDS_DEFAULTS "Defaults"
+    IDS_PROPERTIES "Vlastnosti"
+/*
+    IDS_SCROLLHERE "Rolovať sem"
+    IDS_SCROLLTOP "K hornému okraju"
+    IDS_SCROLLBOTTOM "K dolnému okraju"
+    IDS_SCROLLPAGE_UP "O stránku vyššie"
+    IDS_SCROLLPAGE_DOWN "O stránku nižšie"
+    IDS_SCROLLUP "Rolovať nahor"
+    IDS_SCROLLDOWN "Rolovať nadol"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
+END

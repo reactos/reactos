@@ -18,17 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-#include <wine/debug.h>
-//#include <stdarg.h>
-
-//#include "windef.h"
-#include <winbase.h>
+#include "winldap_private.h"
 
 HINSTANCE hwldap32;
-
-WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 {
@@ -39,8 +31,6 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
     case DLL_PROCESS_ATTACH:
         hwldap32 = hinst;
         DisableThreadLibraryCalls( hinst );
-        break;
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;

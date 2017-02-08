@@ -1,18 +1,5 @@
-#include <ntddk.h>
+#include "precomp.h"
 
-#include <acpi.h>
-
-#include <acpisys.h>
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
-#include <acpiioct.h>
-
-#include <glue.h>
-#include <accommon.h>
-#include <acobject.h>
-#include <actypes.h>
-
-#include <wdmguid.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -53,7 +40,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 
         ParamList.Count = 1;
 
-        ParamList.Pointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_OBJECT), 'IPCA');
+        ParamList.Pointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_OBJECT), 'OpcA');
         if (!ParamList.Pointer) return STATUS_INSUFFICIENT_RESOURCES;
 
         ParamList.Pointer[0].Type = ACPI_TYPE_INTEGER;
@@ -68,7 +55,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 
         ParamList.Count = 1;
 
-        ParamList.Pointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_OBJECT), 'IPCA');
+        ParamList.Pointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_OBJECT), 'OpcA');
         if (!ParamList.Pointer) return STATUS_INSUFFICIENT_RESOURCES;
 
         ParamList.Pointer[0].String.Pointer = (CHAR*)SimpleStr->String;
@@ -86,7 +73,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
                               &RetBuff);
 
   if (ParamList.Count != 0)
-      ExFreePoolWithTag(ParamList.Pointer, 'IPCA');
+      ExFreePoolWithTag(ParamList.Pointer, 'OpcA');
 
   if (ACPI_SUCCESS(Status))
   {
@@ -127,7 +114,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
           ExtraParamLength = 0;
 
       OutputBuf = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
-                                               ExtraParamLength, 'IPCA');
+                                               ExtraParamLength, 'BpcA');
       if (!OutputBuf) return STATUS_INSUFFICIENT_RESOURCES;
 
       OutputBuf->Signature = ACPI_EVAL_OUTPUT_BUFFER_SIGNATURE;
@@ -163,12 +150,12 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
           RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, OutputBuf, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
                                                                     ExtraParamLength);
           Irp->IoStatus.Information = sizeof(ACPI_EVAL_OUTPUT_BUFFER) + ExtraParamLength;
-          ExFreePoolWithTag(OutputBuf, 'IPCA');
+          ExFreePoolWithTag(OutputBuf, 'BpcA');
           return STATUS_SUCCESS;
       }
       else
       {
-          ExFreePoolWithTag(OutputBuf, 'IPCA');
+          ExFreePoolWithTag(OutputBuf, 'BpcA');
           return STATUS_BUFFER_TOO_SMALL;
       }
   }

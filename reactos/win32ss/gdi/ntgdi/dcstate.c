@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for saving and restoring dc states
- * FILE:              subsystems/win32/win32k/objects/dcstate.c
+ * FILE:              win32ss/gdi/ntgdi/dcstate.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -28,8 +28,6 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
 
     /* Copy DC level */
     pdcDst->dclevel.pColorSpace     = pdcSrc->dclevel.pColorSpace;
-    pdcDst->dclevel.lSaveDepth      = pdcSrc->dclevel.lSaveDepth;
-    pdcDst->dclevel.hdcSave         = pdcSrc->dclevel.hdcSave;
     pdcDst->dclevel.laPath          = pdcSrc->dclevel.laPath;
     pdcDst->dclevel.ca              = pdcSrc->dclevel.ca;
     pdcDst->dclevel.mxWorldToDevice = pdcSrc->dclevel.mxWorldToDevice;
@@ -51,23 +49,26 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
-    if (To) // Copy "To" SaveDC state.
+    if (!To)
     {
-        if (pdcSrc->rosdc.hClipRgn)
+        IntGdiExtSelectClipRgn(pdcDst, pdcSrc->dclevel.prgnClip, RGN_COPY);
+        if (pdcDst->dclevel.prgnMeta)
         {
-           pdcDst->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-           NtGdiCombineRgn(pdcDst->rosdc.hClipRgn, pdcSrc->rosdc.hClipRgn, 0, RGN_COPY);
+            REGION_Delete(pdcDst->dclevel.prgnMeta);
+            pdcDst->dclevel.prgnMeta = NULL;
         }
-        // FIXME: Handle prgnMeta!
-    }
-    else // Copy "!To" RestoreDC state.
-    {  /* The VisRectRegion field needs to be set to a valid state */
-       GdiExtSelectClipRgn(pdcDst, pdcSrc->rosdc.hClipRgn, RGN_COPY);
+        if (pdcSrc->dclevel.prgnMeta)
+        {
+            pdcDst->dclevel.prgnMeta = IntSysCreateRectpRgn(0, 0, 0, 0);
+            IntGdiCombineRgn(pdcDst->dclevel.prgnMeta, pdcSrc->dclevel.prgnMeta, NULL, RGN_COPY);
+        }
+        pdcDst->fs |= DC_FLAG_DIRTY_RAO;
     }
 }
 
 
-BOOL FASTCALL
+BOOL
+FASTCALL
 IntGdiCleanDC(HDC hDC)
 {
     PDC dc;
@@ -87,23 +88,35 @@ IntGdiCleanDC(HDC hDC)
         DC_vUpdateTextBrush(dc);
     }
 
+    /* DC_vCopyState frees the Clip rgn and the Meta rgn. Take care of the other ones
+     * There is no need to clear prgnVis, as UserGetDC updates it immediately. */
+    if (dc->prgnRao)
+        REGION_Delete(dc->prgnRao);
+    if (dc->prgnAPI)
+        REGION_Delete(dc->prgnAPI);
+    dc->prgnRao = dc->prgnAPI = NULL;
+
+    dc->fs |= DC_FLAG_DIRTY_RAO;
+
     DC_UnlockDc(dc);
 
     return TRUE;
 }
 
-
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiResetDC(
-    IN HDC hdc,
-    IN LPDEVMODEW pdm,
-    OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2,
-    OUT VOID *ppUMdhpdev)
+    _In_ HDC hdc,
+    _In_ LPDEVMODEW pdm,
+    _Out_ PBOOL pbBanding,
+    _In_opt_ DRIVER_INFO_2W *pDriverInfo2,
+    _At_((PUMDHPDEV*)ppUMdhpdev, _Out_) PVOID ppUMdhpdev)
 {
+    /* According to a comment in Windows SDK the size of the buffer for
+       pdm is (pdm->dmSize + pdm->dmDriverExtra) */
     UNIMPLEMENTED;
-    return 0;
+    return FALSE;
 }
 
 
@@ -116,7 +129,7 @@ DC_vRestoreDC(
     HDC hdcSave;
     PDC pdcSave;
 
-    ASSERT(iSaveLevel > 0);
+    NT_ASSERT(iSaveLevel > 0);
     DPRINT("DC_vRestoreDC(%p, %ld)\n", pdc->BaseObject.hHmgr, iSaveLevel);
 
     /* Loop the save levels */
@@ -131,6 +144,7 @@ DC_vRestoreDC(
             /* Could not get ownership. That's bad! */
             DPRINT1("Could not get ownership of saved DC (%p) for hdc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
+            NT_ASSERT(FALSE);
             return;// FALSE;
         }
 
@@ -141,6 +155,7 @@ DC_vRestoreDC(
             /* WTF? Internal error! */
             DPRINT1("Could not lock the saved DC (%p) for dc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
+            NT_ASSERT(FALSE);
             return;// FALSE;
         }
 
@@ -249,7 +264,7 @@ NtGdiSaveDC(
     }
 
     /* Allocate a new dc */
-    pdcSave = DC_AllocDcWithHandle();
+    pdcSave = DC_AllocDcWithHandle(GDILoObjType_LO_DC_TYPE);
     if (pdcSave == NULL)
     {
         DPRINT("Could not allocate a new DC\n");
@@ -272,7 +287,7 @@ NtGdiSaveDC(
     GDIOBJ_vSetObjectOwner(&pdcSave->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Copy the current state */
-    DC_vCopyState(pdc, pdcSave, TRUE);
+    DC_vCopyState(pdc, pdcSave, FALSE);
 
     /* Only memory DC's change their surface */
     if (pdc->dctype == DCTYPE_MEMORY)
@@ -285,6 +300,7 @@ NtGdiSaveDC(
     if (pdcSave->dclevel.hPath) pdcSave->dclevel.flPath |= DCPATH_SAVE;
 
     /* Set new dc as save dc */
+    pdcSave->dclevel.hdcSave = pdc->dclevel.hdcSave;
     pdc->dclevel.hdcSave = hdcSave;
 
     /* Increase save depth, return old value */

@@ -1,0 +1,32 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{BEF6E001-A874-101A-8BBA-00AA00300CAB}'
+        {
+            '2.0' = s 'Standard OLE Types'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{BEF6E003-A874-101A-8BBA-00AA00300CAB}' = s 'Font'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{BEF6E001-A874-101A-8BBA-00AA00300CAB}' { val Version = s '2.0' }
+        }
+        '{7BF80981-BF32-101A-8BBB-00AA00300CAB}' = s 'Picture'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{BEF6E001-A874-101A-8BBA-00AA00300CAB}' { val Version = s '2.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+    }
+}

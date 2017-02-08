@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR cmap handling (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2007, 2009 by                                          */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,6 +16,8 @@
 /***************************************************************************/
 
 
+#include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include "pfrcmap.h"
 #include "pfrobjs.h"
 
@@ -23,10 +25,13 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  pfr_cmap_init( PFR_CMap  cmap )
+  pfr_cmap_init( PFR_CMap    cmap,
+                 FT_Pointer  pointer )
   {
-    FT_Error  error = PFR_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     PFR_Face  face  = (PFR_Face)FT_CMAP_FACE( cmap );
+
+    FT_UNUSED( pointer );
 
 
     cmap->num_chars = face->phy_font.num_chars;
@@ -42,7 +47,7 @@
       {
         if ( cmap->chars[n - 1].char_code >= cmap->chars[n].char_code )
         {
-          error = PFR_Err_Invalid_Table;
+          error = FT_THROW( Invalid_Table );
           goto Exit;
         }
       }
@@ -65,14 +70,16 @@
   pfr_cmap_char_index( PFR_CMap   cmap,
                        FT_UInt32  char_code )
   {
-    FT_UInt   min = 0;
-    FT_UInt   max = cmap->num_chars;
-    FT_UInt   mid;
-    PFR_Char  gchar;
+    FT_UInt  min = 0;
+    FT_UInt  max = cmap->num_chars;
 
 
     while ( min < max )
     {
+      PFR_Char  gchar;
+      FT_UInt   mid;
+
+
       mid   = min + ( max - min ) / 2;
       gchar = cmap->chars + mid;
 
@@ -123,7 +130,7 @@
         }
 
         if ( gchar->char_code < char_code )
-          min = mid+1;
+          min = mid + 1;
         else
           max = mid;
       }

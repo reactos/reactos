@@ -18,24 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-//#include "initguid.h"
-#include <wuapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
+#include "wuapi_private.h"
 
 typedef struct _update_downloader
 {
@@ -251,11 +234,11 @@ static const struct IUpdateDownloaderVtbl update_downloader_vtbl =
     update_downloader_EndDownload
 };
 
-HRESULT UpdateDownloader_create( IUnknown *pUnkOuter, LPVOID *ppObj )
+HRESULT UpdateDownloader_create( LPVOID *ppObj )
 {
     update_downloader *downloader;
 
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+    TRACE("(%p)\n", ppObj);
 
     downloader = HeapAlloc( GetProcessHeap(), 0, sizeof(*downloader) );
     if (!downloader) return E_OUTOFMEMORY;

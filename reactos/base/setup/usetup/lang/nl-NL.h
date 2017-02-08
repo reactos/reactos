@@ -179,48 +179,12 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         8,
         13,
-        "\x07  Setup kan niet meer dan 1 primaire partitie per vaste schijf aan.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "\x07  Setup kan geen primaire partitie van een schijf verwijderen",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  zo lang er nog uitgebreide partities bestaan op deze schijf.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "\x07  Setup kan de eerste uitgebreide partitie van een schijf niet",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  verwijderen zolang er nog andere uitgebreide partities",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
-        "  op deze schijf bestaan.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        19,
         "\x07  Setup ondersteunt alleen FAT bestandssystemen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        14,
         "\x07  Bestandssysteemcontrole is nog niet ge\x8Bmplementeerd.",
         TEXT_STYLE_NORMAL
     },
@@ -536,6 +500,7 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY nlNLComputerPageEntries[] =
 {
     {
@@ -854,12 +819,25 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Druk op C om een nieuwe partitie aan te maken.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Druk op C om een nieuwe partitie aan te maken.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Druk op D om een bestaande partitie te verwijderen.",
         TEXT_STYLE_NORMAL
     },
@@ -867,6 +845,100 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
         0,
         0,
         "Een ogenblik geduld...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY nlNLConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1320,6 +1392,10 @@ static MUI_ENTRY nlNLRegistryEntries[] =
 MUI_ERROR nlNLErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS is niet geheel ge\x8Bnstalleerd op uw\n"
         "computer. Als u Setup nu afsluit moet u\n"
@@ -1528,17 +1604,44 @@ MUI_ERROR nlNLErrorEntries[] =
         "ENTER = Computer opnieuw opstarten"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Onvoldoende vrije ruimte in de geselecteerde partitie.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Druk op een toets om door te gaan.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE nlNLPages[] =
 {
@@ -1581,6 +1684,10 @@ MUI_PAGE nlNLPages[] =
     {
         SELECT_PARTITION_PAGE,
         nlNLSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        nlNLConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1645,13 +1752,23 @@ MUI_STRING nlNLStrings[] =
     {STRING_PLEASEWAIT,
      "   Een ogenblik geduld..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Installeren   C = Partitie aanmaken   F3 = Afsluiten"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Installeren   C = Partitie aanmaken   F3 = Afsluiten"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installeren   D = Partitie verwijderen   F3 = Afsluiten"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Grootte nieuwe partitie:"},
     {STRING_CHOOSENEWPARTITION,
-     "U wilt een nieuwe partitie aanmaken op"},
+     "You have chosen to create a primary partition on"},
+//     "U wilt een nieuwe partitie aanmaken op"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Voert u de grootte van de nieuwe partitie in in megabytes."},
     {STRING_CREATEPARTITION,
@@ -1660,10 +1777,16 @@ MUI_STRING nlNLStrings[] =
     "Deze partitie zal vervolgens geformatteerd worden."},
     {STRING_NONFORMATTEDPART,
     "U wilt ReactOS installeren op een nieuwe of ongeformatteerde partitie."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installeert ReactOS op Partitie"},
     {STRING_CHECKINGPART,
     "Setup controleert nu de geselecteerde partitie."},
+    {STRING_CONTINUE,
+    "ENTER = Doorgaan"},
     {STRING_QUITCONTINUE,
     "F3 = Afsluiten   ENTER = Doorgaan"},
     {STRING_REBOOTCOMPUTER,
@@ -1691,11 +1814,11 @@ MUI_STRING nlNLStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Computer opnieuw opstarten"},
     {STRING_CONSOLEFAIL1,
-    "Kan console niet openen.\n\n"},
+    "Kan console niet openen.\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "De meest voorkomende oorzaak is het gebruik van een USB toetsenbord.\n"},
+    "De meest voorkomende oorzaak is het gebruik van een USB toetsenbord.\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB toetsenborden worden nog niet volledig ondersteund.\n"},
+    "USB toetsenborden worden nog niet volledig ondersteund.\r\n"},
     {STRING_FORMATTINGDISK,
     "Setup is de vaste schijf aan het formatteren."},
     {STRING_CHECKINGDISK,
@@ -1711,7 +1834,7 @@ MUI_STRING nlNLStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1719,11 +1842,11 @@ MUI_STRING nlNLStrings[] =
     {STRING_HDINFOPARTZEROED,
     "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Type %lu    %I64u %s"},
+    "%c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %S"},
     {STRING_HDDINFOUNK6,
@@ -1731,9 +1854,11 @@ MUI_STRING nlNLStrings[] =
     {STRING_NEWPARTITION,
     "Setup heeft een nieuwe partitie aangemaakt op"},
     {STRING_UNPSPACE,
-    "    Niet gepartitioneerde ruimte     %6lu %s"},
+    "    %sNiet gepartitioneerde ruimte%s   %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Nieuw (Ongeformatteerd)"},
     {STRING_FORMATUNUSED,

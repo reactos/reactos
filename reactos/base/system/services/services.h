@@ -2,21 +2,29 @@
  * services.h
  */
 
+#ifndef _SERVICES_H
+#define _SERVICES_H
+
 #include <stdio.h>
-#include <time.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
-#include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/setypes.h>
 #include <services/services.h>
 #include <svcctl_s.h>
+
+#include "resource.h"
 
 typedef struct _SERVICE_GROUP
 {
@@ -171,6 +179,7 @@ DWORD ScmSetServiceGroup(PSERVICE lpService,
 
 
 /* lock.c */
+
 DWORD ScmAcquireServiceStartLock(IN BOOL IsServiceController,
                                  OUT LPSC_RPC_LOCK lpLock);
 DWORD ScmReleaseServiceStartLock(IN OUT LPSC_RPC_LOCK lpLock);
@@ -186,9 +195,10 @@ VOID ScmStartRpcServer(VOID);
 /* services.c */
 
 VOID PrintString(LPCSTR fmt, ...);
-VOID ScmLogError(DWORD dwEventId,
+VOID ScmLogEvent(DWORD dwEventId,
+                 WORD wType,
                  WORD wStrings,
                  LPCWSTR *lpStrings);
 VOID ScmWaitForLsa(VOID);
 
-/* EOF */
+#endif /* _SERVICES_H */

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/cdfs/rw.c
+ * FILE:             drivers/filesystems/cdfs/rw.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
@@ -41,7 +41,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
+CdfsReadFile(PCDFS_IRP_CONTEXT IrpContext,
              PFILE_OBJECT FileObject,
              PUCHAR Buffer,
              ULONG Length,
@@ -53,6 +53,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
              */
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_EXTENSION DeviceExt;
     PFCB Fcb;
     ULONG ToRead = Length;
 
@@ -63,6 +64,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (Length == 0)
         return(STATUS_SUCCESS);
 
+    DeviceExt = IrpContext->DeviceObject->DeviceExtension;
     Fcb = (PFCB)FileObject->FsContext;
 
     if (ReadOffset >= Fcb->Entry.DataLengthL)
@@ -70,6 +72,15 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         
     if (ReadOffset + Length > Fcb->Entry.DataLengthL)
         ToRead = Fcb->Entry.DataLengthL - ReadOffset;
+
+    if (!(IrpFlags & IRP_PAGING_IO) &&
+        FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
+    {
+        if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp))
+        {
+            return STATUS_FILE_LOCK_CONFLICT;
+        }
+    }
 
     DPRINT("Reading %u bytes at %u\n", Length, ReadOffset);
 
@@ -91,20 +102,37 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
                 Fcb->RFCB.ValidDataLength.HighPart,
                 Fcb->RFCB.ValidDataLength.LowPart);
 
-            CcInitializeCacheMap(FileObject,
-                &FileSizes,
-                FALSE,
-                &(CdfsGlobalData->CacheMgrCallbacks),
-                Fcb);
+            _SEH2_TRY
+            {
+                CcInitializeCacheMap(FileObject,
+                    &FileSizes,
+                    FALSE,
+                    &(CdfsGlobalData->CacheMgrCallbacks),
+                    Fcb);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                return _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
         }
 
         FileOffset.QuadPart = (LONGLONG)ReadOffset;
-        CcCopyRead(FileObject,
-            &FileOffset,
-            ToRead,
-            TRUE,
-            Buffer,
-            &IoStatus);
+        _SEH2_TRY
+        {
+            CcCopyRead(FileObject,
+                &FileOffset,
+                ToRead,
+                TRUE,
+                Buffer,
+                &IoStatus);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            IoStatus.Information = 0;
+            IoStatus.Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
         *LengthRead = IoStatus.Information;
 
         Status = IoStatus.Status;
@@ -117,7 +145,9 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         BOOLEAN bFreeBuffer = FALSE;
         if ((ReadOffset % BLOCKSIZE) != 0 || (ToRead % BLOCKSIZE) != 0)
         {
-            PageBuf = ExAllocatePool(NonPagedPool, nBlocks * BLOCKSIZE);
+            PageBuf = ExAllocatePoolWithTag(NonPagedPool,
+                                            nBlocks * BLOCKSIZE,
+                                            CDFS_TAG);
             if (!PageBuf)
             {
                 return STATUS_NO_MEMORY;
@@ -148,7 +178,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         }
         
         if(bFreeBuffer)
-            ExFreePool(PageBuf);
+            ExFreePoolWithTag(PageBuf, CDFS_TAG);
     }
     
     return Status;
@@ -156,10 +186,10 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
 
 NTSTATUS NTAPI
-CdfsRead(PDEVICE_OBJECT DeviceObject,
-         PIRP Irp)
+CdfsRead(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
-    PDEVICE_EXTENSION DeviceExt;
+    PIRP Irp;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     PVOID Buffer = NULL;
@@ -168,17 +198,20 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
     ULONG ReturnedReadLength = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("CdfsRead(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
+    DPRINT("CdfsRead(%p)\n", IrpContext);
 
-    DeviceExt = DeviceObject->DeviceExtension;
-    Stack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IrpContext);
+
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
+
     FileObject = Stack->FileObject;
 
     ReadLength = Stack->Parameters.Read.Length;
     ReadOffset = Stack->Parameters.Read.ByteOffset;
     if (ReadLength) Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-    Status = CdfsReadFile(DeviceExt,
+    Status = CdfsReadFile(IrpContext,
         FileObject,
         Buffer,
         ReadLength,
@@ -199,21 +232,19 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Information = 0;
     }
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp,IO_NO_INCREMENT);
-
     return(Status);
 }
 
 
 NTSTATUS NTAPI
-CdfsWrite(PDEVICE_OBJECT DeviceObject,
-          PIRP Irp)
+CdfsWrite(
+    PCDFS_IRP_CONTEXT IrpContext)
 {
-    DPRINT("CdfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+    DPRINT("CdfsWrite(%p)\n", IrpContext);
 
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = 0;
+    ASSERT(IrpContext);
+
+    IrpContext->Irp->IoStatus.Information = 0;
     return(STATUS_NOT_SUPPORTED);
 }
 

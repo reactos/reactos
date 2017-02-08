@@ -16,15 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-
 #ifdef HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H
 #define GetCurrentProcess GetCurrentProcess_Mac
 #define GetCurrentThread GetCurrentThread_Mac
@@ -82,19 +73,7 @@
 #undef DPRINTF
 #endif
 
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-//#include "wincodec.h"
-
-//#include "wincodecs_private.h"
-
-#include <wine/debug.h>
-//#include "wine/library.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+#include "wincodecs_private.h"
 
 #if defined(HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H) && \
     MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_4
@@ -183,7 +162,7 @@ static ULONG WINAPI IcnsFrameEncode_Release(IWICBitmapFrameEncode *iface)
         if (This->icns_image != NULL)
             HeapFree(GetProcessHeap(), 0, This->icns_image);
 
-        IUnknown_Release((IUnknown*)This->encoder);
+        IWICBitmapEncoder_Release(&This->encoder->IWICBitmapEncoder_iface);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -395,66 +374,22 @@ static HRESULT WINAPI IcnsFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
 {
     IcnsFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    WICRect rc;
-    WICPixelFormatGUID guid;
-    UINT stride;
-    BYTE *pixeldata = NULL;
 
     TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
 
-    if (!This->initialized || !This->size)
-    {
-        hr = WINCODEC_ERR_WRONGSTATE;
-        goto end;
-    }
+    if (!This->initialized)
+        return WINCODEC_ERR_WRONGSTATE;
 
-    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-    if (FAILED(hr))
-        goto end;
-    if (!IsEqualGUID(&guid, &GUID_WICPixelFormat32bppBGRA))
-    {
-        FIXME("format %s unsupported, could use WICConvertBitmapSource to convert\n", debugstr_guid(&guid));
-        hr = E_FAIL;
-        goto end;
-    }
+    hr = configure_write_source(iface, pIBitmapSource, prc,
+        &GUID_WICPixelFormat32bppBGRA, This->size, This->size,
+        1.0, 1.0);
 
-    if (!prc)
-    {
-        UINT width, height;
-        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
-        if (FAILED(hr))
-            goto end;
-        rc.X = 0;
-        rc.Y = 0;
-        rc.Width = width;
-        rc.Height = height;
-        prc = &rc;
-    }
-
-    if (prc->Width != This->size)
-    {
-        hr = E_INVALIDARG;
-        goto end;
-    }
-
-    stride = (32 * This->size + 7)/8;
-    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
-    if (!pixeldata)
-    {
-        hr = E_OUTOFMEMORY;
-        goto end;
-    }
-
-    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, stride,
-        stride*prc->Height, pixeldata);
     if (SUCCEEDED(hr))
     {
-        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
-            stride*prc->Height, pixeldata);
+        hr = write_source(iface, pIBitmapSource, prc,
+            &GUID_WICPixelFormat32bppBGRA, 32, This->size, This->size);
     }
 
-end:
-    HeapFree(GetProcessHeap(), 0, pixeldata);
     return hr;
 }
 
@@ -537,7 +472,7 @@ static HRESULT WINAPI IcnsEncoder_QueryInterface(IWICBitmapEncoder *iface, REFII
     if (IsEqualIID(&IID_IUnknown, iid) ||
         IsEqualIID(&IID_IWICBitmapEncoder, iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICBitmapEncoder_iface;
     }
     else
     {
@@ -667,7 +602,7 @@ static HRESULT WINAPI IcnsEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         goto end;
     }
 
-    hr = CreatePropertyBag2(ppIEncoderOptions);
+    hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
     if (FAILED(hr))
         goto end;
 
@@ -687,7 +622,7 @@ static HRESULT WINAPI IcnsEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
     frameEncode->committed = FALSE;
     *ppIFrameEncode = &frameEncode->IWICBitmapFrameEncode_iface;
     This->outstanding_commits++;
-    IUnknown_AddRef((IUnknown*)This);
+    IWICBitmapEncoder_AddRef(&This->IWICBitmapEncoder_iface);
 
 end:
     LeaveCriticalSection(&This->lock);
@@ -751,16 +686,14 @@ static const IWICBitmapEncoderVtbl IcnsEncoder_Vtbl = {
     IcnsEncoder_GetMetadataQueryWriter
 };
 
-HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT IcnsEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     IcnsEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(IcnsEncoder));
     if (!This) return E_OUTOFMEMORY;
@@ -775,8 +708,8 @@ HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
     InitializeCriticalSection(&This->lock);
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": IcnsEncoder.lock");
 
-    ret = IUnknown_QueryInterface((IUnknown*)This, iid, ppv);
-    IUnknown_Release((IUnknown*)This);
+    ret = IWICBitmapEncoder_QueryInterface(&This->IWICBitmapEncoder_iface, iid, ppv);
+    IWICBitmapEncoder_Release(&This->IWICBitmapEncoder_iface);
 
     return ret;
 }
@@ -784,7 +717,7 @@ HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 #else /* !defined(HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H) ||
          MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4 */
 
-HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT IcnsEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to save ICNS picture, but ICNS support is not compiled in.\n");
     return E_FAIL;

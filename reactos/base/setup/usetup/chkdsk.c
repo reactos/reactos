@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/chkdsk.c
+ * FILE:            base/setup/usetup/chkdsk.c
  * PURPOSE:         Filesystem chkdsk support functions
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  */
@@ -34,7 +34,9 @@ static PPROGRESSBAR ChkdskProgressBar = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOLEAN NTAPI
+static
+BOOLEAN
+NTAPI
 ChkdskCallback(
     IN CALLBACKCOMMAND Command,
     IN ULONG Modifier,
@@ -49,6 +51,7 @@ ChkdskCallback(
 
     return TRUE;
 }
+
 
 NTSTATUS
 ChkdskPartition(

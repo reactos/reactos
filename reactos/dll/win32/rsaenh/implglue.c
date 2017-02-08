@@ -87,7 +87,7 @@ BOOL init_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext)
     return TRUE;
 }
 
-BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, CONST BYTE *pbData, 
+BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, const BYTE *pbData,
                       DWORD dwDataLen) 
 {
     switch (aiAlgid)
@@ -170,7 +170,7 @@ BOOL finalize_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, BYTE *pbHash
     return TRUE;
 }
 
-BOOL duplicate_hash_impl(ALG_ID aiAlgid, CONST HASH_CONTEXT *pSrcHashContext, 
+BOOL duplicate_hash_impl(ALG_ID aiAlgid, const HASH_CONTEXT *pSrcHashContext,
                          HASH_CONTEXT *pDestHashContext) 
 {
     *pDestHashContext = *pSrcHashContext;
@@ -252,7 +252,7 @@ BOOL setup_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
     return TRUE;
 }
 
-BOOL duplicate_key_impl(ALG_ID aiAlgid, CONST KEY_CONTEXT *pSrcKeyContext,
+BOOL duplicate_key_impl(ALG_ID aiAlgid, const KEY_CONTEXT *pSrcKeyContext,
                         KEY_CONTEXT *pDestKeyContext) 
 {
     switch (aiAlgid) 
@@ -300,8 +300,8 @@ static inline void reverse_bytes(BYTE *pbData, DWORD dwLen) {
     }
 }
 
-BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContext, CONST BYTE *in, BYTE *out, 
-                        DWORD enc) 
+BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContext, const BYTE *in,
+                        BYTE *out, DWORD enc)
 {
     unsigned long inlen, outlen;
     BYTE *in_reversed = NULL;
@@ -409,7 +409,7 @@ BOOL export_public_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD 
     return TRUE;
 }
 
-BOOL import_public_key_impl(CONST BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen, 
+BOOL import_public_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                             DWORD dwPubExp)
 {
     BYTE *pbTemp;
@@ -484,7 +484,7 @@ BOOL export_private_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD
     return TRUE;
 }
 
-BOOL import_private_key_impl(CONST BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen, 
+BOOL import_private_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                              DWORD dwDataLen, DWORD dwPubExp)
 {
     BYTE *pbTemp, *pbBigNum;

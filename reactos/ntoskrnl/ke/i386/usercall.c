@@ -67,7 +67,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     _SEH2_TRY
     {
         /* Sanity check */
-        ASSERT((TrapFrame->SegCs & MODE_MASK) != KernelMode);
+        ASSERT(KiUserTrap(TrapFrame));
 
         /* Get the aligned size */
         AlignedEsp = Context.Esp & ~3;
@@ -179,7 +179,6 @@ KeUserModeCallback(IN ULONG RoutineIndex,
         {
             /* Only restore the exception list if we didn't crash in ring 3 */
             Teb->NtTib.ExceptionList = ExceptionList;
-            CallbackStatus = STATUS_SUCCESS;
         }
         else
         {
@@ -210,7 +209,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
 }
 
 
-/* 
+/*
  * Stack layout for KiUserModeCallout:
  * ----------------------------------
  * KCALLOUT_FRAME.ResultLength    <= 2nd Parameter to KiCallUserMode
@@ -349,6 +348,141 @@ KiUserModeCallout(PKCALLOUT_FRAME CalloutFrame)
 
     /* Exit to user-mode */
     KiServiceExit(CallbackTrapFrame, 0);
+}
+
+/*++
+ * @name NtCallbackReturn
+ *
+ *     The NtCallbackReturn routine returns to kernel mode after a user-mode
+ *     callback was done through KeUserModeCallback. It uses the callback frame
+ *     which was setup in order to return the information, restores the stack,
+ *     and resumes execution where it was left off.
+ *
+ * @param Result
+ *        Pointer to a caller-allocated buffer where the return data
+ *               from the user-mode function is located.
+ *
+ * @param ResultLength
+ *        Size of the Output Buffer described above.
+ *
+ * @param CallbackStatus
+ *        Status code of the callback operation.
+ *
+ * @return Status code of the callback operation.
+ *
+ * @remark This call MUST be paired with KeUserModeCallback.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+NtCallbackReturn(
+    _In_ PVOID Result,
+    _In_ ULONG ResultLength,
+    _In_ NTSTATUS CallbackStatus)
+{
+    PKTHREAD CurrentThread;
+    PKCALLOUT_FRAME CalloutFrame;
+    PKTRAP_FRAME CallbackTrapFrame, TrapFrame;
+    PFX_SAVE_AREA FxSaveArea, CbFxSaveArea;
+    ULONG Size;
+    PKPCR Pcr;
+    PKTSS Tss;
+
+    /* Get the current thread and make sure we have a callback stack */
+    CurrentThread = KeGetCurrentThread();
+    CalloutFrame = CurrentThread->CallbackStack;
+    if (CalloutFrame == NULL)
+    {
+        return STATUS_NO_CALLBACK_ACTIVE;
+    }
+
+    /* Get the trap frame */
+    CallbackTrapFrame = CurrentThread->TrapFrame;
+
+    /* Restore the exception list */
+    Pcr = KeGetPcr();
+    Pcr->NtTib.ExceptionList = CallbackTrapFrame->ExceptionList;
+
+    /* Store the results in the callback stack */
+    *((PVOID*)CalloutFrame->Result) = Result;
+    *((ULONG*)CalloutFrame->ResultLength) = ResultLength;
+
+    /* Disable interrupts for NPX save and stack switch */
+    _disable();
+
+    /* Set desination and origin NPX Frames */
+    CbFxSaveArea = (PVOID)((ULONG)CurrentThread->InitialStack - sizeof(FX_SAVE_AREA));
+    FxSaveArea = (PVOID)(CalloutFrame->InitialStack - sizeof(FX_SAVE_AREA));
+
+    /* Now copy back NPX State */
+    FxSaveArea->U.FnArea.ControlWord = CbFxSaveArea->U.FnArea.ControlWord;
+    FxSaveArea->U.FnArea.StatusWord = CbFxSaveArea->U.FnArea.StatusWord;
+    FxSaveArea->U.FnArea.TagWord = CbFxSaveArea->U.FnArea.TagWord;
+    FxSaveArea->U.FnArea.DataSelector = CbFxSaveArea->U.FnArea.DataSelector;
+    FxSaveArea->Cr0NpxState = CbFxSaveArea->Cr0NpxState;
+
+    /* Get the previous trap frame */
+    TrapFrame = (PKTRAP_FRAME)CalloutFrame->TrapFrame;
+
+    /* Check if we failed in user mode */
+    if (CallbackStatus == STATUS_CALLBACK_POP_STACK)
+    {
+        /* Check if we came from v86 mode */
+        if (CallbackTrapFrame->EFlags & EFLAGS_V86_MASK)
+        {
+            Size = sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, SegFs);
+        }
+        else
+        {
+            Size = FIELD_OFFSET(KTRAP_FRAME, V86Es) - FIELD_OFFSET(KTRAP_FRAME, SegFs);
+        }
+
+        /* Copy back part of the trap frame */
+        RtlCopyMemory(&TrapFrame->SegFs, &CallbackTrapFrame->SegFs, Size);
+    }
+
+    /* Clear DR7 */
+    TrapFrame->Dr7 = 0;
+
+    /* Check if debugging was active */
+    if (CurrentThread->Header.DebugActive & 0xFF)
+    {
+        /* Copy debug registers data from it */
+        TrapFrame->Dr0 = CallbackTrapFrame->Dr0;
+        TrapFrame->Dr1 = CallbackTrapFrame->Dr1;
+        TrapFrame->Dr2 = CallbackTrapFrame->Dr2;
+        TrapFrame->Dr3 = CallbackTrapFrame->Dr3;
+        TrapFrame->Dr6 = CallbackTrapFrame->Dr6;
+        TrapFrame->Dr7 = CallbackTrapFrame->Dr7;
+    }
+
+    /* Get TSS */
+    Tss = Pcr->TSS;
+
+    /* Check for V86 mode */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        /* Set new stack address in TSS (full trap frame) */
+        Tss->Esp0 = (ULONG_PTR)(TrapFrame + 1);
+    }
+    else
+    {
+        /* Set new stack address in TSS (non-V86 trap frame) */
+        Tss->Esp0 = (ULONG_PTR)&TrapFrame->V86Es;
+    }
+
+    /* Get the initial stack and restore it */
+    CurrentThread->InitialStack = (PVOID)CalloutFrame->InitialStack;
+
+    /* Restore the trap frame and the previous callback stack */
+    CurrentThread->TrapFrame = TrapFrame;
+    CurrentThread->CallbackStack = (PVOID)CalloutFrame->CallbackStack;
+
+    /* Bring interrupts back */
+    _enable();
+
+    /* Now switch back to the old stack */
+    KiCallbackReturn(&CalloutFrame->Edi, CallbackStatus);
 }
 
 

@@ -1,10 +1,8 @@
-/*
- * Translation done by Vertaald door Eric Janssen
- */
+/* Dutch translation by Vertaald door Eric Janssen */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary kon '%s' niet laden"
-    IDS_MissingEntry,   "Entry point:%s\n niet gevonden In %s"
+    IDS_DllNotLoaded "LoadLibrary kon '%s' niet laden"
+    IDS_MissingEntry "Entry point:%s\n niet gevonden In %s"
 END

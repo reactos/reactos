@@ -1,152 +1,152 @@
-/* FILE:        dll/cpl/hdwwiz/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-02-03 
+/* FILE:       dll/cpl/hdwwiz/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2014-04-25 
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "VÌtejte v Pr˘vodci p¯id·nÌm hardwaru", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT "Tento pr˘vodce v·m pom˘ûe:", -1, 114, 40, 182, 8
-	LTEXT "1) Nainstalovat software pro podporu hardwaru p¯idanÈho do poËÌtaËe.", -1, 121, 56, 184, 16
-	LTEXT "2) Vy¯eöit problÈmy, kterÈ m˘ûete s vaöÌm hardwarem mÌt.", -1, 121, 78, 185, 16
-	ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-	LTEXT "Pokud bylo k hardwaru p¯ibaleno instalaËnÌ CD, doporuËuje se ukonËit tohoto pr˘vodce klepnutÌm na tlaËÌtko Storno a pouûÌt k instalaci hardwaru toto CD.", 503, 150, 106, 155, 50
-	LTEXT "PokraËujte klepnutÌm na tlaËÌtko DalöÌ.", -1, 114, 166, 193, 8
+    LTEXT "V√≠tejte v Pr≈Øvodci p≈ôid√°n√≠m hardwaru", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Tento pr≈Øvodce v√°m pom≈Ø≈æe:", -1, 114, 40, 182, 8
+    LTEXT "1) Nainstalovat software pro podporu hardwaru p≈ôidan√©ho do poƒç√≠taƒçe.", -1, 121, 56, 184, 16
+    LTEXT "2) Vy≈ôe≈°it probl√©my, kter√© m≈Ø≈æete s va≈°√≠m hardwarem m√≠t.", -1, 121, 78, 185, 16
+    ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
+    LTEXT "Pokud bylo k hardwaru p≈ôibaleno instalaƒçn√≠ CD, doporuƒçuje se ukonƒçit tohoto pr≈Øvodce klepnut√≠m na tlaƒç√≠tko Storno a pou≈æ√≠t k instalaci hardwaru toto CD.", 503, 150, 106, 155, 50
+    LTEXT "Pokraƒçujte klepnut√≠m na tlaƒç√≠tko Dal≈°√≠.", -1, 114, 166, 193, 8
 END
 
-IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_SEARCHPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
-	ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
+    LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
+    ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
 END
 
-IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_ISCONNECTEDPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Byl jiû tento hardware p¯ipojen k tomuto poËÌtaËi?", -1, 20, 11, 275, 8
-	AUTORADIOBUTTON "&Ano, jiû byl p¯ipojen", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-	AUTORADIOBUTTON "&Ne, jeötÏ nebyl p¯id·n", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "Byl ji≈æ tento hardware p≈ôipojen k tomuto poƒç√≠taƒçi?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "&Ano, ji≈æ byl p≈ôipojen", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "&Ne, je≈°tƒõ nebyl p≈ôid√°n", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
-IDD_PROBELISTPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_PROBELISTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Vyberte nainstalovanÈ za¯ÌzenÌ ze seznamu nÌûe, potÈ lze klepnutÌm na tlaËÌtko DalöÌ zkontrolovat jeho vlastnosti nebo zjistit ¯eöenÌ moûn˝ch problÈm˘.", -1, 21, 8, 275, 22
-	LTEXT "KlepnutÌm na ""P¯idat novÈ za¯ÌzenÌ."" p¯id·te hardware, kter˝ se v tomto seznamu nenach·zÌ.", -1, 21, 32, 275, 24
-	LTEXT "Nai&nstalovan˝ hardware:", -1, 21, 62, 140, 8
-	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
+    LTEXT "Vyberte nainstalovan√© za≈ô√≠zen√≠ ze seznamu n√≠≈æe, pot√© lze klepnut√≠m na tlaƒç√≠tko Dal≈°√≠ zkontrolovat jeho vlastnosti nebo zjistit ≈ôe≈°en√≠ mo≈æn√Ωch probl√©m≈Ø.", -1, 21, 8, 275, 22
+    LTEXT "Klepnut√≠m na ""P≈ôidat nov√© za≈ô√≠zen√≠."" p≈ôid√°te hardware, kter√Ω se v tomto seznamu nenach√°z√≠.", -1, 21, 32, 275, 24
+    LTEXT "Nai&nstalovan√Ω hardware:", -1, 21, 62, 140, 8
+    CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
-IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_SELECTWAYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Pr˘vodce m˘ûe vyhledat dalöÌ hardware a automaticky ho nainstalovat, nebo jej m˘ûete vybrat ze seznamu, pokud vÌte o kter˝ model se jedn·.", -1, 21, 8, 280, 24
-	LTEXT "Co m· pr˘vodce udÏlat?", -1, 23, 40, 275, 8
-	AUTORADIOBUTTON "&Vyhledat a automaticky nainstalovat hardware (doporuËeno)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Nainstalovat hardware, kter˝ si &ruËnÏ zvolÌm ze seznamu (pokroËilÈ)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    LTEXT "Pr≈Øvodce m≈Ø≈æe vyhledat dal≈°√≠ hardware a automaticky ho nainstalovat, nebo jej m≈Ø≈æete vybrat ze seznamu, pokud v√≠te o kter√Ω model se jedn√°.", -1, 21, 8, 280, 24
+    LTEXT "Co m√° pr≈Øvodce udƒõlat?", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "&Vyhledat a automaticky nainstalovat hardware (doporuƒçeno)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Nainstalovat hardware, kter√Ω si &ruƒçnƒõ zvol√≠m ze seznamu (pokroƒçil√©)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
-IDD_DETECTEDHWPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
-	LTEXT "Detekovan˝ hardware:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
-	CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
+    LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
+    LTEXT "Detekovan√Ω hardware:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+    CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
 END
 
-IDD_HWTYPESPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_HWTYPESPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Pokud nevidÌte v·mi hledan˝ typ hardwaru, klepnÏte na Zobrazit vöechna za¯ÌzenÌ.", IDC_STATUSTEXT, 21, 9, 275, 18
-	LTEXT "BÏûnÈ typy &hardwaru:", IDC_HWTYPESTEXT, 21, 31, 180, 8
-	CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
+    LTEXT "Pokud nevid√≠te v√°mi hledan√Ω typ hardwaru, klepnƒõte na Zobrazit v≈°echna za≈ô√≠zen√≠.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "Bƒõ≈æn√© typy &hardwaru:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
-IDD_PROGRESSPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_PROGRESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Vyhled·v·nÌ hardwaru m˘ûe trvat nÏkolik minut.", -1, 21, 8, 275, 15
-	LTEXT "Celkov˝ postup:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
-	CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
-	LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
-	CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
+    LTEXT "Vyhled√°v√°n√≠ hardwaru m≈Ø≈æe trvat nƒõkolik minut.", -1, 21, 8, 275, 15
+    LTEXT "Celkov√Ω postup:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+    CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
+    LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
+    CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
 END
 
-IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "DokonËenÌ Pr˘vodce p¯id·nÌm hardwaru", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT "Pr˘vodce p¯id·nÌm hardwaru byl ˙spÏönÏ dokonËen.", -1, 114, 32, 193, 19
-	LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
-	LTEXT "KlepnutÌm na DokonËit uzav¯ete pr˘vodce.", -1, 114, 166, 132, 8
+    LTEXT "Dokonƒçen√≠ Pr≈Øvodce p≈ôid√°n√≠m hardwaru", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Pr≈Øvodce p≈ôid√°n√≠m hardwaru byl √∫spƒõ≈°nƒõ dokonƒçen.", -1, 114, 32, 193, 19
+    LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
+    LTEXT "Klepnut√≠m na Dokonƒçit uzav≈ôete pr≈Øvodce.", -1, 114, 166, 132, 8
 END
 
-IDD_ISFOUNDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_ISFOUNDPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "DokonËenÌ Pr˘vodce p¯id·nÌm hardwaru", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT "Pr˘vodce naöel n·sledujÌcÌ hardware p¯ipojen˝ k tomuto poËÌtaËi:", -1, 114, 32, 193, 19
-	LTEXT "KlepnutÌm na DokonËit uzav¯ete pr˘vodce.", -1, 114, 166, 132, 8
-	CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
+    LTEXT "Dokonƒçen√≠ Pr≈Øvodce p≈ôid√°n√≠m hardwaru", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Pr≈Øvodce na≈°el n√°sleduj√≠c√≠ hardware p≈ôipojen√Ω k tomuto poƒç√≠taƒçi:", -1, 114, 32, 193, 19
+    LTEXT "Klepnut√≠m na Dokonƒçit uzav≈ôete pr≈Øvodce.", -1, 114, 166, 132, 8
+    CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
-IDD_HWSTATUSPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_HWSTATUSPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "DokonËenÌ Pr˘vodce p¯id·nÌm hardwaru", IDC_FINISHTITLE, 114, 8, 195, 28
-	LTEXT "SouËasn˝ stav zvolenÈho hardwaru:", -1, 114, 40, 193, 19
-	EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "KlepnutÌm na DokonËit lze zaËÌt ¯eöit moûnÈ problÈmy.", -1, 114, 136, 193, 16
-	LTEXT "KlepnutÌm na Storno ukonËÌte pr˘vodce.", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "Dokonƒçen√≠ Pr≈Øvodce p≈ôid√°n√≠m hardwaru", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Souƒçasn√Ω stav zvolen√©ho hardwaru:", -1, 114, 40, 193, 19
+    EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Klepnut√≠m na Dokonƒçit lze zaƒç√≠t ≈ôe≈°it mo≈æn√© probl√©my.", -1, 114, 136, 193, 16
+    LTEXT "Klepnut√≠m na Storno ukonƒç√≠te pr≈Øvodce.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
-IDD_NOTCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pr˘vodce p¯id·nÌm hardwaru"
+CAPTION "Pr≈Øvodce p≈ôid√°n√≠m hardwaru"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Nelze pokraËovat v Pr˘vodci p¯id·nÌm hardwaru", IDC_FINISHTITLE, 114, 8, 203, 28
-	LTEXT "PokraËovat lze po p¯ipojenÌ hardwaru k poËÌtaËi.", -1, 114, 40, 193, 16
-	AUTOCHECKBOX "Vypnou&t poËÌtaË po klepnutÌ na tlaËÌtko DokonËit, aby mohl b˝t hardware p¯ipojen.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-	LTEXT "Ve vÏtöinÏ p¯Ìpad˘ ReactOS automaticky nainstaluje hardware po jeho p¯ipojenÌ. Pokud jej ReactOS nenajde, lze tohoto pr˘vodce znovu spustit a nainstalovat podp˘rn˝ software.", -1, 114, 98, 193, 32
-	LTEXT "KlepnutÌm na tlaËÌtko DokonËit ukonËÌte pr˘vodce.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Nelze pokraƒçovat v Pr≈Øvodci p≈ôid√°n√≠m hardwaru", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "Pokraƒçovat lze po p≈ôipojen√≠ hardwaru k poƒç√≠taƒçi.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "Vypnou&t poƒç√≠taƒç po klepnut√≠ na tlaƒç√≠tko Dokonƒçit, aby mohl b√Ωt hardware p≈ôipojen.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "Ve vƒõt≈°inƒõ p≈ô√≠pad≈Ø ReactOS automaticky nainstaluje hardware po jeho p≈ôipojen√≠. Pokud jej ReactOS nenajde, lze tohoto pr≈Øvodce znovu spustit a nainstalovat podp≈Ørn√Ω software.", -1, 114, 98, 193, 32
+    LTEXT "Klepnut√≠m na tlaƒç√≠tko Dokonƒçit ukonƒç√≠te pr≈Øvodce.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLNAME "P¯idat hardware"
-	IDS_CPLDESCRIPTION "P¯id· hardware do tohoto poËÌtaËe."
-	IDS_SEARCHTITLE "»ekejte, prosÌm, pr˘vodce hled·..."
-	IDS_SEARCHTEXT "Tento pr˘vodce hled· hardware, kter˝ byl ned·vno p¯ipojen k tomuto poËÌtaËi, ale jeötÏ nebyl nainstalov·n."
-	IDS_ISCONNECTED "Je hardware p¯ipojen?"
-	IDS_PROBELISTTITLE "N·sledujÌcÌ hardware jiû je nainstalov·n na tomto poËÌtaËi"
-	IDS_ADDNEWDEVICE "P¯idat novÈ hardwarovÈ za¯ÌzenÌ"
-	IDS_SELECTWAYTITLE "Pr˘vodce v·m m˘ûe pomoci nainstalovat jin˝ hardware"
-	IDS_HDTYPESTITLE "Ze seznamu nÌûe zvolte typ instalovanÈho hardwaru"
+    IDS_CPLNAME "P≈ôidat hardware"
+    IDS_CPLDESCRIPTION "P≈ôid√° hardware do tohoto poƒç√≠taƒçe."
+    IDS_SEARCHTITLE "ƒåekejte, pros√≠m, pr≈Øvodce hled√°..."
+    IDS_SEARCHTEXT "Tento pr≈Øvodce hled√° hardware, kter√Ω byl ned√°vno p≈ôipojen k tomuto poƒç√≠taƒçi, ale je≈°tƒõ nebyl nainstalov√°n."
+    IDS_ISCONNECTED "Je hardware p≈ôipojen?"
+    IDS_PROBELISTTITLE "N√°sleduj√≠c√≠ hardware ji≈æ je nainstalov√°n na tomto poƒç√≠taƒçi"
+    IDS_ADDNEWDEVICE "P≈ôidat nov√© hardwarov√© za≈ô√≠zen√≠"
+    IDS_SELECTWAYTITLE "Pr≈Øvodce v√°m m≈Ø≈æe pomoci nainstalovat jin√Ω hardware"
+    IDS_HDTYPESTITLE "Ze seznamu n√≠≈æe zvolte typ instalovan√©ho hardwaru"
 END

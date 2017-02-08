@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component (body).                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2008 by                               */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -51,7 +51,8 @@
   /* documentation is in ftdebug.h */
 
   FT_BASE_DEF( void )
-  FT_Message( const char*  fmt, ... )
+  FT_Message( const char*  fmt,
+              ... )
   {
     va_list  ap;
 
@@ -65,7 +66,8 @@
   /* documentation is in ftdebug.h */
 
   FT_BASE_DEF( void )
-  FT_Panic( const char*  fmt, ... )
+  FT_Panic( const char*  fmt,
+            ... )
   {
     va_list  ap;
 
@@ -75,6 +77,21 @@
     va_end( ap );
 
     exit( EXIT_FAILURE );
+  }
+
+
+  /* documentation is in ftdebug.h */
+
+  FT_BASE_DEF( int )
+  FT_Throw( FT_Error     error,
+            int          line,
+            const char*  file )
+  {
+    FT_UNUSED( error );
+    FT_UNUSED( line );
+    FT_UNUSED( file );
+
+    return 0;
   }
 
 #endif /* FT_DEBUG_LEVEL_ERROR */
@@ -135,8 +152,8 @@
   /* the memory and stream components which are set to 7 and 5,            */
   /* respectively.                                                         */
   /*                                                                       */
-  /* See the file <include/freetype/internal/fttrace.h> for details of the */
-  /* available toggle names.                                               */
+  /* See the file `include/freetype/internal/fttrace.h' for details of     */
+  /* the available toggle names.                                           */
   /*                                                                       */
   /* The level must be between 0 and 7; 0 means quiet (except for serious  */
   /* runtime errors), and 7 means _very_ verbose.                          */
@@ -163,6 +180,9 @@
         q = p;
         while ( *p && *p != ':' )
           p++;
+
+        if ( !*p )
+          break;
 
         if ( *p == ':' && p > q )
         {
@@ -192,7 +212,7 @@
           p++;
           if ( *p )
           {
-            level = *p++ - '0';
+            level = *p - '0';
             if ( level < 0 || level > 7 )
               level = -1;
           }

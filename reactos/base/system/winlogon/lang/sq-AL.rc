@@ -1,0 +1,48 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Fik kompjuterin"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Tani është e sigurt për të fikur kompjuterin tuaj.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Rifillo", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Dështimi Ndërfaqja e Përdoruesit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Hyrja e Nderfaqes se perdoruesit DLL %s deshtoj ne ngarkim.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Kontaktoni administratorin e sistemit per te zevendesuar DLL, ose te ktheje origjinalin e DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Rifillo", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Pergatit lidhjen e networkut..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Aplikon konfigurimet e kompjuterit..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Nis skriptet e fillimit..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Nis skriptet e fikjes..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Apliko konfigurimet personale..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Nis skriptet e daljes..."
+    IDS_RUNNINGLOGONSCRIPTS "Nis skriptet e hyrjes..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Ngarkon konfigurimet personale..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Mbyll lidhjet e networkut..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS po fiket..."
+    IDS_PREPARETOSTANDBY "Pergatitja e gadishmerise..."
+    IDS_PREPARETOHIBERNATE "Pergatitet per letargji..."
+    IDS_SAVEYOURSETTINGS "Ruan konfigurimin tuaj..."
+    IDS_REACTOSISSTARTINGUP "ReactOS po fillon..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon deshtoj te aktivizoj shell'in e perdoruesit!"
+END

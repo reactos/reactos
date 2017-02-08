@@ -1,13 +1,15 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/qotd.c
+ * FILE:        base/services/tcpsvcs/qotd.c
  * PURPOSE:     Sends a random quote to the client
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "tcpsvcs.h"
+
+#include <stdlib.h>
 
 static WCHAR szFilePath[] = L"\\drivers\\etc\\quotes";
 
@@ -56,7 +58,7 @@ RetrieveQuote(SOCKET sock)
     else
     {
         DWORD dwSize = GetFileSize(hFile, NULL);
-        lpQuotes = (LPSTR)HeapAlloc(GetProcessHeap(), 0, dwSize);
+        lpQuotes = (LPSTR)HeapAlloc(GetProcessHeap(), 0, dwSize + 1);
         if (!lpQuotes) 
         {
             CloseHandle(hFile);
@@ -73,7 +75,10 @@ RetrieveQuote(SOCKET sock)
         lpQuotes[dwSize] = 0;
 
         if (dwBytesRead != dwSize)
+        {
+            HeapFree(GetProcessHeap(), 0, lpQuotes);
             return FALSE;
+        }
 
         lpStr = lpQuotes;
         while (*lpStr)
@@ -118,6 +123,7 @@ RetrieveQuote(SOCKET sock)
             }
         }
 
+        HeapFree(GetProcessHeap(), 0, lpQuotes);
         return TRUE;
     }
 

@@ -1,0 +1,51 @@
+/*
+ * Top level resource file for avifil32.dll
+ *
+ * Copyright 2002 Michael Günnewig
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_WAVESTREAMFORMAT	"파형: %s"
+  IDS_WAVEFILETYPE	"파형"
+  IDS_ALLMULTIMEDIA	"모든 멀티미디어 파일"
+  IDS_ALLFILES		"모든 파일 (*.*)"
+  IDS_VIDEO		"비디오"
+  IDS_AUDIO		"오디오"
+  IDS_AVIFILETYPE	"Wine AVI-기본-파일핸들러"
+  IDS_UNCOMPRESSED      "압축안됨"
+}
+
+IDD_SAVEOPTIONS DIALOGEX  43, 37, 226, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "압축 옵션"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "스트림 선택(&C):",-1,5,5,154,10
+    COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "옵션(&O)...",IDC_OPTIONS,170,17,50,14
+    AUTOCHECKBOX    "항상 인터리브 적용(&I)",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
+    EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
+    LTEXT           "프레임",-1,129,43,36,9
+    LTEXT           "현재 형식:",-1,5,56,73,9
+    LTEXT           "",IDC_FORMATTEXT,80,56,88,26
+    DEFPUSHBUTTON   "확인",IDOK,170,42,50,14
+    PUSHBUTTON      "취소",IDCANCEL,170,61,50,14
+END

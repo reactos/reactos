@@ -4,7 +4,7 @@
  * FILE:            dll/directx/dsound_new/enum.c
  * PURPOSE:         Handles DSound device enumeration
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "precomp.h"

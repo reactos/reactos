@@ -1,0 +1,125 @@
+/*
+ * Copyright 2005 Hans Leidekker
+ * Copyright 2010 Claudia Cotună
+ *                Michael Stefaniuc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE
+{
+    0 "Succes"
+    1 "Eroare de operațiuni"
+    2 "Eroare de protocol"
+    3 "Limită de timp depășită"
+    4 "Limită de mărime depășită"
+    5 "Comparație falsă"
+    6 "Comparație adevărată"
+    7 "Metodă de autentificare nesuportată"
+    8 "Autentificare puternică necesară"
+    9 "Referent (v2)"
+    10 "Referent"
+    11 "Limită administrativă depășită"
+    12 "Extensie critică indisponibilă"
+    13 "Confidențialitate necesară"
+    14 ""
+    15 ""
+    16 "Atribut necunoscut"
+    17 "Tip nedefinit"
+    18 "Potrivire necorespunzătoare"
+    19 "Violare de restricție"
+    20 "Atributul sau valoarea există deja"
+    21 "Sintaxă nevalidă"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "Obiect necunoscut"
+    33 "Problemă la alias"
+    34 "Sintaxă DN nevalidă"
+    35 "Este o frunză"
+    36 "Problemă de dereferențiere la alias"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "Autentificare necorespunzătoare"
+    49 "Autorizații nevalide"
+    50 "Drepturi insuficiente"
+    51 "Ocupat"
+    52 "Indisponibil"
+    53 "Refuză să funcționeze"
+    54 "Buclă detectată"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "Control de triere lipsă"
+    61 "Eroare de interval la index"
+    62 ""
+    63 ""
+    64 "Violare de denumire"
+    65 "Violare de clasă de obiect"
+    66 "Nepermis pe non-frunze"
+    67 "Nepermis pe RDN"
+    68 "Există deja"
+    69 "Nici o modificare de clasă de obiecte"
+    70 "Rezultate prea mari"
+    71 "Afectează mai multe DSA"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "Altul"
+    81 "Server indisponibil"
+    82 "Eroare locală"
+    83 "Eroare de codificare"
+    84 "Eroare de decodificare"
+    85 "Timp alocat expirat"
+    86 "Autentificare necunoscută"
+    87 "Eroare de filtrare"
+    88 "Anulat de utilizator"
+    89 "Eroare de parametri"
+    90 "Memorie insuficientă"
+    91 "Nu se poate conecta la serverul LDAP"
+    92 "Operațiune nesuportată de această versiune a protocolului LDAP"
+    93 "Controlul specificat nu a fost găsit în mesaj"
+    94 "Nici un rezultat în mesaj"
+    95 "Mai multe rezultate returnate"
+    96 "Buclă la gestionarea referenților"
+    97 "Limită număr referenți depășită"
+}

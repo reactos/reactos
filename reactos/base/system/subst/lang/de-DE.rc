@@ -1,0 +1,18 @@
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Falsche Anzahl an Parametern - %s\n"
+    IDS_INVALID_PARAMETER "Falsche Anzahl an Parametern - %s\n"
+    IDS_INVALID_PARAMETER2 "Falscher Parameter - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "SUBST wurde hier schon ausgeführt.\n"
+    IDS_FAILED_WITH_ERRORCODE "Fehlgeschlagen - Code 0x%x: %s\n"
+    IDS_USAGE "Weist einem Pfad einen Laufwerksbuchstaben zu.n\n\
+SUBST [Laufwerk1: [Laufwerk2:]Pfad]\n\
+SUBST Laufwerk1: /D\n\n\
+  Laufwerk1:        Laufwerksbezeichnung, die dem Pfad zugewiesen werden soll.\n\
+  [Laufwerk2:]Pfad  Laufwerk und Pfad, die als virtuelles Laufwerk (Laufwerk1:)\n\
+                    angesprochen werden sollen.\n\
+  /D                Löscht ein virtuelles Laufwerk.\n\n\
+SUBST ohne Parameter zeigt alle bereits erstellten, virtuellen Laufwerke an.\n"
+END

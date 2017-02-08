@@ -11,8 +11,8 @@ SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
               )
 
 FacilityNames=(System=0x0:FACILITY_SYSTEM
-			   ITF=0x4:FACILITY_ITF
-			   WIN32=0x7:FACILITY_GENERAL
+               ITF=0x4:FACILITY_ITF
+               WIN32=0x7:FACILITY_GENERAL
               )
 
 LanguageNames=(Russian=0x419:MSG00419)
@@ -29,7 +29,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SUCCESS
 Language=Russian
-ERROR_SUCCESS - Действие завершено успешно.
+ERROR_SUCCESS - Операция успешно завершена.
 .
 
 MessageId=1
@@ -45,7 +45,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FILE_NOT_FOUND
 Language=Russian
-ERROR_FILE_NOT_FOUND - Система не смогла найти указанный файл.
+ERROR_FILE_NOT_FOUND - Не удается найти указанный файл.
 .
 
 MessageId=3
@@ -53,7 +53,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_PATH_NOT_FOUND
 Language=Russian
-ERROR_PATH_NOT_FOUND - Система не смогла найти указанный путь.
+ERROR_PATH_NOT_FOUND - Системе не удается найти указанный путь.
 .
 
 MessageId=4
@@ -61,7 +61,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TOO_MANY_OPEN_FILES
 Language=Russian
-ERROR_TOO_MANY_OPEN_FILES - Система не может открыть файл.
+ERROR_TOO_MANY_OPEN_FILES - Системе не удается открыть файл.
 .
 
 MessageId=5
@@ -69,7 +69,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ACCESS_DENIED
 Language=Russian
-ERROR_ACCESS_DENIED - Доступ запрещен.
+ERROR_ACCESS_DENIED - Отказано в доступе.
 .
 
 MessageId=6
@@ -77,7 +77,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_HANDLE
 Language=Russian
-ERROR_INVALID_HANDLE - The handle is invalid.
+ERROR_INVALID_HANDLE - Неверный дескриптор.
 .
 
 MessageId=7
@@ -85,7 +85,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_ARENA_TRASHED
 Language=Russian
-ERROR_ARENA_TRASHED - The storage control blocks were destroyed.
+ERROR_ARENA_TRASHED - Повреждены управляющие блоки памяти.
 .
 
 MessageId=8
@@ -93,7 +93,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_ENOUGH_MEMORY
 Language=Russian
-ERROR_NOT_ENOUGH_MEMORY - Not enough storage is available to process this command.
+ERROR_NOT_ENOUGH_MEMORY - Недостаточно памяти для обработки команды.
 .
 
 MessageId=9
@@ -101,7 +101,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_BLOCK
 Language=Russian
-ERROR_INVALID_BLOCK - The storage control block address is invalid.
+ERROR_INVALID_BLOCK - Неверный адрес управляющего блока памяти.
 .
 
 MessageId=10
@@ -109,7 +109,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_ENVIRONMENT
 Language=Russian
-ERROR_BAD_ENVIRONMENT - The environment is incorrect.
+ERROR_BAD_ENVIRONMENT - Ошибка в среде.
 .
 
 MessageId=11
@@ -117,7 +117,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_FORMAT
 Language=Russian
-ERROR_BAD_FORMAT - An attempt was made to load a program with an incorrect format.
+ERROR_BAD_FORMAT - Была сделана попытка загрузить программу, имеющую неверный формат.
 .
 
 MessageId=12
@@ -125,7 +125,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_ACCESS
 Language=Russian
-ERROR_INVALID_ACCESS - The access code is invalid.
+ERROR_INVALID_ACCESS - Код доступа неверен.
 .
 
 MessageId=13
@@ -133,7 +133,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_DATA
 Language=Russian
-ERROR_INVALID_DATA - Некорректные данные.
+ERROR_INVALID_DATA - Недопустимые данные.
 .
 
 MessageId=14
@@ -141,7 +141,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OUTOFMEMORY
 Language=Russian
-ERROR_OUTOFMEMORY - Not enough storage is available to complete this operation.
+ERROR_OUTOFMEMORY - Недостаточно памяти для завершения операции.
 .
 
 MessageId=15
@@ -149,7 +149,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_INVALID_DRIVE
 Language=Russian
-ERROR_INVALID_DRIVE - The system cannot find the drive specified.
+ERROR_INVALID_DRIVE - Системе не удается найти указанный диск.
 .
 
 MessageId=16
@@ -157,7 +157,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CURRENT_DIRECTORY
 Language=Russian
-ERROR_CURRENT_DIRECTORY - Невозможно удалить директорию.
+ERROR_CURRENT_DIRECTORY - Не удается удалить папку.
 .
 
 MessageId=17
@@ -165,7 +165,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_SAME_DEVICE
 Language=Russian
-ERROR_NOT_SAME_DEVICE - The system cannot move the file to a different disk drive.
+ERROR_NOT_SAME_DEVICE - Системе не удается переместить файл на другой диск.
 .
 
 MessageId=18
@@ -173,7 +173,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_MORE_FILES
 Language=Russian
-ERROR_NO_MORE_FILES - There are no more files.
+ERROR_NO_MORE_FILES - Файлов больше не осталось.
 .
 
 MessageId=19
@@ -181,7 +181,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WRITE_PROTECT
 Language=Russian
-ERROR_WRITE_PROTECT - The media is write protected.
+ERROR_WRITE_PROTECT - Носитель защищен от записи.
 .
 
 MessageId=20
@@ -189,7 +189,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_UNIT
 Language=Russian
-ERROR_BAD_UNIT - The system cannot find the device specified.
+ERROR_BAD_UNIT - Системе не удается найти указанное устройство.
 .
 
 MessageId=21
@@ -197,7 +197,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_READY
 Language=Russian
-ERROR_NOT_READY - The device is not ready.
+ERROR_NOT_READY - Устройство не готово.
 .
 
 MessageId=22
@@ -205,7 +205,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_COMMAND
 Language=Russian
-ERROR_BAD_COMMAND - The device does not recognize the command.
+ERROR_BAD_COMMAND - "Устройство не опознает команду.
 .
 
 MessageId=23
@@ -213,7 +213,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CRC
 Language=Russian
-ERROR_CRC - Data error (cyclic redundancy check).
+ERROR_CRC - Ошибка в данных (CRC).
 .
 
 MessageId=24
@@ -221,7 +221,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_BAD_LENGTH
 Language=Russian
-ERROR_BAD_LENGTH - The program issued a command but the command length is incorrect.
+ERROR_BAD_LENGTH - Длина выданной программой команды слишком велика.
 .
 
 MessageId=25
@@ -229,7 +229,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SEEK
 Language=Russian
-ERROR_SEEK - The drive cannot locate a specific area or track on the disk.
+ERROR_SEEK - Не удается найти заданную область или дорожку на диске.
 .
 
 MessageId=26
@@ -237,7 +237,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_DOS_DISK
 Language=Russian
-ERROR_NOT_DOS_DISK - The specified disk or diskette cannot be accessed.
+ERROR_NOT_DOS_DISK - Нет доступа к диску или дискете.
 .
 
 MessageId=27
@@ -245,7 +245,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SECTOR_NOT_FOUND
 Language=Russian
-ERROR_SECTOR_NOT_FOUND - The drive cannot find the sector requested.
+ERROR_SECTOR_NOT_FOUND - Не удается найти заданный сектор на диске.
 .
 
 MessageId=28
@@ -253,7 +253,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_OUT_OF_PAPER
 Language=Russian
-ERROR_OUT_OF_PAPER - The printer is out of paper.
+ERROR_OUT_OF_PAPER - Нет бумаги в принтере.
 .
 
 MessageId=29
@@ -261,7 +261,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WRITE_FAULT
 Language=Russian
-ERROR_WRITE_FAULT - The system cannot write to the specified device.
+ERROR_WRITE_FAULT - Системе не удается произвести запись на устройство.
 .
 
 MessageId=30
@@ -269,7 +269,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_READ_FAULT
 Language=Russian
-ERROR_READ_FAULT - The system cannot read from the specified device.
+ERROR_READ_FAULT - Системе не удается произвести чтение с устройстваe.
 .
 
 MessageId=31
@@ -277,7 +277,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_GEN_FAILURE
 Language=Russian
-ERROR_GEN_FAILURE - A device attached to the system is not functioning.
+ERROR_GEN_FAILURE - Присоединенное к системе устройство не работает.
 .
 
 MessageId=32
@@ -285,7 +285,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SHARING_VIOLATION
 Language=Russian
-ERROR_SHARING_VIOLATION - The process cannot access the file because it is being used by another process.
+ERROR_SHARING_VIOLATION - Процесс не может получить доступ к файлу, так как этот файл занят другим процессом.
 .
 
 MessageId=33
@@ -293,7 +293,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_LOCK_VIOLATION
 Language=Russian
-ERROR_LOCK_VIOLATION - The process cannot access the file because another process has locked a portion of the file.
+ERROR_LOCK_VIOLATION - Процесс не может получить доступ к файлу, так как часть этого файла заблокирована другим процессом.
 .
 
 MessageId=34
@@ -301,7 +301,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_WRONG_DISK
 Language=Russian
-ERROR_WRONG_DISK - The wrong diskette is in the drive. Insert %2 (Volume Serial Number: %3) into drive %1.
+ERROR_WRONG_DISK - В устройство вставлен неверный диск. Вставьте %2 (серийный номер тома: %3) в устройство %1.
 .
 
 MessageId=36
@@ -309,7 +309,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SHARING_BUFFER_EXCEEDED
 Language=Russian
-ERROR_SHARING_BUFFER_EXCEEDED - Too many files opened for sharing.
+ERROR_SHARING_BUFFER_EXCEEDED - Слишком много файлов открыто для совместного доступа.
 .
 
 MessageId=38
@@ -317,7 +317,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_HANDLE_EOF
 Language=Russian
-ERROR_HANDLE_EOF - Reached the end of the file.
+ERROR_HANDLE_EOF - Достигнут конец файла.
 .
 
 MessageId=39
@@ -325,7 +325,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_HANDLE_DISK_FULL
 Language=Russian
-ERROR_HANDLE_DISK_FULL - The disk is full.
+ERROR_HANDLE_DISK_FULL - Нет места на диске.
 .
 
 MessageId=50

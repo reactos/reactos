@@ -17,12 +17,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-//#include "windef.h"
-//#include "winerror.h"
-#include <objbase.h>
-#include <oleauto.h>
+
+#pragma once
+
 #include <math.h>
 
 /* Get just the type from a variant pointer */
@@ -47,15 +44,6 @@
 #define VTBIT_UNKNOWN   (1 << VT_UNKNOWN)
 #define VTBIT_VARIANT   (1 << VT_VARIANT)
 #define VTBIT_15        (1 << 15)        /* no variant type with this number */
-
-extern const char * const wine_vtypes[] DECLSPEC_HIDDEN;
-#define debugstr_vt(v) (((v)&VT_TYPEMASK) <= VT_CLSID ? wine_vtypes[((v)&VT_TYPEMASK)] : \
-  ((v)&VT_TYPEMASK) == VT_BSTR_BLOB ? "VT_BSTR_BLOB": "Invalid")
-#define debugstr_VT(v) (!(v) ? "(null)" : debugstr_vt(V_TYPE((v))))
-
-extern const char * const wine_vflags[] DECLSPEC_HIDDEN;
-#define debugstr_vf(v) (wine_vflags[((v)&VT_EXTRA_TYPE)>>12])
-#define debugstr_VF(v) (!(v) ? "(null)" : debugstr_vf(V_EXTRA_TYPE(v)))
 
 /* Size constraints */
 #define I1_MAX   0x7f
@@ -124,7 +112,7 @@ typedef struct tagVARIANT_NUMBER_CHARS
   WCHAR cCurrencyDigitSeparator;
 } VARIANT_NUMBER_CHARS;
 
-
+unsigned int get_type_size(ULONG*, VARTYPE) DECLSPEC_HIDDEN;
 BOOL VARIANT_GetLocalisedText(LANGID, DWORD, WCHAR *) DECLSPEC_HIDDEN;
 HRESULT VARIANT_ClearInd(VARIANTARG *) DECLSPEC_HIDDEN;
 BOOL get_date_format(LCID, DWORD, const SYSTEMTIME *,

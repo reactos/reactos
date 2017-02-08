@@ -1,20 +1,20 @@
-@ stdcall AcceptSecurityContext(ptr ptr ptr long long ptr ptr ptr ptr) secur32.AcceptSecurityContext
-@ stdcall AcquireCredentialsHandleA(str str long ptr ptr ptr ptr ptr ptr) secur32.AcquireCredentialsHandleA
-@ stdcall AcquireCredentialsHandleW(wstr wstr long ptr ptr ptr ptr ptr ptr) secur32.AcquireCredentialsHandleW
-@ stdcall ApplyControlToken(ptr ptr) secur32.ApplyControlToken
+@ stdcall AcceptSecurityContext(ptr ptr ptr long long ptr ptr ptr ptr) schan_AcceptSecurityContext
+@ stdcall AcquireCredentialsHandleA(str str long ptr ptr ptr ptr ptr ptr) schan_AcquireCredentialsHandleA
+@ stdcall AcquireCredentialsHandleW(wstr wstr long ptr ptr ptr ptr ptr ptr) schan_AcquireCredentialsHandleW
+@ stdcall ApplyControlToken(ptr ptr) schan_ApplyControlToken
 @ stub CloseSslPerformanceData
 @ stub CollectSslPerformanceData
-@ stdcall CompleteAuthToken(ptr ptr) secur32.CompleteAuthToken
-@ stdcall DeleteSecurityContext(ptr) secur32.DeleteSecurityContext
-@ stdcall EnumerateSecurityPackagesA(ptr ptr) secur32.EnumerateSecurityPackagesA
-@ stdcall EnumerateSecurityPackagesW(ptr ptr) secur32.EnumerateSecurityPackagesW
-@ stdcall FreeContextBuffer(ptr) secur32.FreeContextBuffer
-@ stdcall FreeCredentialsHandle(ptr) secur32.FreeCredentialsHandle
-@ stdcall ImpersonateSecurityContext(ptr) secur32.ImpersonateSecurityContext
-@ stdcall InitSecurityInterfaceA() secur32.InitSecurityInterfaceA
-@ stdcall InitSecurityInterfaceW() secur32.InitSecurityInterfaceW
-@ stdcall InitializeSecurityContextA(ptr ptr str long long long ptr long ptr ptr ptr ptr) secur32.InitializeSecurityContextA
-@ stdcall InitializeSecurityContextW(ptr ptr wstr long long long ptr long ptr ptr ptr ptr) secur32.InitializeSecurityContextW
+@ stdcall CompleteAuthToken(ptr ptr) schan_CompleteAuthToken
+@ stdcall DeleteSecurityContext(ptr) schan_DeleteSecurityContext
+@ stdcall EnumerateSecurityPackagesA(ptr ptr) schan_EnumerateSecurityPackagesA
+@ stdcall EnumerateSecurityPackagesW(ptr ptr) schan_EnumerateSecurityPackagesW
+@ stdcall FreeContextBuffer(ptr) schan_FreeContextBuffer
+@ stdcall FreeCredentialsHandle(ptr) schan_FreeCredentialsHandle
+@ stdcall ImpersonateSecurityContext(ptr) schan_ImpersonateSecurityContext
+@ stdcall InitSecurityInterfaceA() schan_InitSecurityInterfaceA
+@ stdcall InitSecurityInterfaceW() schan_InitSecurityInterfaceW
+@ stdcall InitializeSecurityContextA(ptr ptr str long long long ptr long ptr ptr ptr ptr) schan_InitializeSecurityContextA
+@ stdcall InitializeSecurityContextW(ptr ptr wstr long long long ptr long ptr ptr ptr ptr) schan_InitializeSecurityContextW
 @ stdcall MakeSignature(ptr long ptr long) secur32.MakeSignature
 @ stub OpenSslPerformanceData
 @ stdcall QueryContextAttributesA(ptr long ptr) secur32.QueryContextAttributesA

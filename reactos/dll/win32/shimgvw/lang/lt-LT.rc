@@ -1,22 +1,30 @@
-/*
- * Translation by Vytis Girdžijauskas, CMan (cman@cman.us)
- */
- 
+/* Translation by Vytis Girdžijauskas, CMan (cman@cman.us) */
+
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "ReactOS paveikslėlių ir faksogramų peržiūros programa"
+    IDS_APPTITLE "ReactOS paveikslėlių ir faksogramų peržiūros programa"
     IDS_SETASDESKBG "Nustatyti kaip darbalaukio foną"
-    IDS_PREVIEW     "Preview"
-
+    IDS_PREVIEW "Preview"
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Tolesnis paveikslėlis"
-    IDS_TOOLTIP_PREV_PIC   "Ankstesnis paveikslėlis"
-    IDS_TOOLTIP_ZOOM_IN    "Didinti (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Mažinti (-)"
+    IDS_TOOLTIP_NEXT_PIC "Tolesnis paveikslėlis"
+    IDS_TOOLTIP_PREV_PIC "Ankstesnis paveikslėlis"
+    IDS_TOOLTIP_ZOOM_IN "Didinti (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Mažinti (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Pasukti pagal laikrodžio rodyklę (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Pasukti prieš laikrodžio rodyklę (Ctrl+L)"
-    IDS_TOOLTIP_PRINT      "Spausdinti (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Įrašyti kaip... (Ctrl+S)"
+    IDS_TOOLTIP_PRINT "Spausdinti (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Įrašyti kaip... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF Image"
+    IDS_GIF_FILE    "GIF Image"
+    IDS_JPG_FILE    "JPEG Image"
+    IDS_BMP_FILE    "Bitmap Image"
+    IDS_PNG_FILE    "PNG Image"
+    IDS_TIF_FILE    "TIF Image"
+    IDS_WMF_FILE    "WMF Image"
 END

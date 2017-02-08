@@ -53,7 +53,7 @@ struct mountmgr_unix_drive {
 #define MOUNTMGR_IS_DRIVE_LETTER(s)                                             \
   ((s)->Length == 28 && (s)->Buffer[0] == '\\' && (s)->Buffer[1] == 'D' &&      \
    (s)->Buffer[2] == 'o' && (s)->Buffer[3] == 's' && (s)->Buffer[4] == 'D' &&   \
-   (s)->Buffer[5] == 'e' && \ (s)->Buffer[6] == 'v' && (s)->Buffer[7] == 'i' && \
+   (s)->Buffer[5] == 'e' && (s)->Buffer[6] == 'v' && (s)->Buffer[7] == 'i' && \
    (s)->Buffer[8] == 'c' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == 's' &&  \
    (s)->Buffer[11] == '\\' && (s)->Buffer[12] >= 'A' &&                         \
    (s)->Buffer[12] <= 'Z' && (s)->Buffer[13] == ':')

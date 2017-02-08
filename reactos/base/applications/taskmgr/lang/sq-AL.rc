@@ -1,0 +1,446 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDR_TASKMANAGER MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Proces i ri (Run...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Mbyll Task Menager", ID_FILE_EXIT
+    END
+    POPUP "&Opsione"
+    BEGIN
+        MENUITEM "Perhere lart", ID_OPTIONS_ALWAYSONTOP, CHECKED
+        MENUITEM "&Minimizo ne perdorim", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "Fshehe gjate minimizimit", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
+        MENUITEM "&Shfaq 16-bit detyre", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+    END
+    POPUP "&Vezhgo"
+    BEGIN
+        MENUITEM "&Rifresko Tani", ID_VIEW_REFRESH
+        POPUP "&Shpejtesi Updejtimi"
+        BEGIN
+            MENUITEM "Lartesi", ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&Normale", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
+            MENUITEM "Ulet", ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Pushim", ID_VIEW_UPDATESPEED_PAUSED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Ikona te medha", ID_VIEW_LARGE
+        MENUITEM "Ikona te vogla", ID_VIEW_SMALL
+        MENUITEM "&Detaje", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "Perzgjedh kolone...", ID_VIEW_SELECTCOLUMNS
+        POPUP "&CPU Histori"
+        BEGIN
+            MENUITEM "Nje grafik, Te gjith CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "Nje grafik &Per CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+        END
+        MENUITEM "&Shfaq oren e Kernelit", ID_VIEW_SHOWKERNELTIMES
+    END
+    POPUP "Dritare"
+    BEGIN
+        MENUITEM "Shfaq &Horizontalisht", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Shfaq &Vertikalisht", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimizo", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizo", ID_WINDOWS_MAXIMIZE
+        MENUITEM "Ujevare", ID_WINDOWS_CASCADE
+        MENUITEM "Sjelle para", ID_WINDOWS_BRINGTOFRONT
+    END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
+    POPUP "Ndihme"
+    BEGIN
+        MENUITEM "Task Manager &Ndihme me teme", ID_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Rreth Task Menager", ID_HELP_ABOUT
+    END
+END
+
+IDR_WINDOWSMENU MENU
+BEGIN
+    MENUITEM "Shfaq &Horizontalisht", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Shfaq &Vertikalisht", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&Minimizo", ID_WINDOWS_MINIMIZE
+    MENUITEM "Ma&ximizo", ID_WINDOWS_MAXIMIZE
+    MENUITEM "Ujvare", ID_WINDOWS_CASCADE
+    MENUITEM "Sjelle para", ID_WINDOWS_BRINGTOFRONT
+END
+
+IDR_APPLICATION_PAGE_CONTEXT1 MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "Detyre e re (Run...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Ikona te medha", ID_VIEW_LARGE
+        MENUITEM "Ikona te vogla", ID_VIEW_SMALL
+        MENUITEM "&Detaje", ID_VIEW_DETAILS, CHECKED
+    END
+END
+
+IDR_APPLICATION_PAGE_CONTEXT2 MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "Ndrysho ne", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "Sjelle para", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM SEPARATOR
+        MENUITEM "Shfaq &Horizontalisht", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Shfaq &Vertiklisht", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimizo", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizo", ID_WINDOWS_MAXIMIZE
+        MENUITEM "Ujvare", ID_WINDOWS_CASCADE
+        MENUITEM SEPARATOR
+        MENUITEM "Perfundo procesin", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Shko tek procese", ID_APPLICATION_PAGE_GOTOPROCESS
+    END
+END
+
+IDR_TRAY_POPUP MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Restauro", ID_RESTORE
+        MENUITEM "Mbyll", ID_FILE_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "Perhere Mbi", ID_OPTIONS_ALWAYSONTOP
+    END
+END
+
+IDR_PROCESS_PAGE_CONTEXT MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "Mbyll procesin", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Mbyll procesin &Tree", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Debug", ID_PROCESS_PAGE_DEBUG
+        MENUITEM SEPARATOR
+        POPUP "Vendos &Prioritetin"
+        BEGIN
+            MENUITEM "KoheReale", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "Lartesi", ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "MbiNormale", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&Normale", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "PoshteNormales", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "Poshte", ID_PROCESS_PAGE_SETPRIORITY_LOW
+        END
+        MENUITEM "Vendos prirje...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Modifiko Debug &Channels...", ID_PROCESS_PAGE_DEBUGCHANNELS
+    END
+END
+
+/* Dialogs */
+
+IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Task Manager"
+MENU IDR_TASKMANAGER
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+END
+
+IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "Proces i ri...", IDC_NEWTASK, 187, 189, 53, 14
+    PUSHBUTTON "Kalo tek", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "Mbyll", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+END
+
+IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "Mbyll Procesin", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "&Shfaq proceset nga te gjith perdoruesit", IDC_SHOWALLPROCESSES, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 140, 10
+END
+
+/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
+IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Perdorimi i CPU", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Perdorimi i MEM", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX "Totale", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Vendos Drejtimin (K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Memoria Fizike (K)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Memoria e Kernelit (K)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    LTEXT "Trajton", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
+    LTEXT "Temat", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
+    LTEXT "proceset", IDS_TOTALS_PROCESS_COUNT, 12, 149, 34, 8
+    EDITTEXT IDC_TOTALS_HANDLE_COUNT, 65, 131, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_THREAD_COUNT, 65, 140, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_PROCESS_COUNT, 65, 149, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Totali", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 27, 8
+    LTEXT "Limiti", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 15, 8, NOT WS_BORDER
+    LTEXT "Shiko", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
+    EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 65, 174, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_LIMIT, 65, 184, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_PEAK, 65, 193, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Totali", IDS_PHYSICAL_MEMORY_TOTAL, 137, 131, 27, 8
+    LTEXT "N'dispozicion", IDS_PHYSICAL_MEMORY_AVAILABLE, 137, 140, 46, 8
+    LTEXT "Kafazi Sistemit", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 46, 8
+    EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 185, 131, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 185, 140, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 185, 149, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Totali", IDS_KERNEL_MEMORY_TOTAL, 137, 174, 46, 8
+    LTEXT "Numerizim", IDS_KERNEL_MEMORY_PAGED, 137, 184, 46, 8
+    LTEXT "Jo te numerizume", IDS_KERNEL_MEMORY_NONPAGED, 137, 193, 56, 8
+    EDITTEXT IDC_KERNEL_MEMORY_TOTAL, 185, 174, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_PAGED, 185, 184, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 195, 193, 38, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX "Historia e perdorimit CPU", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Historia e perdorimit Memories", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    PUSHBUTTON "Shfaq perdorimin e CPU", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Shfaq perdorimin e MEM", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Historia e perdorimit CPU", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Historia e perdorimit MEM", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+END
+
+IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug Channels"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
+    PUSHBUTTON "Mbyll", IDOK, 171, 189, 69, 14
+END
+
+IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Processor Affinity"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 120, 133, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 174, 133, 50, 14
+    LTEXT "Prirja konfiguruese e kontrollit te Procesoreve e cila lejon perzgjedhjen e ekzekutimit nga CPU'ja.", IDC_STATIC, 5, 5, 220, 16
+    CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
+    CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
+    CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
+    CONTROL "CPU 3", IDC_CPU3, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 67, 37, 10
+    CONTROL "CPU 4", IDC_CPU4, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 80, 37, 10
+    CONTROL "CPU 5", IDC_CPU5, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 93, 37, 10
+    CONTROL "CPU 6", IDC_CPU6, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 106, 37, 10
+    CONTROL "CPU 7", IDC_CPU7, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 119, 37, 10
+    CONTROL "CPU 8", IDC_CPU8, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 28, 37, 10
+    CONTROL "CPU 9", IDC_CPU9, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 41, 37, 10
+    CONTROL "CPU 10", IDC_CPU10, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 54, 41, 10
+    CONTROL "CPU 11", IDC_CPU11, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 67, 41, 10
+    CONTROL "CPU 12", IDC_CPU12, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 80, 41, 10
+    CONTROL "CPU 13", IDC_CPU13, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 93, 41, 10
+    CONTROL "CPU 14", IDC_CPU14, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 106, 41, 10
+    CONTROL "CPU 15", IDC_CPU15, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 119, 41, 10
+    CONTROL "CPU 16", IDC_CPU16, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 28, 41, 10
+    CONTROL "CPU 17", IDC_CPU17, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 41, 41, 10
+    CONTROL "CPU 18", IDC_CPU18, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 54, 41, 10
+    CONTROL "CPU 19", IDC_CPU19, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 67, 41, 10
+    CONTROL "CPU 20", IDC_CPU20, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 80, 41, 10
+    CONTROL "CPU 21", IDC_CPU21, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 93, 41, 10
+    CONTROL "CPU 22", IDC_CPU22, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 106, 41, 10
+    CONTROL "CPU 23", IDC_CPU23, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 119, 41, 10
+    CONTROL "CPU 24", IDC_CPU24, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 28, 41, 10
+    CONTROL "CPU 25", IDC_CPU25, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 41, 41, 10
+    CONTROL "CPU 26", IDC_CPU26, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 54, 41, 10
+    CONTROL "CPU 27", IDC_CPU27, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 67, 41, 10
+    CONTROL "CPU 28", IDC_CPU28, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 80, 41, 10
+    CONTROL "CPU 29", IDC_CPU29, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 93, 41, 10
+    CONTROL "CPU 30", IDC_CPU30, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 106, 41, 10
+    CONTROL "CPU 31", IDC_CPU31, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 119, 41, 10
+END
+
+IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zgjidh Kolonat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 84, 178, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 138, 178, 50, 14
+    LTEXT "Zgjidh kolonat qe do te shfaqen ne faqen e Proceseve ne Task Manager.", IDC_STATIC, 7, 7, 181, 17
+    CONTROL "Emri fotos", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
+    CONTROL "&PID (Process Identifier)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 88, 10
+    CONTROL "Perdorimi &CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 60, 10
+    CONTROL "Koha &e CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 60, 10
+    CONTROL "Perdorimiri &Memories", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 100, 10
+    CONTROL "Perdorimi &Delta i Memories", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 100, 10
+    CONTROL "&Kulmi i perdorimi te Memories", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 100, 10
+    CONTROL "Faqe gabim", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
+    CONTROL "Objektet e Perdor&uesit", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 100, 10
+    CONTROL "Lexo I/O", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 49, 10
+    CONTROL "Lexo I/O Bytes", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
+    CONTROL "&Seance ID", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
+    CONTROL "Emri perdoruesit", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 100, 10
+    CONTROL "Faqe Delta G&abim", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
+    CONTROL "Masa &Virtuale e Memories", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 85, 10
+    CONTROL "Faqe Pool", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
+    CONTROL "Jo faqosje Pool", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 67, 10
+    CONTROL "P&rioritete Baze", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 85, 10
+    CONTROL "Trajton Numrimin", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 85, 10
+    CONTROL "Numrimin e &Threads", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 85, 10
+    CONTROL "Objekte GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 55, 10
+    CONTROL "Shkruan I/O", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 85, 10
+    CONTROL "Shkruan I/O Bytes", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 85, 10
+    CONTROL "I/O te tjere", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 85, 10
+    CONTROL "I/O Byte te tjere", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 85, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Task Manager"
+    IDC_TASKMGR "Task Manager"
+    IDS_IDLE_PROCESS "Procese te papune te sistemit"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW "Fillon program te ri"
+    ID_OPTIONS_ALWAYSONTOP "Task Manager mbetet para te gjitha dritareve po te mos minimizohet"
+    ID_OPTIONS_MINIMIZEONUSE "Task Manager minimizohet kur nje operacion ndryshimi performohet"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Fshih Task Manager kur minimizohet"
+    ID_VIEW_REFRESH "sforco Task Manager te updejtohet tani, pa marre parasysh shpejtesi e konfigurimit te updejtimit"
+    ID_VIEW_LARGE "Shfaq proceset duket perdorur ikona te medha"
+    ID_VIEW_SMALL "Shfaq proceset duket perdorur ikona te vogla"
+    ID_VIEW_DETAILS "Shfaq informacione per secilin proces"
+    ID_VIEW_UPDATESPEED_HIGH "Updejto shfaqjen dy here per sekond"
+    ID_VIEW_UPDATESPEED_NORMAL "Updejto shfaqjen qdo dy sekonda"
+    ID_VIEW_UPDATESPEED_LOW "Updejto shfaqjen qdo kater sekonda"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_UPDATESPEED_PAUSED "Nuk updejtohet automatikisht"
+    ID_WINDOWS_TILEHORIZONTALLY "Pret dritaren horizontalisht ne ekran"
+    ID_WINDOWS_TILEVERTICALLY "Pret dritaren vertikalisht ne ekran"
+    ID_WINDOWS_MINIMIZE "Minimizon dritaren"
+    ID_WINDOWS_MAXIMIZE "Maximizon dritaren"
+    ID_WINDOWS_CASCADE "Shfaq dritaren diagonal ne ekran"
+    ID_WINDOWS_BRINGTOFRONT "Sjell dritaren perbadh, por nuk shkon tek ajo"
+    ID_HELP_TOPICS "Shfaq ndihme me teme te Task Manager"
+    ID_HELP_ABOUT "Shfaq informacionet e programit, numnrin e versionit, dhe copyright"
+    ID_FILE_EXIT "Dil nga Task Manager"
+    ID_OPTIONS_SHOW16BITTASKS "Shfaq 16-bit tasks nen ntvdm.exe"
+    ID_VIEW_SELECTCOLUMNS "Perzgjedh cila kolone do te jete e dukshme ne faqen e Proceseve"
+    ID_VIEW_SHOWKERNELTIMES "Shfaq oren e kernelit ne grafikun e performances"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Nje grafik tek shfaq perdorimin total te CPU'se"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Secili CPU ka grafikun e historise se saj"
+    ID_APPLICATION_PAGE_SWITCHTO "Sjell nje proces perpara, ndrysho fokusin tek ai proces"
+END
+
+STRINGTABLE
+BEGIN
+    ID_ENDTASK "Mbyll proceset e perzgjedhur"
+    ID_GOTOPROCESS "Ndrysho fokusin tek procesi i perzgjedhur"
+    ID_RESTORE "Rikthen Task Manager nga gjendja e fshehte"
+    ID_PROCESS_PAGE_ENDPROCESS "Heq procesin nga sistemi"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "Heq kete proces dhe te gjith varesit nga sistemi"
+    ID_PROCESS_PAGE_DEBUG "Ngjet debuggerin ketij procesi"
+    ID_PROCESS_PAGE_SETAFFINITY "Kontrollon cili procesor do te lejoje vendin ku do punoje ky proces"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Vendos procesin ne klasat e prioritet REALTIME"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Vendos procesin ne klasat e prioritetit HIGH"
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Vendos procesin ne klasat e prioritet ABOVE NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Vendos procesin ne klasat e prioritet NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Vendos procesin ne klasat e prioritet BELOW NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Vendos procesin ne klasat e prioritet LOW"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TAB_APPS "Aplikacione"
+    IDS_TAB_PROCESSES "Procese"
+    IDS_TAB_PERFORMANCE "Performanca"
+    IDS_TAB_TASK "Task"
+    IDS_TAB_STATUS "Statusi"
+    IDS_TAB_IMAGENAME "Emer foto"
+    IDS_TAB_PID "PID"
+    IDS_TAB_USERNAME "Perdoruesi"
+    IDS_TAB_SESSIONID "Seance ID"
+    IDS_TAB_CPU "CPU"
+    IDS_TAB_CPUTIME "CPU Koha"
+    IDS_TAB_MEMUSAGE "Perdorimi Mem"
+    IDS_TAB_PEAKMEMUSAGE "Perdorimi ne peak Mem"
+    IDS_TAB_MEMDELTA "Mem Delta"
+    IDS_TAB_PAGEFAULT "Page Faults"
+    IDS_TAB_PFDELTA "PF Delta"
+    IDS_TAB_VMSIZE "Masa VM"
+    IDS_TAB_PAGEDPOOL "Paged Pool"
+    IDS_TAB_NPPOOL "NP Pool"
+    IDS_TAB_BASEPRI "Baza Pri"
+    IDS_TAB_HANDLES "Mbajtes"
+    IDS_TAB_THREADS "Threads"
+    IDS_TAB_USERPBJECTS "Objektet e perdoruesit"
+    IDS_TAB_GDIOBJECTS "Objektek GDI"
+    IDS_TAB_IOREADS "I/O Lexo"
+    IDS_TAB_IOWRITES "I/O Shkruaj"
+    IDS_TAB_IOOTHER "I/O te tjere"
+    IDS_TAB_IOREADBYTES "I/O Lexo Bytes"
+    IDS_TAB_IOWRITESBYTES "I/O Shkruaj Bytes"
+    IDS_TAB_IOOTHERBYTES "I/O te tjere Bytes"
+    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_MENU_SELECTCOLUMNS "Zgjidh kolonat..."
+    IDS_MENU_16BITTASK "&Shfaq 16-bit tasks"
+    IDS_MENU_WINDOWS "Dritare"
+    IDS_MENU_LARGEICONS "Ikona te medha"
+    IDS_MENU_SMALLICONS "Ikona te vogla"
+    IDS_MENU_DETAILS "&Detaje"
+    IDS_MENU_ONEGRAPHALLCPUS "Nje grafik, Te gjith CPUs"
+    IDS_MENU_ONEGRAPHPERCPU "Nje grafik &Per CPU"
+    IDS_MENU_CPUHISTORY "&CPU Histori"
+    IDS_MENU_SHOWKERNELTIMES "Shfaq kohen e Kernelit"
+    IDS_CREATENEWTASK "Krijo proces te ri"
+    IDS_CREATENEWTASK_DESC "Shkruaj emrin e programit, folderit, dokumentit, ose bruimet e Internetit, dhe Task Manager do da hap per ju."
+    IDS_MSG_ACCESSPROCESSAFF "E pamundur hyrja ose vendos prirjen e procesit"
+    IDS_MSG_PROCESSONEPRO "Procesi duhet te kete prirje me te pakten nje procesor."
+    IDS_MSG_INVALIDOPTION "Opsion i pavlefshem"
+    IDS_MSG_UNABLEDEBUGPROCESS "E pamundur Debugu i Procesit"
+    IDS_MSG_WARNINGDEBUG "KUJDES: Debugging i ketij procesi mund te rezultoj ne humbje informacioni.\nJeni te sigurt per bashkangjitjen e debuggerit?"
+    IDS_MSG_TASKMGRWARNING "Paralajmerim i Task Manager"
+    IDS_MSG_WARNINGTERMINATING "KUJDES: Nderprerja e nje procesi mund te japi rezultat te pa \ndeshiruar perfshirje ne humbjen e informacioneve the paqendrueshmeri te sistemit.\nProcesi nuk ju jep shansin per te ruajtur gjendjen apo\ninformacionet perpara se te nderprehet. Jeni i sigurt qe doni te\nnderpreni procesin?"
+    IDS_MSG_UNABLETERMINATEPRO "E pamundur nderprerja e procesit"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
+    IDS_MSG_UNABLECHANGEPRIORITY "E pamundur ndryshimi i prioritetit"
+    IDS_MSG_WARNINGCHANGEPRIORITY "KUJDES: Ndryshimi i klases se prioritetit te ketij procesi mund te \nsjell rrezultate te padeshirushme ne stabilitetin e sistemit. Jeni i sigurt\nper ndryshimin e klases se prioriteteve?"
+    IDS_MSG_TRAYICONCPUUSAGE "Perdorimi i CPU: %d%%"
+    IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %s / %s (%d%%)"
+    IDS_STATUS_CPUUSAGE "Perdorimi i CPU: %3d%%"
+    IDS_STATUS_PROCESSES "Proceset: %d"
+    IDS_NOT_RESPONDING "Nuk pergjigjet"
+    IDS_RUNNING "Ne pune"
+END

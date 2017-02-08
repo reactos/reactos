@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/image.c
  * PURPOSE:         Image handling functions
@@ -20,8 +21,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-USHORT
 FORCEINLINE
+USHORT
 ChkSum(ULONG Sum, PUSHORT Src, ULONG Len)
 {
     ULONG i;
@@ -136,32 +137,42 @@ LdrVerifyMappedImageMatchesChecksum(
  */
 NTSTATUS
 NTAPI
-RtlImageNtHeaderEx(IN ULONG Flags,
-                   IN PVOID Base,
-                   IN ULONG64 Size,
-                   OUT PIMAGE_NT_HEADERS *OutHeaders)
+RtlImageNtHeaderEx(
+    _In_ ULONG Flags,
+    _In_ PVOID Base,
+    _In_ ULONG64 Size,
+    _Out_ PIMAGE_NT_HEADERS *OutHeaders)
 {
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_DOS_HEADER DosHeader;
     BOOLEAN WantsRangeCheck;
+    ULONG NtHeaderOffset;
 
     /* You must want NT Headers, no? */
-    if (!OutHeaders) return STATUS_INVALID_PARAMETER;
+    if (OutHeaders == NULL)
+    {
+        DPRINT1("OutHeaders is NULL\n");
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Assume failure */
     *OutHeaders = NULL;
 
     /* Validate Flags */
-    if (Flags &~ RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK)
+    if (Flags & ~RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK)
     {
-        DPRINT1("Invalid flag combination... check for new API flags?\n");
+        DPRINT1("Invalid flags: 0x%lx\n", Flags);
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Validate base */
-    if (!(Base) || (Base == (PVOID)-1)) return STATUS_INVALID_PARAMETER;
+    if ((Base == NULL) || (Base == (PVOID)-1))
+    {
+        DPRINT1("Invalid base address: %p\n", Base);
+        return STATUS_INVALID_PARAMETER;
+    }
 
-    /* Check if the caller wants validation */
+    /* Check if the caller wants range checks */
     WantsRangeCheck = !(Flags & RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK);
     if (WantsRangeCheck)
     {
@@ -178,56 +189,56 @@ RtlImageNtHeaderEx(IN ULONG Flags,
     if (DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
     {
         /* Not a valid COFF */
-        DPRINT1("Not an MZ file\n");
+        DPRINT1("Invalid image DOS signature!\n");
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Get the offset to the NT headers (and copy from LONG to ULONG) */
+    NtHeaderOffset = DosHeader->e_lfanew;
+
+    /* The offset must not be larger than 256MB, as a hard-coded check.
+       In Windows this check is only done in user mode, not in kernel mode,
+       but it shouldn't harm to have it anyway. Note that without this check,
+       other overflow checks would become necessary! */
+    if (NtHeaderOffset >= (256 * 1024 * 1024))
+    {
+        /* Fail */
+        DPRINT1("NT headers offset is larger than 256MB!\n");
         return STATUS_INVALID_IMAGE_FORMAT;
     }
 
     /* Check if the caller wants validation */
     if (WantsRangeCheck)
     {
-        /* The offset should fit in the passsed-in size */
-        if (DosHeader->e_lfanew >= Size)
+        /* Make sure the file header fits into the size */
+        if ((NtHeaderOffset +
+             RTL_SIZEOF_THROUGH_FIELD(IMAGE_NT_HEADERS, FileHeader)) >= Size)
         {
             /* Fail */
-            DPRINT1("e_lfanew is larger than PE file\n");
-            return STATUS_INVALID_IMAGE_FORMAT;
-        }
-
-        /* It shouldn't be past 4GB either */
-        if (DosHeader->e_lfanew >=
-            (MAXULONG - sizeof(IMAGE_DOS_SIGNATURE) - sizeof(IMAGE_FILE_HEADER)))
-        {
-            /* Fail */
-            DPRINT1("e_lfanew is larger than 4GB\n");
-            return STATUS_INVALID_IMAGE_FORMAT;
-        }
-
-        /* And the whole file shouldn't overflow past 4GB */
-        if ((DosHeader->e_lfanew +
-            sizeof(IMAGE_DOS_SIGNATURE) - sizeof(IMAGE_FILE_HEADER)) >= Size)
-        {
-            /* Fail */
-            DPRINT1("PE is larger than 4GB\n");
+            DPRINT1("NT headers beyond image size!\n");
             return STATUS_INVALID_IMAGE_FORMAT;
         }
     }
 
-    /* The offset also can't be larger than 256MB, as a hard-coded check */
-    if (DosHeader->e_lfanew >= (256 * 1024 * 1024))
+    /* Now get a pointer to the NT Headers */
+    NtHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)Base + NtHeaderOffset);
+
+    /* Check if the mapping is in user space */
+    if (Base <= MmHighestUserAddress)
     {
-        /* Fail */
-        DPRINT1("PE offset is larger than 256MB\n");
-        return STATUS_INVALID_IMAGE_FORMAT;
+        /* Make sure we don't overflow into kernel space */
+        if ((PVOID)(NtHeaders + 1) > MmHighestUserAddress)
+        {
+            DPRINT1("Image overflows from user space into kernel space!\n");
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
     }
-
-    /* Now it's safe to get the NT Headers */
-    NtHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)Base + DosHeader->e_lfanew);
 
     /* Verify the PE Signature */
     if (NtHeaders->Signature != IMAGE_NT_SIGNATURE)
     {
         /* Fail */
-        DPRINT1("PE signature missing\n");
+        DPRINT1("Invalid image NT signature!\n");
         return STATUS_INVALID_IMAGE_FORMAT;
     }
 
@@ -290,10 +301,9 @@ RtlImageDirectoryEntryToData(
     if (MappedAsImage || Va < SWAPD(NtHeader->OptionalHeader.SizeOfHeaders))
         return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
-    /* image mapped as ordinary file, we must find raw pointer */
+    /* Image mapped as ordinary file, we must find raw pointer */
     return RtlImageRvaToVa(NtHeader, BaseAddress, Va, NULL);
 }
-
 
 /*
  * @implemented
@@ -315,14 +325,13 @@ RtlImageRvaToSection(
     while (Count--)
     {
         Va = SWAPD(Section->VirtualAddress);
-        if ((Va <= Rva) &&
-                (Rva < Va + SWAPD(Section->Misc.VirtualSize)))
+        if ((Va <= Rva) && (Rva < Va + SWAPD(Section->SizeOfRawData)))
             return Section;
         Section++;
     }
+
     return NULL;
 }
-
 
 /*
  * @implemented
@@ -342,9 +351,9 @@ RtlImageRvaToVa(
 
     if ((Section == NULL) ||
         (Rva < SWAPD(Section->VirtualAddress)) ||
-        (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize)))
+        (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->SizeOfRawData)))
     {
-        Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
+        Section = RtlImageRvaToSection(NtHeader, BaseAddress, Rva);
         if (Section == NULL)
             return NULL;
 
@@ -352,9 +361,8 @@ RtlImageRvaToVa(
             *SectionHeader = Section;
     }
 
-    return (PVOID)((ULONG_PTR)BaseAddress +
-                   Rva +
-                   SWAPD(Section->PointerToRawData) -
+    return (PVOID)((ULONG_PTR)BaseAddress + Rva +
+                   (ULONG_PTR)SWAPD(Section->PointerToRawData) -
                    (ULONG_PTR)SWAPD(Section->VirtualAddress));
 }
 
@@ -417,7 +425,8 @@ LdrProcessRelocationBlockLongLong(
         case IMAGE_REL_BASED_MIPS_JMPADDR:
         default:
             DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
-            DPRINT1("Address %x, Current %u, Count %u, *TypeOffset %x\n", Address, i, Count, SWAPW(*TypeOffset));
+            DPRINT1("Address %p, Current %u, Count %u, *TypeOffset %x\n",
+                    (PVOID)Address, i, Count, SWAPW(*TypeOffset));
             return (PIMAGE_BASE_RELOCATION)NULL;
         }
 
@@ -425,6 +434,18 @@ LdrProcessRelocationBlockLongLong(
     }
 
     return (PIMAGE_BASE_RELOCATION)TypeOffset;
+}
+
+ULONG
+NTAPI
+LdrRelocateImage(
+    IN PVOID BaseAddress,
+    IN PCCH  LoaderName,
+    IN ULONG Success,
+    IN ULONG Conflict,
+    IN ULONG Invalid)
+{
+    return LdrRelocateImageWithBias(BaseAddress, 0, LoaderName, Success, Conflict, Invalid);
 }
 
 ULONG

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS VGA Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/vga/debug.c
+ * FILE:            win32ss/drivers/displays/vga_new/debug.c
  * PURPOSE:         Debug Support
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  */

@@ -10,7 +10,7 @@
 typedef int (*func_synth)(real *,int, mpg123_handle *,int );
 typedef int (*func_synth_mono)(real *, mpg123_handle *);
 typedef int (*func_synth_stereo)(real *, real *, mpg123_handle *);
-enum synth_channel  { c_plain=0, c_stereo, c_mono2stereo, c_mono, c_limit };
+enum synth_channel  { c_plain=0, c_stereo, c_m2s, c_mono, c_limit };
 enum synth_resample
 {
 	 r_none=-1

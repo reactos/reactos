@@ -38,18 +38,6 @@ Author:
 #define UserMode                                0x1
 
 //
-// CPU Types
-//
-#define CPU_NONE                                0x0
-#define CPU_INTEL                               0x1
-#define CPU_AMD                                 0x2
-#define CPU_CYRIX                               0x3
-#define CPU_TRANSMETA                           0x4
-#define CPU_CENTAUR                             0x5
-#define CPU_RISE                                0x6
-#define CPU_UNKNOWN                             0x7
-
-//
 // Selector Names
 //
 #ifdef __ASM__
@@ -327,13 +315,14 @@ Author:
 #define FRAME_EDITED                            0xFFF8
 
 //
-// KUSER_SHARED_DATA Offsets
+// USER_SHARED_DATA Offsets
 //
 #ifdef __ASM__
 #define USER_SHARED_DATA                        0xFFDF0000
 #endif
 #define USER_SHARED_DATA_INTERRUPT_TIME         0x8
 #define USER_SHARED_DATA_SYSTEM_TIME            0x14
+#define USER_SHARED_DATA_PROCESSOR_FEATURES     0x274
 #define USER_SHARED_DATA_TICK_COUNT             0x320
 
 //
@@ -476,6 +465,7 @@ Author:
 #define EFLAGS_VIP                              0x100000
 #define EFLAG_SIGN                              0x8000
 #define EFLAG_ZERO                              0x4000
+#define EFLAGS_ID                               0x200000
 #define EFLAG_SELECT                            (EFLAG_SIGN + EFLAG_ZERO)
 #endif
 #define EFLAGS_USER_SANITIZE                    0x3F4DD7
@@ -610,11 +600,6 @@ Author:
 //
 // System Call Table definitions
 //
-#define NUMBER_SERVICE_TABLES                   0x0002
-#define SERVICE_NUMBER_MASK                     0x0FFF
-#define SERVICE_TABLE_SHIFT                     0x0008
-#define SERVICE_TABLE_MASK                      0x0010
-#define SERVICE_TABLE_TEST                      0x0010
 #define SERVICE_DESCRIPTOR_BASE                 0x0000
 #define SERVICE_DESCRIPTOR_COUNT                0x0004
 #define SERVICE_DESCRIPTOR_LIMIT                0x0008

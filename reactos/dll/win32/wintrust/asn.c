@@ -18,21 +18,10 @@
  *
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "wintrust_priv.h"
 
-//#include <stdarg.h>
-#include <stdio.h>
 #include <assert.h>
-#define NONAMELESSUNION
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-//#include "wincrypt.h"
-#include <wintrust.h>
 #include <snmp.h>
-#include <winternl.h>
-#include <wine/debug.h>
 #include <wine/exception.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptasn);
@@ -2342,7 +2331,7 @@ static BOOL WINAPI CRYPT_AsnDecodeBool(DWORD dwCertEncodingType,
     else
     {
         *pcbStructInfo = sizeof(BOOL);
-        *(BOOL *)pvStructInfo = pbEncoded[2] ? TRUE : FALSE;
+        *(BOOL *)pvStructInfo = pbEncoded[2] != 0;
         ret = TRUE;
     }
     TRACE("returning %d (%08x)\n", ret, GetLastError());

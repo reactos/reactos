@@ -10,8 +10,6 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
-
 /* FUNCTIONS ****************************************************************/
 
 DWORD
@@ -56,7 +54,8 @@ GetSetupType(VOID)
 static
 DWORD
 WINAPI
-RunSetupThreadProc(IN LPVOID lpParameter)
+RunSetupThreadProc(
+    IN LPVOID lpParameter)
 {
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;
@@ -156,6 +155,8 @@ RunSetup(VOID)
                            NULL,
                            0,
                            NULL);
+    if (hThread != NULL)
+        CloseHandle(hThread);
 
     return hThread != NULL;
 }

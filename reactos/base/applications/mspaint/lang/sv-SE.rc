@@ -1,11 +1,3 @@
-/*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/sv-SE.rc
- * PURPOSE:     Swedish Language resource file
- * TRANSLATORS: Witch
- */
-
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 ID_MENU MENU
@@ -17,13 +9,16 @@ BEGIN
         MENUITEM "&Spara\tCtrl+S", IDM_FILESAVE
         MENUITEM "Spara so&m...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Ange som skrivbordsbakgrund (kakelklädd)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Ange som skrivbordsbakgrund (centrerad)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ange som skrivbordsbakgrund (utsträckt)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Redigera"
     BEGIN
         MENUITEM "Ångra\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +34,6 @@ BEGIN
         MENUITEM "Kopiera till...", IDM_EDITCOPYTO
         MENUITEM "Klistra från...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Visa"
     BEGIN
         MENUITEM "Verktygslåda\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,23 +59,23 @@ BEGIN
         END
         MENUITEM "Helskärm\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Bild"
     BEGIN
         MENUITEM "Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Ändra storlek...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Beskära", IDM_IMAGECROP
         MENUITEM "Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Radera bild\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "???Draw opaque", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Färger"
     BEGIN
         MENUITEM "Redigera palett...", IDM_COLORSEDITPALETTE
+        MENUITEM SEPARATOR
+        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
+        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&Hjälp"
     BEGIN
         MENUITEM "Innehåll", IDM_HELPHELPTOPICS
@@ -107,7 +101,7 @@ BEGIN
     "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
-    "^W", IDM_IMAGECHANGESIZE
+    "^W", IDM_IMAGESTRETCHSKEW
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
@@ -122,9 +116,9 @@ BEGIN
     AUTORADIOBUTTON "Avspegla horisontellt", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Avspegla vertikalt", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Rotera med en vinkel på", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 125, 24, 48, 14
 END
@@ -156,51 +150,65 @@ BEGIN
     PUSHBUTTON "Standard", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
-IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
+IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Ändra storlek"
+CAPTION "Stretch and skew image"
 BEGIN
-    GROUPBOX "Ändra storlek", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
-    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "Horisontellt:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
-    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "Vertikalt:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
+    LTEXT "Horisontellt:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
+    LTEXT "Vertikalt:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
+    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
+    LTEXT "Horisontellt:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
+    LTEXT "Vertikalt:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 170, 24, 48, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Paint"
-    IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint för ReactOS"
-    IDS_INFOTEXT, "Paint för ReactOS är tillgänglig under GNU Lesser General Public License (LGPL) version 3 (se www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Vill du spara ändringarna till %s?"
-    IDS_DEFAULTFILENAME, "Namnlös.bmp"
-    IDS_MINIATURETITLE, "Miniatyr"
-    IDS_TOOLTIP1, "Lasso"
-    IDS_TOOLTIP2, "Markering"
-    IDS_TOOLTIP3, "Suddgummi"
-    IDS_TOOLTIP4, "Fyll med färg"
-    IDS_TOOLTIP5, "Välj färg"
-    IDS_TOOLTIP6, "Zoom"
-    IDS_TOOLTIP7, "Blyertspenna"
-    IDS_TOOLTIP8, "Pensel"
-    IDS_TOOLTIP9, "Airbrush"
-    IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "Linje"
-    IDS_TOOLTIP12, "Bezierkurva"
-    IDS_TOOLTIP13, "Rektangel"
-    IDS_TOOLTIP14, "Polygon"
-    IDS_TOOLTIP15, "Ellips"
-    IDS_TOOLTIP16, "Avrundad rektangel"
-    IDS_OPENFILTER, "Bitmap filer (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixlar per meter"
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint för ReactOS"
+    IDS_INFOTEXT "Paint för ReactOS är tillgänglig under GNU Lesser General Public License (LGPL, se www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Vill du spara ändringarna till %s?"
+    IDS_DEFAULTFILENAME "Namnlös.bmp"
+    IDS_MINIATURETITLE "Miniatyr"
+    IDS_TOOLTIP1 "Lasso"
+    IDS_TOOLTIP2 "Markering"
+    IDS_TOOLTIP3 "Suddgummi"
+    IDS_TOOLTIP4 "Fyll med färg"
+    IDS_TOOLTIP5 "Välj färg"
+    IDS_TOOLTIP6 "Zoom"
+    IDS_TOOLTIP7 "Blyertspenna"
+    IDS_TOOLTIP8 "Pensel"
+    IDS_TOOLTIP9 "Airbrush"
+    IDS_TOOLTIP10 "Text"
+    IDS_TOOLTIP11 "Linje"
+    IDS_TOOLTIP12 "Bezierkurva"
+    IDS_TOOLTIP13 "Rektangel"
+    IDS_TOOLTIP14 "Polygon"
+    IDS_TOOLTIP15 "Ellips"
+    IDS_TOOLTIP16 "Avrundad rektangel"
+    IDS_OPENFILTER "Bitmap filer (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d bytes"
+    IDS_PRINTRES "%d x %d pixlar per meter"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

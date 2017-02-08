@@ -1,0 +1,24 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Επεξεργασία"
+    IDS_MARK "Μαρκάρισμα"
+    IDS_COPY "Αντιγραφή\tEnter"
+    IDS_PASTE "Επικόλληση"
+    IDS_SELECTALL "Επιλογή όλων"
+    IDS_SCROLL "Κύλιση"
+    IDS_FIND "Εύρεση..."
+    IDS_DEFAULTS "Προεπιλογή"
+    IDS_PROPERTIES "Ιδιότητες"
+/*
+    IDS_SCROLLHERE "Κύλιση εδώ"
+    IDS_SCROLLTOP "Αρχή"
+    IDS_SCROLLBOTTOM "Τέλος"
+    IDS_SCROLLPAGE_UP "Προηγούμενη σελίδα"
+    IDS_SCROLLPAGE_DOWN "Επόμενη σελίδα"
+    IDS_SCROLLUP "Κύλιση πάνω"
+    IDS_SCROLLDOWN "Κύλιση κάτω"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END

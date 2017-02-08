@@ -26,62 +26,76 @@
 #include "cryptuires.h"
 
 /* @makedep: smallicons.bmp */
-IDB_SMALL_ICONS BITMAP smallicons.bmp
+IDB_SMALL_ICONS BITMAP "res/smallicons.bmp"
 
 /* @makedep: cert.bmp */
-IDB_CERT BITMAP cert.bmp
+IDB_CERT BITMAP "res/cert.bmp"
 
 /* @makedep: certerror.bmp */
-IDB_CERT_ERROR BITMAP certerror.bmp
+IDB_CERT_ERROR BITMAP "res/certerror.bmp"
 
 /* @makedep: certwarning.bmp */
-IDB_CERT_WARNING BITMAP certwarning.bmp
+IDB_CERT_WARNING BITMAP "res/certwarning.bmp"
 
 /* @makedep: checks.bmp */
-IDB_CHECKS BITMAP checks.bmp
+IDB_CHECKS BITMAP "res/checks.bmp"
 
 /* @makedep: certwatermark.bmp */
-IDB_CERT_WATERMARK BITMAP certwatermark.bmp
+IDB_CERT_WATERMARK BITMAP "res/certwatermark.bmp"
 
 /* @makedep: certheader.bmp */
-IDB_CERT_HEADER BITMAP certheader.bmp
+IDB_CERT_HEADER BITMAP "res/certheader.bmp"
+
+#include <reactos/manifest_dll.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)
 
 #ifdef LANGUAGE_EN_US
-    #include "cryptui_En.rc"
+    #include "lang/cryptui_En.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "cryptui_Ko.rc"
+    #include "lang/cryptui_Ko.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "cryptui_Pl.rc"
+    #include "lang/cryptui_Pl.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
-    #include "cryptui_De.rc"
+    #include "lang/cryptui_De.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "cryptui_Fr.rc"
+    #include "lang/cryptui_Fr.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "cryptui_It.rc"
+    #include "lang/cryptui_It.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "cryptui_Lt.rc"
+    #include "lang/cryptui_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "cryptui_Nl.rc"
+    #include "lang/cryptui_Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "cryptui_No.rc"
+    #include "lang/cryptui_No.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "cryptui_Pt.rc"
+    #include "lang/cryptui_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "cryptui_Ro.rc"
+    #include "lang/cryptui_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/cryptui_Ru.rc"
+#endif
+#ifdef LANGAUGE_SQ_AL
+    #include "lang/cryptui_Sq.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/cryptui_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "cryptui_Uk.rc"
+    #include "lang/cryptui_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/cryptui_Zh.rc"
 #endif

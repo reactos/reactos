@@ -1,4 +1,3 @@
-
 #include "solitaire.h"
 
 #if 1
@@ -11,12 +10,41 @@ extern TCHAR MsgWin[128];
 extern TCHAR MsgDeal[128];
 
 CardStack activepile;
+int LastId;
 bool fGameStarted = false;
+bool bAutoroute = false;
 
 void NewGame(void)
 {
     TRACE("ENTER NewGame()\n");
     int i, j;
+
+    if (GetScoreMode() == SCORE_VEGAS)
+    {
+        if ((dwOptions & OPTION_KEEP_SCORE) && (dwPrevMode == SCORE_VEGAS))
+            lScore = lScore - 52;
+        else
+            lScore = -52;
+        
+        if (dwOptions & OPTION_THREE_CARDS)
+            dwWasteTreshold = 2;
+        else
+            dwWasteTreshold = 0;
+       
+    }
+    else
+    {
+        if (dwOptions & OPTION_THREE_CARDS)
+            dwWasteTreshold = 3;
+        else
+            dwWasteTreshold = 0;
+
+        lScore = 0;
+    }
+
+    dwTime = 0;
+    dwWasteCount = 0;
+    LastId = 0;
 
     SolWnd.EmptyStacks();
 
@@ -53,7 +81,13 @@ void NewGame(void)
     SolWnd.Redraw();
 
     fGameStarted = false;
+
+    dwPrevMode = GetScoreMode();
+
+    UpdateStatusBar();
+
     TRACE("EXIT NewGame()\n");
+
 }
 
 //
@@ -69,6 +103,8 @@ bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumDragCards)
     TRACE("ENTER RowStackDragProc()\n");
     int numfacedown;
     int numcards;
+
+    SetPlayTimer();
 
     stackobj.GetFaceDirection(&numfacedown);
 
@@ -90,6 +126,8 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 {
     TRACE("ENTER RowStackDropProc()\n");
     Card dragcard = dragcards[dragcards.NumCards() - 1];
+
+    SetPlayTimer();
 
     //if we are empty, can only drop a stack with a King at bottom
     if(stackobj.NumCards() == 0)
@@ -122,6 +160,27 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 
     fGameStarted = true;
 
+    if (LastId == PILE_ID)
+    {
+        if (GetScoreMode() == SCORE_STD)
+        {
+            lScore = lScore + 5;
+        }
+    }
+    else if ((LastId >= SUIT_ID) && (LastId <= SUIT_ID + 3))
+    {
+        if (GetScoreMode() == SCORE_STD)
+        {
+            lScore = lScore >= 15 ? lScore - 15 : 0;
+        }
+        else if (GetScoreMode() == SCORE_VEGAS)
+        {
+            lScore = lScore >= -47 ? lScore - 5 : -52;
+        }
+    }
+
+    UpdateStatusBar();
+
     TRACE("EXIT RowStackDropProc(true)\n");
     return true;
 }
@@ -136,6 +195,8 @@ bool CanDrop(CardRegion &stackobj, Card card)
     int topval;
 
     const CardStack &cardstack = stackobj.GetCardStack();
+
+    SetPlayTimer();
 
     if(cardstack.NumCards() > 0)
     {
@@ -169,8 +230,11 @@ bool CanDrop(CardRegion &stackobj, Card card)
 bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 {
     TRACE("ENTER SuitStackDropProc()\n");
+
+    SetPlayTimer();
+
     //only drop 1 card at a time
-    if(dragcards.NumCards() != 1)
+    if (!bAutoroute && dragcards.NumCards() != 1)
     {
         TRACE("EXIT SuitStackDropProc()\n");
         return false;
@@ -178,7 +242,39 @@ bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 
     bool b = CanDrop(stackobj, dragcards[0]);
     TRACE("EXIT SuitStackDropProc()\n");
+
+    if (b)
+    {
+        if ((LastId == PILE_ID) || (LastId >= ROW_ID))
+        {
+            if (GetScoreMode() == SCORE_VEGAS)
+            {
+                lScore = lScore + 5;
+            }
+            else if (GetScoreMode() == SCORE_STD)
+            {
+                lScore = lScore + 10;
+            }
+    
+            UpdateStatusBar();
+        }
+    }
+
     return b;
+}
+
+//
+//    Single-click on one of the suit-stacks
+//
+void CARDLIBPROC SuitStackClickProc(CardRegion &stackobj, int iNumClicked)
+{
+    TRACE("ENTER SuitStackClickProc()\n");
+
+    fGameStarted = true;
+
+    LastId = stackobj.Id();
+
+    TRACE("EXIT SuitStackClickProc()\n");
 }
 
 //
@@ -198,7 +294,18 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
         if(numfacedown > 0) numfacedown--;
         stackobj.SetFaceDirection(CS_FACE_DOWNUP, numfacedown);
         stackobj.Redraw();
+
+        if (GetScoreMode() == SCORE_STD)
+        {
+            lScore = lScore + 5;
+            UpdateStatusBar();
+        }
     }
+
+    LastId = stackobj.Id();
+
+    fGameStarted = true;
+
     TRACE("EXIT RowStackClickProc()\n");
 }
 
@@ -208,6 +315,7 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
 CardRegion *FindSuitStackFromCard(Card card)
 {
     TRACE("ENTER FindSuitStackFromCard()\n");
+
     for(int i = 0; i < 4; i++)
     {
         if(CanDrop(*pSuitStack[i], card))
@@ -232,17 +340,30 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
     TRACE("ENTER SuitStackAddProc()\n");
     bool fGameOver = true;
 
+    SetPlayTimer();
+
     for(int i = 0; i < 4; i++)
     {
         if(pSuitStack[i]->NumCards() != 13)
         {
             fGameOver = false;
+
             break;
         }
     }
 
     if(fGameOver)
     {
+        KillTimer(hwndMain, IDT_PLAYTIMER);
+        PlayTimer = 0;
+
+        if ((dwOptions & OPTION_SHOW_TIME) && (GetScoreMode() == SCORE_STD))
+        {
+            lScore = lScore + (700000 / dwTime);
+        }
+
+        UpdateStatusBar();
+
         MessageBox(SolWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
 
         for(int i = 0; i < 4; i++)
@@ -273,6 +394,9 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER RowStackDblClickProc()\n");
+
+    SetPlayTimer();
+
     //can only move 1 card at a time
     if(iNumClicked != 1)
     {
@@ -287,13 +411,30 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
     if(pDest != 0)
     {
         fGameStarted = true;
+        SetPlayTimer();
 
         //stackobj.MoveCards(pDest, 1, true);
         //use the SimulateDrag funcion, because we get the
         //AddProc callbacks called for us on the destination stacks...
+        bAutoroute = true;
         stackobj.SimulateDrag(pDest, 1, true);
+        bAutoroute = false;
     }
     TRACE("EXIT RowStackDblClickProc()\n");
+}
+
+//
+//    Face-up pile single-click
+//
+void CARDLIBPROC PileClickProc(CardRegion &stackobj, int iNumClicked)
+{
+    TRACE("ENTER SuitStackClickProc()\n");
+
+    fGameStarted = true;
+
+    LastId = stackobj.Id();
+
+    TRACE("EXIT SuitStackClickProc()\n");
 }
 
 //
@@ -302,6 +443,9 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
 void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER PileDblClickProc()\n");
+
+    SetPlayTimer();
+
     RowStackDblClickProc(stackobj, iNumClicked);
     TRACE("EXIT PileDblClickProc()\n");
 }
@@ -312,6 +456,9 @@ void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked)
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 {
     TRACE("ENTER PileRemoveProc()\n");
+
+    SetPlayTimer();
+
     //modify our "virtual" pile by removing the same card
     //that was removed from the physical card stack
     activepile.Pop(iItems);
@@ -335,10 +482,14 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER DeckClickProc()\n");
+
+    SetPlayTimer();
+
     CardStack cardstack = stackobj.GetCardStack();
     CardStack pile      = pPile->GetCardStack();
 
     fGameStarted = true;
+    SetPlayTimer();
 
     //reset the face-up pile to represent 3 cards
     if(dwOptions & OPTION_THREE_CARDS)
@@ -346,11 +497,45 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 
     if(cardstack.NumCards() == 0)
     {
-        pile.Clear();
+        if (GetScoreMode() == SCORE_VEGAS)
+        {
+            if (dwWasteCount < dwWasteTreshold)
+            {
+                pile.Clear();
 
-        activepile.Reverse();
-        cardstack.Push(activepile);
-        activepile.Clear();
+                activepile.Reverse();
+                cardstack.Push(activepile);
+                activepile.Clear();
+            }
+        }
+        else if (GetScoreMode() == SCORE_STD)
+        {
+            if ((dwWasteCount >= dwWasteTreshold) && (activepile.NumCards() != 0))
+            {
+                if (dwOptions & OPTION_THREE_CARDS)
+                    lScore = lScore >= 20 ? lScore - 20 : 0;
+                else
+                    lScore = lScore >= 100 ? lScore - 100 : 0;
+            }
+
+            pile.Clear();
+
+            activepile.Reverse();
+            cardstack.Push(activepile);
+            activepile.Clear();
+
+            UpdateStatusBar();
+        }
+        else
+        {
+            pile.Clear();
+
+            activepile.Reverse();
+            cardstack.Push(activepile);
+            activepile.Clear();
+        }
+
+        dwWasteCount++;
     }
     else
     {

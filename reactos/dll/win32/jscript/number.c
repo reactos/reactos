@@ -16,17 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
-
-//#include <math.h>
-#include <assert.h>
-
 #include "jscript.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 typedef struct {
     jsdisp_t dispex;
@@ -44,9 +34,14 @@ static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 #define NUMBER_TOSTRING_BUF_SIZE 64
 #define NUMBER_DTOA_SIZE 18
 
+static inline NumberInstance *number_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, NumberInstance, dispex);
+}
+
 static inline NumberInstance *number_from_vdisp(vdisp_t *vdisp)
 {
-    return (NumberInstance*)vdisp->u.jsdisp;
+    return number_from_jsdisp(vdisp->u.jsdisp);
 }
 
 static inline NumberInstance *number_this(vdisp_t *jsthis)
@@ -54,7 +49,7 @@ static inline NumberInstance *number_this(vdisp_t *jsthis)
     return is_vclass(jsthis, JSCLASS_NUMBER) ? number_from_vdisp(jsthis) : NULL;
 }
 
-static inline void dtoa(double d, WCHAR *buf, int size, int *dec_point)
+static inline void number_to_str(double d, WCHAR *buf, int size, int *dec_point)
 {
     ULONGLONG l;
     int i;
@@ -113,7 +108,7 @@ static inline jsstr_t *number_to_fixed(double val, int prec)
     if(buf_size > NUMBER_DTOA_SIZE)
         buf_size = NUMBER_DTOA_SIZE;
 
-    dtoa(val, buf, buf_size, &dec_point);
+    number_to_str(val, buf, buf_size, &dec_point);
     dec_point++;
     size = 0;
     if(neg)
@@ -125,11 +120,10 @@ static inline jsstr_t *number_to_fixed(double val, int prec)
     if(prec)
         size += prec+1;
 
-    ret = jsstr_alloc_buf(size);
+    str = jsstr_alloc_buf(size, &ret);
     if(!ret)
         return NULL;
 
-    str = ret->str;
     size = buf_pos = 0;
     if(neg)
         str[size++] = '-';
@@ -172,7 +166,7 @@ static inline jsstr_t *number_to_exponential(double val, int prec)
     buf_size = prec+2;
     if(buf_size<2 || buf_size>NUMBER_DTOA_SIZE)
         buf_size = NUMBER_DTOA_SIZE;
-    dtoa(val, buf, buf_size, &dec_point);
+    number_to_str(val, buf, buf_size, &dec_point);
     buf_size--;
     if(prec == -1)
         for(; buf_size>1 && buf[buf_size-1]=='0'; buf_size--)
@@ -193,11 +187,10 @@ static inline jsstr_t *number_to_exponential(double val, int prec)
     if(neg)
         size++;
 
-    ret = jsstr_alloc_buf(size);
+    str = jsstr_alloc_buf(size, &ret);
     if(!ret)
         return NULL;
 
-    str = ret->str;
     size = 0;
     pbuf = buf;
     if(neg)
@@ -254,7 +247,7 @@ static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 
     val = number->value;
 
-    if(radix==10 || isnan(val) || isinf(val)) {
+    if(radix==10 || !is_finite(val)) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -380,7 +373,7 @@ static HRESULT Number_toFixed(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     }
 
     val = number->value;
-    if(isinf(val) || isnan(val)) {
+    if(!is_finite(val)) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -421,7 +414,7 @@ static HRESULT Number_toExponential(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     }
 
     val = number->value;
-    if(isinf(val) || isnan(val)) {
+    if(!is_finite(val)) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -462,7 +455,7 @@ static HRESULT Number_toPrecision(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
     }
 
     val = number->value;
-    if(isinf(val) || isnan(val) || !prec) {
+    if(!is_finite(val) || !prec) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -502,23 +495,13 @@ static HRESULT Number_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     return S_OK;
 }
 
-static HRESULT Number_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Number_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    NumberInstance *number = number_from_vdisp(jsthis);
+    NumberInstance *number = number_from_jsdisp(jsthis);
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    case DISPATCH_PROPERTYGET:
-        *r = jsval_number(number->value);
-        break;
+    TRACE("(%p)\n", number);
 
-    default:
-        FIXME("flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
+    *r = jsval_number(number->value);
     return S_OK;
 }
 
@@ -533,7 +516,7 @@ static const builtin_prop_t Number_props[] = {
 
 static const builtin_info_t Number_info = {
     JSCLASS_NUMBER,
-    {NULL, Number_value, 0},
+    {NULL, NULL,0, Number_get_value},
     sizeof(Number_props)/sizeof(*Number_props),
     Number_props,
     NULL,
@@ -542,7 +525,7 @@ static const builtin_info_t Number_info = {
 
 static const builtin_info_t NumberInst_info = {
     JSCLASS_NUMBER,
-    {NULL, Number_value, 0},
+    {NULL, NULL,0, Number_get_value},
     0, NULL,
     NULL,
     NULL

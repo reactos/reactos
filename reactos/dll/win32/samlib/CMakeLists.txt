@@ -10,14 +10,17 @@ add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/sam.idl)
 list(APPEND SOURCE
     dllmain.c
     samlib.c
-    samlib.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/samlib_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/samlib.def
-    ${CMAKE_CURRENT_BINARY_DIR}/sam_c.c)
+    precomp.h
+    ${CMAKE_CURRENT_BINARY_DIR}/sam_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/samlib_stubs.c)
 
-add_library(samlib SHARED ${SOURCE})
+add_library(samlib SHARED
+    ${SOURCE}
+    samlib.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/samlib.def)
+
 set_module_type(samlib win32dll UNICODE)
 target_link_libraries(samlib wine ${PSEH_LIB})
 add_importlibs(samlib rpcrt4 advapi32 msvcrt kernel32 ntdll)
-add_pch(samlib precomp.h)
+add_pch(samlib precomp.h SOURCE)
 add_cd_file(TARGET samlib DESTINATION reactos/system32 FOR all)

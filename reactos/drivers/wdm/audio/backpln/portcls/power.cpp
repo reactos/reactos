@@ -8,6 +8,12 @@
 
 #include "private.hpp"
 
+#ifndef YDEBUG
+#define NDEBUG
+#endif
+
+#include <debug.h>
+
 NTSTATUS
 NTAPI
 PcRegisterAdapterPowerManagement(
@@ -41,6 +47,30 @@ PcRegisterAdapterPowerManagement(
     DPRINT("PcRegisterAdapterPowerManagement success %x\n", Status);
     return STATUS_SUCCESS;
 }
+
+NTSTATUS
+NTAPI
+PcUnregisterAdapterPowerManagement(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
+    
+    DPRINT("PcUnregisterAdapterPowerManagement pUnknown %p pvContext %p\n", DeviceObject);
+    PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
+    if (!DeviceObject)
+        return STATUS_INVALID_PARAMETER;
+
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (DeviceExt->AdapterPowerManagement)
+    {
+        DeviceExt->AdapterPowerManagement->Release();
+    }
+    DeviceExt->AdapterPowerManagement = NULL;
+    return STATUS_SUCCESS;
+}
+
 
 
 static

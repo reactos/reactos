@@ -6,7 +6,7 @@
 #pragma function(memcmp)
 #endif
 
-int memcmp(const void *s1, const void *s2, size_t n)
+int __cdecl memcmp(const void *s1, const void *s2, size_t n)
 {
     if (n != 0) {
         const unsigned char *p1 = s1, *p2 = s2;

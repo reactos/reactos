@@ -1,0 +1,93 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the mingw-w64 runtime package.
+ * No warranty is given.
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+typedef enum {
+    IS_DEFAULT                       = 0,
+    IS_URL                           = 1,
+    IS_FILE_FULLFILEPATH             = 2,
+    IS_FILE_FILENAME                 = 3,
+    IS_EMAIL_USERNAME                = 4,
+    IS_EMAIL_SMTPEMAILADDRESS        = 5,
+    IS_LOGINNAME                     = 6,
+    IS_PERSONALNAME_FULLNAME         = 7,
+    IS_PERSONALNAME_PREFIX           = 8,
+    IS_PERSONALNAME_GIVENNAME        = 9,
+    IS_PERSONALNAME_MIDDLENAME       = 10,
+    IS_PERSONALNAME_SURNAME          = 11,
+    IS_PERSONALNAME_SUFFIX           = 12,
+    IS_ADDRESS_FULLPOSTALADDRESS     = 13,
+    IS_ADDRESS_POSTALCODE            = 14,
+    IS_ADDRESS_STREET                = 15,
+    IS_ADDRESS_STATEORPROVINCE       = 16,
+    IS_ADDRESS_CITY                  = 17,
+    IS_ADDRESS_COUNTRYNAME           = 18,
+    IS_ADDRESS_COUNTRYSHORTNAME      = 19,
+    IS_CURRENCY_AMOUNTANDSYMBOL      = 20,
+    IS_CURRENCY_AMOUNT               = 21,
+    IS_DATE_FULLDATE                 = 22,
+    IS_DATE_MONTH                    = 23,
+    IS_DATE_DAY                      = 24,
+    IS_DATE_YEAR                     = 25,
+    IS_DATE_MONTHNAME                = 26,
+    IS_DATE_DAYNAME                  = 27,
+    IS_DIGITS                        = 28,
+    IS_NUMBER                        = 29,
+    IS_ONECHAR                       = 30,
+    IS_PASSWORD                      = 31,
+    IS_TELEPHONE_FULLTELEPHONENUMBER = 32,
+    IS_TELEPHONE_COUNTRYCODE         = 33,
+    IS_TELEPHONE_AREACODE            = 34,
+    IS_TELEPHONE_LOCALNUMBER         = 35,
+    IS_TIME_FULLTIME                 = 36,
+    IS_TIME_HOUR                     = 37,
+    IS_TIME_MINORSEC                 = 38,
+    IS_NUMBER_FULLWIDTH              = 39,
+    IS_ALPHANUMERIC_HALFWIDTH        = 40,
+    IS_ALPHANUMERIC_FULLWIDTH        = 41,
+    IS_CURRENCY_CHINESE              = 42,
+    IS_BOPOMOFO                      = 43,
+    IS_HIRAGANA                      = 44,
+    IS_KATAKANA_HALFWIDTH            = 45,
+    IS_KATAKANA_FULLWIDTH            = 46,
+    IS_HANJA                         = 47,
+    IS_HANGUL_HALFWIDTH              = 48,
+    IS_HANGUL_FULLWIDTH              = 49,
+    IS_SEARCH                        = 50,
+    IS_FORMULA                       = 51,
+    IS_SEARCH_INCREMENTAL            = 52,
+    IS_CHINESE_HALFWIDTH             = 53,
+    IS_CHINESE_FULLWIDTH             = 54,
+    IS_NATIVE_SCRIPT                 = 55,
+
+    IS_PHRASELIST        = -1,
+    IS_REGULAREXPRESSION = -2,
+    IS_SRGS              = -3,
+    IS_XML               = -4,
+    IS_ENUMSTRING        = -5
+} InputScope;
+
+cpp_quote("HRESULT WINAPI SetInputScope(HWND hwnd,InputScope inputscope);")
+cpp_quote("HRESULT WINAPI SetInputScopes(HWND hwnd,const InputScope *pInputScopes,UINT cInputScopes,WCHAR **ppszPhraseList,UINT cPhrases,WCHAR *pszRegExp,WCHAR *pszSRGS);")
+cpp_quote("HRESULT WINAPI SetInputScopeXML(HWND hwnd,WCHAR *pszXML);")
+
+cpp_quote("DEFINE_GUID(GUID_PROP_INPUTSCOPE,0x1713dd5a,0x68e7,0x4a5b,0x9a,0xf6,0x59,0x2a,0x59,0x5c,0x77,0x8d);")
+
+[
+    object,
+    uuid(fde1eaee-6924-4cdf-91e7-da38cff5559d),
+    pointer_default(unique)
+]
+interface ITfInputScope : IUnknown
+{
+    HRESULT GetInputScopes([out, size_is(,*pcCount)] InputScope **pprgInputScopes, [out] UINT *pcCount);
+    HRESULT GetPhrase([out, size_is(,*pcCount)] BSTR **ppbstrPhrases, [out] UINT *pcCount);
+    HRESULT GetRegularExpression([out] BSTR *pbstrRegExp);
+    HRESULT GetSRGS([out] BSTR *pbstrSRGS);
+    HRESULT GetXML([out] BSTR *pbstrXML);
+}

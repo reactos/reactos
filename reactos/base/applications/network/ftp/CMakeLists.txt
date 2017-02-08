@@ -1,7 +1,7 @@
 
 add_definitions(-Dlint)
 
-add_executable(ftp
+list(APPEND SOURCE
     cmds.c
     cmdtab.c
     domacro.c
@@ -9,11 +9,12 @@ add_executable(ftp
     ftp.c
     main.c
     ruserpass.c
-    ftp.rc)
+    precomp.h)
 
+add_executable(ftp ${SOURCE} ftp.rc)
 set_module_type(ftp win32cui)
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
-add_pch(ftp precomp.h)
+add_pch(ftp precomp.h SOURCE)
 
 if(MSVC)
     target_link_libraries(ftp oldnames)

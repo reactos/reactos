@@ -135,6 +135,10 @@ DECL_WINELIB_TYPE_AW(LPCSTRTABLE)
 #define RSC_FLAG_DELAYREGISTEROCX   0x00000200
 #define RSC_FLAG_SETUPAPI           0x00000400
 
+/* Flags for LaunchINFSection */
+#define LIS_QUIET                   0x00000001
+#define LIS_NOGRPCONV               0x00000002
+
 /* Flags for DelNode */
 #define ADN_DEL_IF_EMPTY            0x00000001
 #define ADN_DONT_DEL_SUBDIRS        0x00000002
@@ -190,9 +194,23 @@ HRESULT WINAPI ExecuteCabW( HWND hwnd, CABINFOW* pCab, LPVOID pReserved );
 HRESULT WINAPI ExtractFilesA(LPCSTR,LPCSTR,DWORD,LPCSTR,LPVOID,DWORD);
 HRESULT WINAPI ExtractFilesW(LPCWSTR,LPCWSTR,DWORD,LPCWSTR,LPVOID,DWORD);
 #define ExtractFiles WINELIB_NAME_AW(ExtractFiles)
-HRESULT WINAPI FileSaveMarkNotExistA(LPSTR pszFileList, LPSTR pszDir, LPSTR pszBaseName);
-HRESULT WINAPI FileSaveMarkNotExistW(LPWSTR pszFileList, LPWSTR pszDir, LPWSTR pszBaseName);
+
+HRESULT
+WINAPI
+FileSaveMarkNotExistA(
+  _In_opt_ LPSTR pszFileList,
+  _In_opt_ LPSTR pszDir,
+  _In_opt_ LPSTR pszBaseName);
+
+HRESULT
+WINAPI
+FileSaveMarkNotExistW(
+  _In_opt_ LPWSTR pszFileList,
+  _In_opt_ LPWSTR pszDir,
+  _In_opt_ LPWSTR pszBaseName);
+
 #define FileSaveMarkNotExist WINELIB_NAME_AW(FileSaveMarkNotExist)
+
 HRESULT WINAPI FileSaveRestoreA(HWND hDlg, LPSTR pszFileList, LPSTR pszDir,
      LPSTR pszBaseName, DWORD dwFlags);
 HRESULT WINAPI FileSaveRestoreW(HWND hDlg, LPWSTR pszFileList, LPWSTR pszDir,
@@ -213,9 +231,25 @@ BOOL WINAPI IsNTAdmin(DWORD,LPDWORD);
 INT WINAPI LaunchINFSectionA(HWND,HINSTANCE,LPSTR,INT);
 INT WINAPI LaunchINFSectionW(HWND,HINSTANCE,LPWSTR,INT);
 #define LaunchINFSection WINELIB_NAME_AW(LaunchINFSection)
-HRESULT WINAPI LaunchINFSectionExA(HWND,HINSTANCE,LPSTR,INT);
-HRESULT WINAPI LaunchINFSectionExW(HWND,HINSTANCE,LPWSTR,INT);
+
+HRESULT
+WINAPI
+LaunchINFSectionExA(
+  _In_opt_ HWND,
+  _In_opt_ HINSTANCE,
+  _In_ LPSTR,
+  _In_ INT);
+
+HRESULT
+WINAPI
+LaunchINFSectionExW(
+  _In_opt_ HWND,
+  _In_opt_ HINSTANCE,
+  _In_ LPWSTR,
+  _In_ INT);
+
 #define LaunchINFSectionEx WINELIB_NAME_AW(LaunchINFSectionEx)
+
 DWORD WINAPI NeedRebootInit(VOID);
 BOOL WINAPI NeedReboot(DWORD dwRebootCheck);
 HRESULT WINAPI OpenINFEngineA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
@@ -229,9 +263,23 @@ HRESULT WINAPI RebootCheckOnInstallW(HWND hWnd, LPCWSTR pszINF, LPCWSTR pszSec, 
 HRESULT WINAPI RegInstallA(HMODULE hm, LPCSTR pszSection, const STRTABLEA* pstTable);
 HRESULT WINAPI RegInstallW(HMODULE hm, LPCWSTR pszSection, const STRTABLEW* pstTable);
 #define RegInstall WINELIB_NAME_AW(RegInstall)
-HRESULT WINAPI RegRestoreAllA(HWND hWnd, LPSTR pszTitleString, HKEY hkBackupKey);
-HRESULT WINAPI RegRestoreAllW(HWND hWnd, LPWSTR pszTitleString, HKEY hkBackupKey);
+
+HRESULT
+WINAPI
+RegRestoreAllA(
+  _In_opt_ HWND hWnd,
+  _In_opt_ LPSTR pszTitleString,
+  _In_ HKEY hkBackupKey);
+
+HRESULT
+WINAPI
+RegRestoreAllW(
+  _In_opt_ HWND hWnd,
+  _In_opt_ LPWSTR pszTitleString,
+  _In_ HKEY hkBackupKey);
+
 #define RegRestoreAll WINELIB_NAME_AW(RegRestoreAll)
+
 HRESULT WINAPI RegSaveRestoreA(HWND hWnd, LPCSTR pszTitleString, HKEY hkBackupKey,
      LPCSTR pcszRootKey, LPCSTR pcszSubKey, LPCSTR pcszValueName, DWORD dwFlags);
 HRESULT WINAPI RegSaveRestoreW(HWND hWnd, LPCWSTR pszTitleString, HKEY hkBackupKey,
@@ -249,15 +297,34 @@ HRESULT WINAPI RunSetupCommandW(HWND hWnd,
      LPCWSTR szCmdName, LPCWSTR szInfSection, LPCWSTR szDir, LPCWSTR lpszTitle,
      HANDLE *phEXE, DWORD dwFlags, LPVOID pvReserved);
 #define RunSetupCommand WINELIB_NAME_AW(RunSetupCommand)
-HRESULT WINAPI SetPerUserSecValuesA(PPERUSERSECTIONA pPerUser);
-HRESULT WINAPI SetPerUserSecValuesW(PPERUSERSECTIONW pPerUser);
+HRESULT WINAPI SetPerUserSecValuesA(PERUSERSECTIONA* pPerUser);
+HRESULT WINAPI SetPerUserSecValuesW(PERUSERSECTIONW* pPerUser);
 #define SetPerUserSecValues WINELIB_NAME_AW(SetPerUserSecValues)
-HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
-     LPCSTR pszTranslateSection, LPCSTR pszTranslateKey, LPSTR pszBuffer,
-     DWORD dwBufferSize, PDWORD pdwRequiredSize, PVOID pvReserved);
-HRESULT WINAPI TranslateInfStringW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
-     LPCWSTR pszTranslateSection, LPCWSTR pszTranslateKey, LPWSTR pszBuffer,
-     DWORD dwBufferSize, PDWORD pdwRequiredSize, PVOID pvReserved);
+
+HRESULT
+WINAPI
+TranslateInfStringA(
+  _In_ LPCSTR pszInfFilename,
+  _In_ LPCSTR pszInstallSection,
+  _In_ LPCSTR pszTranslateSection,
+  _In_ LPCSTR pszTranslateKey,
+  _Out_writes_opt_(dwBufferSize) LPSTR pszBuffer,
+  _In_ DWORD dwBufferSize,
+  _Out_ PDWORD pdwRequiredSize,
+  _Reserved_ PVOID pvReserved);
+
+HRESULT
+WINAPI
+TranslateInfStringW(
+  _In_ LPCWSTR pszInfFilename,
+  _In_ LPCWSTR pszInstallSection,
+  _In_ LPCWSTR pszTranslateSection,
+  _In_ LPCWSTR pszTranslateKey,
+  _Out_writes_opt_(dwBufferSize) LPWSTR pszBuffer,
+  _In_ DWORD dwBufferSize,
+  _Out_ PDWORD pdwRequiredSize,
+  _Reserved_ PVOID pvReserved);
+
 #define TranslateInfString WINELIB_NAME_AW(TranslateInfString)
 HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
     LPCSTR pszTranslateSection, LPCSTR pszTranslateKey, LPSTR pszBuffer,

@@ -1090,6 +1090,20 @@ Run CHKDSK /F to check for hard drive corruption, and then
 restart your computer.
 .
 
+MessageId=0x7C
+Severity=Success
+Facility=System
+SymbolicName=MORAL_EXCEPTION_ERROR
+Language=English
+An attempt was made to execute a proprietary machine code instruction.
+The system has been shut down to prevent damage to your conscience.
+
+If this is the first time you have seen this error screen, read
+<http://www.gnu.org/philosophy/free-sw.html>.
+
+If problems continue, remove all nonfree software from your computer.
+.
+
 MessageId=0x7D
 Severity=Success
 Facility=System
@@ -1114,7 +1128,7 @@ Language=English
 Run a system diagnostic utility supplied by your hardware manufacturer.
 In particular, run a memory check, and check for faulty or mismatched
 memory. Try changing video adapters.
- 
+
 Disable or remove any newly installed hardware and drivers. Disable or
 remove any newly installed software. If you need to use Safe Mode to
 remove or disable components, restart your computer, press F8 to select
@@ -1302,13 +1316,21 @@ the file signature is not valid and put the original, correct file back
 so that your operating system will continue to function properly.
 .
 
+MessageId=0xC4
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_VERIFIER_DETECTED_VIOLATION
+Language=English
+Driver Verifier has detected a fatal error condition.
+.
+
 MessageId=0xC5
 Severity=Success
 Facility=System
 SymbolicName=DRIVER_CORRUPTED_EXPOOL
 Language=English
 A device driver has pool.
- 
+
 Check to make sure any new hardware or software is properly installed.
 If this is a new installation, ask your hardware or software manufacturer
 for any ReactOS updates you might need.
@@ -1360,6 +1382,22 @@ Language=English
 DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
 .
 
+MessageId=0xCC
+Severity=Success
+Facility=System
+SymbolicName=PAGE_FAULT_IN_FREED_SPECIAL_POOL
+Language=English
+PAGE_FAULT_IN_FREED_SPECIAL_POOL
+.
+
+MessageId=0xCD
+Severity=Success
+Facility=System
+SymbolicName=PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+Language=English
+PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+.
+
 MessageId=0xCE
 Severity=Success
 Facility=System
@@ -1389,7 +1427,39 @@ Severity=Success
 Facility=System
 SymbolicName=DRIVER_PORTION_MUST_BE_NONPAGED
 Language=English
-The driver mistakenly marked a part of it's image pageable instead of non-pageable.
+The driver mistakenly marked a part of its image pageable instead of non-pageable.
+.
+
+MessageId=0xD4
+Severity=Success
+Facility=System
+SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+Language=English
+The driver unloaded without cancelling pending operations.
+.
+
+MessageId=0xD5
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
+Language=English
+DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
+.
+
+MessageId=0xD6
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+Language=English
+DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+.
+
+MessageId=0xD7
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_UNMAPPING_INVALID_VIEW
+Language=English
+The driver is attempting to unmap an invalid memory address.
 .
 
 MessageId=0xD8
@@ -1400,12 +1470,53 @@ Language=English
 The driver has used an excessive number of system PTEs.
 .
 
-MessageId=0xD4
+MessageId=0xD9
 Severity=Success
 Facility=System
-SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+SymbolicName=LOCKED_PAGES_TRACKER_CORRUPTION
 Language=English
-The driver unloaded without cancelling pending operations.
+The system's structures tracking locked pages have been corrupted.
+.
+
+MessageId=0xDA
+Severity=Success
+Facility=System
+SymbolicName=SYSTEM_PTE_MISUSE
+Language=English
+The driver has called a system PTE routine in an improper way.
+.
+
+MessageId=0xDB
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_CORRUPTED_SYSPTES
+Language=English
+The driver has corrupted system PTEs.
+.
+
+MessageId=0xDC
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_INVALID_STACK_ACCESS
+Language=English
+The driver has accessed an invalid stack address.
+.
+
+MessageId=0xDE
+Severity=Success
+Facility=System
+SymbolicName=POOL_CORRUPTION_IN_FILE_AREA
+Language=English
+Kernel pool corruption has been detected in an area marked to be written to disk.
+.
+
+MessageId=0xDF
+Severity=Success
+Facility=System
+SymbolicName=IMPERSONATING_WORKER_THREAD
+Language=English
+A worker thread is impersonating another process. The work item forgot to
+disable impersonation before it returned.
 .
 
 MessageId=0xE0
@@ -1456,7 +1567,7 @@ If Parameter1 == 0, an executive worker item was found in memory which
 must not contain such items.  Usually this is memory being freed.  This
 is usually caused by a device driver that has not cleaned up properly
 before freeing memory.
-  
+
 If Parameter1 == 1, an attempt was made to queue an executive worker item
 with a usermode execution routine.
 .
@@ -1524,6 +1635,15 @@ Language=English
 The PCI driver has detected an error in a PCI device or BIOS being verified.
 .
 
+MessageId=0xF7
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_OVERRAN_STACK_BUFFER
+Language=English
+A driver has overrun a stack-based buffer.  This overrun could potentially
+allow a malicious user to gain control of this machine.
+.
+
 MessageId=0xF8
 Severity=Success
 Facility=System
@@ -1532,13 +1652,20 @@ Language=English
 An initialization failure occurred while attempting to boot from the RAM disk.
 .
 
+MessageId=0xF9
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_RETURNED_STATUS_REPARSE_FOR_VOLUME_OPEN
+Language=English
+STATUS_REPARSE was returned from a FSD when trying to open a volume.
+.
+
 MessageId=0xFA
 Severity=Success
 Facility=System
-SymbolicName=IMPERSONATING_WORKER_THREAD
+SymbolicName=HTTP_DRIVER_CORRUPTED
 Language=English
-A worker thread is impersonating another process. The work item forgot to
-disable impersonation before it returned.
+Corruption was detected in the HTTP kernel driver.
 .
 
 MessageId=0xFC
@@ -1547,4 +1674,12 @@ Facility=System
 SymbolicName=ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
 Language=English
 An attempt was made to execute to non-executable memory.
+.
+
+MessageId=0x139
+Severity=Success
+Facility=System
+SymbolicName=KERNEL_SECURITY_CHECK_FAILURE
+Language=English
+A critical kernel security check failed.
 .

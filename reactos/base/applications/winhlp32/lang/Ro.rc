@@ -1,0 +1,110 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2009 Michael Stefaniuc
+ * Copyright 2014 Ștefan Fulea
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+MAIN_MENU MENU
+{
+ POPUP "&Fișier" {
+  MENUITEM "&Deschide", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "I&mprimare…", MNID_FILE_PRINT
+  MENUITEM "&Configurare imprimantă…", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "I&eșire", MNID_FILE_EXIT
+ }
+ POPUP "&Editare" {
+   MENUITEM "&Copiere…", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Adnotare…", MNID_EDIT_ANNOTATE
+ }
+ POPUP "Se&mn de carte" {
+   MENUITEM "&Definire…", MNID_BKMK_DEFINE
+ }
+ POPUP "&Opțiuni" {
+  MENUITEM "Î&ntotdeauna deasupra", MNID_HELP_HELPTOP
+  MENUITEM "Ist&oric",		MNID_OPTS_HISTORY
+  POPUP    "&Font"
+  BEGIN
+    MENUITEM "&Mic",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "&Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "M&are",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "Aj&utor" {
+   MENUITEM "&Despre…", MNID_HELP_HELPON
+   MENUITEM "In&formații…", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Adnotare…",       MNID_CTXT_ANNOTATE
+		MENUITEM "Copiază",                MNID_CTXT_COPY
+		MENUITEM "Imprimare…",            MNID_CTXT_PRINT
+		POPUP    "Font"
+		BEGIN
+			MENUITEM "Mic",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Mare",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Manual ReactOS"
+STID_WHERROR, 		"EROARE"
+STID_WARNING,  		"AVERTISMENT"
+STID_INFO,  		"Informație"
+STID_NOT_IMPLEMENTED, 	"Neimplementat"
+STID_HLPFILE_ERROR_s, 	"Eroare la citirea manualului „%s”"
+STID_INDEX, 		"Inde&x"
+STID_CONTENTS,		"Rezumat"
+STID_BACK, 		"Înap&oi"
+STID_ALL_FILES, 	"Toate fișierele (*.*)"
+STID_HELP_FILES_HLP, 	"Fișierele manual (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Fișierul „%s” nu poate fi găsit. Doriți să-l căutați?"
+STID_NO_RICHEDIT	"Nu s-a găsit o implementare pentru richedit… Operația este abandonată"
+STID_PSH_INDEX,		"Subiecte în manual:"
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Căutare"
+{
+    LTEXT  "Încă neimplementată", -1, 10, 10, 180, 150
+}

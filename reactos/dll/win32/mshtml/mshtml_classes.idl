@@ -1,0 +1,310 @@
+/*
+ * COM Classes for mshtml
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+[
+    helpstring("Microsoft HTML About Pluggable Protocol"),
+    threading(apartment),
+    uuid(3050f406-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass AboutProtocol { }
+
+[
+    helpstring("Microsoft Anchor Element Browse Property Page"),
+    threading(apartment),
+    uuid(3050f3bb-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CAnchorBrowsePropertyPage { }
+
+[
+    helpstring("Microsoft HTML Background Page"),
+    threading(apartment),
+    uuid(3050f232-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CBackgroundPropertyPage { }
+
+[
+    helpstring("Microsoft HTML Anchor Page"),
+    threading(apartment),
+    uuid(3050f1fc-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CCDAnchorPropertyPage { }
+
+[
+    helpstring("Microsoft HTML Generic Page"),
+    threading(apartment),
+    uuid(3050f17f-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CCDGenericPropertyPage { }
+
+[
+    helpstring("Microsoft Document Browse Property Page"),
+    threading(apartment),
+    uuid(3050f3b4-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CDocBrowsePropertyPage { }
+
+[
+    helpstring("Microsoft HTML DwnBindInfo"),
+    threading(apartment),
+    uuid(3050f3c2-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CDwnBindInfo { }
+
+[
+    helpstring("Microsoft HTML External Document"),
+    threading(apartment),
+    uuid(3050f163-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass ExternalFrameworkSite { }
+
+[
+    helpstring("Microsoft Scriptlet HiFiTimer Uses"),
+    progid("Scriptlet.HiFiTimer"),
+    threading(apartment),
+    uuid(5aaf51b3-b1f0-11d1-b6ab-00a0c90833e9)
+]
+coclass CHiFiUses { }
+
+[
+    helpstring("Microsoft Html Component"),
+    threading(apartment),
+    uuid(3050f4f8-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CHtmlComponentConstructor { }
+
+[
+    helpstring("Microsoft Image Element Browse Property Page"),
+    threading(apartment),
+    uuid(3050f3b3-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CImageBrowsePropertyPage { }
+
+[
+    helpstring("Microsoft HTML Inline Style Page"),
+    threading(apartment),
+    uuid(3050f296-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CInlineStylePropertyPage { }
+
+[
+    helpstring("Microsoft Scriptlet Element Behavior Handler"),
+    progid("Scriptlet.Behavior"),
+    threading(apartment),
+    uuid(5aaf51b2-b1f0-11d1-b6ab-00a0c90833e9)
+]
+coclass CPeerHandler { }
+
+[
+    helpstring("Microsoft HTML Recalc"),
+    threading(apartment),
+    uuid(3050f499-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CRecalcEngine { }
+
+[
+    helpstring("Microsoft CrSource 4.0"),
+    threading(apartment),
+    progid("CrSource"),
+    version(4.0),
+    uuid(65014010-9f62-11d1-a651-00600811d5ce)
+]
+coclass CrSource { }
+
+[
+    helpstring("Microsoft Scriptlet svr om Uses"),
+    progid("Scriptlet.SvrOm"),
+    threading(apartment),
+    uuid(3050f4f0-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass CSvrOMUses { }
+
+[
+    helpstring("Microsoft HTA Document 6.0"),
+    threading(apartment),
+    version(6.0),
+    uuid(3050f5c8-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTADocument { }
+
+[
+    helpstring("HTML Document"),
+    progid("htmlfile"),
+    threading(apartment),
+    version(6.0),
+    uuid(25336920-03f9-11cf-8fd0-00aa00686f13)
+]
+coclass HTMLDocument { }
+
+[
+    helpstring("Microsoft HTML Document 6.0"),
+    progid("htmlfile_FullWindowEmbed"),
+    threading(apartment),
+    uuid(25336921-03f9-11cf-8fd0-00aa00686f13)
+]
+coclass HTMLPluginDocument { }
+
+[
+    helpstring("Microsoft Html Popup Window"),
+    threading(apartment),
+    uuid(3050f667-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLPopup { }
+
+[
+    helpstring("Microsoft Html Document for Popup Window"),
+    threading(apartment),
+    uuid(3050f67d-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLPopupDoc { }
+
+[
+    helpstring("Microsoft HTML Server Document 6.0"),
+    threading(apartment),
+    uuid(3050f4e7-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLServerDoc { }
+
+[
+    helpstring("Microsoft HTML Window Security Proxy"),
+    threading(apartment),
+    uuid(3050f391-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLWindowProxy { }
+
+[
+    helpstring("CoBMPFilter Class"),
+    progid("BMPFilter.CoBMPFilter.1"),
+    vi_progid("BMPFilter.CoBMPFilter"),
+    threading(apartment),
+    uuid(607fd4e8-0a03-11d1-ab1d-00c04fc9b304)
+]
+coclass CoBMPFilter { }
+
+[
+    helpstring("CoGIFFilter Class"),
+    progid("GIFFilter.CoGIFFilter.1"),
+    vi_progid("GIFFilter.CoGIFFilter"),
+    threading(apartment),
+    uuid(607fd4e8-0a03-11d1-ab1d-00c04fc9b304)
+]
+coclass CoGIFFilter { }
+
+[
+    helpstring("CoJPEGFilter Class"),
+    progid("JPEGFilter.CoJPEGFilter.1"),
+    vi_progid("JPEGFilter.CoJPEGFilter"),
+    threading(apartment),
+    uuid(607fd4e8-0a03-11d1-ab1d-00c04fc9b304)
+]
+coclass CoJPEGFilter { }
+
+[
+    helpstring("CoWMFFilter Class"),
+    progid("WMFFilter.CoWMFFilter.1"),
+    vi_progid("WMFFilter.CoWMFFilter"),
+    threading(apartment),
+    uuid(607fd4e8-0a03-11d1-ab1d-00c04fc9b304)
+]
+coclass CoWMFFilter { }
+
+[
+    helpstring("CoICOFilter Class"),
+    progid("ICOFilter.CoICOFilter.1"),
+    vi_progid("ICOFilter.CoICOFilter"),
+    threading(apartment),
+    uuid(607fd4e8-0a03-11d1-ab1d-00c04fc9b304)
+]
+coclass CoICOFilter { }
+
+[
+    progid("IImgCtx"),
+    threading(apartment),
+    uuid(3050f3d6-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass IImgCtx { }
+
+[
+    helpstring("Microsoft HTML Load Options"),
+    threading(apartment),
+    uuid(18845040-0fa5-11d1-ba19-00c04fd912d0)
+]
+coclass HTMLLoadOptions { }
+
+[
+    helpstring("IntDitherer Class"),
+    threading(apartment),
+    uuid(05f6fe1a-ecef-11d0-aae7-00c04fc9b304)
+]
+coclass IntDitherer { }
+
+[
+    helpstring("Microsoft HTML Javascript Pluggable Protocol"),
+    threading(apartment),
+    uuid(3050f3b2-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass JSProtocol { }
+
+[
+    helpstring("Microsoft HTML Mailto Pluggable Protocol"),
+    threading(apartment),
+    uuid(3050f3da-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass MailtoProtocol { }
+
+[
+    helpstring("MHTML Document"),
+    progid("mhtmlfile"),
+    threading(apartment),
+    version(6.0),
+    uuid(3050f3d9-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass MHTMLDocument { }
+
+[
+    helpstring("Microsoft HTML Resource Pluggable Protocol"),
+    threading(apartment),
+    uuid(3050f3bc-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass ResProtocol { }
+
+[
+    helpstring("Microsoft Scriptlet Component"),
+    progid("ScriptBridge.ScriptBridge.1"),
+    vi_progid("ScriptBridge.ScriptBridge"),
+    threading(apartment),
+    uuid(ae24fdae-03c6-11d1-8b76-0080c744f389)
+]
+coclass Scriptlet { }
+
+[
+    helpstring("Microsoft HTML Resource Pluggable Protocol"),
+    threading(apartment),
+    uuid(76e67a63-06e9-11d2-a840-006008059382)
+]
+coclass SysimageProtocol { }
+
+[
+    helpstring("Trident API"),
+    threading(apartment),
+    uuid(429af92c-a51f-11d2-861e-00c04fa35c89)
+]
+coclass TridentAPI { }

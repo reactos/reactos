@@ -39,6 +39,11 @@
 #define D3DX_FILTER_SRGB_OUT             0x00400000
 #define D3DX_FILTER_SRGB                 0x00600000
 
+#define D3DX_SKIP_DDS_MIP_LEVELS_MASK    0x1f
+#define D3DX_SKIP_DDS_MIP_LEVELS_SHIFT   26
+#define D3DX_SKIP_DDS_MIP_LEVELS(l, f)   ((((l) & D3DX_SKIP_DDS_MIP_LEVELS_MASK) \
+        << D3DX_SKIP_DDS_MIP_LEVELS_SHIFT) | ((f) == D3DX_DEFAULT ? D3DX_FILTER_BOX : (f)))
+
 #define D3DX_NORMALMAP_MIRROR_U          0x00010000
 #define D3DX_NORMALMAP_MIRROR_V          0x00020000
 #define D3DX_NORMALMAP_MIRROR            0x00030000
@@ -52,7 +57,7 @@
 #define D3DX_CHANNEL_LUMINANCE           0x00000010
 
 /**********************************************
- **************** Typedefs ****************
+ ****************** Typedefs ******************
  **********************************************/
 typedef enum _D3DXIMAGE_FILEFORMAT
 {
@@ -63,6 +68,8 @@ typedef enum _D3DXIMAGE_FILEFORMAT
     D3DXIFF_DDS,
     D3DXIFF_PPM,
     D3DXIFF_DIB,
+    D3DXIFF_HDR,
+    D3DXIFF_PFM,
     D3DXIFF_FORCE_DWORD = 0x7fffffff
 } D3DXIMAGE_FILEFORMAT;
 
@@ -81,8 +88,10 @@ typedef struct _D3DXIMAGE_INFO
  ****************** Functions *****************
  **********************************************/
 /* Typedefs for callback functions */
-typedef VOID (WINAPI *LPD3DXFILL2D)(D3DXVECTOR4 *out, CONST D3DXVECTOR2 *texcoord, CONST D3DXVECTOR2 *texelsize, LPVOID data);
-typedef VOID (WINAPI *LPD3DXFILL3D)(D3DXVECTOR4 *out, CONST D3DXVECTOR3 *texcoord, CONST D3DXVECTOR3 *texelsize, LPVOID data);
+typedef void (WINAPI *LPD3DXFILL2D)(D3DXVECTOR4 *out, const D3DXVECTOR2 *texcoord,
+        const D3DXVECTOR2 *texelsize, void *data);
+typedef void (WINAPI *LPD3DXFILL3D)(D3DXVECTOR4 *out, const D3DXVECTOR3 *texcoord,
+        const D3DXVECTOR3 *texelsize, void *data);
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,605 +99,250 @@ extern "C" {
 
 
 /* Image Information */
-HRESULT WINAPI D3DXGetImageInfoFromFileA(LPCSTR file, D3DXIMAGE_INFO *info);
-HRESULT WINAPI D3DXGetImageInfoFromFileW(LPCWSTR file, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromFileA(const char *file, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromFileW(const WCHAR *file, D3DXIMAGE_INFO *info);
 #define        D3DXGetImageInfoFromFile WINELIB_NAME_AW(D3DXGetImageInfoFromFile)
 
-HRESULT WINAPI D3DXGetImageInfoFromResourceA(HMODULE module, LPCSTR resource, D3DXIMAGE_INFO *info);
-HRESULT WINAPI D3DXGetImageInfoFromResourceW(HMODULE module, LPCWSTR resource, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromResourceA(HMODULE module, const char *resource, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromResourceW(HMODULE module, const WCHAR *resource, D3DXIMAGE_INFO *info);
 #define        D3DXGetImageInfoFromResource WINELIB_NAME_AW(D3DXGetImageInfoFromResource)
 
-HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(LPCVOID data, UINT datasize, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT data_size, D3DXIMAGE_INFO *info);
 
 
 /* Surface Loading/Saving */
-HRESULT WINAPI D3DXLoadSurfaceFromFileA(       LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT *destrect,
-                                               LPCSTR srcfile,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey,
-                                               D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadSurfaceFromFileA(struct IDirect3DSurface9 *destsurface,
+        const PALETTEENTRY *destpalette, const RECT *destrect, const char *srcfile,
+        const RECT *srcrect, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadSurfaceFromFileW(struct IDirect3DSurface9 *destsurface,
+        const PALETTEENTRY *destpalette, const RECT *destrect, const WCHAR *srcfile,
+        const RECT *srcrect, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+#define D3DXLoadSurfaceFromFile WINELIB_NAME_AW(D3DXLoadSurfaceFromFile)
 
-HRESULT WINAPI D3DXLoadSurfaceFromFileW(       LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT *destrect,
-                                               LPCWSTR srcfile,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey,
-                                               D3DXIMAGE_INFO *srcinfo);
-#define        D3DXLoadSurfaceFromFile WINELIB_NAME_AW(D3DXLoadSurfaceFromFile)
+HRESULT WINAPI D3DXLoadSurfaceFromResourceA(struct IDirect3DSurface9 *destsurface,
+        const PALETTEENTRY *destpalette, const RECT *destrect, HMODULE srcmodule, const char *resource,
+        const RECT *srcrect, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadSurfaceFromResourceW(struct IDirect3DSurface9 *destsurface,
+        const PALETTEENTRY *destpalette, const RECT *destrect, HMODULE srcmodule, const WCHAR *resource,
+        const RECT *srcrect, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+#define D3DXLoadSurfaceFromResource WINELIB_NAME_AW(D3DXLoadSurfaceFromResource)
 
-HRESULT WINAPI D3DXLoadSurfaceFromResourceA(   LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT *destrect,
-                                               HMODULE srcmodule,
-                                               LPCSTR resource,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey,
-                                               D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadSurfaceFromFileInMemory(struct IDirect3DSurface9 *destsurface,
+        const PALETTEENTRY *destpalette, const RECT *destrect, const void *srcdata, UINT srcdatasize,
+        const RECT *srcrect, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
 
-HRESULT WINAPI D3DXLoadSurfaceFromResourceW(   LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT *destrect,
-                                               HMODULE srcmodule,
-                                               LPCWSTR resource,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey,
-                                               D3DXIMAGE_INFO *srcinfo);
-#define        D3DXLoadSurfaceFromResource WINELIB_NAME_AW(D3DXLoadSurfaceFromResource)
+HRESULT WINAPI D3DXLoadSurfaceFromSurface(struct IDirect3DSurface9 *destsurface,
+        const PALETTEENTRY *destpalette, const RECT *destrect, struct IDirect3DSurface9 *srcsurface,
+        const PALETTEENTRY *srcpalette, const RECT *srcrect, DWORD filter, D3DCOLOR colorkey);
 
-HRESULT WINAPI D3DXLoadSurfaceFromFileInMemory(LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT*destrect,
-                                               LPCVOID srcdata,
-                                               UINT srcdatasize,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey,
-                                               D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
+        const PALETTEENTRY *dst_palette, const RECT *dst_rect, const void *src_memory,
+        D3DFORMAT src_format, UINT src_pitch, const PALETTEENTRY *src_palette, const RECT *src_rect,
+        DWORD filter, D3DCOLOR color_key);
 
-HRESULT WINAPI D3DXLoadSurfaceFromSurface(     LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT *destrect,
-                                               LPDIRECT3DSURFACE9 srcsurface,
-                                               CONST PALETTEENTRY *srcpalette,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey);
+HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(struct ID3DXBuffer **destbuffer,
+        D3DXIMAGE_FILEFORMAT destformat, struct IDirect3DSurface9 *srcsurface,
+        const PALETTEENTRY *srcpalette, const RECT *srcrect);
 
-HRESULT WINAPI D3DXLoadSurfaceFromMemory(      LPDIRECT3DSURFACE9 destsurface,
-                                               CONST PALETTEENTRY *destpalette,
-                                               CONST RECT *destrect,
-                                               LPCVOID srcmemory,
-                                               D3DFORMAT srcformat,
-                                               UINT srcpitch,
-                                               CONST PALETTEENTRY *srcpalette,
-                                               CONST RECT *srcrect,
-                                               DWORD filter,
-                                               D3DCOLOR colorkey);
-
-HRESULT WINAPI D3DXSaveSurfaceToFileA(         LPCSTR destfile,
-                                               D3DXIMAGE_FILEFORMAT destformat,
-                                               LPDIRECT3DSURFACE9 srcsurface,
-                                               CONST PALETTEENTRY *srcpalette,
-                                               CONST RECT *srcrect);
-
-HRESULT WINAPI D3DXSaveSurfaceToFileW(         LPCWSTR destfile,
-                                               D3DXIMAGE_FILEFORMAT destformat,
-                                               LPDIRECT3DSURFACE9 srcsurface,
-                                               CONST PALETTEENTRY *srcpalette,
-                                               CONST RECT *srcrect);
-#define        D3DXSaveSurfaceToFile WINELIB_NAME_AW(D3DXSaveSurfaceToFile)
+HRESULT WINAPI D3DXSaveSurfaceToFileA(const char *destfile, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DSurface9 *srcsurface, const PALETTEENTRY *srcpalette, const RECT *srcrect);
+HRESULT WINAPI D3DXSaveSurfaceToFileW(const WCHAR *destfile, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DSurface9 *srcsurface, const PALETTEENTRY *srcpalette, const RECT *srcrect);
+#define D3DXSaveSurfaceToFile WINELIB_NAME_AW(D3DXSaveSurfaceToFile)
 
 
 /* Volume Loading/Saving */
-HRESULT WINAPI D3DXLoadVolumeFromFileA(       LPDIRECT3DVOLUME9 destvolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              LPCSTR srcfile,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey,
-                                              D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadVolumeFromFileA(struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, const char *srcfile,
+        const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadVolumeFromFileW( struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, const WCHAR *srcfile,
+        const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+#define D3DXLoadVolumeFromFile WINELIB_NAME_AW(D3DXLoadVolumeFromFile)
 
-HRESULT WINAPI D3DXLoadVolumeFromFileW(       LPDIRECT3DVOLUME9 destVolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              LPCWSTR srcfile,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey,
-                                              D3DXIMAGE_INFO *srcinfo);
-#define        D3DXLoadVolumeFromFile WINELIB_NAME_AW(D3DXLoadVolumeFromFile)
+HRESULT WINAPI D3DXLoadVolumeFromResourceA(struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, HMODULE srcmodule, const char *resource,
+        const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadVolumeFromResourceW(struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, HMODULE srcmodule, const WCHAR *resource,
+        const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
+#define D3DXLoadVolumeFromResource WINELIB_NAME_AW(D3DXLoadVolumeFromResource)
 
-HRESULT WINAPI D3DXLoadVolumeFromResourceA(   LPDIRECT3DVOLUME9 destVolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              HMODULE srcmodule,
-                                              LPCSTR resource,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey,
-                                              D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadVolumeFromFileInMemory(struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, const void *srcdata, UINT srcdatasize,
+        const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo);
 
-HRESULT WINAPI D3DXLoadVolumeFromResourceW(   LPDIRECT3DVOLUME9 destVolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              HMODULE srcmodule,
-                                              LPCWSTR resource,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey,
-                                              D3DXIMAGE_INFO *srcinfo);
-#define        D3DXLoadVolumeFromResource WINELIB_NAME_AW(D3DXLoadVolumeFromResource)
+HRESULT WINAPI D3DXLoadVolumeFromVolume(struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, struct IDirect3DVolume9 *srcvolume,
+        const PALETTEENTRY *srcpalette, const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey);
 
-HRESULT WINAPI D3DXLoadVolumeFromFileInMemory(LPDIRECT3DVOLUME9 destvolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              LPCVOID srcdata,
-                                              UINT srcdatasize,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey,
-                                              D3DXIMAGE_INFO *srcinfo);
+HRESULT WINAPI D3DXLoadVolumeFromMemory(struct IDirect3DVolume9 *destvolume,
+        const PALETTEENTRY *destpalette, const D3DBOX *destbox, const void *srcmemory,
+        D3DFORMAT srcformat, UINT srcrowpitch, UINT srcslicepitch, const PALETTEENTRY *srcpalette,
+        const D3DBOX *srcbox, DWORD filter, D3DCOLOR colorkey);
 
-HRESULT WINAPI D3DXLoadVolumeFromVolume(      LPDIRECT3DVOLUME9 destvolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              LPDIRECT3DVOLUME9 srcvolume,
-                                              CONST PALETTEENTRY *srcpalette,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey);
-
-HRESULT WINAPI D3DXLoadVolumeFromMemory(      LPDIRECT3DVOLUME9 destvolume,
-                                              CONST PALETTEENTRY *destpalette,
-                                              CONST D3DBOX *destbox,
-                                              LPCVOID srcmemory,
-                                              D3DFORMAT srcformat,
-                                              UINT srcrowpitch,
-                                              UINT srcslicepitch,
-                                              CONST PALETTEENTRY *srcpalette,
-                                              CONST D3DBOX *srcbox,
-                                              DWORD filter,
-                                              D3DCOLOR colorkey);
-
-HRESULT WINAPI D3DXSaveVolumeToFileA(         LPCSTR destfile,
-                                              D3DXIMAGE_FILEFORMAT destformat,
-                                              LPDIRECT3DVOLUME9 srcvolume,
-                                              CONST PALETTEENTRY *srcpalette,
-                                              CONST D3DBOX *srcbox);
-
-HRESULT WINAPI D3DXSaveVolumeToFileW(         LPCWSTR destfile,
-                                              D3DXIMAGE_FILEFORMAT destformat,
-                                              LPDIRECT3DVOLUME9 srcvolume,
-                                              CONST PALETTEENTRY *srcpalette,
-                                              CONST D3DBOX *srcbox);
-#define        D3DXSaveVolumeToFile WINELIB_NAME_AW(D3DXSaveVolumeToFile)
+HRESULT WINAPI D3DXSaveVolumeToFileA(const char *destfile, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DVolume9 *srcvolume, const PALETTEENTRY *srcpalette, const D3DBOX *srcbox);
+HRESULT WINAPI D3DXSaveVolumeToFileW(const WCHAR *destfile, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DVolume9 *srcvolume, const PALETTEENTRY *srcpalette, const D3DBOX *srcbox);
+#define D3DXSaveVolumeToFile WINELIB_NAME_AW(D3DXSaveVolumeToFile)
 
 
 /* Texture, cube texture and volume texture creation */
-HRESULT WINAPI D3DXCheckTextureRequirements(      LPDIRECT3DDEVICE9 device,
-                                                  UINT *width,
-                                                  UINT *height,
-                                                  UINT *miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT *format,
-                                                  D3DPOOL pool);
-HRESULT WINAPI D3DXCheckCubeTextureRequirements(  LPDIRECT3DDEVICE9 device,
-                                                  UINT *size,
-                                                  UINT *miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT *format,
-                                                  D3DPOOL pool);
+HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UINT *width, UINT *height,
+        UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool);
+HRESULT WINAPI D3DXCheckCubeTextureRequirements(struct IDirect3DDevice9 *device, UINT *size,
+        UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool);
+HRESULT WINAPI D3DXCheckVolumeTextureRequirements(struct IDirect3DDevice9 *device, UINT *width, UINT *height,
+        UINT *depth, UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool);
 
-HRESULT WINAPI D3DXCheckVolumeTextureRequirements(LPDIRECT3DDEVICE9 device,
-                                                  UINT *width,
-                                                  UINT *height,
-                                                  UINT *depth,
-                                                  UINT *miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT *format,
-                                                  D3DPOOL pool);
+HRESULT WINAPI D3DXCreateTexture(struct IDirect3DDevice9 *device, UINT width, UINT height,
+        UINT miplevels, DWORD usage, D3DFORMAT format, D3DPOOL pool, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateCubeTexture(struct IDirect3DDevice9 *device, UINT size,
+        UINT miplevels, DWORD usage, D3DFORMAT format, D3DPOOL pool, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateVolumeTexture(struct IDirect3DDevice9 *device, UINT width, UINT height, UINT depth,
+        UINT miplevels, DWORD usage, D3DFORMAT format, D3DPOOL pool, struct IDirect3DVolumeTexture9 **volume);
 
-HRESULT WINAPI D3DXCreateTexture(      LPDIRECT3DDEVICE9 device,
-                                       UINT width,
-                                       UINT height,
-                                       UINT miplevels,
-                                       DWORD usage,
-                                       D3DFORMAT format,
-                                       D3DPOOL pool,
-                                       LPDIRECT3DTEXTURE9 *texture);
+HRESULT WINAPI D3DXCreateTextureFromFileA(struct IDirect3DDevice9 *device,
+        const char *srcfile, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateTextureFromFileW(struct IDirect3DDevice9 *device,
+        const WCHAR *srcfile, struct IDirect3DTexture9 **texture);
+#define D3DXCreateTextureFromFile WINELIB_NAME_AW(D3DXCreateTextureFromFile)
 
-HRESULT WINAPI D3DXCreateCubeTexture(  LPDIRECT3DDEVICE9 device,
-                                       UINT size,
-                                       UINT miplevels,
-                                       DWORD usage,
-                                       D3DFORMAT format,
-                                       D3DPOOL pool,
-                                       LPDIRECT3DCUBETEXTURE9 *cube);
+HRESULT WINAPI D3DXCreateCubeTextureFromFileA(struct IDirect3DDevice9 *device,
+        const char *srcfile, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateCubeTextureFromFileW(struct IDirect3DDevice9 *device,
+        const WCHAR *srcfile, struct IDirect3DCubeTexture9 **cube);
+#define D3DXCreateCubeTextureFromFile WINELIB_NAME_AW(D3DXCreateCubeTextureFromFile)
 
-HRESULT WINAPI D3DXCreateVolumeTexture(LPDIRECT3DDEVICE9 device,
-                                       UINT width,
-                                       UINT height,
-                                       UINT depth,
-                                       UINT miplevels,
-                                       DWORD usage,
-                                       D3DFORMAT format,
-                                       D3DPOOL pool,
-                                       LPDIRECT3DVOLUMETEXTURE9 *volume);
+HRESULT WINAPI D3DXCreateVolumeTextureFromFileA(struct IDirect3DDevice9 *device,
+        const char *srcfile, struct IDirect3DVolumeTexture9 **volume);
+HRESULT WINAPI D3DXCreateVolumeTextureFromFileW(struct IDirect3DDevice9 *device,
+        const WCHAR *srcfile, struct IDirect3DVolumeTexture9 **volume);
+#define D3DXCreateVolumeTextureFromFile WINELIB_NAME_AW(D3DXCreateVolumeTextureFromFile)
 
-HRESULT WINAPI D3DXCreateTextureFromFileA(      LPDIRECT3DDEVICE9 device,
-                                                LPCSTR srcfile,
-                                                LPDIRECT3DTEXTURE9 *texture);
+HRESULT WINAPI D3DXCreateTextureFromResourceA(struct IDirect3DDevice9 *device,
+        HMODULE srcmodule, const char *resource, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateTextureFromResourceW(struct IDirect3DDevice9 *device,
+        HMODULE srcmodule, const WCHAR *resource, struct IDirect3DTexture9 **texture);
+#define D3DXCreateTextureFromResource WINELIB_NAME_AW(D3DXCreateTextureFromResource)
 
-HRESULT WINAPI D3DXCreateTextureFromFileW(      LPDIRECT3DDEVICE9 device,
-                                                LPCWSTR srcfile,
-                                                LPDIRECT3DTEXTURE9 *texture);
-#define        D3DXCreateTextureFromFile WINELIB_NAME_AW(D3DXCreateTextureFromFile)
+HRESULT WINAPI D3DXCreateCubeTextureFromResourceA(struct IDirect3DDevice9 *device,
+        HMODULE srcmodule, const char *resource, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateCubeTextureFromResourceW(struct IDirect3DDevice9 *device,
+        HMODULE srcmodule, const WCHAR *resource, struct IDirect3DCubeTexture9 **cube);
+#define D3DXCreateCubeTextureFromResource WINELIB_NAME_AW(D3DXCreateCubeTextureFromResource)
 
-HRESULT WINAPI D3DXCreateCubeTextureFromFileA(  LPDIRECT3DDEVICE9 device,
-                                                LPCSTR srcfile,
-                                                LPDIRECT3DCUBETEXTURE9 *cube);
+HRESULT WINAPI D3DXCreateVolumeTextureFromResourceA(struct IDirect3DDevice9 *device,
+        HMODULE srcmodule, const char *resource, struct IDirect3DVolumeTexture9 **volume);
+HRESULT WINAPI D3DXCreateVolumeTextureFromResourceW(struct IDirect3DDevice9 *device,
+        HMODULE srcmodule, const WCHAR *resource, struct IDirect3DVolumeTexture9 **volume);
+#define D3DXCreateVolumeTextureFromResource WINELIB_NAME_AW(D3DXCreateVolumeTextureFromResource)
 
-HRESULT WINAPI D3DXCreateCubeTextureFromFileW(  LPDIRECT3DDEVICE9 device,
-                                                LPCWSTR srcfile,
-                                                LPDIRECT3DCUBETEXTURE9 *cube);
-#define        D3DXCreateCubeTextureFromFile WINELIB_NAME_AW(D3DXCreateCubeTextureFromFile)
+HRESULT WINAPI D3DXCreateTextureFromFileExA(struct IDirect3DDevice9 *device, const char *srcfile,
+        UINT width, UINT height, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateTextureFromFileExW(struct IDirect3DDevice9 *device, const WCHAR *srcfile,
+        UINT width, UINT height, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DTexture9 **texture);
+#define D3DXCreateTextureFromFileEx WINELIB_NAME_AW(D3DXCreateTextureFromFileEx)
 
-HRESULT WINAPI D3DXCreateVolumeTextureFromFileA(LPDIRECT3DDEVICE9 device,
-                                                LPCSTR srcfile,
-                                                LPDIRECT3DVOLUMETEXTURE9 *volume);
+HRESULT WINAPI D3DXCreateCubeTextureFromFileExA(struct IDirect3DDevice9 *device, const char *srcfile,
+        UINT size, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateCubeTextureFromFileExW(struct IDirect3DDevice9 *device, const WCHAR *srcfile,
+        UINT size, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DCubeTexture9 **cube);
+#define D3DXCreateCubeTextureFromFileEx WINELIB_NAME_AW(D3DXCreateCubeTextureFromFileEx)
 
-HRESULT WINAPI D3DXCreateVolumeTextureFromFileW(LPDIRECT3DDEVICE9 device,
-                                                LPCWSTR srcfile,
-                                                LPDIRECT3DVOLUMETEXTURE9 *volume);
-#define        D3DXCreateVolumeTextureFromFile WINELIB_NAME_AW(D3DXCreateVolumeTextureFromFile)
+HRESULT WINAPI D3DXCreateVolumeTextureFromFileExA(struct IDirect3DDevice9 *device, const char *srcfile,
+        UINT width, UINT height, UINT depth, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DVolumeTexture9 **volume);
+HRESULT WINAPI D3DXCreateVolumeTextureFromFileExW(struct IDirect3DDevice9 *device, const WCHAR *srcfile,
+        UINT width, UINT height, UINT depth, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DVolumeTexture9 **volume);
+#define D3DXCreateVolumeTextureFromFileEx WINELIB_NAME_AW(D3DXCreateVolumeTextureFromFileEx)
 
-HRESULT WINAPI D3DXCreateTextureFromResourceA(      LPDIRECT3DDEVICE9 device,
-                                                    HMODULE srcmodule,
-                                                    LPCSTR resource,
-                                                    LPDIRECT3DTEXTURE9 *texture);
+HRESULT WINAPI D3DXCreateTextureFromResourceExA(struct IDirect3DDevice9 *device, HMODULE srcmodule,
+        const char *resource, UINT width, UINT height, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateTextureFromResourceExW(struct IDirect3DDevice9 *device, HMODULE srcmodule,
+        const WCHAR *resource, UINT width, UINT height, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DTexture9 **texture);
+#define D3DXCreateTextureFromResourceEx WINELIB_NAME_AW(D3DXCreateTextureFromResourceEx)
 
-HRESULT WINAPI D3DXCreateTextureFromResourceW(      LPDIRECT3DDEVICE9 device,
-                                                    HMODULE srcmodule,
-                                                    LPCWSTR resource,
-                                                    LPDIRECT3DTEXTURE9 *texture);
-#define        D3DXCreateTextureFromResource WINELIB_NAME_AW(D3DXCreateTextureFromResource)
+HRESULT WINAPI D3DXCreateCubeTextureFromResourceExA(struct IDirect3DDevice9 *device, HMODULE srcmodule,
+        const char *resource, UINT size, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateCubeTextureFromResourceExW(struct IDirect3DDevice9 *device, HMODULE srcmodule,
+        const WCHAR *resource, UINT size, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DCubeTexture9 **cube);
+#define D3DXCreateCubeTextureFromResourceEx WINELIB_NAME_AW(D3DXCreateCubeTextureFromResourceEx)
 
-HRESULT WINAPI D3DXCreateCubeTextureFromResourceA(  LPDIRECT3DDEVICE9 device,
-                                                    HMODULE srcmodule,
-                                                    LPCSTR resource,
-                                                    LPDIRECT3DCUBETEXTURE9 *cube);
-HRESULT WINAPI D3DXCreateCubeTextureFromResourceW(  LPDIRECT3DDEVICE9 device,
-                                                    HMODULE srcmodule,
-                                                    LPCWSTR resource,
-                                                    LPDIRECT3DCUBETEXTURE9 *cube);
-#define        D3DXCreateCubeTextureFromResource WINELIB_NAME_AW(D3DXCreateCubeTextureFromResource)
+HRESULT WINAPI D3DXCreateVolumeTextureFromResourceExA(struct IDirect3DDevice9 *device, HMODULE srcmodule,
+        const char *resource, UINT width, UINT height, UINT depth, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DVolumeTexture9 **volume);
+HRESULT WINAPI D3DXCreateVolumeTextureFromResourceExW(struct IDirect3DDevice9 *device, HMODULE srcmodule,
+        const WCHAR *resource, UINT width, UINT height, UINT depth, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DVolumeTexture9 **volume);
+#define D3DXCreateVolumeTextureFromResourceEx WINELIB_NAME_AW(D3DXCreateVolumeTextureFromResourceEx)
 
-HRESULT WINAPI D3DXCreateVolumeTextureFromResourceA(LPDIRECT3DDEVICE9 device,
-                                                    HMODULE srcmodule,
-                                                    LPCSTR resource,
-                                                    LPDIRECT3DVOLUMETEXTURE9 *volume);
-HRESULT WINAPI D3DXCreateVolumeTextureFromResourceW(LPDIRECT3DDEVICE9 device,
-                                                    HMODULE srcmodule,
-                                                    LPCWSTR resource,
-                                                    LPDIRECT3DVOLUMETEXTURE9 *volume);
-#define        D3DXCreateVolumeTextureFromResource WINELIB_NAME_AW(D3DXCreateVolumeTextureFromResource)
+HRESULT WINAPI D3DXCreateTextureFromFileInMemory(struct IDirect3DDevice9 *device,
+        const void *srcdata, UINT srcdatasize, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateCubeTextureFromFileInMemory(struct IDirect3DDevice9 *device,
+        const void *srcdata, UINT srcdatasize, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemory(struct IDirect3DDevice9 *device,
+        const void *srcdata, UINT srcdatasize, struct IDirect3DVolumeTexture9 **volume);
 
-HRESULT WINAPI D3DXCreateTextureFromFileExA(      LPDIRECT3DDEVICE9 device,
-                                                  LPCSTR srcfile,
-                                                  UINT width,
-                                                  UINT height,
-                                                  UINT miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT format,
-                                                  D3DPOOL pool,
-                                                  DWORD filter,
-                                                  DWORD mipfilter,
-                                                  D3DCOLOR colorkey,
-                                                  D3DXIMAGE_INFO *srcinfo,
-                                                  PALETTEENTRY *palette,
-                                                  LPDIRECT3DTEXTURE9 *texture);
+HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(struct IDirect3DDevice9 *device, const void *srcdata,
+        UINT srcdatasize, UINT width, UINT height, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DTexture9 **texture);
+HRESULT WINAPI D3DXCreateCubeTextureFromFileInMemoryEx(struct IDirect3DDevice9 *device, const void *srcdata,
+        UINT srcdatasize, UINT size, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DCubeTexture9 **cube);
+HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemoryEx(struct IDirect3DDevice9 *device, const void *srcdata,
+        UINT srcdatasize, UINT width, UINT height, UINT depth, UINT miplevels, DWORD usage, D3DFORMAT format,
+        D3DPOOL pool, DWORD filter, DWORD mipfilter, D3DCOLOR colorkey, D3DXIMAGE_INFO *srcinfo,
+        PALETTEENTRY *palette, struct IDirect3DVolumeTexture9 **volume);
 
-HRESULT WINAPI D3DXCreateTextureFromFileExW(      LPDIRECT3DDEVICE9 device,
-                                                  LPCWSTR srcfile,
-                                                  UINT width,
-                                                  UINT height,
-                                                  UINT miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT format,
-                                                  D3DPOOL pool,
-                                                  DWORD filter,
-                                                  DWORD mipfilter,
-                                                  D3DCOLOR colorkey,
-                                                  D3DXIMAGE_INFO *srcinfo,
-                                                  PALETTEENTRY *palette,
-                                                  LPDIRECT3DTEXTURE9 *texture);
-#define        D3DXCreateTextureFromFileEx WINELIB_NAME_AW(D3DXCreateTextureFromFileEx)
-
-HRESULT WINAPI D3DXCreateCubeTextureFromFileExA(  LPDIRECT3DDEVICE9 device,
-                                                  LPCSTR srcfile,
-                                                  UINT size,
-                                                  UINT miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT format,
-                                                  D3DPOOL pool,
-                                                  DWORD filter,
-                                                  DWORD mipfilter,
-                                                  D3DCOLOR colorkey,
-                                                  D3DXIMAGE_INFO *srcinfo,
-                                                  PALETTEENTRY *palette,
-                                                  LPDIRECT3DCUBETEXTURE9 *cube);
-
-HRESULT WINAPI D3DXCreateCubeTextureFromFileExW(  LPDIRECT3DDEVICE9 device,
-                                                  LPCWSTR srcfile,
-                                                  UINT size,
-                                                  UINT miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT format,
-                                                  D3DPOOL pool,
-                                                  DWORD filter,
-                                                  DWORD mipfilter,
-                                                  D3DCOLOR colorkey,
-                                                  D3DXIMAGE_INFO *srcinfo,
-                                                  PALETTEENTRY *palette,
-                                                  LPDIRECT3DCUBETEXTURE9 *cube);
-#define        D3DXCreateCubeTextureFromFileEx WINELIB_NAME_AW(D3DXCreateCubeTextureFromFileEx)
-
-HRESULT WINAPI D3DXCreateVolumeTextureFromFileExA(LPDIRECT3DDEVICE9 device,
-                                                  LPCSTR srcfile,
-                                                  UINT width,
-                                                  UINT height,
-                                                  UINT depth,
-                                                  UINT miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT format,
-                                                  D3DPOOL pool,
-                                                  DWORD filter,
-                                                  DWORD mipfilter,
-                                                  D3DCOLOR colorkey,
-                                                  D3DXIMAGE_INFO *srcinfo,
-                                                  PALETTEENTRY *palette,
-                                                  LPDIRECT3DVOLUMETEXTURE9 *volume);
-
-HRESULT WINAPI D3DXCreateVolumeTextureFromFileExW(LPDIRECT3DDEVICE9 device,
-                                                  LPCWSTR srcfile,
-                                                  UINT width,
-                                                  UINT height,
-                                                  UINT depth,
-                                                  UINT miplevels,
-                                                  DWORD usage,
-                                                  D3DFORMAT format,
-                                                  D3DPOOL pool,
-                                                  DWORD filter,
-                                                  DWORD mipfilter,
-                                                  D3DCOLOR colorkey,
-                                                  D3DXIMAGE_INFO *srcinfo,
-                                                  PALETTEENTRY *palette,
-                                                  LPDIRECT3DVOLUMETEXTURE9 *volume);
-#define        D3DXCreateVolumeTextureFromFileEx WINELIB_NAME_AW(D3DXCreateVolumeTextureFromFileEx)
-
-HRESULT WINAPI D3DXCreateTextureFromResourceExA(      LPDIRECT3DDEVICE9 device,
-                                                      HMODULE srcmodule,
-                                                      LPCSTR resource,
-                                                      UINT width,
-                                                      UINT height,
-                                                      UINT miplevels,
-                                                      DWORD usage,
-                                                      D3DFORMAT format,
-                                                      D3DPOOL pool,
-                                                      DWORD filter,
-                                                      DWORD mipfilter,
-                                                      D3DCOLOR colorkey,
-                                                      D3DXIMAGE_INFO *srcinfo,
-                                                      PALETTEENTRY *palette,
-                                                      LPDIRECT3DTEXTURE9 *texture);
-
-HRESULT WINAPI D3DXCreateTextureFromResourceExW(      LPDIRECT3DDEVICE9 device,
-                                                      HMODULE srcmodule,
-                                                      LPCWSTR resource,
-                                                      UINT width,
-                                                      UINT height,
-                                                      UINT miplevels,
-                                                      DWORD usage,
-                                                      D3DFORMAT format,
-                                                      D3DPOOL pool,
-                                                      DWORD filter,
-                                                      DWORD mipfilter,
-                                                      D3DCOLOR colorkey,
-                                                      D3DXIMAGE_INFO *srcinfo,
-                                                      PALETTEENTRY *palette,
-                                                      LPDIRECT3DTEXTURE9 *texture);
-#define        D3DXCreateTextureFromResourceEx WINELIB_NAME_AW(D3DXCreateTextureFromResourceEx)
-
-HRESULT WINAPI D3DXCreateCubeTextureFromResourceExA(  LPDIRECT3DDEVICE9 device,
-                                                      HMODULE srcmodule,
-                                                      LPCSTR resource,
-                                                      UINT size,
-                                                      UINT miplevels,
-                                                      DWORD usage,
-                                                      D3DFORMAT format,
-                                                      D3DPOOL pool,
-                                                      DWORD filter,
-                                                      DWORD mipfilter,
-                                                      D3DCOLOR colorkey,
-                                                      D3DXIMAGE_INFO *srcinfo,
-                                                      PALETTEENTRY *palette,
-                                                      LPDIRECT3DCUBETEXTURE9 *cube);
-
-HRESULT WINAPI D3DXCreateCubeTextureFromResourceExW(  LPDIRECT3DDEVICE9 device,
-                                                      HMODULE srcmodule,
-                                                      LPCWSTR resource,
-                                                      UINT size,
-                                                      UINT miplevels,
-                                                      DWORD usage,
-                                                      D3DFORMAT format,
-                                                      D3DPOOL pool,
-                                                      DWORD filter,
-                                                      DWORD mipfilter,
-                                                      D3DCOLOR colorkey,
-                                                      D3DXIMAGE_INFO *srcinfo,
-                                                      PALETTEENTRY *palette,
-                                                      LPDIRECT3DCUBETEXTURE9 *cube);
-#define        D3DXCreateCubeTextureFromResourceEx WINELIB_NAME_AW(D3DXCreateCubeTextureFromResourceEx)
-
-HRESULT WINAPI D3DXCreateVolumeTextureFromResourceExA(LPDIRECT3DDEVICE9 device,
-                                                      HMODULE srcmodule,
-                                                      LPCSTR resource,
-                                                      UINT width,
-                                                      UINT height,
-                                                      UINT depth,
-                                                      UINT miplevels,
-                                                      DWORD usage,
-                                                      D3DFORMAT format,
-                                                      D3DPOOL pool,
-                                                      DWORD filter,
-                                                      DWORD mipfilter,
-                                                      D3DCOLOR colorkey,
-                                                      D3DXIMAGE_INFO *srcinfo,
-                                                      PALETTEENTRY *palette,
-                                                      LPDIRECT3DVOLUMETEXTURE9 *volume);
-
-HRESULT WINAPI D3DXCreateVolumeTextureFromResourceExW(LPDIRECT3DDEVICE9 device,
-                                                      HMODULE srcmodule,
-                                                      LPCWSTR resource,
-                                                      UINT width,
-                                                      UINT height,
-                                                      UINT depth,
-                                                      UINT miplevels,
-                                                      DWORD usage,
-                                                      D3DFORMAT format,
-                                                      D3DPOOL pool,
-                                                      DWORD filter,
-                                                      DWORD mipfilter,
-                                                      D3DCOLOR colorkey,
-                                                      D3DXIMAGE_INFO *srcinfo,
-                                                      PALETTEENTRY *palette,
-                                                      LPDIRECT3DVOLUMETEXTURE9 *volume);
-#define        D3DXCreateVolumeTextureFromResourceEx WINELIB_NAME_AW(D3DXCreateVolumeTextureFromResourceEx)
-
-HRESULT WINAPI D3DXCreateTextureFromFileInMemory(      LPDIRECT3DDEVICE9 device,
-                                                       LPCVOID srcdata,
-                                                       UINT srcdatasize,
-                                                       LPDIRECT3DTEXTURE9* texture);
-
-HRESULT WINAPI D3DXCreateCubeTextureFromFileInMemory(  LPDIRECT3DDEVICE9 device,
-                                                       LPCVOID srcdata,
-                                                       UINT srcdatasize,
-                                                       LPDIRECT3DCUBETEXTURE9* cube);
-
-HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemory(LPDIRECT3DDEVICE9 device,
-                                                       LPCVOID srcdata,
-                                                       UINT srcdatasize,
-                                                       LPDIRECT3DVOLUMETEXTURE9 *volume);
-
-HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(      LPDIRECT3DDEVICE9 device,
-                                                         LPCVOID srcdata,
-                                                         UINT srcdatasize,
-                                                         UINT width,
-                                                         UINT height,
-                                                         UINT miplevels,
-                                                         DWORD usage,
-                                                         D3DFORMAT format,
-                                                         D3DPOOL pool,
-                                                         DWORD filter,
-                                                         DWORD mipfilter,
-                                                         D3DCOLOR colorkey,
-                                                         D3DXIMAGE_INFO *srcinfo,
-                                                         PALETTEENTRY *palette,
-                                                         LPDIRECT3DTEXTURE9 *texture);
-
-HRESULT WINAPI D3DXCreateCubeTextureFromFileInMemoryEx(  LPDIRECT3DDEVICE9 device,
-                                                         LPCVOID srcdata,
-                                                         UINT srcdatasize,
-                                                         UINT size,
-                                                         UINT miplevels,
-                                                         DWORD usage,
-                                                         D3DFORMAT format,
-                                                         D3DPOOL pool,
-                                                         DWORD filter,
-                                                         DWORD mipfilter,
-                                                         D3DCOLOR colorkey,
-                                                         D3DXIMAGE_INFO *srcinfo,
-                                                         PALETTEENTRY *palette,
-                                                         LPDIRECT3DCUBETEXTURE9 *cube);
-
-HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemoryEx(LPDIRECT3DDEVICE9 device,
-                                                         LPCVOID srcdata,
-                                                         UINT srcdatasize,
-                                                         UINT width,
-                                                         UINT height,
-                                                         UINT depth,
-                                                         UINT miplevels,
-                                                         DWORD usage,
-                                                         D3DFORMAT format,
-                                                         D3DPOOL pool,
-                                                         DWORD filter,
-                                                         DWORD mipfilter,
-                                                         D3DCOLOR colorkey,
-                                                         D3DXIMAGE_INFO *srcinfo,
-                                                         PALETTEENTRY *palette,
-                                                         LPDIRECT3DVOLUMETEXTURE9 *volume);
-
-HRESULT WINAPI D3DXSaveTextureToFileA(LPCSTR destfile,
-                                      D3DXIMAGE_FILEFORMAT destformat,
-                                      LPDIRECT3DBASETEXTURE9 srctexture,
-                                      CONST PALETTEENTRY *srcpalette);
-HRESULT WINAPI D3DXSaveTextureToFileW(LPCWSTR destfile,
-                                      D3DXIMAGE_FILEFORMAT destformat,
-                                      LPDIRECT3DBASETEXTURE9 srctexture,
-                                      CONST PALETTEENTRY *srcpalette);
-#define        D3DXSaveTextureToFile WINELIB_NAME_AW(D3DXSaveTextureToFile)
-
+HRESULT WINAPI D3DXSaveTextureToFileInMemory(struct ID3DXBuffer **destbuffer, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DBaseTexture9 *srctexture, const PALETTEENTRY *srcpalette);
+HRESULT WINAPI D3DXSaveTextureToFileA(const char *destfile, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DBaseTexture9 *srctexture, const PALETTEENTRY *srcpalette);
+HRESULT WINAPI D3DXSaveTextureToFileW(const WCHAR *destfile, D3DXIMAGE_FILEFORMAT destformat,
+        struct IDirect3DBaseTexture9 *srctexture, const PALETTEENTRY *srcpalette);
+#define D3DXSaveTextureToFile WINELIB_NAME_AW(D3DXSaveTextureToFile)
 
 /* Other functions */
-HRESULT WINAPI D3DXFilterTexture(      LPDIRECT3DBASETEXTURE9 texture,
-                                       CONST PALETTEENTRY *palette,
-                                       UINT srclevel,
-                                       DWORD filter);
+HRESULT WINAPI D3DXFilterTexture(struct IDirect3DBaseTexture9 *texture,
+        const PALETTEENTRY *palette, UINT srclevel, DWORD filter);
 #define D3DXFilterCubeTexture D3DXFilterTexture
 #define D3DXFilterVolumeTexture D3DXFilterTexture
 
-HRESULT WINAPI D3DXFillTexture(        LPDIRECT3DTEXTURE9 texture,
-                                       LPD3DXFILL2D function,
-                                       LPVOID data);
+HRESULT WINAPI D3DXFillTexture(struct IDirect3DTexture9 *texture, LPD3DXFILL2D function, void *data);
+HRESULT WINAPI D3DXFillCubeTexture(struct IDirect3DCubeTexture9 *cube, LPD3DXFILL3D function, void *data);
+HRESULT WINAPI D3DXFillVolumeTexture(struct IDirect3DVolumeTexture9 *volume, LPD3DXFILL3D function, void *data);
 
-HRESULT WINAPI D3DXFillCubeTexture(    LPDIRECT3DCUBETEXTURE9 cube,
-                                       LPD3DXFILL3D function,
-                                       LPVOID data);
+HRESULT WINAPI D3DXFillTextureTX(struct IDirect3DTexture9 *texture, ID3DXTextureShader *texture_shader);
+HRESULT WINAPI D3DXFillCubeTextureTX(struct IDirect3DCubeTexture9 *cube, ID3DXTextureShader *texture_shader);
+HRESULT WINAPI D3DXFillVolumeTextureTX(struct IDirect3DVolumeTexture9 *volume, ID3DXTextureShader *texture_shader);
 
-HRESULT WINAPI D3DXFillVolumeTexture(  LPDIRECT3DVOLUMETEXTURE9 volume,
-                                       LPD3DXFILL3D function,
-                                       LPVOID data);
-
-HRESULT WINAPI D3DXFillTextureTX(      LPDIRECT3DTEXTURE9 texture,
-                                       CONST DWORD *function,
-                                       CONST D3DXVECTOR4 *constants,
-                                       UINT numconstants);
-
-HRESULT WINAPI D3DXFillCubeTextureTX(  LPDIRECT3DCUBETEXTURE9 cube,
-                                       CONST DWORD *function,
-                                       CONST D3DXVECTOR4 *constants,
-                                       UINT numconstants);
-
-HRESULT WINAPI D3DXFillVolumeTextureTX(LPDIRECT3DVOLUMETEXTURE9 volume,
-                                       CONST DWORD *function,
-                                       CONST D3DXVECTOR4 *constants,
-                                       UINT numconstants);
-
-HRESULT WINAPI D3DXComputeNormalMap(   LPDIRECT3DTEXTURE9 texture,
-                                       LPDIRECT3DTEXTURE9 srctexture,
-                                       CONST PALETTEENTRY *srcpalette,
-                                       DWORD flags,
-                                       DWORD channel,
-                                       FLOAT amplitude);
-
+HRESULT WINAPI D3DXComputeNormalMap(IDirect3DTexture9 *texture, IDirect3DTexture9 *srctexture,
+        const PALETTEENTRY *srcpalette, DWORD flags, DWORD channel, float amplitude);
 
 #ifdef __cplusplus
 }

@@ -19,18 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commdlg.h>
-#include <shellapi.h>
-#include <wine/debug.h>
-
 #include "winhelp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
+#include <shellapi.h>
 
 /**************************************************/
 /*               Macro table                      */
@@ -804,7 +795,7 @@ static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR 
     else MACRO_Loaded = HeapReAlloc(GetProcessHeap(), 0, MACRO_Loaded, size);
     MACRO_Loaded[MACRO_NumLoaded - 1].name      = StrDup(proc); /* FIXME: never freed */
     MACRO_Loaded[MACRO_NumLoaded - 1].alias     = NULL;
-    MACRO_Loaded[MACRO_NumLoaded - 1].isBool    = 0;
+    MACRO_Loaded[MACRO_NumLoaded - 1].isBool    = FALSE;
     MACRO_Loaded[MACRO_NumLoaded - 1].arguments = StrDup(args); /* FIXME: never freed */
     MACRO_Loaded[MACRO_NumLoaded - 1].fn        = fn;
     WINE_TRACE("Added %s(%s) at %p\n", proc, args, fn);

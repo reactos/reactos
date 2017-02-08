@@ -1,5 +1,6 @@
 
 include_directories(BEFORE include)
+spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DNDIS_WRAPPER
@@ -9,8 +10,6 @@ add_definitions(
     -DNDIS_LEGACY_MINIPORT
     -DNDIS_LEGACY_PROTOCOL
     -DNDIS_MINIPORT_DRIVER)
-
-spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ndis/30stubs.c
@@ -32,15 +31,14 @@ list(APPEND SOURCE
     ndis/protocol.c
     ndis/string.c
     ndis/time.c
+    include/ndissys.h)
+
+add_library(ndis SHARED
+    ${SOURCE}
     ndis.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ndis.def)
 
-add_library(ndis SHARED ${SOURCE})
-
 set_module_type(ndis kernelmodedriver)
 add_importlibs(ndis ntoskrnl hal)
-
-add_pch(ndis include/ndissys.h)
-
+add_pch(ndis include/ndissys.h SOURCE)
 add_cd_file(TARGET ndis DESTINATION reactos/system32/drivers FOR all)
-

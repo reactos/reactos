@@ -1,20 +1,25 @@
 /*
- * PROJECT:      ReactOS RAPPS
- * FILE:         base\applications\fontview\lang\sv-SE.rc
- * PURPOSE:      Swedish resource file
- * TRANSLATOR:   Jaix Bly
+ * PROJECT:    ReactOS FontView
+ * FILE:       base/applications/fontview/lang/sv-SE.rc
+ * PURPOSE:    Swedish resource file
+ * TRANSLATOR: Jaix Bly
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Install"
-	IDS_PRINT, "Skriv ut"
-	IDS_STRING, "Jackdaws love my big sphinx of quartz. 1234567890"
-	IDS_OPEN, "Open Font..."
-	IDS_ERROR, "Fel"
-	IDS_ERROR_NOMEM, "Det er inte nog minne för att slutföre operationen."
-	IDS_ERROR_NOFONT, "Filen %1 är inte en giltig typsnittsfil."
-	IDS_ERROR_NOCLASS, "Kunde inte initialisera Windows klassen."
+    IDS_INSTALL "Install"
+    IDS_PRINT "Skriv ut"
+    IDS_STRING "Jackdaws love my big sphinx of quartz. 1234567890"
+    IDS_OPEN "Open Font..."
+    IDS_ERROR "Fel"
+    IDS_ERROR_NOMEM "Det er inte nog minne för att slutföre operationen."
+    IDS_ERROR_NOFONT "Filen %1 är inte en giltig typsnittsfil."
+    IDS_ERROR_NOCLASS "Kunde inte initialisera Windows klassen."
+    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType Font (*.ttf)\0*.ttf\0\
+OpenType Font (*.otf)\0*.otf\0\
+Font File (*.fon)\0*.fon\0\
+All Files (*.*)\0*.*\0"
 END

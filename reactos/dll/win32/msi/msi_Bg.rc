@@ -22,15 +22,17 @@
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
 	4 "The specified installation package could not be opened.  Please check the file path and try again."
-	5 "пътят %s не е намерен"
-	9 "поставете диск %s"
+	5 "ГЇГєГІГїГІ %s Г­ГҐ ГҐ Г­Г Г¬ГҐГ°ГҐГ­"
+	9 "ГЇГ®Г±ГІГ ГўГҐГІГҐ Г¤ГЁГ±ГЄ %s"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
-	11 "въведете папката, която съдържа %s"
-	12 "източника за инсталация на функционалността липсва"
-	13 "мрежовото устройства нужно за функционалността липсва "
-	14 "функционалност от:"
-	15 "изберете папката, която съдържа %s"
+	11 "ГўГєГўГҐГ¤ГҐГІГҐ ГЇГ ГЇГЄГ ГІГ , ГЄГ®ГїГІГ® Г±ГєГ¤ГєГ°Г¦Г  %s"
+	12 "ГЁГ§ГІГ®Г·Г­ГЁГЄГ  Г§Г  ГЁГ­Г±ГІГ Г«Г Г¶ГЁГї Г­Г  ГґГіГ­ГЄГ¶ГЁГ®Г­Г Г«Г­Г®Г±ГІГІГ  Г«ГЁГЇГ±ГўГ "
+	13 "Г¬Г°ГҐГ¦Г®ГўГ®ГІГ® ГіГ±ГІГ°Г®Г©Г±ГІГўГ  Г­ГіГ¦Г­Г® Г§Г  ГґГіГ­ГЄГ¶ГЁГ®Г­Г Г«Г­Г®Г±ГІГІГ  Г«ГЁГЇГ±ГўГ  "
+	14 "ГґГіГ­ГЄГ¶ГЁГ®Г­Г Г«Г­Г®Г±ГІ Г®ГІ:"
+	15 "ГЁГ§ГЎГҐГ°ГҐГІГҐ ГЇГ ГЇГЄГ ГІГ , ГЄГ®ГїГІГ® Г±ГєГ¤ГєГ°Г¦Г  %s"
 }

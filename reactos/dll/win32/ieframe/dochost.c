@@ -18,13 +18,7 @@
 
 #include "ieframe.h"
 
-#include <exdispid.h>
-//#include "mshtml.h"
 #include <initguid.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 DEFINE_OLEGUID(CGID_DocHostCmdPriv, 0x000214D4L, 0, 0);
 
@@ -79,6 +73,37 @@ void abort_dochost_tasks(DocHost *This, task_proc_t proc)
     }
 }
 
+void on_commandstate_change(DocHost *doc_host, LONG command, BOOL enable)
+{
+    DISPPARAMS dispparams;
+    VARIANTARG params[2];
+
+    TRACE("command=%d enable=%d\n", command, enable);
+
+    dispparams.cArgs = 2;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = params;
+
+    V_VT(params) = VT_BOOL;
+    V_BOOL(params) = enable ? VARIANT_TRUE : VARIANT_FALSE;
+
+    V_VT(params+1) = VT_I4;
+    V_I4(params+1) = command;
+
+    call_sink(doc_host->cps.wbe2, DISPID_COMMANDSTATECHANGE, &dispparams);
+
+    doc_host->container_vtbl->on_command_state_change(doc_host, command, enable);
+}
+
+void update_navigation_commands(DocHost *dochost)
+{
+    unsigned pos = dochost->travellog.loading_pos == -1 ? dochost->travellog.position : dochost->travellog.loading_pos;
+
+    on_commandstate_change(dochost, CSC_NAVIGATEBACK, pos > 0);
+    on_commandstate_change(dochost, CSC_NAVIGATEFORWARD, pos < dochost->travellog.length);
+}
+
 static void notif_complete(DocHost *This, DISPID dispid)
 {
     DISPPARAMS dispparams;
@@ -120,15 +145,29 @@ static void object_available(DocHost *This)
     }
 
     hres = IUnknown_QueryInterface(This->document, &IID_IHlinkTarget, (void**)&hlink);
-    if(FAILED(hres)) {
-        FIXME("Could not get IHlinkTarget interface\n");
-        return;
-    }
+    if(SUCCEEDED(hres)) {
+        hres = IHlinkTarget_Navigate(hlink, 0, NULL);
+        IHlinkTarget_Release(hlink);
+        if(FAILED(hres))
+            FIXME("Navigate failed\n");
+    }else {
+        IOleObject *ole_object;
+        RECT rect;
 
-    hres = IHlinkTarget_Navigate(hlink, 0, NULL);
-    IHlinkTarget_Release(hlink);
-    if(FAILED(hres))
-        FIXME("Navigate failed\n");
+        TRACE("No IHlink iface\n");
+
+        hres = IUnknown_QueryInterface(This->document, &IID_IOleObject, (void**)&ole_object);
+        if(FAILED(hres)) {
+            FIXME("Could not get IOleObject iface: %08x\n", hres);
+            return;
+        }
+
+        GetClientRect(This->hwnd, &rect);
+        hres = IOleObject_DoVerb(ole_object, OLEIVERB_SHOW, NULL, &This->IOleClientSite_iface, -1, This->hwnd, &rect);
+        IOleObject_Release(ole_object);
+        if(FAILED(hres))
+            FIXME("DoVerb failed: %08x\n", hres);
+    }
 }
 
 static HRESULT get_doc_ready_state(DocHost *This, READYSTATE *ret)
@@ -195,6 +234,12 @@ void set_doc_state(DocHost *This, READYSTATE doc_state)
 
 static void update_ready_state(DocHost *This, READYSTATE ready_state)
 {
+    if(ready_state > READYSTATE_LOADING && This->travellog.loading_pos != -1) {
+        WARN("histupdate not notified\n");
+        This->travellog.position = This->travellog.loading_pos;
+        This->travellog.loading_pos = -1;
+    }
+
     if(ready_state > READYSTATE_LOADING && This->doc_state <= READYSTATE_LOADING && !This->browser_service /* FIXME */)
         notif_complete(This, DISPID_NAVIGATECOMPLETE2);
 
@@ -289,6 +334,10 @@ HRESULT dochost_object_available(DocHost *This, IUnknown *doc)
             push_ready_state_task(This, READYSTATE_COMPLETE);
         if(ready_state != READYSTATE_COMPLETE || This->doc_navigate)
             advise_prop_notif(This, TRUE);
+    }else if(!This->doc_navigate) {
+        /* If we can't get document's ready state, there is not much we can do.
+         * Assume that document is complete at this point. */
+        push_ready_state_task(This, READYSTATE_COMPLETE);
     }
 
     return S_OK;
@@ -327,37 +376,98 @@ static LRESULT WINAPI doc_view_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
+static void free_travellog_entry(travellog_entry_t *entry)
+{
+    if(entry->stream)
+        IStream_Release(entry->stream);
+    heap_free(entry->url);
+}
+
+static IStream *get_travellog_stream(DocHost *This)
+{
+    IPersistHistory *persist_history;
+    IStream *stream;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IPersistHistory, (void**)&persist_history);
+    if(FAILED(hres))
+        return NULL;
+
+    hres = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    if(SUCCEEDED(hres))
+        hres = IPersistHistory_SaveHistory(persist_history, stream);
+    IPersistHistory_Release(persist_history);
+    if(FAILED(hres)) {
+        IStream_Release(stream);
+        return NULL;
+    }
+
+    return stream;
+}
+
+static void dump_travellog(DocHost *This)
+{
+    unsigned i;
+
+    for(i=0; i < This->travellog.length; i++)
+        TRACE("%d: %s %s\n", i, i == This->travellog.position ? "=>" : "  ", debugstr_w(This->travellog.log[i].url));
+    if(i == This->travellog.position)
+        TRACE("%d: =>\n", i);
+}
+
 static void update_travellog(DocHost *This)
 {
     travellog_entry_t *new_entry;
 
-    if(!This->travellog) {
-        This->travellog = heap_alloc(4 * sizeof(*This->travellog));
-        if(!This->travellog)
+    static const WCHAR about_schemeW[] = {'a','b','o','u','t',':'};
+
+    if(This->url && !strncmpiW(This->url, about_schemeW, sizeof(about_schemeW)/sizeof(*about_schemeW))) {
+        TRACE("Skipping about URL\n");
+        return;
+    }
+
+    if(!This->travellog.log) {
+        This->travellog.log = heap_alloc(4 * sizeof(*This->travellog.log));
+        if(!This->travellog.log)
             return;
 
-        This->travellog_size = 4;
-    }else if(This->travellog_size < This->travellog_position+1) {
+        This->travellog.size = 4;
+    }else if(This->travellog.size < This->travellog.position+1) {
         travellog_entry_t *new_travellog;
 
-        new_travellog = heap_realloc(This->travellog, This->travellog_size*2*sizeof(*This->travellog));
+        new_travellog = heap_realloc(This->travellog.log, This->travellog.size*2*sizeof(*This->travellog.log));
         if(!new_travellog)
             return;
 
-        This->travellog = new_travellog;
-        This->travellog_size *= 2;
+        This->travellog.log = new_travellog;
+        This->travellog.size *= 2;
     }
 
-    while(This->travellog_length > This->travellog_position)
-        heap_free(This->travellog[--This->travellog_length].url);
+    if(This->travellog.loading_pos == -1) {
+        /* Clear forward history. */
+        while(This->travellog.length > This->travellog.position)
+            free_travellog_entry(This->travellog.log + --This->travellog.length);
+    }
 
-    new_entry = This->travellog + This->travellog_position;
+    new_entry = This->travellog.log + This->travellog.position;
 
     new_entry->url = heap_strdupW(This->url);
+    TRACE("Adding %s at %d\n", debugstr_w(This->url), This->travellog.position);
     if(!new_entry->url)
         return;
 
-    This->travellog_position++;
+    new_entry->stream = get_travellog_stream(This);
+
+    if(This->travellog.loading_pos == -1) {
+        This->travellog.position++;
+    }else {
+         This->travellog.position = This->travellog.loading_pos;
+         This->travellog.loading_pos = -1;
+    }
+    if(This->travellog.position > This->travellog.length)
+        This->travellog.length = This->travellog.position;
+
+    dump_travellog(This);
 }
 
 void create_doc_view_hwnd(DocHost *This)
@@ -383,7 +493,7 @@ void create_doc_view_hwnd(DocHost *This)
         doc_view_atom = RegisterClassExW(&wndclass);
     }
 
-    This->container_vtbl->GetDocObjRect(This, &rect);
+    This->container_vtbl->get_docobj_rect(This, &rect);
     This->hwnd = CreateWindowExW(0, wszShell_DocObject_View,
          wszShell_DocObject_View,
          WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP,
@@ -453,11 +563,14 @@ void deactivate_document(DocHost *This)
     This->document = NULL;
 }
 
-HRESULT refresh_document(DocHost *This)
+HRESULT refresh_document(DocHost *This, const VARIANT *level)
 {
     IOleCommandTarget *cmdtrg;
     VARIANT vin, vout;
     HRESULT hres;
+
+    if(level && (V_VT(level) != VT_I4 || V_I4(level) != REFRESH_NORMAL))
+        FIXME("Unsupported refresh level %s\n", debugstr_variant(level));
 
     if(!This->document) {
         FIXME("no document\n");
@@ -500,6 +613,11 @@ void release_dochost_client(DocHost *This)
         IOleInPlaceFrame_Release(This->frame);
         This->frame = NULL;
     }
+
+    if(This->olecmd) {
+        IOleCommandTarget_Release(This->olecmd);
+        This->olecmd = NULL;
+    }
 }
 
 static inline DocHost *impl_from_IOleCommandTarget(IOleCommandTarget *iface)
@@ -530,13 +648,13 @@ static HRESULT WINAPI ClOleCommandTarget_QueryStatus(IOleCommandTarget *iface,
         const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
 {
     DocHost *This = impl_from_IOleCommandTarget(iface);
-    ULONG i= 0;
-    FIXME("(%p)->(%s %u %p %p)\n", This, debugstr_guid(pguidCmdGroup), cCmds, prgCmds,
+    ULONG i;
+
+    TRACE("(%p)->(%s %u %p %p)\n", This, debugstr_guid(pguidCmdGroup), cCmds, prgCmds,
           pCmdText);
-    while (prgCmds && (cCmds > i)) {
-        FIXME("command_%u: %u, 0x%x\n", i, prgCmds[i].cmdID, prgCmds[i].cmdf);
-        i++;
-    }
+    for(i=0; prgCmds && i < cCmds; i++)
+        TRACE("unsupported command %u (%x)\n", prgCmds[i].cmdID, prgCmds[i].cmdf);
+
     return E_NOTIMPL;
 }
 
@@ -552,10 +670,20 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
     if(!pguidCmdGroup) {
         switch(nCmdID) {
         case OLECMDID_UPDATECOMMANDS:
+            if(!This->olecmd)
+                return E_NOTIMPL;
+            return IOleCommandTarget_Exec(This->olecmd, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         case OLECMDID_SETDOWNLOADSTATE:
-            return This->container_vtbl->exec(This, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            if(This->olecmd)
+                return IOleCommandTarget_Exec(This->olecmd, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+            if(!pvaIn || V_VT(pvaIn) != VT_I4)
+                return E_INVALIDARG;
+
+            notify_download_state(This, V_I4(pvaIn));
+            return S_OK;
         default:
-            FIXME("Unimplemented cmdid %d\n", nCmdID);
+            TRACE("Unimplemented cmdid %d\n", nCmdID);
             return E_NOTIMPL;
         }
     }
@@ -607,7 +735,7 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
         }
 
         default:
-            FIXME("unsupported command %d of CGID_DocHostCmdPriv\n", nCmdID);
+            TRACE("unsupported command %d of CGID_DocHostCmdPriv\n", nCmdID);
             return E_NOTIMPL;
         }
     }
@@ -616,10 +744,11 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
         switch(nCmdID) {
         case CMDID_EXPLORER_UPDATEHISTORY:
             update_travellog(This);
+            update_navigation_commands(This);
             return S_OK;
 
         default:
-            FIXME("Unimplemented cmdid %d of CGID_Explorer\n", nCmdID);
+            TRACE("Unimplemented cmdid %d of CGID_Explorer\n", nCmdID);
             return E_NOTIMPL;
         }
     }
@@ -627,15 +756,18 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
     if(IsEqualGUID(pguidCmdGroup, &CGID_ShellDocView)) {
         switch(nCmdID) {
         default:
-            FIXME("Unimplemented cmdid %d of CGID_ShellDocView\n", nCmdID);
+            TRACE("Unimplemented cmdid %d of CGID_ShellDocView\n", nCmdID);
             return E_NOTIMPL;
         }
     }
 
-    if(IsEqualGUID(&CGID_DocHostCommandHandler, pguidCmdGroup))
-        return This->container_vtbl->exec(This, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+    if(IsEqualGUID(&CGID_DocHostCommandHandler, pguidCmdGroup)) {
+        if(!This->olecmd)
+            return E_NOTIMPL;
+        return IOleCommandTarget_Exec(This->olecmd, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+    }
 
-    FIXME("Unimplemented cmdid %d of group %s\n", nCmdID, debugstr_guid(pguidCmdGroup));
+    TRACE("Unimplemented cmdid %d of group %s\n", nCmdID, debugstr_guid(pguidCmdGroup));
     return E_NOTIMPL;
 }
 
@@ -975,6 +1107,8 @@ void DocHost_Init(DocHost *This, IWebBrowser2 *wb, const IDocHostContainerVtbl* 
     This->ready_state = READYSTATE_UNINITIALIZED;
     list_init(&This->task_queue);
 
+    This->travellog.loading_pos = -1;
+
     DocHost_ClientSite_Init(This);
     DocHost_Frame_Init(This);
 
@@ -994,9 +1128,9 @@ void DocHost_Release(DocHost *This)
 
     ConnectionPointContainer_Destroy(&This->cps);
 
-    while(This->travellog_length)
-        heap_free(This->travellog[--This->travellog_length].url);
-    heap_free(This->travellog);
+    while(This->travellog.length)
+        free_travellog_entry(This->travellog.log + --This->travellog.length);
+    heap_free(This->travellog.log);
 
     heap_free(This->url);
 }

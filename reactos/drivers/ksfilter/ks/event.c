@@ -6,7 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 BOOLEAN
 KspSynchronizedEventRoutine(
@@ -84,7 +87,7 @@ NTSTATUS
 KspEnableEvent(
     IN  PIRP Irp,
     IN  ULONG EventSetsCount,
-    IN  PKSEVENT_SET EventSet,
+    IN  const KSEVENT_SET* EventSet,
     IN  OUT PLIST_ENTRY EventsList OPTIONAL,
     IN  KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
     IN  PVOID EventsLock OPTIONAL,
@@ -96,7 +99,7 @@ KspEnableEvent(
     KSEVENT Event;
     PKSEVENT_ITEM EventItem, FoundEventItem;
     PKSEVENTDATA EventData;
-    PKSEVENT_SET FoundEventSet;
+    const KSEVENT_SET *FoundEventSet;
     PKSEVENT_ENTRY EventEntry;
     ULONG Index, SubIndex, Size;
     PVOID Object;
@@ -231,7 +234,7 @@ KspEnableEvent(
         if (EventData->NotificationType == KSEVENTF_SEMAPHORE_HANDLE)
         {
             /* get semaphore object handle */
-            Status = ObReferenceObjectByHandle(EventData->SemaphoreHandle.Semaphore, SEMAPHORE_MODIFY_STATE, ExSemaphoreObjectType, Irp->RequestorMode, &Object, NULL);
+            Status = ObReferenceObjectByHandle(EventData->SemaphoreHandle.Semaphore, SEMAPHORE_MODIFY_STATE, *ExSemaphoreObjectType, Irp->RequestorMode, &Object, NULL);
 
             if (!NT_SUCCESS(Status))
             {
@@ -242,7 +245,7 @@ KspEnableEvent(
         else if (EventData->NotificationType == KSEVENTF_EVENT_HANDLE)
         {
             /* get event object handle */
-            Status = ObReferenceObjectByHandle(EventData->EventHandle.Event, EVENT_MODIFY_STATE, ExEventObjectType, Irp->RequestorMode, &Object, NULL);
+            Status = ObReferenceObjectByHandle(EventData->EventHandle.Event, EVENT_MODIFY_STATE, *ExEventObjectType, Irp->RequestorMode, &Object, NULL);
 
             if (!NT_SUCCESS(Status))
             {
@@ -267,7 +270,7 @@ KspEnableEvent(
             /* invalid type requested */
             return STATUS_INVALID_PARAMETER;
         }
-    } 
+    }
 
 
     /* calculate request size */
@@ -395,18 +398,19 @@ KsEnableEvent(
 /*
     @implemented
 */
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsEnableEventWithAllocator(
-    IN  PIRP Irp,
-    IN  ULONG EventSetsCount,
-    IN  PKSEVENT_SET EventSet,
-    IN  OUT PLIST_ENTRY EventsList OPTIONAL,
-    IN  KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
-    IN  PVOID EventsLock OPTIONAL,
-    IN  PFNKSALLOCATOR Allocator OPTIONAL,
-    IN  ULONG EventItemSize OPTIONAL)
+    _In_ PIRP Irp,
+    _In_ ULONG EventSetsCount,
+    _In_reads_(EventSetsCount) const KSEVENT_SET* EventSet,
+    _Inout_opt_ PLIST_ENTRY EventsList,
+    _In_opt_ KSEVENTS_LOCKTYPE EventsFlags,
+    _In_opt_ PVOID EventsLock,
+    _In_opt_ PFNKSALLOCATOR Allocator,
+    _In_opt_ ULONG EventItemSize)
 {
     return KspEnableEvent(Irp, EventSetsCount, EventSet, EventsList, EventsFlags, EventsLock, Allocator, EventItemSize);
 }

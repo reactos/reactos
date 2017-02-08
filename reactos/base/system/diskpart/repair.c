@@ -6,17 +6,12 @@
  *					an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL repair_main(INT argc, WCHAR **argv)
+BOOL repair_main(INT argc, LPWSTR *argv)
 {
     printf("\nTODO: Add code later since Win 7 Home Premium doesn't have this feature.\n");
 
     return TRUE;
-}
-
-
-VOID help_repair(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_REPAIR);
 }

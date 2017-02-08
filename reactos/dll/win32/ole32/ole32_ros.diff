@@ -1,0 +1,60 @@
+diff -prudN e:\wine\dlls\ole32/compobj.c dll\win32\ole32/compobj.c
+--- e:\wine\dlls\ole32/compobj.c	2015-02-21 17:13:09.561542200 +0100
++++ dll\win32\ole32/compobj.c	2015-02-28 13:26:29.259662000 +0100
+@@ -331,8 +304,12 @@ static NTSTATUS create_key( HKEY *retkey
+     return status;
+ }
+ 
++#ifdef __REACTOS__
++static const WCHAR classes_rootW[] = L"\\REGISTRY\\Machine\\Software\\Classes";
++#else
+ static const WCHAR classes_rootW[] =
+     {'M','a','c','h','i','n','e','\\','S','o','f','t','w','a','r','e','\\','C','l','a','s','s','e','s',0};
++#endif
+ 
+ static HKEY classes_root_hkey;
+ 
+diff -prudN e:\wine\dlls\ole32/stg_prop.c dll\win32\ole32/stg_prop.c
+--- e:\wine\dlls\ole32/stg_prop.c	2015-02-21 17:13:09.569542200 +0100
++++ dll\win32\ole32/stg_prop.c	2014-04-08 19:21:32.097336500 +0100
+@@ -1035,12 +1018,12 @@ static HRESULT PropertyStorage_ReadDicti
+ }
+ 
+ #ifdef __i386__
+-#define __thiscall __stdcall
++#define __thiscall_wrapper __stdcall
+ #else
+-#define __thiscall __cdecl
++#define __thiscall_wrapper __cdecl
+ #endif
+ 
+-static __thiscall void* Allocate_CoTaskMemAlloc(void *userdata, ULONG size)
++static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *userdata, ULONG size)
+ {
+     return CoTaskMemAlloc(size);
+ }
+@@ -1049,7 +1032,7 @@ static __thiscall void* Allocate_CoTaskM
+  * end of the buffer.
+  */
+ static HRESULT PropertyStorage_ReadProperty(PROPVARIANT *prop, const BYTE *data,
+-    UINT codepage, void* (__thiscall *allocate)(void *userdata, ULONG size), void *allocate_data)
++    UINT codepage, void* (__thiscall_wrapper *allocate)(void *userdata, ULONG size), void *allocate_data)
+ {
+     HRESULT hr = S_OK;
+ 
+@@ -2738,13 +2721,13 @@ end:
+                    "jmp *(4*(" #num "))(%eax)" )
+ 
+ DEFINE_STDCALL_WRAPPER(0,Allocate_PMemoryAllocator,8)
+-extern void* __thiscall Allocate_PMemoryAllocator(void *this, ULONG cbSize);
++extern void* __stdcall Allocate_PMemoryAllocator(void *this, ULONG cbSize);
+ 
+ #else
+ 
+-static void* __thiscall Allocate_PMemoryAllocator(void *this, ULONG cbSize)
++static void* __cdecl Allocate_PMemoryAllocator(void *this, ULONG cbSize)
+ {
+-    void* (__thiscall *fn)(void*,ULONG) = **(void***)this;
++    void* (__cdecl *fn)(void*,ULONG) = **(void***)this;
+     return fn(this, cbSize);
+ }

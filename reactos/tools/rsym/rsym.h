@@ -1,7 +1,8 @@
 /* rsym.h */
 
 #pragma once
-#include "../pecoff.h"
+#include <typedefs.h>
+#include <pecoff.h>
 
 typedef struct {
   USHORT f_magic;         /* magic number             */
@@ -156,8 +157,14 @@ typedef struct _COFF_SYMENT
 } COFF_SYMENT, *PCOFF_SYMENT;
 #pragma pack(4)
 
+#ifdef TARGET_i386
+typedef ULONG TARGET_ULONG_PTR;
+#else
+typedef ULONGLONG TARGET_ULONG_PTR;
+#endif
+
 typedef struct _ROSSYM_ENTRY {
-  ULONG_PTR Address;
+  TARGET_ULONG_PTR Address;
   ULONG FunctionOffset;
   ULONG FileOffset;
   ULONG SourceLine;

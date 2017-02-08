@@ -275,7 +275,7 @@ SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
         plfFont->lfHeight = -MulDiv(GetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, &bTranslated, FALSE), GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
         plfFont->lfWeight = (SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0) == 1) ? FW_BOLD : FW_NORMAL;
         plfFont->lfItalic = (BYTE)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
-        GetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, plfFont->lfFaceName, LF_FACESIZE * sizeof(TCHAR));
+        GetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, plfFont->lfFaceName, LF_FACESIZE);
     }
 
     ReleaseDC(hwndDlg, hdcDlg);
@@ -425,7 +425,7 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     /* Fill font size combo */
     for (i = 6; i <= 24; i++)
     {
-        wsprintf(Size, TEXT("%d"), i);
+        StringCbPrintf(Size, sizeof(Size), TEXT("%d"), i);
         SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, CB_ADDSTRING, 0, (LPARAM)&Size);
     }
 

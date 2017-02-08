@@ -3,7 +3,7 @@
 * LICENSE:     GPL - See COPYING in the top level directory
 * FILE:        dll/cpl/hotplug/hotplug.c
 * PURPOSE:     applet initialization
-* PROGRAMMERS: Johannes Anderwald (janderwald@reactos.org)
+* PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
 */
 
 #include "hotplug.h"

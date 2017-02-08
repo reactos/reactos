@@ -16,18 +16,17 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
  * PURPOSE:         Registry code
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMER:      HervÃ© Poussineau
  */
 
 /*
  * TODO:
- *	- Implement RegDeleteKeyW()
- *	- Implement RegEnumValue()
- *	- Implement RegQueryValueExW()
+ *   - Implement RegDeleteKeyW() and RegDeleteValueW()
  */
 
 #include <stdlib.h>
@@ -37,593 +36,792 @@
 #define NDEBUG
 #include "mkhive.h"
 
-#define REG_DATA_SIZE_MASK                 0x7FFFFFFF
-#define REG_DATA_IN_OFFSET                 0x80000000
-
 static CMHIVE RootHive;
-static MEMKEY RootKey;
+static PMEMKEY RootKey;
 CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
 CMHIVE SamHive;      /* \Registry\Machine\SAM */
 CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
 CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
 CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
+CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 
-static MEMKEY
-CreateInMemoryStructure(
-	IN PCMHIVE RegistryHive,
-	IN HCELL_INDEX KeyCellOffset,
-	IN PCUNICODE_STRING KeyName)
+//
+// TODO: Write these values in a more human-readable form.
+// See http://amnesia.gtisc.gatech.edu/~moyix/suzibandit.ltd.uk/MSc/Registry%20Structure%20-%20Appendices%20V4.pdf
+// Appendix 12 "The Registry NT Security Descriptor" for more information.
+//
+// Those SECURITY_DESCRIPTORs were obtained by dumping the security block "sk"
+// of registry hives created by setting their permissions to be the same as
+// the ones of the BCD, SOFTWARE, or SYSTEM, SAM and .DEFAULT system hives.
+// A cross-check was subsequently done with the system hives to verify that
+// the security descriptors were the same.
+//
+UCHAR BcdSecurity[] =
 {
-	MEMKEY Key;
+    // SECURITY_DESCRIPTOR_RELATIVE
+    0x01,                   // Revision
+    0x00,                   // Sbz1
+    0x04, 0x94,             // Control: SE_SELF_RELATIVE        (0x8000) |
+                            //          SE_DACL_PROTECTED       (0x1000) |
+                            //          SE_DACL_AUTO_INHERITED  (0x0400) |
+                            //          SE_DACL_PRESENT         (0x0004)
+    0x48, 0x00, 0x00, 0x00, // Owner
+    0x58, 0x00, 0x00, 0x00, // Group
+    0x00, 0x00, 0x00, 0x00, // Sacl (None)
+    0x14, 0x00, 0x00, 0x00, // Dacl
 
-	Key = (MEMKEY) malloc (sizeof(KEY));
-	if (!Key)
-		return NULL;
+    // DACL
+    0x02,       // AclRevision
+    0x00,       // Sbz1
+    0x34, 0x00, // AclSize
+    0x02, 0x00, // AceCount
+    0x00, 0x00, // Sbz2
 
-	InitializeListHead (&Key->SubKeyList);
-	InitializeListHead (&Key->ValueList);
-	InitializeListHead (&Key->KeyList);
+    // (1st ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x19, 0x00, 0x06, 0x00, // ACCESS_MASK: "Write DAC"         (0x00040000) |
+                            //              "Read Control"      (0x00020000) |
+                            //              "Notify"            (0x00000010) |
+                            //              "Enumerate Subkeys" (0x00000008) |
+                            //              "Query Value"       (0x00000001)
+    // (SidStart: S-1-5-32-544 "Administrators")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x20, 0x02, 0x00, 0x00,
 
-	Key->SubKeyCount = 0;
-	Key->ValueCount = 0;
+    // (2nd ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x14, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-5-18 "Local System")
+    0x01, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x12, 0x00, 0x00, 0x00,
 
-	Key->NameSize = KeyName->Length;
-	/* FIXME: It's not enough to allocate this way, because later
-	          this memory gets overwritten with bigger names */
-	Key->Name = malloc (Key->NameSize);
-	if (!Key->Name)
-		return NULL;
-	memcpy(Key->Name, KeyName->Buffer, KeyName->Length);
+    // Owner SID (S-1-5-32-544 "Administrators")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x20, 0x02, 0x00, 0x00,
 
-	Key->DataType = 0;
-	Key->DataSize = 0;
-	Key->Data = NULL;
+    // Group SID (S-1-5-21-domain-513 "Domain Users")
+    0x01, 0x05, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x15, 0x00, 0x00, 0x00,
+    0xAC, 0xD0, 0x49, 0xCB,
+    0xE6, 0x52, 0x47, 0x9C,
+    0xE4, 0x31, 0xDB, 0x5C,
+    0x01, 0x02, 0x00, 0x00
+};
 
-	Key->RegistryHive = RegistryHive;
-	Key->KeyCellOffset = KeyCellOffset;
-	Key->KeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
-	if (!Key->KeyCell)
-	{
-        free(Key->Name);
-		free(Key);
-		return NULL;
-	}
-	Key->LinkedKey = NULL;
-	return Key;
+UCHAR SoftwareSecurity[] =
+{
+    // SECURITY_DESCRIPTOR_RELATIVE
+    0x01,                   // Revision
+    0x00,                   // Sbz1
+    0x04, 0x94,             // Control: SE_SELF_RELATIVE        (0x8000) |
+                            //          SE_DACL_PROTECTED       (0x1000) |
+                            //          SE_DACL_AUTO_INHERITED  (0x0400) |
+                            //          SE_DACL_PRESENT         (0x0004)
+    0xA0, 0x00, 0x00, 0x00, // Owner
+    0xB0, 0x00, 0x00, 0x00, // Group
+    0x00, 0x00, 0x00, 0x00, // Sacl (None)
+    0x14, 0x00, 0x00, 0x00, // Dacl
+
+    // DACL
+    0x02,       // AclRevision
+    0x00,       // Sbz1
+    0x8C, 0x00, // AclSize
+    0x06, 0x00, // AceCount
+    0x00, 0x00, // Sbz2
+
+    // (1st ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-5-32-544 "Administrators")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x20, 0x02, 0x00, 0x00,
+
+    // (2nd ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x0A,                   // AceFlags: INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE
+    0x14, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-3-0 "Creator Owner")
+    0x01, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x03,
+    0x00, 0x00, 0x00, 0x00,
+
+    // (3rd ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x14, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-5-18 "Local System")
+    0x01, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x12, 0x00, 0x00, 0x00,
+
+    // (4th ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x14, 0x00,             // AceSize
+    0x1F, 0x00, 0x03, 0x00, // ACCESS_MASK: "Read Control"      (0x00020000) |
+                            //              "Delete"            (0x00010000) |
+                            //              "Notify"            (0x00000010) |
+                            //              "Enumerate Subkeys" (0x00000008) |
+                            //              "Create Subkey"     (0x00000004) |
+                            //              "Set Value"         (0x00000002) |
+                            //              "Query Value"       (0x00000001)
+    // (SidStart: S-1-5-13 "Terminal Server Users")
+    0x01, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x0D, 0x00, 0x00, 0x00,
+
+    // (5th ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x19, 0x00, 0x02, 0x00, // ACCESS_MASK: "Read Control"      (0x00020000) |
+                            //              "Notify"            (0x00000010) |
+                            //              "Enumerate Subkeys" (0x00000008) |
+                            //              "Query Value"       (0x00000001)
+    // (SidStart: S-1-5-32-545 "Users")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x21, 0x02, 0x00, 0x00,
+
+    // (6th ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x1F, 0x00, 0x03, 0x00, // ACCESS_MASK: "Read Control"      (0x00020000) |
+                            //              "Delete"            (0x00010000) |
+                            //              "Notify"            (0x00000010) |
+                            //              "Enumerate Subkeys" (0x00000008) |
+                            //              "Create Subkey"     (0x00000004) |
+                            //              "Set Value"         (0x00000002) |
+                            //              "Query Value"       (0x00000001)
+    // (SidStart: S-1-5-32-547 "Power Users")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x23, 0x02, 0x00, 0x00,
+
+    // Owner SID (S-1-5-32-544 "Administrators")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x20, 0x02, 0x00, 0x00,
+
+    // Group SID (S-1-5-21-domain-513 "Domain Users")
+    0x01, 0x05, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x15, 0x00, 0x00, 0x00,
+    0xAC, 0xD0, 0x49, 0xCB,
+    0xE6, 0x52, 0x47, 0x9C,
+    0xE4, 0x31, 0xDB, 0x5C,
+    0x01, 0x02, 0x00, 0x00
+};
+
+// Same security for SYSTEM, SAM and .DEFAULT
+UCHAR SystemSecurity[] =
+{
+    // SECURITY_DESCRIPTOR_RELATIVE
+    0x01,                   // Revision
+    0x00,                   // Sbz1
+    0x04, 0x94,             // Control: SE_SELF_RELATIVE        (0x8000) |
+                            //          SE_DACL_PROTECTED       (0x1000) |
+                            //          SE_DACL_AUTO_INHERITED  (0x0400) |
+                            //          SE_DACL_PRESENT         (0x0004)
+    0x8C, 0x00, 0x00, 0x00, // Owner
+    0x9C, 0x00, 0x00, 0x00, // Group
+    0x00, 0x00, 0x00, 0x00, // Sacl (None)
+    0x14, 0x00, 0x00, 0x00, // Dacl
+
+    // DACL
+    0x02,       // AclRevision
+    0x00,       // Sbz1
+    0x78, 0x00, // AclSize
+    0x05, 0x00, // AceCount
+    0x00, 0x00, // Sbz2
+
+    // (1st ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-5-32-544 "Administrators")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x20, 0x02, 0x00, 0x00,
+
+    // (2nd ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x0A,                   // AceFlags: INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE
+    0x14, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-3-0 "Creator Owner")
+    0x01, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x03,
+    0x00, 0x00, 0x00, 0x00,
+
+    // (3rd ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x14, 0x00,             // AceSize
+    0x3F, 0x00, 0x0F, 0x00, // ACCESS_MASK: "Full Control" (0x000F003F)
+    // (SidStart: S-1-5-18 "Local System")
+    0x01, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x12, 0x00, 0x00, 0x00,
+
+    // (4th ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x19, 0x00, 0x02, 0x00, // ACCESS_MASK: "Read Control"      (0x00020000) |
+                            //              "Notify"            (0x00000010) |
+                            //              "Enumerate Subkeys" (0x00000008) |
+                            //              "Query Value"       (0x00000001)
+    // (SidStart: S-1-5-32-545 "Users")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x21, 0x02, 0x00, 0x00,
+
+    // (5th ACE)
+    0x00,                   // AceType : ACCESS_ALLOWED_ACE_TYPE
+    0x02,                   // AceFlags: CONTAINER_INHERIT_ACE
+    0x18, 0x00,             // AceSize
+    0x19, 0x00, 0x02, 0x00, // ACCESS_MASK: "Read Control"      (0x00020000) |
+                            //              "Notify"            (0x00000010) |
+                            //              "Enumerate Subkeys" (0x00000008) |
+                            //              "Query Value"       (0x00000001)
+    // (SidStart: S-1-5-32-547 "Power Users")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x23, 0x02, 0x00, 0x00,
+
+    // Owner SID (S-1-5-32-544 "Administrators")
+    0x01, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x20, 0x00, 0x00, 0x00,
+    0x20, 0x02, 0x00, 0x00,
+
+    // Group SID (S-1-5-21-domain-513 "Domain Users")
+    0x01, 0x05, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x05,
+    0x15, 0x00, 0x00, 0x00,
+    0xAC, 0xD0, 0x49, 0xCB,
+    0xE6, 0x52, 0x47, 0x9C,
+    0xE4, 0x31, 0xDB, 0x5C,
+    0x01, 0x02, 0x00, 0x00
+};
+
+static PMEMKEY
+CreateInMemoryStructure(
+    IN PCMHIVE RegistryHive,
+    IN HCELL_INDEX KeyCellOffset)
+{
+    PMEMKEY Key;
+
+    Key = (PMEMKEY)malloc(sizeof(MEMKEY));
+    if (!Key)
+        return NULL;
+
+    Key->RegistryHive = RegistryHive;
+    Key->KeyCellOffset = KeyCellOffset;
+    return Key;
 }
+
+LIST_ENTRY CmiReparsePointsHead;
 
 static LONG
 RegpOpenOrCreateKey(
-	IN HKEY hParentKey,
-	IN PCWSTR KeyName,
-	IN BOOL AllowCreation,
-	OUT PHKEY Key)
+    IN HKEY hParentKey,
+    IN PCWSTR KeyName,
+    IN BOOL AllowCreation,
+    IN BOOL Volatile,
+    OUT PHKEY Key)
 {
-	PWSTR LocalKeyName;
-	PWSTR End;
-	UNICODE_STRING KeyString;
-	NTSTATUS Status;
-	MEMKEY ParentKey;
-	MEMKEY CurrentKey;
-	PLIST_ENTRY Ptr;
-	PCM_KEY_NODE SubKeyCell;
-	HCELL_INDEX BlockOffset;
+    PWSTR LocalKeyName;
+    PWSTR End;
+    UNICODE_STRING KeyString;
+    NTSTATUS Status;
+    PREPARSE_POINT CurrentReparsePoint;
+    PMEMKEY CurrentKey;
+    PCMHIVE ParentRegistryHive;
+    HCELL_INDEX ParentCellOffset;
+    PCM_KEY_NODE ParentKeyCell;
+    PLIST_ENTRY Ptr;
+    PCM_KEY_NODE SubKeyCell;
+    HCELL_INDEX BlockOffset;
 
-	DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
+    DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
 
-	if (*KeyName == L'\\')
-	{
-		KeyName++;
-		ParentKey = RootKey;
-	}
-	else if (hParentKey == NULL)
-	{
-		ParentKey = RootKey;
-	}
-	else
-	{
-		ParentKey = HKEY_TO_MEMKEY(RootKey);
-	}
+    if (*KeyName == OBJ_NAME_PATH_SEPARATOR)
+    {
+        KeyName++;
+        ParentRegistryHive = RootKey->RegistryHive;
+        ParentCellOffset = RootKey->KeyCellOffset;
+    }
+    else if (hParentKey == NULL)
+    {
+        ParentRegistryHive = RootKey->RegistryHive;
+        ParentCellOffset = RootKey->KeyCellOffset;
+    }
+    else
+    {
+        ParentRegistryHive = HKEY_TO_MEMKEY(hParentKey)->RegistryHive;
+        ParentCellOffset = HKEY_TO_MEMKEY(hParentKey)->KeyCellOffset;
+    }
 
-	LocalKeyName = (PWSTR)KeyName;
-	for (;;)
-	{
-		End = (PWSTR)strchrW(LocalKeyName, '\\');
-		if (End)
-		{
-			KeyString.Buffer = LocalKeyName;
-			KeyString.Length = KeyString.MaximumLength =
-				(USHORT)((ULONG_PTR)End - (ULONG_PTR)LocalKeyName);
-		}
-		else
-			RtlInitUnicodeString(&KeyString, LocalKeyName);
+    LocalKeyName = (PWSTR)KeyName;
+    for (;;)
+    {
+        End = (PWSTR)strchrW(LocalKeyName, OBJ_NAME_PATH_SEPARATOR);
+        if (End)
+        {
+            KeyString.Buffer = LocalKeyName;
+            KeyString.Length = KeyString.MaximumLength =
+                (USHORT)((ULONG_PTR)End - (ULONG_PTR)LocalKeyName);
+        }
+        else
+        {
+            RtlInitUnicodeString(&KeyString, LocalKeyName);
+            if (KeyString.Length == 0)
+            {
+                /* Trailing path separator: we're done */
+                break;
+            }
+        }
 
-		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!strncmpW(LocalKeyName, L"CurrentControlSet", 17) &&
-		    ParentKey->NameSize == 12 &&
-		    !memcmp(ParentKey->Name, L"SYSTEM", 12))
-			RtlInitUnicodeString(&KeyString, L"ControlSet001");
+        ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&ParentRegistryHive->Hive, ParentCellOffset);
+        if (!ParentKeyCell)
+            return STATUS_UNSUCCESSFUL;
 
-		/* Check subkey in memory structure */
-		Ptr = ParentKey->SubKeyList.Flink;
-		while (Ptr != &ParentKey->SubKeyList)
-		{
-			CurrentKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
-			if (CurrentKey->NameSize == KeyString.Length
-			 && memcmp(CurrentKey->Name, KeyString.Buffer, KeyString.Length) == 0)
-			{
-				goto nextsubkey;
-			}
+        VERIFY_KEY_CELL(ParentKeyCell);
 
-			Ptr = Ptr->Flink;
-		}
+        BlockOffset = CmpFindSubKeyByName(&ParentRegistryHive->Hive, ParentKeyCell, &KeyString);
+        if (BlockOffset != HCELL_NIL)
+        {
+            Status = STATUS_SUCCESS;
 
-		Status = CmiScanForSubKey(
-			ParentKey->RegistryHive,
-			ParentKey->KeyCell,
-			&KeyString,
-			OBJ_CASE_INSENSITIVE,
-			&SubKeyCell,
-			&BlockOffset);
-		if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
-		{
-			Status = CmiAddSubKey(
-				ParentKey->RegistryHive,
-				ParentKey->KeyCell,
-				ParentKey->KeyCellOffset,
-				&KeyString,
-				0,
-				&SubKeyCell,
-				&BlockOffset);
-		}
-		if (!NT_SUCCESS(Status))
-			return ERROR_UNSUCCESSFUL;
+            /* Search for a possible reparse point */
+            Ptr = CmiReparsePointsHead.Flink;
+            while (Ptr != &CmiReparsePointsHead)
+            {
+                CurrentReparsePoint = CONTAINING_RECORD(Ptr, REPARSE_POINT, ListEntry);
+                if (CurrentReparsePoint->SourceHive == ParentRegistryHive &&
+                    CurrentReparsePoint->SourceKeyCellOffset == BlockOffset)
+                {
+                    ParentRegistryHive = CurrentReparsePoint->DestinationHive;
+                    BlockOffset = CurrentReparsePoint->DestinationKeyCellOffset;
+                    break;
+                }
+                Ptr = Ptr->Flink;
+            }
+        }
+        else if (AllowCreation) // && (BlockOffset == HCELL_NIL)
+        {
+            Status = CmiAddSubKey(ParentRegistryHive,
+                                  ParentCellOffset,
+                                  &KeyString,
+                                  Volatile,
+                                  &BlockOffset);
+        }
 
-		/* Now, SubKeyCell/BlockOffset are valid */
-		CurrentKey = CreateInMemoryStructure(
-			ParentKey->RegistryHive,
-			BlockOffset,
-			&KeyString);
-		if (!CurrentKey)
-			return ERROR_OUTOFMEMORY;
+        HvReleaseCell(&ParentRegistryHive->Hive, ParentCellOffset);
 
-		/* Add CurrentKey in ParentKey */
-		InsertTailList(&ParentKey->SubKeyList, &CurrentKey->KeyList);
-		ParentKey->SubKeyCount++;
+        if (!NT_SUCCESS(Status))
+            return ERROR_UNSUCCESSFUL;
 
-nextsubkey:
-		ParentKey = CurrentKey;
-		if (End)
-			LocalKeyName = End + 1;
-		else
-			break;
-	}
+        ParentCellOffset = BlockOffset;
+        if (End)
+            LocalKeyName = End + 1;
+        else
+            break;
+    }
 
-	*Key = MEMKEY_TO_HKEY(ParentKey);
+    CurrentKey = CreateInMemoryStructure(ParentRegistryHive, ParentCellOffset);
+    if (!CurrentKey)
+        return ERROR_OUTOFMEMORY;
 
-	return ERROR_SUCCESS;
+    *Key = MEMKEY_TO_HKEY(CurrentKey);
+
+    return ERROR_SUCCESS;
 }
 
 LONG WINAPI
 RegCreateKeyW(
-	IN HKEY hKey,
-	IN LPCWSTR lpSubKey,
-	OUT PHKEY phkResult)
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    OUT PHKEY phkResult)
 {
-	return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, phkResult);
-}
-
-static PWSTR
-MultiByteToWideChar(
-	IN PCSTR MultiByteString)
-{
-	ANSI_STRING Source;
-	UNICODE_STRING Destination;
-	NTSTATUS Status;
-
-	RtlInitAnsiString(&Source, MultiByteString);
-	Status = RtlAnsiStringToUnicodeString(&Destination, &Source, TRUE);
-	if (!NT_SUCCESS(Status))
-		return NULL;
-	return Destination.Buffer;
-}
-
-LONG WINAPI
-RegCreateKeyA(
-	IN HKEY hKey,
-	IN LPCSTR lpSubKey,
-	OUT PHKEY phkResult)
-{
-	PWSTR lpSubKeyW;
-	LONG rc;
-
-	lpSubKeyW = MultiByteToWideChar(lpSubKey);
-	if (!lpSubKeyW)
-		return ERROR_OUTOFMEMORY;
-
-	rc = RegCreateKeyW(hKey, lpSubKeyW, phkResult);
-	free(lpSubKeyW);
-	return rc;
+    return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
 }
 
 LONG WINAPI
 RegDeleteKeyW(
-	IN HKEY hKey,
-	IN LPCWSTR lpSubKey)
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey)
 {
-	DPRINT1("FIXME: implement RegDeleteKeyW!\n");
-	return ERROR_SUCCESS;
-}
-
-LONG WINAPI
-RegDeleteKeyA(
-	IN HKEY hKey,
-	IN LPCSTR lpSubKey)
-{
-	PWSTR lpSubKeyW = NULL;
-	LONG rc;
-
-	if (lpSubKey != NULL && strchr(lpSubKey, '\\') != NULL)
-		return ERROR_INVALID_PARAMETER;
-
-	if (lpSubKey)
-	{
-		lpSubKeyW = MultiByteToWideChar(lpSubKey);
-		if (!lpSubKeyW)
-			return ERROR_OUTOFMEMORY;
-	}
-
-	rc = RegDeleteKeyW(hKey, lpSubKeyW);
-
-	if (lpSubKey)
-		free(lpSubKeyW);
-
-	return rc;
+    DPRINT1("RegDeleteKeyW(0x%p, '%S') is UNIMPLEMENTED!\n",
+            hKey, (lpSubKey ? lpSubKey : L""));
+    return ERROR_SUCCESS;
 }
 
 LONG WINAPI
 RegOpenKeyW(
-	IN HKEY hKey,
-	IN LPCWSTR lpSubKey,
-	OUT PHKEY phkResult)
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    OUT PHKEY phkResult)
 {
-	return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, phkResult);
+    return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
 }
 
 LONG WINAPI
-RegOpenKeyA(
-	IN HKEY hKey,
-	IN LPCSTR lpSubKey,
-	OUT PHKEY phkResult)
+RegCreateKeyExW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    IN DWORD Reserved,
+    IN LPWSTR lpClass OPTIONAL,
+    IN DWORD dwOptions,
+    IN REGSAM samDesired,
+    IN LPSECURITY_ATTRIBUTES lpSecurityAttributes OPTIONAL,
+    OUT PHKEY phkResult,
+    OUT LPDWORD lpdwDisposition OPTIONAL)
 {
-	PWSTR lpSubKeyW;
-	LONG rc;
-
-	lpSubKeyW = MultiByteToWideChar(lpSubKey);
-	if (!lpSubKeyW)
-		return ERROR_OUTOFMEMORY;
-
-	rc = RegOpenKeyW(hKey, lpSubKeyW, phkResult);
-	free(lpSubKeyW);
-	return rc;
-}
-
-static LONG
-RegpOpenOrCreateValue(
-	IN HKEY hKey,
-	IN LPCWSTR ValueName,
-	IN BOOL AllowCreation,
-	OUT PCM_KEY_VALUE *ValueCell,
-	OUT PHCELL_INDEX ValueCellOffset)
-{
-	MEMKEY ParentKey;
-	UNICODE_STRING ValueString;
-	NTSTATUS Status;
-
-	ParentKey = HKEY_TO_MEMKEY(hKey);
-	RtlInitUnicodeString(&ValueString, ValueName);
-
-	Status = CmiScanForValueKey(
-		ParentKey->RegistryHive,
-		ParentKey->KeyCell,
-		&ValueString,
-		ValueCell,
-		ValueCellOffset);
-	if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
-	{
-		Status = CmiAddValueKey(
-			ParentKey->RegistryHive,
-			ParentKey->KeyCell,
-			ParentKey->KeyCellOffset,
-			&ValueString,
-			ValueCell,
-			ValueCellOffset);
-	}
-	if (!NT_SUCCESS(Status))
-		return ERROR_UNSUCCESSFUL;
-	return ERROR_SUCCESS;
+    return RegpOpenOrCreateKey(hKey,
+                               lpSubKey,
+                               TRUE,
+                               (dwOptions & REG_OPTION_VOLATILE) != 0,
+                               phkResult);
 }
 
 LONG WINAPI
 RegSetValueExW(
-	IN HKEY hKey,
-	IN LPCWSTR lpValueName OPTIONAL,
-	IN ULONG Reserved,
-	IN ULONG dwType,
-	IN const UCHAR* lpData,
-	IN USHORT cbData)
+    IN HKEY hKey,
+    IN LPCWSTR lpValueName OPTIONAL,
+    IN ULONG Reserved,
+    IN ULONG dwType,
+    IN const UCHAR* lpData,
+    IN ULONG cbData)
 {
-	MEMKEY Key, DestKey;
-	PHKEY phKey;
-	PCM_KEY_VALUE ValueCell;
-	HCELL_INDEX ValueCellOffset;
-	PVOID DataCell;
-	LONG DataCellSize;
-	NTSTATUS Status;
+    PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
+    PHHIVE Hive;
+    PCM_KEY_NODE KeyNode; // ParentNode
+    PCM_KEY_VALUE ValueCell;
+    HCELL_INDEX CellIndex;
+    UNICODE_STRING ValueNameString;
 
-	if (dwType == REG_LINK)
-	{
-		/* Special handling of registry links */
-		if (cbData != sizeof(PVOID))
-			return STATUS_INVALID_PARAMETER;
-		phKey = (PHKEY)lpData;
-		Key = HKEY_TO_MEMKEY(hKey);
-		DestKey = HKEY_TO_MEMKEY(*phKey);
+    PVOID DataCell;
+    ULONG DataCellSize;
+    NTSTATUS Status;
 
-		/* Create the link in memory */
-		Key->DataType = REG_LINK;
-		Key->LinkedKey = DestKey;
+    if (dwType == REG_LINK)
+    {
+        PMEMKEY DestKey;
 
-		/* Create the link in registry hive (if applicable) */
-		if (Key->RegistryHive != DestKey->RegistryHive)
-			return STATUS_SUCCESS;
-		DPRINT1("Save link to registry\n");
-		return STATUS_NOT_IMPLEMENTED;
-	}
+        /* Special handling of registry links */
+        if (cbData != sizeof(PVOID))
+            return STATUS_INVALID_PARAMETER;
 
-	if ((cbData & REG_DATA_SIZE_MASK) != cbData)
-		return STATUS_UNSUCCESSFUL;
+        DestKey = HKEY_TO_MEMKEY(*(PHKEY)lpData);
 
-	Key = HKEY_TO_MEMKEY(hKey);
+        // FIXME: Add additional checks for the validity of DestKey
 
-	Status = RegpOpenOrCreateValue(hKey, lpValueName, TRUE, &ValueCell, &ValueCellOffset);
-	if (!NT_SUCCESS(Status))
-		return ERROR_UNSUCCESSFUL;
+        /* Create the link in registry hive (if applicable) */
+        if (Key->RegistryHive != DestKey->RegistryHive)
+            return STATUS_SUCCESS;
 
-	/* Get size of the allocated cellule (if any) */
-	if (!(ValueCell->DataLength & REG_DATA_IN_OFFSET) &&
-		(ValueCell->DataLength & REG_DATA_SIZE_MASK) != 0)
-	{
-		DataCell = HvGetCell(&Key->RegistryHive->Hive, ValueCell->Data);
-		if (!DataCell)
-			return ERROR_UNSUCCESSFUL;
-		DataCellSize = -HvGetCellSize(&Key->RegistryHive->Hive, DataCell);
-	}
-	else
-	{
-		DataCell = NULL;
-		DataCellSize = 0;
-	}
+        DPRINT1("Save link to registry\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
-	if (cbData <= sizeof(HCELL_INDEX))
-	{
-		/* If data size <= sizeof(HCELL_INDEX) then store data in the data offset */
-		DPRINT("ValueCell->DataLength %u\n", ValueCell->DataLength);
-		if (DataCell)
-			HvFreeCell(&Key->RegistryHive->Hive, ValueCell->Data);
+    if ((cbData & ~CM_KEY_VALUE_SPECIAL_SIZE) != cbData)
+        return STATUS_UNSUCCESSFUL;
 
-		RtlCopyMemory(&ValueCell->Data, lpData, cbData);
-		ValueCell->DataLength = (ULONG)(cbData | REG_DATA_IN_OFFSET);
-		ValueCell->Type = dwType;
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
-	}
-	else
-	{
-		if (cbData > (SIZE_T)DataCellSize)
-		{
-			/* New data size is larger than the current, destroy current
-			 * data block and allocate a new one. */
-			HCELL_INDEX NewOffset;
+    Hive = &Key->RegistryHive->Hive;
 
-			DPRINT("ValueCell->DataLength %u\n", ValueCell->DataLength);
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
+    if (!KeyNode)
+        return ERROR_UNSUCCESSFUL;
 
-			NewOffset = HvAllocateCell(&Key->RegistryHive->Hive, cbData, Stable, HCELL_NIL);
-			if (NewOffset == HCELL_NIL)
-			{
-				DPRINT("HvAllocateCell() failed with status 0x%08x\n", Status);
-				return ERROR_UNSUCCESSFUL;
-			}
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
-			if (DataCell)
-				HvFreeCell(&Key->RegistryHive->Hive, ValueCell->Data);
+    /* Mark the parent as dirty since we are going to create a new value in it */
+    HvMarkCellDirty(Hive, Key->KeyCellOffset, FALSE);
 
-			ValueCell->Data = NewOffset;
-			DataCell = (PVOID)HvGetCell(&Key->RegistryHive->Hive, NewOffset);
-		}
+    /* Initialize value name string */
+    RtlInitUnicodeString(&ValueNameString, lpValueName);
+    CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
+    if (CellIndex == HCELL_NIL)
+    {
+        /* The value doesn't exist, create a new one */
+        Status = CmiAddValueKey(Key->RegistryHive,
+                                KeyNode,
+                                &ValueNameString,
+                                &ValueCell,
+                                &CellIndex);
+    }
+    else
+    {
+        /* The value already exists, use it. Get the value cell. */
+        ValueCell = HvGetCell(&Key->RegistryHive->Hive, CellIndex);
+        ASSERT(ValueCell != NULL);
+    }
 
-		/* Copy new contents to cellule */
-		RtlCopyMemory(DataCell, lpData, cbData);
-		ValueCell->DataLength = (ULONG)(cbData & REG_DATA_SIZE_MASK);
-		ValueCell->Type = dwType;
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->Data, FALSE);
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
-	}
+    // /**/HvReleaseCell(Hive, CellIndex);/**/
 
-    if (cbData > Key->KeyCell->MaxValueDataLen)
-        Key->KeyCell->MaxValueDataLen = cbData;
+    if (!NT_SUCCESS(Status))
+        return ERROR_UNSUCCESSFUL;
 
-	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset, FALSE);
+    /* Get size of the allocated cell (if any) */
+    if (!(ValueCell->DataLength & CM_KEY_VALUE_SPECIAL_SIZE) &&
+         (ValueCell->DataLength & ~CM_KEY_VALUE_SPECIAL_SIZE) != 0)
+    {
+        DataCell = HvGetCell(Hive, ValueCell->Data);
+        if (!DataCell)
+            return ERROR_UNSUCCESSFUL;
 
-	DPRINT("Return status 0x%08x\n", Status);
-	return Status;
+        DataCellSize = (ULONG)(-HvGetCellSize(Hive, DataCell));
+    }
+    else
+    {
+        DataCell = NULL;
+        DataCellSize = 0;
+    }
+
+    if (cbData <= sizeof(HCELL_INDEX))
+    {
+        /* If data size <= sizeof(HCELL_INDEX) then store data in the data offset */
+        DPRINT("ValueCell->DataLength %u\n", ValueCell->DataLength);
+        if (DataCell)
+            HvFreeCell(Hive, ValueCell->Data);
+
+        RtlCopyMemory(&ValueCell->Data, lpData, cbData);
+        ValueCell->DataLength = (cbData | CM_KEY_VALUE_SPECIAL_SIZE);
+        ValueCell->Type = dwType;
+    }
+    else
+    {
+        if (cbData > DataCellSize)
+        {
+            /* New data size is larger than the current, destroy current
+             * data block and allocate a new one. */
+            HCELL_INDEX NewOffset;
+
+            DPRINT("ValueCell->DataLength %u\n", ValueCell->DataLength);
+
+            NewOffset = HvAllocateCell(Hive, cbData, Stable, HCELL_NIL);
+            if (NewOffset == HCELL_NIL)
+            {
+                DPRINT("HvAllocateCell() failed with status 0x%08x\n", Status);
+                return ERROR_UNSUCCESSFUL;
+            }
+
+            if (DataCell)
+                HvFreeCell(Hive, ValueCell->Data);
+
+            ValueCell->Data = NewOffset;
+            DataCell = (PVOID)HvGetCell(Hive, NewOffset);
+        }
+
+        /* Copy new contents to cell */
+        RtlCopyMemory(DataCell, lpData, cbData);
+        ValueCell->DataLength = (cbData & ~CM_KEY_VALUE_SPECIAL_SIZE);
+        ValueCell->Type = dwType;
+        HvMarkCellDirty(Hive, ValueCell->Data, FALSE);
+    }
+
+    HvMarkCellDirty(Hive, CellIndex, FALSE);
+
+    /* Check if the maximum value name length changed, update it if so */
+    if (KeyNode->MaxValueNameLen < ValueNameString.Length)
+        KeyNode->MaxValueNameLen = ValueNameString.Length;
+
+    /* Check if the maximum data length changed, update it if so */
+    if (KeyNode->MaxValueDataLen < cbData)
+        KeyNode->MaxValueDataLen = cbData;
+
+    /* Save the write time */
+    KeQuerySystemTime(&KeyNode->LastWriteTime);
+
+    DPRINT("Return status 0x%08x\n", Status);
+    return Status;
 }
 
-LONG WINAPI
-RegSetValueExA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName OPTIONAL,
-	IN ULONG Reserved,
-	IN ULONG dwType,
-	IN const UCHAR* lpData,
-	IN ULONG cbData)
+
+// Synced with freeldr/windows/registry.c
+static
+VOID
+RepGetValueData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE ValueCell,
+    OUT ULONG* Type OPTIONAL,
+    OUT PUCHAR Data OPTIONAL,
+    IN OUT ULONG* DataSize OPTIONAL)
 {
-	LPWSTR lpValueNameW = NULL;
-	const UCHAR* lpDataW;
-	USHORT cbDataW;
-	LONG rc = ERROR_SUCCESS;
+    ULONG DataLength;
+    PVOID DataCell;
 
-	DPRINT("RegSetValueA(%s)\n", lpValueName);
-	if (lpValueName)
-	{
-		lpValueNameW = MultiByteToWideChar(lpValueName);
-		if (!lpValueNameW)
-			return ERROR_OUTOFMEMORY;
-	}
+    /* Does the caller want the type? */
+    if (Type != NULL)
+        *Type = ValueCell->Type;
 
-	if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
-	 && cbData != 0)
-	{
-		ANSI_STRING AnsiString;
-		UNICODE_STRING Data;
+    /* Does the caller provide DataSize? */
+    if (DataSize != NULL)
+    {
+        // NOTE: CmpValueToData doesn't support big data (the function will
+        // bugcheck if so), FreeLdr is not supposed to read such data.
+        // If big data is needed, use instead CmpGetValueData.
+        // CmpGetValueData(Hive, ValueCell, DataSize, &DataCell, ...);
+        DataCell = CmpValueToData(Hive, ValueCell, &DataLength);
 
-		if (lpData[cbData - 1] != '\0')
-			cbData++;
-		RtlInitAnsiString(&AnsiString, NULL);
-		AnsiString.Buffer = (PSTR)lpData;
-		AnsiString.Length = (USHORT)cbData - 1;
-		AnsiString.MaximumLength = (USHORT)cbData;
-		RtlAnsiStringToUnicodeString (&Data, &AnsiString, TRUE);
-		lpDataW = (const UCHAR*)Data.Buffer;
-		cbDataW = Data.MaximumLength;
-	}
-	else
-	{
-		lpDataW = lpData;
-		cbDataW = (USHORT)cbData;
-	}
+        /* Does the caller want the data? */
+        if ((Data != NULL) && (*DataSize != 0))
+        {
+            RtlCopyMemory(Data,
+                          DataCell,
+                          min(*DataSize, DataLength));
+        }
 
-	if (rc == ERROR_SUCCESS)
-		rc = RegSetValueExW(hKey, lpValueNameW, 0, dwType, lpDataW, cbDataW);
-	if (lpValueNameW)
-		free(lpValueNameW);
-	if (lpData != lpDataW)
-		free((PVOID)lpDataW);
-	return rc;
+        /* Return the actual data length */
+        *DataSize = DataLength;
+    }
 }
 
+// Similar to RegQueryValue in freeldr/windows/registry.c
 LONG WINAPI
 RegQueryValueExW(
-	IN HKEY hKey,
-	IN LPCWSTR lpValueName,
-	IN PULONG lpReserved,
-	OUT PULONG lpType,
-	OUT PUCHAR lpData,
-	OUT PSIZE_T lpcbData)
+    IN HKEY hKey,
+    IN LPCWSTR lpValueName,
+    IN PULONG lpReserved,
+    OUT PULONG lpType OPTIONAL,
+    OUT PUCHAR lpData OPTIONAL,
+    IN OUT PULONG lpcbData OPTIONAL)
 {
-	//ParentKey = HKEY_TO_MEMKEY(RootKey);
-	PCM_KEY_VALUE ValueCell;
-	HCELL_INDEX ValueCellOffset;
-	LONG rc;
+    PMEMKEY ParentKey = HKEY_TO_MEMKEY(hKey);
+    PHHIVE Hive = &ParentKey->RegistryHive->Hive;
+    PCM_KEY_NODE KeyNode;
+    PCM_KEY_VALUE ValueCell;
+    HCELL_INDEX CellIndex;
+    UNICODE_STRING ValueNameString;
 
-	rc = RegpOpenOrCreateValue(
-			hKey,
-			lpValueName,
-			FALSE,
-			&ValueCell,
-			&ValueCellOffset);
-	if (rc != ERROR_SUCCESS)
-		return rc;
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, ParentKey->KeyCellOffset);
+    if (!KeyNode)
+        return ERROR_UNSUCCESSFUL;
 
-	DPRINT1("RegQueryValueExW(%S) not implemented\n", lpValueName);
-	/* ValueCell and ValueCellOffset are valid */
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
-	return ERROR_UNSUCCESSFUL;
-}
+    /* Initialize value name string */
+    RtlInitUnicodeString(&ValueNameString, lpValueName);
+    CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
+    if (CellIndex == HCELL_NIL)
+        return ERROR_FILE_NOT_FOUND;
 
-LONG WINAPI
-RegQueryValueExA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName,
-	IN PULONG lpReserved,
-	OUT PULONG lpType,
-	OUT PUCHAR lpData,
-	OUT PSIZE_T lpcbData)
-{
-	LPWSTR lpValueNameW = NULL;
-	LONG rc;
+    /* Get the value cell */
+    ValueCell = HvGetCell(Hive, CellIndex);
+    ASSERT(ValueCell != NULL);
 
-	if (lpValueName)
-	{
-		lpValueNameW = MultiByteToWideChar(lpValueName);
-		if (!lpValueNameW)
-			return ERROR_OUTOFMEMORY;
-	}
+    RepGetValueData(Hive, ValueCell, lpType, lpData, lpcbData);
 
-	rc = RegQueryValueExW(hKey, lpValueNameW, lpReserved, lpType, lpData, lpcbData);
-	if (lpValueNameW)
-		free(lpValueNameW);
-	return rc;
+    HvReleaseCell(Hive, CellIndex);
+
+    return ERROR_SUCCESS;
 }
 
 LONG WINAPI
 RegDeleteValueW(
-	IN HKEY hKey,
-	IN LPCWSTR lpValueName OPTIONAL)
+    IN HKEY hKey,
+    IN LPCWSTR lpValueName OPTIONAL)
 {
-	DPRINT1("RegDeleteValueW() unimplemented\n");
-	return ERROR_UNSUCCESSFUL;
+    DPRINT1("RegDeleteValueW(0x%p, '%S') is UNIMPLEMENTED!\n",
+            hKey, (lpValueName ? lpValueName : L""));
+    return ERROR_UNSUCCESSFUL;
 }
 
-LONG WINAPI
-RegDeleteValueA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName OPTIONAL)
-{
-	LPWSTR lpValueNameW;
-	LONG rc;
-
-	if (lpValueName)
-	{
-		lpValueNameW = MultiByteToWideChar(lpValueName);
-		if (!lpValueNameW)
-			return ERROR_OUTOFMEMORY;
-		rc = RegDeleteValueW(hKey, lpValueNameW);
-		free(lpValueNameW);
-	}
-	else
-		rc = RegDeleteValueW(hKey, NULL);
-	return rc;
-}
 
 static BOOL
 ConnectRegistry(
-	IN HKEY RootKey,
-	IN PCMHIVE HiveToConnect,
-	IN LPCWSTR Path)
+    IN HKEY RootKey,
+    IN PCMHIVE HiveToConnect,
+    IN PUCHAR Descriptor,
+    IN ULONG DescriptorLength,
+    IN LPCWSTR Path)
 {
-	NTSTATUS Status;
-	MEMKEY NewKey;
-	LONG rc;
+    NTSTATUS Status;
+    PREPARSE_POINT ReparsePoint;
+    PMEMKEY NewKey;
+    LONG rc;
 
-	Status = CmiInitializeTempHive(HiveToConnect);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("CmiInitializeTempHive() failed with status 0x%08x\n", Status);
-		return FALSE;
-	}
+    ReparsePoint = (PREPARSE_POINT)malloc(sizeof(REPARSE_POINT));
+    if (!ReparsePoint)
+        return FALSE;
 
-	/* Create key */
-	rc = RegCreateKeyW(
-		RootKey,
-		Path,
-		(PHKEY)&NewKey);
-	if (rc != ERROR_SUCCESS)
-		return FALSE;
+    /*
+     * Use a dummy root key name:
+     * - On 2k/XP/2k3, this is "$$$PROTO.HIV"
+     * - On Vista+, this is "CMI-CreateHive{guid}"
+     * See https://github.com/libyal/winreg-kb/blob/master/documentation/Registry%20files.asciidoc
+     * for more information.
+     */
+    Status = CmiInitializeHive(HiveToConnect, L"$$$PROTO.HIV");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CmiInitializeHive() failed with status 0x%08x\n", Status);
+        free(ReparsePoint);
+        return FALSE;
+    }
 
-	NewKey->RegistryHive = HiveToConnect;
-	NewKey->KeyCellOffset = HiveToConnect->Hive.BaseBlock->RootCell;
-	NewKey->KeyCell = (PCM_KEY_NODE)HvGetCell (&HiveToConnect->Hive, NewKey->KeyCellOffset);
-	return TRUE;
+    /*
+     * Add security to the root key.
+     * NOTE: One can implement this using the lpSecurityAttributes
+     * parameter of RegCreateKeyExW.
+     */
+    Status = CmiCreateSecurityKey(&HiveToConnect->Hive,
+                                  HiveToConnect->Hive.BaseBlock->RootCell,
+                                  Descriptor, DescriptorLength);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("Failed to add security for root key '%S'\n", Path);
+
+    /* Create key */
+    rc = RegCreateKeyExW(RootKey,
+                         Path,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         0,
+                         NULL,
+                         (PHKEY)&NewKey,
+                         NULL);
+    if (rc != ERROR_SUCCESS)
+    {
+        free(ReparsePoint);
+        return FALSE;
+    }
+
+    ReparsePoint->SourceHive = NewKey->RegistryHive;
+    ReparsePoint->SourceKeyCellOffset = NewKey->KeyCellOffset;
+    NewKey->RegistryHive = HiveToConnect;
+    NewKey->KeyCellOffset = HiveToConnect->Hive.BaseBlock->RootCell;
+    ReparsePoint->DestinationHive = NewKey->RegistryHive;
+    ReparsePoint->DestinationKeyCellOffset = NewKey->KeyCellOffset;
+    InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
+    return TRUE;
 }
 
 LIST_ENTRY CmiHiveListHead;
@@ -631,68 +829,91 @@ LIST_ENTRY CmiHiveListHead;
 VOID
 RegInitializeRegistry(VOID)
 {
-	UNICODE_STRING RootKeyName = RTL_CONSTANT_STRING(L"\\");
-	NTSTATUS Status;
-	HKEY ControlSetKey;
+    UNICODE_STRING RootKeyName = RTL_CONSTANT_STRING(L"\\");
+    NTSTATUS Status;
+    PMEMKEY ControlSetKey, CurrentControlSetKey;
+    PREPARSE_POINT ReparsePoint;
 
-	InitializeListHead(&CmiHiveListHead);
+    InitializeListHead(&CmiHiveListHead);
+    InitializeListHead(&CmiReparsePointsHead);
 
-	Status = CmiInitializeTempHive(&RootHive);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("CmiInitializeTempHive() failed with status 0x%08x\n", Status);
-		return;
-	}
+    Status = CmiInitializeHive(&RootHive, L"");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CmiInitializeHive() failed with status 0x%08x\n", Status);
+        return;
+    }
 
-	RootKey = CreateInMemoryStructure(
-		&RootHive,
-		RootHive.Hive.BaseBlock->RootCell,
-		&RootKeyName);
+    RootKey = CreateInMemoryStructure(&RootHive,
+                                      RootHive.Hive.BaseBlock->RootCell);
 
-	/* Create DEFAULT key */
-	ConnectRegistry(
-		NULL,
-		&DefaultHive,
-		L"Registry\\User\\.DEFAULT");
+    /* Create DEFAULT key */
+    ConnectRegistry(NULL,
+                    &DefaultHive,
+                    SystemSecurity, sizeof(SystemSecurity),
+                    L"Registry\\User\\.DEFAULT");
 
-	/* Create SAM key */
-	ConnectRegistry(
-		NULL,
-		&SamHive,
-		L"Registry\\Machine\\SAM");
+    /* Create SAM key */
+    ConnectRegistry(NULL,
+                    &SamHive,
+                    SystemSecurity, sizeof(SystemSecurity),
+                    L"Registry\\Machine\\SAM");
 
-	/* Create SECURITY key */
-	ConnectRegistry(
-		NULL,
-		&SecurityHive,
-		L"Registry\\Machine\\SECURITY");
+    /* Create SECURITY key */
+    ConnectRegistry(NULL,
+                    &SecurityHive,
+                    NULL, 0,
+                    L"Registry\\Machine\\SECURITY");
 
-	/* Create SOFTWARE key */
-	ConnectRegistry(
-		NULL,
-		&SoftwareHive,
-		L"Registry\\Machine\\SOFTWARE");
+    /* Create SOFTWARE key */
+    ConnectRegistry(NULL,
+                    &SoftwareHive,
+                    SoftwareSecurity, sizeof(SoftwareSecurity),
+                    L"Registry\\Machine\\SOFTWARE");
 
-	/* Create SYSTEM key */
-	ConnectRegistry(
-		NULL,
-		&SystemHive,
-		L"Registry\\Machine\\SYSTEM");
+    /* Create BCD key */
+    ConnectRegistry(NULL,
+                    &BcdHive,
+                    BcdSecurity, sizeof(BcdSecurity),
+                    L"Registry\\Machine\\BCD00000000");
 
-	/* Create 'ControlSet001' key */
-	RegCreateKeyW(
-		NULL,
-		L"Registry\\Machine\\SYSTEM\\ControlSet001",
-		&ControlSetKey);
+    /* Create SYSTEM key */
+    ConnectRegistry(NULL,
+                    &SystemHive,
+                    SystemSecurity, sizeof(SystemSecurity),
+                    L"Registry\\Machine\\SYSTEM");
+
+    /* Create 'ControlSet001' key */
+    RegCreateKeyW(NULL,
+                  L"Registry\\Machine\\SYSTEM\\ControlSet001",
+                  (HKEY*)&ControlSetKey);
+
+    /* Create 'CurrentControlSet' key */
+    RegCreateKeyExW(NULL,
+                    L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
+                    0,
+                    NULL,
+                    REG_OPTION_VOLATILE,
+                    0,
+                    NULL,
+                    (HKEY*)&CurrentControlSetKey,
+                    NULL);
+
+    /* Connect 'CurrentControlSet' to 'ControlSet001' */
+    ReparsePoint = (PREPARSE_POINT)malloc(sizeof(REPARSE_POINT));
+    ReparsePoint->SourceHive = CurrentControlSetKey->RegistryHive;
+    ReparsePoint->SourceKeyCellOffset = CurrentControlSetKey->KeyCellOffset;
+    ReparsePoint->DestinationHive = ControlSetKey->RegistryHive;
+    ReparsePoint->DestinationKeyCellOffset = ControlSetKey->KeyCellOffset;
+    InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
 }
 
 VOID
 RegShutdownRegistry(VOID)
 {
-	/* FIXME: clean up the complete hive */
+    /* FIXME: clean up the complete hive */
 
-	free(RootKey->Name);
-	free(RootKey);
+    free(RootKey);
 }
 
 /* EOF */

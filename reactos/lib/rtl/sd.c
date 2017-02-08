@@ -1062,28 +1062,28 @@ RtlValidSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
     _SEH2_TRY
     {
         /* Fail on bad revisions */
-        if (Sd->Revision != SECURITY_DESCRIPTOR_REVISION) return FALSE;
+        if (Sd->Revision != SECURITY_DESCRIPTOR_REVISION) _SEH2_YIELD(return FALSE);
 
         /* Owner SID must be valid if present */
         Owner = SepGetOwnerFromDescriptor(Sd);
-        if ((Owner) && (!RtlValidSid(Owner))) return FALSE;
+        if ((Owner) && (!RtlValidSid(Owner))) _SEH2_YIELD(return FALSE);
 
         /* Group SID must be valid if present */
         Group = SepGetGroupFromDescriptor(Sd);
-        if ((Owner) && (!RtlValidSid(Group))) return FALSE;
+        if ((Group) && (!RtlValidSid(Group))) _SEH2_YIELD(return FALSE);
 
         /* DACL must be valid if present */
         Dacl = SepGetDaclFromDescriptor(Sd);
-        if ((Dacl) && (!RtlValidAcl(Dacl))) return FALSE;
+        if ((Dacl) && (!RtlValidAcl(Dacl))) _SEH2_YIELD(return FALSE);
 
         /* SACL must be valid if present */
         Sacl = SepGetSaclFromDescriptor(Sd);
-        if ((Sacl) && (!RtlValidAcl(Sacl))) return FALSE;
+        if ((Sacl) && (!RtlValidAcl(Sacl))) _SEH2_YIELD(return FALSE);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Access fault, bail out */
-        return FALSE;
+        _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
 

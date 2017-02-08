@@ -18,23 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <wuapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
+#include "wuapi_private.h"
 
 typedef struct _automatic_updates
 {
@@ -205,11 +189,11 @@ static const struct IAutomaticUpdatesVtbl automatic_updates_vtbl =
     automatic_updates_EnableService
 };
 
-HRESULT AutomaticUpdates_create( IUnknown *pUnkOuter, LPVOID *ppObj )
+HRESULT AutomaticUpdates_create( LPVOID *ppObj )
 {
     automatic_updates *updates;
 
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+    TRACE("(%p)\n", ppObj);
 
     updates = HeapAlloc( GetProcessHeap(), 0, sizeof(*updates) );
     if (!updates) return E_OUTOFMEMORY;

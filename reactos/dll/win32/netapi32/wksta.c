@@ -18,28 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "netapi32.h"
 
-#include <stdarg.h>
-//#include <stdlib.h>
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <windef.h>
-#include <winbase.h>
-//#include "winsock2.h"
-//#include "nb30.h"
-//#include "lmcons.h"
-//#include "lmapibuf.h"
-//#include "lmerr.h"
-//#include "lmwksta.h"
-#include <iphlpapi.h>
-//#include "winerror.h"
-#include <ntsecapi.h>
-#include "netbios.h"
-#include <wine/debug.h>
+#include <lmwksta.h>
+#include <lmjoin.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
@@ -48,29 +30,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
  *
  * Checks whether the server name indicates local machine.
  */
-BOOL NETAPI_IsLocalComputer(LMCSTR ServerName)
+DECLSPEC_HIDDEN BOOL NETAPI_IsLocalComputer( LMCSTR name )
 {
-    if (!ServerName)
-    {
-        return TRUE;
-    }
-    else if (ServerName[0] == '\0')
-        return TRUE;
-    else
-    {
-        DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-        BOOL Result;
-        LPWSTR buf;
+    WCHAR buf[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD size = sizeof(buf) / sizeof(buf[0]);
+    BOOL ret;
 
-        NetApiBufferAllocate(dwSize * sizeof(WCHAR), (LPVOID *) &buf);
-        Result = GetComputerNameW(buf,  &dwSize);
-        if (Result && (ServerName[0] == '\\') && (ServerName[1] == '\\'))
-            ServerName += 2;
-        Result = Result && !lstrcmpW(ServerName, buf);
-        NetApiBufferFree(buf);
+    if (!name || !name[0]) return TRUE;
 
-        return Result;
-    }
+    ret = GetComputerNameW( buf,  &size );
+    if (ret && name[0] == '\\' && name[1] == '\\') name += 2;
+    return ret && !strcmpiW( name, buf );
 }
 
 static void wprint_mac(WCHAR* buffer, int len, const MIB_IFROW *ifRow)
@@ -340,7 +310,12 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
                 (lstrlenW(ui->wkui0_username) + 1) * sizeof(WCHAR),
                 (LPVOID *) bufptr);
             if (nastatus != NERR_Success)
+            {
+                NetApiBufferFree(ui);
                 return nastatus;
+            }
+            ui = (PWKSTA_USER_INFO_0) *bufptr;
+            ui->wkui0_username = (LMSTR) (*bufptr + sizeof(WKSTA_USER_INFO_0));
         }
         break;
     }
@@ -534,11 +509,11 @@ NET_API_STATUS WINAPI NetWkstaGetInfo( LMSTR servername, DWORD level,
                 ret = LsaNtStatusToWinError(NtStatus);
             else
             {
-                PPOLICY_ACCOUNT_DOMAIN_INFO DomainInfo;
+                PPOLICY_PRIMARY_DOMAIN_INFO DomainInfo;
 
                 LsaQueryInformationPolicy(PolicyHandle,
-                 PolicyAccountDomainInformation, (PVOID*)&DomainInfo);
-                domainNameLen = lstrlenW(DomainInfo->DomainName.Buffer) + 1;
+                 PolicyPrimaryDomainInformation, (PVOID*)&DomainInfo);
+                domainNameLen = lstrlenW(DomainInfo->Name.Buffer) + 1;
                 size = sizeof(WKSTA_INFO_102) + computerNameLen * sizeof(WCHAR)
                     + domainNameLen * sizeof(WCHAR) + sizeof(lanroot);
                 ret = NetApiBufferAllocate(size, (LPVOID *)bufptr);
@@ -554,7 +529,7 @@ NET_API_STATUS WINAPI NetWkstaGetInfo( LMSTR servername, DWORD level,
                     memcpy(info->wki102_computername, computerName,
                      computerNameLen * sizeof(WCHAR));
                     info->wki102_langroup = info->wki102_computername + computerNameLen;
-                    memcpy(info->wki102_langroup, DomainInfo->DomainName.Buffer,
+                    memcpy(info->wki102_langroup, DomainInfo->Name.Buffer,
                      domainNameLen * sizeof(WCHAR));
                     info->wki102_lanroot = info->wki102_langroup + domainNameLen;
                     memcpy(info->wki102_lanroot, lanroot, sizeof(lanroot));
@@ -588,9 +563,11 @@ NET_API_STATUS NET_API_FUNCTION NetGetJoinInformation(
 {
     FIXME("Stub %s %p %p\n", wine_dbgstr_w(Server), Name, type);
 
+    if (Name == NULL || type == NULL)
+        return ERROR_INVALID_PARAMETER;
+
     *Name = NULL;
     *type = NetSetupUnknownStatus;
 
     return NERR_Success;
 }
-

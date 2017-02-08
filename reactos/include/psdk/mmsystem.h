@@ -38,7 +38,10 @@ extern "C" {
 #define mmioFOURCC(c0,c1,c2,c3) MAKEFOURCC(c0,c1,c2,c3)
 #endif
 
+#ifndef MM_MICROSOFT
 #define MM_MICROSOFT            1       /* Microsoft Corp. */
+#endif
+
 #define MM_CREATIVE             2       /* Creative labs   */
 
 #define MM_JOY1MOVE           0x3A0
@@ -1702,194 +1705,927 @@ typedef struct tagMCI_WAVE_SET_PARMS {
 	WORD wReserved5;
 } MCI_WAVE_SET_PARMS,*PMCI_WAVE_SET_PARMS,*LPMCI_WAVE_SET_PARMS;
 
-LRESULT WINAPI CloseDriver(HDRVR,LPARAM,LPARAM);
-HDRVR WINAPI OpenDriver(LPCWSTR,LPCWSTR,LPARAM);
-LRESULT WINAPI SendDriverMessage(HDRVR,UINT,LPARAM,LPARAM);
-HMODULE WINAPI DrvGetModuleHandle(HDRVR);
-HMODULE WINAPI GetDriverModuleHandle(HDRVR);
-LRESULT WINAPI DefDriverProc(DWORD_PTR,HDRVR,UINT,LPARAM,LPARAM);
+typedef struct tagWAVEOUTCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEOUTCAPS2A, *LPWAVEOUTCAPS2A;
+
+typedef struct tagWAVEOUTCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEOUTCAPS2W, *LPWAVEOUTCAPS2W;
+
+typedef struct tagWAVEINCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEINCAPS2A, *LPWAVEINCAPS2A;
+
+typedef struct tagWAVEINCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEINCAPS2W, *LPWAVEINCAPS2W;
+
+typedef struct tagMIDIOUTCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wVoices;
+  WORD wNotes;
+  WORD wChannelMask;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIOUTCAPS2A, *LPMIDIOUTCAPS2A;
+
+typedef struct tagMIDIOUTCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wVoices;
+  WORD wNotes;
+  WORD wChannelMask;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIOUTCAPS2W, *LPMIDIOUTCAPS2W;
+
+typedef struct tagMIDIINCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIINCAPS2A, *LPMIDIINCAPS2A;
+
+typedef struct tagMIDIINCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIINCAPS2W, *LPMIDIINCAPS2W;
+
+typedef struct tagAUXCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} AUXCAPS2A, *LPAUXCAPS2A;
+
+typedef struct tagAUXCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} AUXCAPS2W, *LPAUXCAPS2W;
+
+typedef struct tagMIXERCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD fdwSupport;
+  DWORD cDestinations;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIXERCAPS2A,*LPMIXERCAPS2A;
+
+typedef struct tagMIXERCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD fdwSupport;
+  DWORD cDestinations;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIXERCAPS2W,*LPMIXERCAPS2W;
+
+typedef struct tagJOYCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  CHAR szPname[MAXPNAMELEN];
+  UINT wXmin;
+  UINT wXmax;
+  UINT wYmin;
+  UINT wYmax;
+  UINT wZmin;
+  UINT wZmax;
+  UINT wNumButtons;
+  UINT wPeriodMin;
+  UINT wPeriodMax;
+  UINT wRmin;
+  UINT wRmax;
+  UINT wUmin;
+  UINT wUmax;
+  UINT wVmin;
+  UINT wVmax;
+  UINT wCaps;
+  UINT wMaxAxes;
+  UINT wNumAxes;
+  UINT wMaxButtons;
+  CHAR szRegKey[MAXPNAMELEN];
+  CHAR szOEMVxD[MAX_JOYSTICKOEMVXDNAME];
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} JOYCAPS2A, *LPJOYCAPS2A;
+
+typedef struct tagJOYCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  WCHAR szPname[MAXPNAMELEN];
+  UINT wXmin;
+  UINT wXmax;
+  UINT wYmin;
+  UINT wYmax;
+  UINT wZmin;
+  UINT wZmax;
+  UINT wNumButtons;
+  UINT wPeriodMin;
+  UINT wPeriodMax;
+  UINT wRmin;
+  UINT wRmax;
+  UINT wUmin;
+  UINT wUmax;
+  UINT wVmin;
+  UINT wVmax;
+  UINT wCaps;
+  UINT wMaxAxes;
+  UINT wNumAxes;
+  UINT wMaxButtons;
+  WCHAR szRegKey[MAXPNAMELEN];
+  WCHAR szOEMVxD[MAX_JOYSTICKOEMVXDNAME];
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} JOYCAPS2W, *LPJOYCAPS2W;
+
+LRESULT WINAPI CloseDriver(_In_ HDRVR, _In_ LPARAM, _In_ LPARAM);
+HDRVR WINAPI OpenDriver(_In_ LPCWSTR, _In_ LPCWSTR, _In_ LPARAM);
+LRESULT WINAPI SendDriverMessage(_In_ HDRVR, _In_ UINT, _In_ LPARAM, _In_ LPARAM);
+HMODULE WINAPI DrvGetModuleHandle(_In_ HDRVR);
+HMODULE WINAPI GetDriverModuleHandle(_In_ HDRVR);
+
+LRESULT
+WINAPI
+DefDriverProc(
+  _In_ DWORD_PTR,
+  _In_ HDRVR,
+  _In_ UINT,
+  _In_ LPARAM,
+  _In_ LPARAM);
+
 UINT WINAPI mmsystemGetVersion(void);
 #define OutputDebugStr OutputDebugString
-BOOL WINAPI sndPlaySoundA(LPCSTR,UINT);
-BOOL WINAPI sndPlaySoundW(LPCWSTR,UINT);
-BOOL WINAPI PlaySoundA(LPCSTR,HMODULE,DWORD);
-BOOL WINAPI PlaySoundW(LPCWSTR,HMODULE,DWORD);
+BOOL WINAPI sndPlaySoundA(_In_opt_ LPCSTR, _In_ UINT);
+BOOL WINAPI sndPlaySoundW(_In_opt_ LPCWSTR, _In_ UINT);
+BOOL WINAPI PlaySoundA(_In_opt_ LPCSTR, _In_opt_ HMODULE, _In_ DWORD);
+BOOL WINAPI PlaySoundW(_In_opt_ LPCWSTR, _In_opt_ HMODULE, _In_ DWORD);
 UINT WINAPI waveOutGetNumDevs(void);
-MMRESULT WINAPI waveOutGetDevCapsA(UINT_PTR,LPWAVEOUTCAPSA,UINT);
-MMRESULT WINAPI waveOutGetDevCapsW(UINT_PTR,LPWAVEOUTCAPSW,UINT);
-MMRESULT WINAPI waveOutGetVolume(HWAVEOUT,PDWORD);
-MMRESULT WINAPI waveOutSetVolume(HWAVEOUT,DWORD);
-MMRESULT WINAPI waveOutGetErrorTextA(MMRESULT,LPSTR,UINT);
-MMRESULT WINAPI waveOutGetErrorTextW(MMRESULT,LPWSTR,UINT);
-MMRESULT WINAPI waveOutOpen(LPHWAVEOUT,UINT,LPCWAVEFORMATEX,DWORD_PTR,DWORD_PTR,DWORD);
-MMRESULT WINAPI waveOutClose(HWAVEOUT);
-MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT,LPWAVEHDR,UINT);
-MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT,LPWAVEHDR,UINT);
-MMRESULT WINAPI waveOutWrite(HWAVEOUT,LPWAVEHDR,UINT);
-MMRESULT WINAPI waveOutPause(HWAVEOUT);
-MMRESULT WINAPI waveOutRestart(HWAVEOUT);
-MMRESULT WINAPI waveOutReset(HWAVEOUT);
-MMRESULT WINAPI waveOutBreakLoop(HWAVEOUT);
-MMRESULT WINAPI waveOutGetPosition(HWAVEOUT,LPMMTIME,UINT);
-MMRESULT WINAPI waveOutGetPitch(HWAVEOUT,PDWORD);
-MMRESULT WINAPI waveOutSetPitch(HWAVEOUT,DWORD);
-MMRESULT WINAPI waveOutGetPlaybackRate(HWAVEOUT,PDWORD);
-MMRESULT WINAPI waveOutSetPlaybackRate(HWAVEOUT,DWORD);
-MMRESULT WINAPI waveOutGetID(HWAVEOUT,LPUINT);
+MMRESULT WINAPI waveOutGetDevCapsA(_In_ UINT_PTR, _Out_ LPWAVEOUTCAPSA, _In_ UINT);
+MMRESULT WINAPI waveOutGetDevCapsW(_In_ UINT_PTR, _Out_ LPWAVEOUTCAPSW, _In_ UINT);
+MMRESULT WINAPI waveOutGetVolume(_In_opt_ HWAVEOUT, _Out_ PDWORD);
+MMRESULT WINAPI waveOutSetVolume(_In_opt_ HWAVEOUT, _In_ DWORD);
+
+MMRESULT
+WINAPI
+waveOutGetErrorTextA(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+waveOutGetErrorTextW(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPWSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+waveOutOpen(
+  _Out_opt_ LPHWAVEOUT,
+  _In_ UINT,
+  _In_ LPCWAVEFORMATEX,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR,
+  _In_ DWORD);
+
+MMRESULT WINAPI waveOutClose(_In_ HWAVEOUT);
+
+MMRESULT
+WINAPI
+waveOutPrepareHeader(
+  _In_ HWAVEOUT hwo,
+  _Inout_updates_bytes_(cbwh) LPWAVEHDR pwh,
+  _In_ UINT cbwh);
+
+MMRESULT
+WINAPI
+waveOutUnprepareHeader(
+  _In_ HWAVEOUT hwo,
+  _Inout_updates_bytes_(cbwh) LPWAVEHDR pwh,
+  _In_ UINT cbwh);
+
+MMRESULT
+WINAPI
+waveOutWrite(
+  _In_ HWAVEOUT hwo,
+  _Inout_updates_bytes_(cbwh) LPWAVEHDR pwh,
+  _In_ UINT cbwh);
+
+MMRESULT WINAPI waveOutPause(_In_ HWAVEOUT);
+MMRESULT WINAPI waveOutRestart(_In_ HWAVEOUT);
+MMRESULT WINAPI waveOutReset(_In_ HWAVEOUT);
+MMRESULT WINAPI waveOutBreakLoop(_In_ HWAVEOUT);
+
+MMRESULT
+WINAPI
+waveOutGetPosition(
+  _In_ HWAVEOUT hwo,
+  _Inout_updates_bytes_(cbmmt) LPMMTIME pmmt,
+  _In_ UINT cbmmt);
+
+MMRESULT WINAPI waveOutGetPitch(_In_ HWAVEOUT, _Out_ PDWORD);
+MMRESULT WINAPI waveOutSetPitch(_In_ HWAVEOUT, _In_ DWORD);
+MMRESULT WINAPI waveOutGetPlaybackRate(_In_ HWAVEOUT, _Out_ PDWORD);
+MMRESULT WINAPI waveOutSetPlaybackRate(_In_ HWAVEOUT, _In_ DWORD);
+MMRESULT WINAPI waveOutGetID(_In_ HWAVEOUT, _Out_ LPUINT);
+
 #if (WINVER >= 0x030a)
 #ifdef _WIN32
-MMRESULT WINAPI waveOutMessage(HWAVEOUT,UINT,DWORD_PTR,DWORD_PTR);
+MMRESULT WINAPI waveOutMessage(_In_opt_ HWAVEOUT, _In_ UINT, _In_ DWORD_PTR, _In_ DWORD_PTR);
 #else
 DWORD WINAPI waveOutMessage(HWAVEOUT,UINT,DWORD,DWORD);
 #endif
 #endif
+
 UINT WINAPI waveInGetNumDevs(void);
-MMRESULT WINAPI waveInGetDevCapsA(UINT_PTR,LPWAVEINCAPSA,UINT);
-MMRESULT WINAPI waveInGetDevCapsW(UINT_PTR,LPWAVEINCAPSW,UINT);
-MMRESULT WINAPI waveInGetErrorTextA(MMRESULT,LPSTR,UINT);
-MMRESULT WINAPI waveInGetErrorTextW(MMRESULT,LPWSTR,UINT);
-MMRESULT WINAPI waveInOpen(LPHWAVEIN,UINT,LPCWAVEFORMATEX,DWORD_PTR,DWORD_PTR,DWORD);
-MMRESULT WINAPI waveInClose(HWAVEIN);
-MMRESULT WINAPI waveInPrepareHeader(HWAVEIN,LPWAVEHDR,UINT);
-MMRESULT WINAPI waveInUnprepareHeader(HWAVEIN,LPWAVEHDR,UINT);
-MMRESULT WINAPI waveInAddBuffer(HWAVEIN,LPWAVEHDR,UINT);
-MMRESULT WINAPI waveInStart(HWAVEIN);
-MMRESULT WINAPI waveInStop(HWAVEIN);
-MMRESULT WINAPI waveInReset(HWAVEIN);
-MMRESULT WINAPI waveInGetPosition(HWAVEIN,LPMMTIME,UINT);
-MMRESULT WINAPI waveInGetID(HWAVEIN,LPUINT);
+
+MMRESULT
+WINAPI
+waveInGetDevCapsA(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbwic) LPWAVEINCAPSA pwic,
+  _In_ UINT cbwic);
+
+MMRESULT
+WINAPI
+waveInGetDevCapsW(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbwic) LPWAVEINCAPSW pwic,
+  _In_ UINT cbwic);
+
+MMRESULT
+WINAPI
+waveInGetErrorTextA(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+waveInGetErrorTextW(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPWSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+waveInOpen(
+  _Out_opt_ LPHWAVEIN,
+  _In_ UINT,
+  _In_ LPCWAVEFORMATEX,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR,
+  _In_ DWORD);
+
+MMRESULT WINAPI waveInClose(_In_ HWAVEIN);
+
+MMRESULT
+WINAPI
+waveInPrepareHeader(
+  _In_ HWAVEIN hwi,
+  _Inout_updates_bytes_(cbwh) LPWAVEHDR pwh,
+  _In_ UINT cbwh);
+
+MMRESULT
+WINAPI
+waveInUnprepareHeader(
+  _In_ HWAVEIN hwi,
+  _Inout_updates_bytes_(cbwh) LPWAVEHDR pwh,
+  _In_ UINT cbwh);
+
+MMRESULT
+WINAPI
+waveInAddBuffer(
+  _In_ HWAVEIN hwi,
+  _Inout_updates_bytes_(cbwh) LPWAVEHDR pwh,
+  _In_ UINT cbwh);
+
+MMRESULT WINAPI waveInStart(_In_ HWAVEIN);
+MMRESULT WINAPI waveInStop(_In_ HWAVEIN);
+MMRESULT WINAPI waveInReset(_In_ HWAVEIN);
+
+MMRESULT
+WINAPI
+waveInGetPosition(
+  _In_ HWAVEIN hwi,
+  _Inout_updates_bytes_(cbmmt) LPMMTIME pmmt,
+  _In_ UINT cbmmt);
+
+MMRESULT WINAPI waveInGetID(_In_ HWAVEIN, _In_ LPUINT);
+
 #if (WINVER >= 0x030a)
 #ifdef _WIN32
-MMRESULT WINAPI waveInMessage(HWAVEIN,UINT,DWORD_PTR,DWORD_PTR);
+MMRESULT WINAPI waveInMessage(_In_opt_ HWAVEIN, _In_ UINT, _In_opt_ DWORD_PTR, _In_opt_ DWORD_PTR);
 #else
 DWORD WINAPI waveInMessage(HWAVEIN,UINT,DWORD,DWORD);
 #endif
 #endif
 UINT WINAPI midiOutGetNumDevs(void);
-MMRESULT WINAPI midiStreamOpen(LPHMIDISTRM,LPUINT,DWORD,DWORD_PTR,DWORD_PTR,DWORD);
-MMRESULT WINAPI midiStreamClose(HMIDISTRM);
-MMRESULT WINAPI midiStreamProperty(HMIDISTRM,LPBYTE,DWORD);
-MMRESULT WINAPI midiStreamPosition(HMIDISTRM,LPMMTIME,UINT);
-MMRESULT WINAPI midiStreamOut(HMIDISTRM,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiStreamPause(HMIDISTRM);
-MMRESULT WINAPI midiStreamRestart(HMIDISTRM);
-MMRESULT WINAPI midiStreamStop(HMIDISTRM);
-MMRESULT WINAPI midiConnect(HMIDI,HMIDIOUT,PVOID);
-MMRESULT WINAPI midiDisconnect(HMIDI,HMIDIOUT,PVOID);
-MMRESULT WINAPI midiOutGetDevCapsA(UINT_PTR,LPMIDIOUTCAPSA,UINT);
-MMRESULT WINAPI midiOutGetDevCapsW(UINT_PTR,LPMIDIOUTCAPSW,UINT);
-MMRESULT WINAPI midiOutGetVolume(HMIDIOUT,PDWORD);
-MMRESULT WINAPI midiOutSetVolume(HMIDIOUT,DWORD);
-MMRESULT WINAPI midiOutGetErrorTextA(MMRESULT,LPSTR,UINT);
-MMRESULT WINAPI midiOutGetErrorTextW(MMRESULT,LPWSTR,UINT);
-MMRESULT WINAPI midiOutOpen(LPHMIDIOUT,UINT,DWORD_PTR,DWORD_PTR,DWORD);
-MMRESULT WINAPI midiOutClose(HMIDIOUT);
-MMRESULT WINAPI midiOutPrepareHeader(HMIDIOUT,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiOutUnprepareHeader(HMIDIOUT,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiOutShortMsg(HMIDIOUT,DWORD);
-MMRESULT WINAPI midiOutLongMsg(HMIDIOUT,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiOutReset(HMIDIOUT);
-MMRESULT WINAPI midiOutCachePatches(HMIDIOUT,UINT,LPWORD,UINT);
-MMRESULT WINAPI midiOutCacheDrumPatches(HMIDIOUT,UINT,LPWORD,UINT);
-MMRESULT WINAPI midiOutGetID(HMIDIOUT,LPUINT);
+
+MMRESULT
+WINAPI
+midiStreamOpen(
+  _Out_ LPHMIDISTRM phms,
+  _Inout_updates_(cMidi) LPUINT puDeviceID,
+  _In_ DWORD cMidi,
+  _In_opt_ DWORD_PTR dwCallback,
+  _In_opt_ DWORD_PTR dwInstance,
+  _In_ DWORD fdwOpen);
+
+MMRESULT WINAPI midiStreamClose(_In_ HMIDISTRM);
+
+MMRESULT
+WINAPI
+midiStreamProperty(
+  _In_ HMIDISTRM hms,
+  _Inout_updates_bytes_(sizeof(DWORD) + sizeof(DWORD)) LPBYTE lppropdata,
+  _In_ DWORD dwProperty);
+
+MMRESULT
+WINAPI
+midiStreamPosition(
+  _In_ HMIDISTRM hms,
+  _Out_writes_bytes_(cbmmt) LPMMTIME lpmmt,
+  _In_ UINT cbmmt);
+
+MMRESULT
+WINAPI
+midiStreamOut(
+  _In_ HMIDISTRM hms,
+  _Out_writes_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT WINAPI midiStreamPause(_In_ HMIDISTRM);
+MMRESULT WINAPI midiStreamRestart(_In_ HMIDISTRM);
+MMRESULT WINAPI midiStreamStop(_In_ HMIDISTRM);
+MMRESULT WINAPI midiConnect(_In_ HMIDI, _In_ HMIDIOUT, _In_opt_ PVOID);
+MMRESULT WINAPI midiDisconnect(_In_ HMIDI, _In_ HMIDIOUT, _In_opt_ PVOID);
+
+MMRESULT
+WINAPI
+midiOutGetDevCapsA(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbmoc) LPMIDIOUTCAPSA pmoc,
+  _In_ UINT cbmoc);
+
+MMRESULT
+WINAPI
+midiOutGetDevCapsW(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbmoc) LPMIDIOUTCAPSW pmoc,
+  _In_ UINT cbmoc);
+
+MMRESULT WINAPI midiOutGetVolume(_In_opt_ HMIDIOUT, _Out_ PDWORD);
+MMRESULT WINAPI midiOutSetVolume(_In_opt_ HMIDIOUT, _In_ DWORD);
+
+MMRESULT
+WINAPI
+midiOutGetErrorTextA(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+midiOutGetErrorTextW(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPWSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+midiOutOpen(
+  _Out_ LPHMIDIOUT,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR,
+  _In_ DWORD);
+
+MMRESULT WINAPI midiOutClose(_In_ HMIDIOUT);
+
+MMRESULT
+WINAPI
+midiOutPrepareHeader(
+  _In_ HMIDIOUT hmo,
+  _Inout_updates_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT
+WINAPI
+midiOutUnprepareHeader(
+  _In_ HMIDIOUT hmo,
+  _Inout_updates_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT WINAPI midiOutShortMsg(_In_ HMIDIOUT, _In_ DWORD);
+
+MMRESULT
+WINAPI
+midiOutLongMsg(
+  _In_ HMIDIOUT hmo,
+  _In_reads_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT WINAPI midiOutReset(_In_ HMIDIOUT);
+
+MMRESULT
+WINAPI
+midiOutCachePatches(
+  _In_ HMIDIOUT hmo,
+  _In_ UINT uBank,
+  _In_reads_(MIDIPATCHSIZE) LPWORD pwpa,
+  _In_ UINT fuCache);
+
+MMRESULT
+WINAPI
+midiOutCacheDrumPatches(
+  _In_ HMIDIOUT hmo,
+  _In_ UINT uPatch,
+  _In_reads_(MIDIPATCHSIZE) LPWORD pwkya,
+  _In_ UINT fuCache);
+
+MMRESULT WINAPI midiOutGetID(_In_ HMIDIOUT, _Out_ LPUINT);
+
 #if (WINVER >= 0x030a)
 #ifdef _WIN32
-MMRESULT WINAPI midiOutMessage(HMIDIOUT,UINT,DWORD_PTR,DWORD_PTR);
+MMRESULT WINAPI midiOutMessage(_In_opt_ HMIDIOUT, _In_ UINT, _In_opt_ DWORD_PTR, _In_opt_ DWORD_PTR);
 #else
 DWORD WINAPI midiOutMessage(HMIDIOUT,UINT,DWORD,DWORD);
 #endif
 #endif
+
 UINT WINAPI midiInGetNumDevs(void);
-MMRESULT WINAPI midiInGetDevCapsA(UINT_PTR,LPMIDIINCAPSA,UINT);
-MMRESULT WINAPI midiInGetDevCapsW(UINT_PTR,LPMIDIINCAPSW,UINT);
-MMRESULT WINAPI midiInGetErrorTextA(MMRESULT,LPSTR,UINT);
-MMRESULT WINAPI midiInGetErrorTextW(MMRESULT,LPWSTR,UINT);
-MMRESULT WINAPI midiInOpen(LPHMIDIIN,UINT,DWORD_PTR,DWORD_PTR,DWORD);
-MMRESULT WINAPI midiInClose(HMIDIIN);
-MMRESULT WINAPI midiInPrepareHeader(HMIDIIN,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiInUnprepareHeader(HMIDIIN,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiInAddBuffer(HMIDIIN,LPMIDIHDR,UINT);
-MMRESULT WINAPI midiInStart(HMIDIIN);
-MMRESULT WINAPI midiInStop(HMIDIIN);
-MMRESULT WINAPI midiInReset(HMIDIIN);
-MMRESULT WINAPI midiInGetID(HMIDIIN,LPUINT);
+
+MMRESULT
+WINAPI
+midiInGetDevCapsA(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbmic) LPMIDIINCAPSA pmic,
+  _In_ UINT cbmic);
+
+MMRESULT
+WINAPI
+midiInGetDevCapsW(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbmic) LPMIDIINCAPSW pmic,
+  _In_ UINT cbmic);
+
+MMRESULT
+WINAPI
+midiInGetErrorTextA(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+midiInGetErrorTextW(
+  _In_ MMRESULT mmrError,
+  _Out_writes_(cchText) LPWSTR pszText,
+  _In_ UINT cchText);
+
+MMRESULT
+WINAPI
+midiInOpen(
+  _Out_ LPHMIDIIN,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR,
+  _In_ DWORD);
+
+MMRESULT WINAPI midiInClose(_In_ HMIDIIN);
+
+MMRESULT
+WINAPI
+midiInPrepareHeader(
+  _In_ HMIDIIN hmi,
+  _Inout_updates_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT
+WINAPI
+midiInUnprepareHeader(
+  _In_ HMIDIIN hmi,
+  _Inout_updates_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT
+WINAPI
+midiInAddBuffer(
+  _In_ HMIDIIN hmi,
+  _Out_writes_bytes_(cbmh) LPMIDIHDR pmh,
+  _In_ UINT cbmh);
+
+MMRESULT WINAPI midiInStart(_In_ HMIDIIN);
+MMRESULT WINAPI midiInStop(_In_ HMIDIIN);
+MMRESULT WINAPI midiInReset(_In_ HMIDIIN);
+MMRESULT WINAPI midiInGetID(_In_ HMIDIIN, _Out_ LPUINT);
+
 #if (WINVER >= 0x030a)
 #ifdef _WIN32
-MMRESULT WINAPI midiInMessage(HMIDIIN,UINT,DWORD_PTR,DWORD_PTR);
+MMRESULT WINAPI midiInMessage(_In_opt_ HMIDIIN, _In_ UINT, _In_opt_ DWORD_PTR, _In_opt_ DWORD_PTR);
 #else
 DWORD WINAPI midiInMessage(HMIDIIN,UINT,DWORD,DWORD);
 #endif
 #endif
+
 UINT WINAPI auxGetNumDevs(void);
-MMRESULT WINAPI auxGetDevCapsA(UINT_PTR,LPAUXCAPSA,UINT);
-MMRESULT WINAPI auxGetDevCapsW(UINT_PTR,LPAUXCAPSW,UINT);
-MMRESULT WINAPI auxSetVolume(UINT,DWORD);
-MMRESULT WINAPI auxGetVolume(UINT,PDWORD);
-MMRESULT WINAPI auxOutMessage(UINT,UINT,DWORD_PTR,DWORD_PTR);
+
+MMRESULT
+WINAPI
+auxGetDevCapsA(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbac) LPAUXCAPSA pac,
+  _In_ UINT cbac);
+
+MMRESULT
+WINAPI
+auxGetDevCapsW(
+  _In_ UINT_PTR uDeviceID,
+  _Out_writes_bytes_(cbac) LPAUXCAPSW pac,
+  _In_ UINT cbac);
+
+MMRESULT WINAPI auxSetVolume(_In_ UINT, _In_ DWORD);
+MMRESULT WINAPI auxGetVolume(_In_ UINT, _Out_ PDWORD);
+
+MMRESULT
+WINAPI
+auxOutMessage(
+  _In_ UINT,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR);
+
 UINT WINAPI mixerGetNumDevs(void);
-MMRESULT WINAPI mixerGetDevCapsA(UINT_PTR,LPMIXERCAPSA,UINT);
-MMRESULT WINAPI mixerGetDevCapsW(UINT_PTR,LPMIXERCAPSW,UINT);
-MMRESULT WINAPI mixerOpen(LPHMIXER,UINT,DWORD_PTR,DWORD_PTR,DWORD);
-MMRESULT WINAPI mixerClose(HMIXER);
-DWORD WINAPI mixerMessage(HMIXER,UINT,DWORD_PTR,DWORD_PTR);
-MMRESULT WINAPI mixerGetLineInfoA(HMIXEROBJ,LPMIXERLINEA,DWORD);
-MMRESULT WINAPI mixerGetLineInfoW(HMIXEROBJ,LPMIXERLINEW,DWORD);
-MMRESULT WINAPI mixerGetID(HMIXEROBJ,PUINT,DWORD);
-MMRESULT WINAPI mixerGetLineControlsA(HMIXEROBJ,LPMIXERLINECONTROLSA,DWORD);
-MMRESULT WINAPI mixerGetLineControlsW(HMIXEROBJ,LPMIXERLINECONTROLSW,DWORD);
-MMRESULT WINAPI mixerGetControlDetailsA(HMIXEROBJ,LPMIXERCONTROLDETAILS,DWORD);
-MMRESULT WINAPI mixerGetControlDetailsW(HMIXEROBJ,LPMIXERCONTROLDETAILS,DWORD);
-MMRESULT WINAPI mixerSetControlDetails(HMIXEROBJ,LPMIXERCONTROLDETAILS,DWORD);
-MMRESULT WINAPI timeGetSystemTime(LPMMTIME,UINT);
+
+MMRESULT
+WINAPI
+mixerGetDevCapsA(
+  _In_ UINT_PTR uMxId,
+  _Out_writes_bytes_(cbmxcaps) LPMIXERCAPSA pmxcaps,
+  _In_ UINT cbmxcaps);
+
+MMRESULT
+WINAPI
+mixerGetDevCapsW(
+  _In_ UINT_PTR uMxId,
+  _Out_writes_bytes_(cbmxcaps) LPMIXERCAPSW pmxcaps,
+  _In_ UINT cbmxcaps);
+
+MMRESULT
+WINAPI
+mixerOpen(
+  _Out_opt_ LPHMIXER,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR,
+  _In_ DWORD);
+
+MMRESULT WINAPI mixerClose(_In_ HMIXER);
+
+DWORD
+WINAPI
+mixerMessage(
+  _In_opt_ HMIXER,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR);
+
+MMRESULT
+WINAPI
+mixerGetLineInfoA(
+  _In_opt_ HMIXEROBJ,
+  _Inout_ LPMIXERLINEA,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+mixerGetLineInfoW(
+  _In_opt_ HMIXEROBJ,
+  _Inout_ LPMIXERLINEW,
+  _In_ DWORD);
+
+MMRESULT WINAPI mixerGetID(_In_opt_ HMIXEROBJ, _Out_ PUINT, _In_ DWORD);
+
+MMRESULT
+WINAPI
+mixerGetLineControlsA(
+  _In_opt_ HMIXEROBJ,
+  _Inout_ LPMIXERLINECONTROLSA,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+mixerGetLineControlsW(
+  _In_opt_ HMIXEROBJ,
+  _Inout_ LPMIXERLINECONTROLSW,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+mixerGetControlDetailsA(
+  _In_opt_ HMIXEROBJ,
+  _Inout_ LPMIXERCONTROLDETAILS,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+mixerGetControlDetailsW(
+  _In_opt_ HMIXEROBJ,
+  _Inout_ LPMIXERCONTROLDETAILS,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+mixerSetControlDetails(
+  _In_opt_ HMIXEROBJ,
+  _In_ LPMIXERCONTROLDETAILS,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+timeGetSystemTime(
+  _Out_writes_bytes_(cbmmt) LPMMTIME pmmt,
+  _In_ UINT cbmmt);
+
 DWORD WINAPI timeGetTime(void);
-MMRESULT WINAPI timeSetEvent(UINT,UINT,LPTIMECALLBACK,DWORD_PTR,UINT);
-MMRESULT WINAPI timeKillEvent(UINT);
-MMRESULT WINAPI timeGetDevCaps(LPTIMECAPS,UINT);
-MMRESULT WINAPI timeBeginPeriod(UINT);
-MMRESULT WINAPI timeEndPeriod(UINT);
+
+MMRESULT
+WINAPI
+timeSetEvent(
+  _In_ UINT,
+  _In_ UINT,
+  _In_ LPTIMECALLBACK,
+  _In_ DWORD_PTR,
+  _In_ UINT);
+
+MMRESULT WINAPI timeKillEvent(_In_ UINT);
+
+MMRESULT
+WINAPI
+timeGetDevCaps(
+  _Out_writes_bytes_(cbtc) LPTIMECAPS ptc,
+  _In_ UINT cbtc);
+
+MMRESULT WINAPI timeBeginPeriod(_In_ UINT);
+MMRESULT WINAPI timeEndPeriod(_In_ UINT);
 UINT WINAPI joyGetNumDevs(void);
-MMRESULT WINAPI joyGetDevCapsA(UINT_PTR,LPJOYCAPSA,UINT);
-MMRESULT WINAPI joyGetDevCapsW(UINT_PTR,LPJOYCAPSW,UINT);
-MMRESULT WINAPI joyGetPos(UINT,LPJOYINFO);
-MMRESULT WINAPI joyGetPosEx(UINT,LPJOYINFOEX);
-MMRESULT WINAPI joyGetThreshold(UINT,LPUINT);
-MMRESULT WINAPI joyReleaseCapture(UINT);
-MMRESULT WINAPI joySetCapture(HWND,UINT,UINT,BOOL);
-MMRESULT WINAPI joySetThreshold(UINT,UINT);
-FOURCC WINAPI mmioStringToFOURCCA(LPCSTR,UINT);
-FOURCC WINAPI mmioStringToFOURCCW(LPCWSTR,UINT);
-LPMMIOPROC WINAPI mmioInstallIOProcA(FOURCC,LPMMIOPROC,DWORD);
-LPMMIOPROC WINAPI mmioInstallIOProcW(FOURCC,LPMMIOPROC,DWORD);
-HMMIO WINAPI mmioOpenA(LPSTR,LPMMIOINFO,DWORD);
-HMMIO WINAPI mmioOpenW(LPWSTR,LPMMIOINFO,DWORD);
-MMRESULT WINAPI mmioRenameA(LPCSTR,LPCSTR,LPCMMIOINFO,DWORD);
-MMRESULT WINAPI mmioRenameW(LPCWSTR,LPCWSTR,LPCMMIOINFO,DWORD);
-MMRESULT WINAPI mmioClose(HMMIO,UINT);
-LONG WINAPI mmioRead(HMMIO,HPSTR,LONG);
-LONG WINAPI mmioWrite(HMMIO,LPCSTR,LONG);
-LONG WINAPI mmioSeek(HMMIO,LONG,int);
-MMRESULT WINAPI mmioGetInfo(HMMIO,LPMMIOINFO,UINT);
-MMRESULT WINAPI mmioSetInfo(HMMIO,LPCMMIOINFO,UINT);
-MMRESULT WINAPI mmioSetBuffer(HMMIO,LPSTR,LONG,UINT);
-MMRESULT WINAPI mmioFlush(HMMIO,UINT);
-MMRESULT WINAPI mmioAdvance(HMMIO,LPMMIOINFO,UINT);
-LRESULT WINAPI mmioSendMessage(HMMIO,UINT,LPARAM,LPARAM);
-MMRESULT WINAPI mmioDescend(HMMIO,LPMMCKINFO,const MMCKINFO*,UINT);
-MMRESULT WINAPI mmioAscend(HMMIO,LPMMCKINFO,UINT);
-MMRESULT WINAPI mmioCreateChunk(HMMIO,LPMMCKINFO,UINT);
-MCIERROR WINAPI mciSendCommandA(MCIDEVICEID,UINT,DWORD_PTR,DWORD_PTR);
-MCIERROR WINAPI mciSendCommandW(MCIDEVICEID,UINT,DWORD_PTR,DWORD_PTR);
-MCIERROR WINAPI mciSendStringA(LPCSTR,LPSTR,UINT,HWND);
-MCIERROR WINAPI mciSendStringW(LPCWSTR,LPWSTR,UINT,HWND);
-MCIDEVICEID WINAPI mciGetDeviceIDA(LPCSTR);
-MCIDEVICEID WINAPI mciGetDeviceIDW(LPCWSTR);
-MCIDEVICEID WINAPI mciGetDeviceIDFromElementIDA(DWORD,LPCSTR);
-MCIDEVICEID WINAPI mciGetDeviceIDFromElementIDW(DWORD,LPCWSTR);
-BOOL WINAPI mciGetErrorStringA(MCIERROR,LPSTR,UINT);
-BOOL WINAPI mciGetErrorStringW(MCIERROR,LPWSTR,UINT);
-BOOL WINAPI mciSetYieldProc(MCIDEVICEID,YIELDPROC,DWORD);
-HTASK WINAPI mciGetCreatorTask(MCIDEVICEID);
-YIELDPROC WINAPI mciGetYieldProc(MCIDEVICEID,PDWORD);
+
+MMRESULT
+WINAPI
+joyGetDevCapsA(
+  _In_ UINT_PTR uJoyID,
+  _Out_writes_bytes_(cbjc) LPJOYCAPSA pjc,
+  _In_ UINT cbjc);
+
+MMRESULT
+WINAPI
+joyGetDevCapsW(
+  _In_ UINT_PTR uJoyID,
+  _Out_writes_bytes_(cbjc) LPJOYCAPSW pjc,
+  _In_ UINT cbjc);
+
+MMRESULT WINAPI joyGetPos(_In_ UINT, _Out_ LPJOYINFO);
+MMRESULT WINAPI joyGetPosEx(_In_ UINT, _Out_ LPJOYINFOEX);
+MMRESULT WINAPI joyGetThreshold(_In_ UINT, _Out_ LPUINT);
+MMRESULT WINAPI joyReleaseCapture(_In_ UINT);
+MMRESULT WINAPI joySetCapture(_In_ HWND, _In_ UINT, _In_ UINT, _In_ BOOL);
+MMRESULT WINAPI joySetThreshold(_In_ UINT, _In_ UINT);
+FOURCC WINAPI mmioStringToFOURCCA(LPCSTR, _In_ UINT);
+FOURCC WINAPI mmioStringToFOURCCW(LPCWSTR, _In_ UINT);
+
+LPMMIOPROC
+WINAPI
+mmioInstallIOProcA(
+  _In_ FOURCC,
+  _In_opt_ LPMMIOPROC,
+  _In_ DWORD);
+
+LPMMIOPROC
+WINAPI
+mmioInstallIOProcW(
+  _In_ FOURCC,
+  _In_opt_ LPMMIOPROC,
+  _In_ DWORD);
+
+HMMIO
+WINAPI
+mmioOpenA(
+  _Inout_updates_bytes_opt_(128) LPSTR pszFileName,
+  _Inout_opt_ LPMMIOINFO pmmioinfo,
+  _In_ DWORD fdwOpen);
+
+HMMIO
+WINAPI
+mmioOpenW(
+  _Inout_updates_bytes_opt_(128) LPWSTR pszFileName,
+  _Inout_opt_ LPMMIOINFO pmmioinfo,
+  _In_ DWORD fdwOpen);
+
+MMRESULT
+WINAPI
+mmioRenameA(
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _In_opt_ LPCMMIOINFO,
+  _In_ DWORD);
+
+MMRESULT
+WINAPI
+mmioRenameW(
+  _In_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_opt_ LPCMMIOINFO,
+  _In_ DWORD);
+
+MMRESULT WINAPI mmioClose(_In_ HMMIO, _In_ UINT);
+
+LONG
+WINAPI
+mmioRead(
+  _In_ HMMIO hmmio,
+  _Out_writes_bytes_(cch) HPSTR pch,
+  _In_ LONG cch);
+
+LONG
+WINAPI
+mmioWrite(
+  _In_ HMMIO hmmio,
+  _In_reads_bytes_(cch) const char _huge * pch,
+  _In_ LONG cch);
+
+LONG WINAPI mmioSeek(_In_ HMMIO, _In_ LONG, _In_ int);
+MMRESULT WINAPI mmioGetInfo(_In_ HMMIO, _Out_ LPMMIOINFO, _In_ UINT);
+MMRESULT WINAPI mmioSetInfo(_In_ HMMIO, _In_ LPCMMIOINFO, _In_ UINT);
+
+MMRESULT
+WINAPI
+mmioSetBuffer(
+  _In_ HMMIO hmmio,
+  _Out_writes_opt_(cchBuffer) LPSTR pchBuffer,
+  _In_ LONG cchBuffer,
+  _In_ UINT fuBuffer);
+
+MMRESULT WINAPI mmioFlush(_In_ HMMIO, _In_ UINT);
+MMRESULT WINAPI mmioAdvance(_In_ HMMIO, _In_opt_ LPMMIOINFO, _In_ UINT);
+
+LRESULT
+WINAPI
+mmioSendMessage(
+  _In_ HMMIO,
+  _In_ UINT,
+  _In_opt_ LPARAM,
+  _In_opt_ LPARAM);
+
+MMRESULT
+WINAPI
+mmioDescend(
+  _In_ HMMIO,
+  _Inout_ LPMMCKINFO,
+  _In_opt_ const MMCKINFO*,
+  _In_ UINT);
+
+MMRESULT WINAPI mmioAscend(_In_ HMMIO, _In_ LPMMCKINFO, _In_ UINT);
+MMRESULT WINAPI mmioCreateChunk(_In_ HMMIO, _In_ LPMMCKINFO, _In_ UINT);
+
+MCIERROR
+WINAPI
+mciSendCommandA(
+  _In_ MCIDEVICEID,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR);
+
+MCIERROR
+WINAPI
+mciSendCommandW(
+  _In_ MCIDEVICEID,
+  _In_ UINT,
+  _In_opt_ DWORD_PTR,
+  _In_opt_ DWORD_PTR);
+
+MCIERROR
+WINAPI
+mciSendStringA(
+  _In_ LPCSTR lpstrCommand,
+  _Out_writes_opt_(uReturnLength) LPSTR lpstrReturnString,
+  _In_ UINT uReturnLength,
+  _In_opt_ HWND hwndCallback);
+
+MCIERROR
+WINAPI
+mciSendStringW(
+  _In_ LPCWSTR lpstrCommand,
+  _Out_writes_opt_(uReturnLength) LPWSTR lpstrReturnString,
+  _In_ UINT uReturnLength,
+  _In_opt_ HWND hwndCallback);
+
+MCIDEVICEID WINAPI mciGetDeviceIDA(_In_ LPCSTR);
+MCIDEVICEID WINAPI mciGetDeviceIDW(_In_ LPCWSTR);
+MCIDEVICEID WINAPI mciGetDeviceIDFromElementIDA(_In_ DWORD, _In_ LPCSTR);
+MCIDEVICEID WINAPI mciGetDeviceIDFromElementIDW(_In_ DWORD, _In_ LPCWSTR);
+
+BOOL
+WINAPI
+mciGetErrorStringA(
+  _In_ MCIERROR mcierr,
+  _Out_writes_(cchText) LPSTR pszText,
+  _In_ UINT cchText);
+
+BOOL
+WINAPI
+mciGetErrorStringW(
+  _In_ MCIERROR mcierr,
+  _Out_writes_(cchText) LPWSTR pszText,
+  _In_ UINT cchText);
+
+BOOL WINAPI mciSetYieldProc(_In_ MCIDEVICEID, _In_opt_ YIELDPROC, _In_ DWORD);
+HTASK WINAPI mciGetCreatorTask(_In_ MCIDEVICEID);
+YIELDPROC WINAPI mciGetYieldProc(_In_ MCIDEVICEID, _In_ PDWORD);
 
 #ifdef _WINE
 DWORD WINAPI GetDriverFlags(HDRVR hDriver);

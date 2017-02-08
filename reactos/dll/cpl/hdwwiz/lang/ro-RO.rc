@@ -1,148 +1,156 @@
-// 2011.11.08 - Fulea Ștefan: minor changes
+/*
+ * PROJECT: ReactOS Add hardware control panel
+ * FILE:    dll/cpl/hdwwiz/lang/ro-RO.rc
+ * PURPOSE: Romanian Language File for add hardware control panel
+ * TRANSLATORS:
+ *          Petru Dimitriu (petrimetri at gmail dot com)
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT  "Bun venit la Expertul de adăugare a componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT  "Acest Expert vă va asista la:", -1, 114, 40, 182, 8
-	LTEXT  "1) Instalarea componentelor logice compatibile cu cele fizice pe care le adăugați calculatorului", -1, 121, 56, 184, 16
-	LTEXT  "2) Depanarea problemelor pe care le-ați putea întâmpina la instalarea componentelor fizice", -1, 121, 78, 185, 19
-	ICON   IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-	LTEXT  "În cazul în care componenta fizică este însoțită de un CD de instalare, este recomandată închiderea acestui expert și utilizarea CD-ului de instalare.", 503, 150, 106, 155, 50
-	LTEXT  "Pentru a continua, apăsați „Înainte”.", -1, 114, 166, 193, 8
+    LTEXT "Bun venit la adăugarea de componente fizice", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Acest asistent vă va ajuta la:", -1, 114, 40, 182, 8
+    LTEXT "1) Instalarea componentelor logice aferente componentelor fizice pe care le adăugați calculatorului.", -1, 121, 56, 184, 16
+    LTEXT "2) Depanarea problemelor pe care le-ați putea întâmpina la instalarea componentelor fizice.", -1, 121, 78, 185, 19
+    ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
+    LTEXT "În cazul în care componenta fizică este însoțită de un CD de instalare, este recomandată închiderea acestui asistent și utilizarea CD-ului de instalare.", 503, 150, 106, 155, 50
+    LTEXT "Pentru a continua, apăsați „Înainte”.", -1, 114, 166, 193, 8
 END
 
-IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_SEARCHPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT  "", IDC_STATUSTEXT, 21, 8, 275, 32
-	ICON   IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
+    LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
+    ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
 END
 
-IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_ISCONNECTEDPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT            "Componenta fizică este conectată la calculator?", -1, 20, 11, 275, 8
-	AUTORADIOBUTTON  "&Da, am conectat deja componenta fizică.", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-	AUTORADIOBUTTON  "N&u, încă nu am conectat componenta fizică.", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "Componenta fizică este conectată la calculator?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "Componenta fizică &este deja conectată.", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "Componenta fizică încă n&u a fost conectată.", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
-IDD_PROBELISTPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_PROBELISTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT    "Alegeți din lista de mai jos un dispozitiv instalat, apoi apăsați „Înainte” pentru a-i inspecta proprietățile sau pentru a depana o posibilă problemă.", -1, 21, 8, 275, 22
-	LTEXT    "Pentru a adăuga un dispozitiv neinclus în listă, alegeți „adaugă un nou dispozitiv”", -1, 21, 32, 275, 24
-	LTEXT    "&Dispozitive instalate:", -1, 21, 62, 140, 8
-	CONTROL  "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
+    LTEXT "Alegeți din lista de mai jos un dispozitiv instalat, apoi apăsați „Înainte” pentru a-i inspecta proprietățile sau pentru a depana o posibilă problemă.", -1, 21, 8, 275, 22
+    LTEXT "Pentru a adăuga un dispozitiv neinclus în listă, alegeți „adaugă un nou dispozitiv”", -1, 21, 32, 275, 24
+    LTEXT "&Dispozitive instalate:", -1, 21, 62, 140, 8
+    CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
-IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_SELECTWAYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT            "Expertul poate încerca detectarea și instalarea automată a componentelor fizice. Altfel, dacă știți exact modelul dispozitivului, îl veți putea manual alege dintr-o listă.", -1, 21, 8, 280, 24
-	LTEXT            "Ce preferați să facă expertul?", -1, 23, 40, 275, 8
-	AUTORADIOBUTTON  "Să caute și &automat să instaleze modulul pilot necesar (Recomandat)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON  "Să instaleze modulul pilot pe care îl voi specifica &manual (Avansat)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    LTEXT "Asistentul poate încerca detectarea și instalarea automată a componentelor fizice. Altfel, dacă știți exact modelul dispozitivului, îl veți putea manual alege dintr-o listă.", -1, 21, 8, 280, 24
+    LTEXT "Ce preferați să facă asistentul?", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "Să &caute și automat să instaleze modulul-pilot necesar (Recomandat)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Să instaleze modulul-pilot pe care îl voi specifica &manual (Avansat)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
-IDD_DETECTEDHWPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT    "", IDC_STATUSTEXT, 21, 9, 275, 40
-	LTEXT    "Componente fizice detectate:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
-	CONTROL  "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
+    LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
+    LTEXT "Componente fizice detectate:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+    CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
 END
 
-IDD_HWTYPESPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_HWTYPESPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT    "Dacă nu regăsiți categoria pe care o căutați, specificați „afișează toate”.", IDC_STATUSTEXT, 21, 9, 275, 18
-	LTEXT    "&Tipuri obișnuite de dispozitive:", IDC_HWTYPESTEXT, 21, 31, 180, 8
-	CONTROL  "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
+    LTEXT "Dacă nu regăsiți categoria pe care o căutați, specificați „afișează toate”.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "Tip&uri obișnuite de dispozitive:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
-IDD_PROGRESSPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+IDD_PROGRESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT    "Căutarea componentei fizice poate dura câteva minute.", -1, 21, 8, 275, 15
-	LTEXT    "Progres total:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
-	CONTROL  "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
-	LTEXT    "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
-	CONTROL  "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
+    LTEXT "Căutarea componentei fizice poate dura câteva minute.", -1, 21, 8, 275, 15
+    LTEXT "Progres total:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+    CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
+    LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
+    CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
 END
 
-IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT  "Încheiere expert", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT  "Ați încheiat cu succes adăugarea componentei fizice.", -1, 114, 32, 193, 19
-	LTEXT  "", IDC_STATUSTEXT, 114, 70, 193, 92
-	LTEXT  "Pentru a închide fereastra expertului, apăsați „Termină”.", -1, 114, 166, 132, 8
+    LTEXT "Încheiere proces de instalare", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Ați încheiat cu succes adăugarea componentei fizice.", -1, 114, 32, 193, 19
+    LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
+    LTEXT "Pentru a închide fereastra asistentului, apăsați „Sfârșit”.", -1, 114, 166, 132, 8
 END
 
-IDD_ISFOUNDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_ISFOUNDPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT    "Încheiere expert", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT    "Expertul a detectat următorul dispozitiv conectat:", -1, 114, 32, 193, 19
-	LTEXT    "Pentru a închide fereastra expertului, apăsați „Termină”.", -1, 114, 166, 132, 8
-	CONTROL  "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
+    LTEXT "Încheiere proces de instalare", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Asistentul a detectat următorul dispozitiv conectat:", -1, 114, 32, 193, 19
+    LTEXT "Pentru a închide fereastra asistentului, apăsați „Sfârșit”.", -1, 114, 166, 132, 8
+    CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
-IDD_HWSTATUSPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_HWSTATUSPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT     "Încheire expertiză", IDC_FINISHTITLE, 114, 8, 195, 28
-	LTEXT     "Starea curentă a dispozitivului selectat:", -1, 114, 40, 193, 19
-	EDITTEXT  IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT     "Pentru a porni un program de depanare pentru rezolvarea posibilelor probleme de instalare, apăsați „Termină”.", -1, 114, 136, 193, 16
-	LTEXT     "Pentru a ieși, apăsți „Anulează”.", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "Încheire proces de instalare", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Starea curentă a dispozitivului selectat:", -1, 114, 40, 193, 19
+    EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Pentru a porni un program de depanare pentru rezolvarea posibilelor probleme de instalare, apăsați „Sfârșit”.", -1, 114, 136, 193, 16
+    LTEXT "Pentru a ieși, apăsți „Anulează”.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
-IDD_NOTCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare componente fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT         "Nu se mai poate continua Adăugarea componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 28
-	LTEXT         "Pentru a continua, conectați dispozitivul la calculator.", -1, 114, 40, 193, 16
-	AUTOCHECKBOX  "În&chide calculatorul când apăs „Termină” pentru a putea deschide calculatorul și conecta componenta fizică.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-	LTEXT         "De obicei ReactOS poate instala dispozitive în mod automat, imediat după conectarea lor. Dacă ReactOS nu va detecta în mod automat noul dispozitiv, redeschideți acest expert de adăugare a componentelor fizice.", -1, 114, 98, 193, 32
-	LTEXT         "Pentru a închide acest expert, apăsați „Termină”.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Nu se mai poate continua Adăugarea componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "Pentru a continua, conectați dispozitivul la calculator.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "În&chide calculatorul când apăs „Sfârșit” pentru a putea deschide calculatorul și conecta componenta fizică.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "De obicei ReactOS poate instala dispozitive în mod automat, imediat după conectarea lor. Dacă ReactOS nu va detecta în mod automat noul dispozitiv, redeschideți acest asistent de adăugare a componentelor fizice.", -1, 114, 98, 193, 32
+    LTEXT "Pentru a închide acest asistent, apăsați „Sfârșit”.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLNAME         "Adăugare componente fizice"
-	IDS_CPLDESCRIPTION  "Adaugarea de componente fizice la calculator."
-	IDS_SEARCHTITLE     "Așteptați căutarea de componente fizice…"
-	IDS_SEARCHTEXT      "Expertul caută dispozitive recent conectate, care nu au fost încă instalate."
-	IDS_ISCONNECTED     "Dispozitivul este conectat?"
-	IDS_PROBELISTTITLE  "Componente fizice deja instalate în calculator."
-	IDS_ADDNEWDEVICE    "adăugă un nou dispozitiv"
-	IDS_SELECTWAYTITLE  "Acest expert vă poate asista la instalarea noilor componente fizice."
-	IDS_HDTYPESTITLE    "Alegeți categoria componentei fizice pe care doriți să o instalați."
+    IDS_CPLNAME "Adăugare componente fizice"
+    IDS_CPLDESCRIPTION "Adaugarea de componente fizice la calculator."
+    IDS_SEARCHTITLE "Așteptați căutarea de componente fizice…"
+    IDS_SEARCHTEXT "Asistentul caută dispozitive recent conectate, care nu au fost încă instalate."
+    IDS_ISCONNECTED "Dispozitivul este conectat?"
+    IDS_PROBELISTTITLE "Componente fizice deja instalate în calculator."
+    IDS_ADDNEWDEVICE "adăugă un nou dispozitiv"
+    IDS_SELECTWAYTITLE "Acest asistent vă poate ajuta la instalarea noilor componente fizice."
+    IDS_HDTYPESTITLE "Alegeți categoria componentei fizice pe care doriți să o instalați."
 END

@@ -139,7 +139,11 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                      PreviousMode,
                                      NULL,
                                      (PVOID *)&Port);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference port '%wZ': 0x%lx\n", PortName, Status);
+        return Status;
+    }
 
     /* This has to be a connection port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CONNECTION_PORT)
@@ -160,7 +164,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
             //Status = SeQueryInformationToken(Token, TokenUser, (PVOID*)&TokenUserInfo);
             // FIXME: Need SeQueryInformationToken
             Status = STATUS_SUCCESS;
-            TokenUserInfo = ExAllocatePool(PagedPool, sizeof(TOKEN_USER));
+            TokenUserInfo = ExAllocatePoolWithTag(PagedPool, sizeof(TOKEN_USER), TAG_SE);
             TokenUserInfo->User.Sid = ServerSid;
             PsDereferencePrimaryToken(Token);
 
@@ -175,7 +179,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 }
 
                 /* Free token information */
-                ExFreePool(TokenUserInfo);
+                ExFreePoolWithTag(TokenUserInfo, TAG_SE);
             }
         }
         else
@@ -352,7 +356,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     ConnectMessage->SectionToMap = SectionToMap;
 
     /* Set the data for the connection request message */
-    Message->Request.u1.s1.DataLength = (CSHORT)ConnectionInfoLength + 
+    Message->Request.u1.s1.DataLength = (CSHORT)ConnectionInfoLength +
                                          sizeof(LPCP_CONNECTION_MESSAGE);
     Message->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
                                          Message->Request.u1.s1.DataLength;
@@ -481,7 +485,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 /* Return the handle */
                 *PortHandle = Handle;
                 LPCTRACE(LPC_CONNECT_DEBUG,
-                         "Handle: %lx. Length: %lx\n",
+                         "Handle: %p. Length: %lx\n",
                          Handle,
                          PortMessageLength);
 

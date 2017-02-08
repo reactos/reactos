@@ -1,0 +1,14 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "直观地显示驱动器或路径的文件夹结构。\n\n\
+TREE [驱动器:][路径] [/F] [/A]\n\n\
+\t/F   在每个文件夹中显示的文件的名称。\n\
+\t/A   使用 ASCII 扩展字符代替。\n"
+    IDS_NO_SUBDIRECTORIES "不存在子目录"
+    IDS_FOLDER_PATH "文件夹路径列表\n"
+    IDS_VOL_SERIAL "卷序列号是 %x:%x\n"
+END

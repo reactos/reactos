@@ -4,7 +4,7 @@
  * FILE:            dll/directx/msdvbnp/enum_mediatypes.cpp
  * PURPOSE:         IEnumMediaTypes interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

@@ -1,0 +1,76 @@
+/* German language file by Klemens Friedl <frik85> 2005-06-03 */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "Dieser Befehl wird von der Hilfe nicht unterstützt.\nVersuchen Sie ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Zeigt die Hilfe für Kommandozeilenbefehle an.\n\n\
+HELP [Befehl]\n\n\
+  Befehl - Zeige Informationen über diesen Befehl.\n"
+    IDS_HELP1 "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\n\n\
+  help Befehl\n\
+  Befehl /?     Um nähere Informationen zu einem bestimmten Befehl\n\
+                zu erhalten.\n\n\
+?        Listet alle Befehle auf (ohne Erklärung).\n\
+ALIAS    Setzt, löscht oder zeigt den Alias.\n\
+ATTRIB   Zeigt Dateiattribute an bzw. ändert sie.\n\
+BEEP     Gibt einen Piepton durch den Systemlautsprecher aus.\n\
+CALL     Ruft eine Batchdatei aus einer anderen heraus auf.\n\
+CD       Zeigt den Namen des aktuellen Verzeichnisses an bzw. ändert diesen.\n\
+CHCP     Zeigt die aktive Codepagenummer an bzw. legt diese fest.\n\
+CHOICE   Lässt den Benutzer eine Auswahl aus vorgegebenen Optionen treffen.\n\
+CLS      Löscht den Bildschirminhalt.\n\
+CMD      Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\
+COLOR    Legt die Farben für Hinter- und Vordergrund der Konsole fest.\n\
+COPY     Kopiert eine oder mehrere Dateien an eine andere Stelle.\n\
+DATE     Zeigt das Datum an bzw. legt dieses fest.\n\
+DELETE   Löscht eine oder mehrere Dateien.\n\
+DIR      Listet die Dateien und Unterverzeichnisse eines Verzeichnisses auf.\n\
+ECHO     Zeigt Meldungen an bzw. schaltet die Befehlsanzeige ein oder aus.\n\
+ERASE    Löscht eine oder mehrere Dateien.\n\
+EXIT     Beendet das Programm CMD.EXE (Befehlsinterpreter).\n\
+FOR      Führt einen angegebenen Befehl für jede Datei in einem Dateiensatz\n\
+         aus.\n\
+FREE     Zeigt die aktuelle Speicherausnutzung für Laufwerke an.\n\
+GOTO     Setzt den ReactOS-Befehlsinterpreter auf eine markierte Zeile in\n\
+         einem Batchprogramm.\n\
+HELP     Zeigt die Hilfe für Kommandozeilenbefehle an.\n\
+HISTORY  Listet alle Befehle auf, welche sich im Speicher befinden.\n\
+IF       Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\
+LABEL    Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\
+MD       Erstellt ein Verzeichnis.\n\
+MKDIR    Erstellt ein Verzeichnis.\n\
+MKLINK   Erzeugt eine Dateisystemverknüpfung.\n\
+MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
+         ein anderes.\n"
+    IDS_HELP2 "PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
+PAUSE    Hält die Ausführung einer Batchdatei an und zeigt eine Meldung an.\n\
+POPD     Wechselt zu dem Verzeichnis, das durch PUSHD gespeichert wurde.\n\
+PROMPT   Ändert die Eingabeaufforderung.\n\
+PUSHD    Speichert das aktuelle Verzeichnis, und wechselt dann zu einem\n\
+         anderen Verzeichnis.\n\
+RD       Entfernt ein Verzeichnis.\n\
+REM      Leitet Kommentare in einer Batchdatei ein.\n\
+REN      Benennt eine oder mehrere Dateien um.\n\
+RENAME   Benennt eine oder mehrere Dateien um.\n\
+REPLACE  Ersetzt Dateien.\n\
+RMDIR    Löscht ein Verzeichnis.\n\
+SCREEN   Bewegt den Eingabezeiger und gibt optional Text aus.\n\
+SET      Setzt oder löscht die Umgebungsvariablen bzw. zeigt sie an.\n\
+SHIFT    Verändert die Position ersetzbarer Parameter in Batchdateien.\n\
+START    Startet ein eigenes Fenster, um ein bestimmtes Programm oder einen\n\
+         Befehl auszuführen.\n\
+TIME     Zeigt die Systemzeit an bzw. legt sie fest.\n\
+TIMER    Erlaubt die Benutzung von bis zu 10 Stoppuhren.\n\
+TITLE    Legt den Fenstertitel für das Eingabeaufforderungsfenster fest.\n\
+TYPE     Zeigt den Inhalt einer Textdatei an.\n\
+VER      Zeigt die ReactOS-Version an.\n\
+VERIFY   Legt fest, ob das ordnungsgemäße Schreiben von Dateien auf den\n\
+         Datenträger überprüft werden soll.\n\
+VOL      Zeigt die Datenträgervolumebezeichnung und die Seriennummer an.\n"
+END

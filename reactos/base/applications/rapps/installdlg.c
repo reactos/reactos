@@ -10,7 +10,6 @@
 
 static PAPPLICATION_INFO AppInfo;
 
-
 static
 INT_PTR CALLBACK
 InstallDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)

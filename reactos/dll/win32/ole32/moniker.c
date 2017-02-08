@@ -21,31 +21,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-//#include <string.h>
-
-#define COBJMACROS
-
-//#include "winerror.h"
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "wtypes.h"
-#include <ole2.h>
-
-//#include "wine/list.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
 #include <wine/exception.h>
 
-#include "compobj_private.h"
-#include "moniker.h"
 #include <irot.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -319,7 +298,7 @@ RunningObjectTableImpl_QueryInterface(IRunningObjectTable* iface,
 
     if (IsEqualIID(&IID_IUnknown, riid) ||
         IsEqualIID(&IID_IRunningObjectTable, riid))
-        *ppvObject = This;
+        *ppvObject = &This->IRunningObjectTable_iface;
 
     if ((*ppvObject)==0)
         return E_NOINTERFACE;
@@ -392,7 +371,7 @@ RunningObjectTableImpl_Release(IRunningObjectTable* iface)
 
     ref = InterlockedDecrement(&This->ref);
 
-    /* uninitialize ROT structure if there's no more references to it */
+    /* uninitialize ROT structure if there are no more references to it */
     if (ref == 0)
     {
         struct list *cursor, *cursor2;
@@ -1201,7 +1180,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     IStorage *pstg=0;
     HRESULT res;
     int nbElm, length, i;
-    LONG sizeProgId;
+    LONG sizeProgId, ret;
     LPOLESTR *pathDec=0,absFile=0,progId=0;
     LPWSTR extension;
     static const WCHAR bkslashW[] = {'\\',0};
@@ -1214,10 +1193,10 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
 
         res=StgOpenStorage(filePathName,NULL,STGM_READ | STGM_SHARE_DENY_WRITE,NULL,0,&pstg);
 
-        if (SUCCEEDED(res))
+        if (SUCCEEDED(res)) {
             res=ReadClassStg(pstg,pclsid);
-
-        IStorage_Release(pstg);
+            IStorage_Release(pstg);
+        }
 
         return res;
     }
@@ -1251,8 +1230,10 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     absFile=pathDec[nbElm-1];
 
     /* failed if the path represents a directory and not an absolute file name*/
-    if (!lstrcmpW(absFile, bkslashW))
+    if (!lstrcmpW(absFile, bkslashW)) {
+        CoTaskMemFree(pathDec);
         return MK_E_INVALIDEXTENSION;
+    }
 
     /* get the extension of the file */
     extension = NULL;
@@ -1260,29 +1241,28 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     for(i = length-1; (i >= 0) && *(extension = &absFile[i]) != '.'; i--)
         /* nothing */;
 
-    if (!extension || !lstrcmpW(extension, dotW))
+    if (!extension || !lstrcmpW(extension, dotW)) {
+        CoTaskMemFree(pathDec);
         return MK_E_INVALIDEXTENSION;
+    }
 
-    res=RegQueryValueW(HKEY_CLASSES_ROOT, extension, NULL, &sizeProgId);
+    ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, NULL, &sizeProgId);
 
     /* get the progId associated to the extension */
     progId = CoTaskMemAlloc(sizeProgId);
-    res = RegQueryValueW(HKEY_CLASSES_ROOT, extension, progId, &sizeProgId);
-
-    if (res==ERROR_SUCCESS)
+    ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, progId, &sizeProgId);
+    if (!ret)
         /* return the clsid associated to the progId */
-        res= CLSIDFromProgID(progId,pclsid);
+        res = CLSIDFromProgID(progId,pclsid);
+    else
+        res = HRESULT_FROM_WIN32(ret);
 
     for(i=0; pathDec[i]!=NULL;i++)
         CoTaskMemFree(pathDec[i]);
     CoTaskMemFree(pathDec);
 
     CoTaskMemFree(progId);
-
-    if (res==ERROR_SUCCESS)
-        return res;
-
-    return MK_E_INVALIDEXTENSION;
+    return res != S_OK ? MK_E_INVALIDEXTENSION : res;
 }
 
 /***********************************************************************
@@ -1300,17 +1280,12 @@ static HRESULT WINAPI EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID 
 
     *ppvObject = NULL;
 
-    if (IsEqualIID(&IID_IUnknown, riid))
-        *ppvObject = This;
+    if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IEnumMoniker, riid))
+        *ppvObject = &This->IEnumMoniker_iface;
     else
-        if (IsEqualIID(&IID_IEnumMoniker, riid))
-            *ppvObject = This;
-
-    if ((*ppvObject)==NULL)
         return E_NOINTERFACE;
 
     IEnumMoniker_AddRef(iface);
-
     return S_OK;
 }
 
@@ -1338,7 +1313,7 @@ static ULONG   WINAPI EnumMonikerImpl_Release(IEnumMoniker* iface)
 
     ref = InterlockedDecrement(&This->ref);
 
-    /* uninitialize rot structure if there's no more reference to it*/
+    /* uninitialize ROT structure if there are no more references to it */
     if (ref == 0)
     {
         ULONG i;

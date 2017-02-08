@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/fslist.c
+ * FILE:            base/setup/usetup/fslist.c
  * PURPOSE:         Filesystem list functions
  * PROGRAMMER:      Eric Kohl
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -35,7 +35,7 @@
 VOID
 FS_AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN LPCWSTR FileSystem,
+    IN LPCWSTR FileSystemName,
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc)
 {
@@ -45,10 +45,10 @@ FS_AddProvider(
     if (!Item)
         return;
 
-    Item->FileSystem = FileSystem;
+    Item->FileSystemName = FileSystemName;
     Item->FormatFunc = FormatFunc;
     Item->ChkdskFunc = ChkdskFunc;
-    Item->QuickFormat = FALSE;
+    Item->QuickFormat = TRUE;
     InsertTailList(&List->ListHead, &Item->ListEntry);
 
     if (!FormatFunc)
@@ -58,12 +58,102 @@ FS_AddProvider(
     if (!Item)
         return;
 
-    Item->FileSystem = FileSystem;
+    Item->FileSystemName = FileSystemName;
     Item->FormatFunc = FormatFunc;
     Item->ChkdskFunc = ChkdskFunc;
-    Item->QuickFormat = TRUE;
+    Item->QuickFormat = FALSE;
     InsertTailList(&List->ListHead, &Item->ListEntry);
 }
+
+
+PFILE_SYSTEM_ITEM
+GetFileSystemByName(
+    IN PFILE_SYSTEM_LIST List,
+    IN LPWSTR FileSystemName)
+{
+    PLIST_ENTRY ListEntry;
+    PFILE_SYSTEM_ITEM Item;
+
+    ListEntry = List->ListHead.Flink;
+    while (ListEntry != &List->ListHead)
+    {
+        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
+        if (Item->FileSystemName && wcsicmp(FileSystemName, Item->FileSystemName) == 0)
+            return Item;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
+PFILE_SYSTEM_ITEM
+GetFileSystem(
+    IN PFILE_SYSTEM_LIST FileSystemList,
+    IN struct _PARTENTRY* PartEntry)
+{
+    PFILE_SYSTEM_ITEM CurrentFileSystem;
+    LPWSTR FileSystemName = NULL;
+
+    CurrentFileSystem = PartEntry->FileSystem;
+
+    /* We have a file system, return it */
+    if (CurrentFileSystem != NULL && CurrentFileSystem->FileSystemName != NULL)
+        return CurrentFileSystem;
+
+    DPRINT1("File system not found, try to guess one...\n");
+
+    CurrentFileSystem = NULL;
+
+    /*
+     * We don't have one...
+     *
+     * Try to infer a preferred file system for this partition, given its ID.
+     *
+     * WARNING: This is partly a hack, since partitions with the same ID can
+     * be formatted with different file systems: for example, usual Linux
+     * partitions that are formatted in EXT2/3/4, ReiserFS, etc... have the
+     * same partition ID 0x83.
+     *
+     * The proper fix is to make a function that detects the existing FS
+     * from a given partition (not based on the partition ID).
+     * On the contrary, for unformatted partitions with a given ID, the
+     * following code is OK.
+     */
+    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
+        (PartEntry->PartitionType == PARTITION_FAT_16) ||
+        (PartEntry->PartitionType == PARTITION_HUGE  ) ||
+        (PartEntry->PartitionType == PARTITION_XINT13) ||
+        (PartEntry->PartitionType == PARTITION_FAT32 ) ||
+        (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
+    {
+        FileSystemName = L"FAT";
+    }
+    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    {
+        // WARNING: See the warning above.
+        FileSystemName = L"EXT2";
+    }
+    else if (PartEntry->PartitionType == PARTITION_IFS)
+    {
+        // WARNING: See the warning above.
+        FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
+    }
+
+    // HACK: WARNING: We cannot write on this FS yet!
+    if (PartEntry->PartitionType == PARTITION_EXT2 || PartEntry->PartitionType == PARTITION_IFS)
+        DPRINT1("Recognized file system %S that doesn't support write support yet!\n", FileSystemName);
+
+    DPRINT1("GetFileSystem -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
+            PartEntry->PartitionType, FileSystemName);
+
+    if (FileSystemName != NULL)
+        CurrentFileSystem = GetFileSystemByName(FileSystemList, FileSystemName);
+
+    return CurrentFileSystem;
+}
+
 
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
@@ -98,7 +188,7 @@ CreateFileSystemList(
     while (ListEntry != &List->ListHead)
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystem && wcscmp(ForceFileSystem, Item->FileSystem) == 0)
+        if (Item->FileSystemName && wcscmp(ForceFileSystem, Item->FileSystemName) == 0)
         {
             List->Selected = Item;
             break;
@@ -110,6 +200,7 @@ CreateFileSystemList(
 
     return List;
 }
+
 
 VOID
 DestroyFileSystemList(
@@ -131,6 +222,7 @@ DestroyFileSystemList(
     RtlFreeHeap(ProcessHeap, 0, List);
 }
 
+
 VOID
 DrawFileSystemList(
     IN PFILE_SYSTEM_LIST List)
@@ -140,7 +232,7 @@ DrawFileSystemList(
     COORD coPos;
     DWORD Written;
     ULONG Index = 0;
-    CHAR Buffer[70];
+    CHAR Buffer[128];
 
     ListEntry = List->ListHead.Flink;
     while (ListEntry != &List->ListHead)
@@ -160,15 +252,15 @@ DrawFileSystemList(
                                     coPos,
                                     &Written);
 
-        if (Item->FileSystem)
+        if (Item->FileSystemName)
         {
             if (Item->QuickFormat)
-                sprintf(Buffer, MUIGetString(STRING_FORMATDISK1), Item->FileSystem);
+                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK1), Item->FileSystemName);
             else
-                sprintf(Buffer, MUIGetString(STRING_FORMATDISK2), Item->FileSystem);
+                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK2), Item->FileSystemName);
         }
         else
-            sprintf(Buffer, MUIGetString(STRING_KEEPFORMAT));
+            snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_KEEPFORMAT));
 
         if (ListEntry == &List->Selected->ListEntry)
             CONSOLE_SetInvertedTextXY(List->Left,
@@ -183,6 +275,7 @@ DrawFileSystemList(
     }
 }
 
+
 VOID
 ScrollDownFileSystemList(
     IN PFILE_SYSTEM_LIST List)
@@ -193,6 +286,7 @@ ScrollDownFileSystemList(
         DrawFileSystemList(List);
     }
 }
+
 
 VOID
 ScrollUpFileSystemList(

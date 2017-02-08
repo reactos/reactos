@@ -7,7 +7,13 @@
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
+
 #include "precomp.h"
+
+#include <wdmguid.h>
+
+#define NDEBUG
+#include <debug.h>
 
 PHIDP_COLLECTION_DESC
 HidClassPDO_GetCollectionDescription(
@@ -42,7 +48,7 @@ HidClassPDO_GetReportDescription(
 {
     ULONG Index;
 
-    for(Index = 0; Index < DeviceDescription->ReportIDsLength; Index++)
+    for (Index = 0; Index < DeviceDescription->ReportIDsLength; Index++)
     {
         if (DeviceDescription->ReportIDs[Index].CollectionNumber == CollectionNumber)
         {
@@ -97,7 +103,7 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // allocate new buffer
     //
-    NewBuffer = (LPWSTR)ExAllocatePool(NonPagedPool, (Length + 1) * sizeof(WCHAR));
+    NewBuffer = ExAllocatePoolWithTag(NonPagedPool, (Length + 1) * sizeof(WCHAR), HIDCLASS_TAG);
     if (!NewBuffer)
     {
         //
@@ -126,7 +132,7 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // free old buffer
     //
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, 0);
 
     //
     // store result
@@ -151,8 +157,8 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // get device extension
     //
-   PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+    PDODeviceExtension = DeviceObject->DeviceExtension;
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
     // copy current stack location
@@ -196,7 +202,7 @@ HidClassPDO_HandleQueryHardwareId(
 
     if (CollectionDescription->UsagePage == HID_USAGE_PAGE_GENERIC)
     {
-        switch(CollectionDescription->Usage)
+        switch (CollectionDescription->Usage)
         {
             case HID_USAGE_GENERIC_POINTER:
             case HID_USAGE_GENERIC_MOUSE:
@@ -248,12 +254,12 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // free old buffer
     //
-    ExFreePool((PVOID)Irp->IoStatus.Information);
+    ExFreePoolWithTag((PVOID)Irp->IoStatus.Information, 0);
 
     //
     // allocate buffer
     //
-    Ptr = (LPWSTR)ExAllocatePool(NonPagedPool, (Offset +1)* sizeof(WCHAR));
+    Ptr = ExAllocatePoolWithTag(NonPagedPool, (Offset + 1) * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Ptr)
     {
         //
@@ -287,14 +293,13 @@ HidClassPDO_HandleQueryInstanceId(
     //
     // get device extension
     //
-   PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
+    PDODeviceExtension = DeviceObject->DeviceExtension;
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
     // allocate buffer
     //
-    Buffer = ExAllocatePool(NonPagedPool, 5 * sizeof(WCHAR));
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, 5 * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Buffer)
     {
         //
@@ -322,7 +327,7 @@ HidClassPDO_HandleQueryCompatibleId(
 {
     LPWSTR Buffer;
 
-    Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Buffer)
     {
         //
@@ -359,7 +364,7 @@ HidClassPDO_PnP(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
@@ -370,47 +375,47 @@ HidClassPDO_PnP(
     //
     // handle request
     //
-    switch(IoStack->MinorFunction)
+    switch (IoStack->MinorFunction)
     {
         case IRP_MN_QUERY_ID:
         {
-           if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID)
-           {
-               //
-               // handle query device id
-               //
-               Status = HidClassPDO_HandleQueryDeviceId(DeviceObject, Irp);
-               break;
-           }
-           else if (IoStack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
-           {
-               //
-               // handle instance id
-               //
-               Status = HidClassPDO_HandleQueryHardwareId(DeviceObject, Irp);
-               break;
-           }
-           else if (IoStack->Parameters.QueryId.IdType == BusQueryInstanceID)
-           {
-               //
-               // handle instance id
-               //
-               Status = HidClassPDO_HandleQueryInstanceId(DeviceObject, Irp);
-               break;
-           }
-           else if (IoStack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
-           {
-               //
-               // handle instance id
-               //
-               Status = HidClassPDO_HandleQueryCompatibleId(DeviceObject, Irp);
-               break;
-           }
+            if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID)
+            {
+                //
+                // handle query device id
+                //
+                Status = HidClassPDO_HandleQueryDeviceId(DeviceObject, Irp);
+                break;
+            }
+            else if (IoStack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
+            {
+                //
+                // handle instance id
+                //
+                Status = HidClassPDO_HandleQueryHardwareId(DeviceObject, Irp);
+                break;
+            }
+            else if (IoStack->Parameters.QueryId.IdType == BusQueryInstanceID)
+            {
+                //
+                // handle instance id
+                //
+                Status = HidClassPDO_HandleQueryInstanceId(DeviceObject, Irp);
+                break;
+            }
+            else if (IoStack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
+            {
+                //
+                // handle instance id
+                //
+                Status = HidClassPDO_HandleQueryCompatibleId(DeviceObject, Irp);
+                break;
+            }
 
-           DPRINT1("[HIDCLASS]: IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
-           Status = STATUS_NOT_SUPPORTED;
-           Irp->IoStatus.Information = 0;
-           break;
+            DPRINT1("[HIDCLASS]: IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
+            Status = STATUS_NOT_SUPPORTED;
+            Irp->IoStatus.Information = 0;
+            break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
@@ -426,7 +431,9 @@ HidClassPDO_PnP(
             //
             // copy capabilities
             //
-            RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities, &PDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
+            RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities,
+                          &PDODeviceExtension->Capabilities,
+                          sizeof(DEVICE_CAPABILITIES));
             Status = STATUS_SUCCESS;
             break;
         }
@@ -435,8 +442,8 @@ HidClassPDO_PnP(
             //
             //
             //
-            BusInformation = (PPNP_BUS_INFORMATION)ExAllocatePool(NonPagedPool, sizeof(PNP_BUS_INFORMATION));
- 
+            BusInformation = ExAllocatePoolWithTag(NonPagedPool, sizeof(PNP_BUS_INFORMATION), HIDCLASS_TAG);
+
             //
             // fill in result
             //
@@ -476,7 +483,7 @@ HidClassPDO_PnP(
             //
             // allocate device relations
             //
-            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS));
+            DeviceRelation = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_RELATIONS), HIDCLASS_TAG);
             if (!DeviceRelation)
             {
                 //
@@ -510,7 +517,10 @@ HidClassPDO_PnP(
             //
             // now register the device interface
             //
-            Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject, &GUID_DEVINTERFACE_HID, NULL, &PDODeviceExtension->DeviceInterface);
+            Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject,
+                                               &GUID_DEVINTERFACE_HID,
+                                               NULL,
+                                               &PDODeviceExtension->DeviceInterface);
             DPRINT("[HIDCLASS] IoRegisterDeviceInterfaceState Status %x\n", Status);
             if (NT_SUCCESS(Status))
             {
@@ -533,22 +543,22 @@ HidClassPDO_PnP(
             if (PDODeviceExtension->DeviceInterface.Length != 0)
                 IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, FALSE);
 
-           //
-           // remove us from the fdo's pdo list
-           //
-           bFound = FALSE;
-           for(Index = 0; Index < PDODeviceExtension->FDODeviceExtension->DeviceRelations->Count; Index++)
-           {
-               if (PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] == DeviceObject)
-               {
-                   //
-                   // remove us
-                   //
-                   bFound = TRUE;
-                   PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] = NULL;
-                   break;
-               }
-           }
+            //
+            // remove us from the fdo's pdo list
+            //
+            bFound = FALSE;
+            for (Index = 0; Index < PDODeviceExtension->FDODeviceExtension->DeviceRelations->Count; Index++)
+            {
+                if (PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] == DeviceObject)
+                {
+                    //
+                    // remove us
+                    //
+                    bFound = TRUE;
+                    PDODeviceExtension->FDODeviceExtension->DeviceRelations->Objects[Index] = NULL;
+                    break;
+                }
+            }
 
             /* Complete the IRP */
             Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -565,7 +575,6 @@ HidClassPDO_PnP(
         case IRP_MN_QUERY_INTERFACE:
         {
             DPRINT1("[HIDCLASS] PDO IRP_MN_QUERY_INTERFACE not implemented\n");
-            ASSERT(FALSE);
 
             //
             // do nothing
@@ -627,7 +636,7 @@ HidClassPDO_CreatePDO(
     OUT PDEVICE_RELATIONS *OutDeviceRelations)
 {
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT PDODeviceObject;
     PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
     ULONG Index;
@@ -637,14 +646,14 @@ HidClassPDO_CreatePDO(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // first allocate device relations
     //
     Length = sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * FDODeviceExtension->Common.DeviceDescription.CollectionDescLength;
-    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, Length);
+    DeviceRelations = ExAllocatePoolWithTag(NonPagedPool, Length, HIDCLASS_TAG);
     if (!DeviceRelations)
     {
         //
@@ -659,15 +668,21 @@ HidClassPDO_CreatePDO(
     RtlZeroMemory(DeviceRelations, Length);
 
     //
-    // lets create a PDO for top level collection
+    // let's create a PDO for top level collection
     //
     Index = 0;
-    do
+    while (Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength)
     {
         //
-        // lets create the device object
+        // let's create the device object
         //
-        Status = IoCreateDevice(FDODeviceExtension->Common.DriverExtension->DriverObject, sizeof(HIDCLASS_PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_UNKNOWN, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &PDODeviceObject);
+        Status = IoCreateDevice(FDODeviceExtension->Common.DriverExtension->DriverObject,
+                                sizeof(HIDCLASS_PDO_DEVICE_EXTENSION),
+                                NULL,
+                                FILE_DEVICE_UNKNOWN,
+                                FILE_AUTOGENERATED_DEVICE_NAME,
+                                FALSE,
+                                &PDODeviceObject);
         if (!NT_SUCCESS(Status))
         {
             //
@@ -685,7 +700,7 @@ HidClassPDO_CreatePDO(
         //
         // get device extension
         //
-        PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)PDODeviceObject->DeviceExtension;
+        PDODeviceExtension = PDODeviceObject->DeviceExtension;
 
         //
         // init device extension
@@ -724,10 +739,10 @@ HidClassPDO_CreatePDO(
 
         //
         // move to next
-        // 
+        //
         Index++;
 
-    }while(Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength);
+    }
 
 
     //
@@ -738,7 +753,7 @@ HidClassPDO_CreatePDO(
         //
         // failed
         //
-        for(Index = 0; Index < DeviceRelations->Count; Index++)
+        for (Index = 0; Index < DeviceRelations->Count; Index++)
         {
             //
             // delete device
@@ -749,7 +764,7 @@ HidClassPDO_CreatePDO(
         //
         // free device relations
         //
-        ExFreePool(DeviceRelations);
+        ExFreePoolWithTag(DeviceRelations, HIDCLASS_TAG);
         return Status;
     }
 

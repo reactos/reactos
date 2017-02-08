@@ -13,19 +13,7 @@
  * daniel@veillard.com
  */
 
-#define IN_LIBXSLT
-#include "libxslt.h"
-
-#include <string.h>
-
-#include <libxml/xmlmemory.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
-#include <libxml/xpathInternals.h>
-#include "xslt.h"
-#include "xsltutils.h"
-#include "xsltInternals.h"
-#include "templates.h"
+#include "precomp.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_AVT

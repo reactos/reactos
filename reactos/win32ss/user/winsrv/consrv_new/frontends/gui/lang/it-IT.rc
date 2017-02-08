@@ -1,0 +1,26 @@
+/* Italian translation by Daniele Forsi (dforsi at gmail.com) */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Modifica"
+    IDS_MARK "Seleziona"
+    IDS_COPY "Copia\tInvio"
+    IDS_PASTE "Incolla"
+    IDS_SELECTALL "Seleziona tutto"
+    IDS_SCROLL "Scorri"
+    IDS_FIND "Trova..."
+    IDS_DEFAULTS "Impostazioni predefinite"
+    IDS_PROPERTIES "Proprietà"
+/*
+    IDS_SCROLLHERE "Scorri qui"
+    IDS_SCROLLTOP "Scorri in cima"
+    IDS_SCROLLBOTTOM "Scorri in fondo"
+    IDS_SCROLLPAGE_UP "Pagina sù"
+    IDS_SCROLLPAGE_DOWN "Pagina giù"
+    IDS_SCROLLUP "Scorri sù"
+    IDS_SCROLLDOWN "Scorri giù"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END

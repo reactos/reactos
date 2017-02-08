@@ -218,21 +218,24 @@ capGetDriverDescriptionW(WORD wDriverIndex,
                         if (dwInfoSize)
                         {
                             Version = HeapAlloc(GetProcessHeap(), 0, dwInfoSize);
-
-                            GetFileVersionInfo(szFileName, 0, dwInfoSize, Version);
-
-                            if (VerQueryValueW(Version, L"\\", &Ms, &Ls))
+                            
+                            if (Version != NULL)
                             {
-                                memmove(&FileInfo, Ms, Ls);
-                                swprintf(szVersion, L"Version: %d.%d.%d.%d",
-                                         HIWORD(FileInfo.dwFileVersionMS),
-                                         LOWORD(FileInfo.dwFileVersionMS),
-                                         HIWORD(FileInfo.dwFileVersionLS),
-                                         LOWORD(FileInfo.dwFileVersionLS));
+                                GetFileVersionInfo(szFileName, 0, dwInfoSize, Version);
 
-                                lstrcpynW(lpszVer, szVersion, cbVer);
+                                if (VerQueryValueW(Version, L"\\", &Ms, &Ls))
+                                {
+                                    memmove(&FileInfo, Ms, Ls);
+                                    swprintf(szVersion, L"Version: %d.%d.%d.%d",
+                                             HIWORD(FileInfo.dwFileVersionMS),
+                                             LOWORD(FileInfo.dwFileVersionMS),
+                                             HIWORD(FileInfo.dwFileVersionLS),
+                                             LOWORD(FileInfo.dwFileVersionLS));
+
+                                    lstrcpynW(lpszVer, szVersion, cbVer);
+                                }
+                                HeapFree(GetProcessHeap(), 0, Version);
                             }
-                            HeapFree(GetProcessHeap(), 0, Version);
                         }
                     }
 

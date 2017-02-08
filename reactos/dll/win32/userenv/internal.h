@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/internal.h
+ * FILE:            dll/win32/userenv/internal.h
  * PURPOSE:         internal stuff
  * PROGRAMMER:      Eric Kohl
  */
@@ -29,15 +29,15 @@
 
 /* directory.c */
 BOOL
-CopyDirectory (LPCWSTR lpDestinationPath,
-	       LPCWSTR lpSourcePath);
+CopyDirectory(LPCWSTR lpDestinationPath,
+              LPCWSTR lpSourcePath);
 
 BOOL
-CreateDirectoryPath (LPCWSTR lpPathName,
-		     LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+CreateDirectoryPath(LPCWSTR lpPathName,
+                    LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 
 BOOL
-RemoveDirectoryPath (LPCWSTR lpPathName);
+RemoveDirectoryPath(LPCWSTR lpPathName);
 
 /* misc.c */
 typedef struct _DYN_FUNCS
@@ -64,35 +64,40 @@ typedef struct _DYN_MODULE
 extern DYN_MODULE DynOle32;
 
 BOOL
-LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs);
+LoadDynamicImports(PDYN_MODULE Module,
+                   PDYN_FUNCS DynFuncs);
 
 VOID
 UnloadDynamicImports(PDYN_FUNCS DynFuncs);
 
 LPWSTR
-AppendBackslash (LPWSTR String);
+AppendBackslash(LPWSTR String);
 
 BOOL
-GetUserSidFromToken (HANDLE hToken,
-		     PUNICODE_STRING SidString);
+GetUserSidFromToken(HANDLE hToken,
+                    PSID *Sid);
+
+BOOL
+GetUserSidStringFromToken(HANDLE hToken,
+                          PUNICODE_STRING SidString);
 
 PSECURITY_DESCRIPTOR
 CreateDefaultSecurityDescriptor(VOID);
 
 /* profile.c */
 BOOL
-AppendSystemPostfix (LPWSTR lpName,
-		     DWORD dwMaxLength);
+AppendSystemPostfix(LPWSTR lpName,
+                    DWORD dwMaxLength);
 
 /* registry.c */
 BOOL
-CreateUserHive (LPCWSTR lpKeyName,
-		LPCWSTR lpProfilePath);
+CreateUserHive(LPCWSTR lpKeyName,
+               LPCWSTR lpProfilePath);
 
 /* setup.c */
 BOOL
 UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
-			       HKEY hUserKey);
+                               HKEY hUserKey);
 
 /* userenv.c */
 extern HINSTANCE hInstance;
@@ -106,5 +111,3 @@ VOID
 UninitializeGPNotifications(VOID);
 
 #endif /* _INTERNAL_H */
-
-/* EOF */

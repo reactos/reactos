@@ -1,5 +1,5 @@
 /*
- * CSRSRV Status 
+ * CSRSRV Status
  */
 
 /* Organization
@@ -14,7 +14,7 @@
  *              up the DosDevices Object Directory, and initializing each component.
  *
  * procsup.c  - Handles all internal functions dealing with the CSR Process Object,
- *              including de/allocation, de/referencing, un/locking, prority, and 
+ *              including de/allocation, de/referencing, un/locking, prority, and
  *              lookups. Also handles all external APIs which touch the CSR Process Object.
  *
  * server.c   - Handles all internal functions related to loading and managing Server

@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            win32ss/user/user32/windows/rect.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -193,16 +193,20 @@ SubtractRect(LPRECT lprcDst,
     if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
         return(FALSE);
 
-    CopyRect(lprcDst, lprcSrc1);
-
     if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
+    {
+        *lprcDst = *lprcSrc1;
         return(TRUE);
+    }
 
-    if (EqualRect(&tempRect, lprcDst))
+    if (EqualRect(&tempRect, lprcSrc1))
     {
         SetRectEmpty(lprcDst);
         return FALSE;
     }
+
+    *lprcDst = *lprcSrc1;
+
     if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
     {
         if(lprcDst->left == tempRect.left)
@@ -214,8 +218,8 @@ SubtractRect(LPRECT lprcDst,
     {
         if(lprcDst->top == tempRect.top)
             lprcDst->top = tempRect.bottom;
-        else if(lprcDst->right == tempRect.right)
-            lprcDst->right = tempRect.left;
+        else if(lprcDst->bottom == tempRect.bottom)
+            lprcDst->bottom = tempRect.top;
     }
 
     return(TRUE);

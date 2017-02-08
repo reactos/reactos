@@ -18,66 +18,71 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-
-#ifdef LANGUAGE_DA_DK
-    #include "wldap32_Da.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "wldap32_En.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "wldap32_Es.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "wldap32_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "wldap32_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "wldap32_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "wldap32_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "wldap32_Sv.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "wldap32_Tr.rc"
-#endif
+#include <windef.h>
 
 /* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DA_DK
+    #include "lang/wldap32_Da.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
-    #include "wldap32_De.rc"
+    #include "lang/wldap32_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/wldap32_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/wldap32_Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "wldap32_Fr.rc"
+    #include "lang/wldap32_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "wldap32_He.rc"
+    #include "lang/wldap32_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
-    #include "wldap32_Hu.rc"
+    #include "lang/wldap32_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "wldap32_It.rc"
+    #include "lang/wldap32_It.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/wldap32_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "wldap32_Lt.rc"
+    #include "lang/wldap32_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/wldap32_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/wldap32_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/wldap32_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "wldap32_Pt.rc"
+    #include "lang/wldap32_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "wldap32_Ro.rc"
+    #include "lang/wldap32_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "wldap32_Ru.rc"
+    #include "lang/wldap32_Ru.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/wldap32_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/wldap32_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/wldap32_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "wldap32_Uk.rc"
+    #include "lang/wldap32_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/wldap32_Zh.rc"
 #endif

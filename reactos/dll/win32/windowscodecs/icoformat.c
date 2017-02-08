@@ -16,26 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <objbase.h>
-#include <wincodec.h>
-
 #include "wincodecs_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #include <pshpack1.h>
 
@@ -203,8 +184,8 @@ static HRESULT WINAPI IcoFrameDecode_GetColorContexts(IWICBitmapFrameDecode *ifa
 static HRESULT WINAPI IcoFrameDecode_GetThumbnail(IWICBitmapFrameDecode *iface,
     IWICBitmapSource **ppIThumbnail)
 {
-    FIXME("(%p,%p)\n", iface, ppIThumbnail);
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, ppIThumbnail);
+    return IWICBitmapFrameDecode_QueryInterface(iface, &IID_IWICBitmapSource, (void **)ppIThumbnail);
 }
 
 static const IWICBitmapFrameDecodeVtbl IcoFrameDecode_Vtbl = {
@@ -235,7 +216,7 @@ static HRESULT ReadIcoDib(IStream *stream, IcoFrameDecode *result)
     IWICBitmapFrameDecode *framedecode;
     WICPixelFormatGUID pixelformat;
     IWICBitmapSource *source;
-    int has_alpha=FALSE; /* if TRUE, alpha data might be in the image data */
+    BOOL has_alpha=FALSE; /* if TRUE, alpha data might be in the image data */
     WICRect rc;
 
     hr = IcoDibDecoder_CreateInstance(&bmp_decoder);
@@ -296,7 +277,7 @@ static HRESULT ReadIcoDib(IStream *stream, IcoFrameDecode *result)
         {
             /* If the alpha channel is fully transparent, we should ignore it. */
             int nonzero_alpha = 0;
-            int i;
+            UINT i;
 
             for (i=0; i<(result->height*result->width); i++)
             {
@@ -400,7 +381,7 @@ static HRESULT ReadIcoPng(IStream *stream, IcoFrameDecode *result)
     WICRect rect;
     HRESULT hr;
 
-    hr = PngDecoder_CreateInstance(NULL, &IID_IWICBitmapDecoder, (void**)&decoder);
+    hr = PngDecoder_CreateInstance(&IID_IWICBitmapDecoder, (void**)&decoder);
     if (FAILED(hr))
         goto end;
     hr = IWICBitmapDecoder_Initialize(decoder, stream, WICDecodeMetadataCacheOnLoad);
@@ -741,16 +722,14 @@ static const IWICBitmapDecoderVtbl IcoDecoder_Vtbl = {
     IcoDecoder_GetFrame
 };
 
-HRESULT IcoDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT IcoDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     IcoDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(IcoDecoder));
     if (!This) return E_OUTOFMEMORY;

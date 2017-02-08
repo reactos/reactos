@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
+#pragma once
 
 #define IDR_BROWSE_MAIN_MENU           1000
 #define IDD_BROWSE_OPEN                1001
@@ -63,6 +62,9 @@
 #define IDS_ADDRESS                    1106
 
 #define IDB_IETOOLBAR                  1400
+#ifdef __REACTOS__
+#define IDC_PAGEICO                    1401
+#endif
 
 /* update status text in BINDSTATUS_* callback */
 #define IDS_STATUSFMT_FIRST            4096

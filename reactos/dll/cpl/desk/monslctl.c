@@ -1,4 +1,3 @@
-
 #include "desk.h"
 
 static const TCHAR szMonitorSelWndClass[] = TEXT("MONITORSELWNDCLASS");
@@ -40,6 +39,7 @@ typedef struct _MONITORSELWND
     PMONSL_MON Monitors;
     RECT rcExtent;
     RECT rcMonitors;
+    RECT rcOldMonitors;
     POINT ScrollPos;
     SIZE Margin;
     SIZE SelectionFrame;
@@ -262,6 +262,14 @@ MonSelRepaint(IN PMONITORSELWND infoPtr)
     InvalidateRect(infoPtr->hSelf,
                    &rc,
                    TRUE);
+
+    if (!EqualRect(&infoPtr->rcMonitors, &infoPtr->rcOldMonitors) &&
+        infoPtr->rcOldMonitors.right != infoPtr->rcOldMonitors.left)
+    {
+        MonSelRectToScreen(infoPtr, &infoPtr->rcOldMonitors, &rc);
+        InvalidateRect(infoPtr->hSelf, &rc, TRUE);
+        infoPtr->rcOldMonitors = infoPtr->rcMonitors;
+    }
 }
 
 static VOID
@@ -356,6 +364,7 @@ MonSelUpdateMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
         ScaleRectSizeFit(&rcExtSurface,
                          &rcExtDisplay);
 
+        infoPtr->rcOldMonitors = infoPtr->rcMonitors;
         infoPtr->rcMonitors = rcExtDisplay;
 
         /* Now that we know in which area all monitors are located,
@@ -530,7 +539,7 @@ MonSelGetMonitorRect(IN OUT PMONITORSELWND infoPtr,
 {
     RECT rc, rcClient;
 
-    if (Index < 0 || Index >= infoPtr->MonitorsCount)
+    if (Index < 0 || (UINT)Index >= infoPtr->MonitorsCount)
         return -1;
 
     if (!infoPtr->CanDisplay)
@@ -1460,7 +1469,7 @@ MonitorSelWndProc(IN HWND hwnd,
                                 Index++;
                         }
 
-                        if (infoPtr->SelectedMonitor < infoPtr->MonitorsCount)
+                        if (infoPtr->SelectedMonitor < (INT)infoPtr->MonitorsCount)
                         {
                             MonSelSetCurSelMonitor(infoPtr,
                                                    Index,

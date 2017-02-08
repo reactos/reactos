@@ -1,0 +1,115 @@
+/*
+ * Traditional Chinese resources for the Internet control panel applet
+ *
+ * Copyright 2010 Detlef Riekenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_CPL_NAME        "網際網路設定"
+    IDS_CPL_INFO        "配置Wine網際網路瀏覽器和相關的設定"
+    IDS_SEC_SETTINGS    "區域的安全設定: "
+    IDS_SEC_LEVEL0      "自定義"
+    IDS_SEC_LEVEL1      "非常低"
+    IDS_SEC_LEVEL2      "低"
+    IDS_SEC_LEVEL3      "中等"
+    IDS_SEC_LEVEL4      "增大"
+    IDS_SEC_LEVEL5      "高"
+END
+
+/* "General" propsheet */
+IDD_GENERAL DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "常規"
+BEGIN
+
+    GROUPBOX    "主頁", IDC_STATIC, 4, 4, 312, 56
+    LTEXT       "您可以選擇將用作您的主頁地址。",
+                IDC_STATIC, 10, 14, 300, 10
+    EDITTEXT    IDC_HOME_EDIT, 10, 26, 300, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    PUSHBUTTON  "當前頁(&C)", IDC_HOME_CURRENT, 58, 42, 80, 14
+    PUSHBUTTON  "默認頁(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
+    PUSHBUTTON  "空白頁(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
+    GROUPBOX    "瀏覽歷史記錄", IDC_STATIC, 4, 66, 312, 42
+    LTEXT       "您可以刪除快取的頁面、 小型文字檔案和其他資料。",
+                IDC_STATIC, 10, 76, 300, 10
+    PUSHBUTTON  "刪除檔案...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
+    PUSHBUTTON  "設定...(&S)", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
+
+END
+
+/* "Delete browsing history" dialog */
+IDD_DELETE_HISTORY DIALOG  0, 0, 250, 250
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "刪除瀏覽歷史記錄"
+BEGIN
+
+    AUTOCHECKBOX   "網際網路臨時檔案\n快取的網站頁面、 影象和證書的副本。",
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "小型文字檔案\n通過網站在您的計算機上儲存檔案存儲使用者首選項和登入資訊。",
+                    IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "歷史記錄\n您進入的網站的列表。",
+                    IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "表單資料\n您已進入形式的使用者名和其他資訊。",
+                    IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "密碼\n儲存在窗體中輸入的密碼。",
+                    IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "刪除", IDOK, 120, 230, 60, 15, WS_GROUP
+
+END
+
+/* "Security" propsheet */
+IDD_SECURITY DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "安全"
+BEGIN
+
+    CONTROL     "", IDC_SEC_LISTVIEW, "SysListView32",
+                LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL,
+                4, 4, 312, 58
+    LTEXT       "", IDC_SEC_ZONE_INFO, 4, 68, 312, 20
+    GROUPBOX    "", IDC_SEC_GROUP, 4, 88, 312, 126
+    CONTROL     "", IDC_SEC_TRACKBAR, "msctls_trackbar32",
+                TBS_VERT | TBS_AUTOTICKS | TBS_BOTH | TBS_REVERSED, 8, 98, 32, 100
+    LTEXT       "", IDC_SEC_LEVEL, 48, 102, 180, 12
+    LTEXT       "", IDC_SEC_LEVEL_INFO, 48, 114, 260, 80
+END
+
+/* "Content" propsheet */
+IDD_CONTENT DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "內容"
+BEGIN
+
+    GROUPBOX    "證書", IDC_STATIC, 4, 4, 312, 50
+    LTEXT       "為您的個人身份，確定證書頒發機構和出版商使用證書。",
+                IDC_STATIC, 58, 14, 252, 18
+    PUSHBUTTON  "證書...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON	"出版者...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+
+END
+

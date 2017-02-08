@@ -5,8 +5,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Numero di parametri errato - %s\n"
     IDS_INVALID_PARAMETER "Numero di parametri errato - %s\n"
     IDS_INVALID_PARAMETER2 "Parametro errato - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Unità già sostituita\n"
-    IDS_FAILED_WITH_ERROCODE "Interruzione con codice di errore 0x%x: %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Unità già sostituita\n"
+    IDS_FAILED_WITH_ERRORCODE "Interruzione con codice di errore 0x%x: %s\n"
     IDS_USAGE "Associa un percorso ad una lettera di unità.\n\n\
 SUBST [unità1: [unità2:]percorso]\n\
 SUBST unità1: /D\n\n\

@@ -267,6 +267,14 @@ Quickie:
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+BOOLEAN
+NTAPI
+KeIsWaitListEmpty(IN PVOID Object)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /*
  * @implemented
  */
@@ -285,6 +293,11 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
     ULONG Hand = 0;
 
+    if (Thread->WaitNext)
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    else
+        ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+
     /* If this is a user-mode wait of 0 seconds, yield execution */
     if (!(Interval->QuadPart) && (WaitMode != KernelMode))
     {
@@ -292,7 +305,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
         if (!(Alertable) && !(Thread->ApcState.UserApcPending))
         {
             /* Yield execution */
-            NtYieldExecution();
+            return NtYieldExecution();
         }
     }
 
@@ -595,7 +608,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
              (!Timeout || Timeout->QuadPart != 0))
     {
-        /* HACK: tcpip is broken and waits with spinlocks acquired (bug #7129) */
+        /* HACK: tcpip is broken and waits with spinlocks acquired (CORE-6473) */
         DPRINT("%s called at DISPATCH_LEVEL with non-zero timeout!\n",
                __FUNCTION__);
     }

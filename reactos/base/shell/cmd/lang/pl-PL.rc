@@ -1,25 +1,24 @@
 /*
- *         Translated by Caemyr - Olaf Siejka (Jan,2008)
- *         Updated by niski - Maciej Bialas (Mar,2010)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *    Updated by niski - Maciej Bialas (Mar, 2010)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
-BEGIN
 
-STRING_ASSOC_HELP,    "Modyfikuje skojarzenia rozszerzeń plików.\n\n\
+STRINGTABLE
+BEGIN
+    STRING_ASSOC_HELP "Modyfikuje skojarzenia rozszerzeń plików.\n\n\
 assoc [.ext[=[typPliku]]]\n\
 \n\
 assoc (wyświetla wszystkie skojarzenia)\n\
 assoc .ext (wyświetla określone skojarzenie)\n\
 assoc .ext= (usuwa określone skojarzenie)\n\
 assoc .ext=typPliku (dodaje nowe skojarzenie)\n"
-
-STRING_ATTRIB_HELP,    "Wyświetla lub zmienia atrybuty plików.\n\n\
+    STRING_ATTRIB_HELP "Wyświetla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
        [/S [/D]]\n\n\
   +   Ustawia atrybut\n\
@@ -32,8 +31,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
       i we wszystkich podkatalogach\n\
   /D  Przetwarza również katalogi\n\n\
 Wpisz ATTRIB bez żadnego parametru, by wyświetlić atrybuty wszystkich plików.\n"
-
-STRING_ALIAS_HELP,  "Ustawia, usuwa, a także wyświetla aliasy.\n\n\
+    STRING_ALIAS_HELP "Ustawia, usuwa, a także wyświetla aliasy.\n\n\
 ALIAS [nazwa=[tekst]]\n\n\
   nazwa   Nazwa aliasu.\n\
   tekst   Ciąg tekstu, jaki ma zostać zastąpiony aliasem.\n\n\
@@ -43,15 +41,12 @@ Aby ustawić nowy albo zmienić już istniejący alias:\n\
   ALIAS da=dir a:\n\n\
 Aby usunąć istniejący alias:\n\
   ALIAS da="
-
-STRING_BEEP_HELP, "Sygnał dźwiękowy z głośnika PC.\n\nBIIIIIP\n"
-
-STRING_CALL_HELP, "Umożliwia wywołanie programu wsadowego z poziomu innego.\n\n\
+    STRING_BEEP_HELP "Sygnał dźwiękowy z głośnika PC.\n\nBIIIIIP\n"
+    STRING_CALL_HELP "Umożliwia wywołanie programu wsadowego z poziomu innego.\n\n\
 CALL [napęd:][ścieżka]nazwa_pliku [parametry]\n\n\
   parametry   Wszelkie dane, wymagane przez program wsadowy,\n\
                który ma zostać wywołany."
-
-STRING_CD_HELP, "Zmienia obecny katalog albo wyświetla jego pełną nazwę. \n\n\
+    STRING_CD_HELP "Zmienia obecny katalog albo wyświetla jego pełną nazwę. \n\n\
 CHDIR [/D][napęd:][ścieżka]\n\
 CHDIR[..|.]\n\
 CD [/D][napęd:][ścieżka]\n\
@@ -61,13 +56,11 @@ CD[..|.]\n\n\
   /D   Umożliwia zmianę napędu.\n\n\
 Wpisz CD [napęd:], by wyświetlić bieżący katalog na danym napędzie.\n\
 Wpisz CD bez żadnych parametrów, by wyświetlić bieżący napęd i katalog.\n"
-
-STRING_CHCP_HELP,   "Wyświetla lub ustawia numer aktywnej strony kodowej.\n\n\
+    STRING_CHCP_HELP "Wyświetla lub ustawia numer aktywnej strony kodowej.\n\n\
 CHCP [nnn]\n\n\
   nnn   Numer strony kodowej.\n\n\
 Wpisz CHCP bez parametru, by wyświetlić numer aktywnej strony kodowej.\n"
-
-STRING_CHOICE_HELP, "Wyświetla opcje jakimi dysponuje użytkownik i oczekuje na wybór jednej z nich.\n\n\
+    STRING_CHOICE_HELP "Wyświetla opcje jakimi dysponuje użytkownik i oczekuje na wybór jednej z nich.\n\n\
 CHOICE  [/C[:]opcje][/N][/S][/T[:]c,nn][tekst]\n\n\
   /C[:]opcje  Wyznacza klawisze wyświetlane jako wybór. Domyślne: TN.\n\
   /N            Nie wyświetla klawiszy opcji ani znaku ? na końcu tekstu.\n\
@@ -75,32 +68,22 @@ CHOICE  [/C[:]opcje][/N][/S][/T[:]c,nn][tekst]\n\n\
   /T[:]c,nn     Komenda zwróci domyślny klawisz (c) po upływie (nn) sekund .\n\
   tekst         Tekst wyświetlany przy oczekiwaniu na wybór.\n\n\
 ERRORLEVEL ustawiony jest na kompensowanie wyboru użytkownika domyślnym.\n"
-
-STRING_CLS_HELP, "Czyści ekran konsoli.\n\nCLS\n"
-
-STRING_CMD_HELP1, "\nDostępne wewnętrzne polecenia:\n"
-
-STRING_CMD_HELP2, "\nDostępne opcje:"
-
-STRING_CMD_HELP3,"  [aliasy]"
-
-STRING_CMD_HELP4,"  [historia]"
-
-STRING_CMD_HELP5,"  [dopełnianie nazw unixa]"
-
-STRING_CMD_HELP6,"  [stos katalogu]"
-
-STRING_CMD_HELP7,"  [przekierowania i potoki]"
-
-STRING_CMD_HELP8, "Uruchamia nowe okno konsoli ReactOS (interpreter linii poleceń).\n\n\
+    STRING_CLS_HELP "Czyści ekran konsoli.\n\nCLS\n"
+    STRING_CMD_HELP1 "\nDostępne wewnętrzne polecenia:\n"
+    STRING_CMD_HELP2 "\nDostępne opcje:"
+    STRING_CMD_HELP3 "  [aliasy]"
+    STRING_CMD_HELP4 "  [historia]"
+    STRING_CMD_HELP5 "  [dopełnianie nazw unixa]"
+    STRING_CMD_HELP6 "  [stos katalogu]"
+    STRING_CMD_HELP7 "  [przekierowania i potoki]"
+    STRING_CMD_HELP8 "Uruchamia nowe okno konsoli ReactOS (interpreter linii poleceń).\n\n\
 CMD [/[C|K] komenda][/P][/Q][/T:bf]\n\n\
   /C komenda  Wykonuje podaną komendę i zamyka okno.\n\
   /K komenda  Wykonuje podaną komendę i pozostawia okno.\n\
   /P          CMD przetwarza autoexec.bat i pozostaje permanentny\n\
               (okno nie może zostać zamknięte).\n\
   /T:bf       Ustawia kolor tła/tekstu (patrz komenda COLOR).\n"
-
-STRING_COLOR_HELP1, "Ustawia domyślny kolor tła i tekstu.\n\n\
+    STRING_COLOR_HELP1 "Ustawia domyślny kolor tła i tekstu.\n\n\
 COLOR [atr [/-F]] \n\n\
   atr        Ustawienia koloru \n\
   /-F        Nie uzupełnia kolorem pustych przestrzeni w konsoli\n\n\
@@ -118,10 +101,8 @@ dec  hex  nazwa      dec  hex  nazwa\n\
 5    5    Purpurowy  13   D    Jasnopurpurowy\n\
 6    6    Żółty      14   E    Jasnożółty\n\
 7    7    Biały      15   F    Jaskrawobiały\n"
-
-STRING_COPY_HELP1,  "Nadpisać %s (Tak/Nie/Zawsze)? "
-
-STRING_COPY_HELP2, "Kopiuje jeden lub więcej plików do wskazanej lokacji.\n\n\
+    STRING_COPY_HELP1 "Nadpisać %s (Tak/Nie/Zawsze)? "
+    STRING_COPY_HELP2 "Kopiuje jeden lub więcej plików do wskazanej lokacji.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] źródło [/A|/B]\n\
      [+ źródło [/A|/B] [+ ...]] [cel [/A|/B]]\n\n\
   źródło       Miejsce, gdzie znajdują się plik(i) do skopiowania.\n\
@@ -135,20 +116,15 @@ COPY [/V][/Y|/-Y][/A|/B] źródło [/A|/B]\n\
                istniejącego pliku.\n\n\
 Opcja /Y może znaleźć się wśród zmiennych środowiskowych COPYCMD.\n\
 ...\n"
-
-STRING_DATE_HELP1, "\nPodaj nową datę (mm%cdd%crrrr): "
-
-STRING_DATE_HELP2, "\nPodaj nową datę (dd%cmm%crrrr): "
-
-STRING_DATE_HELP3, "\nPodaj nową datę (rrrr%cmm%cdd): "
-
-STRING_DATE_HELP4, "Wyświetla lub zmienia datę systemową.\n\n\
+    STRING_DATE_HELP1 "\nPodaj nową datę (mm%cdd%crrrr): "
+    STRING_DATE_HELP2 "\nPodaj nową datę (dd%cmm%crrrr): "
+    STRING_DATE_HELP3 "\nPodaj nową datę (rrrr%cmm%cdd): "
+    STRING_DATE_HELP4 "Wyświetla lub zmienia datę systemową.\n\n\
 DATE [/T][data]\n\n\
   /T    tylko wyświetlenie\n\n\
 Wpisz DATE bez żadnych parametrów, by wyświetlić obecną datę i\n\
 zapytać o nową. Naciśnięcie ENTER od razu, pozostawia obecną.\n"
-
-STRING_DEL_HELP1,  "Kasuje jeden lub więcej plików.\n\n\
+    STRING_DEL_HELP1 "Kasuje jeden lub więcej plików.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\n\
@@ -167,18 +143,15 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\n\
          A     Archiwa\n\
          H     Ukryte\n\
          -     przedrostek NIE\n"
-
-STRING_DEL_HELP2, "Wszystkie pliki w tym katalogu zostaną skasowane!\nCzy jesteś pewien (T/N)?"
-STRING_DEL_HELP3, "    %lu plik skasowany\n"
-STRING_DEL_HELP4, "    %lu pliki(-ów) skasowane(-ych)\n"
-
-STRING_DELAY_HELP, "Pauzuje na n sekund lub milisekund\n\
+    STRING_DEL_HELP2 "Wszystkie pliki w tym katalogu zostaną skasowane!\nCzy jesteś pewien (T/N)?"
+    STRING_DEL_HELP3 "    %lu plik skasowany\n"
+    STRING_DEL_HELP4 "    %lu pliki(-ów) skasowane(-ych)\n"
+    STRING_DELAY_HELP "Pauzuje na n sekund lub milisekund\n\
 DELAY [/m]n\n\n\
   /m          wymusza traktowanie n jako milisekund,\n\
               w innym wypadku będzie traktowane jako sekundy\n"
-
-STRING_DIR_HELP1, "DIR [napęd:][ścieżka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]porządek]] [/P] [/Q] [/S] [/T[[:]czas]] [/W] [/X] [/4]\n\n\
+    STRING_DIR_HELP1 "DIR [napęd:][ścieżka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]porządek]] [/P] [/Q] [/R] [/S] [/T[[:]czas]] [/W] [/X] [/4]\n\n\
   [napęd:][ścieżka][nazwa_pliku]\n\
               Wyznacza literę napędu, katalog, i/lub pliki do wyświetlenia.\n\n\
   /A          Wyświetla pliki o określonych atrybutach.\n\
@@ -197,6 +170,7 @@ STRING_DIR_HELP1, "DIR [napęd:][ścieżka][pliki] [/A[[:]atrybuty]] [/B] [/C] [
                G  Wyświetla najpierw katalogi      -  Odwraca kolejność\n\
   /P          Pauza po każdym pełnym ekranie.\n\
   /Q          Wyświetla właściciela plików\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Wyświetla pliki w danym katalogu i wszystkich podkatalogach.\n\
   /T          Pole czasu, odpowiedzialne za wyświetlanie/sortowanie \n\
   czas        C  Utworzenia\n\
@@ -210,50 +184,38 @@ STRING_DIR_HELP1, "DIR [napęd:][ścieżka][pliki] [/A[[:]atrybuty]] [/B] [/C] [
   /4          Wyświetla lata w formacie czterocyfrowym.\n\n\
 Parametry mogą znaleźć się wśród zmiennych środowiskowych DIRCMD. Można\n\
 odwrócić działanie parametrów przedrostkiem - (myślnik)-- na przykład, /-W.\n"
-
-STRING_DIR_HELP2, " Wolumin w napędzie %c ma etykietę: %s\n"
-STRING_DIR_HELP3, " Wolumin w napędzie %c nie posiada etykiety.\n"
-STRING_DIR_HELP4, " Numer seryjny woluminu to: %04X-%04X\n"
-STRING_DIR_HELP5, "\n     Ogółem wyświetonych:\n%16i plik(ów)% 14s bajtów\n"
-STRING_DIR_HELP6, "%16i katalog(ów)% 15s bajtów\n"
-STRING_DIR_HELP7, "\n katalog %s\n\n"
-STRING_DIR_HELP8, "%16i plik(ów)% 14s bajtów\n"
-
-STRING_DIRSTACK_HELP1, "Przechowuje obecny katalog dla potrzeb komendy POPD, następnie\n\
+    STRING_DIR_HELP2 " Wolumin w napędzie %c ma etykietę: %s\n"
+    STRING_DIR_HELP3 " Wolumin w napędzie %c nie posiada etykiety.\n"
+    STRING_DIR_HELP4 " Numer seryjny woluminu to: %04X-%04X\n"
+    STRING_DIR_HELP5 "\n     Ogółem wyświetonych:\n%16i plik(ów)% 14s bajtów\n"
+    STRING_DIR_HELP6 "%16i katalog(ów)% 15s bajtów wolne\n"
+    STRING_DIR_HELP7 "\n katalog %s\n\n"
+    STRING_DIR_HELP8 "%16i plik(ów)% 14s bajtów\n"
+    STRING_DIRSTACK_HELP1 "Przechowuje obecny katalog dla potrzeb komendy POPD, następnie\n\
 zmienia na podany.\n\n\
 PUSHD [ścieżka | ..]\n\n\
   ścieżka      Określa ścieżkę dostępu do katalogu, podawanego do komendy\n"
-
-STRING_DIRSTACK_HELP2, "Zmienia katalog przechowywany w stosie przez PUSHD.\n\nPOPD"
-
-STRING_DIRSTACK_HELP3, "Wyświetla zawartość stosu katalogów.\n\nDIRS"
-
-STRING_DIRSTACK_HELP4, "Stos katalogów jest pusty."
-
-STRING_ECHO_HELP1,  "Wyświetla wiadomość bez następujących po każdej linii znaków CR/LF.\n\n\
+    STRING_DIRSTACK_HELP2 "Zmienia katalog przechowywany w stosie przez PUSHD.\n\nPOPD"
+    STRING_DIRSTACK_HELP3 "Wyświetla zawartość stosu katalogów.\n\nDIRS"
+    STRING_DIRSTACK_HELP4 "Stos katalogów jest pusty."
+    STRING_ECHO_HELP1 "Wyświetla wiadomość bez następujących po każdej linii znaków CR/LF.\n\n\
   ECHOS wiadomość"
-
-STRING_ECHO_HELP2,  "Wyświetla wiadomość dla domyślnego odbiorcy błędów.\n\n\
+    STRING_ECHO_HELP2 "Wyświetla wiadomość dla domyślnego odbiorcy błędów.\n\n\
   ECHOERR wiadomość)\n\
   ECHOERR.              wyświetla pustą linię"
-
-STRING_ECHO_HELP3, "Wyświetla wiadomość dla domyślnego odbiorcy błędów bez znaków CR/LF.\n\n\
+    STRING_ECHO_HELP3 "Wyświetla wiadomość dla domyślnego odbiorcy błędów bez znaków CR/LF.\n\n\
   ECHOSERR wiadomość"
-
-STRING_ECHO_HELP4, "Wyświetla wiadomość albo włącza/wyłącza wyświetlanie.\n\n\
+    STRING_ECHO_HELP4 "Wyświetla wiadomość albo włącza/wyłącza wyświetlanie.\n\n\
   ECHO [ON | OFF]\n\
   ECHO [wiadomość]\n\
   ECHO.             wyświetla pustą linię\n\n\
 Wpisz ECHO bez żadnych parametrów, by wyświetlić obecne ustawienie."
-
-STRING_ECHO_HELP5, "ECHO jest %s\n"
-
-STRING_EXIT_HELP, "Zamyka okno konsoli.\n\nEXIT [/b] [kod]\n\n\
+    STRING_ECHO_HELP5 "ECHO jest %s\n"
+    STRING_EXIT_HELP "Zamyka okno konsoli.\n\nEXIT [/b] [kod]\n\n\
   /B            Zamyka jedynie plik wsadowy.  \n\
                 Jeśli użyty będzie poza plikiem wsadowym, zamknie cmd.exe\n\
   kod           Ta wartość zostanie przypisana do ERRORLEVEL przy wyjściu.\n"
-
-STRING_FOR_HELP1, "Uruchamia wyznaczoną komendę dla każdego pliku w zestawie\n\n\
+    STRING_FOR_HELP1 "Uruchamia wyznaczoną komendę dla każdego pliku w zestawie\n\n\
 FOR %zmienna IN (zestaw) DO komenda [parametery]\n\n\
   %zmienna    Wyznacza zamienny parametr.\n\
   (zestaw)    Definiuje zestaw plików. Można stosować wieloznaczniki (np. *.*)\n\
@@ -261,16 +223,17 @@ FOR %zmienna IN (zestaw) DO komenda [parametery]\n\n\
   parametry   Wyznacza parametry dla podanej komendy.\n\n\
 By użyć FOR w pliku wsadowym, oznacz zmienną jako %%zmienna zamiast\n\
 %zmienna.\n"
-
-STRING_FREE_HELP1, "\nWolumin w napędzie %s ma etykietę: %-11s\n\
+    STRING_FREE_HELP1 "\nWolumin w napędzie %s ma etykietę: %-11s\n\
  Numer seryjny woluminu to: %s\n\
   %16s bajtów na dysku ogółem\n\
   %16s bajtów zajęte\n\
   %16s bajtów wolne\n"
-
-STRING_FREE_HELP2, "Wyświetla informacje o wolnym miejscu w napędzie.\n\nFREE [napęd: ...]\n"
-
-STRING_IF_HELP1, "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
+    STRING_FREE_HELP2 "Wyświetla informacje o wolnym miejscu w napędzie.\n\nFREE [napęd: ...]\n"
+    STRING_GOTO_HELP1 "Przekierowuje CMD do oznaczonej linii w programie wsadowym.\n\n\
+GOTO etykieta\n\n\
+  etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
+Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
+    STRING_IF_HELP1 "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
   IF [NOT] ERRORLEVEL numer komenda\n\
   IF [NOT] ciąg_znaków1==ciąg_znaków2 komenda\n\
   IF [NOT] EXIST plik komenda\n\
@@ -283,46 +246,31 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
-
-STRING_GOTO_HELP1,  "Przekierowuje CMD do oznaczonej linii w programie wsadowym.\n\n\
-GOTO etykieta\n\n\
-  etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
-Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
-
-STRING_LABEL_HELP1, "Wyświetla lub zmienia etykietę napędu.\n\nLABEL [napęd:][etykieta]\n"
-
-STRING_LABEL_HELP2, "Wolumin w napędzie %c: ma etykietę: %s\n"
-STRING_LABEL_HELP3, "Wolumin w napędzie %c: nie posiada etykiety\n"
-STRING_LABEL_HELP4, "Numer seryjny woluminu to: %04X-%04X\n"
-STRING_LABEL_HELP5, "Podaj etykietę (0-11 znaków, ENTER = brak etykiety) "
-
-STRING_LOCALE_HELP1, "Czas bieżący"
-
-STRING_MKDIR_HELP,   "Tworzy katalog.\n\n\
+    STRING_LABEL_HELP1 "Wyświetla lub zmienia etykietę napędu.\n\nLABEL [napęd:][etykieta]\n"
+    STRING_LABEL_HELP2 "Wolumin w napędzie %c: ma etykietę: %s\n"
+    STRING_LABEL_HELP3 "Wolumin w napędzie %c: nie posiada etykiety\n"
+    STRING_LABEL_HELP4 "Numer seryjny woluminu to: %04X-%04X\n"
+    STRING_LABEL_HELP5 "Podaj etykietę (0-11 znaków, ENTER = brak etykiety) "
+    STRING_LOCALE_HELP1 "Czas bieżący"
+    STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"
-
-STRING_MKLINK_HELP, "Tworzy dowiązanie obiektu w systemie plików.\n\n\
+    STRING_MKLINK_HELP "Tworzy dowiązanie obiektu w systemie plików.\n\n\
 MKLINK [/D | /H | /J] nazwa_linku element_docelowy\n\n\
   /D  Oznacza, że dowiązanie symboliczne elementu docelowego jest katalogiem.\n\
   /H  Tworzy dowiązanie twarde.\n\
   /J  Tworzy punkt połączenia katalogów.\n\n\
 Jeśli nie zostały użyte zarówno /H jak i /J, zostanie utworzone dowiązanie symboliczne."
-
-STRING_MEMMORY_HELP1, "Wyświetla ilość pamięci systemowej.\n\nMEMORY"
-
-STRING_MEMMORY_HELP2, "\n  %12s%% pamięci zajętej.\n\n\
+    STRING_MEMMORY_HELP1 "Wyświetla ilość pamięci systemowej.\n\nMEMORY"
+    STRING_MEMMORY_HELP2 "\n  %12s%% pamięci zajętej.\n\n\
   %13s bajtów pamięci RAM ogółem.\n\
   %13s bajtów pamięci RAM dostępne.\n\n\
   %13s bajtów w pliku stronicowania ogółem.\n\
   %13s bajtów dostępnych w pliku stronicowania.\n\n\
   %13s bajtów pamięci wirtualnej ogółem.\n\
   %13s bajtów pamięci wirtualnej dostępne.\n"
-
-STRING_MISC_HELP1, "Naciśnij dowolny klawisz, aby kontynuować...\n"
-
-STRING_MOVE_HELP1, "Nadpisać %s (Tak/Nie/Zawsze)? "
-
-STRING_MOVE_HELP2, "Przenosi, a także zmienia nazwy plików i katalogów.\n\n\
+    STRING_MISC_HELP1 "Naciśnij dowolny klawisz, aby kontynuować...\n"
+    STRING_MOVE_HELP1 "Nadpisać %s (Tak/Nie/Zawsze)? "
+    STRING_MOVE_HELP2 "Przenosi, a także zmienia nazwy plików i katalogów.\n\n\
 Aby przenieść jeden lub więcej plików:\n\
 MOVE [/N][napęd:][ścieżka]nazwa_pliku1[,...] cel\n\n\
 Aby zmienić nazwę katalogu:\n\
@@ -332,8 +280,7 @@ MOVE [/N][napęd:][ścieżka]nazwa1 nazwa2\n\n\
   /N                      Nic. Zrób wszystko, oprócz przenoszenia plików/katalogów.\n\n\
 Obecne ograniczenia:\n\
   - Nie możesz przenieść pliku ani katalogu z jednego napędu na inny.\n"
-
-STRING_MSGBOX_HELP, "Wyświetla okno dialogowe i zwraca odpowiedź użytkownika\n\n\
+    STRING_MSGBOX_HELP "Wyświetla okno dialogowe i zwraca odpowiedź użytkownika\n\n\
 MSGBOX typ ['tytuł'] tekst\n\n\
 typ           Rodzaj okna dialogowego\n\
               możliwe okna: OK, OKCANCEL,\n\
@@ -343,14 +290,12 @@ tekst         Tekst wyświetlony w oknie dialogowym\n\n\n\
 Wartość ERRORLEVEL wynosi zależnie od naciśniętego przycisku:\n\n\
 TAK  :  10    |  NIE      :  11\n\
 OK   :  10    |  ANULUJ   :  12\n"
-
-STRING_PATH_HELP1, "Wyświetla lub ustawia ścieżkę dostępu dla programów.\n\n\
+    STRING_PATH_HELP1 "Wyświetla lub ustawia ścieżkę dostępu dla programów.\n\n\
 PATH [[napęd:]ścieżka[;...]]\nPATH ;\n\n\
 Wpisz PATH ; jeśli chcesz wyczyścić wszystkie zapisane ścieżki dostępu i zmusić konsolę\n\
 do przeszukiwania wyłącznie katalogu bieżącego.\n\
 Wpisz PATH bez żadnych parametrów, by wyświetlić zapisane ścieżki dostępu.\n"
-
-STRING_PROMPT_HELP1, "Zmienia znak zachęty.\n\n\
+    STRING_PROMPT_HELP1 "Zmienia znak zachęty.\n\n\
 PROMPT [tekst]\n\n\
   tekst   Definiuje nowy znak zachęty.\n\n\
 Znak zachęty może składać się z normalnych znaków, a także poniższych symboli:\n\n\
@@ -362,32 +307,28 @@ Znak zachęty może składać się z normalnych znaków, a także poniższych sy
   $F   ) (prawy nawias)\n\
   $G   > (znak większości)\n\
   $H   (usuwa ostatni znak)\n\
+  $I   Information line\n\
   $L   < (znak mniejszości)\n\
   $N   Bieżący napęd\n\
   $P   Bieżący napęd i ścieżka\n\
   $Q   = (znak równości)\n\
+  $S   (space)\n\
   $T   Bieżący czas\n\
   $V   Wersja systemu\n\
   $_   Znak CR/LF\n\
   $$   $ (dolar)\n"
-
-STRING_PAUSE_HELP1, "Zatrzymuje wykonywanie programu wsadowego i pokazuje wiadomość:\n\
+    STRING_PAUSE_HELP1 "Zatrzymuje wykonywanie programu wsadowego i pokazuje wiadomość:\n\
 'Naciśnij dowolny klawisz, aby kontynuować...' albo inną dowolną.\n\n\
 PAUSE [wiadomość]"
-
-STRING_PROMPT_HELP2, "  $+   Wyświetla obecny poziom stosu katalogów"
-
-STRING_PROMPT_HELP3, "\nWpisz PROMPT bez żadnych parametrów, by powrócić do ustawień domyślnych."
-
-STRING_REM_HELP, "Definiuje linię komentarza w pliku wsadowym.\n\nREM [komentarz]"
-
-STRING_RMDIR_HELP,   "Usuwa katalog.\n\n\
+    STRING_PROMPT_HELP2 "  $+   Wyświetla obecny poziom stosu katalogów"
+    STRING_PROMPT_HELP3 "\nWpisz PROMPT bez żadnych parametrów, by powrócić do ustawień domyślnych."
+    STRING_REM_HELP "Definiuje linię komentarza w pliku wsadowym.\n\nREM [komentarz]"
+    STRING_RMDIR_HELP "Usuwa katalog.\n\n\
 RMDIR [napęd:]ścieżka\nRD [napęd:]ścieżka\n\
-/S		Kasuje także wszystkie pliki i podkatalogi w danym katalogu\n\
-/Q		Nie wyświetla prośby o potwierdzenie\n"
-STRING_RMDIR_HELP2,	"Katalog nie jest pusty!\n"
-
-STRING_REN_HELP1, "Zmienia nazwę pliku/katalogu (także wielu).\n\n\
+/S      Kasuje także wszystkie pliki i podkatalogi w danym katalogu\n\
+/Q      Nie wyświetla prośby o potwierdzenie\n"
+    STRING_RMDIR_HELP2 "Katalog nie jest pusty!\n"
+    STRING_REN_HELP1 "Zmienia nazwę pliku/katalogu (także wielu).\n\n\
 RENAME [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\
 REN [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\n\
   /E    Bez komunikatów o błędach.\n\
@@ -399,13 +340,9 @@ REN [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\n\
   /T    Wyświetla podsumowanie ilości zmienionych nazw.\n\n\
 Uwaga: możesz również podać nową ścieżkę dostępu dla zmienionych plików. Użyj\n\
 do tego komendy MOVE.\n"
-
-STRING_REN_HELP2, "   zmieniono nazwę %lu pliku\n"
-
-STRING_REN_HELP3, "   zmieniono nazwy %lu plików\n"
-
-//FIXME
-STRING_REPLACE_HELP1, "Zamienia pliki.\n\n\
+    STRING_REN_HELP2 "   zmieniono nazwę %lu pliku\n"
+    STRING_REN_HELP3 "   zmieniono nazwy %lu plików\n"
+    STRING_REPLACE_HELP1 "Zamienia pliki.\n\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
@@ -422,64 +359,43 @@ REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] 
   /W                      Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
   /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od \n\
                            źródłowych. Nie można łączyć z opcją /A.\n"
-
-STRING_REPLACE_HELP2, "Brak ścieżki do źródła\n"
-
-STRING_REPLACE_HELP3, "Nie zamieniono żadnego pliku\n"
-
-STRING_REPLACE_HELP4, "Zamieniono %lu plik(i/ów) \n"
-
-STRING_REPLACE_HELP5, "Zamiana %s\n"
-
-STRING_REPLACE_HELP6, "Zamieniony %s\n"
-
-STRING_REPLACE_HELP7, "Nie dodano nowych plików\n"
-
-STRING_REPLACE_HELP8, "Dodano %lu plik(i/ów)\n"
-
-STRING_REPLACE_HELP9, "Czy dodać %s (T/N) "
-
-STRING_REPLACE_HELP10, "Czy zamienić %s (T/N) "
-
-STRING_REPLACE_HELP11, "Dodawanie %s\n"
-
-
-STRING_SHIFT_HELP, "Zmienia pozycję parametru w pliku wsadowym.\n\n\
+    STRING_REPLACE_HELP2 "Brak ścieżki do źródła\n"
+    STRING_REPLACE_HELP3 "Nie zamieniono żadnego pliku\n"
+    STRING_REPLACE_HELP4 "Zamieniono %lu plik(i/ów) \n"
+    STRING_REPLACE_HELP5 "Zamiana %s\n"
+    STRING_REPLACE_HELP6 "Zamieniony %s\n"
+    STRING_REPLACE_HELP7 "Nie dodano nowych plików\n"
+    STRING_REPLACE_HELP8 "Dodano %lu plik(i/ów)\n"
+    STRING_REPLACE_HELP9 "Czy dodać %s (T/N) "
+    STRING_REPLACE_HELP10 "Czy zamienić %s (T/N) "
+    STRING_REPLACE_HELP11 "Dodawanie %s\n"
+    STRING_SHIFT_HELP "Zmienia pozycję parametru w pliku wsadowym.\n\n\
 SHIFT [DOWN]"
-
-STRING_SCREEN_HELP, "Przesuwa kursor i opcjonalnie wyświetla tekst\n\n\
+    STRING_SCREEN_HELP "Przesuwa kursor i opcjonalnie wyświetla tekst\n\n\
 SCREEN rząd kolumna [tekst]\n\n\
   rząd         numer rzędu, do którego zostanie przesunięty kursor\n\
   kolumna      numer kolumny, do której zostanie przesunięty kursor"
-
-STRING_SET_HELP, "Wyświetla, ustawia lub usuwa zmienne środowiskowe.\n\n\
+    STRING_SET_HELP "Wyświetla, ustawia lub usuwa zmienne środowiskowe.\n\n\
 SET [zmienna[=][parametry]]\n\n\
   zmienna      Określa nazwę zmiennej środowiskowej.\n\
   parametry    Określa parametry przypisane do tej zmiennej.\n\n\
 Wpisz SET bez żadnych parametrów, by wyświetlić obecne ustawienia zmiennych.\n"
-
-STRING_START_HELP1, "Wywołuje komendę.\n\n\
+    STRING_START_HELP1 "Wywołuje komendę.\n\n\
 START komenda\n\n\
   komenda     Określa komendę, jaka ma być wywołana.\n\n\
 Obecnie wszystkie komendy są uruchamiane asynchronicznie.\n"
-
-STRING_TITLE_HELP, "Ustawia tytuł dla okna ze znakiem zachęty.\n\n\
+    STRING_TITLE_HELP "Ustawia tytuł dla okna ze znakiem zachęty.\n\n\
 TITLE [tytuł]\n\n\
 tytuł       Określa tytuł dla okna.\n"
-
-STRING_TIME_HELP1, "Wyświetla lub ustawia czas systemowy.\n\n\
+    STRING_TIME_HELP1 "Wyświetla lub ustawia czas systemowy.\n\n\
 TIME [/T][czas]\n\n\
   /T    tylko wyświetla\n\n\
 Wpisz TIME bez żadnych parametrów, by wyświetlić obecny czas i\n\
 zapytać o nowy. Naciśnięcie ENTER bez podawania czasu zachowuje obecny.\n"
-
-STRING_TIME_HELP2, "Wprowadź nowy czas: "
-
-STRING_TIMER_HELP1, "Upłynęło %d milisek.\n"
-
-STRING_TIMER_HELP2, "Upłynęło %02d%c%02d%c%02d%c%02d\n"
-
-STRING_TIMER_HELP3, "Umożliwia użycie stoperów (maksymalnie 10 na raz).\n\n\
+    STRING_TIME_HELP2 "Wprowadź nowy czas: "
+    STRING_TIMER_HELP1 "Upłynęło %d milisek.\n"
+    STRING_TIMER_HELP2 "Upłynęło %02d%c%02d%c%02d%c%02d\n"
+    STRING_TIMER_HELP3 "Umożliwia użycie stoperów (maksymalnie 10 na raz).\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          uruchamia stoper\n\
   OFF         wyłącza stoper\n\
@@ -494,61 +410,47 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 jeśli nie podano w składni parametrów: ON, OFF or /S, \n\
 komenda zmieni obecny stan stopera\n\n"
-
-STRING_TYPE_HELP1, "Wyświetla zawartość plików tekstowych.\n\nTYPE [napęd:][ścieżka]nazwa_pliku \n\
-  /P 		  Pauzuje po każdym pełnym ekranie.\n"
-
-STRING_VERIFY_HELP1, "Ta komenda jest tylko na podpuchę\
+    STRING_TYPE_HELP1 "Wyświetla zawartość plików tekstowych.\n\nTYPE [napęd:][ścieżka]nazwa_pliku \n\
+  /P          Pauzuje po każdym pełnym ekranie.\n"
+    STRING_VERIFY_HELP1 "Ta komenda jest tylko na podpuchę\
 Odpowiada za to, czy po zapisaniu plików ma nastąpić sprawdzenie\n\
 poprawności tego zapisu.\n\n\
 VERIFY [ON | OFF]\n\n\
 Wpisz VERIFY bez żadnych parametrów by sprawdzić aktualne ustawienie komendy.\n"
-
-STRING_VERIFY_HELP2, "Stan VERIFY: %s.\n"
-
-STRING_VERIFY_HELP3, "Musisz określić: ON czy OFF."
-
-STRING_VERSION_HELP1, "Wyświetla informacje o wersji powłoki\n\n\
+    STRING_VERIFY_HELP2 "Stan VERIFY: %s.\n"
+    STRING_VERIFY_HELP3 "Musisz określić: ON czy OFF."
+    STRING_VERSION_HELP1 "Wyświetla informacje o wersji powłoki\n\n\
 VER [/C][/R][/W]\n\n\
   /C  Wyświetla podziękowania.\n\
   /R  Wyświetla informacje o redystrybucji.\n\
   /W  Wyświetla informacje o gwarancji."
-
-STRING_VERSION_HELP2, " jest rozpowszechniany BEZ ŻADNEJ GWARANCJI; szczegóły\n\
+    STRING_VERSION_HELP2 " jest rozpowszechniany BEZ ŻADNEJ GWARANCJI; szczegóły\n\
 dostępne - wpisz: `ver /w'. To jest darmowe oprogramowanie, i można je\n\
 rozpowszechniać pod pewnymi warunkami: wpisz `ver /r'. Lista podziękowań pod\n\
 parametrem: `ver /c'."
-
-STRING_VERSION_HELP3, "\n Program ten jest rozpowszechniany w dobrej wierze, ze względu\n\
+    STRING_VERSION_HELP3 "\n Program ten jest rozpowszechniany w dobrej wierze, ze względu\n\
  na jego użyteczność, ale BEZ ŻADNEJ GWARANCJI; nie jest on przeznaczony\n\
  NA SPRZEDAŻ, ani do użytku profesjonalnego. Szczegóły dostępne w\n\
  GNU General Public License."
-
-STRING_VERSION_HELP4, "\n To jest darmowe oprogramowanie; możesz je rozpowszechniać i modyfikować,\n\
+    STRING_VERSION_HELP4 "\n To jest darmowe oprogramowanie; możesz je rozpowszechniać i modyfikować,\n\
 o ile nie naruszasz warunków GNU General Public License, w formie opublikowanej\n\
 przez Free Software Foundation; wersja 2 albo dowolna późniejsza.\n"
-
-STRING_VERSION_HELP5, "\nRaporty o błędach prosimy przesyłać pod adres: <ros-dev@reactos.org>.\n\
+    STRING_VERSION_HELP5 "\nRaporty o błędach prosimy przesyłać pod adres: <ros-dev@reactos.org>.\n\
 Uaktualnienia dostępne na stronie: http://www.reactos.org"
-
-STRING_VERSION_HELP6, "\nwersja FreeDOS, napisana przez:\n"
-
-STRING_VERSION_HELP7, "\nwersja ReactOS, napisana przez:\n"
-
-STRING_VOL_HELP1, " Wolumin w napędzie %c ma etykietę: %s"
-STRING_VOL_HELP2, " Wolumin w napędzie %c nie posiada etykiety.\n"
-STRING_VOL_HELP3, " Numer seryjny woluminu to: %04X-%04X\n"
-STRING_VOL_HELP4, "Wyświetla etykietę woluminu w danym napędzie (o ile istnieje) i jego numer seryjny.\n\nVOL [napęd:]"
-
-STRING_WINDOW_HELP1, "Zmienia wymiar i pozycję danego okna konsoli\n\n\
+    STRING_VERSION_HELP6 "\nwersja FreeDOS, napisana przez:\n"
+    STRING_VERSION_HELP7 "\nwersja ReactOS, napisana przez:\n"
+    STRING_VOL_HELP1 " Wolumin w napędzie %c ma etykietę: %s"
+    STRING_VOL_HELP2 " Wolumin w napędzie %c nie posiada etykiety.\n"
+    STRING_VOL_HELP3 " Numer seryjny woluminu to: %04X-%04X\n"
+    STRING_VOL_HELP4 "Wyświetla etykietę woluminu w danym napędzie (o ile istnieje) i jego numer seryjny.\n\nVOL [napęd:]"
+    STRING_WINDOW_HELP1 "Zmienia wymiar i pozycję danego okna konsoli\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['tytuł']\n\n\
 /POS          określa położenie i rozmiary okna\n\
 MIN           minimalizuje okno\n\
 MAX           maksymalizuje okno\n\
 RESTORE       odtwarza standardowe ustawienia okna"
-
-STRING_WINDOW_HELP2, "Zmienia wymiar i pozycję określonego okna konsoli\n\n\
+    STRING_WINDOW_HELP2 "Zmienia wymiar i pozycję określonego okna konsoli\n\n\
 ACTIVATE 'tytuł' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['nowy_tytuł']\n\n\
 window        tytuł okna, na którym zostaną przeprowadzone zmiany\n\
@@ -557,165 +459,90 @@ MIN           minimalizuje okno\n\
 MAX           maksymalizuje okno\n\
 RESTORE       odtwarza standardowe ustawienia okna\n\
 title         nowy tytuł okna\n"
-
-
-STRING_HELP1, "Lista wszystkich dostępnych komend (+opisy)\n\n\
-  komenda /?     Wyświetla dokładny opis danej komendy\n\n\
-?        Lista wszystkich dostępnych komend (bez opisów).\n\
-ALIAS    Ustawia, pokazuje lub usuwa aliasy.\n\
-ATTRIB   Wyświetla lub zmienia atrybuty plików.\n\
-BEEP     Sygnał przez głośnik PC.\n\
-CALL     Wywołuje program wsadowy z poziomu innego.\n\
-CD       Wyświetla ścieżkę lub przechodzi do innego katalogu.\n\
-CHCP     Wyświetla lub ustawia bieżącą stronę kodową.\n\
-CHOICE   Przedstawia użytkownikowi kilka możliwości i czeka na wybór.\n\
-CLS      Czyści ekran.\n\
-CMD      Uruchamia kolejne okno konsoli ReactOS.\n\
-COLOR    Ustawia kolory tła i tekstu w oknie konsoli.\n\
-COPY     Kopiuje jeden lub więcej plików w inne miejsce.\n\
-DATE     Wyświetla lub ustawia datę.\n\
-DELETE   Kasuje jeden lub więcej plików.\n\
-DIR      Wyświetla listę plików i podkatalogów w danym katalogu.\n\
-ECHO     Wyświetla wiadomości albo włącza/wyłącza komendę ECHO.\n\
-ERASE    Kasuje jeden lub więcej plików.\n\
-EXIT     Zamyka bieżące okno konsoli.\n\
-FOR      Wykonuje określoną komendę dla każdego pliku z określonej listy.\n\
-FREE     Wolne miejsce na dysku.\n\
-GOTO     Kieruje interpreter poleceń do określonej linii,\n\
-         oznaczonej, w danym programie wsadowym.\n\
-HELP     Lista komend konsoli ReactOS wraz z opisem.\n\
-HISTORY  Lista użytych komend.\n\
-IF       Przetwarzanie warunkowe w programach wsadowych.\n\
-LABEL    Tworzy, zmienia lub kasuje etykietę woluminu w danym napędzie.\n\
-MD       Tworzy katalog.\n\
-MKDIR    Tworzy katalog.\n\
-MKLINK   Tworzy dowiązanie obiektu w systemie plików.\n\
-MOVE     Przenosi jeden lub więcej plików z jednego katalogu do drugiego.\n\
-PATH     Wyświetla lub ustawia ścieżki dostępu dla programów.\n\
-PAUSE    Zawiesza przetwarzanie programu wsadowego i wyświetla komunikat.\n\
-POPD     Odtwarza poprzednią nazwę danego katalogu, zapisaną przez\n\
-         PUSHD.\n\
-PROMPT   Zmienia znak zachęty w linii poleceń.\n\
-PUSHD    Zapisuje obecną nazwę katalogu, po czym zmienia ją.\n\
-RD       Usuwa katalog.\n\
-REM      Oznaczenie linii komentarza w programie wsadowym.\n\
-REN      Zmienia nazwę pliku lub plików.\n\
-RENAME   Zmienia nazwę pliku lub plików.\n\
-RMDIR    Usuwa katalog.\n\
-SCREEN   Przenosi kursor i opcjonalnie wyświetla tekst.\n\
-SET      Wyświetla, ustawia lub usuwa zmienne środowiskowe.\n\
-SHIFT    Przenosi zamienne parametry w programach wsadowych.\n"
-STRING_HELP2, "START    Uruchamia oddzielne okno do wykonania określonego polecenia lub komendy.\n\
-         Wykonuje polecenie.\n\
-TIME     Wyświetla lub zmienia czas systemowy.\n\
-TIMER    Pozwala na użycie do 10 stoperów.\n\
-TITLE    Ustanawia tytuł dla danej sesji CMD.EXE.\n\
-TYPE     Wyświetla zawartość pliku tekstowego.\n\
-VER      Wyświetla wersję systemu ReactOS.\n\
-VERIFY   Decyduje czy ReactOS ma sprawdzać poprawność zapisu plików\n\
-         na dysku.\n\
-VOL      Wyświetla etykietę woluminu na danym napędzie i numer seryjny.\n"
-
-
-STRING_CHOICE_OPTION,         "TN"
-STRING_COPY_OPTION,           "TNZ"
-
-
-STRING_ALIAS_ERROR,          "Linia poleceń zbyt długa po rozszerzeniu aliasa!\n"
-STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
-STRING_BATCH_ERROR,          "Błąd podczas otwierania pliku wsadowego\n"
-STRING_CHCP_ERROR1,          "Aktywna strona kodowa nr: %u\n"
-STRING_CHCP_ERROR4,          "Niewłaściwy numer strony kodowej\n"
-STRING_CHOICE_ERROR,         "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
-STRING_CHOICE_ERROR_TXT,     "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
-STRING_CHOICE_ERROR_OPTION,  "Zły parametr: %s"
-STRING_CMD_ERROR1,           "Nie można przekierować danych z pliku %s\n"
-STRING_CMD_ERROR2,           "Błąd podczas tworzenia potokowego pliku tymczasowego\n"
-STRING_CMD_ERROR3,           "Nie można przekierować do pliku %s\n"
-STRING_CMD_ERROR4,           "Wykonywanie %s...\n"
-STRING_CMD_ERROR5,           "Wykonywanie cmdexit.bat...\n"
-STRING_COLOR_ERROR1,         "Błąd! Kolor tła i tekstu nie może być taki sam"
-STRING_COLOR_ERROR2,         "Błąd w oznaczeniu kolorów."
-STRING_COLOR_ERROR3,         "Kolor %x\n"
-STRING_COLOR_ERROR4,         "Błąd - kolory takie same!"
-STRING_CONSOLE_ERROR,        "Nieznany błąd: %d\n"
-STRING_COPY_ERROR1,          "Błąd: Nie można otworzyć źródła - %s!\n"
-STRING_COPY_ERROR2,          "Błąd: Nie można przekopiować pliku na niego samego!\n"
-STRING_COPY_ERROR3,          "Błąd zapisu na miejscu docelowym!\n"
-STRING_COPY_ERROR4,          "Błąd: Nie zaimplementowano!\n"
-STRING_DATE_ERROR,           "Data nieprawidłowa."
-STRING_DEL_ERROR5,           "Plik %s zostanie skasowany! "
-STRING_DEL_ERROR6,           "Czy jesteś pewien (T/N)?"
-STRING_DEL_ERROR7,           "Kasowanie: %s\n"
-STRING_ERROR_ERROR1,         "Nieznany błąd! Kod błędu: 0x%lx\n"
-STRING_ERROR_ERROR2,         "Błąd składni"
-STRING_FOR_ERROR1,           "Brak 'in' dla twierdzenia."
-STRING_FOR_ERROR2,           "Nawias nie został znaleziony."
-STRING_FOR_ERROR3,           "Brakuje 'do'."
-STRING_FOR_ERROR4,           "Brak komendy po 'do'."
-STRING_FREE_ERROR1,          "Nieprawidłowa litera napędu"
-STRING_FREE_ERROR2,          "brak"
-STRING_GOTO_ERROR1,          "Brak etykiety dla GOTO"
-STRING_GOTO_ERROR2,          "Etykieta '%s' nie została znaleziona\n"
-
-STRING_MD_ERROR,             "Istnieje już plik lub podkatalog o tej nazwie.\n"
-STRING_MD_ERROR2,            "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
-STRING_MOVE_ERROR1,          "[OK]\n"
-STRING_MOVE_ERROR2,          "[Błąd]\n"
-
-STRING_REN_ERROR1,           "MoveFile() nieudane. Błąd: %lu\n"
-
-STRING_START_ERROR1,         "Programy wsadowe nie zostały jeszcze zaimplementowane!"
-
-STRING_TIME_ERROR1,          "Nieprawidłowy czas."
-
-STRING_TYPE_ERROR1,          "Nieprawidłowa opcja '/%s'\n"
-
-STRING_WINDOW_ERROR1,        "Okno nie zostało odnalezione"
-
-
-STRING_ERROR_PARAMETERF_ERROR,     "Format parametrów nieprawidłowy - %c\n"
-STRING_ERROR_INVALID_SWITCH,       "Niewłaściwy argument - /%c\n"
-STRING_ERROR_TOO_MANY_PARAMETERS,  "Zbyt wiele parametrów - %s\n"
-STRING_ERROR_PATH_NOT_FOUND,       "Ścieżka nie została znaleziona\n"
-STRING_ERROR_FILE_NOT_FOUND,       "Plik nie został znaleziony\n"
-STRING_ERROR_REQ_PARAM_MISSING,    "Brak wymaganego parametru\n"
-STRING_ERROR_INVALID_DRIVE,        "Nieprawidłowe określenie napędu\n"
-STRING_ERROR_INVALID_PARAM_FORMAT, "Niewłaściwy format parametru - %s\n"
-STRING_ERROR_BADCOMMAND,           "Nieprawidłowa komenda lub nazwa pliku - %s\n"
-STRING_ERROR_OUT_OF_MEMORY,        "Błąd - brak pamięci.\n"
-STRING_ERROR_CANNOTPIPE,           "Błąd potoków! Nie można otworzyć pliku tymczasowego.\n"
-STRING_ERROR_D_PAUSEMSG,           "Naciśnij dowolny klawisz, aby kontynuować . . ."
-STRING_ERROR_DRIVER_NOT_READY,     "Napęd nie jest gotowy"
-
-STRING_PATH_ERROR,                 "CMD: Poza środowiskiem '%s'\n"
-
-STRING_REPLACE_ERROR1, "Nieprawidłowy parametr - %s\n"//FIXME
-STRING_REPLACE_ERROR2, "Ścieżka nie została odnaleziona - %s\n"
-STRING_REPLACE_ERROR3, "Nazwa pliku, katalogu lub napędu nie jest prawidłowa.\n"
-STRING_REPLACE_ERROR4, "Nieprawidłowa kombinacja parametrów\n"
-STRING_REPLACE_ERROR5, "Dostęp zabroniony - %s\n"
-STRING_REPLACE_ERROR6, "Nie znaleziono plików - %s\n"
-STRING_REPLACE_ERROR7, "Extended Error 32 -  Błąd współdzielenia\n"
-
-STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\nInterpreter linii poleceń ReactOS\nVersion %s %s"
-STRING_VERSION_RUNVER,             " działający na %s"
-STRING_COPY_FILE ,                 "        %d plik(ów) skopiowano\n"
-STRING_DELETE_WIPE,                "skasowano"
-STRING_FOR_ERROR,                  "złe określenie zmiennej."
-STRING_SCREEN_COL,                 "nieprawidłowy numer kolumny"
-STRING_SCREEN_ROW,                 "nieprawidłowy numer rzędu"
-STRING_TIMER_TIME                  "Stoper %d czas - %s: "
-STRING_MKLINK_CREATED_SYMBOLIC,    "Dowiązanie symboliczne utworzone dla %s <<===>> %s\n"
-STRING_MKLINK_CREATED_HARD,        "Dowiązanie twarde utworzone dla %s <<===>> %s\n"
-STRING_MKLINK_CREATED_JUNCTION,    "Punkt dowiązania katalogów utworzony dla %s <<===>> %s\n"
-STRING_MORE,                       "Więcej? "
-STRING_CANCEL_BATCH_FILE,          "\r\nWciśnięto Ctrl-Break.  Anulować wykonanie pliku wsadowego? (Tak/Nie/Zawsze) "
-
-STRING_INVALID_OPERAND,            "Nieprawidłowy argument operatora."
-STRING_EXPECTED_CLOSE_PAREN,       "Oczekiwano ')'."
-STRING_EXPECTED_NUMBER_OR_VARIABLE,"Oczekiwano liczby lub nazwy zmiennej."
-STRING_SYNTAX_COMMAND_INCORRECT,   "Składnia komendy jest nieprawidłowa."
-
+    STRING_CHOICE_OPTION "TN"
+    STRING_COPY_OPTION "TNZ"
+    STRING_ALIAS_ERROR "Linia poleceń zbyt długa po rozszerzeniu aliasa!\n"
+    STRING_ASSOC_ERROR "File association not found for extension %s\n"
+    STRING_BATCH_ERROR "Błąd podczas otwierania pliku wsadowego\n"
+    STRING_CHCP_ERROR1 "Aktywna strona kodowa nr: %u\n"
+    STRING_CHCP_ERROR4 "Niewłaściwy numer strony kodowej\n"
+    STRING_CHOICE_ERROR "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
+    STRING_CHOICE_ERROR_TXT "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
+    STRING_CHOICE_ERROR_OPTION "Zły parametr: %s"
+    STRING_CMD_ERROR1 "Nie można przekierować danych z pliku %s\n"
+    STRING_CMD_ERROR2 "Błąd podczas tworzenia potokowego pliku tymczasowego\n"
+    STRING_CMD_ERROR3 "Nie można przekierować do pliku %s\n"
+    STRING_CMD_ERROR4 "Wykonywanie %s...\n"
+    STRING_CMD_ERROR5 "Wykonywanie cmdexit.bat...\n"
+    STRING_COLOR_ERROR1 "Błąd! Kolor tła i tekstu nie może być taki sam"
+    STRING_COLOR_ERROR2 "Błąd w oznaczeniu kolorów."
+    STRING_COLOR_ERROR3 "Kolor %02x\n"
+    STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
+    STRING_COPY_ERROR1 "Błąd: Nie można otworzyć źródła - %s!\n"
+    STRING_COPY_ERROR2 "Błąd: Nie można przekopiować pliku na niego samego!\n"
+    STRING_COPY_ERROR3 "Błąd zapisu na miejscu docelowym!\n"
+    STRING_COPY_ERROR4 "Błąd: Nie zaimplementowano!\n"
+    STRING_DATE_ERROR "Data nieprawidłowa."
+    STRING_DEL_ERROR5 "Plik %s zostanie skasowany! "
+    STRING_DEL_ERROR6 "Czy jesteś pewien (T/N)?"
+    STRING_DEL_ERROR7 "Kasowanie: %s\n"
+    STRING_ERROR_ERROR1 "Nieznany błąd! Kod błędu: 0x%lx\n"
+    STRING_ERROR_ERROR2 "Błąd składni"
+    STRING_FOR_ERROR1 "Brak 'in' dla twierdzenia."
+    STRING_FOR_ERROR2 "Nawias nie został znaleziony."
+    STRING_FOR_ERROR3 "Brakuje 'do'."
+    STRING_FOR_ERROR4 "Brak komendy po 'do'."
+    STRING_FREE_ERROR1 "Nieprawidłowa litera napędu"
+    STRING_FREE_ERROR2 "brak"
+    STRING_GOTO_ERROR1 "Brak etykiety dla GOTO"
+    STRING_GOTO_ERROR2 "Etykieta '%s' nie została znaleziona\n"
+    STRING_MD_ERROR "Istnieje już plik lub podkatalog o tej nazwie.\n"
+    STRING_MD_ERROR2 "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
+    STRING_MOVE_ERROR1 "[OK]\n"
+    STRING_MOVE_ERROR2 "[Błąd]\n"
+    STRING_REN_ERROR1 "MoveFile() nieudane. Błąd: %lu\n"
+    STRING_TIME_ERROR1 "Nieprawidłowy czas."
+    STRING_TYPE_ERROR1 "Nieprawidłowa opcja '/%s'\n"
+    STRING_WINDOW_ERROR1 "Okno nie zostało odnalezione"
+    STRING_ERROR_PARAMETERF_ERROR "Format parametrów nieprawidłowy - %c\n"
+    STRING_ERROR_INVALID_SWITCH "Niewłaściwy argument - /%c\n"
+    STRING_ERROR_TOO_MANY_PARAMETERS "Zbyt wiele parametrów - %s\n"
+    STRING_ERROR_PATH_NOT_FOUND "Ścieżka nie została znaleziona\n"
+    STRING_ERROR_FILE_NOT_FOUND "Plik nie został znaleziony\n"
+    STRING_ERROR_REQ_PARAM_MISSING "Brak wymaganego parametru\n"
+    STRING_ERROR_INVALID_DRIVE "Nieprawidłowe określenie napędu\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Niewłaściwy format parametru - %s\n"
+    STRING_ERROR_BADCOMMAND "Nieprawidłowa komenda lub nazwa pliku - %s\n"
+    STRING_ERROR_OUT_OF_MEMORY "Błąd - brak pamięci.\n"
+    STRING_ERROR_CANNOTPIPE "Błąd potoków! Nie można otworzyć pliku tymczasowego.\n"
+    STRING_ERROR_D_PAUSEMSG "Naciśnij dowolny klawisz, aby kontynuować . . ."
+    STRING_ERROR_DRIVER_NOT_READY "Napęd nie jest gotowy"
+    STRING_PATH_ERROR "CMD: Poza środowiskiem '%s'\n"
+    STRING_REPLACE_ERROR1 "Nieprawidłowy parametr - %s\n"
+    STRING_REPLACE_ERROR2 "Ścieżka nie została odnaleziona - %s\n"
+    STRING_REPLACE_ERROR3 "Nazwa pliku, katalogu lub napędu nie jest prawidłowa.\n"
+    STRING_REPLACE_ERROR4 "Nieprawidłowa kombinacja parametrów\n"
+    STRING_REPLACE_ERROR5 "Dostęp zabroniony - %s\n"
+    STRING_REPLACE_ERROR6 "Nie znaleziono plików - %s\n"
+    STRING_REPLACE_ERROR7 "Extended Error 32 -  Błąd współdzielenia\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
+    STRING_CMD_SHELLINFO "\nInterpreter linii poleceń ReactOS\nVersion %s %s"
+    STRING_VERSION_RUNNING_ON "Działający na: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
+    STRING_COPY_FILE "        %d plik(ów) skopiowano\n"
+    STRING_DELETE_WIPE "skasowano"
+    STRING_FOR_ERROR "złe określenie zmiennej."
+    STRING_SCREEN_COL "nieprawidłowy numer kolumny"
+    STRING_SCREEN_ROW "nieprawidłowy numer rzędu"
+    STRING_TIMER_TIME "Stoper %d czas - %s: "
+    STRING_MKLINK_CREATED_SYMBOLIC "Dowiązanie symboliczne utworzone dla %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_HARD "Dowiązanie twarde utworzone dla %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "Punkt dowiązania katalogów utworzony dla %s <<===>> %s\n"
+    STRING_MORE "Więcej? "
+    STRING_CANCEL_BATCH_FILE "\r\nWciśnięto Ctrl-Break.  Anulować wykonanie pliku wsadowego? (Tak/Nie/Zawsze) "
+    STRING_INVALID_OPERAND "Nieprawidłowy argument operatora."
+    STRING_EXPECTED_CLOSE_PAREN "Oczekiwano ')'."
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Oczekiwano liczby lub nazwy zmiennej."
+    STRING_SYNTAX_COMMAND_INCORRECT "Składnia komendy jest nieprawidłowa."
 END

@@ -1,0 +1,19 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im Prozess Name | /pid Prozess ID]\n"
+    STRING_INVALID_OPTION, "Fehler: Unbekannte oder ungülige Kommandozeilenoption angegeben.\n"
+    STRING_INVALID_PARAM, "Fehler: Ungültiger Kommandozeilenparameter angegeben.\n"
+    STRING_MISSING_OPTION, "Fehler: Eine der Optionen /im oder /pid muss angegeben werden.\n"
+    STRING_MISSING_PARAM, "Fehler: Option %1 erwartet einen Kommandozeilenparameter.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Fehler: Optionen /im und /pid schließen sich gegenseitig aus.\n"
+    STRING_CLOSE_PID_SEARCH, "Schließen-Befehl an oberstes Fenster des Prozesses mit PID %1!u! gesendet.\n"
+    STRING_CLOSE_PROC_SRCH, "Schließen-Befehl an oberstes Fenster des Prozesses ""%1"" mit PID %2!u! gesendet.\n"
+    STRING_TERM_PID_SEARCH, "Prozess mit PID %1!u! wurde erzwungenermaßen beendet.\n"
+    STRING_TERM_PROC_SEARCH, "Prozess ""%1"" mit PID %2!u! wurde erzwungenermaßen beendet.\n"
+    STRING_SEARCH_FAILED, "Fehler: Konnte Prozess ""%1"" nicht finden.\n"
+    STRING_ENUM_FAILED, "Fehler: Prozessliste kann nicht aufgebaut werden.\n"
+    STRING_TERMINATE_FAILED, "Fehler: Prozess ""%1"" kann nicht beendet werden.\n"
+    STRING_SELF_TERMINATION, "Fehler: Der Prozess kann sich nicht selbst beenden.\n"
+}

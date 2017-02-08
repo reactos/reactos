@@ -19,24 +19,7 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-#include <assert.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <rpc.h>
-//#include "rpcndr.h"
-#include <winternl.h>
-
-#include <wine/unicode.h>
-#include <wine/debug.h>
-
-//#include "rpc_binding.h"
-#include "rpc_assoc.h"
-#include "rpc_message.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -79,11 +62,13 @@ static RPC_STATUS RpcAssoc_Alloc(LPCSTR Protseq, LPCSTR NetworkAddr,
     list_init(&assoc->free_connection_pool);
     list_init(&assoc->context_handle_list);
     InitializeCriticalSection(&assoc->cs);
+    assoc->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": RpcAssoc.cs");
     assoc->Protseq = RPCRT4_strdupA(Protseq);
     assoc->NetworkAddr = RPCRT4_strdupA(NetworkAddr);
     assoc->Endpoint = RPCRT4_strdupA(Endpoint);
     assoc->NetworkOptions = NetworkOptions ? RPCRT4_strdupW(NetworkOptions) : NULL;
     assoc->assoc_group_id = 0;
+    UuidCreate(&assoc->http_uuid);
     list_init(&assoc->entry);
     *assoc_out = assoc;
     return RPC_S_OK;
@@ -207,7 +192,7 @@ ULONG RpcAssoc_Release(RpcAssoc *assoc)
         LIST_FOR_EACH_ENTRY_SAFE(Connection, cursor2, &assoc->free_connection_pool, RpcConnection, conn_pool_entry)
         {
             list_remove(&Connection->conn_pool_entry);
-            RPCRT4_DestroyConnection(Connection);
+            RPCRT4_ReleaseConnection(Connection);
         }
 
         LIST_FOR_EACH_ENTRY_SAFE(context_handle, context_handle_cursor, &assoc->context_handle_list, RpcContextHandle, entry)
@@ -218,6 +203,7 @@ ULONG RpcAssoc_Release(RpcAssoc *assoc)
         HeapFree(GetProcessHeap(), 0, assoc->NetworkAddr);
         HeapFree(GetProcessHeap(), 0, assoc->Protseq);
 
+        assoc->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&assoc->cs);
 
         HeapFree(GetProcessHeap(), 0, assoc);
@@ -344,7 +330,7 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
             break;
         case REJECT_INVALID_CHECKSUM:
             ERR("invalid checksum\n");
-            status = ERROR_ACCESS_DENIED;
+            status = RPC_S_ACCESS_DENIED;
             break;
         default:
             ERR("rejected bind for reason %d\n", response_hdr->bind_nack.reject_reason);
@@ -392,7 +378,7 @@ static RpcConnection *RpcAssoc_GetIdleConnection(RpcAssoc *assoc,
 RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
                                         const RPC_SYNTAX_IDENTIFIER *InterfaceId,
                                         const RPC_SYNTAX_IDENTIFIER *TransferSyntax, RpcAuthInfo *AuthInfo,
-                                        RpcQualityOfService *QOS, RpcConnection **Connection)
+                                        RpcQualityOfService *QOS, LPCWSTR CookieAuth, RpcConnection **Connection)
 {
     RpcConnection *NewConnection;
     RPC_STATUS status;
@@ -405,7 +391,7 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
     status = RPCRT4_CreateConnection(&NewConnection, FALSE /* is this a server connection? */,
         assoc->Protseq, assoc->NetworkAddr,
         assoc->Endpoint, assoc->NetworkOptions,
-        AuthInfo, QOS);
+        AuthInfo, QOS, CookieAuth);
     if (status != RPC_S_OK)
         return status;
 
@@ -413,14 +399,14 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
     status = RPCRT4_OpenClientConnection(NewConnection);
     if (status != RPC_S_OK)
     {
-        RPCRT4_DestroyConnection(NewConnection);
+        RPCRT4_ReleaseConnection(NewConnection);
         return status;
     }
 
     status = RpcAssoc_BindConnection(assoc, NewConnection, InterfaceId, TransferSyntax);
     if (status != RPC_S_OK)
     {
-        RPCRT4_DestroyConnection(NewConnection);
+        RPCRT4_ReleaseConnection(NewConnection);
         return status;
     }
 
@@ -446,7 +432,7 @@ RPC_STATUS RpcServerAssoc_AllocateContextHandle(RpcAssoc *assoc, void *CtxGuard,
 
     context_handle = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context_handle));
     if (!context_handle)
-        return ERROR_OUTOFMEMORY;
+        return RPC_S_OUT_OF_MEMORY;
 
     context_handle->ctx_guard = CtxGuard;
     RtlInitializeResource(&context_handle->rw_lock);

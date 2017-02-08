@@ -1,11 +1,9 @@
+#ifndef _I8042PRT_PCH_
+#define _I8042PRT_PCH_
+
 #include <ntifs.h>
 #include <kbdmou.h>
 #include <ntdd8042.h>
-#include <ntddkbd.h>
-#include <bugcodes.h>
-#include <poclass.h>
-#include <kdfuncs.h>
-#include <debug.h>
 
 /*-----------------------------------------------------
  * Structures
@@ -294,10 +292,13 @@ typedef struct _I8042_HOOK_WORKITEM
 
 IO_WORKITEM_ROUTINE i8042SendHookWorkItem;
 
+_Dispatch_type_(IRP_MJ_CREATE)
 DRIVER_DISPATCH i8042Create;
 
+_Dispatch_type_(IRP_MJ_CLEANUP)
 DRIVER_DISPATCH i8042Cleanup;
 
+_Dispatch_type_(IRP_MJ_CLOSE)
 DRIVER_DISPATCH i8042Close;
 
 /* keyboard.c */
@@ -373,6 +374,7 @@ i8042ChangeMode(
 	IN UCHAR FlagsToDisable,
 	IN UCHAR FlagsToEnable);
 
+_Dispatch_type_(IRP_MJ_PNP)
 DRIVER_DISPATCH i8042Pnp;
 
 /* ps2pp.c */
@@ -438,3 +440,20 @@ NTSTATUS
 ReadRegistryEntries(
 	IN PUNICODE_STRING RegistryPath,
 	OUT PI8042_SETTINGS Settings);
+
+/* hwhacks.c */
+
+VOID
+NTAPI
+i8042InitializeHwHacks(
+    VOID);
+
+enum _FLAGS
+{
+    FL_NOLOOP = 0x01,
+    FL_INITHACK = 0x02,
+};
+
+extern ULONG i8042HwFlags;
+
+#endif /* _I8042PRT_PCH_ */

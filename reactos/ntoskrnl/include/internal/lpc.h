@@ -58,6 +58,24 @@
                                                              LPCP_THREAD_FLAG_NO_IMPERSONATION)
 
 //
+// LPC Locking Flags
+//
+#define LPCP_LOCK_HELD      1
+#define LPCP_LOCK_RELEASE   2
+
+
+typedef struct _LPCP_DATA_INFO
+{
+    ULONG NumberOfEntries;
+    struct
+    {
+        PVOID BaseAddress;
+        ULONG DataLength;
+    } Entries[1];
+} LPCP_DATA_INFO, *PLPCP_DATA_INFO;
+
+
+//
 // Internal Port Management
 //
 VOID
@@ -86,7 +104,7 @@ VOID
 NTAPI
 LpcpFreeToPortZone(
     IN PLPCP_MESSAGE Message,
-    IN ULONG Flags
+    IN ULONG LockFlags
 );
 
 VOID
@@ -104,7 +122,7 @@ NTAPI
 LpcpSaveDataInfoMessage(
     IN PLPCP_PORT_OBJECT Port,
     IN PLPCP_MESSAGE Message,
-    IN ULONG LockHeld
+    IN ULONG LockFlags
 );
 
 //
@@ -124,6 +142,13 @@ NTAPI
 LpcInitSystem(
     VOID
 );
+
+BOOLEAN
+NTAPI
+LpcpValidateClientPort(
+    PETHREAD ClientThread,
+    PLPCP_PORT_OBJECT Port);
+
 
 //
 // Global data inside the Process Manager

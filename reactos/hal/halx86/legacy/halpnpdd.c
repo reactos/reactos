@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/legacy/halpnpdd.c
+ * FILE:            hal/halx86/legacy/halpnpdd.c
  * PURPOSE:         HAL Plug and Play Device Driver
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -210,7 +210,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                                                  FIELD_OFFSET(DEVICE_RELATIONS,
                                                               Objects) +
                                                  sizeof(PDEVICE_OBJECT) * PdoCount,
-                                                 ' laH');
+                                                 TAG_HAL);
             if (!FdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
 
             /* Save our count */
@@ -267,7 +267,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
             /* Only one entry */
             PdoRelations = ExAllocatePoolWithTag(PagedPool,
                                                  sizeof(DEVICE_RELATIONS),
-                                                 ' laH');
+                                                 TAG_HAL);
             if (!PdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
 
             /* Fill it out and reference us */
@@ -370,12 +370,12 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* Allocate the resourcel ist */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
                                              sizeof(CM_RESOURCE_LIST),
-                                             ' laH');
+                                             TAG_HAL);
         if (!ResourceList )
         {
             /* Fail, no memory */
             Status = STATUS_INSUFFICIENT_RESOURCES;
-//            ExFreePoolWithTag(RequirementsList, ' laH');
+//            ExFreePoolWithTag(RequirementsList, TAG_HAL);
             return Status;
         }
 
@@ -421,7 +421,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* Return resources and success */
         *Resources = ResourceList;
 
-//        ExFreePoolWithTag(RequirementsList, ' laH');
+//        ExFreePoolWithTag(RequirementsList, TAG_HAL);
 
         return STATUS_SUCCESS;
     }
@@ -539,7 +539,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
                                    Length + sizeof(UNICODE_NULL),
-                                   ' laH');
+                                   TAG_HAL);
     if (Buffer)
     {
         /* Copy the string and null-terminate it */
@@ -605,7 +605,7 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
                                    Length + sizeof(UNICODE_NULL),
-                                   ' laH');
+                                   TAG_HAL);
     if (Buffer)
     {
         /* Copy the string and null-terminate it */
@@ -713,14 +713,14 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
             case IRP_MN_START_DEVICE:
 
                 /* We only care about a PCI PDO */
-                DPRINT1("Start device received\n");
+                DPRINT("Start device received\n");
                 /* Complete the IRP normally */
                 break;
 
             case IRP_MN_REMOVE_DEVICE:
 
                 /* Check if this is a PCI device */
-                DPRINT1("Remove device received\n");
+                DPRINT("Remove device received\n");
 
                 /* We're done */
                 Status = STATUS_SUCCESS;
@@ -729,7 +729,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
             case IRP_MN_SURPRISE_REMOVAL:
 
                 /* Inherit whatever status we had */
-                DPRINT1("Surprise removal IRP\n");
+                DPRINT("Surprise removal IRP\n");
                 Status = Irp->IoStatus.Status;
                 break;
 
@@ -790,7 +790,7 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
             default:
 
                 /* We don't handle anything else, so inherit the old state */
-                DPRINT("Illegal IRP: %lx\n", Minor);
+                DPRINT1("Illegal IRP: %lx\n", Minor);
                 Status = Irp->IoStatus.Status;
                 break;
         }
@@ -820,8 +820,23 @@ NTAPI
 HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
+    PFDO_EXTENSION FdoExtension;
+    
     DPRINT1("HAL: PnP Driver Power!\n");
-    return STATUS_SUCCESS;
+    FdoExtension = DeviceObject->DeviceExtension;
+    if (FdoExtension->ExtensionType == FdoExtensionType)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(FdoExtension->AttachedDeviceObject, Irp);
+    }
+    else
+    {
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
 }
 
 NTSTATUS

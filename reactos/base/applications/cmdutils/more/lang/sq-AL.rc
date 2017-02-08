@@ -1,0 +1,18 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Shfaq të dhëna faqe-per-faqe ne ekran.\n\n\
+  MORE < [Drive:][Path]File name\n\
+  Komandë | MORE \n\
+  MORE [Drive:][Path]File name\n\n\
+  [Drive:][Path]File name    Nje dokument, përmbajtja e të cilit do të shfaqet.\n\
+  Komandë\t\t     Nje komande, nxjerrja e te cilit do të shfaqet.\n\n\
+  At the prompt ""-- Vazhdo --"" ju mund të shtypni çfarëdo butoni për të vazhduar në faqen tjetër.\n"
+    IDS_CONTINUE " -- Vazhdo (100%) -- "
+    IDS_FILE_ACCESS "Nuk mund të aksesoj dokumentin %s."
+END

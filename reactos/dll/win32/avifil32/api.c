@@ -17,35 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winnls.h"
-#include <wingdi.h>
-//#include "winuser.h"
-#include <winreg.h>
-//#include "winerror.h"
-
-//#include "ole2.h"
-//#include "shellapi.h"
-//#include "shlobj.h"
-#include <vfw.h>
-//#include "msacm.h"
-
 #include "avifile_private.h"
 
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(avifile);
-
+#include <winreg.h>
 
 /***********************************************************************
  * for AVIBuildFilterW -- uses fixed size table
@@ -1248,7 +1222,7 @@ static BOOL AVISaveOptionsFmtChoose(HWND hWnd)
       pOptions->dwFlags |= AVICOMPRESSF_VALID;
 
     HeapFree(GetProcessHeap(), 0, afmtc.pwfxEnum);
-    return (ret == S_OK ? TRUE : FALSE);
+    return ret == S_OK;
   } else {
     ERR(": unknown streamtype 0x%08X\n", sInfo.fccType);
     return FALSE;
@@ -1519,7 +1493,7 @@ HRESULT WINAPI AVISaveVA(LPCSTR szFile, CLSID *pclsidHandler,
   HRESULT hr;
   int     len;
 
-  TRACE("%s,%p,%p,%d,%p,%p)\n", debugstr_a(szFile), pclsidHandler,
+  TRACE("(%s,%p,%p,%d,%p,%p)\n", debugstr_a(szFile), pclsidHandler,
 	lpfnCallback, nStream, ppavi, plpOptions);
 
   if (szFile == NULL || ppavi == NULL || plpOptions == NULL)
@@ -2282,17 +2256,85 @@ HRESULT WINAPI AVIPutFileOnClipboard(PAVIFILE pfile)
 HRESULT WINAPIV AVISaveA(LPCSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK lpfnCallback,
                         int nStreams, PAVISTREAM pavi, LPAVICOMPRESSOPTIONS lpOptions, ...)
 {
-    FIXME("(%s,%p,%p,0x%08x,%p,%p), stub!\n", debugstr_a(szFile), pclsidHandler, lpfnCallback,
+    __ms_va_list vl;
+    int i;
+    HRESULT ret;
+    PAVISTREAM *streams;
+    LPAVICOMPRESSOPTIONS *options;
+
+    TRACE("(%s,%p,%p,%d,%p,%p)\n", debugstr_a(szFile), pclsidHandler, lpfnCallback,
           nStreams, pavi, lpOptions);
 
-    return AVIERR_UNSUPPORTED;
+    if (nStreams <= 0) return AVIERR_BADPARAM;
+
+    streams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*streams));
+    options = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*options));
+    if (!streams || !options)
+    {
+        ret = AVIERR_MEMORY;
+        goto error;
+    }
+
+    streams[0] = pavi;
+    options[0] = lpOptions;
+
+    __ms_va_start(vl, lpOptions);
+    for (i = 1; i < nStreams; i++)
+    {
+        streams[i] = va_arg(vl, PAVISTREAM);
+        options[i] = va_arg(vl, PAVICOMPRESSOPTIONS);
+    }
+    __ms_va_end(vl);
+
+    for (i = 0; i < nStreams; i++)
+        TRACE("Pair[%d] - Stream = %p, Options = %p\n", i, streams[i], options[i]);
+
+    ret = AVISaveVA(szFile, pclsidHandler, lpfnCallback, nStreams, streams, options);
+error:
+    HeapFree(GetProcessHeap(), 0, streams);
+    HeapFree(GetProcessHeap(), 0, options);
+    return ret;
 }
 
 HRESULT WINAPIV AVISaveW(LPCWSTR szFile, CLSID * pclsidHandler, AVISAVECALLBACK lpfnCallback,
                         int nStreams, PAVISTREAM pavi, LPAVICOMPRESSOPTIONS lpOptions, ...)
 {
-    FIXME("(%s,%p,%p,0x%08x,%p,%p), stub!\n", debugstr_w(szFile), pclsidHandler, lpfnCallback,
+    __ms_va_list vl;
+    int i;
+    HRESULT ret;
+    PAVISTREAM *streams;
+    LPAVICOMPRESSOPTIONS *options;
+
+    TRACE("(%s,%p,%p,%d,%p,%p)\n", debugstr_w(szFile), pclsidHandler, lpfnCallback,
           nStreams, pavi, lpOptions);
 
-    return AVIERR_UNSUPPORTED;
+    if (nStreams <= 0) return AVIERR_BADPARAM;
+
+    streams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*streams));
+    options = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(*options));
+    if (!streams || !options)
+    {
+        ret = AVIERR_MEMORY;
+        goto error;
+    }
+
+    streams[0] = pavi;
+    options[0] = lpOptions;
+
+    __ms_va_start(vl, lpOptions);
+    for (i = 1; i < nStreams; i++)
+    {
+        streams[i] = va_arg(vl, PAVISTREAM);
+        options[i] = va_arg(vl, PAVICOMPRESSOPTIONS);
+    }
+    __ms_va_end(vl);
+
+    for (i = 0; i < nStreams; i++)
+        TRACE("Pair[%d] - Stream = %p, Options = %p\n", i, streams[i], options[i]);
+
+    ret = AVISaveVW(szFile, pclsidHandler, lpfnCallback, nStreams, streams, options);
+error:
+    HeapFree(GetProcessHeap(), 0, streams);
+    HeapFree(GetProcessHeap(), 0, options);
+    return ret;
 }

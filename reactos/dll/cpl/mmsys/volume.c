@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            dll/cpl/mmsys/mmsys.c
+ * FILE:            dll/cpl/mmsys/volume.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
@@ -8,6 +8,8 @@
  */
 
 #include "mmsys.h"
+
+#include <shellapi.h>
 
 #define VOLUME_DIVIDER 0xFFF
 
@@ -24,6 +26,7 @@ typedef struct _GLOBAL_DATA
     HMIXER hMixer;
     HICON hIconMuted;
     HICON hIconUnMuted;
+    HICON hIconNoHW;
 
     LONG muteVal;
     DWORD muteControlID;
@@ -221,6 +224,9 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     UINT NumMixers;
     MIXERCAPS mxc;
+    TCHAR szNoDevices[256];
+
+    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
     NumMixers = mixerGetNumDevs();
     if (!NumMixers)
@@ -229,10 +235,10 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         EnableWindow(GetDlgItem(hwndDlg, IDC_MUTE_CHECKBOX),   FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ICON_IN_TASKBAR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED_BTN),    FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_SET_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
-        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
+        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconNoHW);
+        SetDlgItemText(hwndDlg, IDC_DEVICE_NAME, szNoDevices);
         return;
     }
 
@@ -331,6 +337,7 @@ VolumeDlgProc(HWND hwndDlg,
 
             pGlobalData->hIconUnMuted = LoadImage(hApplet, MAKEINTRESOURCE(IDI_CPLICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pGlobalData->hIconMuted = LoadImage(hApplet, MAKEINTRESOURCE(IDI_MUTED_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            pGlobalData->hIconNoHW = LoadImage(hApplet, MAKEINTRESOURCE(IDI_NO_HW), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 
             InitImageInfo(&ImgInfo);
             InitVolumeControls(hwndDlg, pGlobalData);
@@ -409,6 +416,7 @@ VolumeDlgProc(HWND hwndDlg,
             mixerClose(pGlobalData->hMixer);
             DestroyIcon(pGlobalData->hIconMuted);
             DestroyIcon(pGlobalData->hIconUnMuted);
+            DestroyIcon(pGlobalData->hIconNoHW);
             HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
     }

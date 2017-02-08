@@ -1,84 +1,83 @@
-/*
- * Copyright 2005-2007 Alexander N. Sørnes <alex@thehandofagony.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-MENU_001 MENU DISCARDABLE
+MENU_001 MENU
 BEGIN
-    MENUITEM "&Store ikoner",      FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Små ikoner",        FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&Liste",             FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "&Detaljer",          FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "&Store ikoner", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Små ikoner", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
-MENU_002 MENU DISCARDABLE
+MENU_002 MENU
 BEGIN
     POPUP ""
     BEGIN
         POPUP "&Vis"
         BEGIN
-            MENUITEM "&Store ikoner",      FCIDM_SHVIEW_BIGICON
-            MENUITEM "S&må ikoner",        FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&Liste",             FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "&Detaljer",          FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "&Store ikoner", FCIDM_SHVIEW_BIGICON
+            MENUITEM "S&må ikoner", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
         POPUP "Ordne &ikoner"
         BEGIN
-            MENUITEM "Etter &navn",        0x30  /* column 0 */
-            MENUITEM "Etter &type",        0x32  /* column 2 */
-            MENUITEM "Etter &størrelse",   0x31  /* ... */
-            MENUITEM "Etter &dato",        0x33
+            MENUITEM "Etter &navn", 0x30  /* column 0 */
+            MENUITEM "Etter &type", 0x32  /* column 2 */
+            MENUITEM "Etter &størrelse", 0x31  /* ... */
+            MENUITEM "Etter &dato", 0x33
             MENUITEM SEPARATOR
-            MENUITEM "Ordne &automatisk",  FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Ordne &automatisk", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Still opp ikoner",     FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "Still opp ikoner", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
-        MENUITEM "Oppdater",             FCIDM_SHVIEW_REFRESH
+        MENUITEM "Oppdater", FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Lim inn",              FCIDM_SHVIEW_INSERT
-        MENUITEM "Lim inn som snarvei",  FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Lim inn", FCIDM_SHVIEW_INSERT
+        MENUITEM "Lim inn som snarvei", FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
-        MENUITEM "Egenskaper",           FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Egenskaper", FCIDM_SHVIEW_PROPERTIES
     END
+END
+
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
-MENU_SHV_FILE MENU DISCARDABLE
+MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Utforsk",             FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Åpne",                FCIDM_SHVIEW_OPEN
+        MENUITEM "&Utforsk", FCIDM_SHVIEW_EXPLORE
+        MENUITEM "&Åpne", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Klipp &ut",            FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopier",              FCIDM_SHVIEW_COPY
+        MENUITEM "Klipp &ut", FCIDM_SHVIEW_CUT
+        MENUITEM "&Kopier", FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "&Opprett snarvei",     FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Slett",               FCIDM_SHVIEW_DELETE
-        MENUITEM "&Gi nytt navn",        FCIDM_SHVIEW_RENAME
+        MENUITEM "&Opprett snarvei", FCIDM_SHVIEW_CREATELINK
+        MENUITEM "&Slett", FCIDM_SHVIEW_DELETE
+        MENUITEM "&Gi nytt navn", FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Egenska&per",          FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Egenska&per", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
-IDD_BROWSE_FOR_FOLDER DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Bla etter mappe"
 FONT 8, "MS Shell Dlg"
@@ -90,7 +89,7 @@ BEGIN
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
 END
 
-IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
+IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Bla etter mappe"
 FONT 8, "MS Shell Dlg"
@@ -118,7 +117,7 @@ BEGIN
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
 
-IDD_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
+IDD_ABOUT DIALOGEX 0, 0, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Om %s"
 FONT 8, "MS Shell Dlg"
@@ -141,11 +140,10 @@ BEGIN
     LTEXT "Fysisk minne tilgjengelig:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
-    
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
-IDD_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
+IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -153,22 +151,22 @@ BEGIN
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
-IDD_RUN DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+IDD_RUN DIALOGEX 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Kjør"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+    ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Skriv inn navnet på programmet, mappen, dokumentet etter Internett-ressursen du ønsker å åpne.", 12289, 36, 11, 182, 18
     LTEXT "&Åpne:", 12305, 7, 39, 24, 10
-    CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
     PUSHBUTTON "Avbryt", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Bla gjennom .", 12288, 170, 63, 54, 14, WS_TABSTOP
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 240, 130
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Snarvei"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -196,14 +194,15 @@ BEGIN
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Avanserte egenskaper"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Velg avansert egenskaper som du vil for denne snarveien.", -1, 5, 30, 210, 10
     CHECKBOX "Kjør som administrator", 14000, 25, 50, 150, 10
     LTEXT "Med dette valget kan du kjøre denne snarveien med som en administrator, mens du beskytter din datamaskin og data fra uautorisert program aktivitet.", -1, 50, 60, 175, 40
-    CHECKBOX "Kjør i seperat minneplass", 14001, 25, 100, 90, 10, WS_DISABLED
+    CHECKBOX "Kjør i seperat minneplass", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
     PUSHBUTTON "Avbryt", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 END
@@ -212,7 +211,7 @@ IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Generielt"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN    
+BEGIN
     ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT
     LTEXT "Filtype:", 14004, 8, 40, 55, 10
@@ -236,7 +235,6 @@ BEGIN
     AUTOCHECKBOX "&Arkiv", 14023, 56, 180, 70, 10
     PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
-
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
@@ -300,13 +298,11 @@ BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Type:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Filsystem:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
     LTEXT "Brukt plass:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -316,7 +312,6 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Kapasitet:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -324,7 +319,6 @@ BEGIN
     LTEXT "Stasjon %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "&Diskoppryding", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CHECKBOX "Komprimer denne stasjonen for å frigjøre diskplass", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "Indekser denne stasjonen for raskere søking", 14012, 8, 205, 222, 10, WS_DISABLED
 END
@@ -335,12 +329,15 @@ CAPTION "Verktøy"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Feilsøking", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Dette alternativet vil kontrollere volumet for \nfeil.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontroller nå...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Dette alternativet defragmenterer filene på volumet.", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmenter nå...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Sikkerhetskopi", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Dette alternativet tar sikkerhetskopi av filene på volumet.", -1, 40, 150, 160, 20
     PUSHBUTTON "Ta sikkerhetskopi...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -364,7 +361,6 @@ BEGIN
     CHECKBOX "Følgende bruker:", 14002, 10, 100, 90, 10
     LTEXT "Brukernavn:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Passord:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
@@ -394,23 +390,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Velg programmet du vil bruke for å åpne denne filen:", -1, 44, 12, 211, 10
-    LTEXT "Fil:    ", 14001, 44, 25, 188, 10
+    LTEXT "Fil:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Program", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Alltid bruk valgte program for å åpne denne filtypen", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Utforsk...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -440,14 +426,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Vis"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Mappe visning", -1, 7, 10, 249, 60
-//ICON
-LTEXT "Du kan bruke visning (slik som detalj eller Tiles) som\ndu bruker for denne mappen til alle mappene.", -1, 60, 20, 180, 20
-PUSHBUTTON "Bruk til a&lle mappene", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Gjenopprett alle mapper", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Avanserte innstillinger:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Gjenopprett &standard", 14004, 180, 210, 80, 14, WS_TABSTOP
+    GROUPBOX "Mappe visning", -1, 7, 10, 249, 60
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
+    LTEXT "Du kan bruke visning (slik som detalj eller Tiles) som\ndu bruker for denne mappen til alle mappene.", -1, 60, 20, 180, 20
+    PUSHBUTTON "Bruk til a&lle mappene", 14001, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Gjenopprett alle mapper", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Avanserte innstillinger:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    PUSHBUTTON "Gjenopprett &standard", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -455,17 +441,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Filtyper"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registerert fil&typer:", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Ny", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Slett", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Detailjer for '%s' utvidelser", 14003, 7, 130, 249, 70
-LTEXT "Åpne med:", -1, 12, 140, 40, 10
-//ICON
-LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Endre...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "Av&ansert", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Registerert fil&typer:", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "&Ny", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Slett", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Detailjer for '%s' utvidelser", 14003, 7, 130, 249, 70
+    LTEXT "Åpne med:", -1, 12, 140, 40, 10
+    //ICON
+    LTEXT "Appname", 14005, 100, 140, 40, 10
+    PUSHBUTTON "&Endre...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "Av&ansert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -603,20 +589,19 @@ BEGIN
     AUTOCHECKBOX "&Utfør komprimering", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Kontroller disken"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-    GROUPBOX "Alternativer for diskkontroll", -1, 7, 6, 179, 50
-    PUSHBUTTON "Avbryt", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Reparer feil i filsysten automatisk", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    GROUPBOX "Alternativer for diskkontroll", -1, 7, 6, 179, 40
+    PUSHBUTTON "Avbryt", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Reparer feil i filsysten automatisk", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Søk etter og forsøk å reparere skadet sektorer", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
-
 
 IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
@@ -624,188 +609,225 @@ CAPTION "Endre ikon"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Filnavn:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Utforsk...",IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    PUSHBUTTON "Utforsk...", IDC_BUTTON_PATH, 148, 24, 67, 14
+    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Icons:", -1, 7, 47, 208, 10
-    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Avbryt",IDCANCEL, 167, 181, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 167, 181, 50, 14
 END
 
-STRINGTABLE DISCARDABLE
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Caution"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "This file could either be used by the operating system or by\n\
+another application. Modifying this file might damage your\n\
+system or make it less functional.\n\n\
+Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+END
+
+STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1             "Fil"
-    IDS_SHV_COLUMN2             "Størrelse"
-    IDS_SHV_COLUMN3             "Type"
-    IDS_SHV_COLUMN4             "Endret"
-    IDS_SHV_COLUMN5             "Egenskaper"
-    IDS_SHV_COLUMN6             "Størrelse"
-    IDS_SHV_COLUMN7             "Ledig plass"
-    IDS_SHV_COLUMN8             "Navn"
-    IDS_SHV_COLUMN9             "Kommentarer"
-    IDS_SHV_COLUMN10            "Eier"
-    IDS_SHV_COLUMN11            "Gruppe"
-    IDS_SHV_COLUMN12            "Filnavn"
-    IDS_SHV_COLUMN13            "Kategori"
-    IDS_SHV_COLUMN_DELFROM      "Opprinnelig plassering"
-    IDS_SHV_COLUMN_DELDATE      "Dato slettet"
-    IDS_SHV_COLUMN_FONTTYPE     "Skrifttype"
-    IDS_SHV_COLUMN_WORKGROUP    "Arbeidsgruppe"
-    IDS_SHV_NETWORKLOCATION     "Nettverksplassering"
-    IDS_SHV_COLUMN_DOCUMENTS    "Dokumenter"
-
-    IDS_SHV_COLUMN_STATUS       "Status"
-    IDS_SHV_COLUMN_COMMENTS     "Kommentarer"
-    IDS_SHV_COLUMN_LOCATION     "Plassering"
-    IDS_SHV_COLUMN_MODEL        "Modell"
+    IDS_SHV_COLUMN1 "Fil"
+    IDS_SHV_COLUMN2 "Størrelse"
+    IDS_SHV_COLUMN3 "Type"
+    IDS_SHV_COLUMN4 "Endret"
+    IDS_SHV_COLUMN5 "Egenskaper"
+    IDS_SHV_COLUMN6 "Størrelse"
+    IDS_SHV_COLUMN7 "Ledig plass"
+    IDS_SHV_COLUMN8 "Navn"
+    IDS_SHV_COLUMN9 "Kommentarer"
+    IDS_SHV_COLUMN10 "Eier"
+    IDS_SHV_COLUMN11 "Gruppe"
+    IDS_SHV_COLUMN12 "Filnavn"
+    IDS_SHV_COLUMN13 "Kategori"
+    IDS_SHV_COLUMN_DELFROM "Opprinnelig plassering"
+    IDS_SHV_COLUMN_DELDATE "Dato slettet"
+    IDS_SHV_COLUMN_FONTTYPE "Skrifttype"
+    IDS_SHV_COLUMN_WORKGROUP "Arbeidsgruppe"
+    IDS_SHV_NETWORKLOCATION "Nettverksplassering"
+    IDS_SHV_COLUMN_DOCUMENTS "Dokumenter"
+    IDS_SHV_COLUMN_STATUS "Status"
+    IDS_SHV_COLUMN_COMMENTS "Kommentarer"
+    IDS_SHV_COLUMN_LOCATION "Plassering"
+    IDS_SHV_COLUMN_MODEL "Modell"
 
     /* special folders */
-    IDS_DESKTOP                 "Skrivebord"
-    IDS_MYCOMPUTER              "Min datamaskin"
-    IDS_RECYCLEBIN_FOLDER_NAME  "Papirkurv"
-    IDS_CONTROLPANEL            "Kontrollpanel"
-    IDS_ADMINISTRATIVETOOLS     "Administrative verktøy"
+    IDS_DESKTOP "Skrivebord"
+    IDS_MYCOMPUTER "Min datamaskin"
+    IDS_RECYCLEBIN_FOLDER_NAME "Papirkurv"
+    IDS_CONTROLPANEL "Kontrollpanel"
+    IDS_ADMINISTRATIVETOOLS "Administrative verktøy"
 
     /* context menus */
-    IDS_VIEW_LARGE              "&Store ikoner"
-    IDS_VIEW_SMALL              "S&må ikoner"
-    IDS_VIEW_LIST               "&Liste"
-    IDS_VIEW_DETAILS            "&Detaljer"
-    IDS_SELECT                  "Velg"
-    IDS_OPEN                    "Åpne"
-    IDS_CREATELINK              "&Opprett snarvei"
-    IDS_COPY                    "Kopier"
-    IDS_DELETE                  "Slett"
-    IDS_PROPERTIES              "Egenskaper"
-    IDS_CUT                     "Klipp ut"
-    IDS_RESTORE                 "Gjenopprett"
-    IDS_FORMATDRIVE             "Formatering..."
-    IDS_RENAME                  "Endre navn"
-    IDS_INSERT                  "Sett inn"
+    IDS_VIEW_LARGE "&Store ikoner"
+    IDS_VIEW_SMALL "S&må ikoner"
+    IDS_VIEW_LIST "&Liste"
+    IDS_VIEW_DETAILS "&Detaljer"
+    IDS_SELECT "Velg"
+    IDS_OPEN "Åpne"
+    IDS_CREATELINK "&Opprett snarvei"
+    IDS_COPY "Kopier"
+    IDS_DELETE "Slett"
+    IDS_PROPERTIES "Egenskaper"
+    IDS_CUT "Klipp ut"
+    IDS_RESTORE "Gjenopprett"
+    IDS_FORMATDRIVE "Formatering..."
+    IDS_RENAME "Endre navn"
+    IDS_PASTE "Sett inn"
 
-    IDS_CREATEFOLDER_DENIED     "Kunne ikke opprette ny mappe: tilgang nektet."
-    IDS_CREATEFOLDER_CAPTION    "Klarte ikke opprette ny mappe"
-    IDS_DELETEITEM_CAPTION      "Bekreft filsletting"
-    IDS_DELETEFOLDER_CAPTION    "Bekreft sletting av mappe"
-    IDS_DELETEITEM_TEXT         "Virkelig slette «%1»?"
-    IDS_DELETEMULTIPLE_TEXT     "Virkelig slette disse %1 elementene?"
-    IDS_DELETESELECTED_TEXT     "Virkelig slette valgte element(er)??"
-    IDS_TRASHITEM_TEXT          "Virkelig legge «%1» i papirkurven?"
-    IDS_TRASHFOLDER_TEXT        "Virkelig legge «%1» og alt innholdet i papirkurven?"
-    IDS_TRASHMULTIPLE_TEXT      "Virkelig legge disse %1 valgte elementene i papirkurven?"
-    IDS_CANTTRASH_TEXT          "Elementet «%1» kan ikke legges i papirkurven. Vil du slette det i stedet?"
-    IDS_OVERWRITEFILE_TEXT      "Denne mapppen innholder allerede en fil som heter '%1'.\n\nVil du overskrive denne?"
-    IDS_OVERWRITEFILE_CAPTION   "Bekreft overskriving av fil"
-    IDS_OVERWRITEFOLDER_TEXT    "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i \nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \ndenne mappen?"
+    IDS_CREATEFOLDER_DENIED "Kunne ikke opprette ny mappe: tilgang nektet."
+    IDS_CREATEFOLDER_CAPTION "Klarte ikke opprette ny mappe"
+    IDS_DELETEITEM_CAPTION "Bekreft filsletting"
+    IDS_DELETEFOLDER_CAPTION "Bekreft sletting av mappe"
+    IDS_DELETEITEM_TEXT "Virkelig slette «%1»?"
+    IDS_DELETEMULTIPLE_TEXT "Virkelig slette disse %1 elementene?"
+    IDS_DELETESELECTED_TEXT "Virkelig slette valgte element(er)??"
+    IDS_TRASHITEM_TEXT "Virkelig legge «%1» i papirkurven?"
+    IDS_TRASHFOLDER_TEXT "Virkelig legge «%1» og alt innholdet i papirkurven?"
+    IDS_TRASHMULTIPLE_TEXT "Virkelig legge disse %1 valgte elementene i papirkurven?"
+    IDS_CANTTRASH_TEXT "Elementet «%1» kan ikke legges i papirkurven. Vil du slette det i stedet?"
+    IDS_OVERWRITEFILE_TEXT "Denne mapppen innholder allerede en fil som heter '%1'.\n\nVil du overskrive denne?"
+    IDS_OVERWRITEFILE_CAPTION "Bekreft overskriving av fil"
+    IDS_OVERWRITEFOLDER_TEXT "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i \nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \ndenne mappen?"
+
+    IDS_FILEOOP_COPYING "Copying..."
+    IDS_FILEOOP_MOVING "Moving..."
+    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
-    IDS_RESTART_TITLE           "Starte på nytt"
-    IDS_RESTART_PROMPT          "Vil du starte datamaskinen på nytt?"
-    IDS_SHUTDOWN_TITLE          "Avslutt"
-    IDS_SHUTDOWN_PROMPT         "Vil du slå av datamaskinen?"
-    IDS_LOGOFF_TITLE            "Log Off"
-    IDS_LOGOFF_PROMPT           "Do you want to log off?"
+    IDS_RESTART_TITLE "Starte på nytt"
+    IDS_RESTART_PROMPT "Vil du starte datamaskinen på nytt?"
+    IDS_SHUTDOWN_TITLE "Avslutt"
+    IDS_SHUTDOWN_PROMPT "Vil du slå av datamaskinen?"
+    IDS_LOGOFF_TITLE "Log Off"
+    IDS_LOGOFF_PROMPT "Do you want to log off?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-    IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS                "Start-meny\\Programmer"
-    IDS_PERSONAL                "Mine dokumenter"
-    IDS_FAVORITES               "Favoritter"
-    IDS_STARTUP                 "Start-meny\\Programmer\\Oppstart"
-    IDS_RECENT                  "Siste"
-    IDS_SENDTO                  "Sendtil"
-    IDS_STARTMENU               "Start-meny"
-    IDS_MYMUSIC                 "Min musikk"
-    IDS_MYVIDEO                 "Mine videoklipp"
-    IDS_DESKTOPDIRECTORY        "Skrivebord"
-    IDS_NETHOOD                 "NetHood"
-    IDS_TEMPLATES               "Maler"
-    IDS_APPDATA                 "Programdata"
-    IDS_PRINTHOOD               "Skrivere"
-    IDS_LOCAL_APPDATA           "Lokale innstillinger\\Programdata"
-    IDS_INTERNET_CACHE          "Lokale innstillinger\\Midligtidig internett filer"
-    IDS_COOKIES                 "Informasjonskapsel"
-    IDS_HISTORY                 "Lokale innstillinger\\Logg"
-    IDS_PROGRAM_FILES           "Programfiler"
-    IDS_MYPICTURES              "Mine bilder"
-    IDS_PROGRAM_FILES_COMMON    "Programfiler\\Fellesfiler"
-    IDS_COMMON_DOCUMENTS        "Dokumenter"
-    IDS_ADMINTOOLS              "Start-meny\\Programmer\\Administrative verktøy"
-    IDS_COMMON_MUSIC            "Dokumenter\\Min musikk"
-    IDS_COMMON_PICTURES         "Dokumenter\\Mine bilder"
-    IDS_COMMON_VIDEO            "Dokumenter\\Mine videoklipp"
-    IDS_CDBURN_AREA             "Lokale innstillinger\\Programdata\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE            "Mine nettverkssteder"
+    IDS_PROGRAMS "Start-meny\\Programmer"
+    IDS_PERSONAL "Mine dokumenter"
+    IDS_FAVORITES "Favoritter"
+    IDS_STARTUP "Start-meny\\Programmer\\Oppstart"
+    IDS_RECENT "Siste"
+    IDS_SENDTO "Sendtil"
+    IDS_STARTMENU "Start-meny"
+    IDS_MYMUSIC "Min musikk"
+    IDS_MYVIDEO "Mine videoklipp"
+    IDS_DESKTOPDIRECTORY "Skrivebord"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Maler"
+    IDS_APPDATA "Programdata"
+    IDS_PRINTHOOD "Skrivere"
+    IDS_LOCAL_APPDATA "Lokale innstillinger\\Programdata"
+    IDS_INTERNET_CACHE "Lokale innstillinger\\Midligtidig internett filer"
+    IDS_COOKIES "Informasjonskapsel"
+    IDS_HISTORY "Lokale innstillinger\\Logg"
+    IDS_PROGRAM_FILES "Programfiler"
+    IDS_MYPICTURES "Mine bilder"
+    IDS_PROGRAM_FILES_COMMON "Programfiler\\Fellesfiler"
+    IDS_COMMON_DOCUMENTS "Dokumenter"
+    IDS_ADMINTOOLS "Start-meny\\Programmer\\Administrative verktøy"
+    IDS_COMMON_MUSIC "Dokumenter\\Min musikk"
+    IDS_COMMON_PICTURES "Dokumenter\\Mine bilder"
+    IDS_COMMON_VIDEO "Dokumenter\\Mine videoklipp"
+    IDS_CDBURN_AREA "Lokale innstillinger\\Programdata\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "Mine nettverkssteder"
 
-    IDS_NEWFOLDER               "Ny mappe"
+    IDS_NEWFOLDER "Ny mappe"
 
-    IDS_DRIVE_FIXED             "Lokal Disk"
-    IDS_DRIVE_CDROM             "CD stasjon"
-    IDS_DRIVE_NETWORK           "Nettverk disk"
+    IDS_DRIVE_FIXED "Lokal Disk"
+    IDS_DRIVE_CDROM "CD stasjon"
+    IDS_DRIVE_NETWORK "Nettverk disk"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
-    IDS_OPEN_WITH               "Åpne med"
-    IDS_OPEN_WITH_CHOOSE        "Velg program..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH "Åpne med"
+    IDS_OPEN_WITH_CHOOSE "Velg program..."
+    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
+    IDS_OPEN_WITH_OTHER "Other Programs:"
 
-    IDS_SHELL_ABOUT_AUTHORS     "&Forfatter"
-    IDS_SHELL_ABOUT_BACK        "< &Tilbake"
-    FCIDM_SHVIEW_NEW         "Ny"
-    FCIDM_SHVIEW_NEWFOLDER         "Ny &mappe"
-    FCIDM_SHVIEW_NEWLINK         "Ny &snarvei"
-    IDS_FOLDER_OPTIONS          "Mappe valg"
-    IDS_RECYCLEBIN_LOCATION     "Papirkurv plassering"
-    IDS_RECYCLEBIN_DISKSPACE    "Ledig plass"
-        IDS_EMPTY_BITBUCKET         "Tøm papirkurven"
-    IDS_PICK_ICON_TITLE         "Velg Ikon"
-    IDS_PICK_ICON_FILTER        "Ikon Fil (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER        "Kjørbare filer (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
-    IDS_DIRECTORY               "Mappe"
-    IDS_VIRTUAL_DRIVER          "Virtuell enhetdriver"
-    IDS_BAT_FILE                "ReactOS Batch fil"
-    IDS_CMD_FILE                "ReactOS Kommando skript"
-    IDS_COM_FILE                "Dos applikasjon"
-    IDS_CPL_FILE                "Kontrollpanel enhet"
-    IDS_CUR_FILE                "Markør"
-    IDS_DLL_FILE                "Applikasjon utvidelse"
-    IDS_DRV_FILE                "Enhet driver"
-    IDS_EXE_FILE                "Applikasjon"
-    IDS_FON_FILE                "Skrift fil"
-    IDS_TTF_FILE                "TrueType skrift fil"
-    IDS_HLP_FILE                "Hjelp fil"
-    IDS_INI_FILE                "Konfigurasjon innstilling"
-    IDS_LNK_FILE                "Snarvei"
-    IDS_SYS_FILE                "Systemfil"
+    IDS_SHELL_ABOUT_AUTHORS "&Forfatter"
+    IDS_SHELL_ABOUT_BACK "< &Tilbake"
+    FCIDM_SHVIEW_NEW "Ny"
+    FCIDM_SHVIEW_NEWFOLDER "Ny &mappe"
+    FCIDM_SHVIEW_NEWLINK "Ny &snarvei"
+    IDS_FOLDER_OPTIONS "Mappe valg"
+    IDS_RECYCLEBIN_LOCATION "Papirkurv plassering"
+    IDS_RECYCLEBIN_DISKSPACE "Ledig plass"
+    IDS_EMPTY_BITBUCKET "Tøm papirkurven"
+    IDS_PICK_ICON_TITLE "Velg Ikon"
+    IDS_PICK_ICON_FILTER "Ikon Fil (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Kjørbare filer (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    IDS_OPEN_VERB               "Åpne"
-    IDS_EXPLORE_VERB            "Explore"
-    IDS_RUNAS_VERB              "Kjør som"
-    IDS_EDIT_VERB               "Rediger"
-    IDS_FIND_VERB               "Finn"
-    IDS_PRINT_VERB              "Skriv ut"
+    IDS_DIRECTORY "Mappe"
+    IDS_BAT_FILE "ReactOS Batch fil"
+    IDS_CMD_FILE "ReactOS Kommando skript"
+    IDS_COM_FILE "DOS Applikasjon"
+    IDS_CPL_FILE "Kontrollpanel enhet"
+    IDS_CUR_FILE "Markør"
+    IDS_DLL_FILE "Applikasjon utvidelse"
+    IDS_DRV_FILE "Enhet driver"
+    IDS_EXE_FILE "Applikasjon"
+    IDS_FON_FILE "Skrift fil"
+    IDS_TTF_FILE "TrueType skrift fil"
+    IDS_OTF_FILE "OpenType skrift fil"
+    IDS_HLP_FILE "Hjelp fil"
+    IDS_ICO_FILE "Icon"
+    IDS_INI_FILE "Konfigurasjon innstilling"
+    IDS_LNK_FILE "Snarvei"
+    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_SCR_FILE "Screen Saver"
+    IDS_SYS_FILE "Systemfil"
+    IDS_VXD_FILE "Virtuell enhetdriver"
 
-    IDS_FILE_FOLDER             "%u filer, %u mapper"
-    IDS_PRINTERS                "Skrivere"
-    IDS_FONTS                   "Skrifttyper"
-    IDS_INSTALLNEWFONT          "Installere nye skrifttyper..."
+    IDS_OPEN_VERB "Åpne"
+    IDS_EXPLORE_VERB "Explore"
+    IDS_RUNAS_VERB "Kjør som..."
+    IDS_EDIT_VERB "Rediger"
+    IDS_FIND_VERB "Finn"
+    IDS_PRINT_VERB "Skriv ut"
 
-    IDS_DEFAULT_CLUSTER_SIZE    "Standard tildelingsstørrelse"
-    IDS_COPY_OF                 "Copy of"
-    
-    IDS_SHLEXEC_NOASSOC         "Intet Windows-program er satt opp til å åpne denne filtypen."
-    
-    IDS_FILE_DETAILS            "Detailjer for '%s' utvidelser"
-    IDS_FILE_DETAILSADV         "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert."
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_FILE_FOLDER "%u filer, %u mapper"
+    IDS_PRINTERS "Skrivere"
+    IDS_FONTS "Skrifttyper"
+    IDS_INSTALLNEWFONT "Installere nye skrifttyper..."
+
+    IDS_DEFAULT_CLUSTER_SIZE "Standard tildelingsstørrelse"
+    IDS_COPY_OF "Copy of"
+
+    IDS_SHLEXEC_NOASSOC "Intet Windows-program er satt opp til å åpne denne filtypen."
+
+    IDS_FILE_DETAILS "Detailjer for '%s' utvidelser"
+    IDS_FILE_DETAILSADV "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert."
+    IDS_FILE_TYPES "FileTypes"
+    IDS_COLUMN_EXTENSION "Extensions"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "%s File"
+
+    IDS_BYTES_FORMAT "bytes"
+    IDS_UNKNOWN_APP "Unknown application"
+    IDS_EXE_DESCRIPTION "Description:"
+
+    IDS_MENU_EMPTY "(Empty)"
+    IDS_OBJECTS "%d Objects"
+    IDS_OBJECTS_SELECTED "%d Objects Selected"
 END

@@ -101,7 +101,6 @@ InfWriteFile(HINF InfHandle,
   if (!INF_SUCCESS(Status))
     {
       DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-      FREE(Buffer);
       return(Status);
     }
 

@@ -8,6 +8,9 @@
 #define actctx                  202
 #define resource                203
 #define kernel32session         204
+#define comm                    205
+#define profile                 206
+#define nls                     207
 
 
 #if DBG
@@ -27,29 +30,19 @@
 
 #define debugstr_a
 #define debugstr_w
+#define debugstr_wn
 #define wine_dbgstr_w
 #define debugstr_guid
 
 #include "wine/unicode.h"
 #include "baseheap.h"
 
-#define BINARY_UNKNOWN	(0)
-#define BINARY_PE_EXE32	(1)
-#define BINARY_PE_DLL32	(2)
-#define BINARY_PE_EXE64	(3)
-#define BINARY_PE_DLL64	(4)
-#define BINARY_WIN16	(5)
-#define BINARY_OS216	(6)
-#define BINARY_DOS	(7)
-#define BINARY_UNIX_EXE	(8)
-#define BINARY_UNIX_LIB	(9)
+#define MAGIC(c1,c2,c3,c4)  ((c1) + ((c2)<<8) + ((c3)<<16) + ((c4)<<24))
 
-#define  MAGIC(c1,c2,c3,c4)  ((c1) + ((c2)<<8) + ((c3)<<16) + ((c4)<<24))
+#define MAGIC_HEAP      MAGIC( 'H','E','A','P' )
 
-#define  MAGIC_HEAP        MAGIC( 'H','E','A','P' )
-
-#define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
-#define ROUNDDOWN(a,b)	(((a)/(b))*(b))
+#define ROUNDUP(a,b)    ((((a)+(b)-1)/(b))*(b))
+#define ROUNDDOWN(a,b)  (((a)/(b))*(b))
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
@@ -57,45 +50,9 @@
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
-#ifndef FIELD_OFFSET
-#define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
-#endif
-
-//
-// This stuff maybe should go in a vdm.h?
-//
-typedef enum _VDM_ENTRY_CODE
-{
-    VdmEntryUndo,
-    VdmEntryUpdateProcess,
-    VdmEntryUpdateControlCHandler
-} VDM_ENTRY_CODE;
-
-//
-// Undo States
-//
-#define VDM_UNDO_PARTIAL    0x01
-#define VDM_UNDO_FULL       0x02
-#define VDM_UNDO_REUSE      0x04
-#define VDM_UNDO_COMPLETED  0x08
-
-//
-// Binary Types to share with VDM
-//
-#define BINARY_TYPE_EXE     0x01
-#define BINARY_TYPE_COM     0x02
-#define BINARY_TYPE_PIF     0x03
-#define BINARY_TYPE_DOS     0x10
-#define BINARY_TYPE_SEPARATE_WOW 0x20
-#define BINARY_TYPE_WOW     0x40
-#define BINARY_TYPE_WOW_EX  0x80
-
-//
-// VDM States
-//
-#define VDM_NOT_LOADED      0x01
-#define VDM_NOT_READY       0x02
-#define VDM_READY           0x04
+#define __TRY _SEH2_TRY
+#define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
+#define __ENDTRY _SEH2_END
 
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
@@ -159,6 +116,21 @@ DWORD
 
 extern WaitForInputIdleType UserWaitForInputIdleRoutine;
 
+/* Flags for PrivCopyFileExW && BasepCopyFileExW */
+#define BASEP_COPY_METADATA         0x10
+#define BASEP_COPY_SACL             0x20
+#define BASEP_COPY_OWNER_AND_GROUP  0x40
+#define BASEP_COPY_DIRECTORY        0x80
+#define BASEP_COPY_BACKUP_SEMANTICS 0x100
+#define BASEP_COPY_REPLACE          0x200
+#define BASEP_COPY_SKIP_DACL        0x400
+#define BASEP_COPY_PUBLIC_MASK      0xF
+#define BASEP_COPY_BASEP_MASK       0xFFFFFFF0
+
+/* Flags for PrivMoveFileIdentityW */
+#define PRIV_DELETE_ON_SUCCESS      0x1
+#define PRIV_ALLOW_NON_TRACKABLE    0x2
+
 /* GLOBAL VARIABLES **********************************************************/
 
 extern BOOL bIsFileApiAnsi;
@@ -194,7 +166,7 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapAlloc RtlAllocateHeap
 #define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
-#define _lread  (_readfun)_hread
+#define _lread(a, b, c)  (long)(_hread(a, b, (long)c))
 
 PLARGE_INTEGER
 WINAPI
@@ -243,6 +215,14 @@ BasepAllocateActivationContextActivationBlock(
     IN PVOID CompletionRoutine,
     IN PVOID CompletionContext,
     OUT PBASEP_ACTCTX_BLOCK *ActivationBlock
+);
+
+NTSTATUS
+NTAPI
+BasepProbeForDllManifest(
+    IN PVOID DllHandle,
+    IN PCWSTR FullDllName,
+    OUT PVOID *ActCtx
 );
 
 __declspec(noreturn)
@@ -366,41 +346,13 @@ IsShimInfrastructureDisabled(
     VOID
 );
 
-BOOL
-NTAPI
-BaseDestroyVDMEnvironment(
-    IN PANSI_STRING AnsiEnv,
-    IN PUNICODE_STRING UnicodeEnv
-);
-
-BOOL
-WINAPI
-BaseGetVdmConfigInfo(
-    IN LPCWSTR Reserved,
-    IN ULONG DosSeqId,
-    IN ULONG BinaryType,
-    IN PUNICODE_STRING CmdLineString,
-    OUT PULONG VdmSize
-);
-
-BOOL
-NTAPI
-BaseCreateVDMEnvironment(
-    IN PWCHAR lpEnvironment,
-    IN PANSI_STRING AnsiEnv,
-    IN PUNICODE_STRING UnicodeEnv
-);
-
 VOID
 WINAPI
 InitCommandLines(VOID);
 
-VOID
+DWORD
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status);
-
-/* FIXME */
-WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
 
 VOID
 NTAPI
@@ -410,13 +362,13 @@ BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
 
 typedef NTSTATUS
 (NTAPI *PBASEP_APPCERT_PLUGIN_FUNC)(
-    IN PCHAR ApplicationName,
+    IN LPWSTR ApplicationName,
     IN ULONG CertFlag
 );
 
 typedef NTSTATUS
 (NTAPI *PBASEP_APPCERT_EMBEDDED_FUNC)(
-    IN PCHAR ApplicationName
+    IN LPWSTR ApplicationName
 );
 
 typedef NTSTATUS
@@ -468,15 +420,6 @@ BasepConfigureAppCertDlls(
 extern LIST_ENTRY BasepAppCertDllsList;
 extern RTL_CRITICAL_SECTION gcsAppCert;
 
-BOOL
-WINAPI
-BaseUpdateVDMEntry(
-    IN ULONG UpdateIndex,
-    IN OUT PHANDLE WaitHandle,
-    IN ULONG IndexInfo,
-    IN ULONG BinaryType
-);
-
 VOID
 WINAPI
 BaseMarkFileForDelete(
@@ -485,10 +428,16 @@ BaseMarkFileForDelete(
 );
 
 BOOL
-WINAPI
-BaseCheckForVDM(
-    IN HANDLE ProcessHandle,
-    OUT LPDWORD ExitCode
+BasepCopyFileExW(
+    IN LPCWSTR lpExistingFileName,
+    IN LPCWSTR lpNewFileName,
+    IN LPPROGRESS_ROUTINE lpProgressRoutine OPTIONAL,
+    IN LPVOID lpData OPTIONAL,
+    IN LPBOOL pbCancel OPTIONAL,
+    IN DWORD dwCopyFlags,
+    IN DWORD dwBasepFlags,
+    OUT LPHANDLE lpExistingHandle,
+    OUT LPHANDLE lpNewHandle
 );
 
 /* FIXME: This is EXPORTED! It should go in an external kernel32.h header */
@@ -497,4 +446,15 @@ WINAPI
 BasepFreeAppCompatData(
     IN PVOID AppCompatData,
     IN PVOID AppCompatSxsData
+);
+
+NTSTATUS
+WINAPI
+BasepCheckWinSaferRestrictions(
+    IN HANDLE UserToken,
+    IN LPWSTR ApplicationName,
+    IN HANDLE FileHandle,
+    OUT PBOOLEAN InJob,
+    OUT PHANDLE NewToken,
+    OUT PHANDLE JobHandle
 );

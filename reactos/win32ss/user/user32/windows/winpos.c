@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/winpos.c
+ * FILE:            win32ss/user/user32/windows/winpos.c
  * PURPOSE:         Window management
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -217,8 +217,6 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
           Delta.x -= Change * ToWnd->rcClient.left;
        Delta.y -= ToWnd->rcClient.top;
     }
-
-    if (mirror_from) Delta.x = -Delta.x;
 
     for (i = 0; i != cPoints; i++)
     {

@@ -26,13 +26,13 @@ ULONG BuildType;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID 
+VOID
 PrintUsage(VOID)
 {
     /* This is who we are */
     printf("\nKbdTool v%d.%02d - convert keyboard text file to C file or a keyboard layout DLL\n\n",
            gVersion, gSubVersion);
-    
+
     /* This is what we do */
     printf("Usage: KbdTool [-v] [-n] [-w] [-k] [-n] [-u|a] [-i|x|m|o|s] FILE\n\n");
     printf("\t[-?] display this message\n");
@@ -47,11 +47,11 @@ PrintUsage(VOID)
     printf("\t[-o] Builds for WOW64\n");
     printf("\t[-s] Generate Source files (no build)\n\n");
     printf("\tFILE The source keyboard file (required)\n\n");
-    
+
     /* Extra hints */
     printf("\t-u/-a are mutually exclusive; kbdutool will use the last one if you specify more than one.\n");
     printf("\t-i/-x/-m/-o-s will exhibit the same behavior when than one of them is specified.\n\n");
-    
+
     /* Quit */
     exit(1);
     printf("should not be here");
@@ -65,18 +65,18 @@ main(INT argc,
     CHAR Option;
     PCHAR OpenFlags;
     CHAR BuildOptions[16] = {0};
-    
+
     /* Loop for parameter */
     for (i = 1; i < argc; ++i)
     {
         if (argv[i][0] != '/' && argv[i][0] != '-')
             break;
-        
+
         if (argv[i][1] && !argv[i][2])
             Option = argv[i][1];
         else
             Option = 0;
-        
+
         /* Check supported options */
         switch (Option)
         {
@@ -85,74 +85,74 @@ main(INT argc,
             case 'a':
                 UnicodeFile = 0;
                 break;
-            
+
             /* UNICODE File */
             case 'U':
             case 'u':
                 UnicodeFile = 1;
                 break;
-            
+
             /* Verbose */
             case 'V':
             case 'v':
                 Verbose = 1;
                 break;
-            
+
             /* No logo */
             case 'N':
             case 'n':
                 NoLogo = 1;
                 break;
-            
+
             /* Fallback driver */
             case 'K':
             case 'k':
                 FallbackDriver = 1;
                 break;
-            
+
             /* Sanity Check */
             case 'W':
             case 'w':
                 SanityCheck = 1;
                 break;
-            
+
             /* Itanium */
             case 'I':
             case 'i':
                 BuildType = 1;
                 break;
-            
+
             /* X86 */
             case 'X':
             case 'x':
                 BuildType = 0;
                 break;
-            
+
             /* AMD64 */
             case 'M':
             case 'm':
                 BuildType = 2;
                 break;
-            
+
             /* WOW64 */
             case 'O':
             case 'o':
                 BuildType = 3;
                 break;
-            
+
             /* Source only */
             case 'S':
             case 's':
                 SourceOnly = 1;
                 break;
-            
+
             default:
                 /* If you got here, the options are invalid or missing */
                 PrintUsage();
                 break;
         }
     }
-    
+
     /* Do we have no options? */
     if (i == argc) PrintUsage();
 
@@ -163,14 +163,14 @@ main(INT argc,
         printf("\nKbdTool v%d.%02d - convert keyboard text file to C file or a keyboard layout DLL\n\n",
                gVersion, gSubVersion);
     }
-    
+
     /* Save the file name */
     gpszFileName = argv[i];
-    
+
     /* Open either as binary or text */
     OpenFlags = "rb";
     if (!UnicodeFile) OpenFlags = "rt";
-    
+
     /* Open a handle to the file */
     gfpInput = fopen(gpszFileName, OpenFlags);
     if (!gfpInput)
@@ -179,7 +179,7 @@ main(INT argc,
         printf("Unable to open '%s' for read.\n", gpszFileName);
         exit(1);
     }
-    
+
     /* Should we print out what we're doing? */
     if (!NoLogo)
     {
@@ -197,7 +197,7 @@ main(INT argc,
                 /* Print the appropriate message depending on what was chosen */
                 case 0:
                     strcpy(BuildOptions, "i386/x86");
-                    break;                      
+                    break;
                 case 1:
                     strcpy(BuildOptions, "ia64");
                     break;
@@ -212,17 +212,17 @@ main(INT argc,
                     break;
             }
         }
-        
+
         /* Now inform the user */
         printf("Compiling layout information from '%s' for %s.\n", gpszFileName, BuildOptions);
     }
-          
+
     /* Now parse the keywords */
     FailureCode = DoParsing();
-    
+
     /* Should we build? */
     if (!(SourceOnly) && !(FallbackDriver)) ErrorCode = 0;//DoBuild();
-    
+
     /* Did everything work? */
     if (FailureCode == 0)
     {
@@ -234,7 +234,7 @@ main(INT argc,
         /* Print the failure code */
         printf("\n     %13d\n", FailureCode);
     }
-    
+
     /* Return the error code */
     return ErrorCode;
 }

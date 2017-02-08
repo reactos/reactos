@@ -24,18 +24,7 @@ Revision History:
 
 --*/
 
-#include "stddef.h"
-#include "string.h"
-
-#include "ntddk.h"
-
-#include "ntddcdvd.h"
-#include "classpnp.h"
-
-#include "initguid.h"
-#include "ntddstor.h"
 #include "cdrom.h"
-
 
 #if DBG
     PUCHAR READ_DVD_STRUCTURE_FORMAT_STRINGS[DvdMaxDescriptor+1] = {
@@ -82,11 +71,11 @@ Return Value:
     PIO_STACK_LOCATION nextStack;
     PCDROM_DATA        cdData = (PCDROM_DATA)(commonExtension->DriverData);
 
-    BOOLEAN            use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
+    //BOOLEAN            use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
     SCSI_REQUEST_BLOCK srb;
     PCDB cdb = (PCDB)srb.Cdb;
     //PVOID outputBuffer;
-    ULONG bytesTransferred = 0;
+    //ULONG bytesTransferred = 0;
     NTSTATUS status;
     //NTSTATUS status2;
     KIRQL    irql;
@@ -1208,7 +1197,6 @@ RetryControl:
         IoMarkIrpPending(Irp);
         IoStartPacket(DeviceObject, Irp, NULL, NULL);
         return STATUS_PENDING;
-        break;
     }
 
     case IOCTL_DVD_READ_KEY: {
@@ -2288,7 +2276,7 @@ CdRomDeviceControlCompletion(
 
     if (NT_SUCCESS(status)) {
         
-        BOOLEAN b = FALSE;
+        //BOOLEAN b = FALSE;
 
 
         switch (realIrpStack->Parameters.DeviceIoControl.IoControlCode) {
@@ -3216,7 +3204,7 @@ Return Value:
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
 
-    PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
+    //PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
 
     PDVD_SESSION_ID sessionId = Irp->AssociatedIrp.SystemBuffer;
 
@@ -3642,7 +3630,7 @@ CdRomDeviceControlDvdEndSession(
     IN PSCSI_REQUEST_BLOCK Srb
     )
 {
-    PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(OriginalIrp);
+    //PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(OriginalIrp);
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCDB cdb = (PCDB)Srb->Cdb;
 
@@ -3834,7 +3822,7 @@ CdRomDeviceControlDvdSendKey(
     IN PSCSI_REQUEST_BLOCK Srb
     )
 {
-    PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(OriginalIrp);
+    //PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(OriginalIrp);
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCDB cdb = (PCDB)Srb->Cdb;
 

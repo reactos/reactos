@@ -16,38 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winreg.h"
-#include <ole2.h>
-#include <wininet.h>
-//#include "shlwapi.h"
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
-//#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 static HRESULT get_url(HTMLLocation *This, const WCHAR **ret)
 {
-    if(!This->window || !This->window->url) {
+    if(!This->window || !This->window->base.outer_window || !This->window->base.outer_window->url) {
         FIXME("No current URL\n");
         return E_NOTIMPL;
     }
 
-    *ret = This->window->url;
+    *ret = This->window->base.outer_window->url;
     return S_OK;
+}
+
+static IUri *get_uri(HTMLLocation *This)
+{
+    if(!This->window || !This->window->base.outer_window)
+        return NULL;
+    return This->window->base.outer_window->uri;
 }
 
 static HRESULT get_url_components(HTMLLocation *This, URL_COMPONENTSW *url)
@@ -68,36 +54,36 @@ static HRESULT get_url_components(HTMLLocation *This, URL_COMPONENTSW *url)
     return S_OK;
 }
 
-#define HTMLLOCATION_THIS(iface) DEFINE_THIS(HTMLLocation, HTMLLocation, iface)
+static inline HTMLLocation *impl_from_IHTMLLocation(IHTMLLocation *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLLocation, IHTMLLocation_iface);
+}
 
 static HRESULT WINAPI HTMLLocation_QueryInterface(IHTMLLocation *iface, REFIID riid, void **ppv)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = HTMLLOCATION(This);
+        *ppv = &This->IHTMLLocation_iface;
     }else if(IsEqualGUID(&IID_IHTMLLocation, riid)) {
-        TRACE("(%p)->(IID_IHTMLLocation %p)\n", This, ppv);
-        *ppv = HTMLLOCATION(This);
+        *ppv = &This->IHTMLLocation_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLLocation_AddRef(IHTMLLocation *iface)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -107,7 +93,7 @@ static ULONG WINAPI HTMLLocation_AddRef(IHTMLLocation *iface)
 
 static ULONG WINAPI HTMLLocation_Release(IHTMLLocation *iface)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -124,51 +110,52 @@ static ULONG WINAPI HTMLLocation_Release(IHTMLLocation *iface)
 
 static HRESULT WINAPI HTMLLocation_GetTypeInfoCount(IHTMLLocation *iface, UINT *pctinfo)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLLocation_GetTypeInfo(IHTMLLocation *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLLocation_GetIDsOfNames(IHTMLLocation *iface, REFIID riid,
                                                 LPOLESTR *rgszNames, UINT cNames,
                                                 LCID lcid, DISPID *rgDispId)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+            lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLLocation_Invoke(IHTMLLocation *iface, DISPID dispIdMember,
                             REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLLocation_put_href(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
-    if(!This->window) {
+    if(!This->window || !This->window->base.outer_window) {
         FIXME("No window available\n");
         return E_FAIL;
     }
 
-    return navigate_url(This->window, v, This->window->url);
+    return navigate_url(This->window->base.outer_window, v, This->window->base.outer_window->uri, BINDING_NAVIGATED);
 }
 
 static HRESULT WINAPI HTMLLocation_get_href(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
     WCHAR *buf = NULL, *url_path = NULL;
     HRESULT hres, ret;
@@ -268,15 +255,17 @@ cleanup:
 
 static HRESULT WINAPI HTMLLocation_put_protocol(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_get_protocol(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    BSTR protocol, ret;
+    unsigned len;
+    IUri *uri;
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
@@ -284,35 +273,41 @@ static HRESULT WINAPI HTMLLocation_get_protocol(IHTMLLocation *iface, BSTR *p)
     if(!p)
         return E_POINTER;
 
-    url.dwSchemeLength = 1;
-    hres = get_url_components(This, &url);
+    if(!(uri = get_uri(This))) {
+        FIXME("No current URI\n");
+        return E_NOTIMPL;
+    }
+
+    hres = IUri_GetSchemeName(uri, &protocol);
     if(FAILED(hres))
         return hres;
-
-    if(!url.dwSchemeLength) {
-        FIXME("Unexpected blank protocol\n");
-        return E_NOTIMPL;
-    }else {
-        WCHAR buf[url.dwSchemeLength + 1];
-        memcpy(buf, url.lpszScheme, url.dwSchemeLength * sizeof(WCHAR));
-        buf[url.dwSchemeLength] = ':';
-        *p = SysAllocStringLen(buf, url.dwSchemeLength + 1);
+    if(hres == S_FALSE) {
+        SysFreeString(protocol);
+        *p = NULL;
+        return S_OK;
     }
-    if(!*p)
+
+    len = SysStringLen(protocol);
+    ret = SysAllocStringLen(protocol, len+1);
+    SysFreeString(protocol);
+    if(!ret)
         return E_OUTOFMEMORY;
+
+    ret[len] = ':';
+    *p = ret;
     return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_host(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_get_host(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
     HRESULT hres;
 
@@ -333,14 +328,14 @@ static HRESULT WINAPI HTMLLocation_get_host(IHTMLLocation *iface, BSTR *p)
 
     if(url.nPort) {
         /* <hostname>:<port> */
-        const WCHAR format[] = {'%','d',0};
-        DWORD len = url.dwHostNameLength + 1 + 5 + 1;
-        WCHAR buf[len];
+        const WCHAR format[] = {'%','u',0};
+        DWORD len = url.dwHostNameLength + 1 + 5;
+        WCHAR *buf;
 
+        buf = *p = SysAllocStringLen(NULL, len);
         memcpy(buf, url.lpszHostName, url.dwHostNameLength * sizeof(WCHAR));
         buf[url.dwHostNameLength] = ':';
         snprintfW(buf + url.dwHostNameLength + 1, 6, format, url.nPort);
-        *p = SysAllocString(buf);
     }else
         *p = SysAllocStringLen(url.lpszHostName, url.dwHostNameLength);
 
@@ -351,15 +346,16 @@ static HRESULT WINAPI HTMLLocation_get_host(IHTMLLocation *iface, BSTR *p)
 
 static HRESULT WINAPI HTMLLocation_put_hostname(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_get_hostname(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    BSTR hostname;
+    IUri *uri;
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
@@ -367,33 +363,36 @@ static HRESULT WINAPI HTMLLocation_get_hostname(IHTMLLocation *iface, BSTR *p)
     if(!p)
         return E_POINTER;
 
-    url.dwHostNameLength = 1;
-    hres = get_url_components(This, &url);
-    if(FAILED(hres))
-        return hres;
-
-    if(!url.dwHostNameLength){
-        *p = NULL;
-        return S_OK;
+    if(!(uri = get_uri(This))) {
+        FIXME("No current URI\n");
+        return E_NOTIMPL;
     }
 
-    *p = SysAllocStringLen(url.lpszHostName, url.dwHostNameLength);
-    if(!*p)
-        return E_OUTOFMEMORY;
+    hres = IUri_GetHost(uri, &hostname);
+    if(hres == S_OK) {
+        *p = hostname;
+    }else if(hres == S_FALSE) {
+        SysFreeString(hostname);
+        *p = NULL;
+    }else {
+        return hres;
+    }
+
     return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_port(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_get_port(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    DWORD port;
+    IUri *uri;
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
@@ -401,18 +400,23 @@ static HRESULT WINAPI HTMLLocation_get_port(IHTMLLocation *iface, BSTR *p)
     if(!p)
         return E_POINTER;
 
-    hres = get_url_components(This, &url);
+    if(!(uri = get_uri(This))) {
+        FIXME("No current URI\n");
+        return E_NOTIMPL;
+    }
+
+    hres = IUri_GetPort(uri, &port);
     if(FAILED(hres))
         return hres;
 
-    if(url.nPort) {
-        const WCHAR format[] = {'%','d',0};
-        WCHAR buf[6];
-        snprintfW(buf, 6, format, url.nPort);
+    if(hres == S_OK) {
+        static const WCHAR formatW[] = {'%','u',0};
+        WCHAR buf[12];
+
+        sprintfW(buf, formatW, port);
         *p = SysAllocString(buf);
     }else {
-        const WCHAR empty[] = {0};
-        *p = SysAllocString(empty);
+        *p = SysAllocStringLen(NULL, 0);
     }
 
     if(!*p)
@@ -422,14 +426,14 @@ static HRESULT WINAPI HTMLLocation_get_port(IHTMLLocation *iface, BSTR *p)
 
 static HRESULT WINAPI HTMLLocation_put_pathname(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_get_pathname(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
     HRESULT hres;
 
@@ -456,55 +460,60 @@ static HRESULT WINAPI HTMLLocation_get_pathname(IHTMLLocation *iface, BSTR *p)
 
 static HRESULT WINAPI HTMLLocation_put_search(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_get_search(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    BSTR query;
+    IUri *uri;
     HRESULT hres;
-    const WCHAR hash[] = {'#',0};
 
     TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_POINTER;
 
-    url.dwExtraInfoLength = 1;
-    hres = get_url_components(This, &url);
-    if(FAILED(hres))
-        return hres;
-
-    if(!url.dwExtraInfoLength){
-        *p = NULL;
-        return S_OK;
+    if(!(uri = get_uri(This))) {
+        FIXME("No current URI\n");
+        return E_NOTIMPL;
     }
 
-    url.dwExtraInfoLength = strcspnW(url.lpszExtraInfo, hash);
+    hres = IUri_GetQuery(uri, &query);
+    if(hres == S_OK) {
+        *p = query;
+    }else if(hres == S_FALSE) {
+        SysFreeString(query);
+        *p = NULL;
+    }else {
+        return hres;
+    }
 
-    *p = SysAllocStringLen(url.lpszExtraInfo, url.dwExtraInfoLength);
-
-    if(!*p)
-        return E_OUTOFMEMORY;
     return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_put_hash(IHTMLLocation *iface, BSTR v)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->window || !This->window->base.outer_window) {
+        FIXME("No window available\n");
+        return E_FAIL;
+    }
+
+    return navigate_url(This->window->base.outer_window, v, This->window->base.outer_window->uri, 0);
 }
 
 static HRESULT WINAPI HTMLLocation_get_hash(IHTMLLocation *iface, BSTR *p)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    URL_COMPONENTSW url = {sizeof(URL_COMPONENTSW)};
-    const WCHAR hash[] = {'#',0};
-    DWORD hash_pos = 0;
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    BSTR hash;
+    IUri *uri;
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
@@ -512,55 +521,61 @@ static HRESULT WINAPI HTMLLocation_get_hash(IHTMLLocation *iface, BSTR *p)
     if(!p)
         return E_POINTER;
 
-    url.dwExtraInfoLength = 1;
-    hres = get_url_components(This, &url);
-    if(FAILED(hres))
-        return hres;
-
-    if(!url.dwExtraInfoLength){
-        *p = NULL;
-        return S_OK;
+    if(!(uri = get_uri(This))) {
+        FIXME("No current URI\n");
+        return E_NOTIMPL;
     }
 
-    hash_pos = strcspnW(url.lpszExtraInfo, hash);
-    url.dwExtraInfoLength -= hash_pos;
+    hres = IUri_GetFragment(uri, &hash);
+    if(hres == S_OK) {
+        *p = hash;
+    }else if(hres == S_FALSE) {
+        SysFreeString(hash);
+        *p = NULL;
+    }else {
+        return hres;
+    }
 
-    *p = SysAllocStringLen(url.lpszExtraInfo + hash_pos, url.dwExtraInfoLength);
-
-    if(!*p)
-        return E_OUTOFMEMORY;
     return S_OK;
 }
 
 static HRESULT WINAPI HTMLLocation_reload(IHTMLLocation *iface, VARIANT_BOOL flag)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
     FIXME("(%p)->(%x)\n", This, flag);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLLocation_replace(IHTMLLocation *iface, BSTR bstr)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(bstr));
-    return E_NOTIMPL;
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(bstr));
+
+    if(!This->window || !This->window->base.outer_window) {
+        FIXME("No window available\n");
+        return E_FAIL;
+    }
+
+    return navigate_url(This->window->base.outer_window, bstr, This->window->base.outer_window->uri,
+            BINDING_NAVIGATED|BINDING_REPLACE);
 }
 
 static HRESULT WINAPI HTMLLocation_assign(IHTMLLocation *iface, BSTR bstr)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(bstr));
-    return E_NOTIMPL;
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
+    TRACE("(%p)->(%s)\n", This, debugstr_w(bstr));
+    return IHTMLLocation_put_href(iface, bstr);
 }
 
 static HRESULT WINAPI HTMLLocation_toString(IHTMLLocation *iface, BSTR *String)
 {
-    HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, String);
-    return E_NOTIMPL;
-}
+    HTMLLocation *This = impl_from_IHTMLLocation(iface);
 
-#undef HTMLLOCATION_THIS
+    TRACE("(%p)->(%p)\n", This, String);
+
+    return IHTMLLocation_get_href(&This->IHTMLLocation_iface, String);
+}
 
 static const IHTMLLocationVtbl HTMLLocationVtbl = {
     HTMLLocation_QueryInterface,
@@ -604,7 +619,7 @@ static dispex_static_data_t HTMLLocation_dispex = {
 };
 
 
-HRESULT HTMLLocation_Create(HTMLWindow *window, HTMLLocation **ret)
+HRESULT HTMLLocation_Create(HTMLInnerWindow *window, HTMLLocation **ret)
 {
     HTMLLocation *location;
 
@@ -612,11 +627,11 @@ HRESULT HTMLLocation_Create(HTMLWindow *window, HTMLLocation **ret)
     if(!location)
         return E_OUTOFMEMORY;
 
-    location->lpHTMLLocationVtbl = &HTMLLocationVtbl;
+    location->IHTMLLocation_iface.lpVtbl = &HTMLLocationVtbl;
     location->ref = 1;
     location->window = window;
 
-    init_dispex(&location->dispex, (IUnknown*)HTMLLOCATION(location),  &HTMLLocation_dispex);
+    init_dispex(&location->dispex, (IUnknown*)&location->IHTMLLocation_iface, &HTMLLocation_dispex);
 
     *ret = location;
     return S_OK;

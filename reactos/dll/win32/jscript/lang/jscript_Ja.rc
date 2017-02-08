@@ -1,0 +1,68 @@
+/*
+ * Copyright 2009 Piotr Caban
+ * Copyright 2010 Akihiro Sagawa
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "オブジェクトを基本型に変換できません"
+    IDS_INVALID_CALL_ARG    "手続き呼び出しまたは引数が無効です"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
+    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_CREATE_OBJ_ERROR    "オートメーション サーバはオブジェクトを生成できません"
+    IDS_NO_PROPERTY         "オブジェクトはこのプロパティまたはメソッドをサポートしていません"
+    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_ARG_NOT_OPT         "引数は省略できません"
+    IDS_SYNTAX_ERROR        "文法エラー"
+    IDS_SEMICOLON           "';'を期待していました"
+    IDS_LBRACKET            "'('を期待していました"
+    IDS_RBRACKET            "')'を期待していました"
+    IDS_EXPECTED_IDENTIFIER "Expected identifier"
+    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_INVALID_CHAR        "Invalid character"
+    IDS_UNTERMINATED_STR    "文字列定数が終端していません"
+    IDS_MISPLACED_RETURN    "'return' statement outside of function"
+    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
+    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_LABEL_REDEFINED     "Label redefined"
+    IDS_LABEL_NOT_FOUND     "Label not found"
+    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_DISABLED_CC         "Conditional compilation is turned off"
+    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_NOT_FUNC            "関数を期待していました"
+    IDS_NOT_DATE            "'[object]' は日付オブジェクトではありません"
+    IDS_NOT_NUM             "数値を期待していました"
+    IDS_OBJECT_EXPECTED     "オブジェクトを期待していました"
+    IDS_ILLEGAL_ASSIGN      "不正な割り当て"
+    IDS_UNDEFINED           "'|'は定義されていません"
+    IDS_NOT_BOOL            "論理オブジェクトを期待していました"
+    IDS_INVALID_DELETE      "Cannot delete '|'"
+    IDS_NOT_VBARRAY         "VBArray object expected"
+    IDS_JSCRIPT_EXPECTED    "JScriptオブジェクトを期待していました"
+    IDS_REGEXP_SYNTAX_ERROR "正規表現に文法誤りがあります"
+    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
+    IDS_URI_INVALID_CHAR    "エンコードされるURIに無効な文字が含まれています"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
+    IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
+    IDS_INVALID_LENGTH      "配列の長さは有限の正整数でなければなりません"
+    IDS_ARRAY_EXPECTED      "配列オブジェクトを期待していました"
+}

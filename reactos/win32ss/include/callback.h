@@ -11,7 +11,13 @@
 #define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
 #define USER32_CALLBACK_CLIENTLOADLIBRARY     (8)
 #define USER32_CALLBACK_GETCHARSETINFO        (9)
-#define USER32_CALLBACK_MAXIMUM               (9)
+#define USER32_CALLBACK_COPYIMAGE             (10)
+#define USER32_CALLBACK_SETWNDICONS           (11)
+#define USER32_CALLBACK_DELIVERUSERAPC        (12)
+#define USER32_CALLBACK_DDEPOST               (13)
+#define USER32_CALLBACK_DDEGET                (14)
+#define USER32_CALLBACK_SETOBM                (15)
+#define USER32_CALLBACK_MAXIMUM               (15)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -49,7 +55,11 @@ typedef struct _HOOKPROC_CALLBACK_ARGUMENTS
   WPARAM wParam;
   LPARAM lParam;
   HOOKPROC Proc;
+  INT Mod;
+  ULONG_PTR offPfn;
   BOOLEAN Ansi;
+  LRESULT Result;
+  WCHAR ModuleName[512];
 } HOOKPROC_CALLBACK_ARGUMENTS, *PHOOKPROC_CALLBACK_ARGUMENTS;
 
 typedef struct _HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS
@@ -70,13 +80,25 @@ typedef struct _EVENTPROC_CALLBACK_ARGUMENTS
   DWORD dwEventThread;
   DWORD dwmsEventTime;
   WINEVENTPROC Proc;
+  INT Mod;
+  ULONG_PTR offPfn;
 } EVENTPROC_CALLBACK_ARGUMENTS, *PEVENTPROC_CALLBACK_ARGUMENTS;
 
 typedef struct _LOADMENU_CALLBACK_ARGUMENTS
 {
   HINSTANCE hModule;
+  LPCWSTR InterSource;
   WCHAR MenuName[1];
 } LOADMENU_CALLBACK_ARGUMENTS, *PLOADMENU_CALLBACK_ARGUMENTS;
+
+typedef struct _COPYIMAGE_CALLBACK_ARGUMENTS
+{
+  HANDLE hImage;
+  UINT uType;
+  int cxDesired;
+  int cyDesired;
+  UINT fuFlags;
+} COPYIMAGE_CALLBACK_ARGUMENTS, *PCOPYIMAGE_CALLBACK_ARGUMENTS;
 
 typedef struct _CLIENT_LOAD_LIBRARY_ARGUMENTS
 {
@@ -92,6 +114,35 @@ typedef struct _GET_CHARSET_INFO
     CHARSETINFO Cs;
 } GET_CHARSET_INFO, *PGET_CHARSET_INFO;
 
+typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
+{
+    HICON hIconSample;
+    HICON hIconHand;
+    HICON hIconQuestion;
+    HICON hIconBang;
+    HICON hIconNote;
+    HICON hIconWindows;
+    HICON hIconSmWindows;
+} SETWNDICONS_CALLBACK_ARGUMENTS, *PSETWNDICONS_CALLBACK_ARGUMENTS;
+
+typedef struct _DDEPOSTGET_CALLBACK_ARGUMENTS
+{
+    INT Type;
+    MSG;
+    int size;
+    PVOID pvData;
+    BYTE buffer[1];
+} DDEPOSTGET_CALLBACK_ARGUMENTS, *PDDEPOSTGET_CALLBACK_ARGUMENTS;
+
+typedef struct _SETOBM_CALLBACK_ARGUMENTS
+{
+    struct tagOEMBITMAPINFO oembmi[93];   
+} SETOBM_CALLBACK_ARGUMENTS, *PSETOBM_CALLBACK_ARGUMENTS;
+
+NTSTATUS WINAPI
+User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallSetWndIconsFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -112,4 +163,12 @@ NTSTATUS WINAPI
 User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32DeliverUserAPC(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallDDEPostFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallDDEGetFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallOBMFromKernel(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */

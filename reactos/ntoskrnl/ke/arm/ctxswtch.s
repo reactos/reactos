@@ -3,124 +3,144 @@
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/ctxswtch.s
  * PURPOSE:         Context Switch and Idle Thread on ARM
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  ReactOS Portable Systems Group
  */
 
-    .title "ARM Context Switching"
-    .include "ntoskrnl/include/internal/arm/kxarm.h"
-    .include "ntoskrnl/include/internal/arm/ksarm.h"
+#include <ksarm.h>
+
+    IMPORT KeLowerIrql
 
     TEXTAREA
+
+/*!
+ * \name KiSwapContextInternal
+ *
+ * \brief
+ *     The KiSwapContextInternal routine switches context to another thread.
+ *
+ * \param r0
+ *     Pointer to the KTHREAD to which the caller wishes to switch to.
+ *
+ * \param r1
+ *     Pointer to the KTHREAD to which the caller wishes to switch from.
+ *
+ * \param r2
+ *     APC bypass
+ *
+ * \return
+ *     None.
+ *
+ * \remarks
+ *     ...
+ *
+ *--*/
+    NESTED_ENTRY KiSwapContextInternal
+
+    /* Push a KSWITCH_FRAME on the stack */
+    stmdb sp!,{r2,r3,r11,lr} // FIXME: what is the 2nd field?
+    // PROLOG_PUSH {r2,r3,r11,lr}
+
+    PROLOG_END KiSwapContextInternal
+
+    /* Save kernel stack of old thread */
+    str sp, [r1, #ThKernelStack]
+
+    /* Save new thread in R11 */
+    mov r11, r0
+
+    //bl KiSwapContextSuspend
+    __debugbreak
+
+    /* Load stack of new thread */
+    ldr sp, [r11, #ThKernelStack]
+
+    /* Reload APC bypass */
+    ldr r2, [sp, #SwApcBypass]
+
+    //bl KiSwapContextResume
+    __debugbreak
+
+    /* Restore R2, R11 and return */
+    ldmia sp!,{r2,r3,r11,pc}
+
+    NESTED_END KiSwapContextInternal
+
+
+/*!
+ * KiSwapContext
+ *
+ * \brief
+ *     The KiSwapContext routine switches context to another thread.
+ *
+ * BOOLEAN
+ * KiSwapContext(
+ *     _In_ KIRQL WaitIrql,
+ *     _Inout_ PKTHREAD CurrentThread);
+ *
+ * \param WaitIrql <r0>
+ *     ...
+ *
+ * \param CurrentThread <r1>
+ *     Pointer to the KTHREAD of the current thread.
+ *
+ * \return
+ *     The WaitStatus of the Target Thread.
+ *
+ * \remarks
+ *     This is a wrapper around KiSwapContextInternal which will save all the
+ *     non-volatile registers so that the Internal function can use all of
+ *     them. It will also save the old current thread and set the new one.
+ *
+ *     The calling thread does not return after KiSwapContextInternal until
+ *     another thread switches to it.
+ *
+ *--*/
     NESTED_ENTRY KiSwapContext
+
+    /* Push non-volatiles and return address on the stack */
+    stmdb sp!,{r4,r5,r6,r7,r8,r9,r10,r11,lr}
+    // PROLOG_PUSH {r4,r5,r6,r7,r8,r9,r10,r11,lr}
+
     PROLOG_END KiSwapContext
 
-	// BUSTEDDDD
-	b .
-
-    //
-    // a1 = Old Thread
-    // a2 = New Thread
-    //
-    
-    //
-    // Make space for the trap frame
-    //
-    sub sp, sp, #ExceptionFrameLength
-    
-    //
-    // Build exception frame
-    // FIXME-PERF: Change to stmdb later
-    //
-    str r4, [sp, #ExR4]
-    str r5, [sp, #ExR5]
-    str r6, [sp, #ExR6]
-    str r7, [sp, #ExR7]
-    str r8, [sp, #ExR8]
-    str r9, [sp, #ExR9]
-    str r10, [sp, #ExR10]
-    str r11, [sp, #ExR11]
-    str lr, [sp, #ExLr]
-    mrs r4, spsr_all
-    str r4, [sp, #ExSpsr]
-
-    //
-    // Switch stacks
-    //
-    str sp, [a1, #ThKernelStack]
-    ldr sp, [a2, #ThKernelStack]
-    
-    //
-    // Call the C context switch code
-    //
+    /* Do the swap with the registers correctly setup */
+    mov32 r0, 0xFFDFF000 // FIXME: properly load the PCR into r0 (PCR should be in CP15, c3, TPIDRPRW)
+    ldr r0, [r0, #PcCurrentThread] /* Pointer to the new thread */
     bl KiSwapContextInternal
 
-    //
-    // Get the SPSR and restore it
-    //
-    ldr r4, [sp, #ExSpsr]
-    msr spsr_all, r4
-    
-    //
-    // Restore the registers
-    // FIXME-PERF: Use LDMIA later
-    //
-    ldr r4, [sp, #ExR4]
-    ldr r5, [sp, #ExR5]
-    ldr r6, [sp, #ExR6]
-    ldr r7, [sp, #ExR7]
-    ldr r8, [sp, #ExR8]
-    ldr r9, [sp, #ExR9]
-    ldr r10, [sp, #ExR10]
-    ldr r11, [sp, #ExR11]
-    ldr lr, [sp, #ExLr]
-    
-    //
-    // Restore stack
-    //
-    add sp, sp, #ExceptionFrameLength
-    
-    //
-    // Jump to saved restore address
-    //
-    mov pc, lr
+    /* Restore non-volatiles and return */
+    ldmia sp!,{r4,r5,r6,r7,r8,r9,r10,r11,pc}
 
-    ENTRY_END KiSwapContext
+    NESTED_END KiSwapContext
+
+
 
     NESTED_ENTRY KiThreadStartup
     PROLOG_END KiThreadStartup
-        
-    //
-    // Lower to APC_LEVEL
-    //
+
+    /* Lower IRQL to APC_LEVEL */
     mov a1, #1
     bl KeLowerIrql
-    
-    //
-    // Set the start address and startup context
-    //
+
+    /* Set the start address and startup context */
     mov a1, r6
     mov a2, r5
     blx r7
-    
-    //
-    // Oh noes, we are back!
-    //
-    b .
-    
-    ENTRY_END KiThreadStartup
+
+    /* The function must not return! */
+    __assertfail
+
+    NESTED_END KiThreadStartup
+
 
     NESTED_ENTRY KiSwitchThreads
     PROLOG_END KiSwitchThreads
 
-	// BUSTEDDDD
-	b .
+	// UNIMPLEMENTED!
+	__debugbreak
 
-    ENTRY_END KiSwitchThreads
+    NESTED_END KiSwitchThreads
 
-    NESTED_ENTRY KiSwapContextInternal
-    PROLOG_END KiSwapContextInternal
-
-	// BUSTEDDDD
-	b .
-
-    ENTRY_END KiSwapContextInternal
+    END
+/* EOF */

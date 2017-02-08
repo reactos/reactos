@@ -1,0 +1,30 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "編集"
+    IDS_MARK "範囲指定"
+    IDS_COPY "コピー\tEnter"
+    IDS_PASTE "貼り付け"
+    IDS_SELECTALL "すべて選択"
+    IDS_SCROLL "スクロール"
+    IDS_FIND "検索..."
+    IDS_DEFAULTS "規定値"
+    IDS_PROPERTIES "プロパティ"
+/*
+    IDS_SCROLLHERE "ここにスクロール"
+    IDS_SCROLLTOP "一番上にスクロール"
+    IDS_SCROLLBOTTOM "一番下にスクロール"
+    IDS_SCROLLPAGE_UP "Page up"
+    IDS_SCROLLPAGE_DOWN "Page down"
+    IDS_SCROLLUP "上にスクロール"
+    IDS_SCROLLDOWN "下にスクロール"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
+END

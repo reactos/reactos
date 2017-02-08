@@ -64,7 +64,7 @@ CallNtPowerInformation(POWER_INFORMATION_LEVEL InformationLevel,
 {
     BOOLEAN old;
 
-	//Lohnegrim: In order to get the right results, we have to ajust our Privilegs
+	//Lohnegrim: In order to get the right results, we have to adjust our Privileges
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
     RtlAdjustPrivilege(SE_CREATE_PAGEFILE_PRIVILEGE, TRUE, FALSE, &old);
 
@@ -332,7 +332,7 @@ GetCurrentPowerPolicies(PGLOBAL_POWER_POLICY pGlobalPowerPolicy,
     return FALSE;
     */
 /*
-   Lohnegrim: I dont know why this Function shoud call NtPowerInformation, becouse as far as i know,
+   Lohnegrim: I don't know why this Function should call NtPowerInformation, because as far as I know,
       it simply returns the GlobalPowerPolicy and the AktivPowerScheme!
  */
     UINT uiID;
@@ -793,8 +793,8 @@ static BOOLEAN
 CheckPowerActionPolicy(PPOWER_ACTION_POLICY pPAP, SYSTEM_POWER_CAPABILITIES PowerCaps)
 {
 /*
-   Lohnegrim: this is an Helperfunction, it checks if the POWERACTIONPOLICY is valid
-   Also, if the System dosn't support Hipernation, then change the PowerAction
+   Lohnegrim: this is an Helper function, it checks if the POWERACTIONPOLICY is valid
+   Also, if the System doesn't support Hibernation, then change the PowerAction
 */
     switch (pPAP->Action)
     {
@@ -829,7 +829,7 @@ CheckPowerActionPolicy(PPOWER_ACTION_POLICY pPAP, SYSTEM_POWER_CAPABILITIES Powe
 static VOID
 FixSystemPowerState(PSYSTEM_POWER_STATE Psps, SYSTEM_POWER_CAPABILITIES PowerCaps)
 {
-	//Lohnegrim: If the System dosn't support the Powerstates, then we have to change them
+	//Lohnegrim: If the System doesn't support the Powerstates, then we have to change them
     if (!PowerCaps.SystemS1 && *Psps == PowerSystemSleeping1)
         *Psps = PowerSystemSleeping2;
     if (!PowerCaps.SystemS2 && *Psps == PowerSystemSleeping2)
@@ -920,10 +920,10 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             return FALSE;
         }
         //Lohnegrim: The BroadcastCapacityResolution presents the Powerlevel in Percent, if invalid set th 100 == FULL
-        if ((pGPP->mach.BroadcastCapacityResolution < 0) || (pGPP->mach.BroadcastCapacityResolution > 100))
-            pGPP->mach.BroadcastCapacityResolution=100;
+        if (pGPP->mach.BroadcastCapacityResolution > 100)
+            pGPP->mach.BroadcastCapacityResolution = 100;
 
-		//Lohnegrim: I have no idear, if they are realy needed, or if they are spezific for my System, or what they mean, so i removed them
+		//Lohnegrim: I have no idea, if they are really needed, or if they are specific for my System, or what they mean, so I removed them
         //pGPP->user.DischargePolicy[1].PowerPolicy.EventCode = pGPP->user.DischargePolicy[1].PowerPolicy.EventCode | 0x010000;
         //pGPP->user.DischargePolicy[2].PowerPolicy.EventCode = pGPP->user.DischargePolicy[2].PowerPolicy.EventCode | 0x020000;
         //pGPP->user.DischargePolicy[3].PowerPolicy.EventCode = pGPP->user.DischargePolicy[3].PowerPolicy.EventCode | 0x030000;
@@ -1053,7 +1053,7 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             pPP->user.MaxSleepAc=PowerSystemSleeping1;
             pPP->user.MaxSleepDc=PowerSystemSleeping1;
         }
-		//Lohnegrim: I dont know where to get this info from, so i removed it
+		//Lohnegrim: I don't know where to get this info from, so I removed it
         //pPP->user.OptimizeForPowerAc=TRUE;
         //pPP->user.OptimizeForPowerDc=TRUE;
 

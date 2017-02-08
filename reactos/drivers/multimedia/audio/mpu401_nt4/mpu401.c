@@ -258,7 +258,7 @@ MPU401DeviceControl(PDEVICE_OBJECT DeviceObject,
             DPRINT("Received IOCTL_MIDI_PLAY\n");
             Data = (PUCHAR) Irp->AssociatedIrp.SystemBuffer;
 
-            DPRINT("Sending %d bytes of MIDI data to 0x%d:\n", Stack->Parameters.DeviceIoControl.InputBufferLength, DeviceExtension->Port);
+            DPRINT("Sending %d bytes of MIDI data to 0x%x:\n", Stack->Parameters.DeviceIoControl.InputBufferLength, DeviceExtension->Port);
 
             for (ByteCount = 0; ByteCount < Stack->Parameters.DeviceIoControl.InputBufferLength; ByteCount ++)
             {

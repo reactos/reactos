@@ -6,7 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS
 FindMethodHandler(
@@ -144,7 +147,7 @@ KspMethodHandlerWithAllocator(
             if (Allocator)
             {
                 /* allocate the requested amount */
-                Status = Allocator(Irp, Irp->IoStatus.Information, FALSE);
+                Status = Allocator(Irp, (ULONG)Irp->IoStatus.Information, FALSE);
 
                 /* check if the block was allocated */
                 if (!NT_SUCCESS(Status))
@@ -186,13 +189,14 @@ KspMethodHandlerWithAllocator(
 /*
     @implemented
 */
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsMethodHandler(
-    IN  PIRP Irp,
-    IN  ULONG MethodSetsCount,
-    IN  PKSMETHOD_SET MethodSet)
+    _In_ PIRP Irp,
+    _In_ ULONG MethodSetsCount,
+    _In_reads_(MethodSetsCount) const KSMETHOD_SET* MethodSet)
 {
     return KspMethodHandlerWithAllocator(Irp, MethodSetsCount, MethodSet, NULL, 0);
 }
@@ -200,15 +204,16 @@ KsMethodHandler(
 /*
     @implemented
 */
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsMethodHandlerWithAllocator(
-    IN  PIRP Irp,
-    IN  ULONG MethodSetsCount,
-    IN  PKSMETHOD_SET MethodSet,
-    IN  PFNKSALLOCATOR Allocator OPTIONAL,
-    IN  ULONG MethodItemSize OPTIONAL)
+    _In_ PIRP Irp,
+    _In_ ULONG MethodSetsCount,
+    _In_reads_(MethodSetsCount) const KSMETHOD_SET* MethodSet,
+    _In_opt_ PFNKSALLOCATOR Allocator,
+    _In_opt_ ULONG MethodItemSize)
 {
     return KspMethodHandlerWithAllocator(Irp, MethodSetsCount, MethodSet, Allocator, MethodItemSize);
 }

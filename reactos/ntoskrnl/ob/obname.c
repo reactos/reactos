@@ -37,56 +37,27 @@ INIT_FUNCTION
 ObpCreateDosDevicesDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name, LinkName;
+    UNICODE_STRING RootName, TargetName, LinkName;
     HANDLE Handle, SymHandle;
     NTSTATUS Status;
 
-    /* Create the '\??' directory */
-    RtlInitUnicodeString(&Name, L"\\??");
+    /* Create the global DosDevices directory \?? */
+    RtlInitUnicodeString(&RootName, L"\\GLOBAL??");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &RootName,
                                OBJ_PERMANENT,
                                NULL,
                                NULL);
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return FALSE;
-
-    /* Initialize the GLOBALROOT path */
-    RtlInitUnicodeString(&LinkName, L"GLOBALROOT");
-    RtlInitUnicodeString(&Name, L"");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
-                               OBJ_PERMANENT,
-                               Handle,
-                               NULL);
-    Status = NtCreateSymbolicLinkObject(&SymHandle,
-                                        SYMBOLIC_LINK_ALL_ACCESS,
-                                        &ObjectAttributes,
-                                        &Name);
-    if (NT_SUCCESS(Status)) NtClose(SymHandle);
-
-    /* Link \??\Global to \?? */
-    RtlInitUnicodeString(&LinkName, L"Global");
-    RtlInitUnicodeString(&Name, L"\\??");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
-                               OBJ_PERMANENT,
-                               Handle,
-                               NULL);
-    Status = NtCreateSymbolicLinkObject(&SymHandle,
-                                        SYMBOLIC_LINK_ALL_ACCESS,
-                                        &ObjectAttributes,
-                                        &Name);
-    if (NT_SUCCESS(Status)) NtClose(SymHandle);
-
-    /* Close the directory handle */
-    NtClose(Handle);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Create link from '\DosDevices' to '\??' directory */
-    RtlCreateUnicodeString(&LinkName, L"\\DosDevices");
+    /*********************************************\
+    |*** HACK until we support device mappings ***|
+    |*** Add a symlink \??\ <--> \GLOBAL??\    ***|
+    \*********************************************/
+    RtlInitUnicodeString(&LinkName, L"\\??");
     InitializeObjectAttributes(&ObjectAttributes,
                                &LinkName,
                                OBJ_PERMANENT,
@@ -95,7 +66,68 @@ ObpCreateDosDevicesDirectory(VOID)
     Status = NtCreateSymbolicLinkObject(&SymHandle,
                                         SYMBOLIC_LINK_ALL_ACCESS,
                                         &ObjectAttributes,
-                                        &Name);
+                                        &RootName);
+    if (NT_SUCCESS(Status)) NtClose(SymHandle);
+    /*********************************************\
+    \*********************************************/
+
+    // FIXME: Create a device mapping for the global \?? directory
+
+    /*
+     * Initialize the \??\GLOBALROOT symbolic link
+     * pointing to the root directory \ .
+     */
+    RtlInitUnicodeString(&LinkName, L"GLOBALROOT");
+    RtlInitUnicodeString(&TargetName, L"");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_PERMANENT,
+                               Handle,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &TargetName);
+    if (NT_SUCCESS(Status)) NtClose(SymHandle);
+
+    /*
+     * Initialize the \??\Global symbolic link pointing to the global
+     * DosDevices directory \?? . It is used to access the global \??
+     * by user-mode components which, by default, use a per-session
+     * DosDevices directory.
+     */
+    RtlInitUnicodeString(&LinkName, L"Global");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_PERMANENT,
+                               Handle,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &RootName);
+    if (NT_SUCCESS(Status)) NtClose(SymHandle);
+
+    /* Close the directory handle */
+    NtClose(Handle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /*
+     * Initialize the \DosDevices symbolic link pointing to the global
+     * DosDevices directory \?? , for backward compatibility with
+     * Windows NT-2000 systems.
+     */
+    RtlCreateUnicodeString(&LinkName, L"\\DosDevices");
+    RtlInitUnicodeString(&RootName, (PCWSTR)&ObpDosDevicesShortNameRoot);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &RootName);
     if (NT_SUCCESS(Status)) NtClose(SymHandle);
 
     /* FIXME: Hack Hack! */
@@ -229,14 +261,14 @@ ObpDeleteNameCheck(IN PVOID Object)
                     ObpDeleteSymbolicLinkName(Object);
                 }
 
-                /* Check if the magic protection flag is set */
+                /* Check if the kernel exclusive is set */
                 ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
                 if ((ObjectNameInfo) &&
-                    (ObjectNameInfo->QueryReferences & 0x40000000))
+                    (ObjectNameInfo->QueryReferences & OB_FLAG_KERNEL_EXCLUSIVE))
                 {
                     /* Remove protection flag */
                     InterlockedExchangeAdd((PLONG)&ObjectNameInfo->QueryReferences,
-                                           -0x40000000);
+                                           -OB_FLAG_KERNEL_EXCLUSIVE);
                 }
 
                 /* Get the directory */
@@ -1166,9 +1198,7 @@ ObQueryNameString(IN PVOID Object,
                     ObjectName = (PWCH)((ULONG_PTR)ObjectName -
                                                    sizeof(L"...") +
                                                    sizeof(UNICODE_NULL));
-                    RtlCopyMemory(ObjectName,
-                                  L"...",
-                                  sizeof(L"...") + sizeof(UNICODE_NULL));
+                    RtlCopyMemory(ObjectName, L"...", sizeof(L"..."));
                     break;
                 }
             }

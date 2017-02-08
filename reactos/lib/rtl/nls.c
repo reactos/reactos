@@ -31,14 +31,11 @@ BOOLEAN NlsMbOemCodePageTag = FALSE; /* exported */
 PWCHAR NlsOemToUnicodeTable = NULL;
 PCHAR NlsUnicodeToOemTable =NULL;
 PWCHAR NlsDbcsUnicodeToOemTable = NULL;
-PUSHORT _NlsOemLeadByteInfo = NULL; /* exported */
+PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
 
 USHORT NlsOemDefaultChar = '\0';
 USHORT NlsUnicodeDefaultChar = 0;
 
-
-#define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
-#define INIT_FUNCTION
 
 /* FUNCTIONS *****************************************************************/
 
@@ -285,6 +282,32 @@ RtlMultiByteToUnicodeN(
    }
 
    return STATUS_SUCCESS;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlConsoleMultiByteToUnicodeN(
+    OUT PWCHAR UnicodeString,
+    IN ULONG UnicodeSize,
+    OUT PULONG ResultSize,
+    IN PCSTR MbString,
+    IN ULONG MbSize,
+    OUT PULONG Unknown)
+{
+    PAGED_CODE_RTL();
+
+    UNIMPLEMENTED;
+    DPRINT1("RtlConsoleMultiByteToUnicodeN calling RtlMultiByteToUnicodeN\n");
+    *Unknown = 1;
+    return RtlMultiByteToUnicodeN(UnicodeString,
+                                  UnicodeSize,
+                                  ResultSize,
+                                  MbString,
+                                  MbSize);
 }
 
 

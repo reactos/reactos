@@ -683,7 +683,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     Body = &ObjectHeader->Body;
     GrantedAccess = HandleEntry->GrantedAccess;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closing handle: %lx for %p. HC PC %lx %lx\n",
+            "%s - Closing handle: %p for %p. HC PC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -753,7 +753,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx for %p.\n",
+            "%s - Closed handle: %p for %p.\n",
             __FUNCTION__,
             Handle,
             Body);
@@ -807,6 +807,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     KIRQL CalloutIrql;
     KPROCESSOR_MODE ProbeMode;
     ULONG Total;
+    POBJECT_HEADER_NAME_INFO NameInfo;
     PAGED_CODE();
 
     /* Get the object header and type */
@@ -868,6 +869,16 @@ ObpIncrementHandleCount(IN PVOID Object,
              (OBJECT_HEADER_TO_EXCLUSIVE_PROCESS(ObjectHeader)))
     {
         /* Caller didn't want exclusive access, but the object is exclusive */
+        Status = STATUS_ACCESS_DENIED;
+        goto Quickie;
+    }
+
+    /* Check for exclusive kernel object */
+    NameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    if ((NameInfo) && (NameInfo->QueryReferences & OB_FLAG_KERNEL_EXCLUSIVE) &&
+        (ProbeMode != KernelMode))
+    {
+        /* Caller is not kernel, but the object is kernel exclusive */
         Status = STATUS_ACCESS_DENIED;
         goto Quickie;
     }
@@ -1399,7 +1410,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC PC %lx %lx\n",
+                "%s - Returning Handle: %p HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1645,7 +1656,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC PC %lx %lx\n",
+                "%s - Returning Handle: %p HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1708,13 +1719,13 @@ ObpCloseHandle(IN HANDLE Handle,
     PEPROCESS Process = PsGetCurrentProcess();
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closing handle: %lx\n", __FUNCTION__, Handle);
+            "%s - Closing handle: %p\n", __FUNCTION__, Handle);
 
     if (AccessMode == KernelMode && Handle == (HANDLE)-1)
         return STATUS_INVALID_HANDLE;
 
     /* Check if we're dealing with a kernel handle */
-    if (ObIsKernelHandle(Handle, AccessMode))
+    if (ObpIsKernelHandle(Handle, AccessMode))
     {
         /* Use the kernel table and convert the handle */
         HandleTable = ObpKernelHandleTable;
@@ -1803,7 +1814,7 @@ ObpCloseHandle(IN HANDLE Handle,
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx S: %lx\n",
+            "%s - Closed handle: %p S: %lx\n",
             __FUNCTION__, Handle, Status);
     return Status;
 }
@@ -2139,9 +2150,11 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     PHANDLE_TABLE HandleTable;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     ULONG AuditMask;
+    BOOLEAN KernelHandle = FALSE;
+
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicating handle: %lx for %p into %p\n",
+            "%s - Duplicating handle: %p for %p into %p\n",
             __FUNCTION__,
             SourceHandle,
             SourceProcess,
@@ -2209,6 +2222,14 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         ObDereferenceProcessHandleTable(SourceProcess);
         ObDereferenceObject(SourceObject);
         return Status;
+    }
+
+    /* Create a kernel handle if asked, but only in the system process */
+    if (PreviousMode == KernelMode &&
+        HandleAttributes & OBJ_KERNEL_HANDLE &&
+        TargetProcess == PsInitialSystemProcess)
+    {
+        KernelHandle = TRUE;
     }
 
     /* Get the target handle table */
@@ -2365,6 +2386,12 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* Mark it as a kernel handle if requested */
+    if (KernelHandle)
+    {
+        NewHandle = ObMarkHandleAsKernelHandle(NewHandle);
+    }
+
     /* Return the handle */
     if (TargetHandle) *TargetHandle = NewHandle;
 
@@ -2374,7 +2401,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicated handle: %lx for %p into %p. Source: %p HC PC %lx %lx\n",
+            "%s - Duplicated handle: %p for %p into %p. Source: %p HC PC %lx %lx\n",
             __FUNCTION__,
             NewHandle,
             SourceProcess,
@@ -2431,7 +2458,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 {
     PVOID Object = NULL;
     UNICODE_STRING ObjectName;
-    NTSTATUS Status;
+    NTSTATUS Status, Status2;
     POBJECT_HEADER ObjectHeader;
     PGENERIC_MAPPING GenericMapping = NULL;
     OB_OPEN_REASON OpenReason;
@@ -2490,7 +2517,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         PassedAccessState->SecurityDescriptor =
             TempBuffer->ObjectCreateInfo.SecurityDescriptor;
     }
-    
+
     /* Validate the access mask */
     Status = ObpValidateAccessMask(PassedAccessState);
     if (!NT_SUCCESS(Status))
@@ -2557,17 +2584,21 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     else
     {
         /* Create the actual handle now */
-        Status = ObpCreateHandle(OpenReason,
-                                 Object,
-                                 ObjectType,
-                                 PassedAccessState,
-                                 0,
-                                 TempBuffer->ObjectCreateInfo.Attributes,
-                                 &TempBuffer->LookupContext,
-                                 AccessMode,
-                                 NULL,
-                                 Handle);
-        if (!NT_SUCCESS(Status)) ObDereferenceObject(Object);
+        Status2 = ObpCreateHandle(OpenReason,
+                                  Object,
+                                  ObjectType,
+                                  PassedAccessState,
+                                  0,
+                                  TempBuffer->ObjectCreateInfo.Attributes,
+                                  &TempBuffer->LookupContext,
+                                  AccessMode,
+                                  NULL,
+                                  Handle);
+        if (!NT_SUCCESS(Status2))
+        {
+            ObDereferenceObject(Object);
+            Status = Status2;
+        }
     }
 
 Cleanup:
@@ -2851,7 +2882,7 @@ ObInsertObject(IN PVOID Object,
     if (!(ObjectHeader->Flags & OB_FLAG_CREATE_INFO))
     {
         /* Display warning and break into debugger */
-        DPRINT1("OB: Attempting to insert existing object %08x\n", Object);
+        DPRINT1("OB: Attempting to insert existing object %p\n", Object);
         DbgBreakPoint();
 
         /* Allow debugger to continue */
@@ -3172,6 +3203,80 @@ ObInsertObject(IN PVOID Object,
 }
 
 /*++
+* @name ObSetHandleAttributes
+* @implemented NT5.1
+*
+*     The ObSetHandleAttributes routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @param HandleFlags
+*        <FILLMEIN>.
+*
+* @param PreviousMode
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObSetHandleAttributes(IN HANDLE Handle,
+                      IN POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+                      IN KPROCESSOR_MODE PreviousMode)
+{
+    OBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleAttributesContext;
+    BOOLEAN Result, AttachedToSystemProcess = FALSE;
+    PHANDLE_TABLE HandleTable;
+    KAPC_STATE ApcState;
+    PAGED_CODE();
+
+    /* Check if this is a kernel handle */
+    if (ObpIsKernelHandle(Handle, PreviousMode))
+    {
+        /* Use the kernel table and convert the handle */
+        HandleTable = ObpKernelHandleTable;
+        Handle = ObKernelHandleToHandle(Handle);
+
+        /* Check if we're not in the system process */
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        {
+            /* Attach to the system process */
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+            AttachedToSystemProcess = TRUE;
+        }
+    }
+    else
+    {
+        /* Get the current process' handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Initialize the handle attribute context */
+    SetHandleAttributesContext.PreviousMode = PreviousMode;
+    SetHandleAttributesContext.Information = *HandleFlags;
+
+    /* Invoke the ObpSetHandleAttributes callback */
+    Result = ExChangeHandle(HandleTable,
+                            Handle,
+                            ObpSetHandleAttributes,
+                            (ULONG_PTR)&SetHandleAttributesContext);
+
+    /* Did we attach to the system process? */
+    if (AttachedToSystemProcess)
+    {
+        /* Detach from it */
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    /* Return the result as an NTSTATUS value */
+    return Result ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+}
+
+/*++
 * @name ObCloseHandle
 * @implemented NT5.1
 *
@@ -3234,7 +3339,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicating handle: %lx for %lx into %lx.\n",
+            "%s - Duplicating handle: %p for %p into %p.\n",
             __FUNCTION__,
             SourceHandle,
             SourceProcessHandle,
@@ -3265,7 +3370,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
                                        PreviousMode,
                                        (PVOID*)&SourceProcess,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if got a target handle */
     if (TargetProcessHandle)
@@ -3324,7 +3429,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
 
     /* Dereference the processes */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicated handle: %lx into %lx S %lx\n",
+            "%s - Duplicated handle: %p into %p S %lx\n",
             __FUNCTION__,
             hTarget,
             TargetProcessHandle,
@@ -3334,13 +3439,12 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     return Status;
 }
 
-#undef ObIsKernelHandle
 BOOLEAN
 NTAPI
 ObIsKernelHandle(IN HANDLE Handle)
 {
-    /* We know we're kernel mode, so just check for the kernel handle flag */
-    return (BOOLEAN)(((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG) != 0);
+    /* Use the inlined version. We know we are in kernel mode. */
+    return ObpIsKernelHandle(Handle, KernelMode);
 }
 
 /* EOF */

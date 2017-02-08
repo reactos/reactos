@@ -188,4 +188,4 @@ typedef struct _UHCI_QUEUE_HEAD
 #define UHCI_BULK_QUEUE               3
 #define UHCI_DEBUG_QUEUE              4
 
-#endif
+#endif /* UHCI_HARDWARE_H */

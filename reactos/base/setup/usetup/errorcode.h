@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/errcode.h
+ * FILE:            base/setup/usetup/errorcode.h
  * PURPOSE:         
  * PROGRAMMER:      
  */
@@ -28,7 +28,8 @@
 
 typedef enum
 {
-    ERROR_NOT_INSTALLED = 0,
+    NOT_AN_ERROR = 0,
+    ERROR_NOT_INSTALLED,
     ERROR_NO_HDD,
     ERROR_NO_SOURCE_DRIVE,
     ERROR_LOAD_TXTSETUPSIF,
@@ -65,9 +66,13 @@ typedef enum
     ERROR_UPDATE_LOCALESETTINGS,
     ERROR_ADDING_KBLAYOUTS,
     ERROR_UPDATE_GEOID,
-    ERROR_INSUFFICIENT_DISKSPACE,
+    ERROR_DIRECTORY_NAME,
+    ERROR_INSUFFICIENT_PARTITION_SIZE,
+    ERROR_PARTITION_TABLE_FULL,
+    ERROR_ONLY_ONE_EXTENDED,
+    ERROR_FORMATTING_PARTITION,
 
     ERROR_LAST_ERROR_CODE
-}ERROR_NUMBER;
+} ERROR_NUMBER;
 
 /* EOF */

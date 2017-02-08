@@ -3,16 +3,16 @@
 
 #define _AUTHZ_
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
 
 #include <authz.h>
-#include <debug.h>
 
 #if DBG
 
@@ -61,4 +61,3 @@ typedef struct _AUTHZ_CLIENT_CONTEXT
 } AUTHZ_CLIENT_CONTEXT, *PAUTHZ_CLIENT_CONTEXT;
 
 #endif /* __AUTHZ_PRECOMP_H */
-/* EOF */

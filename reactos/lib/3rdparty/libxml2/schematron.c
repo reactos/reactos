@@ -165,8 +165,10 @@ struct _xmlSchematronValidCtxt {
 
     FILE *outputFile;		/* if using XML_SCHEMATRON_OUT_FILE */
     xmlBufferPtr outputBuffer;	/* if using XML_SCHEMATRON_OUT_BUFFER */
+#ifdef LIBXML_OUTPUT_ENABLED
     xmlOutputWriteCallback iowrite; /* if using XML_SCHEMATRON_OUT_IO */
     xmlOutputCloseCallback  ioclose;
+#endif
     void *ioctx;
 
     /* error reporting data */

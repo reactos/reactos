@@ -15,17 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdarg.h>
 
-#define NONAMELESSUNION
-
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winuser.h"
-#include "wincrypt.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -457,7 +448,7 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
             for (j = 0; (!psz || ret < csz) && j < rdn->cRDNAttr; j++)
             {
                 DWORD chars;
-                char prefixBuf[10]; /* big enough for GivenName */
+                char prefixBuf[13]; /* big enough for SERIALNUMBER */
                 LPCSTR prefix = NULL;
 
                 if ((dwStrType & 0x000000ff) == CERT_OID_NAME_STR)
@@ -769,7 +760,7 @@ struct KeynameKeeper
 {
     WCHAR  buf[10]; /* big enough for L"GivenName" */
     LPWSTR keyName; /* usually = buf, but may be allocated */
-    DWORD  keyLen;
+    DWORD  keyLen;  /* full available buffer size in WCHARs */
 };
 
 static void CRYPT_InitializeKeynameKeeper(struct KeynameKeeper *keeper)
@@ -795,17 +786,13 @@ static void CRYPT_KeynameKeeperFromTokenW(struct KeynameKeeper *keeper,
 {
     DWORD len = key->end - key->start;
 
-    if (len > keeper->keyLen)
+    if (len >= keeper->keyLen)
     {
-        if (keeper->keyName == keeper->buf)
-            keeper->keyName = CryptMemAlloc(len * sizeof(WCHAR));
-        else
-            keeper->keyName = CryptMemRealloc(keeper->keyName,
-             len * sizeof(WCHAR));
-        keeper->keyLen = len;
+        CRYPT_FreeKeynameKeeper( keeper );
+        keeper->keyLen = len + 1;
+        keeper->keyName = CryptMemAlloc(keeper->keyLen * sizeof(WCHAR));
     }
-    memcpy(keeper->keyName, key->start, (key->end - key->start) *
-     sizeof(WCHAR));
+    memcpy(keeper->keyName, key->start, len * sizeof(WCHAR));
     keeper->keyName[len] = '\0';
     TRACE("Keyname is %s\n", debugstr_w(keeper->keyName));
 }
@@ -840,13 +827,14 @@ static BOOL CRYPT_GetNextKeyW(LPCWSTR str, struct X500TokenW *token,
 
 /* Assumes separators are characters in the 0-255 range */
 static BOOL CRYPT_GetNextValueW(LPCWSTR str, DWORD dwFlags, LPCWSTR separators,
- struct X500TokenW *token, LPCWSTR *ppszError)
+ WCHAR *separator_used, struct X500TokenW *token, LPCWSTR *ppszError)
 {
     BOOL ret = TRUE;
 
     TRACE("(%s, %s, %p, %p)\n", debugstr_w(str), debugstr_w(separators), token,
      ppszError);
 
+    *separator_used = 0;
     while (*str && isspaceW(*str))
         str++;
     if (*str)
@@ -886,6 +874,7 @@ static BOOL CRYPT_GetNextValueW(LPCWSTR str, DWORD dwFlags, LPCWSTR separators,
             while (*str && (*str >= 0xff || !map[*str]))
                 str++;
             token->end = str;
+            if (map[*str]) *separator_used = *str;
         }
     }
     else
@@ -1077,6 +1066,7 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
                     static const WCHAR allSepsWithoutPlus[] = { ',',';','\r','\n',0 };
                     static const WCHAR allSeps[] = { '+',',',';','\r','\n',0 };
                     LPCWSTR sep;
+                    WCHAR sep_used;
 
                     str++;
                     if (dwStrType & CERT_NAME_STR_COMMA_FLAG)
@@ -1089,11 +1079,14 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
                         sep = allSepsWithoutPlus;
                     else
                         sep = allSeps;
-                    ret = CRYPT_GetNextValueW(str, dwStrType, sep, &token,
+                    ret = CRYPT_GetNextValueW(str, dwStrType, sep, &sep_used, &token,
                      ppszError);
                     if (ret)
                     {
                         str = token.end;
+                        /* if token.end points to the separator, skip it */
+                        if (str && sep_used && *str == sep_used) str++;
+
                         ret = CRYPT_ValueToRDN(dwCertEncodingType, &info,
                          keyOID, &token, dwStrType, ppszError);
                     }

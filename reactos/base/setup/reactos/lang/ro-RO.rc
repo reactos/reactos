@@ -1,153 +1,146 @@
-//2011.10.30 - Fulea Ștefan: UTF-8 encoding, diacritics, minor changes
+/*
+ * PROJECT: ReactOS GUI first stage setup application
+ * FILE:    base/setup/reactos/lang/ro-RO.rc
+ * PURPOSE: Romanian Language File for ReactOS GUI first stage setup
+ * TRANSLATORS:
+ *          Petru Dimitriu (petrimetri at gmail dot com)
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bun venit la Expertul de Instalare ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Bun venit la instalarea ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "ReactOS încă nu poate fi instalat direct de pe acest CD! Pentru a instala ReactOS, reporniți calculatorul și utilizați acest CD în secvența de inițializare.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Apăsați pe „Termină” pentru a ieși.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Apăsați pe „Sfârșit” pentru a ieși.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_LANGSELPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL  "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    CONTROL  "Limba de instalare:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
-    CONTROL  "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
-    CONTROL  "Tastatura sau metoda de introducere:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
-    CONTROL  "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
-    LTEXT    "Apăsați pe „Înainte” pentru a specifica tipul instalării.", IDC_STATIC, 10, 180 ,297, 10
+    AUTORADIOBUTTON "Instalează ReactOS", IDC_INSTALL, 7, 7, 277, 10
+    LTEXT "Instalarea unei noi copii a ReactOS. FiÈ™ierele, configuraÈ›iile È™i programele existente nu vor fi pÄƒstrate. Se pot face ajustÄƒri asupra discurilor È™i partiÈ›iilor.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "Repară sau actualizează ReactOS", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Repararea sau actualizarea ReactOS. AceastÄƒ opÈ›iune menÈ›ine fiÈ™ierele, configuraÈ›iile È™i programele existente. OpÈ›iune validÄƒ doar dacÄƒ ReactOS e deja instalat Ã®n calculator.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Apăsați pe „Înainte” pentru configurarea de dispozitive.", IDC_STATIC, 7, 128, 297, 8
 END
 
-IDD_TYPEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL  "Tipul de instalare", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    CONTROL  "Instalează ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
-    CONTROL  "Repară sau actualizează ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
-    LTEXT    "Apăsați pe „Înainte” pentru configurarea de dispozitive.", IDC_STATIC, 10, 180 ,297, 10
+    LTEXT "Calculator:", IDC_STATIC, 20, 15, 80, 10
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
+    LTEXT "Ecran:", IDC_STATIC, 20, 35, 80, 10
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    LTEXT "Tastatură:", IDC_STATIC, 20, 55, 80, 10
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
+    LTEXT "Apăsați pe „Înainte” pentru configurarea dispozitivului de instalare.", IDC_STATIC, 7, 128, 297, 8
 END
 
-IDD_DEVICEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL  "Configurare dispozitive", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT    "Calculator:", IDC_STATIC, 20,15, 80, 10
-    CONTROL  "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 180, 80
-    LTEXT    "Ecran:", IDC_STATIC, 20,35, 80, 10
-    CONTROL  "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 180, 80
-    LTEXT    "Tastatură:", IDC_STATIC, 20,55, 80, 10
-    CONTROL  "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 180, 80
-    LTEXT    "Apăsați pe „Înainte” pentru configurarea dispozitivului de instalare.", IDC_STATIC, 10, 180 ,277, 20
+    CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "&Crează", IDC_PARTCREATE, 7, 122, 50, 15
+    PUSHBUTTON "&Șterge", IDC_PARTDELETE, 63, 122, 50, 15
+    PUSHBUTTON "Mo&dul pilot", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "&Opțiuni avansate…", IDC_PARTMOREOPTS, 230, 122, 80, 15
+    LTEXT "Apăsați pe „Înainte” pentru a verifica sumarul.", IDC_STATIC, 10, 180, 277, 20
 END
 
-IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL     "Partiția pentru instalarea ReactOS", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
-    LISTBOX     IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON  "&Crează", IDC_PARTCREATE, 20,155,50,15
-    PUSHBUTTON  "&Șterge", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON  "Mo&dul pilot", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
-    PUSHBUTTON  "&Opțiuni avansate…", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT       "Apăsați pe „Înainte” pentru a verifica sumarul.", IDC_STATIC, 10, 180 ,277, 20
-END
-
-IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
-STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
+IDD_PARTITION DIALOGEX 0, 0, 145, 90
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
 CAPTION "Creare partiție"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL     "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-    CONTROL     "Crearea și formatarea partiției",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-    LTEXT       "Marime:",IDC_STATIC, 13,24,27,9
-    EDITTEXT    IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
-    LTEXT       "GO",IDC_UNIT, 117,24,14,9
-    LTEXT       "Sistemul de fișiere:",IDC_STATIC,13,46,55,9
-    CONTROL     "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,72,42,59,50
-    PUSHBUTTON  "Con&firmă",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-    PUSHBUTTON  "A&nulează",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
+    CONTROL "Crearea și formatarea partiției", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    LTEXT "Marime:", IDC_STATIC, 13, 24, 27, 9
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
+    LTEXT "GO", IDC_UNIT, 117, 24, 14, 9
+    LTEXT "Sistemul de fișiere:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
+    PUSHBUTTON "Con&firmă", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "A&nulează", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
 END
 
-IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 116
-STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
+IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
 CAPTION "Opțiuni avansate partiție"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL     "Dosarul de instalare", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
-    EDITTEXT    IDC_PATH, 10,11,278,13, WS_VISIBLE
-
-    CONTROL     "Instalarea secvenței de inițializare", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
-
-    CONTROL     "Instalează inițializatorul pe hard disc (MBR și VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL     "Instalează inițializatorul pe hard disc (numai VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
-    CONTROL     "Omite instalarea inițializatorului", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
-    PUSHBUTTON  "Con&firmă", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON  "A&nulează", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
+    CONTROL "Dosarul de instalare", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
+    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
+    CONTROL "Instalarea secvenței de inițializare", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "Instalează inițializatorul pe hard disc (MBR și VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "Instalează inițializatorul pe hard disc (numai VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "Omite instalarea inițializatorului", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    PUSHBUTTON "Con&firmă", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "A&nulează", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
 END
 
-IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL  "Sumar", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT    "Apăsați „Înainte” pentru a continua procesul de instalare.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Apăsați „Înainte” pentru a continua procesul de instalare.", IDC_STATIC, 10, 180, 277, 20
 END
 
-IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL  "Acțiune de instalare", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT    "Instalarea fișierelor…", IDC_ACTIVITY, 20, 50, 277, 10
-    LTEXT    "test.txt", IDC_ITEM, 30, 80, 257, 10
-    CONTROL  "", IDC_PROCESSPROGRESS, "msctls_progress32",
-            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+    LTEXT "Se instalează fișierele…", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Încheiere instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL  "Finalizarea primei etape", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT    "Ați dus la bun sfârșit prima etapă de instalare a ReactOS", IDC_STATIC, 20, 50, 277, 10
- 
-    LTEXT    "Când veți apăsa „Termină”, calculatorul va reporni.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL  "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT    "Dacă aveți vreun CD în calculator, scoateți-l, după care apăsați „Termină” pentru a reporni.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Ați dus la bun sfârșit prima etapă de instalare a ReactOS", IDC_STATIC, 20, 50, 277, 10
+    LTEXT "Când veți apăsa „Sfârșit”, calculatorul va reporni.", IDC_STATIC, 20, 80, 277, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+    LTEXT "Dacă aveți vreun CD în calculator, scoateți-l, după care apăsați „Sfârșit” pentru a reporni.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGTITLE       "Selecție limbă"
-    IDS_LANGSUBTITLE    "Alegeți limba pentru procesul de instalare și pentru sistemul final."
-    IDS_TYPETITLE       "Bun venit la instalarea ReactOS"
-    IDS_TYPESUBTITLE    "Alegeți tipul de instalare."
-    IDS_DEVICETITLE     "Instalare dispozitive de bază"
-    IDS_DEVICESUBTITLE  "Stabilirea parametrilor de afișare și tastatură."
-    IDS_DRIVETITLE      "Stabilire destinație"
-    IDS_DRIVESUBTITLE   "Pregătirea partiției de instalare, a dosarului de sistem și a inițializatorului."
-    IDS_PROCESSTITLE    "Executare pași de instalare"
+    IDS_TYPETITLE "Bun venit la instalarea ReactOS"
+    IDS_TYPESUBTITLE "Alegeți tipul de instalare."
+    IDS_DEVICETITLE "Instalare dispozitive de bază"
+    IDS_DEVICESUBTITLE "Stabilirea parametrilor de afișare și tastatură."
+    IDS_DRIVETITLE "Stabilire destinație"
+    IDS_DRIVESUBTITLE "Pregătirea partiției de instalare, a dosarului de sistem și a inițializatorului."
+    IDS_PROCESSTITLE "Executare pași de instalare"
     IDS_PROCESSSUBTITLE "Crearea și formatarea partiției, copierea de fișiere și instalarea inițializatorului."
-    IDS_RESTARTTITLE    "Finalizare primă etapă"
+    IDS_RESTARTTITLE "Finalizare primă etapă"
     IDS_RESTARTSUBTITLE "Prima etapă a instalarii a fost încheiată cu succes, reporniți pentru a doua etapă."
-    IDS_SUMMARYTITLE    "Rezumat de instalare"
+    IDS_SUMMARYTITLE "Rezumat de instalare"
     IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
-    IDS_ABORTSETUP      "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
-    IDS_ABORTSETUP2     "Abandonați instalarea?"
+    IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
+    IDS_ABORTSETUP2 "Abandonați instalarea?"
+    IDS_NO_TXTSETUP_SIF "Nu se poate găsi „txtsetup.sif”\nInstalarea nu se poate continua."
+    IDS_CAPTION "Asistentul de instalare ReactOS"
 END
-/* EOF */
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Name"
+    IDS_PARTITION_SIZE "Size"
+    IDS_PARTITION_TYPE "Type"
+END

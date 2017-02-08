@@ -1,0 +1,82 @@
+/*
+ * Copyright 2003 Mike McCormack for CodeWeavers
+ * Copyright 2006 Mikolaj Zalewski
+ * Copyright 2010 £ukasz Wojniłowicz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_LANCONNECTION "Połączenie LAN"
+  IDS_CERT_CA_INVALID   "Certyfikat jest wydawany przez nieznanego lub niezaufanego wydawcę."
+  IDS_CERT_DATE_INVALID "Data certyfikatu jest nieprawidłowa."
+  IDS_CERT_CN_INVALID   "Nazwa na certyfikacie nie pasuje do witryny."
+  IDS_CERT_ERRORS       "Istnieje co najmniej jeden nieokreślony problem bezpieczeństwa z tym certyfikatem."
+}
+
+IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wprowadź hasło do sieci"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Proszę wprowadzić nazwę użytkownika i hasło:", -1, 6, 6, 210, 15
+ LTEXT "Proxy", -1, 6, 26, 50, 18
+ LTEXT "Obszar", -1, 6, 46, 50, 18
+ LTEXT "Użytkownik", -1, 6, 66, 50, 18
+ LTEXT "Hasło", -1, 6, 86, 50, 18
+ LTEXT "", IDC_PROXY, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Zapamiętaj to hasło (niebezpieczne)", IDC_SAVEPASSWORD,
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Anuluj", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wymagane uwierzytelnienie "
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Proszę wprowadzić nazwę użytkownika i hasło:", -1, 6, 6, 210, 15
+ LTEXT "Serwer", -1, 6, 26, 50, 18
+ LTEXT "Obszar", -1, 6, 46, 50, 18
+ LTEXT "Użytkownik", -1, 6, 66, 50, 18
+ LTEXT "Hasło", -1, 6, 86, 50, 18
+ LTEXT "", IDC_SERVER, 60, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Zapamiętaj to hasło (niebezpieczne)", IDC_SAVEPASSWORD,
+           60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Anuluj", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ostrzeżenie o zabezpieczeniach"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Wystąpił problem z certyfikatem dla tej strony.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Czy mimo to chcesz kontynuować?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Tak", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Nie", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
+}

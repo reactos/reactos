@@ -11,14 +11,11 @@
 
 #include "netapi32.h"
 
-
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
-
 
 /* GLOBALS *******************************************************************/
 
 static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -173,6 +170,49 @@ OpenBuiltinDomain(IN SAM_HANDLE ServerHandle,
     }
 
     return Status;
+}
+
+
+NET_API_STATUS
+BuildSidFromSidAndRid(IN PSID SrcSid,
+                      IN ULONG RelativeId,
+                      OUT PSID *DestSid)
+{
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+    ULONG DstSidSize;
+    PULONG p, q;
+    NET_API_STATUS ApiStatus = NERR_Success;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return ERROR_INVALID_PARAMETER;
+
+    DstSidSize = RtlLengthRequiredSid(RidCount + 1);
+
+    ApiStatus = NetApiBufferAllocate(DstSidSize,
+                                     &DstSid);
+    if (ApiStatus != NERR_Success)
+        return ApiStatus;
+
+    RtlInitializeSid(DstSid,
+                     RtlIdentifierAuthoritySid(SrcSid),
+                     RidCount + 1);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(SrcSid, i);
+        q = RtlSubAuthoritySid(DstSid, i);
+        *q = *p;
+    }
+
+    q = RtlSubAuthoritySid(DstSid, (ULONG)RidCount);
+    *q = RelativeId;
+
+    *DestSid = DstSid;
+
+    return NERR_Success;
 }
 
 /* EOF */

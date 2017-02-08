@@ -11,11 +11,11 @@ list(APPEND SOURCE
     smsubsys.c
     smutil.c
     smss.c
-    smss.rc)
+    smss.h)
 
-add_executable(smss WIN32 ${SOURCE})
+add_executable(smss WIN32 ${SOURCE} smss.rc)
 target_link_libraries(smss nt ${PSEH_LIB} smlib)
-add_pch(smss smss.h)
 set_module_type(smss nativecui)
 add_importlibs(smss ntdll)
+add_pch(smss smss.h SOURCE)
 add_cd_file(TARGET smss DESTINATION reactos/system32 FOR all)

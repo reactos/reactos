@@ -1,9 +1,16 @@
+#pragma once
+
 #ifndef _SWENUM_
 #define _SWENUM_
 
-#define IOCTL_SWENUM_INSTALL_INTERFACE CTL_CODE(FILE_DEVICE_BUS_EXTENDER, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_SWENUM_REMOVE_INTERFACE CTL_CODE(FILE_DEVICE_BUS_EXTENDER, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_SWENUM_GET_BUS_ID CTL_CODE(FILE_DEVICE_BUS_EXTENDER, 0x002, METHOD_NEITHER, FILE_READ_ACCESS)
+#define IOCTL_SWENUM_INSTALL_INTERFACE \
+  CTL_CODE(FILE_DEVICE_BUS_EXTENDER, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_SWENUM_REMOVE_INTERFACE \
+  CTL_CODE(FILE_DEVICE_BUS_EXTENDER, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_SWENUM_GET_BUS_ID \
+  CTL_CODE(FILE_DEVICE_BUS_EXTENDER, 0x002, METHOD_NEITHER, FILE_READ_ACCESS)
 
 typedef struct _SWENUM_INSTALL_INTERFACE {
   GUID DeviceId;
@@ -11,23 +18,34 @@ typedef struct _SWENUM_INSTALL_INTERFACE {
   WCHAR ReferenceString[1];
 } SWENUM_INSTALL_INTERFACE, *PSWENUM_INSTALL_INTERFACE;
 
-#if defined(_KS_)
+#ifdef _KS_
 #define STATIC_BUSID_SoftwareDeviceEnumerator STATIC_KSMEDIUMSETID_Standard
 #define BUSID_SoftwareDeviceEnumerator KSMEDIUMSETID_Standard
 #else
 #define STATIC_BUSID_SoftwareDeviceEnumerator \
-  0x4747B320L, 0x62CE, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+    0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
 #endif /* _KS_ */
 
-#if defined(_NTDDK_)
+#ifdef _NTDDK_
 
-#if !defined(_KS_)
-typedef VOID (NTAPI *PFNREFERENCEDEVICEOBJECT)(PVOID Context);
-typedef VOID (NTAPI *PFNDEREFERENCEDEVICEOBJECT)(PVOID Context);
-typedef NTSTATUS (NTAPI *PFNQUERYREFERENCESTRING)(PVOID Context, PWCHAR *String);
-#endif /* _KS_ */
+#ifndef _KS_
 
-#define BUS_INTERFACE_SWENUM_VERSION    0x100
+typedef VOID
+(NTAPI *PFNREFERENCEDEVICEOBJECT)(
+  _In_ PVOID Context);
+
+typedef VOID
+(NTAPI *PFNDEREFERENCEDEVICEOBJECT)(
+  _In_ PVOID Context);
+
+typedef NTSTATUS
+(NTAPI *PFNQUERYREFERENCESTRING)(
+  _In_ PVOID Context,
+  _Inout_ PWCHAR *String);
+
+#endif /* !_KS_ */
+
+#define BUS_INTERFACE_SWENUM_VERSION 0x100
 
 typedef struct _BUS_INTERFACE_SWENUM {
   INTERFACE Interface;
@@ -40,90 +58,98 @@ typedef struct _BUS_INTERFACE_SWENUM {
 extern "C" {
 #endif
 
-#if defined(_KS_)
+#ifdef _KS_
 
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsQuerySoftwareBusInterface(
-  IN PDEVICE_OBJECT PnpDeviceObject,
-  OUT PBUS_INTERFACE_SWENUM BusInterface);
+  _In_ PDEVICE_OBJECT PnpDeviceObject,
+  _Out_ PBUS_INTERFACE_SWENUM BusInterface);
 
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsReferenceSoftwareBusObject(
-  IN KSDEVICE_HEADER Header);
+  _In_ KSDEVICE_HEADER Header);
 
 KSDDKAPI
 VOID
 NTAPI
 KsDereferenceSoftwareBusObject(
-  IN KSDEVICE_HEADER  Header);
+  _In_ KSDEVICE_HEADER  Header);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsCreateBusEnumObject(
-  IN PWSTR BusIdentifier,
-  IN PDEVICE_OBJECT BusDeviceObject,
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN PDEVICE_OBJECT PnpDeviceObject,
-  IN REFGUID InterfaceGuid,
-  IN PWSTR ServiceRelativePath);
+  _In_ PWSTR BusIdentifier,
+  _In_ PDEVICE_OBJECT BusDeviceObject,
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_opt_ PDEVICE_OBJECT PnpDeviceObject,
+  _In_opt_ REFGUID InterfaceGuid,
+  _In_opt_ PWSTR ServiceRelativePath);
 
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsGetBusEnumIdentifier(
-  IN OUT PIRP Irp);
+  _Inout_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsGetBusEnumPnpDeviceObject(
-  IN PDEVICE_OBJECT DeviceObject,
-  OUT PDEVICE_OBJECT *PnpDeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ PDEVICE_OBJECT *PnpDeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsInstallBusEnumInterface(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsIsBusEnumChildDevice(
-  IN PDEVICE_OBJECT DeviceObject,
-  OUT PBOOLEAN ChildDevice);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ PBOOLEAN ChildDevice);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsRemoveBusEnumInterface(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsServiceBusEnumPnpRequest(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsServiceBusEnumCreateRequest(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsGetBusEnumParentFDOFromChildPDO(
-  IN PDEVICE_OBJECT DeviceObject,
-  OUT PDEVICE_OBJECT *FunctionalDeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ PDEVICE_OBJECT *FunctionalDeviceObject);
 
 #endif /* _KS_ */
 

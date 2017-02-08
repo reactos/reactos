@@ -6,18 +6,10 @@
  *					an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL delete_main(INT argc, WCHAR **argv)
+BOOL delete_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-/*
- * help_delete():
- * Shows the description and explains each argument type of the delete command
- */
-VOID help_delete(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_DELETE);
 }

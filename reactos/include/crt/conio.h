@@ -416,10 +416,10 @@ extern "C" {
     int _Ch);
 
 #if (defined(_X86_) && !defined(__x86_64))
-  _CRT_NONSTDC_DEPRECATE(_inp) _CRTIMP int __cdecl inp(unsigned short);
-  _CRT_NONSTDC_DEPRECATE(_inpw) _CRTIMP unsigned short __cdecl inpw(unsigned short);
-  _CRT_NONSTDC_DEPRECATE(_outp) _CRTIMP int __cdecl outp(unsigned short,int);
-  _CRT_NONSTDC_DEPRECATE(_outpw) _CRTIMP unsigned short __cdecl outpw(unsigned short,unsigned short);
+  _CRT_NONSTDC_DEPRECATE(_inp) int __cdecl inp(unsigned short);
+  _CRT_NONSTDC_DEPRECATE(_inpw) unsigned short __cdecl inpw(unsigned short);
+  _CRT_NONSTDC_DEPRECATE(_outp) int __cdecl outp(unsigned short,int);
+  _CRT_NONSTDC_DEPRECATE(_outpw) unsigned short __cdecl outpw(unsigned short,unsigned short);
 #endif
 
 #endif /* !NO_OLDNAMES */

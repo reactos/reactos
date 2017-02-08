@@ -19,6 +19,9 @@
 #ifndef __WINE_D3D8TYPES_H
 #define __WINE_D3D8TYPES_H
 
+#ifdef __i386__
+#include <pshpack4.h>
+#endif
 
 /*****************************************************************************
  * Direct 3D v8 #defines
@@ -35,7 +38,7 @@
 #define D3DCLIPPLANE4 (1 << 4)
 #define D3DCLIPPLANE5 (1 << 5)
 
-#define D3DCOLOR_ARGB(a,r,g,b)        ((D3DCOLOR)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
+#define D3DCOLOR_ARGB(a,r,g,b)        ((D3DCOLOR)((((a)&0xffu)<<24)|(((r)&0xffu)<<16)|(((g)&0xffu)<<8)|((b)&0xffu)))
 #define D3DCOLOR_COLORVALUE(r,g,b,a)  D3DCOLOR_RGBA((DWORD)((r)*255.f),(DWORD)((g)*255.f),(DWORD)((b)*255.f),(DWORD)((a)*255.f))
 #define D3DCOLOR_RGBA(r,g,b,a)        D3DCOLOR_ARGB(a,r,g,b)
 #define D3DCOLOR_XRGB(r,g,b)          D3DCOLOR_ARGB(0xff,r,g,b)
@@ -154,7 +157,7 @@
     ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
 #endif
 
-/****************************
+/**************************** 
  * Vertex Shaders Declaration
  */
 
@@ -170,7 +173,7 @@ typedef enum _D3DVSD_TOKENTYPE {
   D3DVSD_FORCE_DWORD       = 0x7FFFFFFF
 } D3DVSD_TOKENTYPE;
 
-/** input registers for vertes shaders functions */
+/** input registers for vertex shaders functions */
 /*
 #define D3DVSDE_POSITION      0
 #define D3DVSDE_BLENDWEIGHT   1
@@ -260,11 +263,11 @@ typedef enum _D3DVSDT_TYPE {
 #define D3DVSD_CONSTCOUNTMASK    (0xF      << D3DVSD_CONSTCOUNTSHIFT)
 #define D3DVSD_DATALOADTYPEMASK  (0x1      << D3DVSD_DATALOADTYPESHIFT)
 #define D3DVSD_STREAMTESSMASK    (0x1      << D3DVSD_STREAMTESSSHIFT)
-#define D3DVSD_TOKENTYPEMASK     (0x7      << D3DVSD_TOKENTYPESHIFT)
+#define D3DVSD_TOKENTYPEMASK     (0x7u     << D3DVSD_TOKENTYPESHIFT)
 
 
 #define D3DVSD_MAKETOKENTYPE(TokenType) \
-  ((TokenType << D3DVSD_TOKENTYPESHIFT) & D3DVSD_TOKENTYPEMASK)
+  (((unsigned)TokenType << D3DVSD_TOKENTYPESHIFT) & D3DVSD_TOKENTYPEMASK)
 
 #define D3DVSD_CONST(ConstantAddress, Count) \
   (D3DVSD_MAKETOKENTYPE(D3DVSD_TOKEN_CONSTMEM) | ((Count) << D3DVSD_CONSTCOUNTSHIFT) | (ConstantAddress))
@@ -683,7 +686,7 @@ typedef enum _D3DMULTISAMPLE_TYPE {
     D3DMULTISAMPLE_15_SAMPLES      = 15,
     D3DMULTISAMPLE_16_SAMPLES      = 16,
 
-    D3DMULTISAMPLE_FORCE_DWORD     = 0xffffffff
+    D3DMULTISAMPLE_FORCE_DWORD     = 0x7fffffff
 } D3DMULTISAMPLE_TYPE;
 
 typedef enum _D3DORDERTYPE {
@@ -1053,11 +1056,14 @@ typedef struct _D3DINDEXBUFFER_DESC {
     UINT                Size;
 } D3DINDEXBUFFER_DESC;
 
+#ifndef D3DVECTOR_DEFINED
 typedef struct _D3DVECTOR {
     float x;
     float y;
     float z;
 } D3DVECTOR;
+#define D3DVECTOR_DEFINED
+#endif
 
 typedef struct _D3DLIGHT8 {
     D3DLIGHTTYPE    Type;
@@ -1130,6 +1136,8 @@ typedef struct _D3DPRESENT_PARAMETERS_ {
     UINT                    FullScreen_PresentationInterval;
 
 } D3DPRESENT_PARAMETERS;
+
+#define D3DPRESENTFLAG_LOCKABLE_BACKBUFFER  0x00000001
 
 typedef struct _D3DRANGE {
     UINT                Offset;
@@ -1204,5 +1212,9 @@ typedef struct _D3DVOLUME_DESC {
     UINT                Height;
     UINT                Depth;
 } D3DVOLUME_DESC;
+
+#ifdef __i386__
+#include <poppack.h>
+#endif
 
 #endif  /* __WINE_D3D8TYPES_H */

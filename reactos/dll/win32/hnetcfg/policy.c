@@ -16,27 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <netfw.h>
-
-#include <wine/debug.h>
-//#include "wine/unicode.h"
 #include "hnetcfg_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_policy
 {
@@ -99,8 +79,9 @@ static HRESULT WINAPI fw_policy_GetTypeInfoCount(
 {
     fw_policy *This = impl_from_INetFwPolicy( iface );
 
-    FIXME("%p %p\n", This, pctinfo);
-    return E_NOTIMPL;
+    TRACE("%p %p\n", This, pctinfo);
+    *pctinfo = 1;
+    return S_OK;
 }
 
 static HRESULT WINAPI fw_policy_GetTypeInfo(
@@ -111,8 +92,8 @@ static HRESULT WINAPI fw_policy_GetTypeInfo(
 {
     fw_policy *This = impl_from_INetFwPolicy( iface );
 
-    FIXME("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    TRACE("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
+    return get_typeinfo( INetFwPolicy_tid, ppTInfo );
 }
 
 static HRESULT WINAPI fw_policy_GetIDsOfNames(
@@ -124,9 +105,18 @@ static HRESULT WINAPI fw_policy_GetIDsOfNames(
     DISPID *rgDispId )
 {
     fw_policy *This = impl_from_INetFwPolicy( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
 
-    FIXME("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
-    return E_NOTIMPL;
+    TRACE("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+
+    hr = get_typeinfo( INetFwPolicy_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames( typeinfo, rgszNames, cNames, rgDispId );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
 }
 
 static HRESULT WINAPI fw_policy_Invoke(
@@ -141,10 +131,20 @@ static HRESULT WINAPI fw_policy_Invoke(
     UINT *puArgErr )
 {
     fw_policy *This = impl_from_INetFwPolicy( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
 
-    FIXME("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    hr = get_typeinfo( INetFwPolicy_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke( typeinfo, &This->INetFwPolicy_iface, dispIdMember,
+                               wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
 }
 
 static HRESULT WINAPI fw_policy_get_CurrentProfile(

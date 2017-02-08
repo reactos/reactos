@@ -22,14 +22,14 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                                      IDC_LICENSE_EDIT);
         if (hLicenseEditWnd)
         {
-            LPTSTR lpString;
+            LPWSTR lpString;
 
             if (AllocAndLoadString(&lpString,
                                    hInstance,
                                    IDS_LICENSE))
             {
-                SetWindowText(hLicenseEditWnd,
-                              lpString);
+                SetWindowTextW(hLicenseEditWnd,
+                               lpString);
 
                 LocalFree(lpString);
             }

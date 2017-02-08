@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <pci.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -1127,7 +1128,7 @@ PciSkipThisFunction(IN PPCI_COMMON_HEADER PciData,
         else
         {
             /* Logic error in the driver */
-            ASSERTMSG(FALSE, "PCI Skip Function - Operation type unknown.");
+            ASSERTMSG("PCI Skip Function - Operation type unknown.", FALSE);
         }
 
         /* Check for legacy bridges during resource enumeration */
@@ -2171,7 +2172,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if (!PcipIsSameDevice(PdoExtension, &PciData))
     {
         /* Fail */
-        ASSERTMSG(FALSE, "PCI Set resources - not same device");
+        ASSERTMSG("PCI Set resources - not same device", FALSE);
         return STATUS_DEVICE_DOES_NOT_EXIST;
     }
 

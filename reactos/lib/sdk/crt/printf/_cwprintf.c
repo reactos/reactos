@@ -10,7 +10,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 _cwprintf(const wchar_t* format, ...)
 {
   int retval;

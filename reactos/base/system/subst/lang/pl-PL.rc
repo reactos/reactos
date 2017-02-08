@@ -1,9 +1,9 @@
 /*
- *      translated by Caemyr - Olaf Siejka (May, 2011)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl;
- *      UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (May, 2011)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -13,8 +13,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Nieprawidłowa liczba parametrów - %s\n"
     IDS_INVALID_PARAMETER "Nieprawidłowy parametr - %s\n"
     IDS_INVALID_PARAMETER2 "Nieprawidłowe parametry - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Na tym dysku już użyto komendy SUBST\n"
-    IDS_FAILED_WITH_ERROCODE "Błąd 0x%x: %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Na tym dysku już użyto komendy SUBST\n"
+    IDS_FAILED_WITH_ERRORCODE "Błąd 0x%x: %s\n"
     IDS_USAGE "Powiązuje ścieżkę z literą napędu.\n\n\
 SUBST [napęd1: [napęd2:]ścieżka]\n\
 SUBST napęd1: /D\n\n\

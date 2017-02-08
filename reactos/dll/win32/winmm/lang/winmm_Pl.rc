@@ -1,0 +1,126 @@
+/*
+ * Copyright 2005 Sebastian Gasiorek
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+STRINGTABLE LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"Wydane polecenie zostało wykonane."
+MMSYSERR_ERROR, 		"Nie zdefiniowany błąd zewnętrzny."
+MMSYSERR_BADDEVICEID, 		"Użyto identyfikatora urządzenia, który jest poza zakresem tego systemu."
+MMSYSERR_NOTENABLED, 		"Sterownik nie został włączony."
+MMSYSERR_ALLOCATED, 		"Określone urządzenie jest już używane. Poczekaj, aż będzie wolne i spróbuj ponownie."
+MMSYSERR_INVALHANDLE, 		"Podane dojście urządzenia jest nieprawidłowe."
+MMSYSERR_NODRIVER, 		"Nie ma żadnego zainstalowanego sterownika w tym systemie!\n"
+MMSYSERR_NOMEM, 		"Brak dostępnej pamięci do wykonania tego zadania. Zakończ jedną lub więcej aplikacji, aby zwiększyć dostępną pamięć, a następnie spróbuj ponownie."
+MMSYSERR_NOTSUPPORTED, 		"Ta funkcja nie jest obsługiwana. Użyj funkcji Możliwości, aby ustalić jakie funkcje i komunikaty obsługuje sterownik."
+MMSYSERR_BADERRNUM, 		"Podano numer błędu, który nie jest zdefiniowany w systemie."
+MMSYSERR_INVALFLAG, 		"Nieprawidłowa flaga została przekazana do funkcji systemowej."
+MMSYSERR_INVALPARAM, 		"Nieprawidłowy parametr został przekazany do funkcji systemowej."
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"Określony format nie jest obsługiwany i nie można go przetłumaczyć. Użyj funkcji Możliwości, aby ustalić obsługiwane formaty."
+WAVERR_STILLPLAYING, 		"Nie można wykonać tej operacji w czasie, gdy dane multimedialne są nadal odtwarzane. Zresetuj urządzenie lub poczekaj, aż zakończy się odtwarzanie danych."
+WAVERR_UNPREPARED, 		"Nagłówek WAVE nie został przygotowany. Przygotuj nagłówek używając funkcji Przygotuj i spróbuj ponownie."
+WAVERR_SYNC, 			"Nie można otworzyć urządzenia bez użycia flagi WAVE_ALLOWSYNC. Użyj tej flagi i spróbuj ponownie."
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"Nagłówek MIDI nie został przygotowany. Przygotuj nagłówek używając funkcji Przygotuj i spróbuj ponownie."
+MIDIERR_STILLPLAYING, 		"Nie można wykonać tej operacji w czasie, gdy dane multimedialne są nadal odtwarzane. Zresetuj urządzenie lub poczekaj, aż zakończy się odtwarzanie danych."
+MIDIERR_NOMAP, 			"Nie można odnaleźć mapowania urządzenia MIDI. Może to być spowodowane problemem ze sterownikiem albo brakiem lub uszkodzeniem pliku MIDIMAP.CFG."
+MIDIERR_NOTREADY, 		"Port przesyła dane do urządzenia. Poczekaj, aż dane zostaną przesłane i spróbuj ponownie."
+MIDIERR_NODEVICE, 		"Bieżące ustawienia mapowania MIDI odwołują się do urządzenia MIDI, które nie jest zainstalowane w systemie. Użyj Mapowania MIDI do edycji ustawień."
+MIDIERR_INVALIDSETUP, 		"Bieżące ustawienia MIDI są uszkodzone. Skopiuj oryginalny plik MIDIMAP.CFG do katalogu ReactOS SYSTEM, a następnie spróbuj ponownie."
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"Nieprawidłowy identyfikator urządzenia MCI. Użyj identyfikatora zwróconego podczas otwierania urządzenia MCI."
+MCIERR_UNRECOGNIZED_KEYWORD, 	"Sterownik nie może rozpoznać podanego parametru polecenia."
+MCIERR_UNRECOGNIZED_COMMAND,	"Sterownik nie może rozpoznać podanego polecenia."
+MCIERR_HARDWARE, 		"Wystąpił problem z urządzeniem multimedialnym. Sprawdź czy działa ono poprawnie lub skontaktuj się z producentem urządzenia."
+MCIERR_INVALID_DEVICE_NAME, 	"Podane urządzenie nie jest otwarte lub nie jest rozpoznawane przez MCI."
+MCIERR_OUT_OF_MEMORY, 		"Za mało pamięci dla tego zadania. \nZamknij jedną lub więcej aplikacji w celu zwiększenia dostępnej pamięci, a następnie spróbuj ponownie."
+MCIERR_DEVICE_OPEN, 		"Nazwa urządzenia jest już używana jako alias przez tą aplikację. Użyj unikatowego aliasu."
+MCIERR_CANNOT_LOAD_DRIVER, 	"Nieznany problem przy ładowaniu określonego sterownika urządzenia."
+MCIERR_MISSING_COMMAND_STRING, 	"Nie określono polecenia."
+MCIERR_PARAM_OVERFLOW, 		"Wyjściowy ciąg znaków był za duży, aby zmieścić się w buforze. Zwiększ rozmiar buforu."
+MCIERR_MISSING_STRING_ARGUMENT, "Określone polecenie wymaga parametru. Podaj ten parametr."
+MCIERR_BAD_INTEGER, 		"Określona liczba całkowita jest nieprawidłowa dla tego polecenia."
+MCIERR_PARSER_INTERNAL, 	"Sterownik urządzenia zwrócił nieprawidłowy typ zwrotny. Skontaktuj się z producentem urządzenia, w celu otrzymania nowego sterownika."
+MCIERR_DRIVER_INTERNAL, 	"Wystąpił problem ze sterownikiem tego urządzenia. Skontaktuj się z producentem urządzenia, w celu otrzymania nowego sterownika."
+MCIERR_MISSING_PARAMETER, 	"Określone polecenie wymaga parametru. Podaj ten parametr."
+MCIERR_UNSUPPORTED_FUNCTION, 	"Używane urządzenie MCI nie obsługuje określonego polecenia."
+MCIERR_FILE_NOT_FOUND, 		"Nie można znaleźć określonego pliku. Sprawdź, czy ścieżka i nazwa pliku są poprawne."
+MCIERR_DEVICE_NOT_READY, 	"Sterownik urządzenia nie jest gotowy."
+MCIERR_INTERNAL, 		"Wystąpił problem podczas inicjowania MCI. Spróbuj uruchomić ponownie ReactOS."
+MCIERR_DRIVER, 			"Wystąpił problem ze sterownikiem tego urządzenia. Sterownik został zamknięty. Nie ma dostępu do informacji o błędach."
+MCIERR_CANNOT_USE_ALL, 		"W określonym poleceniu nie można użyć parametru 'all' jako nazwy urządzenia."
+MCIERR_MULTIPLE, 		"Wystąpił błąd w więcej niż jednym urządzeniu. Określ każde polecenie i urządzenie oddzielnie, aby ustalić, które urządzenie spowodowało błędy."
+MCIERR_EXTENSION_NOT_FOUND, 	"Nie można ustalić typu urządzenia na podstawie podanego rozszerzenia pliku."
+MCIERR_OUTOFRANGE, 		"Określony parametr przekracza zakres przewidziany dla tego polecenia."
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"Określonych parametrów nie można używać razem."
+MCIERR_FILE_NOT_SAVED, 		"Nie można zapisać określonego pliku, Sprawdź, czy jest dość miejsca na dysku lub czy połączenie sieciowe jest wciąż aktywne."
+MCIERR_DEVICE_TYPE_REQUIRED, 	"Nie można odnaleźć określonego urządzenia. Sprawdź, czy jest ono zainstalowane i czy jest nazwa jest napisana poprawnie."
+MCIERR_DEVICE_LOCKED, 		"Określone urządzenie jest właśnie zamykane. Poczekaj kilka sekund i spróbuj ponownie."
+MCIERR_DUPLICATE_ALIAS, 	"Podany alias jest już używany w tej aplikacji. Użyj unikatowego aliasu."
+MCIERR_BAD_CONSTANT, 		"Określony parametr jest nieprawidłowy dla tego polecenia."
+MCIERR_MUST_USE_SHAREABLE, 	"Sterownik urządzenia jest już używany. Aby go udostępnić, zastosuj parametr 'shareable' dla każdego polecenia 'open'."
+MCIERR_MISSING_DEVICE_NAME, 	"Określone polecenie wymaga podania nazwy aliasu, pliku, sterownika lub urządzenia. Podaj tę nazwę."
+MCIERR_BAD_TIME_FORMAT, 	"Określona wartość formatu czasu jest nieprawidłowa. Sprawdź prawidłowe formaty w dokumentacji MCI."
+MCIERR_NO_CLOSING_QUOTE, 	"W wartości parametru brak cudzysłowu zamykającego. Dodaj go."
+MCIERR_DUPLICATE_FLAGS, 	"Parametr lub wartość określono dwukrotnie. Określ je tylko raz."
+MCIERR_INVALID_FILE, 		"Podanego pliku nie można odtworzyć za pomocą tego urządzenia MIDI. Plik może być uszkodzony, mieć zły format lub może nie być dostępna obsługa tego formatu."
+MCIERR_NULL_PARAMETER_BLOCK, 	"Do MCI przekazano blok parametrów zerowych."
+MCIERR_UNNAMED_RESOURCE, 	"Nie można zapisać pliku bez nazwy. Podaj nazwę."
+MCIERR_NEW_REQUIRES_ALIAS, 	"Podczas używania parametru 'new' należy podać jakiś alias."
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"Dla automatycznie otwieranych urządzeń nie można użyć flagi 'notify'."
+MCIERR_NO_ELEMENT_ALLOWED, 	"Z określonym urządzeniem nie można używać nazwy pliku."
+MCIERR_NONAPPLICABLE_FUNCTION, 	"Nie można wykonać poleceń w podanej kolejności. Popraw kolejność poleceń i spróbuj ponownie."
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"Nie można wykonać tego polecenia na urządzeniu otwieranym automatycznie. Odczekaj, aż urządzenie zostanie zamknięte i spróbuj ponownie."
+MCIERR_FILENAME_REQUIRED, 	"Nazwa pliku jest nieprawidłowa. Upewnij się, że nazwa pliku nie jest dłuższa niż 8 znaków i zakończona jest kropką oraz rozszerzeniem."
+MCIERR_EXTRA_CHARACTERS, 	"Nie można określić dodatkowych znaków po ciągu ujętym w cudzysłowy."
+MCIERR_DEVICE_NOT_INSTALLED, 	"Podane urządzenie nie jest zainstalowane w systemie. Aby zainstalować urządzenie, przejdź do Panelu sterowania i użyj opcji Sterowniki."
+MCIERR_GET_CD, 			"Nie można uzyskać dostępu do określonego pliku lub urządzenia MCI. Spróbuj zmienić katalogi lub ponownie uruchomić komputer."
+MCIERR_SET_CD, 			"Nie można uzyskać dostępu do podanego pliku lub urządzenia MCI, gdyż aplikacja ta nie może zmieniać katalogów."
+MCIERR_SET_DRIVE, 		"Nie można uzyskać dostępu do określonego pliku lub urządzenia MCI, gdyż aplikacja ta nie może zmieniać dysków."
+MCIERR_DEVICE_LENGTH, 		"Podaj nazwę urządzenia lub sterownika krótszą niż 79 znaków."
+MCIERR_DEVICE_ORD_LENGTH, 	"Podaj nazwę urządzenia lub sterownika któtszą niż 69 znaków."
+MCIERR_NO_INTEGER, 		"Określone polecenie wymaga parametru w postaci liczby całkowitej. Podaj taki parametr."
+MCIERR_WAVE_OUTPUTSINUSE, 	"Wszystkie urządzenia dźwiękowe Wave, które mogą odtwarzać pliki w bieżącym formacie, są już używane. Zaczekaj na zwolnienie jednego z nich i spróbuj ponownie."
+MCIERR_WAVE_SETOUTPUTINUSE, 	"Nie można ustawić bieżącego urządzenia dźwiękowego Wave na odtwarzanie, ponieważ urządzenie jest używane. Zaczekaj, aż urządzenie zostanie zwolnione i spróbuj ponownie."
+MCIERR_WAVE_INPUTSINUSE, 	"Wszystkie urządzenia dźwiękowe Wave, które mogą nagrywać pliki w bieżącym formacie, są już używane. Zaczekaj na zwolnienie jednego z nich i spróbuj ponownie."
+MCIERR_WAVE_SETINPUTINUSE, 	"Nie można ustawić bieżącego urządzenia dźwiękowego Wave na nagrywanie, ponieważ urządzenie jest używane. Zaczekaj, aż urządzenie zostanie zwolnione i spróbuj ponownie."
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"Można użyć dowolnego zgodnego urządzenia odtwarzającego Wave."
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"Można użyć dowolnego zgodnego urządzenia nagrywającego Wave."
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"Nie zainstalowano żadnego urządzenia dźwiękowego Wave, które mogłoby odtwarzać pliki w bieżącym formacie. Aby zainstalować urządzenie wave, użyj opcji Sterowniki."
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"Urządzenie, którego próbujesz użyć do odtwarzania, nie może rozpoznać bieżącego formatu pliku."
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"Nie zainstalowano żadnego urządzenia dźwiękowego Wave, które mogłoby nagrywać pliki w bieżacym formacie. Aby zainstalować urządzenie wave, użyj opcji Sterowniki."
+MCIERR_WAVE_SETINPUTUNSUITABLE, "Urządzenie, którego próbujesz użyć do nagrywania, nie może rozpoznać bieżącego formatu pliku."
+MCIERR_NO_WINDOW, 		"Brak okna wyświetlania."
+MCIERR_CREATEWINDOW, 		"Nie można utworzyć lub użyć okna."
+MCIERR_FILE_READ, 		"Nie można odczytać określonego pliku. Upewnij się, że plik nadal istnieje i sprawdź dysk lub połączenie sieciowe."
+MCIERR_FILE_WRITE, 		"Nie można zapisać określonego pliku. Sprawdź, czy jest miejsce na dysku lub czy połączenie sieciowe jest aktywne."
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"Nie można użyć razem formatu czasu wskaźnika piosenki i formatu czasu SMPTE."
+MCIERR_SEQ_NOMIDIPRESENT, 	"W systemie nie ma zainstalowanych urządzeń MIDI. Aby zainstalować urządzenie MIDI, przejdź do Panelu sterowania i użyj opcji Sterowniki."
+MCIERR_SEQ_PORT_INUSE, 		"Określony port MIDI jest już używany. Poczekaj, aż będzie wolny i spróbuj ponownie."
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"Bieżące ustawienia mapowania MIDI odwołują się do urządzenia MIDI, które nie jest zainstalowane w systemie. Użyj Mapowania MIDI do edycji ustawień."
+MCIERR_SEQ_PORT_MISCERROR, 	"Wystąpił błąd podczas korzystania z określonego portu."
+MCIERR_SEQ_PORT_NONEXISTENT, 	"Określone urządzenie MIDI nie jest zainstalowane w systemie. Aby zainstalować urządzenie MIDI, przejdź do Panelu sterowania i użyj opcji Sterowniki."
+MCIERR_SEQ_PORTUNSPECIFIED, 	"Brak bieżącego portu MIDI."
+MCIERR_SEQ_TIMER, 		"Wszystkie czasomierze multimediów są używane przez inne aplikacje. Zamknij jedną z nich i spróbuj ponownie."
+
+END

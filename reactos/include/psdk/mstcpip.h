@@ -12,7 +12,7 @@ extern "C" {
 #ifdef _MSC_VER
 #define MSTCPIP_INLINE __inline
 #else
-#define MSTCPIP_INLINE extern inline
+#define MSTCPIP_INLINE static inline
 #endif
 
 #include <nldef.h>
@@ -236,8 +236,8 @@ typedef struct _RSS_SCALABILITY_INFO {
 MSTCPIP_INLINE
 BOOLEAN
 IN4_ADDR_EQUAL(
-  IN CONST IN_ADDR *a,
-  IN CONST IN_ADDR *b)
+  _In_ CONST IN_ADDR *a,
+  _In_ CONST IN_ADDR *b)
 {
   return (BOOLEAN)(a->s_addr == b->s_addr);
 }
@@ -245,8 +245,8 @@ IN4_ADDR_EQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_UNALIGNED_ADDR_EQUAL(
-  IN CONST IN_ADDR UNALIGNED *a,
-  IN CONST IN_ADDR UNALIGNED *b)
+  _In_ CONST IN_ADDR UNALIGNED *a,
+  _In_ CONST IN_ADDR UNALIGNED *b)
 {
   return (BOOLEAN)(a->s_addr == b->s_addr);
 }
@@ -254,7 +254,7 @@ IN4_UNALIGNED_ADDR_EQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_UNSPECIFIED(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)(a->s_addr == IN4ADDR_ANY);
 }
@@ -262,7 +262,7 @@ IN4_IS_ADDR_UNSPECIFIED(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_UNSPECIFIED(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   return (BOOLEAN)(a->s_addr == IN4ADDR_ANY);
 }
@@ -270,7 +270,7 @@ IN4_IS_UNALIGNED_ADDR_UNSPECIFIED(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_LOOPBACK(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)(*((PUCHAR) a) == 0x7f);
 }
@@ -278,7 +278,7 @@ IN4_IS_ADDR_LOOPBACK(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_LOOPBACK(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   return (BOOLEAN)(*((PUCHAR) a) == 0x7f);
 }
@@ -286,7 +286,7 @@ IN4_IS_UNALIGNED_ADDR_LOOPBACK(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_BROADCAST(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)(a->s_addr == IN4ADDR_BROADCAST);
 }
@@ -294,7 +294,7 @@ IN4_IS_ADDR_BROADCAST(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_BROADCAST(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   return (BOOLEAN)(a->s_addr == IN4ADDR_BROADCAST);
 }
@@ -302,7 +302,7 @@ IN4_IS_UNALIGNED_ADDR_BROADCAST(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_MULTICAST(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)IN4_MULTICAST(a->s_addr);
 }
@@ -310,7 +310,7 @@ IN4_IS_ADDR_MULTICAST(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_MULTICAST(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   return (BOOLEAN)IN4_MULTICAST(a->s_addr);
 }
@@ -318,7 +318,7 @@ IN4_IS_UNALIGNED_ADDR_MULTICAST(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_LINKLOCAL(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)((a->s_addr & 0xffff) == 0xfea9);
 }
@@ -326,7 +326,7 @@ IN4_IS_ADDR_LINKLOCAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_LINKLOCAL(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   return (BOOLEAN)((a->s_addr & 0xffff) == 0xfea9); // 169.254/16
 }
@@ -334,7 +334,7 @@ IN4_IS_UNALIGNED_ADDR_LINKLOCAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_SITELOCAL(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   UNREFERENCED_PARAMETER(a);
   return FALSE;
@@ -344,7 +344,7 @@ IN4_IS_ADDR_SITELOCAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_RFC1918(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)(((a->s_addr & 0x00ff) == 0x0a) ||
                    ((a->s_addr & 0xf0ff) == 0x10ac) ||
@@ -354,7 +354,7 @@ IN4_IS_ADDR_RFC1918(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_RFC1918(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   IN_ADDR Ipv4Address = *a;
   return IN4_IS_ADDR_RFC1918(&Ipv4Address);
@@ -363,7 +363,7 @@ IN4_IS_UNALIGNED_ADDR_RFC1918(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_MC_LINKLOCAL(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)((a->s_addr & 0xffffff) == 0xe0);
 }
@@ -371,7 +371,7 @@ IN4_IS_ADDR_MC_LINKLOCAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_MC_ADMINLOCAL(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)((a->s_addr & 0xffff) == 0xffef);
 }
@@ -379,7 +379,7 @@ IN4_IS_ADDR_MC_ADMINLOCAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_MC_SITELOCAL(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)((a->s_addr & 0xff) == 0xef) &&
                   !IN4_IS_ADDR_MC_ADMINLOCAL(a);
@@ -388,9 +388,9 @@ IN4_IS_ADDR_MC_SITELOCAL(
 MSTCPIP_INLINE
 VOID
 IN4ADDR_SETSOCKADDR(
-  OUT PSOCKADDR_IN a,
-  IN CONST IN_ADDR *addr,
-  IN USHORT port)
+  _Out_ PSOCKADDR_IN a,
+  _In_ CONST IN_ADDR *addr,
+  _In_ USHORT port)
 {
   a->sin_family = AF_INET;
   a->sin_port = port;
@@ -401,7 +401,7 @@ IN4ADDR_SETSOCKADDR(
 MSTCPIP_INLINE
 VOID
 IN4ADDR_SETANY(
-  OUT PSOCKADDR_IN a)
+  _Out_ PSOCKADDR_IN a)
 {
   a->sin_family = AF_INET;
   a->sin_port = 0;
@@ -412,7 +412,7 @@ IN4ADDR_SETANY(
 MSTCPIP_INLINE
 VOID
 IN4ADDR_SETLOOPBACK(
-  OUT PSOCKADDR_IN a)
+  _Out_ PSOCKADDR_IN a)
 {
   a->sin_family = AF_INET;
   a->sin_port = 0;
@@ -423,7 +423,7 @@ IN4ADDR_SETLOOPBACK(
 MSTCPIP_INLINE
 BOOLEAN
 IN4ADDR_ISANY(
-  IN CONST SOCKADDR_IN *a)
+  _In_ CONST SOCKADDR_IN *a)
 {
   ASSERT(a->sin_family == AF_INET);
   return IN4_IS_ADDR_UNSPECIFIED(&a->sin_addr);
@@ -432,7 +432,7 @@ IN4ADDR_ISANY(
 MSTCPIP_INLINE
 BOOLEAN
 IN4ADDR_ISLOOPBACK(
-  IN CONST SOCKADDR_IN *a)
+  _In_ CONST SOCKADDR_IN *a)
 {
   ASSERT(a->sin_family == AF_INET);
   return IN4_IS_ADDR_LOOPBACK(&a->sin_addr);
@@ -441,7 +441,7 @@ IN4ADDR_ISLOOPBACK(
 MSTCPIP_INLINE
 SCOPE_ID
 IN4ADDR_SCOPE_ID(
-  IN CONST SOCKADDR_IN *a)
+  _In_ CONST SOCKADDR_IN *a)
 {
   SCOPE_ID UnspecifiedScopeId = {{{0}}};
   UNREFERENCED_PARAMETER(a);
@@ -451,8 +451,8 @@ IN4ADDR_SCOPE_ID(
 MSTCPIP_INLINE
 BOOLEAN
 IN4ADDR_ISEQUAL(
-  IN CONST SOCKADDR_IN *a,
-  IN CONST SOCKADDR_IN *b)
+  _In_ CONST SOCKADDR_IN *a,
+  _In_ CONST SOCKADDR_IN *b)
 {
   ASSERT(a->sin_family == AF_INET);
   return (BOOLEAN)(IN4ADDR_SCOPE_ID(a).Value == IN4ADDR_SCOPE_ID(b).Value &&
@@ -462,7 +462,7 @@ IN4ADDR_ISEQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN4ADDR_ISUNSPECIFIED(
-  IN CONST SOCKADDR_IN *a)
+  _In_ CONST SOCKADDR_IN *a)
 {
   ASSERT(a->sin_family == AF_INET);
   return (BOOLEAN)(IN4ADDR_SCOPE_ID(a).Value == 0 &&
@@ -475,7 +475,7 @@ IN4ADDR_ISUNSPECIFIED(
 MSTCPIP_INLINE
 SCOPE_LEVEL
 Ipv4UnicastAddressScope(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   IN_ADDR Ipv4Address;
 
@@ -493,7 +493,7 @@ Ipv4UnicastAddressScope(
 MSTCPIP_INLINE
 SCOPE_LEVEL
 Ipv4MulticastAddressScope(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   IN_ADDR Ipv4Address;
 
@@ -515,9 +515,9 @@ Ipv4MulticastAddressScope(
 MSTCPIP_INLINE
 SCOPE_LEVEL
 Ipv4AddressScope(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
-  IN CONST IN_ADDR Ipv4Address = *(CONST IN_ADDR UNALIGNED *)Address;
+  CONST IN_ADDR Ipv4Address = *(CONST IN_ADDR UNALIGNED *)Address;
 
   if (IN4_IS_ADDR_BROADCAST(&Ipv4Address)) {
     return ScopeLevelLink;
@@ -531,7 +531,7 @@ Ipv4AddressScope(
 MSTCPIP_INLINE
 NL_ADDRESS_TYPE
 Ipv4AddressType(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   IN_ADDR Ipv4Address = *(CONST IN_ADDR UNALIGNED *) Address;
 
@@ -554,8 +554,8 @@ Ipv4AddressType(
 MSTCPIP_INLINE
 VOID
 IN4_UNCANONICALIZE_SCOPE_ID(
-  IN CONST IN_ADDR *Address,
-  IN OUT SCOPE_ID *ScopeId)
+  _In_ CONST IN_ADDR *Address,
+  _Inout_ SCOPE_ID *ScopeId)
 {
   SCOPE_LEVEL ScopeLevel = Ipv4AddressScope((CONST UCHAR *)Address);
 
@@ -570,7 +570,7 @@ IN4_UNCANONICALIZE_SCOPE_ID(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_ADDR_6TO4ELIGIBLE(
-  IN CONST IN_ADDR *a)
+  _In_ CONST IN_ADDR *a)
 {
   return (BOOLEAN)((Ipv4AddressType((CONST UCHAR *) a) == NlatUnicast) &&
                    !(IN4_IS_ADDR_LOOPBACK(a) ||
@@ -582,7 +582,7 @@ IN4_IS_ADDR_6TO4ELIGIBLE(
 MSTCPIP_INLINE
 BOOLEAN
 IN4_IS_UNALIGNED_ADDR_6TO4ELIGIBLE(
-  IN CONST IN_ADDR UNALIGNED *a)
+  _In_ CONST IN_ADDR UNALIGNED *a)
 {
   IN_ADDR Ipv4Address = *a;
   return IN4_IS_ADDR_6TO4ELIGIBLE(&Ipv4Address);
@@ -597,9 +597,9 @@ IN4_IS_UNALIGNED_ADDR_6TO4ELIGIBLE(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_PREFIX_EQUAL(
-  IN CONST IN6_ADDR *a,
-  IN CONST IN6_ADDR *b,
-  IN UINT8 len)
+  _In_ CONST IN6_ADDR *a,
+  _In_ CONST IN6_ADDR *b,
+  _In_ UINT8 len)
 {
   UINT8 Bytes = len / 8;
   UINT8 Bits = len % 8;
@@ -613,7 +613,7 @@ IN6_PREFIX_EQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_ALLNODESONNODE(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   return IN6_ADDR_EQUAL(a, &in6addr_allnodesonnode);
 }
@@ -621,7 +621,7 @@ IN6_IS_ADDR_ALLNODESONNODE(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_ALLNODESONLINK(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   return IN6_ADDR_EQUAL(a, &in6addr_allnodesonlink);
 }
@@ -629,7 +629,7 @@ IN6_IS_ADDR_ALLNODESONLINK(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_ALLROUTERSONLINK(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   return IN6_ADDR_EQUAL(a, &in6addr_allroutersonlink);
 }
@@ -637,7 +637,7 @@ IN6_IS_ADDR_ALLROUTERSONLINK(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_SOLICITEDNODE(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   return IN6_PREFIX_EQUAL(a, &in6addr_solicitednodemulticastprefix,
                           IN6ADDR_SOLICITEDNODEMULTICASTPREFIX_LENGTH);
@@ -646,7 +646,7 @@ IN6_IS_ADDR_SOLICITEDNODE(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_ISATAP(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   return (BOOLEAN)(((a->s6_words[4] & 0xfffd) == 0x0000) &&
                    (a->s6_words[5] == 0xfe5e));
@@ -655,7 +655,7 @@ IN6_IS_ADDR_ISATAP(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_6TO4(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   C_ASSERT(IN6ADDR_6TO4PREFIX_LENGTH == RTL_BITS_OF(USHORT));
   return (BOOLEAN)(a->s6_words[0] == in6addr_6to4prefix.s6_words[0]);
@@ -664,7 +664,7 @@ IN6_IS_ADDR_6TO4(
 MSTCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_TEREDO(
-  IN CONST IN6_ADDR *a)
+  _In_ CONST IN6_ADDR *a)
 {
   C_ASSERT(IN6ADDR_TEREDOPREFIX_LENGTH == 2 * RTL_BITS_OF(USHORT));
   return (BOOLEAN)
@@ -677,7 +677,7 @@ IN6_IS_ADDR_TEREDO(
 MSTCPIP_INLINE
 BOOLEAN
 IN6ADDR_ISV4MAPPED(
-  IN CONST SOCKADDR_IN6 *a)
+  _In_ CONST SOCKADDR_IN6 *a)
 {
   ASSERT(a->sin6_family == AF_INET6);
   return IN6_IS_ADDR_V4MAPPED(&a->sin6_addr);
@@ -686,7 +686,7 @@ IN6ADDR_ISV4MAPPED(
 MSTCPIP_INLINE
 BOOLEAN
 IN6ADDR_ISISATAP(
-  IN CONST SOCKADDR_IN6 *a)
+  _In_ CONST SOCKADDR_IN6 *a)
 {
   ASSERT(a->sin6_family == AF_INET6);
   return IN6_IS_ADDR_ISATAP(&a->sin6_addr);
@@ -695,7 +695,7 @@ IN6ADDR_ISISATAP(
 MSTCPIP_INLINE
 BOOLEAN
 IN6ADDR_IS6TO4(
-  IN CONST SOCKADDR_IN6 *a)
+  _In_ CONST SOCKADDR_IN6 *a)
 {
   ASSERT(a->sin6_family == AF_INET6);
   return IN6_IS_ADDR_6TO4(&a->sin6_addr);
@@ -704,7 +704,7 @@ IN6ADDR_IS6TO4(
 MSTCPIP_INLINE
 BOOLEAN
 IN6ADDR_ISTEREDO(
-  IN CONST SOCKADDR_IN6 *a)
+  _In_ CONST SOCKADDR_IN6 *a)
 {
   ASSERT(a->sin6_family == AF_INET6);
   return IN6_IS_ADDR_TEREDO(&a->sin6_addr);
@@ -713,7 +713,7 @@ IN6ADDR_ISTEREDO(
 MSTCPIP_INLINE
 CONST UCHAR*
 IN6_GET_ADDR_V4MAPPED(
-  IN CONST IN6_ADDR *Ipv6Address)
+  _In_ CONST IN6_ADDR *Ipv6Address)
 {
   return (CONST UCHAR *) (Ipv6Address->s6_words + 6);
 }
@@ -721,7 +721,7 @@ IN6_GET_ADDR_V4MAPPED(
 MSTCPIP_INLINE
 CONST UCHAR*
 IN6_GET_ADDR_V4COMPAT(
-  IN CONST IN6_ADDR *Ipv6Address)
+  _In_ CONST IN6_ADDR *Ipv6Address)
 {
   return (CONST UCHAR *) (Ipv6Address->s6_words + 6);
 }
@@ -729,7 +729,7 @@ IN6_GET_ADDR_V4COMPAT(
 MSTCPIP_INLINE
 CONST UCHAR*
 IN6_EXTRACT_V4ADDR_FROM_ISATAP(
-  IN CONST IN6_ADDR *Ipv6Address)
+  _In_ CONST IN6_ADDR *Ipv6Address)
 {
   return (CONST UCHAR *) (Ipv6Address->s6_words + 6);
 }
@@ -737,7 +737,7 @@ IN6_EXTRACT_V4ADDR_FROM_ISATAP(
 MSTCPIP_INLINE
 CONST UCHAR*
 IN6_EXTRACT_V4ADDR_FROM_6TO4(
-  IN CONST IN6_ADDR *Ipv6Address)
+  _In_ CONST IN6_ADDR *Ipv6Address)
 {
   return (CONST UCHAR *) (Ipv6Address->s6_words + 1);
 }
@@ -745,8 +745,8 @@ IN6_EXTRACT_V4ADDR_FROM_6TO4(
 MSTCPIP_INLINE
 VOID
 IN6_SET_ADDR_V4MAPPED(
-  OUT PIN6_ADDR a6,
-  IN CONST IN_ADDR* a4)
+  _Out_ PIN6_ADDR a6,
+  _In_ CONST IN_ADDR* a4)
 {
   *a6 = in6addr_v4mappedprefix;
   a6->s6_bytes[12] = ((CONST UCHAR *) a4)[0];
@@ -758,8 +758,8 @@ IN6_SET_ADDR_V4MAPPED(
 MSTCPIP_INLINE
 VOID
 IN6_SET_ADDR_V4COMPAT(
-  OUT PIN6_ADDR a6,
-  IN CONST IN_ADDR* a4)
+  _Out_ PIN6_ADDR a6,
+  _In_ CONST IN_ADDR* a4)
 {
   *a6 = in6addr_any;
   a6->s6_bytes[12] = ((CONST UCHAR *) a4)[0];
@@ -771,8 +771,8 @@ IN6_SET_ADDR_V4COMPAT(
 MSTCPIP_INLINE
 VOID
 IN6_SET_ADDR_SOLICITEDNODE(
-  OUT PIN6_ADDR Multicast,
-  IN CONST IN6_ADDR *Unicast)
+  _Out_ PIN6_ADDR Multicast,
+  _In_ CONST IN6_ADDR *Unicast)
 {
   *Multicast = in6addr_solicitednodemulticastprefix;
   Multicast->s6_bytes[13] = Unicast->s6_bytes[13];
@@ -783,8 +783,8 @@ IN6_SET_ADDR_SOLICITEDNODE(
 MSTCPIP_INLINE
 VOID
 IN6_SET_ISATAP_IDENTIFIER(
-  IN OUT IN6_ADDR *Ipv6Address,
-  IN CONST IN_ADDR *Ipv4Address)
+  _Inout_ IN6_ADDR *Ipv6Address,
+  _In_ CONST IN_ADDR *Ipv4Address)
 {
   if (IN4_IS_ADDR_6TO4ELIGIBLE(Ipv4Address)) {
     Ipv6Address->s6_words[4] = 0x0002;
@@ -798,8 +798,8 @@ IN6_SET_ISATAP_IDENTIFIER(
 MSTCPIP_INLINE
 VOID
 IN6_SET_6TO4_PREFIX(
-  IN OUT IN6_ADDR *Ipv6Address,
-  IN CONST IN_ADDR *Ipv4Address)
+  _Inout_ IN6_ADDR *Ipv6Address,
+  _In_ CONST IN_ADDR *Ipv4Address)
 {
   Ipv6Address->s6_words[0] = 0x0220;
   *((UNALIGNED IN_ADDR *) (Ipv6Address->s6_words + 1)) = *Ipv4Address;
@@ -809,7 +809,7 @@ IN6_SET_6TO4_PREFIX(
 MSTCPIP_INLINE
 SCOPE_LEVEL
 Ipv6UnicastAddressScope(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   IN6_ADDR Ipv6Address;
 
@@ -830,7 +830,7 @@ Ipv6UnicastAddressScope(
 MSTCPIP_INLINE
 SCOPE_LEVEL
 IN6_MULTICAST_SCOPE(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   PIN6_ADDR Ipv6Address = (PIN6_ADDR) Address;
   return (SCOPE_LEVEL)(Ipv6Address->s6_bytes[1] & 0xf);
@@ -839,7 +839,7 @@ IN6_MULTICAST_SCOPE(
 MSTCPIP_INLINE
 SCOPE_LEVEL
 Ipv6AddressScope(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   if (IN6_IS_ADDR_MULTICAST((CONST IN6_ADDR *) Address)) {
     return IN6_MULTICAST_SCOPE(Address);
@@ -851,7 +851,7 @@ Ipv6AddressScope(
 MSTCPIP_INLINE
 NL_ADDRESS_TYPE
 Ipv6AddressType(
-  IN CONST UCHAR *Address)
+  _In_ CONST UCHAR *Address)
 {
   CONST IN6_ADDR *Ipv6Address = (CONST IN6_ADDR *) Address;
   CONST UCHAR *Ipv4Address;
@@ -879,8 +879,8 @@ Ipv6AddressType(
 MSTCPIP_INLINE
 VOID
 IN6_UNCANONICALIZE_SCOPE_ID(
-  IN CONST IN6_ADDR *Address,
-  IN OUT SCOPE_ID *ScopeId)
+  _In_ CONST IN6_ADDR *Address,
+  _Inout_ SCOPE_ID *ScopeId)
 {
   SCOPE_LEVEL ScopeLevel = Ipv6AddressScope((CONST UCHAR *)Address);
 
@@ -897,10 +897,10 @@ IN6_UNCANONICALIZE_SCOPE_ID(
 MSTCPIP_INLINE
 VOID
 IN6ADDR_SETSOCKADDR(
-  OUT PSOCKADDR_IN6 a,
-  IN CONST IN6_ADDR *addr,
-  IN SCOPE_ID scope,
-  IN USHORT port)
+  _Out_ PSOCKADDR_IN6 a,
+  _In_ CONST IN6_ADDR *addr,
+  _In_ SCOPE_ID scope,
+  _In_ USHORT port)
 {
   a->sin6_family = AF_INET6;
   a->sin6_port = port;
@@ -913,10 +913,10 @@ IN6ADDR_SETSOCKADDR(
 MSTCPIP_INLINE
 VOID
 IN6ADDR_SETV4MAPPED(
-  OUT PSOCKADDR_IN6 a6,
-  IN CONST IN_ADDR* a4,
-  IN SCOPE_ID scope,
-  IN USHORT port)
+  _Out_ PSOCKADDR_IN6 a6,
+  _In_ CONST IN_ADDR* a4,
+  _In_ SCOPE_ID scope,
+  _In_ USHORT port)
 {
   a6->sin6_family = AF_INET6;
   a6->sin6_port = port;
@@ -931,9 +931,9 @@ IN6ADDR_SETV4MAPPED(
 MSTCPIP_INLINE
 BOOLEAN
 INET_ADDR_EQUAL(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a,
-  IN CONST VOID* b)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a,
+  _In_ CONST VOID* b)
 {
   if (af == AF_INET6) {
     return IN6_ADDR_EQUAL((CONST IN6_ADDR*)a, (CONST IN6_ADDR*)b);
@@ -946,9 +946,9 @@ INET_ADDR_EQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 INET_UNALIGNED_ADDR_EQUAL(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a,
-  IN CONST VOID* b)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a,
+  _In_ CONST VOID* b)
 {
   if (af == AF_INET6) {
     return IN6_ADDR_EQUAL((CONST IN6_ADDR*)a, (CONST IN6_ADDR*)b);
@@ -961,8 +961,8 @@ INET_UNALIGNED_ADDR_EQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 INET_IS_ADDR_UNSPECIFIED(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a)
 {
   if (af == AF_INET6) {
     return IN6_IS_ADDR_UNSPECIFIED((CONST IN6_ADDR*)a);
@@ -975,8 +975,8 @@ INET_IS_ADDR_UNSPECIFIED(
 MSTCPIP_INLINE
 BOOLEAN
 INET_IS_UNALIGNED_ADDR_UNSPECIFIED(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a)
 {
   if (af == AF_INET6) {
     return IN6_IS_ADDR_UNSPECIFIED((CONST IN6_ADDR*)a);
@@ -989,8 +989,8 @@ INET_IS_UNALIGNED_ADDR_UNSPECIFIED(
 MSTCPIP_INLINE
 BOOLEAN
 INET_IS_ADDR_LOOPBACK(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a)
 {
   if (af == AF_INET6) {
     return IN6_IS_ADDR_LOOPBACK((CONST IN6_ADDR*)a);
@@ -1003,8 +1003,8 @@ INET_IS_ADDR_LOOPBACK(
 MSTCPIP_INLINE
 BOOLEAN
 INET_IS_ADDR_BROADCAST(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a)
 {
   if (af == AF_INET6) {
     return FALSE;
@@ -1017,8 +1017,8 @@ INET_IS_ADDR_BROADCAST(
 MSTCPIP_INLINE
 BOOLEAN
 INET_IS_ADDR_MULTICAST(
-  IN ADDRESS_FAMILY af,
-  IN CONST VOID* a)
+  _In_ ADDRESS_FAMILY af,
+  _In_ CONST VOID* a)
 {
   if (af == AF_INET6) {
     return IN6_IS_ADDR_MULTICAST((CONST IN6_ADDR*)a);
@@ -1031,7 +1031,7 @@ INET_IS_ADDR_MULTICAST(
 MSTCPIP_INLINE
 CONST UCHAR*
 INET_ADDR_UNSPECIFIED(
-  IN ADDRESS_FAMILY af)
+  _In_ ADDRESS_FAMILY af)
 {
   if (af == AF_INET6) {
     return (CONST UCHAR*)&in6addr_any;
@@ -1044,9 +1044,9 @@ INET_ADDR_UNSPECIFIED(
 MSTCPIP_INLINE
 VOID
 INET_SET_ADDRESS(
-  IN ADDRESS_FAMILY Family,
-  OUT PUCHAR Address,
-  IN CONST UCHAR *Value)
+  _In_ ADDRESS_FAMILY Family,
+  _Out_ PUCHAR Address,
+  _In_ CONST UCHAR *Value)
 {
   if (Family == AF_INET6) {
     *((PIN6_ADDR)Address) = *((PIN6_ADDR)Value);
@@ -1059,7 +1059,7 @@ INET_SET_ADDRESS(
 MSTCPIP_INLINE
 SIZE_T
 INET_ADDR_LENGTH(
-  IN ADDRESS_FAMILY af)
+  _In_ ADDRESS_FAMILY af)
 {
   if (af == AF_INET6) {
     return sizeof(IN6_ADDR);
@@ -1072,7 +1072,7 @@ INET_ADDR_LENGTH(
 MSTCPIP_INLINE
 SIZE_T
 INET_SOCKADDR_LENGTH(
-  IN ADDRESS_FAMILY af)
+  _In_ ADDRESS_FAMILY af)
 {
   if (af == AF_INET6) {
     return sizeof(SOCKADDR_IN6);
@@ -1086,11 +1086,11 @@ INET_SOCKADDR_LENGTH(
 MSTCPIP_INLINE
 VOID
 INETADDR_SETSOCKADDR(
-  IN ADDRESS_FAMILY af,
-  OUT PSOCKADDR a,
-  IN CONST VOID* addr,
-  IN SCOPE_ID scope,
-  IN USHORT port)
+  _In_ ADDRESS_FAMILY af,
+  _Out_ PSOCKADDR a,
+  _In_ CONST VOID* addr,
+  _In_ SCOPE_ID scope,
+  _In_ USHORT port)
 {
   if (af == AF_INET6) {
     IN6ADDR_SETSOCKADDR((PSOCKADDR_IN6) a, (CONST IN6_ADDR *) addr, scope, port);
@@ -1105,7 +1105,7 @@ INETADDR_SETSOCKADDR(
 MSTCPIP_INLINE
 VOID
 INETADDR_SETANY(
-  OUT PSOCKADDR a)
+  _Inout_ PSOCKADDR a)
 {
   if (a->sa_family == AF_INET6) {
     IN6ADDR_SETANY((PSOCKADDR_IN6)a);
@@ -1118,7 +1118,7 @@ INETADDR_SETANY(
 MSTCPIP_INLINE
 VOID
 INETADDR_SETLOOPBACK(
-  OUT PSOCKADDR a)
+  _Inout_ PSOCKADDR a)
 {
   if (a->sa_family == AF_INET6) {
     IN6ADDR_SETLOOPBACK((PSOCKADDR_IN6)a);
@@ -1131,7 +1131,7 @@ INETADDR_SETLOOPBACK(
 MSTCPIP_INLINE
 BOOLEAN
 INETADDR_ISANY(
-  IN CONST SOCKADDR *a)
+  _In_ CONST SOCKADDR *a)
 {
   if (a->sa_family == AF_INET6) {
     return IN6ADDR_ISANY((CONST SOCKADDR_IN6*)a);
@@ -1144,7 +1144,7 @@ INETADDR_ISANY(
 MSTCPIP_INLINE
 BOOLEAN
 INETADDR_ISLOOPBACK(
-  IN CONST SOCKADDR *a)
+  _In_ CONST SOCKADDR *a)
 {
   if (a->sa_family == AF_INET6) {
     return IN6ADDR_ISLOOPBACK((CONST SOCKADDR_IN6*)a);
@@ -1156,7 +1156,8 @@ INETADDR_ISLOOPBACK(
 
 MSTCPIP_INLINE
 BOOLEAN
-INETADDR_ISV4MAPPED(IN CONST SOCKADDR *a)
+INETADDR_ISV4MAPPED(
+  _In_ CONST SOCKADDR *a)
 {
   if (a->sa_family == AF_INET6) {
     return IN6ADDR_ISV4MAPPED((CONST SOCKADDR_IN6*)a);
@@ -1168,11 +1169,11 @@ INETADDR_ISV4MAPPED(IN CONST SOCKADDR *a)
 MSTCPIP_INLINE
 BOOLEAN
 NL_ADDR_EQUAL(
-  IN ADDRESS_FAMILY af,
-  IN SCOPE_ID sa,
-  IN CONST UCHAR* aa,
-  IN SCOPE_ID sb,
-  IN CONST UCHAR* ab)
+  _In_ ADDRESS_FAMILY af,
+  _In_ SCOPE_ID sa,
+  _In_ CONST UCHAR* aa,
+  _In_ SCOPE_ID sb,
+  _In_ CONST UCHAR* ab)
 {
   return (BOOLEAN)((sa.Value == sb.Value) && INET_ADDR_EQUAL(af, aa, ab));
 }
@@ -1180,9 +1181,9 @@ NL_ADDR_EQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 NL_IS_ADDR_UNSPECIFIED(
-  IN ADDRESS_FAMILY af,
-  IN SCOPE_ID s,
-  IN CONST UCHAR* a)
+  _In_ ADDRESS_FAMILY af,
+  _In_ SCOPE_ID s,
+  _In_ CONST UCHAR* a)
 {
   return (BOOLEAN)((s.Value == 0) && INET_IS_ADDR_UNSPECIFIED(af, a));
 }
@@ -1190,8 +1191,8 @@ NL_IS_ADDR_UNSPECIFIED(
 MSTCPIP_INLINE
 BOOLEAN
 INETADDR_ISEQUAL(
-  IN CONST SOCKADDR *a,
-  IN CONST SOCKADDR *b)
+  _In_ CONST SOCKADDR *a,
+  _In_ CONST SOCKADDR *b)
 {
   if (a->sa_family == AF_INET6) {
     return (BOOLEAN) (b->sa_family == AF_INET6 &&
@@ -1206,7 +1207,7 @@ INETADDR_ISEQUAL(
 MSTCPIP_INLINE
 BOOLEAN
 INETADDR_ISUNSPECIFIED(
-  IN CONST SOCKADDR *a)
+  _In_ CONST SOCKADDR *a)
 {
   if (a->sa_family == AF_INET6) {
     return IN6ADDR_ISUNSPECIFIED((CONST SOCKADDR_IN6*)a);
@@ -1220,7 +1221,7 @@ INETADDR_ISUNSPECIFIED(
 MSTCPIP_INLINE
 SCOPE_ID
 INETADDR_SCOPE_ID(
-  IN CONST SOCKADDR *a)
+  _In_ CONST SOCKADDR *a)
 {
   if (a->sa_family == AF_INET6) {
     return ((CONST SOCKADDR_IN6*)a)->sin6_scope_struct;
@@ -1234,7 +1235,7 @@ INETADDR_SCOPE_ID(
 MSTCPIP_INLINE
 USHORT
 INETADDR_PORT(
-  IN CONST SOCKADDR *a)
+  _In_ CONST SOCKADDR *a)
 {
   if (a->sa_family == AF_INET6) {
     return ((CONST SOCKADDR_IN6*)a)->sin6_port;
@@ -1247,7 +1248,7 @@ INETADDR_PORT(
 MSTCPIP_INLINE
 PUCHAR
 INETADDR_ADDRESS(
-  IN CONST SOCKADDR* a)
+  _In_ CONST SOCKADDR* a)
 {
   if (a->sa_family == AF_INET6) {
     return (PUCHAR)&((PSOCKADDR_IN6)a)->sin6_addr;
@@ -1260,8 +1261,8 @@ INETADDR_ADDRESS(
 MSTCPIP_INLINE
 VOID
 INETADDR_SET_PORT(
-  IN OUT PSOCKADDR a,
-  IN USHORT Port)
+  _Inout_ PSOCKADDR a,
+  _In_ USHORT Port)
 {
   SS_PORT(a) = Port;
 }
@@ -1269,8 +1270,8 @@ INETADDR_SET_PORT(
 MSTCPIP_INLINE
 VOID
 INETADDR_SET_ADDRESS(
-  IN OUT PSOCKADDR a,
-  IN CONST UCHAR *Address)
+  _Inout_ PSOCKADDR a,
+  _In_ CONST UCHAR *Address)
 {
   if (a->sa_family == AF_INET6) {
     ((PSOCKADDR_IN6)a)->sin6_addr = *((CONST IN6_ADDR*)Address);
@@ -1283,9 +1284,9 @@ INETADDR_SET_ADDRESS(
 MSTCPIP_INLINE
 VOID
 INET_UNCANONICALIZE_SCOPE_ID(
-  IN ADDRESS_FAMILY AddressFamily,
-  IN CONST UCHAR *Address,
-  IN OUT SCOPE_ID *ScopeId)
+  _In_ ADDRESS_FAMILY AddressFamily,
+  _In_ CONST UCHAR *Address,
+  _Inout_ SCOPE_ID *ScopeId)
 {
   if (AddressFamily == AF_INET6) {
     IN6_UNCANONICALIZE_SCOPE_ID((CONST IN6_ADDR*) Address, ScopeId);
@@ -1307,69 +1308,69 @@ NTSYSAPI
 PSTR
 NTAPI
 RtlIpv4AddressToStringA(
-  IN const struct in_addr *Addr,
-  OUT PSTR S);
+  _In_ const struct in_addr *Addr,
+  _Out_writes_(16) PSTR S);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv4AddressToStringExA(
-  IN const struct in_addr *Address,
-  IN USHORT Port,
-  OUT PSTR AddressString,
-  IN OUT PULONG AddressStringLength);
+  _In_ const struct in_addr *Address,
+  _In_ USHORT Port,
+  _Out_writes_to_(*AddressStringLength, *AddressStringLength) PSTR AddressString,
+  _Inout_ PULONG AddressStringLength);
 
 NTSYSAPI
 PWSTR
 NTAPI
 RtlIpv4AddressToStringW(
-  IN const struct in_addr *Addr,
-  OUT PWSTR S);
+  _In_ const struct in_addr *Addr,
+  _Out_writes_(16) PWSTR S);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv4AddressToStringExW(
-  IN const struct in_addr *Address,
-  IN USHORT Port,
-  OUT PWSTR AddressString,
-  IN OUT PULONG AddressStringLength);
+  _In_ const struct in_addr *Address,
+  _In_ USHORT Port,
+  _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWSTR AddressString,
+  _Inout_ PULONG AddressStringLength);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv4StringToAddressA(
-  IN PCSTR S,
-  IN BOOLEAN Strict,
-  OUT PCSTR *Terminator,
-  OUT struct in_addr *Addr);
+  _In_ PCSTR String,
+  _In_ BOOLEAN Strict,
+  _Out_ PCSTR *Terminator,
+  _Out_ struct in_addr *Addr);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv4StringToAddressExA(
-  IN PCSTR AddressString,
-  IN BOOLEAN Strict,
-  OUT struct in_addr *Address,
-  OUT PUSHORT Port);
+  _In_ PCSTR AddressString,
+  _In_ BOOLEAN Strict,
+  _Out_ struct in_addr *Address,
+  _Out_ PUSHORT Port);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv4StringToAddressW(
-  IN PCWSTR S,
-  IN BOOLEAN Strict,
-  OUT LPCWSTR *Terminator,
-  OUT struct in_addr *Addr);
+  _In_ PCWSTR String,
+  _In_ BOOLEAN Strict,
+  _Out_ PCWSTR *Terminator,
+  _Out_ struct in_addr *Addr);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv4StringToAddressExW(
-  IN PCWSTR AddressString,
-  IN BOOLEAN Strict,
-  OUT struct in_addr *Address,
-  OUT PUSHORT Port);
+  _In_ PCWSTR AddressString,
+  _In_ BOOLEAN Strict,
+  _Out_ struct in_addr *Address,
+  _Out_ PUSHORT Port);
 
 #ifdef UNICODE
 #define RtlIpv4AddressToString RtlIpv4AddressToStringW
@@ -1391,69 +1392,69 @@ NTSYSAPI
 PSTR
 NTAPI
 RtlIpv6AddressToStringA(
-  IN const struct in6_addr *Addr,
-  OUT PSTR S);
+  _In_ const struct in6_addr *Addr,
+  _Out_writes_(46) PSTR S);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv6AddressToStringExA(
-  IN const struct in6_addr *Address,
-  IN ULONG ScopeId,
-  IN USHORT Port,
-  OUT PSTR AddressString,
-  IN OUT PULONG AddressStringLength);
+  _In_ const struct in6_addr *Address,
+  _In_ ULONG ScopeId,
+  _In_ USHORT Port,
+  _Out_writes_to_(*AddressStringLength, *AddressStringLength) PSTR AddressString,
+  _Inout_ PULONG AddressStringLength);
 
 NTSYSAPI
 PWSTR
 NTAPI
 RtlIpv6AddressToStringW(
-  IN const struct in6_addr *Addr,
-  OUT PWSTR S);
+  _In_ const struct in6_addr *Addr,
+  _Out_writes_(46) PWSTR S);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv6AddressToStringExW(
-  IN const struct in6_addr *Address,
-  IN ULONG ScopeId,
-  IN USHORT Port,
-  OUT PWSTR AddressString,
-  IN OUT PULONG AddressStringLength);
+  _In_ const struct in6_addr *Address,
+  _In_ ULONG ScopeId,
+  _In_ USHORT Port,
+  _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWSTR AddressString,
+  _Inout_ PULONG AddressStringLength);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv6StringToAddressA(
-  IN PCSTR S,
-  OUT PCSTR *Terminator,
-  OUT struct in6_addr *Addr);
+  _In_ PCSTR S,
+  _Out_ PCSTR *Terminator,
+  _Out_ struct in6_addr *Addr);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv6StringToAddressExA(
-  IN PCSTR AddressString,
-  OUT struct in6_addr *Address,
-  OUT PULONG ScopeId,
-  OUT PUSHORT Port);
+  _In_ PCSTR AddressString,
+  _Out_ struct in6_addr *Address,
+  _Out_ PULONG ScopeId,
+  _Out_ PUSHORT Port);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv6StringToAddressW(
-  IN PCWSTR S,
-  OUT PCWSTR *Terminator,
-  OUT struct in6_addr *Addr);
+  _In_ PCWSTR S,
+  _Out_ PCWSTR *Terminator,
+  _Out_ struct in6_addr *Addr);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlIpv6StringToAddressExW(
-  IN PCWSTR AddressString,
-  OUT struct in6_addr *Address,
-  OUT PULONG ScopeId,
-  OUT PUSHORT Port);
+  _In_ PCWSTR AddressString,
+  _Out_ struct in6_addr *Address,
+  _Out_ PULONG ScopeId,
+  _Out_ PUSHORT Port);
 
 #ifdef UNICODE
 #define RtlIpv6AddressToString RtlIpv6AddressToStringW
@@ -1478,31 +1479,31 @@ NTSYSAPI
 PSTR
 NTAPI
 RtlEthernetAddressToStringA(
-  IN const DL_EUI48 *Addr,
-  OUT PSTR S);
+  _In_ const DL_EUI48 *Addr,
+  _Out_writes_(18) PSTR S);
 
 NTSYSAPI
 PWSTR
 NTAPI
 RtlEthernetAddressToStringW(
-  IN const DL_EUI48 *Addr,
-  OUT PWSTR S);
+  _In_ const DL_EUI48 *Addr,
+  _Out_writes_(18) PWSTR S);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlEthernetStringToAddressA(
-  IN PCSTR S,
-  OUT PCSTR *Terminator,
-  OUT DL_EUI48 *Addr);
+  _In_ PCSTR S,
+  _Out_ PCSTR *Terminator,
+  _Out_ DL_EUI48 *Addr);
 
 NTSYSAPI
 LONG
 NTAPI
 RtlEthernetStringToAddressW(
-  IN PCWSTR S,
-  OUT LPCWSTR *Terminator,
-  OUT DL_EUI48 *Addr);
+  _In_ PCWSTR S,
+  _Out_ LPCWSTR *Terminator,
+  _Out_ DL_EUI48 *Addr);
 
 #ifdef UNICODE
 #define RtlEthernetAddressToString RtlEthernetAddressToStringW

@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+$define(UCHAR=UCHAR)
+$define(ULONG=ULONG)
+$define(USHORT=USHORT)
+
 /* Dependencies */
 #include <ntddk.h>
 #include <excpt.h>
@@ -1124,13 +1128,14 @@ HalGetDmaAlignmentRequirement(
 #define HalGetDmaAlignmentRequirement() 1L
 #endif
 
-extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
-#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
-
-#ifdef NLS_MB_CODE_PAGE_TAG
-#undef NLS_MB_CODE_PAGE_TAG
+#ifdef _NTSYSTEM_
+extern PUSHORT NlsOemLeadByteInfo;
+#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
+#else
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsOemLeadByteInfo)
+extern PUSHORT *NlsOemLeadByteInfo;
+#define NLS_OEM_LEAD_BYTE_INFO (*NlsOemLeadByteInfo)
 #endif
-#define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -1409,15 +1414,6 @@ typedef struct _OBJECT_BASIC_INFORMATION
     LARGE_INTEGER CreationTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 
-typedef struct _BITMAP_RANGE {
-    LIST_ENTRY      Links;
-    LONGLONG        BasePage;
-    ULONG           FirstDirtyPage;
-    ULONG           LastDirtyPage;
-    ULONG           DirtyPages;
-    PULONG          Bitmap;
-} BITMAP_RANGE, *PBITMAP_RANGE;
-
 typedef struct _FILE_COPY_ON_WRITE_INFORMATION {
     BOOLEAN ReplaceIfExists;
     HANDLE  RootDirectory;
@@ -1534,19 +1530,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     ULONGLONG       StartVcn;
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
-
-typedef struct _MBCB {
-    CSHORT          NodeTypeCode;
-    CSHORT          NodeIsInZone;
-    ULONG           PagesToWrite;
-    ULONG           DirtyPages;
-    ULONG           Reserved;
-    LIST_ENTRY      BitmapRanges;
-    LONGLONG        ResumeWritePage;
-    BITMAP_RANGE    BitmapRange1;
-    BITMAP_RANGE    BitmapRange2;
-    BITMAP_RANGE    BitmapRange3;
-} MBCB, *PMBCB;
 
 typedef struct _MOVEFILE_DESCRIPTOR {
      HANDLE         FileHandle;

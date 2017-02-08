@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/kdb_keyboard.c
+ * FILE:            ntoskrnl/kdbg/kdb_keyboard.c
  * PURPOSE:         Keyboard driver
  *
  * PROGRAMMERS:     Victor Kirhenshtein (sauros@iname.com)

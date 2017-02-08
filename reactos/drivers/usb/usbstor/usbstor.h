@@ -1,25 +1,14 @@
+#ifndef _USBSTOR_H_
+#define _USBSTOR_H_
 
-#pragma once
-
-#include <ntddk.h>
-#define NDEBUG
-#include <debug.h>
+#include <wdm.h>
 #include <usbdi.h>
-#include <hubbusif.h>
 #include <usbbusif.h>
-#include <usbioctl.h>
-#include <usbiodef.h>
-#include <usb.h>
 #include <usbdlib.h>
-#include <stdio.h>
-#include <wdmguid.h>
 #include <classpnp.h>
-#include <scsi.h>
 
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
-
-
 
 #define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
@@ -317,6 +306,12 @@ C_ASSERT(sizeof(UFI_TEST_UNIT_CMD) == 12);
 
 #define UFI_TEST_UNIT_CMD_LEN (6)
 
+//-------------------------------------------------------------------------------------------------------------------------------------------
+typedef struct
+{
+    UCHAR Bytes[16];
+}UFI_UNKNOWN_CMD, *PUFI_UNKNOWN_CMD;
+
 typedef struct
 {
     union
@@ -385,7 +380,7 @@ USBSTOR_GetBusInterface(
 
 PVOID
 AllocateItem(
-    IN POOL_TYPE PoolType, 
+    IN POOL_TYPE PoolType,
     IN ULONG ItemSize);
 
 VOID
@@ -406,7 +401,7 @@ NTSTATUS
 NTAPI
 USBSTOR_SyncForwardIrpCompletionRoutine(
     PDEVICE_OBJECT DeviceObject,
-    PIRP Irp, 
+    PIRP Irp,
     PVOID Context);
 
 NTSTATUS
@@ -452,7 +447,7 @@ NTSTATUS
 NTAPI
 USBSTOR_CSWCompletionRoutine(
     PDEVICE_OBJECT DeviceObject,
-    PIRP Irp, 
+    PIRP Irp,
     PVOID Ctx);
 
 NTSTATUS
@@ -552,3 +547,4 @@ USBSTOR_TimerRoutine(
     PDEVICE_OBJECT DeviceObject,
      PVOID Context);
 
+#endif /* _USBSTOR_H_ */

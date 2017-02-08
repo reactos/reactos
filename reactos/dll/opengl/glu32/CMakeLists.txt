@@ -1,21 +1,18 @@
 
+set_cpp(WITH_RUNTIME)
+
 include_directories(BEFORE
     include
     src/include
     src/libnurbs/internals
     src/libnurbs/interface
-    src/libnurbs/nurbtess
-)
+    src/libnurbs/nurbtess)
 
 add_definitions(
     -DBUILD_GLU32
     -DNDEBUG
     -DLIBRARYBUILD
-    -DRESOLVE_3D_TEXTURE_SUPPORT
-)
-
-#this library uses C++
-# set_cpp()
+    -DRESOLVE_3D_TEXTURE_SUPPORT)
 
 # we must use our own spec file
 spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
@@ -110,23 +107,21 @@ list(APPEND SOURCE
     src/libnurbs/nurbtess/sampleMonoPoly.cc
     src/libnurbs/nurbtess/sampledLine.cc
     src/libnurbs/nurbtess/searchTree.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
-add_library(glu32 SHARED ${SOURCE})
+add_library(glu32 SHARED ${SOURCE} glu32.rc)
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
-#FIXME: we really need a standard C++ library
-    target_link_libraries(glu32 -lsupc++ -lgcc)
-    add_compile_flags("-Wno-error=write-strings")
+    add_target_compile_flags(glu32 "-Wno-write-strings")
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        target_link_libraries(glu32 mingwex)
+        #FIXME: longjmp exists in both our msvcrt and mingwex
+        add_target_link_flags(glu32 "-Wl,--allow-multiple-definition")
+    else()
+        add_target_compile_flags(glu32 "-Wno-unused-but-set-variable")
+    endif()
 endif()
 
-add_importlibs(glu32
-    opengl32
-    gdi32
-    msvcrt
-    kernel32
-    ntdll)
-
+add_importlibs(glu32 opengl32 gdi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)

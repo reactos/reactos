@@ -1,0 +1,126 @@
+/*
+ * Copyright 1999 Eric Pouech
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+STRINGTABLE LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"Komanda e përcaktuar është kryer."
+MMSYSERR_ERROR, 		"Gabim i jashtëm i papërcaktuar."
+MMSYSERR_BADDEVICEID, 		"Një ID pajisje është përdorur që është jashtë diapazonit për sistemin tuaj."
+MMSYSERR_NOTENABLED, 		"Drejtuesi nuk është i aktivizuar."
+MMSYSERR_ALLOCATED, 		"Pajisja specifikuar është tashmë në përdorim. Prisni deri sa ajo është e lirë, dhe pastaj provoni përsëri."
+MMSYSERR_INVALHANDLE, 		"Trajtimi i pajisjes së specifikuar është e pavlefshme."
+MMSYSERR_NODRIVER, 		"Nuk ka drejtues të instaluar në sistemin tuaj !\n"
+MMSYSERR_NOMEM, 		"Memoria e pamjaftueshme në dispozicion për këtë detyrë. Nxjerr një ose më shumë aplikime për të rritur memorien në dispozicion, dhe pastaj provoni përsëri."
+MMSYSERR_NOTSUPPORTED, 		"Ky funksion nuk është i mbështetur. Përdorni funksionin për Aftësitë për të përcaktuar se cilat funksione dhe mesazhe të mbështet drejtuesin."
+MMSYSERR_BADERRNUM, 		"Një numër gabime është përcaktuar që nuk është përcaktuar në sistemin."
+MMSYSERR_INVALFLAG, 		"Një flamur i pavlefshëm u miratua në një funksion të sistemit."
+MMSYSERR_INVALPARAM, 		"Një parametër i pavlefshëm u miratua në një funksion të sistemit."
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"Formati i specifikuar nuk është i mbështetur ose nuk mund të përkthehet. Përdorni funksionin për Aftësitë për të përcaktuar formate të mbështetur"
+WAVERR_STILLPLAYING, 		"Nuk mund të kryesh këtë operacion, ndërsa të dhënat e media's është ende duke luajtur. Rivë pajisjen, ose prisni deri të dhënave është përfunduar duke luajtur."
+WAVERR_UNPREPARED, 		"Vala kokës nuk është përgatitur. Përdorni funksionin Përgatitja për të përgatitur kokën, dhe pastaj provoni përsëri."
+WAVERR_SYNC, 			"Nuk mund të hapni pajisjen pa përdorur WAVE_ALLOWSYNC flamuri. Përdorimi flamurin, dhe pastaj provoni përsëri."
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"Koka MIDI nuk ishte i përgatitur. Përdorni funksionin Përgatitja për të përgatitur koka, dhe pastaj provoni përsëri."
+MIDIERR_STILLPLAYING, 		"Nuk mund të ktheni këtë operacion, ndërsa të dhënat e media's është ende duke luajtur. Rivë pajisjen, ose prisni deri të dhënave është përfunduar duke luajtur."
+MIDIERR_NOMAP, 			"Një hartë MIDI nuk u gjet. Nuk mund të jetë një problem me të shoferit, ose fotografi MIDIMAP.CFG mund të jenë të korruptuar ose të humbur."
+MIDIERR_NOTREADY, 		"Porti është duke transmetuar të dhënat për pajisjen. Prisni derisa të dhënat janë transmetuar, dhe pastaj provoni përsëri."
+MIDIERR_NODEVICE, 		"Ndërtuesi aktual MIDI Mapper i referohet një pajisje MIDI që nuk është i instaluar në sistemin. Përdorimi MIDI Mapper për të redaktuar ndërtuesin."
+MIDIERR_INVALIDSETUP, 		"Skema aktuale MIDI është i dëmtuar. Kopjoni origjinal MIDIMAP.CFG dokument e skedarëve të SISTEMIT ReactOS, dhe pastaj provoni përsëri."
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"ID MCI pajisje pavlefshme. Përdorimi ID kthyer kur hapni pajisjen MCI."
+MCIERR_UNRECOGNIZED_KEYWORD, 	"Drejtuesi nuk mund të njohin parametër specifikuar komanduese."
+MCIERR_UNRECOGNIZED_COMMAND,	"Drejtuesi nuk mund të njohin komandën e specifikuar."
+MCIERR_HARDWARE, 		"Ka një problem me pajisjen tuaj të media's. Sigurohuni që ajo është duke punuar si duhet ose kontaktoni prodhuesin e pajisjes."
+MCIERR_INVALID_DEVICE_NAME, 	"Pajisja specifikuar nuk është e hapur ose nuk njihet nga MCI."
+MCIERR_OUT_OF_MEMORY, 		"Memoria e pamjaftueshme në dispozicion për këtë detyrë. \nNxjirr një ose më shumë aplikime për të rritur memorien në dispozicion, dhe pastaj provoni përsëri."
+MCIERR_DEVICE_OPEN, 		"Emri Pajisjes tashmë është duke u përdorur si një pseudonim me këtë kërkesë. Përdorni një pseudonim të veçantë."
+MCIERR_CANNOT_LOAD_DRIVER, 	"Nuk është një problem i pa-dallueshëm në ngarkimin e aparatit drejtues të specifikuar."
+MCIERR_MISSING_COMMAND_STRING, 	"Komandë jo e specifikuar."
+MCIERR_PARAM_OVERFLOW, 		"Varg nxjerrje ishte shumë e madhe për të përshtatur një zbutës në kthimi. Rrit madhësinë e zbutësit."
+MCIERR_MISSING_STRING_ARGUMENT, "Komanda e përcaktuar kërkon një parametër karakter-string. Ju lutemi të sigurojë një."
+MCIERR_BAD_INTEGER, 		"Numër i plotë specifikuar është i pavlefshëm për këtë komandë."
+MCIERR_PARSER_INTERNAL, 	"Aparati drejtues ka kthyer një lloj të vlefshëm e kthimit. Kontrolloni me prodhuesit të pajisjes për marrjen e një drejtuesi të ri."
+MCIERR_DRIVER_INTERNAL, 	"Ka një problem me drejtuesin e pajisjes. Kontrolloni me prodhuesit të pajisjes për marrjen e një drejtues të ri."
+MCIERR_MISSING_PARAMETER, 	"Komanda e përcaktuar kërkon një parametër. Ju lutemi ofroni një."
+MCIERR_UNSUPPORTED_FUNCTION, 	"Pajisja MCI që ju jeni duke përdorur nuk ka mbështetjen e komandës së specifikuar."
+MCIERR_FILE_NOT_FOUND, 		"Nuk mund të gjeni skedarin e specifikuar. Sigurohuni që rruga dhe emri dokumentit janë të sakta."
+MCIERR_DEVICE_NOT_READY, 	"Drejtuesi i pjesës nuk është i gatshëm."
+MCIERR_INTERNAL, 		"Një problem i ndodhur në inicializimin e MCI. Provoni të rifilloni ReactOS."
+MCIERR_DRIVER, 			"Ka një problem me drejtuesin e pajisjes. Drejtuesi ka mbyllur. Gabim, nuk mund të hyni."
+MCIERR_CANNOT_USE_ALL, 		"Nuk mund të përdorni 'të gjithë' si emer të pajisjes me komandën e specifikuar."
+MCIERR_MULTIPLE, 		"Gabimet ndodhen në më shumë se një pajisje. Specifikoni çdo komandën dhe pajisje veçmas për të përcaktuar se cilat pajisje shkaktuan gabim"
+MCIERR_EXTENSION_NOT_FOUND, 	"Nuk mund të përcaktuar llojin e pajisjes e dhënë në prapashtesën e emrit të dokumentit."
+MCIERR_OUTOFRANGE, 		"Parametri i specifikuar është jashtë vargut për komandën e specifikuar."
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"Parametrat e specifikuara nuk mund të përdoret së bashku."
+MCIERR_FILE_NOT_SAVED, 		"Nuk mund të ruajtur dokumentin specifikuar. Sigurohuni që ju keni hapësirë ​​të mjaftueshme në disk, ose janë ende të lidhura me rrjetin."
+MCIERR_DEVICE_TYPE_REQUIRED, 	"Nuk mund të gjeni pajisjen specifikuar. Sigurohuni që ajo është instaluar ose që emri pajisja është shkruar drejt."
+MCIERR_DEVICE_LOCKED, 		"Pajisja specifikuar tani është duke u mbyllur. Prisni disa sekonda, dhe pastaj provoni përsëri."
+MCIERR_DUPLICATE_ALIAS, 	"Pseudonimi i ​​specifikuar tashmë është duke u përdorur në këtë aplikim. Përdorni një pseudonim të veçantë."
+MCIERR_BAD_CONSTANT, 		"Parametri i specifikuar është i pavlefshëm për këtë komandë."
+MCIERR_MUST_USE_SHAREABLE, 	"Drejtuesi pajisjes është tashmë në përdorim. Për të ndarë atë, përdorin 'shpërndarje' parametër me secilin 'hap' komandë."
+MCIERR_MISSING_DEVICE_NAME, 	"Komanda e përcaktuar kërkon një pseudonim, dokument, drejtues, ose emri pajisje. Ju lutemi të ofrojë një."
+MCIERR_BAD_TIME_FORMAT, 	"Vlera e caktuar për kohë të formatit është e pavlefshme. Referojuni dokumentacionit MCI për formate të vlefshme."
+MCIERR_NO_CLOSING_QUOTE, 	"Një shenjë-mbyllje me dy citate mungon nga vlera e parametrit. Ju lutemi të ofrojë një."
+MCIERR_DUPLICATE_FLAGS, 	"Një parametër ose vlerë është specifikuar dy herë. Vetëm specifikoni një herë."
+MCIERR_INVALID_FILE, 		"Skedari i caktuar nuk mund të luhet në pajisje të specifikuar MCI. Skedari mund të jetë i korruptuar, ose jo në formatin e duhur."
+MCIERR_NULL_PARAMETER_BLOCK, 	"Një bllok null parametër u miratua me MCI."
+MCIERR_UNNAMED_RESOURCE, 	"Nuk mund të ruash një skedar pa emër. Furnizo me një emër kartelën."
+MCIERR_NEW_REQUIRES_ALIAS, 	"Ju duhet të specifikoni një pseudonim kur duke përdorur parametrin 'ri'."
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"Nuk mund të përdorë flamurin 'njofto' me pajisje auto-hapur."
+MCIERR_NO_ELEMENT_ALLOWED, 	"Nuk mund të përdorni një emër kartele me pajisjen e specifikuar."
+MCIERR_NONAPPLICABLE_FUNCTION, 	"Nuk mund të kryejnë komandat sipas radhës së detajuar. Korrigjoni rendin e komandës, dhe pastaj provoni përsëri."
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"Nuk mund të kryejnë një komandë të specifikuar në një pajisje auto-hapur. Prisni derisa pajisja është e mbyllur, dhe pastaj provoni përsëri."
+MCIERR_FILENAME_REQUIRED, 	"Emri i skedarit është i pavlefshëm. Sigurohuni që emri i skedarit nuk është më e gjatë se 8 karaktere, e ndjekur nga një periudhë dhe një zgjatje."
+MCIERR_EXTRA_CHARACTERS, 	"Nuk mund të specifikojë karaktere shtesë pas një varg të mbyllur në thonjëza."
+MCIERR_DEVICE_NOT_INSTALLED, 	"Pajisja specifikuar nuk është i instaluar në sistem. Përdorni opsionin e drejtuesin në Panelin e Kontrollit për të instaluar pajisjen."
+MCIERR_GET_CD, 			"Nuk mund të hyni në dokumentin e caktuar apo pajisjet MCI. Provoni ndryshimin skedarit ose rifilloni kompjuterin tuaj."
+MCIERR_SET_CD, 			"Nuk mund të hyni në dokumentin e caktuar apo pajisje MCI për shkak se kërkesa nuk mund të ndryshojë skedarë."
+MCIERR_SET_DRIVE, 		"Nuk mund të keni hyrje në dokumentet ose pajisjet e specifikuara të MCI për shkak se kërkesa nuk mund të ndryshojë drejtuesin."
+MCIERR_DEVICE_LENGTH, 		"Specifikoni një pajisje ose emrin drejtues që është më pak se 79 karaktere."
+MCIERR_DEVICE_ORD_LENGTH, 	"Specifikoni një pajisje ose emrin e drejtuesit që është më pak se 69 karaktere."
+MCIERR_NO_INTEGER, 		"Komanda e përcaktuar kërkon një parametër numër i plotë. Ju lutemi të sigurojë një."
+MCIERR_WAVE_OUTPUTSINUSE, 	"Të gjitha pajisjet valë që mund të luajë dokumentet në formatin e tanishëm janë në përdorim. Prisni derisa një pajisje valë është i lirë, dhe pastaj provoni përsëri."
+MCIERR_WAVE_SETOUTPUTINUSE, 	"Nuk mund të vendos pajisjen aktuale valë për të luajtur përsëri për shkak se ajo është në përdorim. Prisni derisa pajisja është i lirë, dhe pastaj provoni përsëri."
+MCIERR_WAVE_INPUTSINUSE, 	"Të gjitha pajisjet valë që mund të regjistroni dokumentet në formatin e tanishëm janë në përdorim. Prisni derisa një pajisje valë është i lirë, dhe pastaj provoni përsëri."
+MCIERR_WAVE_SETINPUTINUSE, 	"Nuk mund të vendos pajisjen aktuale valë për regjistrim për shkak se ajo është në përdorim. Prisni derisa pajisja është i lirë, dhe pastaj provoni përsëri."
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"Çdo pajisja pajtueshme luaj-mbrapa valë-formë mund të përdoret."
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"Çdo pajisje pajtueshme regjistrimi valë-formë mund të përdoren."
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"Nuk ka pajisje valë që mund të luajë dokumentet në formatin aktual të instaluar. Përdorni opsionin e drejtuesit të instaluar të pajisjes valë."
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"Pajisja që ju jeni duke u përpjekur për të luajtur për të nuk mund të njohin formatin aktual skedarëve."
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"Nuk ka pajisje valë që mund të regjistrojë dokumente në formatin aktual të instaluar. Përdorni opsionin drejtues për të instaluar pajisjen valë."
+MCIERR_WAVE_SETINPUTUNSUITABLE, "Pajisja që ju jeni duke u përpjekur për të regjistruar nga nuk mund të njohin formatin aktual të skedarëve."
+MCIERR_NO_WINDOW, 		"Nuk ka asnjë dritare ekrani."
+MCIERR_CREATEWINDOW, 		"Nuk mund të krijohet ose të përdoret dritarja."
+MCIERR_FILE_READ, 		"Nuk mund të lexoni dosjen e specifikuar. Sigurohuni që skedari është ende e pranishme, ose kontrolloni diskun ose rrjetit tuaj lidhje."
+MCIERR_FILE_WRITE, 		"Nuk mund të shkruaj në kartelën specifikuar. Sigurohuni që ju keni hapësirë ​​të mjaftueshme në disk, ose janë ende të lidhura me rrjetin."
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"Koha e Formateve e ""treguesin e këngës"" dhe SMPTE janë reciprokisht ekskluzive. Ju nuk mund të përdorni ato së bashku."
+MCIERR_SEQ_NOMIDIPRESENT, 	"Sistemi nuk ka instaluar pajisje MIDI. Përdorni opsionin drejtues nga Paneli Kontrollit për të instaluar një drejtues MIDI."
+MCIERR_SEQ_PORT_INUSE, 		"Port specifikuar MIDI është tashmë në përdorim. Prisni deri sa ajo është e lirë; provoni përsëri."
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"Ndërtuesi Aktual MIDI Mapper i referohet një pajisje MIDI që nuk është i instaluar në sistemin. Përdorni opsionin MIDI Mapper nga Paneli Kontrollit për të redaktuar ndërtuesin."
+MCIERR_SEQ_PORT_MISCERROR, 	"Një gabim ka ndodhur me portin e specifikuar."
+MCIERR_SEQ_PORT_NONEXISTENT, 	"Pajisja specifikuar MIDI nuk është i instaluar në sistemin. Përdorni opsionin Drestues nga Paneli Kontrollit për të instaluar një pajisje MIDI."
+MCIERR_SEQ_PORTUNSPECIFIED, 	"Sistemi nuk ka një port aktuale MIDI të specifikuar."
+MCIERR_SEQ_TIMER, 		"Të gjitha kohët multimediale janë duke u përdorur nga aplikacionet e tjera. Dil nga një nga këto aplikime; pastaj, provoni përsëri."
+
+END

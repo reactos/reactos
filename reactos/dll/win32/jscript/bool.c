@@ -19,10 +19,6 @@
 
 #include "jscript.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
-
 typedef struct {
     jsdisp_t dispex;
 
@@ -35,6 +31,12 @@ static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 static inline BoolInstance *bool_this(vdisp_t *jsthis)
 {
     return is_vclass(jsthis, JSCLASS_BOOLEAN) ? (BoolInstance*)jsthis->u.jsdisp : NULL;
+}
+
+BOOL bool_obj_value(jsdisp_t *obj)
+{
+    assert(is_class(obj, JSCLASS_BOOLEAN));
+    return ((BoolInstance*)obj)->val;
 }
 
 /* ECMA-262 3rd Edition    15.6.4.2 */

@@ -29,6 +29,7 @@
 #error video.h cannot be included with winddi.h
 #else
 
+//#include <winapifamily.h>
 #include <ddrawint.h>
 #include <d3dnthal.h>
 #include <specstrings.h>
@@ -42,10 +43,62 @@ extern "C" {
 #endif
 
 #if defined(_ENGINE_EXPORT_)
-#define ENGAPI
+ #define ENGAPI
 #else
-#define ENGAPI DECLSPEC_IMPORT
+ #define ENGAPI DECLSPEC_IMPORT
 #endif
+
+#ifndef _NO_DDRAWINT_NO_COM
+
+#if !defined(EXTERN_C)
+ #ifdef __cplusplus
+  #define EXTERN_C extern "C"
+  #define __EXTERN_C extern "C"
+ #else
+  #define EXTERN_C extern
+  #define __EXTERN_C
+ #endif
+#endif /* !defined(EXTERN_C) */
+
+#if !defined(DEFINE_GUID)
+ #ifdef INITGUID
+  #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+      __EXTERN_C const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+ #else /* !INITGUID */
+  #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+      EXTERN_C const GUID FAR name
+ #endif /* !INITGUID */
+#endif /* !defined(DEFINE_GUID) */
+
+#if !defined(DEFINE_GUIDEX)
+ #define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+#endif /* !defined(DEFINE_GUIDEX) */
+
+#if !defined(STATICGUIDOF)
+ #define STATICGUIDOF(guid) STATIC_##guid
+#endif /* !defined(STATICGUIDOF) */
+
+#if !defined(GUID_DEFINED)
+ #define GUID_DEFINED
+ typedef struct _GUID
+ {
+     ULONG Data1;
+     USHORT Data2;
+     USHORT Data3;
+     UCHAR Data4[8];
+ } GUID;
+#endif /* !defined(GUID_DEFINED) */
+
+#if !defined(IsEqualGUID)
+ #define IsEqualGUID(guid1, guid2) \
+     (!memcmp((guid1), (guid2), sizeof(GUID)))
+#endif /* !defined(IsEqualGUID) */
+
+#ifndef IsEqualIID
+ #define IsEqualIID IsEqualGUID
+#endif /* !defined(IsEqualIID) */
+
+#endif /* !_NO_DDRAWINT_NO_COM */
 
 #define DDI_DRIVER_VERSION_NT4            0x00020000
 #define DDI_DRIVER_VERSION_SP3            0x00020003
@@ -85,6 +138,9 @@ DECLARE_HANDLE(HSURF);
 DECLARE_HANDLE(DHSURF);
 DECLARE_HANDLE(DHPDEV);
 DECLARE_HANDLE(HDRVOBJ);
+DECLARE_HANDLE(HSEMAPHORE);
+
+typedef _Return_type_success_(return >= 0) long NTSTATUS;
 
 #ifndef _NTDDVDEO_
 typedef struct _ENG_EVENT *PEVENT;
@@ -108,6 +164,14 @@ typedef struct _ENG_EVENT *PEVENT;
 #define DN_DEVICE_ORIGIN                  2
 #define DN_SLEEP_MODE                     3
 #define DN_DRAWING_BEGIN                  4
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define DN_ASSOCIATE_WINDOW               5
+#define DN_COMPOSITION_CHANGED            6
+#define DN_DRAWING_BEGIN_APIBITMAP        7
+#define DN_SURFOBJ_DESTRUCTION            8
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+#define SGI_EXTRASPACE                    0
 
 #define DCR_SOLID                         0
 #define DCR_DRIVER                        1
@@ -123,6 +187,10 @@ typedef struct _ENG_EVENT *PEVENT;
 #define FXTOLFLOOR(x)   ((x) >> 4)
 #define FXTOLCEILING(x) ((x + 0x0F) >> 4)
 #define FXTOLROUND(x)   ((((x) >> 3) + 1) >> 1)
+
+#define SIZEOFDV(cAxes)   (offsetof(DESIGNVECTOR, dvValues) + (cAxes) * sizeof(LONG))
+#define SIZEOFAXIW(cAxes) (offsetof(AXESLISTW, axlAxisInfo) + (cAxes) * sizeof(AXISINFOW))
+#define SIZEOFAXIA(cAxes) (offsetof(AXESLISTA, axlAxisInfo) + (cAxes) * sizeof(AXISINFOA))
 
 typedef struct _POINTE {
 	FLOATL  x;
@@ -306,6 +374,17 @@ typedef struct _DEVHTADJDATA {
 #define GCAPS2_ICD_MULTIMON     0x00000100
 #define GCAPS2_MOUSETRAILS      0x00000200
 #define GCAPS2_RESERVED1        0x00000400
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define GCAPS2_EXCLUDELAYERED    0x00000800
+#define GCAPS2_INCLUDEAPIBITMAPS 0x00001000
+#define GCAPS2_SHOWHIDDENPOINTER 0x00002000
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define GCAPS2_CLEARTYPE         0x00004000
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define GCAPS2_ACC_DRIVER        0x00008000
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 
 typedef struct _DEVINFO {
   FLONG  flGraphicsCaps;
@@ -459,14 +538,17 @@ typedef struct _DRVFN {
 #define DDI_DRIVER_VERSION_NT5_01         0x00030100
 #define DDI_DRIVER_VERSION_NT5_01_SP1     0x00030101
 
-typedef struct _DRVENABLEDATA {
+typedef struct tagDRVENABLEDATA {
   ULONG  iDriverVersion;
   ULONG  c;
   DRVFN  *pdrvfn;
 } DRVENABLEDATA, *PDRVENABLEDATA;
 
-DECLARE_HANDLE(HSEMAPHORE);
+/* Font file status values */
+#define FF_SIGNATURE_VERIFIED             0x00000001L
+#define FF_IGNORED_SIGNATURE              0x00000002L
 
+ /* Obsolete in Windows 2000 and later */
 typedef struct {
   DWORD  nSize;
   HDC  hdc;
@@ -569,6 +651,22 @@ typedef struct _FD_KERNINGPAIR {
   FWORD  fwdKern;
 } FD_KERNINGPAIR;
 
+ /* Obsolete in Windows 2000 and later */
+typedef struct _LIGATURE {
+  ULONG culSize;
+  LPWSTR pwsz;
+  ULONG chglyph;
+  HGLYPH ahglyph[1];
+} LIGATURE, *PLIGATURE;
+
+ /* Obsolete in Windows 2000 and later */
+typedef struct _FD_LIGATURE {
+  ULONG culThis;
+  ULONG ulType;
+  ULONG cLigatures;
+  LIGATURE alig[1];
+} FD_LIGATURE;
+
 #if defined(_X86_) && !defined(USERMODE_DRIVER)
 typedef struct _FLOATOBJ
 {
@@ -654,6 +752,11 @@ typedef struct _FONTINFO {
 #define FO_NOCLEARTYPE    0x02000000
 #define FO_CLEARTYPE_X    0x10000000
 #define FO_CLEARTYPE_Y    0x20000000
+#define FO_CLEARTYPENATURAL_X 0x40000000
+
+#define FD_NEGATIVE_FONT   1L /* Obsolete in Windows 2000 and later */
+#define FO_DEVICE_FONT     1L
+#define FO_OUTLINE_CAPABLE 2L
 
 typedef struct _FONTOBJ {
   ULONG  iUniq;
@@ -842,6 +945,9 @@ typedef struct _PATHDATA {
 #define PO_ELLIPSE                        0x00000002
 #define PO_ALL_INTEGERS                   0x00000004
 #define PO_ENUM_AS_INTEGERS               0x00000008
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define PO_WIDENED                        0x00000010
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 typedef struct _PATHOBJ {
   FLONG  fl;
@@ -932,7 +1038,7 @@ typedef struct _IFIEXTRA {
 #define FM_INFO_IGNORE_TC_RA_ABLE         0x40000000
 #define FM_INFO_TECH_TYPE1                0x80000000
 
-#define MAXCHARSETS                       16
+#define MAXCHARSETS                       16 /* Obsolete in Windows 2000 and later */
 
 /* IFIMETRICS.ulPanoseCulture constants */
 #define  FM_PANOSE_CULTURE_LATIN          0x0
@@ -1079,7 +1185,21 @@ typedef struct _STROBJ {
 #define BMF_NOTSYSMEM                     0x0020
 #define BMF_WINDOW_BLT                    0x0040
 #define BMF_UMPDMEM                       0x0080
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define BMF_TEMP_ALPHA                    0x0100
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define BMF_ACC_NOTIFY                    0x8000
+#define BMF_RMT_ENTER                     0x4000
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define BMF_RESERVED                      0x3E00
+#elif (NTDDI_VERSION >= NTDDI_WIN7)
+#define BMF_RESERVED                      0xFE00
+#else
 #define BMF_RESERVED                      0xFF00
+#endif
 
 typedef struct _SURFOBJ {
   DHSURF  dhsurf;
@@ -1237,6 +1357,9 @@ EngAcquireSemaphore(
 
 #define FL_ZERO_MEMORY                    0x00000001
 #define FL_NONPAGED_MEMORY                0x00000002
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define FL_NON_SESSION                    0x00000004
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #ifdef USERMODE_DRIVER
 
@@ -1244,11 +1367,12 @@ EngAcquireSemaphore(
 #define EngAllocPrivateUserMem(psl, cj, tag) ((PVOID)GlobalAlloc(GMEM_FIXED, cj))
 #define EngAllocUserMem(cj, tag) ((PVOID)GlobalAlloc(GMEM_FIXED, cj))
 
-#else
+#else /* !USERMODE_DRIVER */
 
 _Must_inspect_result_
 _When_(fl & FL_ZERO_MEMORY, _Ret_opt_bytecount_(cjMemSize))
 _When_(!(fl & FL_ZERO_MEMORY), _Ret_opt_bytecap_(cjMemSize))
+__drv_allocatesMem(Mem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1259,6 +1383,7 @@ EngAllocMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(PrivateUserMem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1269,6 +1394,7 @@ EngAllocPrivateUserMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(UserMem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1276,7 +1402,7 @@ EngAllocUserMem(
     _In_ SIZE_T cjMemSize,
     _In_ ULONG ulTag);
 
-#endif /* USERMODE_DRIVER */
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 BOOL
@@ -1350,6 +1476,7 @@ APIENTRY
 EngClearEvent(
     _In_ PEVENT pEvent);
 
+_Success_(return != 0)
 ENGAPI
 FD_GLYPHSET*
 APIENTRY
@@ -1377,8 +1504,8 @@ EngCopyBits(
     _In_ SURFOBJ *psoSrc,
     _In_opt_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
-    _In_ RECTL *prclDest,
-    _In_ POINTL *pptlSrc);
+    _In_ __in_data_source(USER_MODE) RECTL *prclDest,
+    _In_ __in_data_source(USER_MODE) POINTL *pptlSrc);
 
 ENGAPI
 HBITMAP
@@ -1454,10 +1581,13 @@ PATHOBJ*
 APIENTRY
 EngCreatePath(VOID);
 
+__drv_allocatesMem(Mem)
+_Post_writable_byte_size_(sizeof(ERESOURCE))
 ENGAPI
 HSEMAPHORE
 APIENTRY
-EngCreateSemaphore(VOID);
+EngCreateSemaphore(
+    VOID);
 
 /* EngCreateWnd.fl constants */
 #define WO_RGN_CLIENT_DELTA               0x00000001
@@ -1540,13 +1670,14 @@ ENGAPI
 VOID
 APIENTRY
 EngDeleteSafeSemaphore(
-    _Inout_ ENGSAFESEMAPHORE *pssem);
+    _Inout_ _Post_invalid_ ENGSAFESEMAPHORE *pssem);
 
+_Requires_lock_not_held_(*hsem)
 ENGAPI
 VOID
 APIENTRY
 EngDeleteSemaphore(
-    _In_ _Post_ptr_invalid_ HSEMAPHORE hsem);
+    _Inout_ __drv_freesMem(Mem) HSEMAPHORE hsem);
 
 ENGAPI
 BOOL
@@ -1567,9 +1698,9 @@ APIENTRY
 EngDeviceIoControl(
     _In_ HANDLE hDevice,
     _In_ DWORD dwIoControlCode,
-    _In_opt_bytecount_(cjInBufferSize) LPVOID lpInBuffer,
+    _In_reads_bytes_opt_(cjInBufferSize) LPVOID lpInBuffer,
     _In_ DWORD cjInBufferSize,
-    _Out_opt_bytecap_(cjOutBufferSize) LPVOID lpOutBuffer,
+    _Out_writes_bytes_opt_(cjOutBufferSize) LPVOID lpOutBuffer,
     _In_ DWORD cjOutBufferSize,
     _Out_ LPDWORD lpBytesReturned);
 
@@ -1587,6 +1718,18 @@ EngDitherColor(
     _When_(iMode == DM_MONOCHROME, _Out_writes_bytes_(8))
         ULONG *pul);
 
+/* Obsolete in Windows 2000 and later */
+ENGAPI
+HRESULT
+APIENTRY
+EngDxIoctl(
+    _In_ ULONG ulIoctl,
+    _Inout_ PVOID pBuffer,
+    _In_ ULONG ulBufferSize);
+
+#ifdef USERMODE_DRIVER
+#define EngEnumForms        EnumForms
+#else /* !USERMODE_DRIVER */
 ENGAPI
 BOOL
 APIENTRY
@@ -1597,6 +1740,7 @@ EngEnumForms(
     _In_ DWORD cbBuf,
     _Out_ LPDWORD pcbNeeded,
     _Out_ LPDWORD pcReturned);
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 BOOL
@@ -1618,12 +1762,16 @@ EngFillPath(
     _In_ MIX mix,
     _In_ FLONG flOptions);
 
+#ifdef USERMODE_DRIVER
+#define EngFindImageProcAddress(h, procname) ((PVOID) GetProcAddress(h, procname))
+#else /* !USERMODE_DRIVER */
 ENGAPI
 PVOID
 APIENTRY
 EngFindImageProcAddress(
     _In_ HANDLE hModule,
     _In_ LPSTR lpProcName);
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 PVOID
@@ -1673,20 +1821,20 @@ ENGAPI
 VOID
 APIENTRY
 EngFreeMem(
-    _In_ _Post_ptr_invalid_ PVOID pv);
+    _Pre_notnull_ __drv_freesMem(Mem) PVOID pv);
 
 ENGAPI
 VOID
 APIENTRY
 EngFreePrivateUserMem(
     _In_ PDD_SURFACE_LOCAL psl,
-    _In_ _Post_ptr_invalid_ PVOID  pv);
+    _Pre_notnull_ __drv_freesMem(PrivateUserMem) PVOID pv);
 
 ENGAPI
 VOID
 APIENTRY
 EngFreeUserMem(
-    _In_ _Post_ptr_invalid_ PVOID pv);
+    _Pre_notnull_ __drv_freesMem(UserMem) PVOID pv);
 
 #endif /* !USERMODE_DRIVER */
 
@@ -1694,7 +1842,7 @@ ENGAPI
 VOID
 APIENTRY
 EngFreeModule(
-    _In_ HANDLE h);
+    _In_ _Post_invalid_ HANDLE h);
 
 
 ENGAPI
@@ -1735,6 +1883,12 @@ EngGetFilePath(
     _In_ HANDLE h,
     _Out_ WCHAR (*pDest)[MAX_PATH+1]);
 
+#ifdef USERMODE_DRIVER
+#define EngGetForm GetForm
+#define EngGetLastError GetLastError
+#define EngGetPrinter GetPrinter
+#define EngGetPrinterData GetPrinterData
+#else /* !USERMODE_DRIVER */
 ENGAPI
 BOOL
 APIENTRY
@@ -1746,14 +1900,10 @@ EngGetForm(
     _In_ DWORD cbBuf,
     _Out_ LPDWORD pcbNeeded);
 
-#ifdef USERMODE_DRIVER
-#define EngGetLastError GetLastError
-#else
 ENGAPI
 ULONG
 APIENTRY
 EngGetLastError(VOID);
-#endif
 
 ENGAPI
 BOOL
@@ -1775,6 +1925,7 @@ EngGetPrinterData(
     _Out_writes_bytes_opt_(cjSize) LPBYTE pData,
     _In_ DWORD cjSize,
     _Out_ LPDWORD pcjNeeded);
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 LPWSTR
@@ -1782,6 +1933,9 @@ APIENTRY
 EngGetPrinterDataFileName(
     _In_ HDEV hdev);
 
+#ifdef USERMODE_DRIVER
+#define EngGetPrinterDriver GetPrinterDriver
+#else /* !USERMODE_DRIVER */
 ENGAPI
 BOOL
 APIENTRY
@@ -1792,6 +1946,7 @@ EngGetPrinterDriver(
     _Out_writes_bytes_opt_(cjBufSize) BYTE *lpbDrvInfo,
     _In_ DWORD cjBufSize,
     _Out_ DWORD *pcjNeeded);
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 HANDLE
@@ -1867,11 +2022,15 @@ EngLineTo(
     _In_opt_ RECTL *prclBounds,
     _In_ MIX mix);
 
+#ifdef USERMODE_DRIVER
+#define EngLoadImage(pwszDriver) ((HANDLE)LoadLibraryW(pwszDriver))
+#else /* !USERMODE_DRIVER */
 ENGAPI
 HANDLE
 APIENTRY
 EngLoadImage(
     _In_ LPWSTR pwszDriver);
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 HANDLE
@@ -1929,6 +2088,9 @@ EngMapFile(
     _In_ ULONG cjSize,
     _Out_ ULONG_PTR *piFile);
 
+__drv_preferredFunction("EngMapFontFileFD", "Obsolete")
+_Check_return_
+_Success_(return!=FALSE)
 ENGAPI
 BOOL
 APIENTRY
@@ -1937,6 +2099,8 @@ EngMapFontFile(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
+_Check_return_
+_Success_(return!=FALSE)
 ENGAPI
 BOOL
 APIENTRY
@@ -1945,12 +2109,15 @@ EngMapFontFileFD(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
+_Check_return_
+_Success_(return!=NULL)
+_Post_writable_byte_size_(*pulSize)
 ENGAPI
 PVOID
 APIENTRY
 EngMapModule(
-    _In_ HANDLE h,
-    _Out_ PULONG pSize);
+    _In_  HANDLE h,
+    _Out_ PULONG pulSize);
 
 ENGAPI
 BOOL
@@ -1961,6 +2128,7 @@ EngMarkBandingSurface(
 /* EngModifySurface.flSurface constants */
 #define MS_NOTSYSTEMMEMORY                0x00000001
 #define MS_SHAREDACCESS                   0x00000002
+#define MS_CDDDEVICEBITMAP                0x00000004
 
 ENGAPI
 BOOL
@@ -2024,7 +2192,7 @@ EngPaint(
     _In_ CLIPOBJ *pco,
     _In_ BRUSHOBJ *pbo,
     _In_ POINTL *pptlBrushOrg,
-    _In_ MIX mix);
+    _In_ __in_data_source(USER_MODE) MIX mix);
 
 ENGAPI
 BOOL
@@ -2040,18 +2208,14 @@ EngPlgBlt(
     _In_ POINTFIX *pptfx,
     _In_ RECTL *prcl,
     _When_(psoMsk, _In_) POINTL *pptl,
-    _In_ ULONG iMode);
+    _In_ __in_data_source(USER_MODE) ULONG iMode);
 
 ENGAPI
 VOID
 APIENTRY
 EngProbeForRead(
     _In_reads_bytes_(Length) PVOID Address,
-#if (NTDDI_VERSION <= NTDDI_WINXP)
-    _In_ ULONG  Length,
-#else
     _In_ SIZE_T Length,
-#endif
     _In_ ULONG Alignment);
 
 ENGAPI
@@ -2059,11 +2223,7 @@ VOID
 APIENTRY
 EngProbeForReadAndWrite(
     _Inout_updates_bytes_(Length) PVOID Address,
-#if (NTDDI_VERSION <= NTDDI_WINXP)
-    _In_ ULONG  Length,
-#else
     _In_ SIZE_T Length,
-#endif
     _In_ ULONG Alignment);
 
 typedef enum _ENG_DEVICE_ATTRIBUTE {
@@ -2081,6 +2241,13 @@ EngQueryDeviceAttribute(
     _In_ ULONG cjInSize,
     _Out_writes_bytes_(cjOutSize) PVOID pvOut,
     _In_ ULONG cjOutSize);
+
+/* Obsolete in Windows 2000 and later */
+DECLSPEC_DEPRECATED_DDK
+BOOL APIENTRY
+EngQueryEMFInfo(
+    _In_ HDEV hdev,
+    _Out_ EMFINFO *pEMFInfo);
 
 ENGAPI
 LARGE_INTEGER
@@ -2125,6 +2292,11 @@ typedef enum _ENG_SYSTEM_ATTRIBUTE {
 #define QSA_MMX                           0x00000100
 #define QSA_SSE                           0x00002000
 #define QSA_3DNOW                         0x00004000
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define QSA_SSE1                          QSA_SSE
+#define QSA_SSE2                          0x00010000
+#define QSA_SSE3                          0x00080000
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 _Check_return_
 _Success_(return)
@@ -2141,11 +2313,16 @@ APIENTRY
 EngReadStateEvent(
     _In_ PEVENT pEvent);
 
+_Requires_lock_held_(*hsem)
+_Releases_lock_(*hsem)
+_Releases_lock_(_Global_critical_region_)
 ENGAPI
 VOID
 APIENTRY
 EngReleaseSemaphore(
-    _In_ HSEMAPHORE hsem);
+    _Inout_ HSEMAPHORE hsem);
+
+#if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA)
 
 _Check_return_
 _Success_(return)
@@ -2157,7 +2334,41 @@ BOOL
 APIENTRY
 EngRestoreFloatingPointState(
     _In_reads_(_Inexpressible_(statesize))
-    PVOID pBuffer);
+    PVOID pBuffer)
+{
+    UNREFERENCED_PARAMETER(pBuffer);
+    return TRUE;
+}
+
+_Check_return_
+_Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
+          ((pBuffer == NULL || cjBufferSize == 0) && return > 0))
+_When_(pBuffer != NULL && cjBufferSize != 0 && return == 1, _Kernel_float_saved_
+    _At_(*pBuffer, _Post_valid_ _Kernel_acquires_resource_(EngFloatState)))
+_On_failure_(_Post_satisfies_(return == 0))
+ENGAPI
+ULONG
+APIENTRY
+EngSaveFloatingPointState(
+    _At_(*pBuffer, _Kernel_requires_resource_not_held_(EngFloatState))
+    _Out_writes_bytes_opt_(cjBufferSize) PVOID pBuffer,
+    _Inout_ ULONG cjBufferSize)
+{
+    return ((((pBuffer) == NULL) || ((cjBufferSize) == 0)) ? 8 : TRUE);
+}
+
+#else /* !(defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA)) */
+
+_Check_return_
+_Success_(return)
+_Kernel_float_restored_
+_At_(*pBuffer, _Kernel_requires_resource_held_(EngFloatState)
+               _Kernel_releases_resource_(EngFloatState))
+ENGAPI
+BOOL
+APIENTRY
+EngRestoreFloatingPointState(
+    _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer);
 
 _Check_return_
 _Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
@@ -2172,6 +2383,9 @@ EngSaveFloatingPointState(
     _At_(*pBuffer, _Kernel_requires_resource_not_held_(EngFloatState))
     _Out_writes_bytes_opt_(cjBufferSize) PVOID pBuffer,
     _Inout_ ULONG cjBufferSize);
+
+
+#endif /* defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA) */
 
 ENGAPI
 HANDLE
@@ -2188,13 +2402,13 @@ EngSetEvent(
 
 #ifdef USERMODE_DRIVER
 #define EngSetLastError SetLastError
-#else
+#else /* !USERMODE_DRIVER */
 ENGAPI
 VOID
 APIENTRY
 EngSetLastError(
     _In_ ULONG iError);
-#endif
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 ULONG
@@ -2211,6 +2425,7 @@ EngSetPointerShape(
     _In_ RECTL *prcl,
     _In_ FLONG fl);
 
+__drv_preferredFunction("(see documentation)", "Obsolete, always returns false. ")
 ENGAPI
 BOOL
 APIENTRY
@@ -2221,6 +2436,9 @@ EngSetPointerTag(
     _Reserved_ XLATEOBJ *pxlo,
     _In_ FLONG fl);
 
+#ifdef USERMODE_DRIVER
+#define EngSetPrinterData   SetPrinterData
+#else /* !USERMODE_DRIVER */
 ENGAPI
 DWORD
 APIENTRY
@@ -2230,8 +2448,9 @@ EngSetPrinterData(
     _In_ DWORD dwType,
     _In_reads_bytes_(cjPrinterData) LPBYTE lpbPrinterData,
     _In_ DWORD cjPrinterData);
+#endif /* !USERMODE_DRIVER */
 
-typedef int (CDECL *SORTCOMP)(const void *pv1, const void *pv2);
+typedef int (__cdecl /*CDECL*/ *SORTCOMP)(const void *pv1, const void *pv2);
 
 ENGAPI
 VOID
@@ -2288,8 +2507,8 @@ EngStrokeAndFillPath(
     _In_ LINEATTRS *plineattrs,
     _In_ BRUSHOBJ *pboFill,
     _In_ POINTL *pptlBrushOrg,
-    _In_ MIX mixFill,
-    _In_ FLONG flOptions);
+    _In_ __in_data_source(USER_MODE) MIX mixFill,
+    _In_ __in_data_source(USER_MODE) FLONG flOptions);
 
 ENGAPI
 BOOL
@@ -2342,11 +2561,15 @@ EngUnicodeToMultiByteN(
     _In_reads_bytes_(cjUnicodeString) PWSTR pwszUnicodeString,
     _In_ ULONG cjUnicodeString);
 
+#ifdef USERMODE_DRIVER
+#define EngUnloadImage(h) FreeLibrary((HMODULE) (h))
+#else /* !USERMODE_DRIVER */
 ENGAPI
 VOID
 APIENTRY
 EngUnloadImage(
     _In_ HANDLE hModule);
+#endif /* !USERMODE_DRIVER */
 
 ENGAPI
 BOOL
@@ -2378,6 +2601,7 @@ APIENTRY
 EngUnmapFile(
     _In_ ULONG_PTR iFile);
 
+__drv_preferredFunction("EngUnmapFontFileFD", "Obsolete")
 ENGAPI
 VOID
 APIENTRY
@@ -2413,6 +2637,9 @@ EngWideCharToMultiByte(
     _Out_z_bytecap_(cjMultiByteString) LPSTR pszMultiByteString,
     _In_ INT cjMultiByteString);
 
+#ifdef USERMODE_DRIVER
+#define EngWritePrinter WritePrinter
+#else /* !USERMODE_DRIVER */
 ENGAPI
 BOOL
 APIENTRY
@@ -2421,6 +2648,7 @@ EngWritePrinter(
     _In_reads_bytes_(cjBuf) LPVOID pvBuf,
     _In_ DWORD cjBuf,
     _Out_ LPDWORD pcWritten);
+#endif /* !USERMODE_DRIVER */
 
 #if defined(_X86_) && !defined(USERMODE_DRIVER)
 ENGAPI
@@ -2684,6 +2912,7 @@ FONTOBJ_vGetInfo(
     _Out_bytecap_(cjSize) FONTINFO *pfi);
 
 #if (NTDDI_VERSION <= NTDDI_WINXP)
+ /* Obsolete in Windows 2000 and later */
 GAMMA_TABLES*
 APIENTRY
 FONTOBJ_pGetGammaTables(
@@ -2892,6 +3121,14 @@ XFORMOBJ_bApplyXform(
     _In_reads_bytes_(cPoints * sizeof(POINTL)) PVOID pvIn,
     _Out_writes_bytes_(cPoints * sizeof(POINTL)) PVOID pvOut);
 
+/* Obsolete in Windows 2000 and later */
+DECLSPEC_DEPRECATED_DDK
+ENGAPI
+HANDLE
+APIENTRY
+XFORMOBJ_cmGetTransform(
+    XFORMOBJ *pxo);
+
 #if !defined(USERMODE_DRIVER)
 ENGAPI
 ULONG
@@ -2945,6 +3182,229 @@ APIENTRY
 XLATEOBJ_piVector(
     _In_ XLATEOBJ *pxlo);
 
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+
+ENGAPI
+VOID
+APIENTRY
+EngBugCheckEx(
+    _In_ ULONG BugCheckCode,
+    _In_ ULONG_PTR P1,
+    _In_ ULONG_PTR P2,
+    _In_ ULONG_PTR P3,
+    _In_ ULONG_PTR P4);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXPSP2) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+ENGAPI
+HANDLE
+APIENTRY
+EngCreateRectRgn(
+    _In_ INT left,
+    _In_ INT top,
+    _In_ INT right,
+    _In_ INT bottom);
+
+ENGAPI
+VOID
+APIENTRY
+EngDeleteRgn(
+    _In_ HANDLE hrgn);
+
+ENGAPI
+INT
+APIENTRY
+EngCombineRgn(
+    _In_ HANDLE hrgnTrg,
+    _In_ HANDLE hrgnSrc1,
+    _In_ HANDLE hrgnSrc2,
+    _In_ INT iMode);
+
+ENGAPI
+INT
+APIENTRY
+EngCopyRgn(
+    _In_ HANDLE hrgnDst,
+    _In_ HANDLE hrgnSrc);
+
+ENGAPI
+INT
+APIENTRY
+EngIntersectRgn(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+
+ENGAPI
+INT
+APIENTRY
+EngSubtractRgn(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+
+ENGAPI
+INT
+APIENTRY
+EngUnionRgn(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+
+ENGAPI
+INT
+APIENTRY
+EngXorRgn(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+
+ENGAPI
+BOOL
+APIENTRY
+EngRectInRgn(
+    _In_ HANDLE hrgn,
+    _In_ LPRECT prcl);
+
+ENGAPI
+BOOL
+APIENTRY
+EngEqualRgn(
+    _In_ HANDLE hrgn1,
+    _In_ HANDLE hrgn2);
+
+ENGAPI
+DWORD
+APIENTRY
+EngGetRgnData(
+    _In_ HANDLE hrgn,
+    _In_ DWORD nCount,
+    _Out_cap_(nCount) LPRGNDATA lpRgnData);
+
+ENGAPI
+BOOL
+APIENTRY
+EngSetRectRgn(
+    _In_ HANDLE hrgn,
+    _In_ INT left,
+    _In_ INT top,
+    _In_ INT right,
+    _In_ INT bottom);
+
+ENGAPI
+INT
+APIENTRY
+EngGetRgnBox(
+    _In_ HANDLE hrgn,
+    _Out_ LPRECT prcl);
+
+ENGAPI
+INT
+APIENTRY
+EngOffsetRgn(
+    _In_ HANDLE hrgn,
+    _In_ INT x,
+    _In_ INT y);
+
+ENGAPI
+VOID
+APIENTRY
+EngRenderHint(
+    _In_ DHPDEV dhpdev,
+    _In_ ULONG NotifyCode,
+    _In_ SIZE_T Length,
+    _In_reads_bytes_opt_(Length) PVOID Data);
+
+_Requires_lock_not_held_(*hsem)
+_Acquires_exclusive_lock_(*hsem)
+_Acquires_lock_(_Global_critical_region_)
+ENGAPI
+VOID
+APIENTRY
+EngAcquireSemaphore(
+    _Inout_ HSEMAPHORE hsem);
+
+ENGAPI
+BOOL
+APIENTRY
+EngAcquireSemaphoreNoWait(
+    _In_ HSEMAPHORE hsem);
+
+_Acquires_lock_(_Global_critical_region_)
+_Requires_lock_not_held_(*hsem)
+_Acquires_shared_lock_(*hsem)
+ENGAPI
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    _Inout_ HSEMAPHORE hsem);
+
+ENGAPI
+BOOL
+APIENTRY
+EngIsSemaphoreSharedByCurrentThread(
+    _In_ HSEMAPHORE hsem);
+
+DECLARE_HANDLE(HFASTMUTEX);
+
+ENGAPI
+HFASTMUTEX
+APIENTRY
+EngCreateFastMutex(
+    VOID);
+
+ENGAPI
+VOID
+APIENTRY
+EngDeleteFastMutex(
+    _In_ HFASTMUTEX hfm);
+
+ENGAPI
+VOID
+APIENTRY
+EngAcquireFastMutex(
+    _In_ HFASTMUTEX hfm);
+
+ENGAPI
+VOID
+APIENTRY
+EngReleaseFastMutex(
+    _In_ HFASTMUTEX hfm);
+
+ENGAPI
+BOOL
+APIENTRY
+EngUpdateDeviceSurface(
+    _In_ SURFOBJ *pso,
+    _Inout_ CLIPOBJ **ppco);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+ENGAPI
+HBITMAP
+APIENTRY
+EngCreateRedirectionDeviceBitmap(
+    __in_data_source(USER_MODE) DHSURF dhsurf,
+    __in_data_source(USER_MODE) SIZEL sizl,
+    _In_ ULONG iFormatCompat);
+
+VOID
+APIENTRY
+EngCTGetGammaTable(
+    _In_ ULONG ulGamma,
+    _Out_ CONST BYTE** pGammaTable,
+    _Out_ CONST BYTE** pInverseGammaTable);
+
+ULONG
+APIENTRY
+EngCTGetCurrentGamma(
+    _In_ HDEV hdev);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 /* Graphics Driver Functions */
 
@@ -3382,7 +3842,6 @@ extern FN_DrvQueryFont DrvQueryFont;
 #define QC_OUTLINES                       0x00000001
 #define QC_1BIT                           0x00000002
 #define QC_4BIT                           0x00000004
-
 #define QC_FONTDRIVERCAPS (QC_OUTLINES | QC_1BIT | QC_4BIT)
 
 typedef LONG
@@ -3578,6 +4037,9 @@ extern FN_DrvSetPixelFormat DrvSetPixelFormat;
 #define SPS_ANIMATESTART                  0x00000004L
 #define SPS_ANIMATEUPDATE                 0x00000008L
 #define SPS_ALPHA                         0x00000010L
+#define SPS_RESERVED                      0x00000020L /* Force s/w cursor rendering */
+#define SPS_RESERVED1                     0x00000040L /* Force show/hide system cursor */
+#define SPS_FLAGSMASK                     0x000000FFL
 #define SPS_LENGTHMASK                    0x00000F00L
 #define SPS_FREQMASK                      0x000FF000L
 
@@ -3776,6 +4238,192 @@ typedef BOOL //DECLSPEC_DEPRECATED_DDK
 typedef FN_DrvQuerySpoolType *PFN_DrvQuerySpoolType;
 extern FN_DrvQuerySpoolType DrvQuerySpoolType;
 
+typedef LONG
+(APIENTRY FN_DrvQueryTrueTypeSection)(
+    ULONG,
+    ULONG,
+    ULONG,
+    HANDLE *,
+    PTRDIFF *);
+typedef FN_DrvQueryTrueTypeSection *PFN_DrvQueryTrueTypeSection;
+extern FN_DrvQueryTrueTypeSection DrvQueryTrueTypeSection;
+
+DECLSPEC_DEPRECATED_DDK
+typedef VOID
+(APIENTRY FN_DrvMovePanning)(
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ FLONG fl);
+typedef FN_DrvMovePanning *PFN_DrvMovePanning;
+extern FN_DrvMovePanning DrvMovePanning;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef LONG
+(APIENTRY FN_DrvRenderHint)(
+    _In_ DHPDEV dhpdev,
+    _In_ ULONG NotifyCode,
+    _In_ SIZE_T Length,
+    _In_reads_bytes_opt_(Length) PVOID Data);
+typedef FN_DrvRenderHint *PFN_DrvRenderHint;
+extern FN_DrvRenderHint DrvRenderHint;
+
+typedef struct _DRH_APIBITMAPDATA
+{
+    SURFOBJ *pso;
+    BOOL b;
+} DRH_APIBITMAPDATA, *PDRH_APIBITMAPDATA;
+
+#define DRH_APIBITMAP 0x00000001
+
+typedef HANDLE
+(APIENTRY FN_EngCreateRectRgn)(
+    _In_ INT left,
+    _In_ INT top,
+    _In_ INT right,
+    _In_ INT bottom);
+typedef FN_EngCreateRectRgn *PFN_EngCreateRectRgn;
+
+typedef VOID
+(APIENTRY FN_EngDeleteRgn)(
+    HANDLE hrgn);
+typedef FN_EngDeleteRgn *PFN_EngDeleteRgn;
+
+typedef INT
+(APIENTRY FN_EngCombineRgn)(
+    _In_ HANDLE hrgnTrg,
+    _In_ HANDLE hrgnSrc1,
+    _In_ HANDLE hrgnSrc2,
+    _In_ INT iMode);
+typedef FN_EngCombineRgn *PFN_EngCombineRgn;
+
+typedef INT
+(APIENTRY FN_EngCopyRgn)(
+    _In_ HANDLE hrgnDst,
+    _In_ HANDLE hrgnSrc);
+typedef FN_EngCopyRgn *PFN_EngCopyRgn;
+
+typedef INT
+(APIENTRY FN_EngIntersectRgn)(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+typedef FN_EngIntersectRgn *PFN_EngIntersectRgn;
+
+typedef INT
+(APIENTRY FN_EngSubtractRgn)(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+typedef FN_EngSubtractRgn *PFN_EngSubtractRgn;
+
+typedef INT
+(APIENTRY FN_EngUnionRgn)(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+typedef FN_EngUnionRgn *PFN_EngUnionRgn;
+
+typedef INT
+(APIENTRY FN_EngXorRgn)(
+    _In_ HANDLE hrgnResult,
+    _In_ HANDLE hRgnA,
+    _In_ HANDLE hRgnB);
+typedef FN_EngXorRgn *PFN_EngXorRgn;
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+/* DrvCreateDeviceBitmapEx() flags */
+#define CDBEX_REDIRECTION  0x00000001
+#define CDBEX_DXINTEROP    0x00000002
+
+typedef HBITMAP
+(APIENTRY FN_DrvCreateDeviceBitmapEx)(
+    _In_ DHPDEV dhpdev,
+    _In_ SIZEL sizl,
+    _In_ ULONG iFormat,
+    _In_ DWORD Flags,
+    _In_ DHSURF dhsurfGroup,
+    _In_ DWORD DxFormat,
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    _In_ DWORD SubresourceIndex,
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+    _Out_ HANDLE* phSharedSurface);
+typedef FN_DrvCreateDeviceBitmapEx *PFN_DrvCreateDeviceBitmapEx;
+extern DrvCreateDeviceBitmapEx DrvCreateDeviceBitmapEx
+
+typedef VOID
+(APIENTRY FN_DrvDeleteDeviceBitmapEx)(
+    _Inout_ DHSURF);
+typedef FN_DrvDeleteDeviceBitmapEx *PFN_DrvDeleteDeviceBitmapEx;
+extern FN_DrvDeleteDeviceBitmapEx DrvDeleteDeviceBitmapEx;
+
+typedef BOOL
+(APIENTRY FN_DrvAssociateSharedSurface)(
+    _In_ SURFOBJ* psoSurf,
+    _In_ HANDLE   hPhysicalSurface,
+    _In_ HANDLE   hLogicalSurface,
+    _In_ SIZEL    sizl);
+typedef FN_DrvAssociateSharedSurface *PFN_DrvAssociateSharedSurface;
+extern FN_DrvAssociateSharedSurface DrvAssociateSharedSurface;
+
+typedef LONG
+(APIENTRY FN_DrvSynchronizeRedirectionBitmaps)(
+    _In_ DHPDEV  dhpdev,
+    _Out_ UINT64* puiFenceID);
+typedef FN_DrvSynchronizeRedirectionBitmaps *PFN_DrvSynchronizeRedirectionBitmaps;
+extern FN_DrvSynchronizeRedirectionBitmaps DrvSynchronizeRedirectionBitmaps;
+
+#define WINDDI_MAX_BROADCAST_CONTEXT 64
+typedef struct tagCDDDXGK_REDIRBITMAPPRESENTINFO
+{
+    UINT NumDirtyRects;
+    PRECT DirtyRect;
+    UINT NumContexts;
+    HANDLE hContext[WINDDI_MAX_BROADCAST_CONTEXT+1];
+} CDDDXGK_REDIRBITMAPPRESENTINFO;
+
+typedef BOOL
+(APIENTRY FN_DrvAccumulateD3DDirtyRect)(
+    _In_ SURFOBJ* psoSurf,
+    _In_ CDDDXGK_REDIRBITMAPPRESENTINFO* pDirty);
+typedef FN_DrvAccumulateD3DDirtyRect *PFN_DrvAccumulateD3DDirtyRect;
+extern FN_DrvAccumulateD3DDirtyRect DrvAccumulateD3DDirtyRect;
+
+typedef BOOL
+(APIENTRY FN_DrvStartDxInterop)(
+    _In_ SURFOBJ* psoSurf,
+    _In_ BOOL bDiscard,
+    _In_ PVOID KernelModeDeviceHandle);
+typedef FN_DrvStartDxInterop *PFN_DrvStartDxInterop;
+extern FN_DrvStartDxInterop DrvStartDxInterop;
+
+typedef BOOL
+(APIENTRY FN_DrvEndDxInterop)(
+    _In_ SURFOBJ* psoSurf,
+    _In_ BOOL bDiscard,
+    _Out_ BOOL* bDeviceLost,
+    _In_ PVOID KernelModeDeviceHandle);
+typedef FN_DrvEndDxInterop *PFN_DrvEndDxInterop;
+extern FN_DrvEndDxInterop DrvEndDxInterop;
+
+typedef VOID
+(APIENTRY FN_DrvLockDisplayArea)(
+    _In_ DHPDEV dhpdev,
+    _In_opt_ RECTL  *prcl);
+typedef FN_DrvLockDisplayArea *PFN_DrvLockDisplayArea;
+extern FN_DrvLockDisplayArea DrvLockDisplayArea;
+
+typedef VOID
+(APIENTRY FN_DrvUnlockDisplayArea)(
+    _In_ DHPDEV dhpdev,
+    _In_opt_ RECTL *prcl);
+typedef FN_DrvUnlockDisplayArea *PFN_DrvUnlockDisplayArea;
+extern FN_DrvUnlockDisplayArea DrvUnlockDisplayArea;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/dbgk.h
+ * FILE:            ntoskrnl/include/internal/dbgk.h
  * PURPOSE:         Internal header for the User-Mode Debugging Backend
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -47,7 +47,6 @@
 #endif
 
 VOID
-INIT_FUNCTION
 NTAPI
 DbgkInitialize(
     VOID
@@ -141,7 +140,7 @@ DbgkOpenProcessDebugPort(
     IN KPROCESSOR_MODE PreviousMode,
     OUT HANDLE *DebugHandle
 );
-                         
+
 extern ULONG DbgkpTraceLevel;
 extern POBJECT_TYPE DbgkDebugObjectType;
 

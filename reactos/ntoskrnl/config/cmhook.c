@@ -180,7 +180,7 @@ CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
                 ExReleaseFastMutex(&CmiCallbackLock);
 
                 /* free the callback */
-                ExFreePool(CurrentCallback);
+                ExFreePoolWithTag(CurrentCallback, 'bcMC');
                 return STATUS_SUCCESS;
             }
             else

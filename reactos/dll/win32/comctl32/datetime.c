@@ -39,21 +39,9 @@
  *    -- FORMATCALLBACK
  */
 
-#include <math.h>
-//#include <string.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <limits.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
+
+#include <math.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 
@@ -72,7 +60,7 @@ typedef struct
     RECT checkbox;  /* checkbox allowing the control to be enabled/disabled */
     RECT calbutton; /* button that toggles the dropdown of the monthcal control */
     BOOL bCalDepressed; /* TRUE = cal button is depressed */
-    int  bDropdownEnabled;
+    BOOL bDropdownEnabled;
     int  select;
     WCHAR charsEntered[4];
     int nCharsEntered;
@@ -198,7 +186,7 @@ static BOOL DATETIME_IsDateInValidRange(const DATETIME_INFO *infoPtr, const SYST
 static BOOL
 DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *systime)
 {
-    if (!systime) return 0;
+    if (!systime) return FALSE;
 
     TRACE("%04d/%02d/%02d %02d:%02d:%02d\n",
           systime->wYear, systime->wMonth, systime->wDay,
@@ -217,7 +205,7 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *sy
             return FALSE;
 
         /* Windows returns true if the date is valid but outside the limits set */
-        if (DATETIME_IsDateInValidRange(infoPtr, systime) == FALSE)
+        if (!DATETIME_IsDateInValidRange(infoPtr, systime))
             return TRUE;
 
         infoPtr->dateValid = TRUE;
@@ -831,8 +819,8 @@ DATETIME_HitTest (const DATETIME_INFO *infoPtr, POINT pt)
     return DTHT_NONE;
 }
 
-/* Returns index of a closest date field from given counting to left
-   or -1 if there's no such fields at left */
+/* Returns index of the nearest preceding date field from given,
+   or -1 if none was found */
 static int DATETIME_GetPrevDateField(const DATETIME_INFO *infoPtr, int i)
 {
     for(--i; i >= 0; i--)
@@ -846,7 +834,8 @@ static void
 DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
 {
     int fieldNum = infoPtr->select & DTHT_DATEFIELD;
-    int i, val=0, clamp_day=0;
+    int i, val = 0;
+    BOOL clamp_day = FALSE;
     SYSTEMTIME date = infoPtr->date;
     int oldyear;
 
@@ -870,7 +859,7 @@ DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
             date.wYear = date.wYear - (date.wYear%100) + val;
 
             if (DATETIME_IsDateInValidRange(infoPtr, &date))
-                clamp_day = 1;
+                clamp_day = TRUE;
             else
                 date.wYear = oldyear;
 
@@ -881,7 +870,7 @@ DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
             date.wYear = val;
 
             if (DATETIME_IsDateInValidRange(infoPtr, &date))
-                clamp_day = 1;
+                clamp_day = TRUE;
             else
                 date.wYear = oldyear;
 
@@ -889,7 +878,7 @@ DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
         case ONEDIGITMONTH:
         case TWODIGITMONTH:
             date.wMonth = val;
-            clamp_day = 1;
+            clamp_day = TRUE;
             break;
         case ONEDIGITDAY:
         case TWODIGITDAY:

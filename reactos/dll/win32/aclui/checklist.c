@@ -25,7 +25,13 @@
  * UPDATE HISTORY:
  *      07/01/2005  Created
  */
+
 #include "precomp.h"
+
+#ifdef SUPPORT_UXTHEME
+#include <uxtheme.h>
+#include <tmschema.h>
+#endif
 
 #define NDEBUG
 #include <debug.h>

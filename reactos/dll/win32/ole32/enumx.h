@@ -31,4 +31,4 @@ extern HRESULT WINAPI enumx_Clone(enumx_impl *, enumx_impl **) DECLSPEC_HIDDEN;
 extern enumx_impl *enumx_allocate(REFIID, const void *, ULONG) DECLSPEC_HIDDEN;
 extern void *enumx_add_element(enumx_impl *, const void *) DECLSPEC_HIDDEN;
 
-#endif
+#endif /* __OLE_ENUM_H__ */

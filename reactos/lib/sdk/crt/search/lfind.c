@@ -4,7 +4,7 @@
 /*
  * @implemented
  */
-void *_lfind(const void *key, const void *base, unsigned int *nelp,
+void * __cdecl _lfind(const void *key, const void *base, unsigned int *nelp,
          unsigned int width, int (__cdecl *compar)(const void *, const void *))
 {
 	char* char_base = (char*)base;

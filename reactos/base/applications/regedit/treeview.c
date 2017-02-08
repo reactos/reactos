@@ -651,10 +651,15 @@ HWND CreateTreeView(HWND hwndParent, LPWSTR pHostName, HMENU id)
     return hwndTV;
 }
 
-void DestroyTreeView()
+void DestroyTreeView(HWND hwndTV)
 {
-    if (pathBuffer)
-        HeapFree(GetProcessHeap(), 0, pathBuffer);
+    HIMAGELIST himl;
+
+    if (pathBuffer) HeapFree(GetProcessHeap(), 0, pathBuffer);
+
+    /* Destroy the image list associated with the tree view control */
+    himl = TreeView_GetImageList(hwndTV, TVSIL_NORMAL);
+    if (himl) ImageList_Destroy(himl);
 }
 
 BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)

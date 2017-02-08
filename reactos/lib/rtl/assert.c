@@ -25,7 +25,6 @@ RtlAssert(IN PVOID FailedAssertion,
           IN ULONG LineNumber,
           IN PCHAR Message OPTIONAL)
 {
-#if 0 // Disabled until sysreg can handle debug prompts
     CHAR Action[2];
     CONTEXT Context;
 
@@ -97,23 +96,4 @@ RtlAssert(IN PVOID FailedAssertion,
     /* Shouldn't get here */
     DbgBreakPoint();
     ZwTerminateProcess(ZwCurrentProcess(), STATUS_UNSUCCESSFUL);
-#else
-   if (NULL != Message)
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber,
-               Message);
-   }
-   else
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %u\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber);
-   }
-
-   DbgBreakPoint();
-#endif
 }

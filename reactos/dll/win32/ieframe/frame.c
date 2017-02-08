@@ -18,10 +18,6 @@
 
 #include "ieframe.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
-
 static inline DocHost *impl_from_IOleInPlaceFrame(IOleInPlaceFrame *iface)
 {
     return CONTAINING_RECORD(iface, DocHost, IOleInPlaceFrame_iface);
@@ -141,7 +137,7 @@ static HRESULT WINAPI InPlaceFrame_SetStatusText(IOleInPlaceFrame *iface,
 {
     DocHost *This = impl_from_IOleInPlaceFrame(iface);
     TRACE("(%p)->(%s)\n", This, debugstr_w(pszStatusText));
-    return This->container_vtbl->SetStatusText(This, pszStatusText);
+    return This->container_vtbl->set_status_text(This, pszStatusText);
 }
 
 static HRESULT WINAPI InPlaceFrame_EnableModeless(IOleInPlaceFrame *iface, BOOL fEnable)

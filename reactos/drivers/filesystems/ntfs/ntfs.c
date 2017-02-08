@@ -31,16 +31,17 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#pragma alloc_text(INIT, NtfsInitializeFunctionPointers)
+#endif
+
 /* GLOBALS *****************************************************************/
 
 PNTFS_GLOBAL_DATA NtfsGlobalData = NULL;
 
-
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject,
-            PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initialize the driver
  * ARGUMENTS:
@@ -48,91 +49,103 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+INIT_SECTION
+NTSTATUS
+NTAPI
+DriverEntry(PDRIVER_OBJECT DriverObject,
+            PUNICODE_STRING RegistryPath)
 {
-  NTSTATUS Status;
-  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(DEVICE_NAME);
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(DEVICE_NAME);
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
 
-  TRACE_(NTFS, "DriverEntry(%p, '%wZ')\n", DriverObject, RegistryPath);
+    TRACE_(NTFS, "DriverEntry(%p, '%wZ')\n", DriverObject, RegistryPath);
 
-  /* Initialize global data */
-  NtfsGlobalData = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_GLOBAL_DATA), 'GRDN');
-  if (!NtfsGlobalData)
-  {
-    Status = STATUS_INSUFFICIENT_RESOURCES;
-    goto ErrorEnd;
-  }
-  RtlZeroMemory(NtfsGlobalData, sizeof(NTFS_GLOBAL_DATA));
-  NtfsGlobalData->Identifier.Type = NTFS_TYPE_GLOBAL_DATA;
-  NtfsGlobalData->Identifier.Size = sizeof(NTFS_GLOBAL_DATA);
-  
-  ExInitializeResourceLite(&NtfsGlobalData->Resource);
-
-  /* Keep trace of Driver Object */
-  NtfsGlobalData->DriverObject = DriverObject;
-
-  /* Initialize IRP functions array */
-  NtfsInitializeFunctionPointers(DriverObject);
-  
-  /* Initialize CC functions array */
-  NtfsGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = NtfsAcqLazyWrite; 
-  NtfsGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = NtfsRelLazyWrite; 
-  NtfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = NtfsAcqReadAhead; 
-  NtfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = NtfsRelReadAhead; 
-
-  /* Driver can't be unloaded */
-  DriverObject->DriverUnload = NULL;
-
-  Status = IoCreateDevice(DriverObject,
-                          sizeof(NTFS_GLOBAL_DATA),
-                          &DeviceName,
-                          FILE_DEVICE_DISK_FILE_SYSTEM,
-                          0,
-                          FALSE,
-                          &NtfsGlobalData->DeviceObject);
-  if (!NT_SUCCESS(Status))
-  {
-    WARN_(NTFS, "IoCreateDevice failed with status: %lx\n", Status);
-    goto ErrorEnd;
-  }
-  
-  NtfsGlobalData->DeviceObject->Flags |= DO_DIRECT_IO;
-
-  /* Register file system */
-  IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
-  ObReferenceObject(NtfsGlobalData->DeviceObject);
-
-ErrorEnd:
-  if (!NT_SUCCESS(Status))
-  {
-    if (NtfsGlobalData)
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(NTFS_GLOBAL_DATA),
+                            &DeviceName,
+                            FILE_DEVICE_DISK_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (!NT_SUCCESS(Status))
     {
-      ExDeleteResourceLite(&NtfsGlobalData->Resource);
-      ExFreePoolWithTag(NtfsGlobalData, 'GRDN');
+        WARN_(NTFS, "IoCreateDevice failed with status: %lx\n", Status);
+        return Status;
     }
-  }
 
-  return Status;
+    /* Initialize global data */
+    NtfsGlobalData = DeviceObject->DeviceExtension;
+    RtlZeroMemory(NtfsGlobalData, sizeof(NTFS_GLOBAL_DATA));
+
+    NtfsGlobalData->DeviceObject = DeviceObject;
+    NtfsGlobalData->Identifier.Type = NTFS_TYPE_GLOBAL_DATA;
+    NtfsGlobalData->Identifier.Size = sizeof(NTFS_GLOBAL_DATA);
+
+    ExInitializeResourceLite(&NtfsGlobalData->Resource);
+
+    /* Keep trace of Driver Object */
+    NtfsGlobalData->DriverObject = DriverObject;
+
+    /* Initialize IRP functions array */
+    NtfsInitializeFunctionPointers(DriverObject);
+
+    /* Initialize CC functions array */
+    NtfsGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = NtfsAcqLazyWrite; 
+    NtfsGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = NtfsRelLazyWrite; 
+    NtfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = NtfsAcqReadAhead; 
+    NtfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = NtfsRelReadAhead; 
+
+    NtfsGlobalData->FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
+    NtfsGlobalData->FastIoDispatch.FastIoCheckIfPossible = NtfsFastIoCheckIfPossible;
+    NtfsGlobalData->FastIoDispatch.FastIoRead = NtfsFastIoRead;
+    NtfsGlobalData->FastIoDispatch.FastIoWrite = NtfsFastIoWrite;
+    DriverObject->FastIoDispatch = &NtfsGlobalData->FastIoDispatch;
+
+    /* Initialize lookaside list for IRP contexts */
+    ExInitializeNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList,
+                                    NULL, NULL, 0, sizeof(NTFS_IRP_CONTEXT), 'PRIN', 0);
+    /* Initialize lookaside list for FCBs */
+    ExInitializeNPagedLookasideList(&NtfsGlobalData->FcbLookasideList,
+                                    NULL, NULL, 0, sizeof(NTFS_FCB), TAG_FCB, 0);
+
+    /* Driver can't be unloaded */
+    DriverObject->DriverUnload = NULL;
+
+    NtfsGlobalData->DeviceObject->Flags |= DO_DIRECT_IO;
+
+    /* Register file system */
+    IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
+    ObReferenceObject(NtfsGlobalData->DeviceObject);
+
+    return Status;
 }
 
-VOID NTAPI 
-NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)
+
 /*
  * FUNCTION: Called within the driver entry to initialize the IRP functions array 
  * ARGUMENTS:
  *           DriverObject = object describing this driver
  * RETURNS: Nothing
  */
+INIT_SECTION
+VOID
+NTAPI
+NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)
 {
-  DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsFsdCreate;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsFsdClose;
-  DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsFsdRead;
-  DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsFsdWrite;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsFsdQueryInformation;
-  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NtfsFsdDispatch;
-  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = NtfsFsdDispatch;
-  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]        = NtfsFsdDirectoryControl;
-  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL]      = NtfsFsdFileSystemControl;
-    
-  return;
+    DriverObject->MajorFunction[IRP_MJ_CREATE]                   = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP]                  = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_READ]                     = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]                    = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]        = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL]      = NtfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]           = NtfsFsdDispatch;
+
+    return;
 }
 
+/* EOF */

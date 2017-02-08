@@ -1,0 +1,239 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "À propos de l'Utilitaire de configuration système"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
+    LTEXT           "Utilitaire de configuration système\nVersion 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
+//  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
+    LTEXT           "Copyright (C) ReactOS Team 2005-2015\n\
+Christoph von Wittich (Christoph@ApiViewer.de)\n\
+Gregor Schneider (Gregor.Schneider@reactos.org)\n\
+Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",
+                    IDC_STATIC, 41, 34, 183, 34
+    DEFPUSHBUTTON   "OK", IDOK, 174, 79, 50, 14, WS_GROUP
+END
+
+IDD_GENERAL_PAGE DIALOGEX 0, 0, 366, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Général"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Démarrage &normal", IDC_RB_NORMAL_STARTUP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 18, 332, 10
+    CONTROL         "Démarrage en mode &diagnostic", IDC_RB_DIAGNOSTIC_STARTUP, "Button", BS_AUTORADIOBUTTON, 15, 46, 332, 10
+    CONTROL         "Démarrage &sélectif", IDC_RB_SELECTIVE_STARTUP, "Button", BS_AUTORADIOBUTTON, 15, 73, 332, 10
+    CONTROL         "Exécuter le fichier S&YSTEM.INI", IDC_CBX_SYSTEM_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 86, 316, 10
+    CONTROL         "Exécuter le fichier &WIN.INI", IDC_CBX_WIN_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 98, 316, 10
+    CONTROL         "C&harger les services système", IDC_CBX_LOAD_SYSTEM_SERVICES, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 110, 316, 10
+    CONTROL         "&Charger les éléments de démarrage", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
+    CONTROL         "&Utiliser la configuration de démarrage d’origine", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
+    PUSHBUTTON      "Exéc&uter la restauration du système", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
+    PUSHBUTTON      "E&xtraire le fichier...", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
+    GROUPBOX        "Sélection du mode de démarrage ", IDC_STATIC, 5, 5, 356, 145
+    LTEXT           "Charger tous les pilotes de périphériques et tous les services", IDC_STATIC, 25, 30, 322, 10
+    LTEXT           "Charger seulement les pilotes de périphérique et les services de base", IDC_STATIC, 25, 58, 322, 10
+END
+
+IDD_SYSTEM_PAGE DIALOGEX 0, 0, 366, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Système"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_BORDER | WS_HSCROLL | WS_TABSTOP, 5, 5, 285, 146
+    PUSHBUTTON      "Monter", IDC_BTN_SYSTEM_UP, 295, 5, 66, 14
+    PUSHBUTTON      "&Descendre", IDC_BTN_SYSTEM_DOWN, 295, 24, 66, 14
+    PUSHBUTTON      "Activ&er", IDC_BTN_SYSTEM_ENABLE, 295, 52, 66, 14
+    PUSHBUTTON      "Désact&iver", IDC_BTN_SYSTEM_DISABLE, 295, 71, 66, 14
+    PUSHBUTTON      "Rechercher", IDC_BTN_SYSTEM_FIND, 295, 99, 66, 14
+    PUSHBUTTON      "&Nouveau", IDC_BTN_SYSTEM_NEW, 295, 118, 66, 14
+    PUSHBUTTON      "M&odifier", IDC_BTN_SYSTEM_EDIT, 295, 137, 66, 14
+    PUSHBUTTON      "Activer tout", IDC_BTN_SYSTEM_ENABLE_ALL, 153, 156, 66, 14
+    PUSHBUTTON      "Désactiver tout", IDC_BTN_SYSTEM_DISABLE_ALL, 224, 156, 66, 14
+    PUSHBUTTON      "&Supprimer", IDC_BTN_SYSTEM_DELETE, 295, 156, 66, 14
+END
+
+IDD_FREELDR_PAGE DIALOGEX 0, 0, 366, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "FREELDR.INI"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_LIST_BOX, 5, 5, 356, 61, LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Vérifier les entrées", IDC_BTN_CHECK_BOOT_PATH, 5, 68, 72, 14
+    PUSHBUTTON      "&Par défaut", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
+    PUSHBUTTON      "&Monter", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
+    PUSHBUTTON      "&Descendre", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
+    GROUPBOX        "Options de démarrage", IDC_STATIC, 5, 84, 285, 86
+    GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
+    CHECKBOX        "Démarrage sécurisé (/SA&FEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
+    CONTROL         "Minimal (&MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
+    CONTROL         "Autre environnement\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4,
+                    "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
+    CONTROL         "Réparer ActiveDirectory (DSRE&PAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
+    CONTROL         "Réseau (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
+    CHECKBOX        "Ne pas démarrer la GUI\n(/&NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
+    CHECKBOX        "Journal de démarrage (/&BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
+    CHECKBOX        "Vidéo de base (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
+    CHECKBOX        "Infos de démarrage (/S&OS)", IDC_CBX_SOS, 158, 138, 127, 12
+    PUSHBUTTON      "Options a&vancées...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
+    LTEXT           "&Délai :", IDC_STATIC, 296, 91, 32, 10
+    EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
+    LTEXT           "secondes", IDC_STATIC, 330, 104, 31, 10
+    CONTROL         "Rendre permanents &tous les paramètres de démarrage", 292,
+                    "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
+    PUSHBUTTON      "&Supprimer", IDC_BTN_DELETE, 295, 68, 66, 14
+END
+
+IDD_SERVICES_PAGE DIALOGEX 0, 0, 366, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Services"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 5, 5, 356, 129
+    PUSHBUTTON      "&Activer tout", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
+    PUSHBUTTON      "&Désactiver tout", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
+    CONTROL         "&Masquer tous les services %s", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 203, 12
+    LTEXT           "Veuiller noter que certains services %s sécurisés peuvent ne pas pouvoir être désactivés.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
+END
+
+IDD_STARTUP_PAGE DIALOGEX 0, 0, 362, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List3", IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
+    PUSHBUTTON "&Activer tout", IDC_BTN_STARTUP_ACTIVATE, 223, 155, 66, 14
+    PUSHBUTTON "&Désactiver tout", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
+END
+
+IDD_TOOLS_PAGE DIALOGEX 0, 0, 366, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
+CAPTION "Outils"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "List1", IDC_TOOLS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 5, 356, 118
+    EDITTEXT        IDC_TOOLS_CMDLINE, 5, 139, 356, 14, ES_READONLY
+    PUSHBUTTON      "&Exécuter", IDC_BTN_RUN, 311, 156, 50, 14
+    CONTROL         "Opt&ions avancées", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
+    LTEXT           "&Commande sélectionnée :", IDC_STATIC, 5, 127, 128, 10
+END
+
+IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Décompression de fichiers à partir de la source d'installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Indiquez les fichiers que vous voulez restaurer, l'emplacement de la source contenant les fichiers d'installation ainsi que l'emplacement de destination des fichiers.", IDC_STATIC, 7, 7, 339, 17
+    LTEXT           "&Fichiers à restaurer :", IDC_STATIC, 7, 34, 93, 10
+    EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "Parco&urir les fichiers...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "&Restaurer à partir de :", IDC_STATIC, 7, 55, 93, 10
+    COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Parcourir &depuis...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    LTEXT           "&Enregistrer les fichiers dans :", IDC_STATIC, 7, 76, 93, 10
+    COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Parcourir &vers...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    DEFPUSHBUTTON   "Décompresser", IDOK, 179, 96, 82, 14
+    PUSHBUTTON      "Annuler", IDCANCEL, 264, 96, 82, 14
+END
+
+IDD_FIND_DIALOG DIALOGEX 30, 73, 236, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rechercher"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Rechercher :", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Mot entier &uniquement", IDC_CBX_FIND_WHOLE_WORD_ONLY,
+                    "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
+    CONTROL         "Respecter la &casse", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
+    GROUPBOX        "Direction", IDC_STATIC, 107, 26, 68, 28
+    CONTROL         "&Haut", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
+    CONTROL         "&Bas", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
+    DEFPUSHBUTTON   "&Suivant", IDOK, 182, 5, 50, 14, WS_GROUP
+    PUSHBUTTON      "Annuler", IDCANCEL, 182, 23, 50, 14, WS_GROUP
+    CONTROL         "Rechercher &depuis le début (Direction : Bas) ou la fin (Direction : Haut)", IDC_CBX_FIND_FROM_BEGINNING,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
+END
+
+IDD_FREELDR_ADVANCED_PAGE DIALOGEX 0, 0, 175, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CHECKBOX "/&MAXMEM=", IDC_CBX_MAX_MEM, 10, 10, 50, 10
+    EDITTEXT IDC_TXT_MAX_MEM, 80, 10, 60, 12
+    CONTROL "", IDC_SCR_MAX_MEM, "msctls_updown32", 0x50000000, 140, 10, 11, 11
+    CHECKBOX "/&NUMPROC=", IDC_CBX_NUM_PROC, 10, 25, 50, 10
+    COMBOBOX IDC_DRP_NUM_PROC, 80, 25, 60, 10, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    CHECKBOX "/&PCILOCK", IDC_CBX_PCI_LOCK, 10, 40, 50, 10
+    CHECKBOX "/P&ROFILE", IDC_CBX_PROFILE, 10, 55, 50, 10
+    CHECKBOX "/&IRQ", IDC_CBX_IRQ, 10, 70, 40, 12
+    EDITTEXT IDC_TXT_IRQ, 80, 70, 60, 12, ES_LEFT
+    CHECKBOX "/&DEBUG", IDC_CBX_DEBUG, 10, 85, 40, 10
+    CHECKBOX "/D&EBUGPORT", IDC_CBX_DEBUG_PORT, 20, 100, 60, 10
+    COMBOBOX IDC_DRP_DEBUG_PORT, 80, 100, 60, 10, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    CHECKBOX "/&BAUDRATE", IDC_CBX_BAUD_RATE, 20, 115, 50, 10
+    COMBOBOX IDC_DRP_DRP_BAUD_RATE, 80, 115, 60, 10, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    CHECKBOX "/&CHANNEL", IDC_CBX_CHANNEL, 20, 130, 50, 10
+    EDITTEXT IDC_TXT_CHANNEL, 80, 130, 60, 12, ES_LEFT
+    CONTROL "", IDC_SCR_CHANNEL, "msctls_updown32", 0x50000000, 140, 130, 11, 11
+    PUSHBUTTON "OK", IDOK, 20, 160, 50, 12
+    PUSHBUTTON "Annuler", IDCANCEL, 100, 160, 50, 12
+END
+
+IDD_REQUIRED_SERVICES_DISABLING_DIALOG DIALOGEX 0, 0, 237, 62
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Utilitaire de configuration système"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 180, 41, 50, 14
+    LTEXT           "Les services essentiels ne peuvent pas être désactivés. Cela pourrait empêcher %s de fonctionner sur votre ordinateur.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
+    CONTROL         "&Ne plus afficher ce message", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MSCONFIG            "Utilitaire de configuration système"
+    IDS_MSCONFIG_2          "Configuration du système"
+    IDS_ABOUT               "À &propos de...\tMaj+F1"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_YES                 "Oui"
+    IDS_NO                  "Non"
+    IDS_UNKNOWN             "Inconnu"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TAB_STARTUP "Démarrage"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICES_COLUMN_SERVICE "Service"
+    IDS_SERVICES_COLUMN_REQ "Essentiel"
+    IDS_SERVICES_COLUMN_VENDOR "Fabricant"
+    IDS_SERVICES_COLUMN_STATUS "État"
+    IDS_SERVICES_COLUMN_DATEDISABLED "Date de désactivation"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLS_COLUMN_NAME "Nom de l'outil"
+    IDS_TOOLS_COLUMN_DESCR "Description"
+    IDS_TOOLS_COLUMN_STANDARD "Standard"
+    IDS_STARTUP_COLUMN_ELEMENT "Élément"
+    IDS_STARTUP_COLUMN_CMD "Commande"
+    IDS_STARTUP_COLUMN_PATH "Chemin"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICES_STATUS_RUNNING "En cours d'exécution"
+    IDS_SERVICES_STATUS_STOPPED "Arrêté"
+END

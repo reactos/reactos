@@ -4,14 +4,17 @@
  * FILE:        vfatlib.h
  */
 
+#ifndef _VFATLIB_H_
+#define _VFATLIB_H_
+
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
-#include <objbase.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>
@@ -19,17 +22,7 @@
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 
-#include <time.h>
-#include <limits.h> // for INT_MAX definition
-
 #include "check/dosfsck.h"
-#include "check/common.h"
-#include "check/io.h"
-#include "check/lfn.h"
-#include "check/boot.h"
-#include "check/fat.h"
-#include "check/file.h"
-#include "check/check.h"
 
 #include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR
@@ -59,7 +52,6 @@ typedef struct _FAT16_BOOT_SECTOR
     unsigned char  Res2[446];                   // 62
     unsigned long  Signature1;                  // 508
 } FAT16_BOOT_SECTOR, *PFAT16_BOOT_SECTOR;
-
 
 typedef struct _FAT32_BOOT_SECTOR
 {
@@ -108,6 +100,10 @@ typedef struct _FAT32_FSINFO
 } FAT32_FSINFO, *PFAT32_FSINFO;
 #include <poppack.h>
 
+#define FSINFO_SECTOR_BEGIN_SIGNATURE   0x41615252  // 'RRaA'
+#define FSINFO_SECTOR_END_SIGNATURE     0xAA550000
+#define FSINFO_SIGNATURE                0x61417272  // 'rrAa'
+
 typedef struct _FORMAT_CONTEXT
 {
     PFMIFSCALLBACK Callback;
@@ -116,6 +112,8 @@ typedef struct _FORMAT_CONTEXT
     BOOLEAN Success;
     ULONG Percent;
 } FORMAT_CONTEXT, *PFORMAT_CONTEXT;
+
+#include "common.h"
 
 
 NTSTATUS
@@ -150,6 +148,11 @@ UpdateProgress(PFORMAT_CONTEXT Context,
                ULONG Increment);
 
 VOID
+VfatPrintV(PCHAR Format, va_list args);
+
+VOID
 VfatPrint(PCHAR Format, ...);
+
+#endif /* _VFATLIB_H_ */
 
 /* EOF */

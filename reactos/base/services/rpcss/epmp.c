@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <epm_s.h>
+#include "rpcss.h"
+
 #include <wine/debug.h>
-#include <wine/list.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -88,16 +88,16 @@ void __RPC_USER ept_lookup_handle_t_rundown(ept_lookup_handle_t entry_handle)
     WINE_FIXME("%p\n", entry_handle);
 }
 
-void ept_insert(handle_t h,
-                unsigned32 num_ents,
-                ept_entry_t entries[],
-                boolean32 replace,
-                error_status_t *status)
+void __cdecl ept_insert(handle_t h,
+                        unsigned32 num_ents,
+                        ept_entry_t entries[],
+                        boolean32 replace,
+                        error_status_t *status)
 {
     unsigned32 i;
     RPC_STATUS rpc_status;
 
-    WINE_TRACE("(%p, %lu, %p, %lu, %p)\n", h, num_ents, entries, replace, status);
+    WINE_TRACE("(%p, %u, %p, %u, %p)\n", h, num_ents, entries, replace, status);
 
     *status = RPC_S_OK;
 
@@ -119,7 +119,7 @@ void ept_insert(handle_t h,
                                   &entry->address);
         if (rpc_status != RPC_S_OK)
         {
-            WINE_WARN("TowerExplode failed %lu\n", rpc_status);
+            WINE_WARN("TowerExplode failed %u\n", rpc_status);
             *status = rpc_status;
             break; /* FIXME: more cleanup? */
         }
@@ -138,17 +138,17 @@ void ept_insert(handle_t h,
     LeaveCriticalSection(&csEpm);
 }
 
-void ept_delete(handle_t h,
-                unsigned32 num_ents,
-                ept_entry_t entries[],
-                error_status_t *status)
+void __cdecl ept_delete(handle_t h,
+                        unsigned32 num_ents,
+                        ept_entry_t entries[],
+                        error_status_t *status)
 {
     unsigned32 i;
     RPC_STATUS rpc_status;
 
     *status = RPC_S_OK;
 
-    WINE_TRACE("(%p, %lu, %p, %p)\n", h, num_ents, entries, status);
+    WINE_TRACE("(%p, %u, %p, %p)\n", h, num_ents, entries, status);
 
     EnterCriticalSection(&csEpm);
 
@@ -179,30 +179,30 @@ void ept_delete(handle_t h,
     LeaveCriticalSection(&csEpm);
 }
 
-void ept_lookup(handle_t h,
-                unsigned32 inquiry_type,
-                uuid_p_t object,
-                rpc_if_id_p_t interface_id,
-                unsigned32 vers_option,
-                ept_lookup_handle_t *entry_handle,
-                unsigned32 max_ents,
-                unsigned32 *num_ents,
-                ept_entry_t entries[],
-                error_status_t *status)
+void __cdecl ept_lookup(handle_t h,
+                        unsigned32 inquiry_type,
+                        uuid_p_t object,
+                        rpc_if_id_p_t interface_id,
+                        unsigned32 vers_option,
+                        ept_lookup_handle_t *entry_handle,
+                        unsigned32 max_ents,
+                        unsigned32 *num_ents,
+                        ept_entry_t entries[],
+                        error_status_t *status)
 {
     WINE_FIXME("(%p, %p, %p): stub\n", h, entry_handle, status);
 
     *status = EPT_S_CANT_PERFORM_OP;
 }
 
-void ept_map(handle_t h,
-             uuid_p_t object,
-             twr_p_t map_tower,
-             ept_lookup_handle_t *entry_handle,
-             unsigned32 max_towers,
-             unsigned32 *num_towers,
-             twr_p_t *towers,
-             error_status_t *status)
+void __cdecl ept_map(handle_t h,
+                     uuid_p_t object,
+                     twr_p_t map_tower,
+                     ept_lookup_handle_t *entry_handle,
+                     unsigned32 max_towers,
+                     unsigned32 *num_towers,
+                     twr_p_t *towers,
+                     error_status_t *status)
 {
     RPC_STATUS rpc_status;
     RPC_SYNTAX_IDENTIFIER iface, syntax;
@@ -212,7 +212,7 @@ void ept_map(handle_t h,
     *status = RPC_S_OK;
     *num_towers = 0;
 
-    WINE_TRACE("(%p, %p, %p, %p, %lu, %p, %p, %p)\n", h, object, map_tower,
+    WINE_TRACE("(%p, %p, %p, %p, %u, %p, %p, %p)\n", h, object, map_tower,
           entry_handle, max_towers, num_towers, towers, status);
 
     rpc_status = TowerExplode(map_tower, &iface, &syntax, &protseq,
@@ -251,33 +251,35 @@ void ept_map(handle_t h,
     }
 
     LeaveCriticalSection(&csEpm);
+
+    I_RpcFree(protseq);
 }
 
-void ept_lookup_handle_free(handle_t h,
-                            ept_lookup_handle_t *entry_handle,
-                            error_status_t *status)
+void __cdecl ept_lookup_handle_free(handle_t h,
+                                    ept_lookup_handle_t *entry_handle,
+                                    error_status_t *status)
 {
     WINE_FIXME("(%p, %p, %p): stub\n", h, entry_handle, status);
 
     *status = EPT_S_CANT_PERFORM_OP;
 }
 
-void ept_inq_object(handle_t h,
-                    GUID *ept_object,
-                    error_status_t *status)
+void __cdecl ept_inq_object(handle_t h,
+                            GUID *ept_object,
+                            error_status_t *status)
 {
     WINE_FIXME("(%p, %p, %p): stub\n", h, ept_object, status);
 
     *status = EPT_S_CANT_PERFORM_OP;
 }
 
-void ept_mgmt_delete(handle_t h,
-                     boolean32 object_speced,
-                     uuid_p_t object,
-                     twr_p_t tower,
-                     error_status_t *status)
+void __cdecl ept_mgmt_delete(handle_t h,
+                             boolean32 object_speced,
+                             uuid_p_t object,
+                             twr_p_t tower,
+                             error_status_t *status)
 {
-    WINE_FIXME("(%p, %ld, %p, %p, %p): stub\n", h, object_speced, object, tower, status);
+    WINE_FIXME("(%p, %d, %p, %p, %p): stub\n", h, object_speced, object, tower, status);
 
     *status = EPT_S_CANT_PERFORM_OP;
 }

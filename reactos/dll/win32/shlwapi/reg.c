@@ -19,22 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-//#include <string.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winreg.h>
-#include <wine/debug.h>
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+#include "precomp.h"
 
 /* Key/Value names for MIME content types */
 static const char lpszContentTypeA[] = "Content Type";
@@ -197,6 +182,9 @@ LONG WINAPI SHRegCloseUSKey(
     LPSHUSKEY hKey = hUSKey;
     LONG ret = ERROR_SUCCESS;
 
+    if (!hKey)
+        return ERROR_INVALID_PARAMETER;
+
     if (hKey->HKCUkey)
         ret = RegCloseKey(hKey->HKCUkey);
     if (hKey->HKCUstart && hKey->HKCUstart != HKEY_CURRENT_USER)
@@ -213,31 +201,48 @@ LONG WINAPI SHRegCloseUSKey(
 /*************************************************************************
  * SHRegCreateUSKeyA  [SHLWAPI.@]
  *
- * Create or open a user-specific registry key.
- * 
- * PARAMS
- *  pszPath        [I] Key name to create or open.
- *  samDesired     [I] Wanted security access.
- *  hRelativeUSKey [I] Base path if pszPath is relative. NULL otherwise.
- *  phNewUSKey     [O] Receives a handle to the new or opened key.
- *  dwFlags        [I] Base key under which the key should be opened.
- *
- * RETURNS
- *  Success: ERROR_SUCCESS
- *  Failure: Nonzero error code from winerror.h
+ * See SHRegCreateUSKeyW.
  */
-LONG WINAPI SHRegCreateUSKeyA(LPCSTR pszPath, REGSAM samDesired, HUSKEY hRelativeUSKey,
-                              PHUSKEY phNewUSKey, DWORD dwFlags)
+LONG WINAPI SHRegCreateUSKeyA(LPCSTR path, REGSAM samDesired, HUSKEY relative_key,
+                              PHUSKEY new_uskey, DWORD flags)
 {
-    FIXME("(%s, 0x%08x, %p, %p, 0x%08x) stub\n", debugstr_a(pszPath), samDesired,
-          hRelativeUSKey, phNewUSKey, dwFlags);
-    return ERROR_SUCCESS;
+    WCHAR *pathW;
+    LONG ret;
+
+    TRACE("(%s, 0x%08x, %p, %p, 0x%08x)\n", debugstr_a(path), samDesired, relative_key,
+        new_uskey, flags);
+
+    if (path)
+    {
+        INT len = MultiByteToWideChar(CP_ACP, 0, path, -1, NULL, 0);
+        pathW = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        if (!pathW)
+            return ERROR_NOT_ENOUGH_MEMORY;
+        MultiByteToWideChar(CP_ACP, 0, path, -1, pathW, len);
+    }
+    else
+        pathW = NULL;
+
+    ret = SHRegCreateUSKeyW(pathW, samDesired, relative_key, new_uskey, flags);
+    HeapFree(GetProcessHeap(), 0, pathW);
+    return ret;
 }
 
 /*************************************************************************
  * SHRegCreateUSKeyW  [SHLWAPI.@]
  *
- * See SHRegCreateUSKeyA.
+ * Create or open a user-specific registry key.
+ *
+ * PARAMS
+ *  path         [I] Key name to create or open.
+ *  samDesired   [I] Wanted security access.
+ *  relative_key [I] Base path if 'path' is relative. NULL otherwise.
+ *  new_uskey    [O] Receives a handle to the new or opened key.
+ *  flags        [I] Base key under which the key should be opened.
+ *
+ * RETURNS
+ *  Success: ERROR_SUCCESS
+ *  Failure: Nonzero error code from winerror.h
  */
 LONG WINAPI SHRegCreateUSKeyW(LPCWSTR path, REGSAM samDesired, HUSKEY relative_key,
                               PHUSKEY new_uskey, DWORD flags)

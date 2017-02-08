@@ -6,6 +6,7 @@
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *                        2011      Gregor Schneider <Gregor.Schneider@reactos.org>
  */
+
 #include "precomp.h"
 
 HWND hSystemPage;
@@ -22,9 +23,15 @@ LoadSystemIni(WCHAR * szPath, HWND hDlg)
     FILE* file;
     UINT length;
     TVINSERTSTRUCT insert;
+    HRESULT hr;
 
-    wcscpy(szBuffer, szPath);
-    wcscat(szBuffer, L"\\system.ini");
+    hr = StringCbCopyW(szBuffer, sizeof(szBuffer), szPath);
+    if (FAILED(hr))
+        return FALSE;
+
+    hr = StringCbCatW(szBuffer, sizeof(szBuffer), L"\\system.ini");
+    if (FAILED(hr))
+        return FALSE;
 
     file = _wfopen(szBuffer, L"rt");
     if (!file)

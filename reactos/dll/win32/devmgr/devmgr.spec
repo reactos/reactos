@@ -21,7 +21,7 @@
 23 stdcall DeviceProblenWizard_RunDLLA(ptr ptr str long) DeviceProblemWizard_RunDLLA
 24 stdcall DeviceProblenWizard_RunDLLW(ptr ptr wstr long) DeviceProblemWizard_RunDLLW
 
-@ stub -private DllCanUnloadNow
-@ stub -private DllGetClassObject
-@ stub -private DllRegisterServer
-@ stub -private DllUnregisterServer
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()

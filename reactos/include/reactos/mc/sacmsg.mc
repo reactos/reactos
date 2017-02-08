@@ -1,17 +1,22 @@
 MessageId=1
-SymbolicName=SACDRV_1
+SymbolicName=SAC_INIT_STATUS
 Language=English
-Computer is booting, SAC started and initialized.\n\nUse the \"ch -?\" command for information about using channels.\nUse the \"?\" command for general help.
+
+Computer is booting, SAC started and initialized.
+
+Use the "ch -?" command for information about using channels.
+Use the "?" command for general help.
+
 .
 
 MessageId=2
-SymbolicName=SACDRV_2
+SymbolicName=SAC_NEWLINE
 Language=English
 
 .
 
 MessageId=3
-SymbolicName=SACDRV_3
+SymbolicName=SAC_PROMPT
 Language=English
 SAC>%0
 .
@@ -25,7 +30,8 @@ The SAC is unavailable, it was directly unloaded.
 MessageId=5
 SymbolicName=SACDRV_5
 Language=English
-The SAC will become unavailable soon.  The computer is shutting down.\n
+The SAC will become unavailable soon.  The computer is shutting down.
+
 .
 
 MessageId=6
@@ -59,9 +65,9 @@ Paging is now OFF.
 .
 
 MessageId=11
-SymbolicName=SACDRV_11
+SymbolicName=SAC_OUT_OF_MEMORY_PROMPT
 Language=English
-Paging is now OFF.
+THIS LOOKS LIKE A BUG???
 .
 
 MessageId=12
@@ -173,7 +179,7 @@ lock                 Lock access to Command Prompt channels.
 .
 
 MessageId=48
-SymbolicName=SACDRV_48
+SymbolicName=SAC_FAIL_PROMPT
 Language=English
 Failed with status 0x%%X.
 .
@@ -269,13 +275,13 @@ SAC cannot raise the process priority any higher.
 .
 
 MessageId=65
-SymbolicName=SACDRV_65
+SymbolicName=SAC_SHUTDOWN_FAIL_PROMPT
 Language=English
 SAC failed to shutdown the system.
 .
 
 MessageId=66
-SymbolicName=SACDRV_66
+SymbolicName=SAC_RESTART_FAIL_PROMPT
 Language=English
 SAC failed to restart the system.
 .
@@ -295,7 +301,9 @@ SAC failed to retrieve the task list.
 MessageId=69
 SymbolicName=SACDRV_69
 Language=English
-memory: %%4ld kb  uptime:%%3ld %%2ld:%%02ld:%%02ld.%%03ld\n\n
+memory: %%4ld kb  uptime:%%3ld %%2ld:%%02ld:%%02ld.%%03ld
+
+
 .
 
 MessageId=70
@@ -319,7 +327,8 @@ Language=English
 MessageId=73
 SymbolicName=SACDRV_73
 Language=English
-\n Memory:%%7ldK Avail:%%7ldK  TotalWs:%%7ldK InRam Kernel:%%5ldK P:%%5ldK
+
+ Memory:%%7ldK Avail:%%7ldK  TotalWs:%%7ldK InRam Kernel:%%5ldK P:%%5ldK
 .
 
 MessageId=74
@@ -421,7 +430,8 @@ That process has been killed and is being cleaned up by the system.
 MessageId=90
 SymbolicName=SACDRV_90
 Language=English
-A duplicate process id is being cleaned up by the system.  Try the \ncommand again in a few seconds.
+A duplicate process id is being cleaned up by the system.  Try the 
+command again in a few seconds.
 .
 
 MessageId=92
@@ -461,7 +471,7 @@ Language=English
 .
 
 MessageId=98
-SymbolicName=SACDRV_98
+SymbolicName=SAC_NO_DATA_MSG
 Language=English
 None%0
 .
@@ -473,25 +483,25 @@ Language=English
 .
 
 MessageId=100
-SymbolicName=SACDRV_100
+SymbolicName=SAC_DATACENTER_SUITE_MSG
 Language=English
 Windows Server 2003 Datacenter Edition%0
 .
 
 MessageId=101
-SymbolicName=SACDRV_101
+SymbolicName=SAC_EMBEDDED_SUITE_MSG
 Language=English
 Windows Server 2003 Embedded%0
 .
 
 MessageId=102
-SymbolicName=SACDRV_102
+SymbolicName=SAC_ENTERPRISE_SUITE_MSG
 Language=English
 Windows Server 2003 Enterprise Edition%0
 .
 
 MessageId=103
-SymbolicName=SACDRV_103
+SymbolicName=SAC_NO_SUITE_MSG
 Language=English
 Windows Server 2003%0
 .
@@ -503,7 +513,7 @@ Computer identification information is unavailable.
 .
 
 MessageId=105
-SymbolicName=SACDRV_105
+SymbolicName=SAC_UNKNOWN_COMMAND
 Language=English
 Unrecognized command.  Try the 'help' command for more details.
 .
@@ -523,47 +533,62 @@ Error: Could not find a channel with that name.
 MessageId=108
 SymbolicName=SACDRV_108
 Language=English
-Channel List\n                       \n(Use \"ch -?\" for information on using channels)\n\n# Status  Channel Name 
+Channel List
+
+(Use "ch -?" for information on using channels)
+
+# Status  Channel Name 
 .
 
 MessageId=109
 SymbolicName=SACDRV_109
 Language=English
-EVENT:   A new channel has been created.  Use \"ch -?\" for channel help.\nChannel: %%s
+EVENT:   A new channel has been created.  Use "ch -?" for channel help.
+Channel: %%s
 .
 
 MessageId=110
 SymbolicName=SACDRV_110
 Language=English
-EVENT:   A channel has been closed.\nChannel: %%s
+EVENT:   A channel has been closed.
+Channel: %%s
 .
 
 MessageId=111
 SymbolicName=SACDRV_111
 Language=English
-Name:                  %%s\nDescription:           %%s\nType:                  %%s\nChannel GUID:          %%08lx-%%04x-%%04x-%%02x%%02x-%%02x%%02x%%02x%%02x%%02x%%02x\nApplication Type GUID: %%08lx-%%04x-%%04x-%%02x%%02x-%%02x%%02x%%02x%%02x%%02x%%02x\n\nPress <esc><tab> for next channel.\nPress <esc><tab>0 to return to the SAC channel.\nUse any other key to view this channel.\n
+Name:                  %%s
+Description:           %%s
+Type:                  %%s
+Channel GUID:          %%08lx-%%04x-%%04x-%%02x%%02x-%%02x%%02x%%02x%%02x%%02x%%02x
+Application Type GUID: %%08lx-%%04x-%%04x-%%02x%%02x-%%02x%%02x%%02x%%02x%%02x%%02x
+
+Press <esc><tab> for next channel.
+Press <esc><tab>0 to return to the SAC channel.
+Use any other key to view this channel.
+
 .
 
 MessageId=112
 SymbolicName=SACDRV_112
 Language=English
-ch                   Channel management commands.  Use ch -? for more help.    
+ch                   Channel management commands.  Use ch -? for more help.
 .
 
 MessageId=113
-SymbolicName=SACDRV_113
+SymbolicName=SAC_RESTART_TIME_PROMPT
 Language=English
   Time since last reboot: %%d:%%02d:%%02d
 .
 
 MessageId=114
-SymbolicName=SACDRV_114
+SymbolicName=SAC_RESTART_PROMPT
 Language=English
 SAC preparing to restart the system.
 .
 
 MessageId=115
-SymbolicName=SACDRV_115
+SymbolicName=SAC_SHUTDOWN_PROMPT
 Language=English
 SAC preparing to shutdown the system.
 .
@@ -571,7 +596,10 @@ SAC preparing to shutdown the system.
 MessageId=116
 SymbolicName=SACDRV_116
 Language=English
-Error! Failed to remove channel! \n\nPlease contact your system administrator.\n
+Error! Failed to remove channel! 
+
+Please contact your system administrator.
+
 .
 
 MessageId=119
@@ -583,7 +611,9 @@ cmd                  Create a Command Prompt channel.
 MessageId=120
 SymbolicName=SACDRV_120
 Language=English
-Timeout: Unable to launch a Command Prompt.  The service responsible for \n         launching Command Prompt channels has timed out.  This may be \n         because the service is malfunctioning or is unresponsive.  
+Timeout: Unable to launch a Command Prompt.  The service responsible for
+         launching Command Prompt channels has timed out.  This may be
+         because the service is malfunctioning or is unresponsive.
 .
 
 MessageId=121
@@ -601,7 +631,10 @@ Error: The SAC Command Console session failed to be created.
 MessageId=131
 SymbolicName=SACDRV_131
 Language=English
-Error: Unable to launch a Command Prompt.  The service responsible for launching\n       Command Prompt channels has not yet registered.  This may be because the\n       service is not yet started, is disabled by the administrator, is\n       malfunctioning or is unresponsive.  
+Error: Unable to launch a Command Prompt.  The service responsible for launching
+       Command Prompt channels has not yet registered.  This may be because the
+       service is not yet started, is disabled by the administrator, is
+       malfunctioning or is unresponsive.  
 .
 
 MessageId=132
@@ -619,19 +652,39 @@ EVENT: The CMD command is unavailable.
 MessageId=134
 SymbolicName=SACDRV_134
 Language=English
-EVENT:   An attempt was made to close a channel but failed.\nChannel: %%s
+EVENT:   An attempt was made to close a channel but failed.
+Channel: %%s
 .
 
 MessageId=135
 SymbolicName=SACDRV_135
 Language=English
-EVENT:   An attempt to close a channel failed because it is already closed.\nChannel: %%s
+EVENT:   An attempt to close a channel failed because it is already closed.
+Channel: %%s
 .
 
 MessageId=136
 SymbolicName=SACDRV_136
 Language=English
-Channel management commands:\n\nch                   List all channels.\n\nStatus Legend: (AB)\nA: Channel operational status\n    'A' = Channel is active.\n    'I' = Channel is inactive.\nB: Channel Type\n    'V' = VT-UTF8 emulation.\n    'R' = Raw - no emulation.\n\nch -si <#>           Switch to a channel by its number.\nch -sn <name>        Switch to a channel by its name.\nch -ci <#>           Close a channel by its number.\nch -cn <name>        Close a channel by its name.\n\nPress <esc><tab> to select a channel.\nPress <esc><tab>0 to return to the SAC channel.
+Channel management commands:
+
+ch                   List all channels.
+
+Status Legend: (AB)
+A: Channel operational status
+    'A' = Channel is active.
+    'I' = Channel is inactive.
+B: Channel Type
+    'V' = VT-UTF8 emulation.
+    'R' = Raw - no emulation.
+
+ch -si <#>           Switch to a channel by its number.
+ch -sn <name>        Switch to a channel by its name.
+ch -ci <#>           Close a channel by its number.
+ch -cn <name>        Close a channel by its name.
+
+Press <esc><tab> to select a channel.
+Press <esc><tab>0 to return to the SAC channel.
 .
 
 MessageId=137
@@ -641,13 +694,13 @@ Error: There is no channel present at the specified index.
 .
 
 MessageId=144
-SymbolicName=SACDRV_144
+SymbolicName=SAC_CHANNEL_NAME
 Language=English
 SAC%0
 .
 
 MessageId=145
-SymbolicName=SACDRV_145
+SymbolicName=SAC_CHANNEL_DESCRIPTION
 Language=English
 Special Administration Console%0
 .
@@ -695,7 +748,7 @@ The specified gateway IP address is invalid.
 .
 
 MessageId=153
-SymbolicName=SACDRV_153
+SymbolicName=SAC_UNINITIALIZED_MSG
 Language=English
 not yet initialized%0
 .
@@ -703,5 +756,5 @@ not yet initialized%0
 MessageId=154
 SymbolicName=SACDRV_154
 Language=English
-The maximum number of channels has been reached.  
+The maximum number of channels has been reached.
 .

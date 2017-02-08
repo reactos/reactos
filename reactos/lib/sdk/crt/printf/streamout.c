@@ -227,6 +227,10 @@ static
 int
 streamout_char(FILE *stream, int chr)
 {
+#if !defined(_USER32_WSPRINTF)
+     if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
+        return 1;
+#endif
 #if defined(_USER32_WSPRINTF) || defined(_LIBCNT_)
     /* Check if the buffer is full */
     if (stream->_cnt < sizeof(TCHAR))
@@ -248,6 +252,11 @@ streamout_astring(FILE *stream, const char *string, size_t count)
 {
     TCHAR chr;
     int written = 0;
+
+#if !defined(_USER32_WSPRINTF)
+     if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
+        return count;
+#endif
 
     while (count--)
     {
@@ -271,6 +280,11 @@ streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 {
     wchar_t chr;
     int written = 0;
+
+#if defined(_UNICODE) && !defined(_USER32_WSPRINTF)
+     if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
+        return count;
+#endif
 
     while (count--)
     {
@@ -307,7 +321,7 @@ streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 #endif
 
 int
-_cdecl
+__cdecl
 streamout(FILE *stream, const TCHAR *format, va_list argptr)
 {
     static const TCHAR digits_l[] = _T("0123456789abcdef0x");

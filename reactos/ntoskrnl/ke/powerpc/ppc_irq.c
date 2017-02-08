@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/i386/irq.c
+ * FILE:            ntoskrnl/ke/powerpc/ppc_irq.c
  * PURPOSE:         IRQ handling
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)

@@ -13,10 +13,14 @@ list(APPEND SOURCE
 #   asysta.idl
     atliface.idl
     audioclient.idl
+    audiopolicy.idl
     bdaiface.idl
 #   binres.idl
     bits.idl
     bits1_5.idl
+    bits2_0.idl
+    bits2_5.idl
+    bits3_0.idl
 #   cmdbas.idl
 #   cmdtxt.idl
     comcat.idl
@@ -33,12 +37,14 @@ list(APPEND SOURCE
 #   dbprop.idl
 #   dbs.idl
     devenum.idl
+    devicetopology.idl
     dimm.idl
     dispex.idl
     docobj.idl
     docobjectservice.idl
     downloadmgr.idl
 #   dyngraph.idl
+    endpointvolume.idl
     exdisp.idl
     fusion.idl
     hlink.idl
@@ -50,6 +56,8 @@ list(APPEND SOURCE
     imnact.idl
     imnxport.idl
     indexsrv.idl
+    inputscope.idl
+    inseng.idl
     metahost.idl
     mimeinfo.idl
     mimeole.idl
@@ -99,6 +107,7 @@ list(APPEND SOURCE
     strmif.idl
     structuredquerycondition.idl
     textstor.idl
+    tlogstg.idl
     tom.idl
     tuner.idl
     unknwn.idl
@@ -106,11 +115,18 @@ list(APPEND SOURCE
     urlmon.idl
     vmr9.idl
 #   vmrender.idl
+    vss.idl
+    wbemcli.idl
+    wbemdisp.idl
+    wbemprov.idl
     wia_lh.idl
     wia_xp.idl
     wincodec.idl
     wincodecsdk.idl
     winsxs.idl
+    wmiutils.idl
+    wmsbuffer.idl
+    wmsdkidl.idl
     wtypes.idl
     wuapi.idl
     xmldom.idl
@@ -118,15 +134,12 @@ list(APPEND SOURCE
     ctfutb.idl
     xmllite.idl)
 
-if(NOT MSVC)
-  list(APPEND SOURCE
-    wbemcli.idl)
-endif()
-
 add_idl_headers(psdk ${SOURCE})
-
+add_dependencies(psdk xdk)
 add_typelib(stdole2.idl)
 add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
+
+add_idl_headers(d3d_idl_headers d3dcommon.idl)
 
 add_iid_library(wuguid wuapi.idl)
 add_iid_library(xml_uuids msxml2.idl)

@@ -2,7 +2,7 @@
  * File cpu_x86_64.c
  *
  * Copyright (C) 1999, 2005 Alexandre Julliard
- * Copyright (C) 2009       Eric Pouech.
+ * Copyright (C) 2009, 2011 Eric Pouech.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,15 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
-#include "winternl.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -53,7 +45,7 @@ typedef union _UNWIND_CODE
         BYTE CodeOffset;
         BYTE UnwindOp : 4;
         BYTE OpInfo   : 4;
-    };
+    } u;
     USHORT FrameOffset;
 } UNWIND_CODE, *PUNWIND_CODE;
 
@@ -76,23 +68,8 @@ typedef struct _UNWIND_INFO
  */
 } UNWIND_INFO, *PUNWIND_INFO;
 
-#define GetUnwindCodeEntry(info, index) \
-    ((info)->UnwindCode[index])
-
-#define GetLanguageSpecificDataPtr(info) \
-    ((PVOID)&GetUnwindCodeEntry((info),((info)->CountOfCodes + 1) & ~1))
-
-#define GetExceptionHandler(base, info) \
-    ((PEXCEPTION_HANDLER)((base) + *(PULONG)GetLanguageSpecificDataPtr(info)))
-
-#define GetChainedFunctionEntry(base, info) \
-    ((PRUNTIME_FUNCTION)((base) + *(PULONG)GetLanguageSpecificDataPtr(info)))
-
-#define GetExceptionDataPtr(info) \
-    ((PVOID)((PULONG)GetLanguageSpecificData(info) + 1)
-
-static unsigned x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                                enum cpu_addr ca, ADDRESS64* addr)
+static BOOL x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                            enum cpu_addr ca, ADDRESS64* addr)
 {
     addr->Mode = AddrModeFlat;
     switch (ca)
@@ -107,6 +84,8 @@ static unsigned x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
     }
 }
 
+#ifdef __x86_64__
+
 enum st_mode {stm_start, stm_64bit, stm_done};
 
 /* indexes in Reserved array */
@@ -118,46 +97,51 @@ enum st_mode {stm_start, stm_64bit, stm_done};
 #define curr_count  (frame->Reserved[__CurrentCount])
 /* #define ??? (frame->Reserved[__]) (unused) */
 
-#ifdef __x86_64__
 union handler_data
 {
     RUNTIME_FUNCTION chain;
     ULONG handler;
 };
 
-static void dump_unwind_info(HANDLE hProcess, ULONG64 base, RUNTIME_FUNCTION *function)
+static void dump_unwind_info(struct cpu_stack_walk* csw, ULONG64 base, RUNTIME_FUNCTION *function)
 {
     static const char * const reg_names[16] =
         { "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
           "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15" };
 
-    union handler_data *handler_data;
+    union handler_data handler_data;
     char buffer[sizeof(UNWIND_INFO) + 256 * sizeof(UNWIND_CODE)];
     UNWIND_INFO* info = (UNWIND_INFO*)buffer;
     unsigned int i, count;
-    SIZE_T r;
+    RUNTIME_FUNCTION snext;
+    ULONG64 addr;
 
     TRACE("**** func %x-%x\n", function->BeginAddress, function->EndAddress);
     for (;;)
     {
         if (function->UnwindData & 1)
         {
-#if 0
-            RUNTIME_FUNCTION *next = (RUNTIME_FUNCTION*)((char*)base + (function->UnwindData & ~1));
+            if (!sw_read_mem(csw, base + function->UnwindData, &snext, sizeof(snext)))
+            {
+                TRACE("Couldn't unwind RUNTIME_INFO at %lx\n", base + function->UnwindData);
+                return;
+            }
             TRACE("unwind info for function %p-%p chained to function %p-%p\n",
                   (char*)base + function->BeginAddress, (char*)base + function->EndAddress,
-                  (char*)base + next->BeginAddress, (char*)base + next->EndAddress);
-            function = next;
+                  (char*)base + snext.BeginAddress, (char*)base + snext.EndAddress);
+            function = &snext;
             continue;
-#else
-            FIXME("NOT SUPPORTED\n");
-#endif
         }
-        ReadProcessMemory(hProcess, (char*)base + function->UnwindData, info, sizeof(*info), &r);
-        ReadProcessMemory(hProcess, (char*)base + function->UnwindData + FIELD_OFFSET(UNWIND_INFO, UnwindCode),
-                          info->UnwindCode, 256 * sizeof(UNWIND_CODE), &r);
+        addr = base + function->UnwindData;
+        if (!sw_read_mem(csw, addr, info, FIELD_OFFSET(UNWIND_INFO, UnwindCode)) ||
+            !sw_read_mem(csw, addr + FIELD_OFFSET(UNWIND_INFO, UnwindCode),
+                         info->UnwindCode, info->CountOfCodes * sizeof(UNWIND_CODE)))
+        {
+            FIXME("couldn't read memory for UNWIND_INFO at %lx\n", addr);
+            return;
+        }
         TRACE("unwind info at %p flags %x prolog 0x%x bytes function %p-%p\n",
-              info, info->Flags, info->SizeOfProlog,
+              (char*)addr, info->Flags, info->SizeOfProlog,
               (char*)base + function->BeginAddress, (char*)base + function->EndAddress);
 
         if (info->FrameRegister)
@@ -166,14 +150,14 @@ static void dump_unwind_info(HANDLE hProcess, ULONG64 base, RUNTIME_FUNCTION *fu
 
         for (i = 0; i < info->CountOfCodes; i++)
         {
-            TRACE("    0x%x: ", info->UnwindCode[i].CodeOffset);
-            switch (info->UnwindCode[i].UnwindOp)
+            TRACE("    0x%x: ", info->UnwindCode[i].u.CodeOffset);
+            switch (info->UnwindCode[i].u.UnwindOp)
             {
             case UWOP_PUSH_NONVOL:
-                TRACE("pushq %%%s\n", reg_names[info->UnwindCode[i].OpInfo]);
+                TRACE("pushq %%%s\n", reg_names[info->UnwindCode[i].u.OpInfo]);
                 break;
             case UWOP_ALLOC_LARGE:
-                if (info->UnwindCode[i].OpInfo)
+                if (info->UnwindCode[i].u.OpInfo)
                 {
                     count = *(DWORD*)&info->UnwindCode[i+1];
                     i += 2;
@@ -186,7 +170,7 @@ static void dump_unwind_info(HANDLE hProcess, ULONG64 base, RUNTIME_FUNCTION *fu
                 TRACE("subq $0x%x,%%rsp\n", count);
                 break;
             case UWOP_ALLOC_SMALL:
-                count = (info->UnwindCode[i].OpInfo + 1) * 8;
+                count = (info->UnwindCode[i].u.OpInfo + 1) * 8;
                 TRACE("subq $0x%x,%%rsp\n", count);
                 break;
             case UWOP_SET_FPREG:
@@ -195,45 +179,58 @@ static void dump_unwind_info(HANDLE hProcess, ULONG64 base, RUNTIME_FUNCTION *fu
                 break;
             case UWOP_SAVE_NONVOL:
                 count = *(USHORT*)&info->UnwindCode[i+1] * 8;
-                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].OpInfo], count);
+                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].u.OpInfo], count);
                 i++;
                 break;
             case UWOP_SAVE_NONVOL_FAR:
                 count = *(DWORD*)&info->UnwindCode[i+1];
-                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].OpInfo], count);
+                TRACE("movq %%%s,0x%x(%%rsp)\n", reg_names[info->UnwindCode[i].u.OpInfo], count);
                 i += 2;
                 break;
             case UWOP_SAVE_XMM128:
                 count = *(USHORT*)&info->UnwindCode[i+1] * 16;
-                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].OpInfo, count);
+                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].u.OpInfo, count);
                 i++;
                 break;
             case UWOP_SAVE_XMM128_FAR:
                 count = *(DWORD*)&info->UnwindCode[i+1];
-                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].OpInfo, count);
+                TRACE("movaps %%xmm%u,0x%x(%%rsp)\n", info->UnwindCode[i].u.OpInfo, count);
                 i += 2;
                 break;
             case UWOP_PUSH_MACHFRAME:
-                TRACE("PUSH_MACHFRAME %u\n", info->UnwindCode[i].OpInfo);
+                TRACE("PUSH_MACHFRAME %u\n", info->UnwindCode[i].u.OpInfo);
                 break;
             default:
-                FIXME("unknown code %u\n", info->UnwindCode[i].UnwindOp);
+                FIXME("unknown code %u\n", info->UnwindCode[i].u.UnwindOp);
                 break;
             }
         }
 
-        handler_data = (union handler_data*)&info->UnwindCode[(info->CountOfCodes + 1) & ~1];
+        addr += FIELD_OFFSET(UNWIND_INFO, UnwindCode) +
+            ((info->CountOfCodes + 1) & ~1) * sizeof(UNWIND_CODE);
         if (info->Flags & UNW_FLAG_CHAININFO)
         {
+            if (!sw_read_mem(csw, addr, &handler_data, sizeof(handler_data.chain)))
+            {
+                FIXME("couldn't read memory for handler_data.chain\n");
+                return;
+            }
             TRACE("    chained to function %p-%p\n",
-                  (char*)base + handler_data->chain.BeginAddress,
-                  (char*)base + handler_data->chain.EndAddress);
-            function = &handler_data->chain;
+                  (char*)base + handler_data.chain.BeginAddress,
+                  (char*)base + handler_data.chain.EndAddress);
+            function = &handler_data.chain;
             continue;
         }
         if (info->Flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER))
+        {
+            if (!sw_read_mem(csw, addr, &handler_data, sizeof(handler_data.handler)))
+            {
+                FIXME("couldn't read memory for handler_data.handler\n");
+                return;
+            }
             TRACE("    handler %p data at %p\n",
-                  (char*)base + handler_data->handler, &handler_data->handler + 1);
+                  (char*)base + handler_data.handler, (char*)addr + sizeof(handler_data.handler));
+        }
         break;
     }
 }
@@ -256,10 +253,10 @@ static void set_float_reg(CONTEXT *context, int reg, M128A val)
 
 static int get_opcode_size(UNWIND_CODE op)
 {
-    switch (op.UnwindOp)
+    switch (op.u.UnwindOp)
     {
     case UWOP_ALLOC_LARGE:
-        return 2 + (op.OpInfo != 0);
+        return 2 + (op.u.OpInfo != 0);
     case UWOP_SAVE_NONVOL:
     case UWOP_SAVE_XMM128:
         return 2;
@@ -271,9 +268,11 @@ static int get_opcode_size(UNWIND_CODE op)
     }
 }
 
-static BOOL is_inside_epilog(struct cpu_stack_walk* csw, DWORD64 pc)
+static BOOL is_inside_epilog(struct cpu_stack_walk* csw, DWORD64 pc,
+                             DWORD64 base, const RUNTIME_FUNCTION *function )
 {
-    BYTE        op0, op1, op2;
+    BYTE op0, op1, op2;
+    LONG val32;
 
     if (!sw_read_mem(csw, pc, &op0, 1)) return FALSE;
 
@@ -319,12 +318,9 @@ static BOOL is_inside_epilog(struct cpu_stack_walk* csw, DWORD64 pc)
     /* now check for various pop instructions */
     for (;;)
     {
-        BYTE rex = 0;
-
         if (!sw_read_mem(csw, pc, &op0, 1)) return FALSE;
-        if ((op0 & 0xf0) == 0x40)
+        if ((op0 & 0xf0) == 0x40)  /* rex prefix */
         {
-            rex = op0 & 0x0f;  /* rex prefix */
             if (!sw_read_mem(csw, ++pc, &op0, 1)) return FALSE;
         }
 
@@ -343,8 +339,106 @@ static BOOL is_inside_epilog(struct cpu_stack_walk* csw, DWORD64 pc)
         case 0xc2: /* ret $nn */
         case 0xc3: /* ret */
             return TRUE;
-        /* FIXME: add various jump instructions */
+        case 0xe9: /* jmp nnnn */
+            if (!sw_read_mem(csw, pc + 1, &val32, sizeof(LONG))) return FALSE;
+            pc += 5 + val32;
+            if (pc - base >= function->BeginAddress && pc - base < function->EndAddress)
+                continue;
+            break;
+        case 0xeb: /* jmp n */
+            if (!sw_read_mem(csw, pc + 1, &op1, 1)) return FALSE;
+            pc += 2 + (signed char)op1;
+            if (pc - base >= function->BeginAddress && pc - base < function->EndAddress)
+                continue;
+            break;
+        case 0xf3: /* rep; ret (for amd64 prediction bug) */
+            if (!sw_read_mem(csw, pc + 1, &op1, 1)) return FALSE;
+            return op1 == 0xc3;
         }
+        return FALSE;
+    }
+}
+
+static BOOL interpret_epilog(struct cpu_stack_walk* csw, ULONG64 pc, CONTEXT *context )
+{
+    BYTE        insn, val8;
+    WORD        val16;
+    LONG        val32;
+    DWORD64     val64;
+
+    for (;;)
+    {
+        BYTE rex = 0;
+
+        if (!sw_read_mem(csw, pc, &insn, 1)) return FALSE;
+        if ((insn & 0xf0) == 0x40)
+        {
+            rex = insn & 0x0f;  /* rex prefix */
+            if (!sw_read_mem(csw, ++pc, &insn, 1)) return FALSE;
+        }
+
+        switch (insn)
+        {
+        case 0x58: /* pop %rax/r8 */
+        case 0x59: /* pop %rcx/r9 */
+        case 0x5a: /* pop %rdx/r10 */
+        case 0x5b: /* pop %rbx/r11 */
+        case 0x5c: /* pop %rsp/r12 */
+        case 0x5d: /* pop %rbp/r13 */
+        case 0x5e: /* pop %rsi/r14 */
+        case 0x5f: /* pop %rdi/r15 */
+            if (!sw_read_mem(csw, context->Rsp, &val64, sizeof(DWORD64))) return FALSE;
+            set_int_reg(context, insn - 0x58 + (rex & 1) * 8, val64);
+            context->Rsp += sizeof(ULONG64);
+            pc++;
+            continue;
+        case 0x81: /* add $nnnn,%rsp */
+            if (!sw_read_mem(csw, pc + 2, &val32, sizeof(LONG))) return FALSE;
+            context->Rsp += val32;
+            pc += 2 + sizeof(LONG);
+            continue;
+        case 0x83: /* add $n,%rsp */
+            if (!sw_read_mem(csw, pc + 2, &val8, sizeof(BYTE))) return FALSE;
+            context->Rsp += (signed char)val8;
+            pc += 3;
+            continue;
+        case 0x8d:
+            if (!sw_read_mem(csw, pc + 1, &insn, sizeof(BYTE))) return FALSE;
+            if ((insn >> 6) == 1)  /* lea n(reg),%rsp */
+            {
+                if (!sw_read_mem(csw, pc + 2, &val8, sizeof(BYTE))) return FALSE;
+                context->Rsp = get_int_reg( context, (insn & 7) + (rex & 1) * 8 ) + (signed char)val8;
+                pc += 3;
+            }
+            else  /* lea nnnn(reg),%rsp */
+            {
+                if (!sw_read_mem(csw, pc + 2, &val32, sizeof(LONG))) return FALSE;
+                context->Rsp = get_int_reg( context, (insn & 7) + (rex & 1) * 8 ) + val32;
+                pc += 2 + sizeof(LONG);
+            }
+            continue;
+        case 0xc2: /* ret $nn */
+            if (!sw_read_mem(csw, context->Rsp, &val64, sizeof(DWORD64))) return FALSE;
+            if (!sw_read_mem(csw, pc + 1, &val16, sizeof(WORD))) return FALSE;
+            context->Rip = val64;
+            context->Rsp += sizeof(ULONG64) + val16;
+            return TRUE;
+        case 0xc3: /* ret */
+        case 0xf3: /* rep; ret */
+            if (!sw_read_mem(csw, context->Rsp, &val64, sizeof(DWORD64))) return FALSE;
+            context->Rip = val64;
+            context->Rsp += sizeof(ULONG64);
+            return TRUE;
+        case 0xe9: /* jmp nnnn */
+            if (!sw_read_mem(csw, pc + 1, &val32, sizeof(LONG))) return FALSE;
+            pc += 5 + val32;
+            continue;
+        case 0xeb: /* jmp n */
+            if (!sw_read_mem(csw, pc + 1, &val8, sizeof(BYTE))) return FALSE;
+            pc += 2 + (signed char)val8;
+            continue;
+        }
+        FIXME("unsupported insn %x\n", insn);
         return FALSE;
     }
 }
@@ -372,7 +466,7 @@ static BOOL interpret_function_table_entry(struct cpu_stack_walk* csw,
 
     /* FIXME: we have some assumptions here */
     assert(context);
-    dump_unwind_info(csw->hProcess, sw_module_base(csw, context->Rip), function);
+    dump_unwind_info(csw, sw_module_base(csw, context->Rip), function);
     newframe = context->Rsp;
     for (;;)
     {
@@ -402,60 +496,59 @@ static BOOL interpret_function_table_entry(struct cpu_stack_walk* csw,
         else
         {
             prolog_offset = ~0;
-            if (is_inside_epilog(csw, context->Rip))
+            if (is_inside_epilog(csw, context->Rip, base, function))
             {
-                FIXME("epilog management not fully done\n");
-                /* interpret_epilog((const BYTE*)frame->AddrPC.Offset, context); */
+                interpret_epilog(csw, context->Rip, context);
                 return TRUE;
             }
         }
 
         for (i = 0; i < info->CountOfCodes; i += get_opcode_size(info->UnwindCode[i]))
         {
-            if (prolog_offset < info->UnwindCode[i].CodeOffset) continue; /* skip it */
+            if (prolog_offset < info->UnwindCode[i].u.CodeOffset) continue; /* skip it */
 
-            switch (info->UnwindCode[i].UnwindOp)
+            switch (info->UnwindCode[i].u.UnwindOp)
             {
             case UWOP_PUSH_NONVOL:  /* pushq %reg */
                 if (!sw_read_mem(csw, context->Rsp, &value, sizeof(DWORD64))) return FALSE;
-                set_int_reg(context, info->UnwindCode[i].OpInfo, value);
+                set_int_reg(context, info->UnwindCode[i].u.OpInfo, value);
                 context->Rsp += sizeof(ULONG64);
                 break;
             case UWOP_ALLOC_LARGE:  /* subq $nn,%rsp */
-                if (info->UnwindCode[i].OpInfo) context->Rsp += *(DWORD*)&info->UnwindCode[i+1];
+                if (info->UnwindCode[i].u.OpInfo) context->Rsp += *(DWORD*)&info->UnwindCode[i+1];
                 else context->Rsp += *(USHORT*)&info->UnwindCode[i+1] * 8;
                 break;
             case UWOP_ALLOC_SMALL:  /* subq $n,%rsp */
-                context->Rsp += (info->UnwindCode[i].OpInfo + 1) * 8;
+                context->Rsp += (info->UnwindCode[i].u.OpInfo + 1) * 8;
                 break;
             case UWOP_SET_FPREG:  /* leaq nn(%rsp),%framereg */
                 context->Rsp = newframe;
                 break;
             case UWOP_SAVE_NONVOL:  /* movq %reg,n(%rsp) */
                 off = newframe + *(USHORT*)&info->UnwindCode[i+1] * 8;
-                if (!sw_read_mem(csw, context->Rsp, &value, sizeof(DWORD64))) return FALSE;
-                set_int_reg(context, info->UnwindCode[i].OpInfo, value);
+                if (!sw_read_mem(csw, off, &value, sizeof(DWORD64))) return FALSE;
+                set_int_reg(context, info->UnwindCode[i].u.OpInfo, value);
                 break;
             case UWOP_SAVE_NONVOL_FAR:  /* movq %reg,nn(%rsp) */
                 off = newframe + *(DWORD*)&info->UnwindCode[i+1];
-                if (!sw_read_mem(csw, context->Rsp, &value, sizeof(DWORD64))) return FALSE;
-                set_int_reg(context, info->UnwindCode[i].OpInfo, value);
+                if (!sw_read_mem(csw, off, &value, sizeof(DWORD64))) return FALSE;
+                set_int_reg(context, info->UnwindCode[i].u.OpInfo, value);
                 break;
             case UWOP_SAVE_XMM128:  /* movaps %xmmreg,n(%rsp) */
                 off = newframe + *(USHORT*)&info->UnwindCode[i+1] * 16;
-                if (!sw_read_mem(csw, context->Rsp, &floatvalue, sizeof(M128A))) return FALSE;
-                set_float_reg(context, info->UnwindCode[i].OpInfo, floatvalue);
+                if (!sw_read_mem(csw, off, &floatvalue, sizeof(M128A))) return FALSE;
+                set_float_reg(context, info->UnwindCode[i].u.OpInfo, floatvalue);
                 break;
             case UWOP_SAVE_XMM128_FAR:  /* movaps %xmmreg,nn(%rsp) */
                 off = newframe + *(DWORD*)&info->UnwindCode[i+1];
-                if (!sw_read_mem(csw, context->Rsp, &floatvalue, sizeof(M128A))) return FALSE;
-                set_float_reg(context, info->UnwindCode[i].OpInfo, floatvalue);
+                if (!sw_read_mem(csw, off, &floatvalue, sizeof(M128A))) return FALSE;
+                set_float_reg(context, info->UnwindCode[i].u.OpInfo, floatvalue);
                 break;
             case UWOP_PUSH_MACHFRAME:
-                FIXME("PUSH_MACHFRAME %u\n", info->UnwindCode[i].OpInfo);
+                FIXME("PUSH_MACHFRAME %u\n", info->UnwindCode[i].u.OpInfo);
                 break;
             default:
-                FIXME("unknown code %u\n", info->UnwindCode[i].UnwindOp);
+                FIXME("unknown code %u\n", info->UnwindCode[i].u.UnwindOp);
                 break;
             }
         }
@@ -619,7 +712,7 @@ static void*    x86_64_find_runtime_function(struct module* module, DWORD64 addr
     return NULL;
 }
 
-static unsigned x86_64_map_dwarf_register(unsigned regno)
+static unsigned x86_64_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     unsigned    reg;
 
@@ -796,6 +889,64 @@ static const char* x86_64_fetch_regname(unsigned regno)
     return NULL;
 }
 
+static BOOL x86_64_fetch_minidump_thread(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx)
+{
+    if (ctx->ContextFlags && (flags & ThreadWriteInstructionWindow))
+    {
+        /* FIXME: crop values across module boundaries, */
+#ifdef __x86_64__
+        ULONG64 base = ctx->Rip <= 0x80 ? 0 : ctx->Rip - 0x80;
+        minidump_add_memory_block(dc, base, ctx->Rip + 0x80 - base, 0);
+#endif
+    }
+
+    return TRUE;
+}
+
+static BOOL x86_64_fetch_minidump_module(struct dump_context* dc, unsigned index, unsigned flags)
+{
+    /* FIXME: not sure about the flags... */
+    if (1)
+    {
+        /* FIXME: crop values across module boundaries, */
+#ifdef __x86_64__
+        struct process*         pcs;
+        struct module*          module;
+        const RUNTIME_FUNCTION* rtf;
+        ULONG                   size;
+
+        if (!(pcs = process_find_by_handle(dc->hProcess)) ||
+            !(module = module_find_by_addr(pcs, dc->modules[index].base, DMT_UNKNOWN)))
+            return FALSE;
+        rtf = (const RUNTIME_FUNCTION*)pe_map_directory(module, IMAGE_DIRECTORY_ENTRY_EXCEPTION, &size);
+        if (rtf)
+        {
+            const RUNTIME_FUNCTION* end = (const RUNTIME_FUNCTION*)((const char*)rtf + size);
+            UNWIND_INFO ui;
+
+            while (rtf + 1 < end)
+            {
+                while (rtf->UnwindData & 1)  /* follow chained entry */
+                {
+                    FIXME("RunTime_Function outside IMAGE_DIRECTORY_ENTRY_EXCEPTION unimplemented yet!\n");
+                    return FALSE;
+                    /* we need to read into the other process */
+                    /* rtf = (RUNTIME_FUNCTION*)(module->module.BaseOfImage + (rtf->UnwindData & ~1)); */
+                }
+                if (ReadProcessMemory(dc->hProcess,
+                                      (void*)(dc->modules[index].base + rtf->UnwindData),
+                                      &ui, sizeof(ui), NULL))
+                    minidump_add_memory_block(dc, dc->modules[index].base + rtf->UnwindData,
+                                              FIELD_OFFSET(UNWIND_INFO, UnwindCode) + ui.CountOfCodes * sizeof(UNWIND_CODE), 0);
+                rtf++;
+            }
+        }
+#endif
+    }
+
+    return TRUE;
+}
+
 DECLSPEC_HIDDEN struct cpu cpu_x86_64 = {
     IMAGE_FILE_MACHINE_AMD64,
     8,
@@ -806,4 +957,6 @@ DECLSPEC_HIDDEN struct cpu cpu_x86_64 = {
     x86_64_map_dwarf_register,
     x86_64_fetch_context_reg,
     x86_64_fetch_regname,
+    x86_64_fetch_minidump_thread,
+    x86_64_fetch_minidump_module,
 };

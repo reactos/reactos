@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <pci.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -35,7 +36,7 @@ busintrf_Initializer(IN PVOID Instance)
 {
     UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG(FALSE, "PCI busintrf_Initializer, unexpected call.");
+    ASSERTMSG("PCI busintrf_Initializer, unexpected call.", FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 

@@ -29,6 +29,8 @@
 
 #include "vbemp.h"
 
+#include <devioctl.h>
+
 #undef LOWORD
 #undef HIWORD
 #define LOWORD(l)	((USHORT)((ULONG_PTR)(l)))

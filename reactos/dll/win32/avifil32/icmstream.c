@@ -16,26 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <assert.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-//#include "winerror.h"
-//#include "mmsystem.h"
-#include <vfw.h>
-
 #include "avifile_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 #define MAX_FRAMESIZE       (16 * 1024 * 1024)
 #define MAX_FRAMESIZE_DIFF  512
@@ -101,7 +82,7 @@ static HRESULT WINAPI ICMStream_fnQueryInterface(IAVIStream *iface,
 
   if (IsEqualGUID(&IID_IUnknown, refiid) ||
       IsEqualGUID(&IID_IAVIStream, refiid)) {
-    *obj = This;
+    *obj = &This->IAVIStream_iface;
     IAVIStream_AddRef(iface);
 
     return S_OK;
@@ -318,7 +299,7 @@ static LONG WINAPI ICMStream_fnFindSample(IAVIStream *iface, LONG pos,
       return This->lLastKey;
     }
   } else if (flags & FIND_ANY) {
-    return pos; /* We really don't know, reread is to expensive, so guess. */
+    return pos; /* We really don't know, reread is too expensive, so guess. */
   } else if (flags & FIND_FORMAT) {
     if (flags & FIND_PREV)
       return 0;
@@ -775,11 +756,11 @@ static HRESULT AVIFILE_EncodeFrame(IAVIStreamImpl *This,
   if (This->lKeyFrameEvery != 0) {
     if (This->lCurrent == This->sInfo.dwStart) {
       if (idxFlags & AVIIF_KEYFRAME) {
-	/* for keyframes allow to consume all unused bytes */
+	/* allow keyframes to consume all unused bytes */
 	dwRequest = This->dwBytesPerFrame + This->dwUnusedBytes;
 	This->dwUnusedBytes = 0;
       } else {
-	/* for non-keyframes only allow something of the unused bytes to be consumed */
+	/* for non-keyframes only allow some of the unused bytes to be consumed */
 	DWORD tmp1 = 0;
 	DWORD tmp2;
 
@@ -801,8 +782,8 @@ static HRESULT AVIFILE_EncodeFrame(IAVIStreamImpl *This,
       dwRequest = MAX_FRAMESIZE;
   }
 
-  /* must we check for framesize to gain requested
-   * datarate or could we trust codec? */
+  /* must we check for frame size to gain the requested
+   * data rate or can we trust the codec? */
   doSizeCheck = (dwRequest != 0 && ((This->dwICMFlags & (VIDCF_CRUNCH|VIDCF_QUALITY)) == 0));
 
   dwMaxQual = dwCurQual = This->sInfo.dwQuality;

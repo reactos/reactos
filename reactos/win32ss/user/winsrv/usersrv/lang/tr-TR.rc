@@ -1,0 +1,26 @@
+/* Turkish translation by Arda Tanrikulu <ardatanrikulu@gmail.com> */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Programı Sonlandır - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Program Sonlandırılıyor... Lütfen bekleyin", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "İşlem", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Programı hemen kapatmayı seçerseniz, kaydedilmemiş veriyi kaybedersiniz. Programdan şimdi çıkmak için Şimdi Sonlandır'ı tıklatın.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "End Program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "İptal", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "Şimdi Sonlandır", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Bu program yanıt vermiyor.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "ReactOS'a dönmek ve programın durumunu denetlemek için İptal'i tıklatın.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Programı hemen kapatmayı seçerseniz, kaydedilmemiş veriyi kaybedersiniz. Programdan şimdi çıkmak için Şimdi Sonlandır'ı tıklatın.", IDC_STATIC, 7, 53, 178, 26
+END

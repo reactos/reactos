@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/video/displays/vga/vgavideo/vgavideo.c
+ * FILE:            win32ss/drivers/displays/vga/vgavideo/vgavideo.c
  * PURPOSE:         
  * PROGRAMMERS:     
  */
@@ -560,7 +560,7 @@ void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDe
             pb++;
         }
 
-        if (edgePixel == TRUE)
+        if (edgePixel)
         {
             b1 = *pb;
             if(b1 != trans) vgaPutPixel(x2, j, b1);

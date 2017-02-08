@@ -1,10 +1,6 @@
-#define WIN32_NO_STATUS
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include <tchar.h>
+#ifndef _SPIDER_PCH_
+#define _SPIDER_PCH_
+
 #include <cardlib.h>
 
 #include "resource.h"
@@ -16,12 +12,11 @@
 #define CARDBACK_END             IDC_CARDBACK12
 #define NUM_CARDBACKS            (CARDBACK_END - CARDBACK_START + 1)
 #define CARDBACK_RES_START       53
-/* Display option cards with half the size */
-#define CARDBACK_OPTIONS_WIDTH   36
-#define CARDBACK_OPTIONS_HEIGHT  48
+#define CARDBACK_OPTIONS_WIDTH   72
+#define CARDBACK_OPTIONS_HEIGHT  112
 
-#define X_BORDER                  6
-#define Y_BORDER                 12
+#define X_BORDER                  5
+#define Y_BORDER                  5
 
 #define NUM_STACKS         10
 
@@ -46,3 +41,5 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked);
 void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked);
 
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iRemoved);
+
+#endif /* _SPIDER_PCH_ */

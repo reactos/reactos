@@ -32,13 +32,13 @@ RtlValidSid(IN PSID Sid_)
              (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES)))
         {
             /* It's not, fail */
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Access violation, SID is not valid */
-        return FALSE;
+        _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
 

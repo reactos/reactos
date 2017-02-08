@@ -258,15 +258,15 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
     };
 } IOAPIC_REDIRECTION_REGISTER;
 
-ULONG
 FORCEINLINE
+ULONG
 ApicRead(ULONG Offset)
 {
     return *(volatile ULONG *)(APIC_BASE + Offset);
 }
 
-VOID
 FORCEINLINE
+VOID
 ApicWrite(ULONG Offset, ULONG Value)
 {
     *(volatile ULONG *)(APIC_BASE + Offset) = Value;
@@ -276,5 +276,5 @@ VOID
 NTAPI
 ApicInitializeTimer(ULONG Cpu);
 
-VOID ApicSpuriousService(VOID);
+VOID __cdecl ApicSpuriousService(VOID);
 

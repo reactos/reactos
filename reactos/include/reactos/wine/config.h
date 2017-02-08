@@ -1,7 +1,14 @@
 #define __WINE_CONFIG_H
 
 /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
+#ifndef DECLSPEC_HOTPATCH
+#if defined(_MSC_VER) || defined(__clang__)
+/* FIXME: https://llvm.org/bugs/show_bug.cgi?id=10212 */
 #define DECLSPEC_HOTPATCH
+#else
+#define DECLSPEC_HOTPATCH __attribute__((__ms_hook_prologue__))
+#endif
+#endif /* DECLSPEC_HOTPATCH */
 
 /* Define to the file extension for executables. */
 #define EXEEXT ".exe"
@@ -295,6 +302,9 @@
 
 /* Define to 1 if you have the <io.h> header file. */
 #define HAVE_IO_H 1
+
+/* Define to 1 if you have the `isfinite' function. */
+/* #undef HAVE_ISFINITE */
 
 /* Define to 1 if you have the `isinf' function. */
 /* #undef HAVE_ISINF */
@@ -1003,9 +1013,7 @@
 /* #undef HAVE_SYS_TIMES_H */
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#ifndef _MSC_VER
-  #define HAVE_SYS_TIME_H 1
-#endif
+#define HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
@@ -1053,9 +1061,7 @@
 /* #undef HAVE_UCONTEXT_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#ifndef _MSC_VER
 #define HAVE_UNISTD_H 1
-#endif
 
 /* Define to 1 if you have the `usleep' function. */
 /* #undef HAVE_USLEEP */
@@ -1221,7 +1227,7 @@
 /* #undef SONAME_LIBGLU */
 
 /* Define to the soname of the libgnutls library. */
-/* #unef SONAME_LIBGNUTLS */
+/* #undef SONAME_LIBGNUTLS */
 
 /* Define to the soname of the libgsm library. */
 /* #undef SONAME_LIBGSM */
@@ -1234,6 +1240,9 @@
 
 /* Define to the soname of the libjpeg library. */
 #define SONAME_LIBJPEG "libjpeg"
+
+/* Define to the soname of the libmbedtls library. */
+#define SONAME_LIBMBEDTLS "mbedtls"
 
 /* Define to the soname of the libncurses library. */
 /* #undef SONAME_LIBNCURSES */
@@ -1255,6 +1264,9 @@
 
 /* Define to the soname of the libtiff library. */
 #define SONAME_LIBTIFF "libtiff"
+
+/* Define to the soname of the libtxc_dxtn library. */
+#define SONAME_LIBTXC_DXTN "dxtn"
 
 /* Define to the soname of the libv4l1 library. */
 /* #undef SONAME_LIBV4L1 */

@@ -1,0 +1,69 @@
+/*
+ * Copyright 2009 Piotr Caban
+ * Copyright 2010 Claudia Cotună
+ *                Michael Stefaniuc
+ *                Ștefan Fulea
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Eroare la convertirea obiectului la un tip primitiv"
+    IDS_INVALID_CALL_ARG    "Apel de procedură sau argument nevalid"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript în afara limitelor admise"
+    IDS_OBJECT_REQUIRED     "Obiect necesar"
+    IDS_CREATE_OBJ_ERROR    "Serverul de automatizare nu poate crea obiectul"
+    IDS_NO_PROPERTY         "Proprietatea sau metoda este neaplicabilă obiectului"
+    IDS_UNSUPPORTED_ACTION  "Acțiunea este neaplicabilă obiectului"
+    IDS_ARG_NOT_OPT         "Argumentul nu este opțional"
+    IDS_SYNTAX_ERROR        "Eroare de sintaxă"
+    IDS_SEMICOLON           "Se aștepta „;”"
+    IDS_LBRACKET            "Se aștepta „(”"
+    IDS_RBRACKET            "Se aștepta „)”"
+    IDS_EXPECTED_IDENTIFIER "Se aștepta identificator"
+    IDS_EXPECTED_ASSIGN     "Se aștepta '='"
+    IDS_INVALID_CHAR        "Caracter nevalid"
+    IDS_UNTERMINATED_STR    "Șir constant neterminat"
+    IDS_MISPLACED_RETURN    "Poziția 'return' este în afara funcției"
+    IDS_INVALID_BREAK       "Nu se poate admite 'break' în afara buclelor"
+    IDS_INVALID_CONTINUE    "Nu se poate admite 'continue' în afara buclelor"
+    IDS_LABEL_REDEFINED     "Eticheta este redefinită"
+    IDS_LABEL_NOT_FOUND     "Etichetă nu este găsită"
+    IDS_EXPECTED_CCEND      "Se aștepta '@end'"
+    IDS_DISABLED_CC         "Compilarea condițională este dezactivată"
+    IDS_EXPECTED_AT         "Se aștepta '@'"
+    IDS_NOT_FUNC            "Se aștepta o funcție"
+    IDS_NOT_DATE            "„[obiect]” nu este un obiect de tip dată"
+    IDS_NOT_NUM             "Se aștepta un număr"
+    IDS_OBJECT_EXPECTED     "Se aștepta un obiect"
+    IDS_ILLEGAL_ASSIGN      "Atribuire ilegală"
+    IDS_UNDEFINED           "„|” nu este definit"
+    IDS_NOT_BOOL            "Se așteaptă un obiect boolean"
+    IDS_INVALID_DELETE      "'|' nu poate fi șters"
+    IDS_NOT_VBARRAY         "Se aștepta obiect de tip VBArray"
+    IDS_JSCRIPT_EXPECTED    "Se aștepta un obiect JScript"
+    IDS_REGEXP_SYNTAX_ERROR "Eroare de sintaxă în expresia regulată"
+    IDS_URI_INVALID_CODING  "URI ce urmează a fi decodificat nu este corect"
+    IDS_URI_INVALID_CHAR    "URI care trebuie codificat conține caractere nevalide"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Numărul cifrelor fracționare este în afara limitelor admise"
+    IDS_PRECISION_OUT_OF_RANGE "Precizia este în afara limitelor admise"
+    IDS_INVALID_LENGTH      "Lungimea unei matrice trebuie să fie un număr întreg pozitiv"
+    IDS_ARRAY_EXPECTED      "Se aștepta un obiect matrice"
+}

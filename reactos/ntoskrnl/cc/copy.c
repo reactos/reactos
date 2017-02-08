@@ -18,8 +18,15 @@
 static PFN_NUMBER CcZeroPage = 0;
 
 #define MAX_ZERO_LENGTH    (256 * 1024)
-#define MAX_RW_LENGTH    (256 * 1024)
 
+typedef enum _CC_COPY_OPERATION
+{
+    CcOperationRead,
+    CcOperationWrite,
+    CcOperationZero
+} CC_COPY_OPERATION;
+
+ULONG CcRosTraceLevel = 0;
 ULONG CcFastMdlReadWait;
 ULONG CcFastMdlReadNotPossible;
 ULONG CcFastReadNotPossible;
@@ -55,157 +62,22 @@ CcInitCacheZeroPage (
 
 NTSTATUS
 NTAPI
-ReadCacheSegmentChain (
-    PBCB Bcb,
-    ULONG ReadOffset,
-    ULONG Length,
-    PVOID Buffer)
-{
-    PCACHE_SEGMENT head;
-    PCACHE_SEGMENT current;
-    PCACHE_SEGMENT previous;
-    IO_STATUS_BLOCK Iosb;
-    LARGE_INTEGER SegOffset;
-    NTSTATUS Status;
-    ULONG TempLength;
-    KEVENT Event;
-    PMDL Mdl;
-
-    Mdl = _alloca(MmSizeOfMdl(NULL, MAX_RW_LENGTH));
-
-    Status = CcRosGetCacheSegmentChain(Bcb, ReadOffset, Length, &head);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-    current = head;
-    while (current != NULL)
-    {
-        /*
-         * If the current segment is valid then copy it into the
-         * user buffer.
-         */
-        if (current->Valid)
-        {
-            TempLength = min(Bcb->CacheSegmentSize, Length);
-            memcpy(Buffer, current->BaseAddress, TempLength);
-
-            Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
-
-            Length = Length - TempLength;
-            previous = current;
-            current = current->NextInChain;
-            CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
-        }
-        /*
-         * Otherwise read in as much as we can.
-         */
-        else
-        {
-            PCACHE_SEGMENT current2;
-            ULONG current_size;
-            ULONG i;
-            PPFN_NUMBER MdlPages;
-
-            /*
-             * Count the maximum number of bytes we could read starting
-             * from the current segment.
-             */
-            current2 = current;
-            current_size = 0;
-            while ((current2 != NULL) && !current2->Valid && (current_size < MAX_RW_LENGTH))
-            {
-                current2 = current2->NextInChain;
-                current_size += Bcb->CacheSegmentSize;
-            }
-
-            /*
-             * Create an MDL which contains all their pages.
-             */
-            MmInitializeMdl(Mdl, NULL, current_size);
-            Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
-            current2 = current;
-            current_size = 0;
-            MdlPages = (PPFN_NUMBER)(Mdl + 1);
-            while ((current2 != NULL) && !current2->Valid && (current_size < MAX_RW_LENGTH))
-            {
-                PVOID address = current2->BaseAddress;
-                for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++, address = RVA(address, PAGE_SIZE))
-                {
-                    *MdlPages++ = MmGetPfnForProcess(NULL, address);
-                }
-                current2 = current2->NextInChain;
-                current_size += Bcb->CacheSegmentSize;
-            }
-
-            /*
-             * Read in the information.
-             */
-            SegOffset.QuadPart = current->FileOffset;
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Status = IoPageRead(Bcb->FileObject,
-                                Mdl,
-                                &SegOffset,
-                                &Event,
-                                &Iosb);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = Iosb.Status;
-            }
-            if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
-            {
-                MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
-            }
-            if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
-            {
-                while (current != NULL)
-                {
-                    previous = current;
-                    current = current->NextInChain;
-                    CcRosReleaseCacheSegment(Bcb, previous, FALSE, FALSE, FALSE);
-                }
-                return Status;
-            }
-            current_size = 0;
-            while (current != NULL && !current->Valid && current_size < MAX_RW_LENGTH)
-            {
-                previous = current;
-                current = current->NextInChain;
-                TempLength = min(Bcb->CacheSegmentSize, Length);
-                memcpy(Buffer, previous->BaseAddress, TempLength);
-
-                Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
-
-                Length = Length - TempLength;
-                CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
-                current_size += Bcb->CacheSegmentSize;
-            }
-        }
-    }
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ReadCacheSegment (
-    PCACHE_SEGMENT CacheSeg)
+CcReadVirtualAddress (
+    PROS_VACB Vacb)
 {
     ULONG Size;
     PMDL Mdl;
     NTSTATUS Status;
-    LARGE_INTEGER SegOffset;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
 
-    SegOffset.QuadPart = CacheSeg->FileOffset;
-    Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
-    if (Size > CacheSeg->Bcb->CacheSegmentSize)
+    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
+    if (Size > VACB_MAPPING_GRANULARITY)
     {
-        Size = CacheSeg->Bcb->CacheSegmentSize;
+        Size = VACB_MAPPING_GRANULARITY;
     }
 
-    Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
+    Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -214,7 +86,7 @@ ReadCacheSegment (
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
+    Status = IoPageRead(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -229,10 +101,10 @@ ReadCacheSegment (
         return Status;
     }
 
-    if (CacheSeg->Bcb->CacheSegmentSize > Size)
+    if (Size < VACB_MAPPING_GRANULARITY)
     {
-        RtlZeroMemory((char*)CacheSeg->BaseAddress + Size,
-                      CacheSeg->Bcb->CacheSegmentSize - Size);
+        RtlZeroMemory((char*)Vacb->BaseAddress + Size,
+                      VACB_MAPPING_GRANULARITY - Size);
     }
 
     return STATUS_SUCCESS;
@@ -240,22 +112,20 @@ ReadCacheSegment (
 
 NTSTATUS
 NTAPI
-WriteCacheSegment (
-    PCACHE_SEGMENT CacheSeg)
+CcWriteVirtualAddress (
+    PROS_VACB Vacb)
 {
     ULONG Size;
     PMDL Mdl;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
-    LARGE_INTEGER SegOffset;
     KEVENT Event;
 
-    CacheSeg->Dirty = FALSE;
-    SegOffset.QuadPart = CacheSeg->FileOffset;
-    Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
-    if (Size > CacheSeg->Bcb->CacheSegmentSize)
+    Vacb->Dirty = FALSE;
+    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
+    if (Size > VACB_MAPPING_GRANULARITY)
     {
-        Size = CacheSeg->Bcb->CacheSegmentSize;
+        Size = VACB_MAPPING_GRANULARITY;
     }
     //
     // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
@@ -265,11 +135,11 @@ WriteCacheSegment (
         ULONG i = 0;
         do
         {
-            MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i << PAGE_SHIFT)));
+            MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)Vacb->BaseAddress + (i << PAGE_SHIFT)));
         } while (++i < (Size >> PAGE_SHIFT));
     }
 
-    Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
+    Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -277,7 +147,7 @@ WriteCacheSegment (
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoSynchronousPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
+    Status = IoSynchronousPageWrite(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -287,13 +157,177 @@ WriteCacheSegment (
     if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
         DPRINT1("IoPageWrite failed, Status %x\n", Status);
-        CacheSeg->Dirty = TRUE;
+        Vacb->Dirty = TRUE;
         return Status;
     }
 
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+ReadWriteOrZero(
+    _Inout_ PVOID BaseAddress,
+    _Inout_opt_ PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ CC_COPY_OPERATION Operation)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (Operation == CcOperationZero)
+    {
+        /* Zero */
+        RtlZeroMemory(BaseAddress, Length);
+    }
+    else
+    {
+        _SEH2_TRY
+        {
+            if (Operation == CcOperationWrite)
+                RtlCopyMemory(BaseAddress, Buffer, Length);
+            else
+                RtlCopyMemory(Buffer, BaseAddress, Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    return Status;
+}
+
+BOOLEAN
+CcCopyData (
+    _In_ PFILE_OBJECT FileObject,
+    _In_ LONGLONG FileOffset,
+    _Inout_ PVOID Buffer,
+    _In_ LONGLONG Length,
+    _In_ CC_COPY_OPERATION Operation,
+    _In_ BOOLEAN Wait,
+    _Out_ PIO_STATUS_BLOCK IoStatus)
+{
+    NTSTATUS Status;
+    LONGLONG CurrentOffset;
+    ULONG BytesCopied;
+    KIRQL OldIrql;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PLIST_ENTRY ListEntry;
+    PROS_VACB Vacb;
+    ULONG PartialLength;
+    PVOID BaseAddress;
+    BOOLEAN Valid;
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    CurrentOffset = FileOffset;
+    BytesCopied = 0;
+
+    if (!Wait)
+    {
+        /* test if the requested data is available */
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+        /* FIXME: this loop doesn't take into account areas that don't have
+         * a VACB in the list yet */
+        ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
+        while (ListEntry != &SharedCacheMap->CacheMapVacbListHead)
+        {
+            Vacb = CONTAINING_RECORD(ListEntry,
+                                     ROS_VACB,
+                                     CacheMapVacbListEntry);
+            ListEntry = ListEntry->Flink;
+            if (!Vacb->Valid &&
+                DoRangesIntersect(Vacb->FileOffset.QuadPart,
+                                  VACB_MAPPING_GRANULARITY,
+                                  CurrentOffset, Length))
+            {
+                KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+                /* data not available */
+                return FALSE;
+            }
+            if (Vacb->FileOffset.QuadPart >= CurrentOffset + Length)
+                break;
+        }
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+    }
+
+    PartialLength = CurrentOffset % VACB_MAPPING_GRANULARITY;
+    if (PartialLength != 0)
+    {
+        PartialLength = min(Length, VACB_MAPPING_GRANULARITY - PartialLength);
+        Status = CcRosRequestVacb(SharedCacheMap,
+                                  ROUND_DOWN(CurrentOffset,
+                                             VACB_MAPPING_GRANULARITY),
+                                  &BaseAddress,
+                                  &Valid,
+                                  &Vacb);
+        if (!NT_SUCCESS(Status))
+            ExRaiseStatus(Status);
+        if (!Valid)
+        {
+            Status = CcReadVirtualAddress(Vacb);
+            if (!NT_SUCCESS(Status))
+            {
+                CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+                ExRaiseStatus(Status);
+            }
+        }
+        Status = ReadWriteOrZero((PUCHAR)BaseAddress + CurrentOffset % VACB_MAPPING_GRANULARITY,
+                                 Buffer,
+                                 PartialLength,
+                                 Operation);
+
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, Operation != CcOperationRead, FALSE);
+
+        if (!NT_SUCCESS(Status))
+            ExRaiseStatus(STATUS_INVALID_USER_BUFFER);
+
+        Length -= PartialLength;
+        CurrentOffset += PartialLength;
+        BytesCopied += PartialLength;
+
+        if (Operation != CcOperationZero)
+            Buffer = (PVOID)((ULONG_PTR)Buffer + PartialLength);
+    }
+
+    while (Length > 0)
+    {
+        ASSERT(CurrentOffset % VACB_MAPPING_GRANULARITY == 0);
+        PartialLength = min(VACB_MAPPING_GRANULARITY, Length);
+        Status = CcRosRequestVacb(SharedCacheMap,
+                                  CurrentOffset,
+                                  &BaseAddress,
+                                  &Valid,
+                                  &Vacb);
+        if (!NT_SUCCESS(Status))
+            ExRaiseStatus(Status);
+        if (!Valid &&
+            (Operation == CcOperationRead ||
+             PartialLength < VACB_MAPPING_GRANULARITY))
+        {
+            Status = CcReadVirtualAddress(Vacb);
+            if (!NT_SUCCESS(Status))
+            {
+                CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+                ExRaiseStatus(Status);
+            }
+        }
+        Status = ReadWriteOrZero(BaseAddress, Buffer, PartialLength, Operation);
+
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, Operation != CcOperationRead, FALSE);
+
+        if (!NT_SUCCESS(Status))
+            ExRaiseStatus(STATUS_INVALID_USER_BUFFER);
+
+        Length -= PartialLength;
+        CurrentOffset += PartialLength;
+        BytesCopied += PartialLength;
+
+        if (Operation != CcOperationZero)
+            Buffer = (PVOID)((ULONG_PTR)Buffer + PartialLength);
+    }
+    IoStatus->Status = STATUS_SUCCESS;
+    IoStatus->Information = BytesCopied;
+    return TRUE;
+}
 
 /*
  * @unimplemented
@@ -306,10 +340,11 @@ CcCanIWrite (
     IN BOOLEAN Wait,
     IN BOOLEAN Retrying)
 {
-    UNIMPLEMENTED;
-    return FALSE;
-}
+    CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
+        FileObject, BytesToWrite, Wait, Retrying);
 
+    return TRUE;
+}
 
 /*
  * @implemented
@@ -324,113 +359,21 @@ CcCopyRead (
     OUT PVOID Buffer,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
-    ULONG ReadOffset;
-    ULONG TempLength;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PVOID BaseAddress;
-    PCACHE_SEGMENT CacheSeg;
-    BOOLEAN Valid;
-    ULONG ReadLength = 0;
-    PBCB Bcb;
-    KIRQL oldirql;
-    PLIST_ENTRY current_entry;
-    PCACHE_SEGMENT current;
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu Wait=%d\n",
+        FileObject, FileOffset->QuadPart, Length, Wait);
 
     DPRINT("CcCopyRead(FileObject 0x%p, FileOffset %I64x, "
            "Length %lu, Wait %u, Buffer 0x%p, IoStatus 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait,
            Buffer, IoStatus);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-    ReadOffset = (ULONG)FileOffset->QuadPart;
-
-    DPRINT("AllocationSize %I64d, FileSize %I64d\n",
-           Bcb->AllocationSize.QuadPart,
-           Bcb->FileSize.QuadPart);
-
-    /*
-     * Check for the nowait case that all the cache segments that would
-     * cover this read are in memory.
-     */
-    if (!Wait)
-    {
-        KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-        current_entry = Bcb->BcbSegmentListHead.Flink;
-        while (current_entry != &Bcb->BcbSegmentListHead)
-        {
-            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
-                                        BcbSegmentListEntry);
-            if (!current->Valid && current->FileOffset < ReadOffset + Length
-                    && current->FileOffset + Bcb->CacheSegmentSize > ReadOffset)
-            {
-                KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-                IoStatus->Status = STATUS_UNSUCCESSFUL;
-                IoStatus->Information = 0;
-                return FALSE;
-            }
-            current_entry = current_entry->Flink;
-        }
-        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-    }
-
-    TempLength = ReadOffset % Bcb->CacheSegmentSize;
-    if (TempLength != 0)
-    {
-        TempLength = min (Length, Bcb->CacheSegmentSize - TempLength);
-        Status = CcRosRequestCacheSegment(Bcb,
-                                          ROUND_DOWN(ReadOffset,
-                                                  Bcb->CacheSegmentSize),
-                                          &BaseAddress, &Valid, &CacheSeg);
-        if (!NT_SUCCESS(Status))
-        {
-            IoStatus->Information = 0;
-            IoStatus->Status = Status;
-            DPRINT("CcRosRequestCacheSegment faild, Status %x\n", Status);
-            return FALSE;
-        }
-        if (!Valid)
-        {
-            Status = ReadCacheSegment(CacheSeg);
-            if (!NT_SUCCESS(Status))
-            {
-                IoStatus->Information = 0;
-                IoStatus->Status = Status;
-                CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-                return FALSE;
-            }
-        }
-        memcpy (Buffer, (char*)BaseAddress + ReadOffset % Bcb->CacheSegmentSize,
-                TempLength);
-        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-        ReadLength += TempLength;
-        Length -= TempLength;
-        ReadOffset += TempLength;
-        Buffer = (PVOID)((char*)Buffer + TempLength);
-    }
-
-    while (Length > 0)
-    {
-        TempLength = min(max(Bcb->CacheSegmentSize, MAX_RW_LENGTH), Length);
-        Status = ReadCacheSegmentChain(Bcb, ReadOffset, TempLength, Buffer);
-        if (!NT_SUCCESS(Status))
-        {
-            IoStatus->Information = 0;
-            IoStatus->Status = Status;
-            DPRINT("ReadCacheSegmentChain failed, Status %x\n", Status);
-            return FALSE;
-        }
-
-        ReadLength += TempLength;
-        Length -= TempLength;
-        ReadOffset += TempLength;
-
-        Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
-    }
-
-    IoStatus->Status = STATUS_SUCCESS;
-    IoStatus->Information = ReadLength;
-    DPRINT("CcCopyRead O.K.\n");
-    return TRUE;
+    return CcCopyData(FileObject,
+                      FileOffset->QuadPart,
+                      Buffer,
+                      Length,
+                      CcOperationRead,
+                      Wait,
+                      IoStatus);
 }
 
 /*
@@ -445,107 +388,22 @@ CcCopyWrite (
     IN BOOLEAN Wait,
     IN PVOID Buffer)
 {
-    NTSTATUS Status;
-    ULONG WriteOffset;
-    KIRQL oldirql;
-    PBCB Bcb;
-    PLIST_ENTRY current_entry;
-    PCACHE_SEGMENT CacheSeg;
-    ULONG TempLength;
-    PVOID BaseAddress;
-    BOOLEAN Valid;
+    IO_STATUS_BLOCK IoStatus;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu Wait=%d Buffer=%p\n",
+        FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
 
     DPRINT("CcCopyWrite(FileObject 0x%p, FileOffset %I64x, "
            "Length %lu, Wait %u, Buffer 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-    WriteOffset = (ULONG)FileOffset->QuadPart;
-
-    if (!Wait)
-    {
-        /* testing, if the requested datas are available */
-        KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-        current_entry = Bcb->BcbSegmentListHead.Flink;
-        while (current_entry != &Bcb->BcbSegmentListHead)
-        {
-            CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
-                                         BcbSegmentListEntry);
-            if (!CacheSeg->Valid)
-            {
-                if (((WriteOffset >= CacheSeg->FileOffset) &&
-                     (WriteOffset < CacheSeg->FileOffset + Bcb->CacheSegmentSize))
-                 || ((WriteOffset + Length > CacheSeg->FileOffset) &&
-                     (WriteOffset + Length <= CacheSeg->FileOffset +
-                            Bcb->CacheSegmentSize)))
-                {
-                    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-                    /* datas not available */
-                    return FALSE;
-                }
-            }
-            current_entry = current_entry->Flink;
-        }
-        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-    }
-
-    TempLength = WriteOffset % Bcb->CacheSegmentSize;
-    if (TempLength != 0)
-    {
-        ULONG ROffset;
-        ROffset = ROUND_DOWN(WriteOffset, Bcb->CacheSegmentSize);
-        TempLength = min (Length, Bcb->CacheSegmentSize - TempLength);
-        Status = CcRosRequestCacheSegment(Bcb, ROffset,
-                                          &BaseAddress, &Valid, &CacheSeg);
-        if (!NT_SUCCESS(Status))
-        {
-            return FALSE;
-        }
-        if (!Valid)
-        {
-            if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
-            {
-                return FALSE;
-            }
-        }
-        memcpy ((char*)BaseAddress + WriteOffset % Bcb->CacheSegmentSize,
-                Buffer, TempLength);
-        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
-
-        Length -= TempLength;
-        WriteOffset += TempLength;
-
-        Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
-    }
-
-    while (Length > 0)
-    {
-        TempLength = min (Bcb->CacheSegmentSize, Length);
-        Status = CcRosRequestCacheSegment(Bcb,
-                                          WriteOffset,
-                                          &BaseAddress,
-                                          &Valid,
-                                          &CacheSeg);
-        if (!NT_SUCCESS(Status))
-        {
-            return FALSE;
-        }
-        if (!Valid && TempLength < Bcb->CacheSegmentSize)
-        {
-            if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
-            {
-                CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-                return FALSE;
-            }
-        }
-        memcpy (BaseAddress, Buffer, TempLength);
-        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
-        Length -= TempLength;
-        WriteOffset += TempLength;
-
-        Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
-    }
-    return TRUE;
+    return CcCopyData(FileObject,
+                      FileOffset->QuadPart,
+                      Buffer,
+                      Length,
+                      CcOperationWrite,
+                      Wait,
+                      &IoStatus);
 }
 
 /*
@@ -561,7 +419,10 @@ CcDeferWrite (
     IN ULONG BytesToWrite,
     IN BOOLEAN Retrying)
 {
-    UNIMPLEMENTED;
+    CCTRACE(CC_API_DEBUG, "FileObject=%p PostRoutine=%p Context1=%p Context2=%p BytesToWrite=%lu Retrying=%d\n",
+        FileObject, PostRoutine, Context1, Context2, BytesToWrite, Retrying);
+
+    PostRoutine(Context1, Context2);
 }
 
 /*
@@ -577,8 +438,24 @@ CcFastCopyRead (
     OUT PVOID Buffer,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
-    UNIMPLEMENTED;
+    LARGE_INTEGER LargeFileOffset;
+    BOOLEAN Success;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%lu Length=%lu PageCount=%lu Buffer=%p\n",
+        FileObject, FileOffset, Length, PageCount, Buffer);
+
+    DBG_UNREFERENCED_PARAMETER(PageCount);
+
+    LargeFileOffset.QuadPart = FileOffset;
+    Success = CcCopyRead(FileObject,
+                         &LargeFileOffset,
+                         Length,
+                         TRUE,
+                         Buffer,
+                         IoStatus);
+    ASSERT(Success == TRUE);
 }
+
 /*
  * @unimplemented
  */
@@ -590,7 +467,19 @@ CcFastCopyWrite (
     IN ULONG Length,
     IN PVOID Buffer)
 {
-    UNIMPLEMENTED;
+    LARGE_INTEGER LargeFileOffset;
+    BOOLEAN Success;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%lu Length=%lu Buffer=%p\n",
+        FileObject, FileOffset, Length, Buffer);
+
+    LargeFileOffset.QuadPart = FileOffset;
+    Success = CcCopyWrite(FileObject,
+                          &LargeFileOffset,
+                          Length,
+                          TRUE,
+                          Buffer);
+    ASSERT(Success == TRUE);
 }
 
 /*
@@ -618,18 +507,21 @@ CcZeroData (
 {
     NTSTATUS Status;
     LARGE_INTEGER WriteOffset;
-    ULONG Length;
+    LONGLONG Length;
     ULONG CurrentLength;
     PMDL Mdl;
     ULONG i;
     IO_STATUS_BLOCK Iosb;
     KEVENT Event;
 
+    CCTRACE(CC_API_DEBUG, "FileObject=%p StartOffset=%I64u EndOffset=%I64u Wait=%d\n",
+        FileObject, StartOffset->QuadPart, EndOffset->QuadPart, Wait);
+
     DPRINT("CcZeroData(FileObject 0x%p, StartOffset %I64x, EndOffset %I64x, "
            "Wait %u)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
            Wait);
 
-    Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
+    Length = EndOffset->QuadPart - StartOffset->QuadPart;
     WriteOffset.QuadPart = StartOffset->QuadPart;
 
     if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
@@ -640,9 +532,9 @@ CcZeroData (
 
         while (Length > 0)
         {
-            if (Length + WriteOffset.u.LowPart % PAGE_SIZE > MAX_ZERO_LENGTH)
+            if (Length + WriteOffset.QuadPart % PAGE_SIZE > MAX_ZERO_LENGTH)
             {
-                CurrentLength = MAX_ZERO_LENGTH - WriteOffset.u.LowPart % PAGE_SIZE;
+                CurrentLength = MAX_ZERO_LENGTH - WriteOffset.QuadPart % PAGE_SIZE;
             }
             else
             {
@@ -675,100 +567,15 @@ CcZeroData (
     }
     else
     {
-        /* File is cached */
-        KIRQL oldirql;
-        PBCB Bcb;
-        PLIST_ENTRY current_entry;
-        PCACHE_SEGMENT CacheSeg, current, previous;
-        ULONG TempLength;
+        IO_STATUS_BLOCK IoStatus;
 
-        Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-        if (Wait)
-        {
-            /* testing, if the requested datas are available */
-            KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-            current_entry = Bcb->BcbSegmentListHead.Flink;
-            while (current_entry != &Bcb->BcbSegmentListHead)
-            {
-                CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
-                                             BcbSegmentListEntry);
-                if (!CacheSeg->Valid)
-                {
-                    if (((WriteOffset.u.LowPart >= CacheSeg->FileOffset) &&
-                         (WriteOffset.u.LowPart < CacheSeg->FileOffset + Bcb->CacheSegmentSize))
-                     || ((WriteOffset.u.LowPart + Length > CacheSeg->FileOffset) &&
-                         (WriteOffset.u.LowPart + Length <=
-                                CacheSeg->FileOffset + Bcb->CacheSegmentSize)))
-                    {
-                        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-                        /* datas not available */
-                        return FALSE;
-                    }
-                }
-                current_entry = current_entry->Flink;
-            }
-            KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-        }
-
-        while (Length > 0)
-        {
-            ULONG Offset;
-            Offset = WriteOffset.u.LowPart % Bcb->CacheSegmentSize;
-            if (Length + Offset > MAX_ZERO_LENGTH)
-            {
-                CurrentLength = MAX_ZERO_LENGTH - Offset;
-            }
-            else
-            {
-                CurrentLength = Length;
-            }
-            Status = CcRosGetCacheSegmentChain (Bcb, WriteOffset.u.LowPart - Offset,
-                                                Offset + CurrentLength, &CacheSeg);
-            if (!NT_SUCCESS(Status))
-            {
-                return FALSE;
-            }
-            current = CacheSeg;
-
-            while (current != NULL)
-            {
-                Offset = WriteOffset.u.LowPart % Bcb->CacheSegmentSize;
-                if ((Offset != 0) ||
-                    (Offset + CurrentLength < Bcb->CacheSegmentSize))
-                {
-                    if (!current->Valid)
-                    {
-                        /* read the segment */
-                        Status = ReadCacheSegment(current);
-                        if (!NT_SUCCESS(Status))
-                        {
-                            DPRINT1("ReadCacheSegment failed, status %x\n",
-                                    Status);
-                        }
-                    }
-                    TempLength = min (CurrentLength, Bcb->CacheSegmentSize - Offset);
-                }
-                else
-                {
-                    TempLength = Bcb->CacheSegmentSize;
-                }
-                memset ((PUCHAR)current->BaseAddress + Offset, 0, TempLength);
-
-                WriteOffset.QuadPart += TempLength;
-                CurrentLength -= TempLength;
-                Length -= TempLength;
-
-                current = current->NextInChain;
-            }
-
-            current = CacheSeg;
-            while (current != NULL)
-            {
-                previous = current;
-                current = current->NextInChain;
-                CcRosReleaseCacheSegment(Bcb, previous, TRUE, TRUE, FALSE);
-            }
-        }
+        return CcCopyData(FileObject,
+                          WriteOffset.QuadPart,
+                          NULL,
+                          Length,
+                          CcOperationZero,
+                          Wait,
+                          &IoStatus);
     }
 
     return TRUE;

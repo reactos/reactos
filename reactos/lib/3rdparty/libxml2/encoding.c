@@ -1517,6 +1517,8 @@ xmlGetCharEncodingHandler(xmlCharEncoding enc) {
             if (handler != NULL) return(handler);
             handler = xmlFindCharEncodingHandler("EBCDIC-US");
             if (handler != NULL) return(handler);
+            handler = xmlFindCharEncodingHandler("IBM-037");
+            if (handler != NULL) return(handler);
 	    break;
         case XML_CHAR_ENCODING_UCS4BE:
             handler = xmlFindCharEncodingHandler("ISO-10646-UCS-4");
@@ -2161,6 +2163,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
 /**
  * xmlCharEncInput:
  * @input: a parser input buffer
+ * @flush: try to flush all the raw buffer
  *
  * Generic front-end for the encoding handler on parser input
  *
@@ -2170,7 +2173,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
  *        the result of transformation can't fit into the encoding we want), or
  */
 int
-xmlCharEncInput(xmlParserInputBufferPtr input)
+xmlCharEncInput(xmlParserInputBufferPtr input, int flush)
 {
     int ret = -2;
     size_t written;
@@ -2189,7 +2192,7 @@ xmlCharEncInput(xmlParserInputBufferPtr input)
     toconv = xmlBufUse(in);
     if (toconv == 0)
         return (0);
-    if (toconv > 64 * 1024)
+    if ((toconv > 64 * 1024) && (flush == 0))
         toconv = 64 * 1024;
     written = xmlBufAvail(out);
     if (written > 0)
@@ -2200,7 +2203,7 @@ xmlCharEncInput(xmlParserInputBufferPtr input)
         if (written > 0)
             written--; /* count '\0' */
     }
-    if (written > 128 * 1024)
+    if ((written > 128 * 1024) && (flush == 0))
         written = 128 * 1024;
 
     c_in = toconv;
@@ -2381,6 +2384,7 @@ xmlCharEncInFunc(xmlCharEncodingHandler * handler, xmlBufferPtr out,
     return (written? written : ret);
 }
 
+#ifdef LIBXML_OUTPUT_ENABLED
 /**
  * xmlCharEncOutput:
  * @output: a parser output buffer
@@ -2609,6 +2613,7 @@ retry:
     }
     return(ret);
 }
+#endif
 
 /**
  * xmlCharEncOutFunc:
@@ -2848,14 +2853,25 @@ int
 xmlCharEncCloseFunc(xmlCharEncodingHandler *handler) {
     int ret = 0;
     int tofree = 0;
+    int i, handler_in_list = 0;
+
     if (handler == NULL) return(-1);
     if (handler->name == NULL) return(-1);
+    if (handlers != NULL) {
+        for (i = 0;i < nbCharEncodingHandler; i++) {
+            if (handler == handlers[i]) {
+	        handler_in_list = 1;
+		break;
+	    }
+	}
+    }
 #ifdef LIBXML_ICONV_ENABLED
     /*
      * Iconv handlers can be used only once, free the whole block.
      * and the associated icon resources.
      */
-    if ((handler->iconv_out != NULL) || (handler->iconv_in != NULL)) {
+    if ((handler_in_list == 0) &&
+        ((handler->iconv_out != NULL) || (handler->iconv_in != NULL))) {
         tofree = 1;
 	if (handler->iconv_out != NULL) {
 	    if (iconv_close(handler->iconv_out))
@@ -2870,7 +2886,8 @@ xmlCharEncCloseFunc(xmlCharEncodingHandler *handler) {
     }
 #endif /* LIBXML_ICONV_ENABLED */
 #ifdef LIBXML_ICU_ENABLED
-    if ((handler->uconv_out != NULL) || (handler->uconv_in != NULL)) {
+    if ((handler_in_list == 0) &&
+        ((handler->uconv_out != NULL) || (handler->uconv_in != NULL))) {
         tofree = 1;
 	if (handler->uconv_out != NULL) {
 	    closeIcuConverter(handler->uconv_out);

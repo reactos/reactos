@@ -19,14 +19,27 @@
 #ifndef _WINE_WINHTTP_PRIVATE_H_
 #define _WINE_WINHTTP_PRIVATE_H_
 
-#ifndef __WINE_CONFIG_H
-# error You must include config.h to use this header
-#endif
+#include <wine/config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <oleauto.h>
+#include <winsock2.h>
+#include <winhttp.h>
 
 #include <wine/list.h>
 #include <wine/unicode.h>
 
-//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -42,7 +55,11 @@
 # define closesocket close
 # define ioctlsocket ioctl
 #endif
-#include <ole2.h>
+
+#include <sspi.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 static const WCHAR getW[]    = {'G','E','T',0};
 static const WCHAR postW[]   = {'P','O','S','T',0};
@@ -50,6 +67,7 @@ static const WCHAR headW[]   = {'H','E','A','D',0};
 static const WCHAR slashW[]  = {'/',0};
 static const WCHAR http1_0[] = {'H','T','T','P','/','1','.','0',0};
 static const WCHAR http1_1[] = {'H','T','T','P','/','1','.','1',0};
+static const WCHAR chunkedW[] = {'c','h','u','n','k','e','d',0};
 
 typedef struct _object_header_t object_header_t;
 
@@ -107,6 +125,7 @@ typedef struct
     LPWSTR proxy_username;
     LPWSTR proxy_password;
     struct list cookie_cache;
+    HANDLE unload_event;
 } session_t;
 
 typedef struct
@@ -127,7 +146,11 @@ typedef struct
 {
     int socket;
     BOOL secure; /* SSL active on connection? */
-    void *ssl_conn;
+    CtxtHandle ssl_ctx;
+    SecPkgContext_StreamSizes ssl_sizes;
+    char *ssl_buf;
+    char *extra_buf;
+    size_t extra_len;
     char *peek_msg;
     char *peek_msg_mem;
     size_t peek_len;
@@ -141,6 +164,38 @@ typedef struct
     BOOL is_request; /* part of request headers? */
 } header_t;
 
+enum auth_target
+{
+    TARGET_INVALID = -1,
+    TARGET_SERVER,
+    TARGET_PROXY,
+    TARGET_MAX
+};
+
+enum auth_scheme
+{
+    SCHEME_INVALID = -1,
+    SCHEME_BASIC,
+    SCHEME_NTLM,
+    SCHEME_PASSPORT,
+    SCHEME_DIGEST,
+    SCHEME_NEGOTIATE,
+    SCHEME_MAX
+};
+
+struct authinfo
+{
+    enum auth_scheme scheme;
+    CredHandle cred;
+    CtxtHandle ctx;
+    TimeStamp exp;
+    ULONG attr;
+    ULONG max_token;
+    char *data;
+    unsigned int data_len;
+    BOOL finished; /* finished authenticating */
+};
+
 typedef struct
 {
     object_header_t hdr;
@@ -149,24 +204,45 @@ typedef struct
     LPWSTR path;
     LPWSTR version;
     LPWSTR raw_headers;
+    void *optional;
+    DWORD optional_len;
     netconn_t netconn;
     int resolve_timeout;
     int connect_timeout;
     int send_timeout;
     int recv_timeout;
     LPWSTR status_text;
-    DWORD content_length; /* total number of bytes to be read (per chunk) */
+    DWORD content_length; /* total number of bytes to be read */
     DWORD content_read;   /* bytes read so far */
+    BOOL  read_chunked;   /* are we reading in chunked mode? */
+    BOOL  read_chunked_eof;  /* end of stream in chunked mode */
+    BOOL  read_chunked_size; /* chunk size remaining */
+    DWORD read_pos;       /* current read position in read_buf */
+    DWORD read_size;      /* valid data size in read_buf */
+    char  read_buf[8192]; /* buffer for already read but not returned data */
     header_t *headers;
     DWORD num_headers;
     WCHAR **accept_types;
     DWORD num_accept_types;
+    struct authinfo *authinfo;
+    struct authinfo *proxy_authinfo;
+    HANDLE task_wait;
+    HANDLE task_cancel;
+    HANDLE task_thread;
+    struct list task_queue;
+    CRITICAL_SECTION task_cs;
+    struct
+    {
+        WCHAR *username;
+        WCHAR *password;
+    } creds[TARGET_MAX][SCHEME_MAX];
 } request_t;
 
 typedef struct _task_header_t task_header_t;
 
 struct _task_header_t
 {
+    struct list entry;
     request_t *request;
     void (*proc)( task_header_t * );
 };
@@ -224,14 +300,13 @@ BOOL netconn_close( netconn_t * ) DECLSPEC_HIDDEN;
 BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int, int ) DECLSPEC_HIDDEN;
 BOOL netconn_connected( netconn_t * ) DECLSPEC_HIDDEN;
 BOOL netconn_create( netconn_t *, int, int, int ) DECLSPEC_HIDDEN;
-BOOL netconn_get_next_line( netconn_t *, char *, DWORD * ) DECLSPEC_HIDDEN;
-BOOL netconn_init( netconn_t *, BOOL ) DECLSPEC_HIDDEN;
+BOOL netconn_init( netconn_t * ) DECLSPEC_HIDDEN;
 void netconn_unload( void ) DECLSPEC_HIDDEN;
-BOOL netconn_query_data_available( netconn_t *, DWORD * ) DECLSPEC_HIDDEN;
+ULONG netconn_query_data_available( netconn_t * ) DECLSPEC_HIDDEN;
 BOOL netconn_recv( netconn_t *, void *, size_t, int, int * ) DECLSPEC_HIDDEN;
 BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr *, socklen_t *, int ) DECLSPEC_HIDDEN;
 BOOL netconn_secure_connect( netconn_t *, WCHAR * ) DECLSPEC_HIDDEN;
-BOOL netconn_send( netconn_t *, const void *, size_t, int, int * ) DECLSPEC_HIDDEN;
+BOOL netconn_send( netconn_t *, const void *, size_t, int * ) DECLSPEC_HIDDEN;
 DWORD netconn_set_timeout( netconn_t *, BOOL, int ) DECLSPEC_HIDDEN;
 const void *netconn_get_certificate( netconn_t * ) DECLSPEC_HIDDEN;
 int netconn_get_cipher_strength( netconn_t * ) DECLSPEC_HIDDEN;
@@ -240,40 +315,11 @@ BOOL set_cookies( request_t *, const WCHAR * ) DECLSPEC_HIDDEN;
 BOOL add_cookie_headers( request_t * ) DECLSPEC_HIDDEN;
 BOOL add_request_headers( request_t *, LPCWSTR, DWORD, DWORD ) DECLSPEC_HIDDEN;
 void delete_domain( domain_t * ) DECLSPEC_HIDDEN;
-BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT port ) DECLSPEC_HIDDEN;
+BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HIDDEN;
+void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
-extern HRESULT WinHttpRequest_create( IUnknown *, void ** ) DECLSPEC_HIDDEN;
-
-static inline const char *debugstr_variant( const VARIANT *v )
-{
-    if (!v) return "(null)";
-    switch (V_VT(v))
-    {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf( "{VT_I4: %d}", V_I4(v) );
-    case VT_R8:
-        return wine_dbg_sprintf( "{VT_R8: %lf}", V_R8(v) );
-    case VT_BSTR:
-        return wine_dbg_sprintf( "{VT_BSTR: %s}", debugstr_w(V_BSTR(v)) );
-    case VT_DISPATCH:
-        return wine_dbg_sprintf( "{VT_DISPATCH: %p}", V_DISPATCH(v) );
-    case VT_BOOL:
-        return wine_dbg_sprintf( "{VT_BOOL: %x}", V_BOOL(v) );
-    case VT_UNKNOWN:
-        return wine_dbg_sprintf( "{VT_UNKNOWN: %p}", V_UNKNOWN(v) );
-    case VT_UINT:
-        return wine_dbg_sprintf( "{VT_UINT: %u}", V_UINT(v) );
-    case VT_BSTR|VT_BYREF:
-        return wine_dbg_sprintf( "{VT_BSTR|VT_BYREF: ptr %p, data %s}",
-            V_BSTRREF(v), V_BSTRREF(v) ? debugstr_w( *V_BSTRREF(v) ) : NULL );
-    default:
-        return wine_dbg_sprintf( "{vt %d}", V_VT(v) );
-    }
-}
+extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
+void release_typelib( void ) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc( SIZE_T size )
 {

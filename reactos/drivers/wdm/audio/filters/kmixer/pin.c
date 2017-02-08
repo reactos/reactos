@@ -3,10 +3,15 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/wdm/audio/filters/kmixer/kmixer.c
  * PURPOSE:         Pin functions
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "kmixer.h"
+
+#include <samplerate.h>
+
+#define NDEBUG
+#include <debug.h>
 
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 

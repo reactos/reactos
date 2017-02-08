@@ -1,0 +1,3 @@
+2002-06-17  Matthew T. Russotto <mrussotto@speakeasy.net>
+	Switched to non-sliding version of Lempel-Ziv for
+	major performance boost

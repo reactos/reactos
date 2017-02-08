@@ -20,33 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
 #include <winsvc.h>
-//#include "objbase.h"
-#include <ole2.h>
-//#include "rpc.h"
-//#include "winerror.h"
-//#include "winreg.h"
-#include <wine/unicode.h>
-
-#include "compobj_private.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -685,7 +661,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     }
 
     RpcBindingInqObject(message_state->binding_handle, &ipid);
-    hr = ipid_get_dispatch_params(&ipid, &apt, &message_state->params.stub,
+    hr = ipid_get_dispatch_params(&ipid, &apt, NULL, &message_state->params.stub,
                                   &message_state->params.chan,
                                   &message_state->params.iid,
                                   &message_state->params.iface);
@@ -1444,6 +1420,7 @@ exit:
 static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
 {
     struct dispatch_params *params;
+    struct stub_manager *stub_manager;
     APARTMENT *apt;
     IPID ipid;
     HRESULT hr;
@@ -1459,7 +1436,7 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
         return;
     }
 
-    hr = ipid_get_dispatch_params(&ipid, &apt, &params->stub, &params->chan,
+    hr = ipid_get_dispatch_params(&ipid, &apt, &stub_manager, &params->stub, &params->chan,
                                   &params->iid, &params->iface);
     if (hr != S_OK)
     {
@@ -1517,11 +1494,12 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
         IRpcStubBuffer_Release(params->stub);
     HeapFree(GetProcessHeap(), 0, params);
 
+    stub_manager_int_release(stub_manager);
     apartment_release(apt);
 
     /* if IRpcStubBuffer_Invoke fails, we should raise an exception to tell
      * the RPC runtime that the call failed */
-    if (hr) RpcRaiseException(hr);
+    if (hr != S_OK) RpcRaiseException(hr);
 }
 
 /* stub registration */
@@ -1582,7 +1560,7 @@ HRESULT RPC_RegisterInterface(REFIID riid)
 }
 
 /* stub unregistration */
-void RPC_UnregisterInterface(REFIID riid)
+void RPC_UnregisterInterface(REFIID riid, BOOL wait)
 {
     struct registered_if *rif;
     EnterCriticalSection(&csRegIf);
@@ -1592,7 +1570,7 @@ void RPC_UnregisterInterface(REFIID riid)
         {
             if (!--rif->refs)
             {
-                RpcServerUnregisterIf((RPC_IF_HANDLE)&rif->If, NULL, TRUE);
+                RpcServerUnregisterIf((RPC_IF_HANDLE)&rif->If, NULL, wait);
                 list_remove(&rif->entry);
                 HeapFree(GetProcessHeap(), 0, rif);
             }
@@ -1658,6 +1636,7 @@ static HRESULT create_server(REFCLSID rclsid, HANDLE *process)
     DWORD               size = (MAX_PATH+1) * sizeof(WCHAR);
     STARTUPINFOW        sinfo;
     PROCESS_INFORMATION pinfo;
+    LONG ret;
 
     hres = COM_OpenKeyForCLSID(rclsid, wszLocalServer32, KEY_READ, &key);
     if (FAILED(hres)) {
@@ -1665,9 +1644,9 @@ static HRESULT create_server(REFCLSID rclsid, HANDLE *process)
         return hres;
     }
 
-    hres = RegQueryValueExW(key, NULL, NULL, NULL, (LPBYTE)command, &size);
+    ret = RegQueryValueExW(key, NULL, NULL, NULL, (LPBYTE)command, &size);
     RegCloseKey(key);
-    if (hres) {
+    if (ret) {
         WARN("No default value for LocalServer32 key\n");
         return REGDB_E_CLASSNOTREG; /* FIXME: check retval */
     }
@@ -1809,6 +1788,7 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     LARGE_INTEGER  seekto;
     ULARGE_INTEGER newpos;
     int            tries = 0;
+    IServiceProvider *local_server;
 
     static const int MAXTRIES = 30; /* 30 seconds */
 
@@ -1850,6 +1830,7 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
         bufferlen = 0;
         if (!ReadFile(hPipe,marshalbuffer,sizeof(marshalbuffer),&bufferlen,NULL)) {
             FIXME("Failed to read marshal id from classfactory of %s.\n",debugstr_guid(rclsid));
+            CloseHandle(hPipe);
             Sleep(1000);
             continue;
         }
@@ -1862,14 +1843,17 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
         return E_NOINTERFACE;
     
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
-    if (hres) return hres;
+    if (hres != S_OK) return hres;
     hres = IStream_Write(pStm,marshalbuffer,bufferlen,&res);
-    if (hres) goto out;
+    if (hres != S_OK) goto out;
     seekto.u.LowPart = 0;seekto.u.HighPart = 0;
     hres = IStream_Seek(pStm,seekto,STREAM_SEEK_SET,&newpos);
     
-    TRACE("unmarshalling classfactory\n");
-    hres = CoUnmarshalInterface(pStm,&IID_IClassFactory,ppv);
+    TRACE("unmarshalling local server\n");
+    hres = CoUnmarshalInterface(pStm, &IID_IServiceProvider, (void**)&local_server);
+    if(SUCCEEDED(hres))
+        hres = IServiceProvider_QueryService(local_server, rclsid, iid, ppv);
+    IServiceProvider_Release(local_server);
 out:
     IStream_Release(pStm);
     return hres;
@@ -1920,50 +1904,38 @@ static DWORD WINAPI local_server_thread(LPVOID param)
                 DWORD ret;
                 ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
                 if (ret != WAIT_OBJECT_0)
-                {
-                    CloseHandle(hPipe);
                     break;
-                }
             }
             /* client already connected isn't an error */
             else if (error != ERROR_PIPE_CONNECTED)
             {
                 ERR("ConnectNamedPipe failed with error %d\n", GetLastError());
-                CloseHandle(hPipe);
                 break;
             }
         }
 
-        TRACE("marshalling IClassFactory to client\n");
+        TRACE("marshalling LocalServer to client\n");
         
         hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
-        if (hres)
-        {
-            CloseHandle(hPipe);
-            CloseHandle(pipe_event);
-            return hres;
-        }
+        if (hres != S_OK)
+            break;
 
         seekto.u.LowPart = 0;
         seekto.u.HighPart = 0;
         hres = IStream_Seek(pStm,seekto,STREAM_SEEK_SET,&newpos);
-        if (hres) {
+        if (hres != S_OK) {
             FIXME("IStream_Seek failed, %x\n",hres);
-            CloseHandle(hPipe);
-            CloseHandle(pipe_event);
-            return hres;
+            break;
         }
 
         buflen = ststg.cbSize.u.LowPart;
         buffer = HeapAlloc(GetProcessHeap(),0,buflen);
         
         hres = IStream_Read(pStm,buffer,buflen,&res);
-        if (hres) {
+        if (hres != S_OK) {
             FIXME("Stream Read failed, %x\n",hres);
-            CloseHandle(hPipe);
-            CloseHandle(pipe_event);
             HeapFree(GetProcessHeap(),0,buffer);
-            return hres;
+            break;
         }
         
         WriteFile(hPipe,buffer,buflen,&res,&ovl);
@@ -1972,27 +1944,27 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
         FlushFileBuffers(hPipe);
         DisconnectNamedPipe(hPipe);
-        TRACE("done marshalling IClassFactory\n");
+        TRACE("done marshalling LocalServer\n");
 
         if (!multi_use)
         {
             TRACE("single use object, shutting down pipe %s\n", debugstr_w(pipefn));
-            CloseHandle(hPipe);
             break;
         }
         new_pipe = CreateNamedPipeW( pipefn, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
                                      PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
                                      4096, 4096, 500 /* 0.5 second timeout */, NULL );
-        CloseHandle(hPipe);
         if (new_pipe == INVALID_HANDLE_VALUE)
         {
             FIXME("pipe creation failed for %s, le is %u\n", debugstr_w(pipefn), GetLastError());
-            CloseHandle(pipe_event);
-            return 1;
+            break;
         }
+        CloseHandle(hPipe);
         hPipe = new_pipe;
     }
+
     CloseHandle(pipe_event);
+    CloseHandle(hPipe);
     return 0;
 }
 

@@ -20,8 +20,10 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/attrib.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Eric Kohl
- * Updated	by       Valentin Verkhovsky  2003/09/12
+ * PROGRAMMERS:      Eric Kohl
+ *                   Valentin Verkhovsky
+ *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,258 +33,557 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *****************************************************************/
-
-
 /* FUNCTIONS ****************************************************************/
 
-
-
-static ULONG
-RunLength(PUCHAR run)
+PUCHAR
+DecodeRun(PUCHAR DataRun,
+          LONGLONG *DataRunOffset,
+          ULONGLONG *DataRunLength)
 {
-  return(*run & 0x0f) + ((*run >> 4) & 0x0f) + 1;
+    UCHAR DataRunOffsetSize;
+    UCHAR DataRunLengthSize;
+    CHAR i;
+
+    DataRunOffsetSize = (*DataRun >> 4) & 0xF;
+    DataRunLengthSize = *DataRun & 0xF;
+    *DataRunOffset = 0;
+    *DataRunLength = 0;
+    DataRun++;
+    for (i = 0; i < DataRunLengthSize; i++)
+    {
+        *DataRunLength += ((ULONG64)*DataRun) << (i * 8);
+        DataRun++;
+    }
+
+    /* NTFS 3+ sparse files */
+    if (DataRunOffsetSize == 0)
+    {
+        *DataRunOffset = -1;
+    }
+    else
+    {
+        for (i = 0; i < DataRunOffsetSize - 1; i++)
+        {
+            *DataRunOffset += ((ULONG64)*DataRun) << (i * 8);
+            DataRun++;
+        }
+        /* The last byte contains sign so we must process it different way. */
+        *DataRunOffset = ((LONG64)(CHAR)(*(DataRun++)) << (i * 8)) + *DataRunOffset;
+    }
+
+    DPRINT("DataRunOffsetSize: %x\n", DataRunOffsetSize);
+    DPRINT("DataRunLengthSize: %x\n", DataRunLengthSize);
+    DPRINT("DataRunOffset: %x\n", *DataRunOffset);
+    DPRINT("DataRunLength: %x\n", *DataRunLength);
+
+    return DataRun;
 }
-
-
-static LONGLONG
-RunLCN(PUCHAR run)
-{
-	UCHAR n1 = *run & 0x0f;
-	UCHAR n2 = (*run >> 4) & 0x0f;
-	LONGLONG lcn = (n2 == 0) ? 0 : (CHAR)(run[n1 + n2]);
-	LONG i = 0;
-
-	for (i = n1 +n2 - 1; i > n1; i--)
-		lcn = (lcn << 8) + run[i];
-	return lcn;
-}
-
-
-
-static ULONGLONG
-RunCount(PUCHAR run)
-{
-	UCHAR n =  *run & 0xf;
-	ULONGLONG count = 0;
-	ULONG i = 0;
-
-	for (i = n; i > 0; i--)
-		count = (count << 8) + run[i];
-	return count;
-}
-
 
 BOOLEAN
-FindRun (PNONRESIDENT_ATTRIBUTE NresAttr,
-	 ULONGLONG vcn,
-	 PULONGLONG lcn,
-	 PULONGLONG count)
+FindRun(PNTFS_ATTR_RECORD NresAttr,
+        ULONGLONG vcn,
+        PULONGLONG lcn,
+        PULONGLONG count)
 {
-  PUCHAR run;
+    if (vcn < NresAttr->NonResident.LowestVCN || vcn > NresAttr->NonResident.HighestVCN)
+        return FALSE;
 
-  ULONGLONG base = NresAttr->StartVcn;
+    DecodeRun((PUCHAR)((ULONG_PTR)NresAttr + NresAttr->NonResident.MappingPairsOffset), (PLONGLONG)lcn, count);
 
-  if (vcn < NresAttr->StartVcn || vcn > NresAttr->LastVcn)
-    return FALSE;
+    return TRUE;
+}
 
-  *lcn = 0;
+static
+NTSTATUS
+InternalReadNonResidentAttributes(PFIND_ATTR_CONTXT Context)
+{
+    ULONGLONG ListSize;
+    PNTFS_ATTR_RECORD Attribute;
+    PNTFS_ATTR_CONTEXT ListContext;
 
-  for (run = (PUCHAR)((ULONG_PTR)NresAttr + NresAttr->RunArrayOffset);
-	*run != 0; run += RunLength(run))
+    DPRINT("InternalReadNonResidentAttributes(%p)\n", Context);
+
+    Attribute = Context->CurrAttr;
+    ASSERT(Attribute->Type == AttributeAttributeList);
+
+    if (Context->OnlyResident)
     {
-      *lcn += RunLCN(run);
-      *count = RunCount(run);
-
-      if (base <= vcn && vcn < base + *count)
-	{
-	  *lcn = (RunLCN(run) == 0) ? 0 : *lcn + vcn - base;
-	  *count -= (ULONG)(vcn - base);
-
-	  return TRUE;
-	}
-      else
-	{
-	  base += *count;
-	}
+        Context->NonResidentStart = NULL;
+        Context->NonResidentEnd = NULL;
+        return STATUS_SUCCESS;
     }
 
-  return FALSE;
-}
-
-
-static VOID
-NtfsDumpFileNameAttribute(PATTRIBUTE Attribute)
-{
-  PRESIDENT_ATTRIBUTE ResAttr;
-  PFILENAME_ATTRIBUTE FileNameAttr;
-
-  DbgPrint("  $FILE_NAME ");
-
-  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
-//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
-
-  FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
-  DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
-}
-
-
-static VOID
-NtfsDumpVolumeNameAttribute(PATTRIBUTE Attribute)
-{
-  PRESIDENT_ATTRIBUTE ResAttr;
-  PWCHAR VolumeName;
-
-  DbgPrint("  $VOLUME_NAME ");
-
-  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
-//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
-
-  VolumeName = (PWCHAR)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
-  DbgPrint(" '%.*S' ", ResAttr->ValueLength / sizeof(WCHAR), VolumeName);
-}
-
-
-static VOID
-NtfsDumpVolumeInformationAttribute(PATTRIBUTE Attribute)
-{
-  PRESIDENT_ATTRIBUTE ResAttr;
-  PVOLINFO_ATTRIBUTE VolInfoAttr;
-
-  DbgPrint("  $VOLUME_INFORMATION ");
-
-  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
-//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
-
-  VolInfoAttr = (PVOLINFO_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
-  DbgPrint(" NTFS Version %u.%u  Flags 0x%04hx ",
-	   VolInfoAttr->MajorVersion,
-	   VolInfoAttr->MinorVersion,
-	   VolInfoAttr->Flags);
-}
-
-
-static VOID
-NtfsDumpAttribute (PATTRIBUTE Attribute)
-{
-  PNONRESIDENT_ATTRIBUTE NresAttr;
-  UNICODE_STRING Name;
-
-  ULONGLONG lcn = 0;
-  ULONGLONG runcount = 0;
-
-  switch (Attribute->AttributeType)
+    if (Context->NonResidentStart != NULL)
     {
-      case AttributeFileName:
-	NtfsDumpFileNameAttribute(Attribute);
-	break;
-
-      case AttributeStandardInformation:
-	DbgPrint("  $STANDARD_INFORMATION ");
-	break;
-
-      case AttributeAttributeList:
-	DbgPrint("  $ATTRIBUTE_LIST ");
-	break;
-
-      case AttributeObjectId:
-	DbgPrint("  $OBJECT_ID ");
-	break;
-
-      case AttributeSecurityDescriptor:
-	DbgPrint("  $SECURITY_DESCRIPTOR ");
-	break;
-
-      case AttributeVolumeName:
-	NtfsDumpVolumeNameAttribute(Attribute);
-	break;
-
-      case AttributeVolumeInformation:
-	NtfsDumpVolumeInformationAttribute(Attribute);
-	break;
-
-      case AttributeData:
-	DbgPrint("  $DATA ");
-	//DataBuf = ExAllocatePool(NonPagedPool,AttributeLengthAllocated(Attribute));
-	break;
-
-      case AttributeIndexRoot:
-	DbgPrint("  $INDEX_ROOT ");
-	break;
-
-      case AttributeIndexAllocation:
-	DbgPrint("  $INDEX_ALLOCATION ");
-	break;
-
-      case AttributeBitmap:
-	DbgPrint("  $BITMAP ");
-	break;
-
-      case AttributeReparsePoint:
-	DbgPrint("  $REPARSE_POINT ");
-	break;
-
-      case AttributeEAInformation:
-	DbgPrint("  $EA_INFORMATION ");
-	break;
-
-      case AttributeEA:
-	DbgPrint("  $EA ");
-	break;
-
-      case AttributePropertySet:
-	DbgPrint("  $PROPERTY_SET ");
-	break;
-
-      case AttributeLoggedUtilityStream:
-	DbgPrint("  $LOGGED_UTILITY_STREAM ");
-	break;
-
-      default:
-	DbgPrint("  Attribute %lx ",
-		 Attribute->AttributeType);
-	break;
+        return STATUS_FILE_CORRUPT_ERROR;
     }
 
-  if (Attribute->NameLength != 0)
+    ListContext = PrepareAttributeContext(Attribute);
+    ListSize = AttributeDataLength(&ListContext->Record);
+    if (ListSize > 0xFFFFFFFF)
     {
-      Name.Length = Attribute->NameLength * sizeof(WCHAR);
-      Name.MaximumLength = Name.Length;
-      Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
-
-      DbgPrint("'%wZ' ", &Name);
+        ReleaseAttributeContext(ListContext);
+        return STATUS_BUFFER_OVERFLOW;
     }
 
-  DbgPrint("(%s)\n",
-	   Attribute->Nonresident ? "non-resident" : "resident");
-
-  if (Attribute->Nonresident)
+    Context->NonResidentStart = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
+    if (Context->NonResidentStart == NULL)
     {
-      NresAttr = (PNONRESIDENT_ATTRIBUTE)Attribute;
+        ReleaseAttributeContext(ListContext);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-      FindRun (NresAttr,0,&lcn, &runcount);
+    if (ReadAttribute(Context->Vcb, ListContext, 0, (PCHAR)Context->NonResidentStart, (ULONG)ListSize) != ListSize)
+    {
+        ExFreePoolWithTag(Context->NonResidentStart, TAG_NTFS);
+        Context->NonResidentStart = NULL;
+        ReleaseAttributeContext(ListContext);
+        return STATUS_FILE_CORRUPT_ERROR;
+    }
 
-      DbgPrint ("  AllocatedSize %I64u  DataSize %I64u\n",
-		NresAttr->AllocatedSize, NresAttr->DataSize);
-      DbgPrint ("  logical clusters: %I64u - %I64u\n",
-		lcn, lcn + runcount - 1);
+    ReleaseAttributeContext(ListContext);
+    Context->NonResidentEnd = (PNTFS_ATTR_RECORD)((PCHAR)Context->NonResidentStart + ListSize);
+    return STATUS_SUCCESS;
+}
+
+static
+PNTFS_ATTR_RECORD
+InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
+{
+    if (Context->CurrAttr == (PVOID)-1)
+    {
+        return NULL;
+    }
+
+    if (Context->CurrAttr >= Context->FirstAttr &&
+        Context->CurrAttr < Context->LastAttr)
+    {
+        if (Context->CurrAttr->Length == 0)
+        {
+            DPRINT1("Broken length!\n");
+            Context->CurrAttr = (PVOID)-1;
+            return NULL;
+        }
+
+        Context->CurrAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+        if (Context->CurrAttr < Context->LastAttr &&
+            Context->CurrAttr->Type != AttributeEnd)
+        {
+            return Context->CurrAttr;
+        }
+    }
+
+    if (Context->NonResidentStart == NULL)
+    {
+        Context->CurrAttr = (PVOID)-1;
+        return NULL;
+    }
+
+    if (Context->CurrAttr < Context->NonResidentStart ||
+        Context->CurrAttr >= Context->NonResidentEnd)
+    {
+        Context->CurrAttr = Context->NonResidentStart;
+    }
+    else if (Context->CurrAttr->Length != 0)
+    {
+        Context->CurrAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+    }
+    else
+    {
+        DPRINT1("Broken length!\n");
+        Context->CurrAttr = (PVOID)-1;
+        return NULL;
+    }
+
+    if (Context->CurrAttr < Context->NonResidentEnd &&
+        Context->CurrAttr->Type != AttributeEnd)
+    {
+        return Context->CurrAttr;
+    }
+
+    Context->CurrAttr = (PVOID)-1;
+    return NULL;
+}
+
+NTSTATUS
+FindFirstAttribute(PFIND_ATTR_CONTXT Context,
+                   PDEVICE_EXTENSION Vcb,
+                   PFILE_RECORD_HEADER FileRecord,
+                   BOOLEAN OnlyResident,
+                   PNTFS_ATTR_RECORD * Attribute)
+{
+    NTSTATUS Status;
+
+    DPRINT("FindFistAttribute(%p, %p, %p, %p, %u, %p)\n", Context, Vcb, FileRecord, OnlyResident, Attribute);
+
+    Context->Vcb = Vcb;
+    Context->OnlyResident = OnlyResident;
+    Context->FirstAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    Context->CurrAttr = Context->FirstAttr;
+    Context->LastAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse);
+    Context->NonResidentStart = NULL;
+    Context->NonResidentEnd = NULL;
+
+    if (Context->FirstAttr->Type == AttributeEnd)
+    {
+        Context->CurrAttr = (PVOID)-1;
+        return STATUS_END_OF_FILE;
+    }
+    else if (Context->FirstAttr->Type == AttributeAttributeList)
+    {
+        Status = InternalReadNonResidentAttributes(Context);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        *Attribute = InternalGetNextAttribute(Context);
+        if (*Attribute == NULL)
+        {
+            return STATUS_END_OF_FILE;
+        }
+    }
+    else
+    {
+        *Attribute = Context->CurrAttr;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+FindNextAttribute(PFIND_ATTR_CONTXT Context,
+                  PNTFS_ATTR_RECORD * Attribute)
+{
+    NTSTATUS Status;
+
+    DPRINT("FindNextAttribute(%p, %p)\n", Context, Attribute);
+
+    *Attribute = InternalGetNextAttribute(Context);
+    if (*Attribute == NULL)
+    {
+        return STATUS_END_OF_FILE;
+    }
+
+    if (Context->CurrAttr->Type != AttributeAttributeList)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    Status = InternalReadNonResidentAttributes(Context);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    *Attribute = InternalGetNextAttribute(Context);
+    if (*Attribute == NULL)
+    {
+        return STATUS_END_OF_FILE;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+FindCloseAttribute(PFIND_ATTR_CONTXT Context)
+{
+    if (Context->NonResidentStart != NULL)
+    {
+        ExFreePoolWithTag(Context->NonResidentStart, TAG_NTFS);
+        Context->NonResidentStart = NULL;
+    }
+}
+
+static
+VOID
+NtfsDumpFileNameAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PFILENAME_ATTRIBUTE FileNameAttr;
+
+    DbgPrint("  $FILE_NAME ");
+
+//    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
+
+    FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+    DbgPrint(" (%x) '%.*S' ", FileNameAttr->NameType, FileNameAttr->NameLength, FileNameAttr->Name);
+    DbgPrint(" '%x' ", FileNameAttr->FileAttributes);
+}
+
+
+static
+VOID
+NtfsDumpStandardInformationAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PSTANDARD_INFORMATION StandardInfoAttr;
+
+    DbgPrint("  $STANDARD_INFORMATION ");
+
+//    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
+
+    StandardInfoAttr = (PSTANDARD_INFORMATION)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+    DbgPrint(" '%x' ", StandardInfoAttr->FileAttribute);
+}
+
+
+static
+VOID
+NtfsDumpVolumeNameAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PWCHAR VolumeName;
+
+    DbgPrint("  $VOLUME_NAME ");
+
+//    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
+
+    VolumeName = (PWCHAR)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+    DbgPrint(" '%.*S' ", Attribute->Resident.ValueLength / sizeof(WCHAR), VolumeName);
+}
+
+
+static
+VOID
+NtfsDumpVolumeInformationAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PVOLINFO_ATTRIBUTE VolInfoAttr;
+
+    DbgPrint("  $VOLUME_INFORMATION ");
+
+//    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
+
+    VolInfoAttr = (PVOLINFO_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+    DbgPrint(" NTFS Version %u.%u  Flags 0x%04hx ",
+             VolInfoAttr->MajorVersion,
+             VolInfoAttr->MinorVersion,
+             VolInfoAttr->Flags);
+}
+
+
+static
+VOID
+NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PINDEX_ROOT_ATTRIBUTE IndexRootAttr;
+
+    IndexRootAttr = (PINDEX_ROOT_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+
+    if (IndexRootAttr->AttributeType == AttributeFileName)
+        ASSERT(IndexRootAttr->CollationRule == COLLATION_FILE_NAME);
+
+    DbgPrint("  $INDEX_ROOT (%uB, %u) ", IndexRootAttr->SizeOfEntry, IndexRootAttr->ClustersPerIndexRecord);
+
+    if (IndexRootAttr->Header.Flags == INDEX_ROOT_SMALL)
+    {
+        DbgPrint(" (small) ");
+    }
+    else
+    {
+        ASSERT(IndexRootAttr->Header.Flags == INDEX_ROOT_LARGE);
+        DbgPrint(" (large) ");
+    }
+}
+
+
+static
+VOID
+NtfsDumpAttribute(PDEVICE_EXTENSION Vcb,
+                  PNTFS_ATTR_RECORD Attribute)
+{
+    UNICODE_STRING Name;
+
+    ULONGLONG lcn = 0;
+    ULONGLONG runcount = 0;
+
+    switch (Attribute->Type)
+    {
+        case AttributeFileName:
+            NtfsDumpFileNameAttribute(Attribute);
+            break;
+
+        case AttributeStandardInformation:
+            NtfsDumpStandardInformationAttribute(Attribute);
+            break;
+
+        case AttributeObjectId:
+            DbgPrint("  $OBJECT_ID ");
+            break;
+
+        case AttributeSecurityDescriptor:
+            DbgPrint("  $SECURITY_DESCRIPTOR ");
+            break;
+
+        case AttributeVolumeName:
+            NtfsDumpVolumeNameAttribute(Attribute);
+            break;
+
+        case AttributeVolumeInformation:
+            NtfsDumpVolumeInformationAttribute(Attribute);
+            break;
+
+        case AttributeData:
+            DbgPrint("  $DATA ");
+            //DataBuf = ExAllocatePool(NonPagedPool,AttributeLengthAllocated(Attribute));
+            break;
+
+        case AttributeIndexRoot:
+            NtfsDumpIndexRootAttribute(Attribute);
+            break;
+
+        case AttributeIndexAllocation:
+            DbgPrint("  $INDEX_ALLOCATION ");
+            break;
+
+        case AttributeBitmap:
+            DbgPrint("  $BITMAP ");
+            break;
+
+        case AttributeReparsePoint:
+            DbgPrint("  $REPARSE_POINT ");
+            break;
+
+        case AttributeEAInformation:
+            DbgPrint("  $EA_INFORMATION ");
+            break;
+
+        case AttributeEA:
+            DbgPrint("  $EA ");
+            break;
+
+        case AttributePropertySet:
+            DbgPrint("  $PROPERTY_SET ");
+            break;
+
+        case AttributeLoggedUtilityStream:
+            DbgPrint("  $LOGGED_UTILITY_STREAM ");
+            break;
+
+        default:
+            DbgPrint("  Attribute %lx ",
+                     Attribute->Type);
+            break;
+    }
+
+    if (Attribute->Type != AttributeAttributeList)
+    {
+        if (Attribute->NameLength != 0)
+        {
+            Name.Length = Attribute->NameLength * sizeof(WCHAR);
+            Name.MaximumLength = Name.Length;
+            Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
+
+            DbgPrint("'%wZ' ", &Name);
+        }
+
+        DbgPrint("(%s)\n",
+                 Attribute->IsNonResident ? "non-resident" : "resident");
+
+        if (Attribute->IsNonResident)
+        {
+            FindRun(Attribute,0,&lcn, &runcount);
+
+            DbgPrint("  AllocatedSize %I64u  DataSize %I64u\n",
+                     Attribute->NonResident.AllocatedSize, Attribute->NonResident.DataSize);
+            DbgPrint("  logical clusters: %I64u - %I64u\n",
+                     lcn, lcn + runcount - 1);
+        }
     }
 }
 
 
 VOID
-NtfsDumpFileAttributes (PFILE_RECORD_HEADER FileRecord)
+NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb,
+                       PFILE_RECORD_HEADER FileRecord)
 {
-  PATTRIBUTE Attribute;
+    NTSTATUS Status;
+    FIND_ATTR_CONTXT Context;
+    PNTFS_ATTR_RECORD Attribute;
 
-  Attribute = (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-  while (Attribute < (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
-         Attribute->AttributeType != (ATTRIBUTE_TYPE)-1)
+    Status = FindFirstAttribute(&Context, Vcb, FileRecord, FALSE, &Attribute);
+    while (NT_SUCCESS(Status))
     {
-      NtfsDumpAttribute (Attribute);
+        NtfsDumpAttribute(Vcb, Attribute);
 
-      Attribute = (PATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Length);
+        Status = FindNextAttribute(&Context, &Attribute);
     }
+
+    FindCloseAttribute(&Context);
+}
+
+PFILENAME_ATTRIBUTE
+GetFileNameFromRecord(PDEVICE_EXTENSION Vcb,
+                      PFILE_RECORD_HEADER FileRecord,
+                      UCHAR NameType)
+{
+    FIND_ATTR_CONTXT Context;
+    PNTFS_ATTR_RECORD Attribute;
+    PFILENAME_ATTRIBUTE Name;
+    NTSTATUS Status;
+
+    Status = FindFirstAttribute(&Context, Vcb, FileRecord, FALSE, &Attribute);
+    while (NT_SUCCESS(Status))
+    {
+        if (Attribute->Type == AttributeFileName)
+        {
+            Name = (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+            if (Name->NameType == NameType ||
+                (Name->NameType == NTFS_FILE_NAME_WIN32_AND_DOS && NameType == NTFS_FILE_NAME_WIN32) ||
+                (Name->NameType == NTFS_FILE_NAME_WIN32_AND_DOS && NameType == NTFS_FILE_NAME_DOS))
+            {
+                FindCloseAttribute(&Context);
+                return Name;
+            }
+        }
+
+        Status = FindNextAttribute(&Context, &Attribute);
+    }
+
+    FindCloseAttribute(&Context);
+    return NULL;
+}
+
+PSTANDARD_INFORMATION
+GetStandardInformationFromRecord(PDEVICE_EXTENSION Vcb,
+                                 PFILE_RECORD_HEADER FileRecord)
+{
+    NTSTATUS Status;
+    FIND_ATTR_CONTXT Context;
+    PNTFS_ATTR_RECORD Attribute;
+    PSTANDARD_INFORMATION StdInfo;
+
+    Status = FindFirstAttribute(&Context, Vcb, FileRecord, FALSE, &Attribute);
+    while (NT_SUCCESS(Status))
+    {
+        if (Attribute->Type == AttributeStandardInformation)
+        {
+            StdInfo = (PSTANDARD_INFORMATION)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+            FindCloseAttribute(&Context);
+            return StdInfo;
+        }
+
+        Status = FindNextAttribute(&Context, &Attribute);
+    }
+
+    FindCloseAttribute(&Context);
+    return NULL;
+}
+
+PFILENAME_ATTRIBUTE
+GetBestFileNameFromRecord(PDEVICE_EXTENSION Vcb,
+                          PFILE_RECORD_HEADER FileRecord)
+{
+    PFILENAME_ATTRIBUTE FileName;
+
+    FileName = GetFileNameFromRecord(Vcb, FileRecord, NTFS_FILE_NAME_POSIX);
+    if (FileName == NULL)
+    {
+        FileName = GetFileNameFromRecord(Vcb, FileRecord, NTFS_FILE_NAME_WIN32);
+        if (FileName == NULL)
+        {
+            FileName = GetFileNameFromRecord(Vcb, FileRecord, NTFS_FILE_NAME_DOS);
+        }
+    }
+
+    return FileName;
 }
 
 /* EOF */

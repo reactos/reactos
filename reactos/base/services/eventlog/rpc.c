@@ -1,7 +1,7 @@
 /*
  * PROJECT:          ReactOS kernel
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             services/eventlog/rpc.c
+ * FILE:             base/services/eventlog/rpc.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
  *                   Copyright 2008 Michael Martin
@@ -10,6 +10,9 @@
 /* INCLUDES *****************************************************************/
 
 #include "eventlog.h"
+
+#define NDEBUG
+#include <debug.h>
 
 LIST_ENTRY LogHandleListHead;
 
@@ -115,6 +118,14 @@ ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
         if (lpLogHandle->LogFile == NULL)
         {
             lpLogHandle->LogFile = LogfListItemByName(L"Application");
+
+            if (lpLogHandle->LogFile == NULL)
+            {
+                DPRINT1("Application log is missing!\n");
+                Status = STATUS_UNSUCCESSFUL;
+                goto Done;
+            }
+
             lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
         }
     }
@@ -159,6 +170,8 @@ ElfCreateBackupLogHandle(PLOGHANDLE *LogHandle,
     Status = LogfCreate(&lpLogHandle->LogFile,
                         NULL,
                         FileName,
+                        0,
+                        0,
                         FALSE,
                         TRUE);
     if (!NT_SUCCESS(Status))
@@ -191,31 +204,40 @@ Done:
 
 PLOGHANDLE ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
 {
+    PLIST_ENTRY CurrentEntry;
     PLOGHANDLE lpLogHandle;
 
-    if (IsListEmpty(&LogHandleListHead))
+    CurrentEntry = LogHandleListHead.Flink;
+    while (CurrentEntry != &LogHandleListHead)
     {
-        return NULL;
+        lpLogHandle = CONTAINING_RECORD(CurrentEntry,
+                                        LOGHANDLE,
+                                        LogHandleListEntry);
+        CurrentEntry = CurrentEntry->Flink;
+
+        if (lpLogHandle == EventLogHandle)
+            return lpLogHandle;
     }
 
-    lpLogHandle = CONTAINING_RECORD((PLOGHANDLE)EventLogHandle, LOGHANDLE, LogHandleListEntry);
-
-    return lpLogHandle;
+    return NULL;
 }
 
 
 static NTSTATUS
-ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
+ElfDeleteEventLogHandle(IELF_HANDLE LogHandle)
 {
-    PLOGHANDLE lpLogHandle = (PLOGHANDLE)EventLogHandle;
+    PLOGHANDLE lpLogHandle;
 
-    if (!ElfGetLogHandleEntryByHandle(lpLogHandle))
+    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    if (!lpLogHandle)
+    {
         return STATUS_INVALID_HANDLE;
-
-    LogfClose(lpLogHandle->LogFile, FALSE);
+    }
 
     RemoveEntryList(&lpLogHandle->LogHandleListEntry);
-    HeapFree(GetProcessHeap(),0,lpLogHandle);
+    LogfClose(lpLogHandle->LogFile, FALSE);
+
+    HeapFree(GetProcessHeap(), 0, lpLogHandle);
 
     return STATUS_SUCCESS;
 }
@@ -234,6 +256,10 @@ NTSTATUS ElfrClearELFW(
     {
         return STATUS_INVALID_HANDLE;
     }
+
+    /* Fail, if the log file is a backup file */
+    if (lpLogHandle->Flags & LOG_HANDLE_BACKUP_FILE)
+        return STATUS_INVALID_HANDLE;
 
     return LogfClearFile(lpLogHandle->LogFile,
                          (PUNICODE_STRING)BackupFileName);
@@ -284,7 +310,7 @@ NTSTATUS ElfrNumberOfRecords(
     PLOGHANDLE lpLogHandle;
     PLOGFILE lpLogFile;
 
-    DPRINT("ElfrNumberOfRecords()");
+    DPRINT("ElfrNumberOfRecords()\n");
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
@@ -914,20 +940,22 @@ NTSTATUS ElfrReportEventA(
     }
 
 Done:
-    for (i = 0; i < NumStrings; i++)
+    if (StringsArrayW != NULL)
     {
-        if (StringsArrayW[i] != NULL)
+        for (i = 0; i < NumStrings; i++)
         {
-            if (StringsArrayW[i]->Buffer)
+            if (StringsArrayW[i] != NULL)
             {
-                RtlFreeUnicodeString(StringsArrayW[i]);
-                HeapFree(MyHeap, 0, StringsArrayW[i]);
+                if (StringsArrayW[i]->Buffer)
+                {
+                    RtlFreeUnicodeString(StringsArrayW[i]);
+                    HeapFree(MyHeap, 0, StringsArrayW[i]);
+                }
             }
         }
-    }
 
-    if (StringsArrayW != NULL)
         HeapFree(MyHeap, 0, StringsArrayW);
+    }
 
     RtlFreeUnicodeString(&ComputerNameW);
 

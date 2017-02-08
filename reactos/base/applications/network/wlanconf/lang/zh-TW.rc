@@ -1,0 +1,39 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n配置無線區域網介面卡。\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\t連線到提供的 SSID，\n\
+\t-w WEP\t\t指定要使用的 WEP 金鑰。\n\
+\t-a\t\t指定目標網路是特設\n\
+\t-d\t\t從當前 AP 斷開連線。\n\
+\t-s\t\t掃描並顯示範圍中的接入\n\
+\t\t\t點列表。\n\n\
+不傳遞任何參數將列印當前 WLAN 連線有關的資訊\n"
+    IDS_NO_NETWORK "沒有找到在範圍內網路\n"
+    IDS_NO_WLAN_ADAPTER "無法在系統上找到一個 WLAN 介面卡\n"
+    IDS_SUCCESS "操作已成功完成。\n"
+    IDS_WLAN_DISCONNECT "\nWLAN 斷開連線\n"
+    IDS_MSG_WEP_ENABLED "啟用 WEP: %s\n"
+    IDS_MSG_NETWORK_MODE "網路模式: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\n當前無線配置資訊:\n\n"
+    IDS_MSG_ENCRYPTED "加密: %s\n"
+    IDS_MSG_NETWORK_TYPE "網路類型: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "支援的速率 (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "傳輸功率: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "天線數量: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "發射天線: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "發射天線: 任何\n"
+    IDS_MSG_RECEIVE_ANTENNA "接收天線: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "接收天線: 任何\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "檔案碎片閾值: %d 個位元組\n"
+    IDS_MSG_RTS_THRESHOLD "RTS 閾值: %d 個位元組\n"
+    IDS_YES "是"
+    IDS_NO "否"
+    IDS_ADHOC "Adhoc"
+    IDS_INFRASTRUCTURE "基礎設施"
+END

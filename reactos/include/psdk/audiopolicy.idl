@@ -1,0 +1,240 @@
+/*
+ * Core Audio audio policy definitions
+ *
+ * Copyright 2009 Maarten Lankhorst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "propidl.idl";
+import "audiosessiontypes.h";
+import "audioclient.idl";
+
+interface IAudioSessionEvents;
+interface IAudioSessionControl;
+interface IAudioSessionControl2;
+interface IAudioSessionManager;
+interface IAudioVolumeDuckNotification;
+interface IAudioSessionNotification;
+interface IAudioSessionEnumerator;
+interface IAudioSessionManager2;
+
+typedef enum AudioSessionDisconnectReason /*[local]*/
+{
+    DisconnectReasonDeviceRemoval = 0,
+    DisconnectReasonServerShutdown,
+    DisconnectReasonFormatChanged,
+    DisconnectReasonSessionLogoff,
+    DisconnectReasonSessionDisconnected,
+    DisconnectReasonExclusiveModeOverride,
+} AudioSessionDisconnectReason;
+
+[
+    local,
+    uuid(24918acc-64b3-37c1-8ca9-74a66e9957a8),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionEvents : IUnknown
+{
+    HRESULT OnDisplayNameChanged(
+        [string,in] LPCWSTR NewDisplayName,
+        [in] LPCGUID EventContext
+    );
+    HRESULT OnIconPathChanged(
+        [string,in] LPCWSTR NewIconPath,
+        [in] LPCGUID EventContext
+    );
+    HRESULT OnSimpleVolumeChanged(
+        [in] float NewVolume,
+        [in] BOOL NewMute,
+        [in] LPCGUID EventContext
+    );
+    HRESULT OnChannelVolumeChanged(
+        [in] DWORD ChannelCount,
+        [size_is(ChannelCount),in] float *NewChannelVolumeArray,
+        [in] DWORD ChangedChannel,
+        [in] LPCGUID EventContext
+    );
+    HRESULT OnGroupingParamChanged(
+        [in] LPCGUID NewGroupingParam,
+        [in] LPCGUID EventContext
+    );
+    HRESULT OnStateChanged(
+        [in] AudioSessionState NewState
+    );
+    HRESULT OnSessionDisconnected(
+        [in] AudioSessionDisconnectReason DisconnectReason
+    );
+}
+
+[
+    local,
+    uuid(f4b1a599-7266-4319-a8ca-e70acb11e8cd),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionControl : IUnknown
+{
+    HRESULT GetState(
+        [out] AudioSessionState *pRetVal
+    );
+    HRESULT GetDisplayName(
+        [string,out] LPWSTR *pRetVal
+    );
+    HRESULT SetDisplayName(
+        [string,in] LPCWSTR DisplayName,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT GetIconPath(
+        [string,out] LPWSTR *pRetVal
+    );
+    HRESULT SetIconPath(
+        [string,in] LPCWSTR Value,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT GetGroupingParam(
+        [out] GUID *pRetVal
+    );
+    HRESULT SetGroupingParam(
+        [in] LPCGUID Override,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT RegisterAudioSessionNotification(
+        [in] IAudioSessionEvents *NewNotifications
+    );
+    HRESULT UnregisterAudioSessionNotification(
+        [in] IAudioSessionEvents *NewNotifications
+    );
+}
+
+[
+    local,
+    uuid(bfb7ff88-7239-4fc9-8fa2-07c950be9c6d),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionControl2 : IAudioSessionControl
+{
+    HRESULT GetSessionIdentifier(
+        [string,out] LPWSTR *pRetVal
+    );
+    HRESULT GetSessionInstanceIdentifier(
+        [string,out] LPWSTR *pRetVal
+    );
+    HRESULT GetProcessId(
+        [out] DWORD *pRetVal
+    );
+    HRESULT IsSystemSoundsSession(void);
+    HRESULT SetDuckingPreferences(
+        [in] BOOL optOut
+    );
+};
+
+[
+    local,
+    uuid(bfa971f1-4d5e-40bb-935e-967039bfbee4),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionManager : IUnknown
+{
+    HRESULT GetAudioSessionControl(
+        [in] LPCGUID AudioSessionGuid,
+        [in] DWORD StreamFlags,
+        [out] IAudioSessionControl **SessionControl
+    );
+    HRESULT GetSimpleAudioVolume(
+        [in] LPCGUID AudioSessionGuid,
+        [in] DWORD StreamFlags,
+        [out] ISimpleAudioVolume **AudioVolume
+    );
+};
+
+[
+    local,
+    uuid(c3b284d4-6d39-4359-b3cf-b56ddb3bb39c),
+    pointer_default(unique),
+    object
+]
+interface IAudioVolumeDuckNotification : IUnknown
+{
+    HRESULT OnVolumeDuckNotification(
+        [in] LPCWSTR sessionID,
+        [in] UINT32 countCommunicationSessions
+    );
+    HRESULT OnVolumeUnduckNotification(
+        [in] LPCWSTR sessionID
+    );
+};
+
+[
+    local,
+    uuid(641dd20b-4d41-49cc-aba3-174b9477bb08),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionNotification : IUnknown
+{
+    HRESULT OnSessionCreated(
+        [in] IAudioSessionControl *NewSession
+    );
+};
+
+[
+    local,
+    uuid(e2f5bb11-0570-40ca-acdd-3aa01277dee8),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionEnumerator : IUnknown
+{
+    HRESULT GetCount(
+        [out] INT *SessionCount
+    );
+    HRESULT GetSession(
+        [in] INT SessionCount,
+        [out] IAudioSessionControl **Session
+    );
+};
+
+[
+    local,
+    uuid(77aa99a0-1bd6-484f-8bc7-2c654c9a9b6f),
+    pointer_default(unique),
+    object
+]
+interface IAudioSessionManager2 : IAudioSessionManager
+{
+    HRESULT GetSessionEnumerator(
+        [retval,out] IAudioSessionEnumerator **SessionEnum
+    );
+    HRESULT RegisterSessionNotification(
+        [in] IAudioSessionNotification *SessionNotification
+    );
+    HRESULT UnregisterSessionNotification(
+        [in] IAudioSessionNotification *SessionNotification
+    );
+    HRESULT RegisterDuckNotification(
+        [string,in] LPCWSTR sessionID,
+        [in] IAudioVolumeDuckNotification *duckNotification
+    );
+    HRESULT UnregisterDuckNotification(
+        [in] IAudioVolumeDuckNotification *duckNotification
+    );
+};

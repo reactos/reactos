@@ -11,6 +11,9 @@
 
 #include "usbstor.h"
 
+#define NDEBUG
+#include <debug.h>
+
 LPCSTR
 USBSTOR_GetDeviceType(
     IN PUFI_INQUIRY_RESPONSE InquiryData,

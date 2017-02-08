@@ -65,8 +65,9 @@ extern ULONG DebugTraceLevel;
 
 #undef DPRINT
 #define DPRINT(_t_, _x_) \
-    if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
-        ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
+    if ((_t_ > NORMAL_MASK) \
+        ? (DebugTraceLevel & _t_) > NORMAL_MASK \
+        : (DebugTraceLevel & NORMAL_MASK) >= _t_) { \
         printf("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
         printf _x_ ; \
     }
@@ -255,7 +256,8 @@ typedef struct _CAB_SEARCH
 
 /* Codecs */
 
-class CCABCodec {
+class CCABCodec
+{
 public:
     /* Default constructor */
     CCABCodec() {};
@@ -291,7 +293,8 @@ public:
 
 #ifndef CAB_READ_ONLY
 
-class CCFDATAStorage {
+class CCFDATAStorage
+{
 public:
     /* Default constructor */
     CCFDATAStorage();
@@ -312,7 +315,8 @@ private:
 
 #endif /* CAB_READ_ONLY */
 
-class CCabinet {
+class CCabinet
+{
 public:
     /* Default constructor */
     CCabinet();

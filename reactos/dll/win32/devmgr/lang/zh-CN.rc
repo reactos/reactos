@@ -1,0 +1,322 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_NAME "名称"
+    IDS_TYPE "类型"
+    IDS_MANUFACTURER "制造商: %1"
+    IDS_LOCATION "位置: %1"
+    IDS_STATUS "设备状态: %1"
+    IDS_UNKNOWN "未知"
+    IDS_LOCATIONSTR "位置 %1!u! (%2)"
+    IDS_DEVCODE " (代码 %1!u!)"
+    IDS_DEVCODE2 " (代码 %2!u!)"
+    IDS_ENABLEDEVICE "使用这个设备 (启用)"
+    IDS_DISABLEDEVICE "不要使用这个设备 (停用)"
+    IDS_UNKNOWNDEVICE "未知的设备"
+    IDS_NODRIVERLOADED "为此设备不安装任何驱动程序。"
+    IDS_DEVONPARENT "on %1"
+    IDS_TROUBLESHOOTDEV "排除故障......(&T)"
+    IDS_ENABLEDEV "启用设备(&N)"
+    IDS_REINSTALLDRV "重新安装驱动程序(&I)"
+    IDS_PROPERTIES "属性(&R)"
+    IDS_UPDATEDRV "更新驱动程序...(&P)"
+    IDS_REBOOT "重新启动计算机...(&C)"
+    IDS_NOTAVAILABLE "没有可供选择"
+    IDS_NOTDIGITALLYSIGNED "不进行数字签名"
+    IDS_NODRIVERS "没有驱动程序文件要求或都已加载此设备。"
+    IDS_RESOURCE_COLUMN "资源类型"
+    IDS_SETTING_COLUMN "设置"
+    IDS_RESOURCE_MEMORY_RANGE "内存范围"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "I/O 范围"
+END
+
+/* error messages, source: http://www.z123.org/techsupport/medm.htm */
+STRINGTABLE
+BEGIN
+    IDS_DEV_NO_PROBLEM "此设备工作正常。"
+    IDS_DEV_NOT_CONFIGURED "此设备的配置不正确。"
+    IDS_DEV_DEVLOADER_FAILED "ReactOS 无法加载这个设备的驱动程序，因为计算机报告两个 %1 总线类型。"
+    IDS_DEV_DEVLOADER_FAILED2 "此设备 %1 设备装载无法加载设备驱动程序。"
+    IDS_DEV_OUT_OF_MEMORY "此设备的驱动程序可能已损坏，或者您的系统的内存或其他资源不足。"
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "此设备工作不正常，因为其驱动程序之一可能已损坏，或您的注册表可能已损坏。"
+    IDS_DEV_LACKED_ARBITRATOR "此设备的驱动程序要求 ReactOS 不知道如何处理资源。"
+    IDS_DEV_BOOT_CONFIG_CONFLICT "另一个设备正在使用此设备所需的资源。"
+    IDS_DEV_FAILED_FILTER "此设备的驱动程序需要重新安装。"
+    IDS_DEV_DEVLOADER_NOT_FOUND "此设备工作不正常，因为 ReactOS 不能加载的文件加载设备的驱动程序 %1。"
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "此设备工作不正常，因为文件 %1 加载此设备的驱动程序是坏了。"
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "设备故障: 试着改变此设备的驱动程序。如果无法正常工作，请参阅硬件文档。"
+    IDS_DEV_INVALID_DATA "此设备工作不正常，因为您的计算机中的 BIOS 错误地报告设备的资源。"
+    IDS_DEV_INVALID_DATA2 "此设备工作不正常，因为设备的 BIOS 错误地报告设备的资源。"
+    IDS_DEV_FAILED_START "此设备是要么不存在，工作不正常，或者没有安装所有的驱动程序。"
+    IDS_DEV_LIAR "ReactOS 停止响应尝试启动这个设备，因此永远不会尝试重新启动此设备时。"
+    IDS_DEV_NORMAL_CONFLICT "此设备不能找到任何免费 %1 的资源使用。"
+    IDS_DEV_NOT_VERIFIED "此设备是要么不存在，工作不正常，或者没有安装所有的驱动程序。"
+    IDS_DEV_NEED_RESTART "此设备不能正常工作，直到您重新启动计算机。"
+    IDS_DEV_REENUMERATION "此设备造成资源冲突。"
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS 无法识别此设备使用的所有资源。"
+    IDS_DEV_UNKNOWN_RESOURCE "驱动程序信息文件 %1 告诉子设备使用一种资源，父设备不有，也不承认。"
+    IDS_DEV_REINSTALL "此设备的驱动程序需要重新安装。"
+    IDS_DEV_REGISTRY "您的注册表可能已损坏。"
+    IDS_DEV_WILL_BE_REMOVED "ReactOS 删除这个设备。"
+    IDS_DEV_DISABLED "此设备未启动。"
+    IDS_DEV_DISABLED2 "此设备已被禁用。"
+    IDS_DEV_DEVLOADER_NOT_READY "此设备无法加载必需的驱动程序。"
+    IDS_DEV_DEVLOADER_NOT_READY2 "这个显示适配器工作正常。"
+    IDS_DEV_DEVLOADER_NOT_READY3 "此设备无法加载必需的驱动程序。"
+    IDS_DEV_DEVICE_NOT_THERE "此设备是要么不存在，工作不正常，或者没有安装所有的驱动程序。"
+    IDS_DEV_MOVED "ReactOS 正在设置此设备。"
+    IDS_DEV_TOO_EARLY "ReactOS 正在设置此设备。"
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS 不能指定此设备的资源。"
+    IDS_DEV_FAILED_INSTALL "此设备的驱动程序未安装。"
+    IDS_DEV_HARDWARE_DISABLED "此设备被禁用，因为该设备的 BIOS 没有给它任何资源。"
+    IDS_DEV_CANT_SHARE_IRQ "此设备正在使用的另一个设备正在使用，无法共享中断请求 (IRQ) 资源。\n您必须更改冲突的设置，或删除造成冲突的实模式驱动程序。"
+    IDS_DEV_FAILED_ADD "此设备工作不正常，因为 %1 工作不正常。"
+    IDS_DEV_DISABLED_SERVICE "ReactOS 不能安装此设备的驱动程序，因为它不能访问已安装文件的驱动器或网络上的位置。"
+    IDS_DEV_TRANSLATION_FAILED "此设备没有响应对其驱动程序。"
+    IDS_DEV_NO_SOFTCONFIG "ReactOS 不能确定此设备的设置。请参考此设备附带的文档，使用资源选项卡来设置配置。"
+    IDS_DEV_BIOS_TABLE "您的计算机的系统固件不包括足够的信息来正确配置和使用此设备。 \n若要使用此设备，请联系计算机制造商以获取固件或 BIOS 更新。"
+    IDS_DEV_IRQ_TRANSLATION_FAILED "该设备正在请求 PCI 中断但被配置为 ISA 中断 (反之亦然)。 \n请使用计算机的系统设置程序重新配置此设备的中断。"
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS 无法初始化这个硬件的设备驱动程序。"
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "由于设备驱动程序的前一个实例仍在内存中，ReactOS 无法加载这个硬件的设备驱动程序。"
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS 无法加载这个硬件的设备驱动程序。驱动程序可能已损坏或丢失。"
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS 无法访问这个硬件，因为它在注册表中的服务密钥信息已丢失或记录不正确。"
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS 成功地加载了这个硬件的设备驱动程序，但找不到硬件设备。"
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS 无法加载这个硬件的设备驱动程序，因为那里是一个重复的设备已经在系统上运行。"
+    IDS_DEV_FAILED_POST_START "ReactOS 已停止此设备，因为它已报告的问题。"
+    IDS_DEV_HALTED "应用程序或服务已关闭这个硬件设备。"
+    IDS_DEV_PHANTOM "目前，这个硬件设备没有连接到计算机。"
+    IDS_DEV_SYSTEM_SHUTDOWN "因为操作系统正在关闭 ReactOS 无法访问这个硬件设备。"
+    IDS_DEV_HELD_FOR_EJECT "ReactOS 不能使用这个硬件设备，因为它已为安全删除，但它不从计算机删除。"
+    IDS_DEV_DRIVER_BLOCKED "此设备的软件已经被阻止开始因为它已知有 ReactOS 的问题。 请与硬件供应商联系新的驱动程序。"
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS 不能启动新的硬件设备，因为系统配置单元是太大 (超过了注册表大小限制)。"
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS 不能更改此设备的设置。"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROP_DEVICEID "设备实例 ID"
+    IDS_PROP_HARDWAREIDS "硬件 IDs"
+    IDS_PROP_COMPATIBLEIDS "兼容  IDs"
+    IDS_PROP_MATCHINGDEVICEID "匹配的设备 ID"
+    IDS_PROP_SERVICE "服务"
+    IDS_PROP_ENUMERATOR "枚举数"
+    IDS_PROP_CAPABILITIES "能力"
+    IDS_PROP_DEVNODEFLAGS "Devnode 标志"
+    IDS_PROP_CONFIGFLAGS "配置标志"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig 标志"
+    IDS_PROP_EJECTIONRELATIONS "弹射关系"
+    IDS_PROP_REMOVALRELATIONS "删除关系"
+    IDS_PROP_BUSRELATIONS "总线关系"
+    IDS_PROP_DEVUPPERFILTERS "上部的设备筛选器"
+    IDS_PROP_DEVLOWERFILTERS "较低的设备筛选器"
+    IDS_PROP_CLASSUPPERFILTERS "类别高层筛选程序"
+    IDS_PROP_CLASSLOWERFILTERS "类别低层筛选程序"
+    IDS_PROP_CLASSINSTALLER "安装程序类"
+    IDS_PROP_CLASSCOINSTALLER "类别协同安装程"
+    IDS_PROP_DEVICECOINSTALLER "设备协同安装程序"
+    IDS_PROP_FIRMWAREREVISION "固件版本"
+    IDS_PROP_CURRENTPOWERSTATE "当前电源状态"
+    IDS_PROP_POWERCAPABILITIES "电源功能"
+    IDS_PROP_POWERSTATEMAPPINGS "电源状态映射"
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 300, 400
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "设备:(&D)", IDC_DEVICES, 7, 6, 196, 10
+    CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
+    GROUPBOX "设备属性", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
+    LTEXT "", IDC_STATUS, 14, 112, 183, 30
+    PUSHBUTTON "排除故障......(&T)", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "属性(&R)", IDC_PROPERTIES, 146, 140, 50, 14
+END
+
+IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "常规"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "设备类型:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "制造商:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "位置:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX "设备状态", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON "排除故障...(&T)", IDC_DEVPROBLEM, 148, 163, 90, 15
+    LTEXT "设备使用情况:(&D)", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
+END
+
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "驱动程序"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "驱动程序提供商:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "驱动程序日期:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "驱动程序版本:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "数字签名:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "驱动程序详细信息...(&D)", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "要查看有关驱动程序文件的详细信息。", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "更新驱动程序...(&U)", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "更新设备驱动程序。", -1, 91, 130, 154, 17, SS_NOPREFIX
+END
+
+IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "驱动程序文件的详细信息"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "驱动程序文件:(&D)", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "提供商:", -1, 14, 134, 50, 8
+    EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "文件版本:", -1, 14, 150, 50, 8
+    EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "版权:", -1, 14, 166, 50, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "数字签名:", -1, 14, 182, 50, 8
+    EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "确定", IDOK, 167, 208, 50, 14
+END
+
+IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "详细信息"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    COMBOBOX IDC_DETAILSPROPNAME, 7, 36, 238, 165, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_DETAILSPROPVALUE, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 58, 238, 155
+END
+
+IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "资源"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "资源设置:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
+END
+
+IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "电源"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+END
+
+
+/*
+ This code relates to the device manager GUI
+ */
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "文件(&F)"
+  BEGIN
+    MENUITEM "关闭(&X)",                       IDC_EXIT
+  END
+  MENUITEM "行动",                        IDC_ACTIONMENU
+  POPUP "视图"
+  BEGIN
+    MENUITEM "按类型设备",             IDC_DEVBYTYPE
+    MENUITEM "依连接排序设备",       IDC_DEVBYCONN
+    MENUITEM "依类型排序资源",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "依连接排序资源",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "显示隐藏的设备",         IDC_SHOWHIDDEN
+  END
+  POPUP "帮助"
+  BEGIN
+    MENUITEM "关于",                       IDC_ABOUT
+  END
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME               "ReactOS 设备管理器"
+  IDS_CONFIRM_DISABLE       "禁用此设备会使其停止运行。\r\n你真的想要禁用它吗?"
+  IDS_CONFIRM_UNINSTALL     "警告: 您将要从系统中卸载此设备。\r\n你想要继续吗?"
+END
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_MENU_UPDATE           "更新驱动程序软件..."
+  IDS_MENU_ENABLE           "启用"
+  IDS_MENU_DISABLE          "禁用"
+  IDS_MENU_UNINSTALL        "卸载"
+  IDS_MENU_SCAN             "扫描检测硬件改动"
+  IDS_MENU_ADD              "添加硬件"
+  IDS_MENU_PROPERTIES       "属性"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROPERTIES    "属性"
+  IDS_TOOLTIP_SCAN          "扫描检测硬件改动"
+  IDS_TOOLTIP_ENABLE        "启用"
+  IDS_TOOLTIP_DISABLE       "禁用"
+  IDS_TOOLTIP_UPDATE        "更新驱动程序软件"
+  IDS_TOOLTIP_UNINSTALL     "卸载"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_PROPERTIES   " 当前所选内容的公开的属性对话框。"
+  IDS_HINT_SCAN         " 扫描已更改或新插设备。"
+  IDS_HINT_ENABLE       " 启用所选的设备。"
+  IDS_HINT_DISABLE      " 禁用所选的设备。"
+  IDS_HINT_UPDATE       " 启动所选设备的更新驱动程序软件向导。"
+  IDS_HINT_UNINSTALL    " 卸载所选设备的驱动程序。"
+  IDS_HINT_ADD          " 将一个旧的 (非即插) 设备添加到计算机。" 
+  IDS_HINT_ABOUT        " 关于 ReactOS 设备管理器。"
+  IDS_HINT_EXIT         " 退出程序。"
+
+  IDS_HINT_DEV_BY_TYPE  " 按硬件类型显示设备。"
+  IDS_HINT_DEV_BY_CONN  " 按连接显示设备。"
+  IDS_HINT_RES_BY_TYPE  " 按类型显示资源。"
+  IDS_HINT_RES_BY_CONN  " 按连接类型显示资源。"
+  IDS_HINT_SHOW_HIDDEN  " 显示旧设备和不再安装的设备。"
+
+  IDS_HINT_SYS_RESTORE  " 将此窗口还原到正常大小。"
+  IDS_HINT_SYS_MOVE     " 移动此窗口。"
+  IDS_HINT_SYS_SIZE     " 调整此窗口的大小。"
+  IDS_HINT_SYS_MINIMIZE " 将该窗口缩小为图标。"
+  IDS_HINT_SYS_MAXIMIZE " 扩展此窗口以填充此屏幕。"
+  IDS_HINT_SYS_CLOSE    " 关闭此窗口。"
+END

@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
- * FILE:            subsys/system/winlogon/winlogon.h
+ * FILE:            base/system/winlogon/winlogon.h
  * PURPOSE:         Winlogon
  * PROGRAMMER:
  */
@@ -26,28 +26,26 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
+#include <stdarg.h>
+
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <mmsystem.h>
-#include <userenv.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
 #include <winwlx.h>
-#include <cmfuncs.h>
-#include <rtlfuncs.h>
-#include <exfuncs.h>
-#include <setypes.h>
-#include <sefuncs.h>
-#include <aclapi.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/exfuncs.h>
 #include <strsafe.h>
 
 #include <reactos/undocuser.h>
-#include <reactos/winlogon.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
-#include "setup.h"
 #include "resource.h"
 
 typedef BOOL (WINAPI * PFWLXNEGOTIATE)  (DWORD, DWORD *);
@@ -156,16 +154,6 @@ typedef struct _GINAINSTANCE
  *    STATE_LOCKED. Pressing "Shutdown" changes the state to
  *    STATE_SHUTTING_DOWN.
  *
- * STATE_SCREENSAVER
- *    Winlogon runs the screen saver. Upon user activity, the screensaver
- *    terminates and the state changes back to STATE_LOGGED_ON if the secure
- *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
- *
- * STATE_LOGGING_OFF
- *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
- *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
- *    and changes the state to STATE_LOGGED_OFF.
- *
  * STATE_LOCKED
  *    Winlogon shows the locked message dialog. When the user presses "Ctrl-
  *    Alt-Del" the state changes to STATE_LOCKED_SAS. If DisableCAD is true,
@@ -178,6 +166,11 @@ typedef struct _GINAINSTANCE
  *    pressing "OK" unlocks the computer and changes the state to
  *    STATE_LOGGED_ON.
  *
+ * STATE_LOGGING_OFF
+ *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
+ *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
+ *    and changes the state to STATE_LOGGED_OFF.
+ *
  * STATE_SHUTTING_DOWN
  *    Winlogon shows the shutdown dialog. Presing "Cancel" or a timeout will
  *    change the state back to STATE_LOGGED_ON_SAS. Pressing "OK" will change
@@ -185,20 +178,25 @@ typedef struct _GINAINSTANCE
  *
  * STATE_SHUT_DOWN
  *    Terminates Winlogon and initiates shut-down.
+ *
+ * STATE_SCREENSAVER
+ *    Winlogon runs the screen saver. Upon user activity, the screensaver
+ *    terminates and the state changes back to STATE_LOGGED_ON if the secure
+ *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
  */
 typedef enum _LOGON_STATE
 {
-    STATE_INIT,            // not user yet
+    STATE_INIT,
     STATE_LOGGED_OFF,
-    STATE_LOGGED_OFF_SAS,  // not user yet
+    STATE_LOGGED_OFF_SAS,
     STATE_LOGGED_ON,
-    STATE_LOGGED_ON_SAS,   // not user yet
-    STATE_SCREENSAVER,     // not user yet
+    STATE_LOGGED_ON_SAS,
     STATE_LOCKED,
-    STATE_LOCKED_SAS,      // not user yet
-    STATE_LOGGING_OFF,     // not user yet
-    STATE_SHUTTING_DOWN,   // not user yet
-    STATE_SHUT_DOWN        // not user yet
+    STATE_LOCKED_SAS,
+    STATE_LOGGING_OFF,     // not used yet
+    STATE_SHUTTING_DOWN,   // not used yet
+    STATE_SHUT_DOWN,       // not used yet
+    STATE_SCREENSAVER      // not used yet
 } LOGON_STATE, *PLOGON_STATE;
 
 #define LockWorkstation(Session)
@@ -241,6 +239,23 @@ typedef struct _WLSESSION
     WLX_PROFILE_V2_0 *Profile;
 } WLSESSION, *PWLSESSION;
 
+typedef enum _NOTIFICATION_TYPE
+{
+    LogonHandler,
+    LogoffHandler,
+    LockHandler,
+    UnlockHandler,
+    StartupHandler,
+    ShutdownHandler,
+    StartScreenSaverHandler,
+    StopScreenSaverHandler,
+    DisconnectHandler,
+    ReconnectHandler,
+    StartShellHandler,
+    PostShellHandler,
+    LastHandler
+} NOTIFICATION_TYPE, *PNOTIFICATION_TYPE;
+
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
 
@@ -260,6 +275,22 @@ extern PWLSESSION WLSession;
 BOOL
 CreateUserEnvironment(IN PWLSESSION Session);
 
+/* notifiy.c */
+BOOL
+InitNotifications(VOID);
+
+VOID
+CleanupNotifications(VOID);
+
+VOID
+CallNotificationDlls(
+    PWLSESSION pSession,
+    NOTIFICATION_TYPE Type);
+
+/* rpcserver.c */
+BOOL
+StartRpcServer(VOID);
+
 /* sas.c */
 BOOL
 SetDefaultLanguage(IN BOOL UserProfile);
@@ -274,8 +305,14 @@ InitializeScreenSaver(IN OUT PWLSESSION Session);
 VOID
 StartScreenSaver(IN PWLSESSION Session);
 
-/* winlogon.c */
+/* setup.c */
+DWORD
+GetSetupType(VOID);
 
+BOOL
+RunSetup(VOID);
+
+/* winlogon.c */
 BOOL
 PlaySoundRoutine(IN LPCWSTR FileName,
                  IN UINT Logon,
@@ -290,6 +327,12 @@ BOOL
 RemoveStatusMessage(IN PWLSESSION Session);
 
 /* wlx.c */
+VOID
+InitDialogListHead(VOID);
+
+HWND
+GetTopDialogWindow(VOID);
+
 BOOL
 GinaInit(IN OUT PWLSESSION Session);
 
@@ -329,5 +372,3 @@ BOOL WINAPI WlxDisconnect(VOID);
 DWORD WINAPI WlxQueryTerminalServicesData(HANDLE hWlx, PWLX_TERMINAL_SERVICES_DATA pTSData, WCHAR* UserName, WCHAR* Domain);
 
 #endif /* __WINLOGON_MAIN_H__ */
-
-/* EOF */

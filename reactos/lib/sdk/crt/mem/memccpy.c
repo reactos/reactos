@@ -3,6 +3,7 @@
 
 
 void *
+__cdecl
 _memccpy (void *to, const void *from,int c,size_t count)
 {
     char t;

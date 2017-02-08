@@ -3,6 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/smlib/lookupss.c
  */
+
 #include "precomp.h"
 
 #define NDEBUG
@@ -84,9 +85,9 @@ SmLookupSubsystem (IN     PWSTR   Name,
 					  & ResultLength);
 		if(NT_SUCCESS(Status))
 		{
-			DPRINT("nkvpi.TitleIndex = %ld\n", kvpi->TitleIndex);
-			DPRINT("kvpi.Type        = %ld\n", kvpi->Type);
-			DPRINT("kvpi.DataLength  = %ld\n", kvpi->DataLength);
+			DPRINT("nkvpi.TitleIndex = %lu\n", kvpi->TitleIndex);
+			DPRINT("kvpi.Type        = %lu\n", kvpi->Type);
+			DPRINT("kvpi.DataLength  = %lu\n", kvpi->DataLength);
 
 			if((NULL != Data) && (NULL != DataLength) && (NULL != DataType))
 			{
@@ -109,12 +110,12 @@ SmLookupSubsystem (IN     PWSTR   Name,
 					}
 					else
 					{
-						Source.Length        = kvpi->DataLength;
-						Source.MaximumLength = kvpi->DataLength;
+						Source.Length        = (USHORT)kvpi->DataLength;
+						Source.MaximumLength = (USHORT)kvpi->DataLength;
 						Source.Buffer        = (PWCHAR) & kvpi->Data;
 
 						Destination.Length        = 0;
-						Destination.MaximumLength = (2 * KeyValueInformationLength);
+						Destination.MaximumLength = (USHORT)(2 * KeyValueInformationLength);
 						Destination.Buffer        = DestinationBuffer;
 
 						Status = RtlExpandEnvironmentStrings_U (Environment,

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType validation module error codes (specification only).         */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,21 +23,20 @@
   /*                                                                       */
   /*************************************************************************/
 
-#ifndef __OTVERROR_H__
-#define __OTVERROR_H__
+#ifndef OTVERROR_H_
+#define OTVERROR_H_
 
 #include FT_MODULE_ERRORS_H
 
-#undef __FTERRORS_H__
+#undef FTERRORS_H_
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  OTV_Err_
 #define FT_ERR_BASE    FT_Mod_Err_OTvalid
 
-#define FT_KEEP_ERR_PREFIX
-
 #include FT_ERRORS_H
 
-#endif /* __OTVERROR_H__ */
+#endif /* OTVERROR_H_ */
 
 
 /* END */

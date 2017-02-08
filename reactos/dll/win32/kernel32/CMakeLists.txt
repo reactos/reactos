@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    client/actctx.c
     client/appcache.c
     client/atom.c
     client/compname.c
@@ -47,6 +48,7 @@ list(APPEND SOURCE
     client/file/delete.c
     client/file/deviceio.c
     client/file/dir.c
+    client/file/disk.c
     client/file/fileinfo.c
     client/file/filemap.c
     client/file/filename.c
@@ -57,6 +59,7 @@ list(APPEND SOURCE
     client/file/lock.c
     client/file/mailslot.c
     client/file/move.c
+    client/file/mntpoint.c
     client/file/npipe.c
     client/file/rw.c
     client/file/tape.c
@@ -77,8 +80,7 @@ list(APPEND SOURCE
     winnls/string/lstring.c
     winnls/string/nls.c
     winnls/string/sortkey.c
-    kernel32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
+    k32.h)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
@@ -88,13 +90,27 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         client/amd64/fiber.S
         client/amd64/thread.S)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ASM_SOURCE
+        client/arm/fiber.S
+        client/arm/thread.S)
 endif()
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})
-add_library(kernel32 SHARED ${SOURCE} ${kernel32_asm})
+add_library(kernel32 SHARED
+    ${SOURCE}
+    ${kernel32_asm}
+    kernel32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
+
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
+#############################################
+## HACK FOR MSVC COMPILATION WITH win32dll ##
+set_subsystem(kernel32 console)
+################# END  HACK #################
+
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
-add_pch(kernel32 k32.h)
+add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)

@@ -1,0 +1,107 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+/* Dialog */
+IDD_GUI DIALOGEX 0, 0, 240, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Fikje ne distance"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "Anulo", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "Ko&mpjuter:", IDC_STATIC, 9, 9, 35, 36
+    LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
+    PUSHBUTTON "Shto...", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "Hiq", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "Shfleto...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "Veprim", IDC_ACTION, 11, 81, 20, 14
+    COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX "Paralajmero perdoruesin", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Shfaq paralajmerimin per", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
+    LTEXT "sekond(a)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "Fik ndjekesin e eventeve", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "Arsye:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "Planifikuar", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
+    LTEXT "Kom&ent:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Vegla e fikjes se ReactOS\n\
+\n\
+Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+\n\
+    Ska argument ose /?    Shfaq ndihmen.\n\
+    /i      Shfaq interfaqen grafike te perdoruesit (GUI). Ky opsion duhet te jete\n\
+            i pari.\n\
+    /l      Dil vetem nga sistemi vendas. Nuk mund te perdoret me /m ose /d.\n\
+    /s      Fik kompjuterin.\n\
+    /r      Rifillo kompjuterin.\n\
+    /g      Rifillo kompjuterin dhe rifillo te gjitha programet e rregjistrume.\n\
+    /a      Anulo fikjen e vonuar. Mund te perdoret vetem gjate kohes se\n\
+            voneses.\n\
+    /p      Fik kompjuterin vendas pa asnje paralajmerim ose kohe. Mund te perdoret\n\
+            me /d ose /f.\n\
+    /h      Ver ne pushim kompjuterin vendas. Perdoret me /f.\n\
+    /e      Dokumento arsyen e fikjes se kompjuterit vendas ne papritshmerin e fikjes.\n\
+    /m \\\\computer  Specifiko kompjuterin e planifikuar (UNC/IP address).\n\
+    /t xxx  Shih kohen dhe periudhen tel xxx sekonda para fikjes.\n\
+            Periudha e vlefshme fillon nga 0 deri 315360000 (10 vjet),\n\
+            30 eshte vlera e parazgjedhur.\n\
+    /c ""comment""  Komento arsyen e fikjes ose rifillimit.\n\
+            512 karaktere te lejuar maksimalisht.\n\
+    /f      Sforco mbylljen e aplikacioneve pa paralajmerim te perdoruesit. Nese ju\n\
+            nuk specifikone parametra te tjere, ky opsion do te jete gjithashtu per dil.\n\
+    /d [p|u:]xx:yy  Hep kodin e arsyes per fikje ose per rifillimin.\n\
+            p tregon qe fikja ose rifillimi eshte plafinikuar.\n\
+            u tregon qe arsya eshte percaktuar nga perdoruesi.\n\
+            Nese as p apo u jane te specifikuar, fikja ose rifillimi nuk jane\n\
+            te planifikuara.\n\
+            xx eshte arsya e kodit madhor (intigeri pozitiv me i vogel se 256).\n\
+            yy eshte arsya e kodit minor (intigeri pozitiv me i vogel se 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT "ERROR: E pamundur te fiket dhe rifillohet ne te njejten kohe.\n"
+    IDS_ERROR_TIMEOUT "ERROR: Vlera e kohezgjatjes e %u eshte jasht kufirit (0-315360000).\n"
+    IDS_ERROR_ABORT "ERROR: E pamundur anullimi i fikjes se sistemit.\n"
+    IDS_ERROR_LOGOFF "ERROR: E pamundur dalja nga sistemi.\n"
+    IDS_ERROR_SHUTDOWN "ERROR: E pamundur fikja e sistemit.\n"
+    IDS_ERROR_RESTART "ERROR: E pamundur rifillimi i sistemit.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: Gjatesia e komentit kalon limitin maksimal te karaktereve te vendosur nga sistemit.\n"
+    IDS_ERROR_HIBERNATE "ERROR: E pamundur vendosja ne menyre letargjike te sistemit.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "ERROR: Menyra letargjike nuk te fillohet ne kontroll distace te sistemit.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "ERROR: Menyra letargjike e sistemit nuk eshte e aktivizuar.\n"
+    IDS_ERROR_DIALOG_CAPTION "Fikje ne distance"
+    IDS_ERROR_DIALOG_INIT "E pamundur shfaqja e nderfaqes grafike te perdoruesit."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN "Fike Sistemit"
+    IDS_ACTION_RESTART "Rifillo Sistemin"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Mbaj shenime te fikjes se papritur"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE
+BEGIN
+    IDS_REASON_OTHER "T'tjera"
+    IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Mirembajtje"
+    IDS_REASON_HARDWARE_INSTALL "Hardware: Instalimi"
+    IDS_REASON_OS_RECOVER "Operating System: Rekuperim"
+    IDS_REASON_OS_RECONFIGURE "Operating System: Rikonfiguro"
+    IDS_REASON_APP_MAINTENANCE "Application: Mirembajtje"
+    IDS_REASON_APP_INSTALL "Application: Instalim"
+    IDS_REASON_APP_UNRESPONSIVE "Application: Nuk pergjigjes"
+    IDS_REASON_APP_UNSTABLE "Application: Jo stablet"
+    IDS_REASON_SECURITY "Probleme Sigurie"
+    IDS_REASON_NETWORK "Humbje e lidhjes ne rrjet"
+END

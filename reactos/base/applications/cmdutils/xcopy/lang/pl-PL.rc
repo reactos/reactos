@@ -1,0 +1,56 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Niewłaściwa liczba parametrów - uruchom xcopy /? aby wyświetlić pomoc\n"
+    STRING_INVPARM,  "Nieznany parameter '%1' -  uruchom xcopy /? aby wyświetlić pomoc\n"
+    STRING_PAUSE,    "Naciśnij <enter> aby rozpocząć kopiowanie\n"
+    STRING_SIMCOPY,  "%1!d! plik(ów) zostałoby skopiowanych\n"
+    STRING_COPY,     "%1!d! plik(ów) skopiowanych\n"
+    STRING_QISDIR,   "Czy '%1' jest nazwą pliku czy katalogu\n\
+                     docelowego?\n\
+                     (P - plik, K - katalog)\n"
+    STRING_SRCPROMPT,"%1? (Tak|Nie)\n"
+    STRING_OVERWRITE,"Zastąpić %1? (Tak|Nie|Wszystkie)\n"
+    STRING_COPYFAIL, "Kopiowanie '%1' do '%2' nie powiodło się - kod błędu %3!d!\n"
+    STRING_OPENFAIL, "Nie udało się otworzyć '%1'\n"
+    STRING_READFAIL, "Błąd podczas czytania '%1'\n"
+    STRING_YES_CHAR, "T"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "W"
+    STRING_FILE_CHAR,"P"
+    STRING_DIR_CHAR, "K"
+
+    STRING_HELP,
+"XCOPY - kopiuje pliki lub drzewa katalogów\n\
+\n\
+Składnia:\n\
+XCOPY źródło [cel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Gdzie:\n\
+\n\
+[/I]  Jeżeli ""cel"" nie istnieje i kopiowane są co najmniej dwa pliki,\n\
+\tzakłada, że ""cel"" powien być katalogiem\n\
+[/S]  Kopiuje katalogi i podkatalogi\n\
+[/E]  Kopiuje katalogi i podkatalogi, łącznie z pustymi\n\
+[/Q]  Nie wypisuje nazw plików podczas kopiowania (tryb cichy)\n\
+[/F]  Wypisuje pełne ścieżki źródłowe i docelowe podczas kopiowania\n\
+[/L]  Jedynie symuluje operację, pokazując pliki, które byłyby kopiowane\n\
+[/W]  Prosi o potwierdzenie przed rozpoczęciem kopiowania\n\
+[/T]  Tworzy puste katalogi, ale nie kopiuje plików\n\
+[/Y]  Zastępuje pliki bez prośby o potwierdzenie\n\
+[/-Y] Zawsze prosi o potwierdzenie przed zastąpieniem pliku\n\
+[/P]  Prosi o potwierdzenie przed skopiowaniem każdego pliku\n\
+[/N]  Kopiuje używając krótkich nazw plików\n\
+[/U]  Kopiuje tylko pliki, które już istnieją w miejscu docelowym\n\
+[/R]  Zastępuje pliki tylko do odczytu\n\
+[/H]  Kopiuje również pliki ukryte i systemowe\n\
+[/C]  Kontynuuje nawet jeżeli podczas kopiowania wystąpiły błędy\n\
+[/A]  Kopiuje tylko pliki z atrybutem archiwalny\n\
+[/M]  Kopiuje tylko pliki z atrybutem archiwalny i usuwa ten atrybut\n\
+[/D | /D:m-d-y] Kopiuje tylko nowe pliki lub te zmodifikowane po podanej dacie.\n\
+\t\tJeżeli nie podano żadnej daty, to kopiowane są pliki, które są\n\
+\t\tnowsze niż w katalogu docelowym\n\n"
+
+}

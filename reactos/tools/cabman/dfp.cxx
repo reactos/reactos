@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/dfp.cpp
+ * FILE:        tools/cabman/dfp.cxx
  * PURPOSE:     Directive file parser
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>
@@ -14,7 +14,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include "cabinet.h"
+#include "cabman.h"
 #include "dfp.h"
 
 
@@ -345,7 +345,7 @@ ULONG CDFParser::Parse()
 
                             if (Status == CAB_STATUS_FAILURE)
                             {
-                                printf("Directive file contains errors at line %u.\n", (UINT)CurrentLine);
+                                printf("ERROR: Directive file contains errors at line %u.\n", (UINT)CurrentLine);
                                 DPRINT(MID_TRACE, ("Error while executing command.\n"));
                             }
 
@@ -359,12 +359,10 @@ ULONG CDFParser::Parse()
 
                             if (Status != CAB_STATUS_SUCCESS)
                             {
-                                printf("Directive file contains errors at line %u.\n", (UINT)CurrentLine);
+                                printf("ERROR: Directive file contains errors at line %u.\n", (UINT)CurrentLine);
                                 DPRINT(MID_TRACE, ("Error while copying file.\n"));
-                            }
-
-                            if (Status != CAB_STATUS_SUCCESS)
                                 return Status;
+                            }
                         }
                         break;
 
@@ -380,7 +378,7 @@ ULONG CDFParser::Parse()
                         break;
 
                     default:
-                        printf("Directive file contains errors at line %u.\n", (UINT)CurrentLine);
+                        printf("ERROR: Directive file contains errors at line %u.\n", (UINT)CurrentLine);
                         DPRINT(MID_TRACE, ("Token is (%u).\n", (UINT)CurrentToken));
                         return CAB_STATUS_SUCCESS;
                     }
@@ -391,7 +389,10 @@ ULONG CDFParser::Parse()
 
     if (!InfFileOnly)
     {
-        printf("\nWriting cabinet. This may take a while...\n\n");
+        if (CABMgr.IsVerbose())
+        {
+            printf("Writing cabinet. This may take a while...\n");
+        }
 
         if (DiskCreated)
         {
@@ -415,7 +416,10 @@ ULONG CDFParser::Parse()
             }
         }
 
-        printf("\nDone.\n");
+        if (CABMgr.IsVerbose())
+        {
+            printf("Done.\n");
+        }
     }
 
     return CAB_STATUS_SUCCESS;
@@ -1181,7 +1185,7 @@ ULONG CDFParser::PerformFileCopy()
         if (Status != CAB_STATUS_SUCCESS)
         {
             DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
-            printf("Cannot create cabinet.\n");
+            printf("ERROR: Cannot create cabinet.\n");
             return CAB_STATUS_FAILURE;
         }
         CabinetCreated = true;
@@ -1192,7 +1196,7 @@ ULONG CDFParser::PerformFileCopy()
         if (Status != CAB_STATUS_SUCCESS)
         {
             DPRINT(MIN_TRACE, ("Cannot create disk (%u).\n", (UINT)Status));
-            printf("Cannot create disk.\n");
+            printf("ERROR: Cannot create disk.\n");
             return CAB_STATUS_FAILURE;
         }
         DiskCreated = true;
@@ -1219,19 +1223,19 @@ ULONG CDFParser::PerformFileCopy()
             if (strstr(Options,"optional"))
             {
                 Status = CAB_STATUS_SUCCESS;
-                printf("Optional file does not exist: %s.\n", SrcName);
+                printf("Optional file skipped (does not exist): %s.\n", SrcName);
             }
             else
-                printf("File does not exist: %s.\n", SrcName);
+                printf("ERROR: File not found: %s.\n", SrcName);
 
             break;
 
         case CAB_STATUS_NOMEMORY:
-            printf("Insufficient memory to add file: %s.\n", SrcName);
+            printf("ERROR: Insufficient memory to add file: %s.\n", SrcName);
             break;
 
         default:
-            printf("Cannot add file: %s (%u).\n", SrcName, (UINT)Status);
+            printf("ERROR: Cannot add file: %s (%u).\n", SrcName, (UINT)Status);
             break;
     }
     return Status;

@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+#include <winsock2.h>
+#include <mswsock.h>
+
 /*
  * @implemented
  */

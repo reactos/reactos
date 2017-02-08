@@ -18,24 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <fusion.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(fusion);
-
+#include "fusionpriv.h"
 
 /******************************************************************
  *  InitializeFusion   (FUSION.@)
@@ -52,6 +35,15 @@ HRESULT WINAPI InitializeFusion(void)
 HRESULT WINAPI ClearDownloadCache(void)
 {
     FIXME("stub!\n");
+    return E_NOTIMPL;
+}
+
+/******************************************************************
+ *  CopyPDBs   (FUSION.@)
+ */
+HRESULT WINAPI CopyPDBs(void *unknown)
+{
+    FIXME("(%p) stub!\n", unknown);
     return E_NOTIMPL;
 }
 
@@ -165,7 +157,7 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
 
     len++;
     if (*pcchPath <= len || !pwzCachePath)
-        hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        hr = E_NOT_SUFFICIENT_BUFFER;
     else if (pwzCachePath)
         strcpyW(pwzCachePath, path);
 

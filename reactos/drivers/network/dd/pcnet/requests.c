@@ -510,4 +510,3 @@ MiniportSetInformation(
 
   return Status;
 }
-

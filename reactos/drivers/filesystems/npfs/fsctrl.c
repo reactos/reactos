@@ -1,810 +1,878 @@
 /*
-* COPYRIGHT:  See COPYING in the top level directory
-* PROJECT:    ReactOS kernel
-* FILE:       drivers/filesystems/npfs/fsctrl.c
-* PURPOSE:    Named pipe filesystem
-* PROGRAMMER: David Welch <welch@cwcom.net>
-*             Eric Kohl
-*             Michael Martin
-*/
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/fsctrl.c
+ * PURPOSE:     Named Pipe FileSystem I/O Controls
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "npfs.h"
 
-#define NDEBUG
-#include <debug.h>
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_FSCTRL)
 
-//#define USING_PROPER_NPFS_WAIT_SEMANTICS
+/* GLOBALS ********************************************************************/
 
-/* FUNCTIONS *****************************************************************/
+IO_STATUS_BLOCK NpUserIoStatusBlock;
 
-static DRIVER_CANCEL NpfsListeningCancelRoutine;
-static VOID NTAPI
-NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
-                           IN PIRP Irp)
+/* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+NTAPI
+NpInternalTransceive(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp,
+                     IN PLIST_ENTRY List)
 {
-    PNPFS_WAITER_ENTRY Waiter;
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    Waiter = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
-
-    DPRINT("NpfsListeningCancelRoutine() called for <%wZ>\n",
-        &Waiter->Ccb->Fcb->PipeName);
-
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-
-    KeLockMutex(&Waiter->Ccb->Fcb->CcbListLock);
-    RemoveEntryList(&Waiter->Entry);
-    KeUnlockMutex(&Waiter->Ccb->Fcb->CcbListLock);
-
-    Irp->IoStatus.Status = STATUS_CANCELLED;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
-
-static NTSTATUS
-NpfsAddListeningServerInstance(PIRP Irp,
-                               PNPFS_CCB Ccb)
+NTSTATUS
+NTAPI
+NpInternalRead(IN PDEVICE_OBJECT DeviceObject,
+               IN PIRP Irp,
+               IN BOOLEAN Overflow,
+               IN PLIST_ENTRY List)
 {
-    PNPFS_WAITER_ENTRY Entry;
-    KIRQL oldIrql;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
-    Entry = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
+NTSTATUS
+NTAPI
+NpInternalWrite(IN PDEVICE_OBJECT DeviceObject,
+                IN PIRP Irp,
+                IN PLIST_ENTRY List)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
-    Entry->Ccb = Ccb;
+NTSTATUS
+NTAPI
+NpQueryClientProcess(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStackLocation;
+    NODE_TYPE_CODE NodeTypeCode;
+    PNP_CCB Ccb;
+    PNP_CLIENT_PROCESS ClientSession, QueryBuffer;
+    ULONG Length;
+    PAGED_CODE();
 
-    KeLockMutex(&Ccb->Fcb->CcbListLock);
+    /* Get the current stack location */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-    IoAcquireCancelSpinLock(&oldIrql);
-    if (!Irp->Cancel)
+    /* Decode the file object and check the node type */
+    NodeTypeCode = NpDecodeFileObject(IoStackLocation->FileObject, 0, &Ccb, 0);
+    if (NodeTypeCode != NPFS_NTC_CCB)
     {
-        Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
-        IoMarkIrpPending(Irp);
-        InsertTailList(&Ccb->Fcb->WaiterListHead, &Entry->Entry);
-        (void)IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
-        IoReleaseCancelSpinLock(oldIrql);
-        KeUnlockMutex(&Ccb->Fcb->CcbListLock);
-        return STATUS_PENDING;
+        return STATUS_PIPE_DISCONNECTED;
     }
-    IoReleaseCancelSpinLock(oldIrql);
 
-    RemoveEntryList(&Entry->Entry);
+    /* Get the length of the query buffer */
+    Length = IoStackLocation->Parameters.QueryFile.Length;
+    if (Length < 8)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-    Irp->IoStatus.Status = STATUS_CANCELLED;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    KeUnlockMutex(&Ccb->Fcb->CcbListLock);
+    QueryBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-    return STATUS_CANCELLED;
+    /* Lock the Ccb */
+    ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+    /* Get the CCBs client session and check if it's set */
+    ClientSession = Ccb->ClientSession;
+    if (ClientSession != NULL)
+    {
+        /* Copy first 2 fields */
+        QueryBuffer->Unknown = ClientSession->Unknown;
+        QueryBuffer->Process = ClientSession->Process;
+    }
+    else
+    {
+        /* Copy the process from the CCB */
+        QueryBuffer->Unknown = NULL;
+        QueryBuffer->Process = Ccb->Process;
+    }
+
+    /* Does the caller provide a large enough buffer for the full data? */
+    if (Length >= sizeof(NP_CLIENT_PROCESS))
+    {
+        Irp->IoStatus.Information = sizeof(NP_CLIENT_PROCESS);
+
+        /* Do we have a ClientSession structure? */
+        if (ClientSession != NULL)
+        {
+            /* Copy length and the data */
+            QueryBuffer->DataLength = ClientSession->DataLength;
+            RtlCopyMemory(QueryBuffer->Buffer,
+                          ClientSession->Buffer,
+                          ClientSession->DataLength);
+
+            /* NULL terminate the buffer */
+            NT_ASSERT(QueryBuffer->DataLength <= 30);
+            QueryBuffer->Buffer[QueryBuffer->DataLength / sizeof(WCHAR)] = 0;
+        }
+        else
+        {
+            /* No data */
+            QueryBuffer->DataLength = 0;
+            QueryBuffer->Buffer[0] = 0;
+        }
+    }
+    else
+    {
+        Irp->IoStatus.Information = FIELD_OFFSET(NP_CLIENT_PROCESS, DataLength);
+    }
+
+    /* Unlock the Ccb */
+    ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+
+    return STATUS_SUCCESS;
 }
 
-
-static NTSTATUS
-NpfsConnectPipe(PIRP Irp,
-                PNPFS_CCB Ccb)
+NTSTATUS
+NTAPI
+NpSetClientProcess(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStackLocation;
+    NODE_TYPE_CODE NodeTypeCode;
+    PNP_CCB Ccb;
+    ULONG Length;
+    PNP_CLIENT_PROCESS InputBuffer, ClientSession, OldClientSession;
+    PAGED_CODE();
+
+    /* Get the current stack location */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Only kernel calls are allowed! */
+    if (IoStackLocation->MinorFunction != IRP_MN_KERNEL_CALL)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Decode the file object and check the node type */
+    NodeTypeCode = NpDecodeFileObject(IoStackLocation->FileObject, 0, &Ccb, 0);
+    if (NodeTypeCode != NPFS_NTC_CCB)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
+
+    /* Get the length of the query buffer and check if it's valid */
+    Length = IoStackLocation->Parameters.QueryFile.Length;
+    if (Length != sizeof(NP_CLIENT_PROCESS))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the buffer and check if the data Length is valid */
+    InputBuffer = Irp->AssociatedIrp.SystemBuffer;
+    if (InputBuffer->DataLength > 30)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Allocate a new structure */
+    ClientSession = ExAllocatePoolWithQuotaTag(PagedPool,
+                                               sizeof(NP_CLIENT_PROCESS),
+                                               'iFpN');
+
+    /* Copy the full input buffer */
+    RtlCopyMemory(ClientSession, InputBuffer, sizeof(NP_CLIENT_PROCESS));
+
+    /* Lock the Ccb */
+    ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+    /* Get the old ClientSession and set the new */
+    OldClientSession = Ccb->ClientSession;
+    Ccb->ClientSession = ClientSession;
+
+    /* Copy the process to the CCB */
+    Ccb->Process = ClientSession->Process;
+
+    /* Unlock the Ccb */
+    ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+
+    /* Check if there was already a ClientSession */
+    if (OldClientSession != NULL)
+    {
+        /* Free it */
+        ExFreePoolWithTag(OldClientSession, 'iFpN');
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NpAssignEvent(IN PDEVICE_OBJECT DeviceObject,
+              IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NpQueryEvent(IN PDEVICE_OBJECT DeviceObject,
+             IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NpImpersonate(IN PDEVICE_OBJECT DeviceObject,
+              IN PIRP Irp)
+{
+    ULONG NamedPipeEnd;
+    PNP_CCB Ccb;
+    NTSTATUS Status;
+    NODE_TYPE_CODE NodeTypeCode;
     PIO_STACK_LOCATION IoStack;
-    PFILE_OBJECT FileObject;
-    ULONG Flags;
-    PLIST_ENTRY current_entry;
-    PNPFS_FCB Fcb;
-    PNPFS_CCB ClientCcb;
-    NTSTATUS Status;
-    KPROCESSOR_MODE WaitMode;
+    PAGED_CODE();
 
-    DPRINT("NpfsConnectPipe()\n");
-
-    /* Fail, if the CCB is not a pipe CCB */
-    if (Ccb->Type != CCB_PIPE)
-    {
-        DPRINT("Not a pipe\n");
-        return STATUS_ILLEGAL_FUNCTION;
-    }
-
-    /* Fail, if the CCB is not a server end CCB */
-    if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
-    {
-        DPRINT("Not the server end\n");
-        return STATUS_ILLEGAL_FUNCTION;
-    }
-
-    if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
-    {
-        KeResetEvent(&Ccb->ConnectEvent);
-        return STATUS_PIPE_CONNECTED;
-    }
-
-    if (Ccb->PipeState == FILE_PIPE_CLOSING_STATE)
-        return STATUS_PIPE_CLOSING;
-
-    DPRINT("Waiting for connection...\n");
-
-    Fcb = Ccb->Fcb;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    FileObject = IoStack->FileObject;
-    Flags = FileObject->Flags;
-    WaitMode = Irp->RequestorMode;
 
-    /* search for a listening client fcb */
-    KeLockMutex(&Fcb->CcbListLock);
-
-    current_entry = Fcb->ClientCcbListHead.Flink;
-    while (current_entry != &Fcb->ClientCcbListHead)
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+    if (NodeTypeCode == NPFS_NTC_CCB && NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
-        ClientCcb = CONTAINING_RECORD(current_entry,
-            NPFS_CCB,
-            CcbListEntry);
-
-        if (ClientCcb->PipeState == 0)
-        {
-            /* found a passive (waiting) client CCB */
-            DPRINT("Passive (waiting) client CCB found -- wake the client\n");
-            KeSetEvent(&ClientCcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
-            break;
-        }
-
-#if 0
-        if (ClientCcb->PipeState == FILE_PIPE_LISTENING_STATE)
-        {
-            /* found a listening client CCB */
-            DPRINT("Listening client CCB found -- connecting\n");
-
-            /* connect client and server CCBs */
-            Ccb->OtherSide = ClientCcb;
-            ClientCcb->OtherSide = Ccb;
-
-            /* set connected state */
-            Ccb->PipeState = FILE_PIPE_CONNECTED_STATE;
-            ClientCcb->PipeState = FILE_PIPE_CONNECTED_STATE;
-
-            KeUnlockMutex(&Fcb->CcbListLock);
-
-            /* FIXME: create and initialize data queues */
-
-            /* signal client's connect event */
-            DPRINT("Setting the ConnectEvent for %x\n", ClientCcb);
-            KeSetEvent(&ClientCcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
-
-            return STATUS_PIPE_CONNECTED;
-        }
-#endif
-
-        current_entry = current_entry->Flink;
-    }
-
-    /* no listening client fcb found */
-    DPRINT("No listening client fcb found -- waiting for client\n");
-
-    Status = NpfsAddListeningServerInstance(Irp, Ccb);
-
-    KeUnlockMutex(&Fcb->CcbListLock);
-
-    if ((Status == STATUS_PENDING) && (Flags & FO_SYNCHRONOUS_IO))
-    {
-        KeWaitForSingleObject(&Ccb->ConnectEvent,
-            UserRequest,
-            WaitMode,
-            (Flags & FO_ALERTABLE_IO) != 0,
-            NULL);
-    }
-
-    DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
-
-    return Status;
-}
-
-
-static NTSTATUS
-NpfsDisconnectPipe(PNPFS_CCB Ccb)
-{
-    NTSTATUS Status;
-    PNPFS_FCB Fcb;
-    PNPFS_CCB OtherSide;
-    BOOLEAN Server;
-
-    DPRINT("NpfsDisconnectPipe()\n");
-
-    /* Fail, if the CCB is not a pipe CCB */
-    if (Ccb->Type != CCB_PIPE)
-    {
-        DPRINT("Not a pipe\n");
-        return STATUS_ILLEGAL_FUNCTION;
-    }
-
-    /* Fail, if the CCB is not a server end CCB */
-    if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
-    {
-        DPRINT("Not the server end\n");
-        return STATUS_ILLEGAL_FUNCTION;
-    }
-
-    Fcb = Ccb->Fcb;
-    KeLockMutex(&Fcb->CcbListLock);
-
-    if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
-    {
-        DPRINT("Pipe is already disconnected\n");
-        Status = STATUS_PIPE_DISCONNECTED;
-    }
-    else if ((!Ccb->OtherSide) && (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE))
-    {
-        ExAcquireFastMutex(&Ccb->DataListLock);
-        Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-        ExReleaseFastMutex(&Ccb->DataListLock);
-        Status = STATUS_SUCCESS;
-    }
-    else if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
-    {
-        Server = (Ccb->PipeEnd == FILE_PIPE_SERVER_END);
-        OtherSide = Ccb->OtherSide;
-        //Ccb->OtherSide = NULL;
-        Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-        /* Lock the server first */
-        if (Server)
-        {
-            ExAcquireFastMutex(&Ccb->DataListLock);
-            ExAcquireFastMutex(&OtherSide->DataListLock);
-        }
-        else
-        {
-            ExAcquireFastMutex(&OtherSide->DataListLock);
-            ExAcquireFastMutex(&Ccb->DataListLock);
-        }
-        OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-        //OtherSide->OtherSide = NULL;
-        /*
-        * Signaling the write event. If is possible that an other
-        * thread waits for an empty buffer.
-        */
-        KeSetEvent(&OtherSide->ReadEvent, IO_NO_INCREMENT, FALSE);
-        KeSetEvent(&OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
-        if (Server)
-        {
-            ExReleaseFastMutex(&OtherSide->DataListLock);
-            ExReleaseFastMutex(&Ccb->DataListLock);
-        }
-        else
-        {
-            ExReleaseFastMutex(&Ccb->DataListLock);
-            ExReleaseFastMutex(&OtherSide->DataListLock);
-        }
-        Status = STATUS_SUCCESS;
-    }
-    else if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
-    {
-        PLIST_ENTRY Entry;
-        PNPFS_WAITER_ENTRY WaitEntry = NULL;
-        BOOLEAN Complete = FALSE;
-        PIRP Irp = NULL;
-
-        Entry = Ccb->Fcb->WaiterListHead.Flink;
-        while (Entry != &Ccb->Fcb->WaiterListHead)
-        {
-            WaitEntry = CONTAINING_RECORD(Entry, NPFS_WAITER_ENTRY, Entry);
-            if (WaitEntry->Ccb == Ccb)
-            {
-                RemoveEntryList(Entry);
-                Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DriverContext);
-                Complete = (NULL != IoSetCancelRoutine(Irp, NULL));
-                break;
-            }
-            Entry = Entry->Flink;
-        }
-
-        if (Irp)
-        {
-            if (Complete)
-            {
-                Irp->IoStatus.Status = STATUS_PIPE_BROKEN;
-                Irp->IoStatus.Information = 0;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            }
-        }
-        Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-        Status = STATUS_SUCCESS;
-    }
-    else if (Ccb->PipeState == FILE_PIPE_CLOSING_STATE)
-    {
-        Status = STATUS_PIPE_CLOSING;
+        Status = NpImpersonateClientContext(Ccb);
     }
     else
     {
-        Status = STATUS_UNSUCCESSFUL;
+        Status = STATUS_ILLEGAL_FUNCTION;
     }
-    KeUnlockMutex(&Fcb->CcbListLock);
-    return Status;
-}
-
-static NTSTATUS
-NpfsWaitPipe(PIRP Irp,
-             PNPFS_CCB Ccb)
-{
-    PLIST_ENTRY current_entry;
-    PNPFS_FCB Fcb;
-    PNPFS_CCB ServerCcb;
-    PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
-    PLARGE_INTEGER TimeOut;
-    NTSTATUS Status;
-    PEXTENDED_IO_STACK_LOCATION IoStack;
-    PFILE_OBJECT FileObject;
-    PNPFS_VCB Vcb;
-
-    IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack);
-    FileObject = IoStack->FileObject;
-    ASSERT(FileObject);
-
-    DPRINT("Waiting on Pipe %wZ\n", &FileObject->FileName);
-
-    WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-
-    ASSERT(Ccb->Fcb);
-    ASSERT(Ccb->Fcb->Vcb);
-
-    /* Get the VCB */
-    Vcb = Ccb->Fcb->Vcb;
-
-    /* Lock the pipe list */
-    KeLockMutex(&Vcb->PipeListLock);
-
-    /* File a pipe with the given name */
-    Fcb = NpfsFindPipe(Vcb,
-                       &FileObject->FileName);
-
-    /* Unlock the pipe list */
-    KeUnlockMutex(&Vcb->PipeListLock);
-
-    /* Fail if not pipe was found */
-    if (Fcb == NULL)
-    {
-        DPRINT("No pipe found!\n");
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-    /* search for listening server */
-    current_entry = Fcb->ServerCcbListHead.Flink;
-    while (current_entry != &Fcb->ServerCcbListHead)
-    {
-        ServerCcb = CONTAINING_RECORD(current_entry,
-                                      NPFS_CCB,
-                                      CcbListEntry);
-
-        if (ServerCcb->PipeState == FILE_PIPE_LISTENING_STATE)
-        {
-            /* found a listening server CCB */
-            DPRINT("Listening server CCB found -- connecting\n");
-            NpfsDereferenceFcb(Fcb);
-            return STATUS_SUCCESS;
-        }
-
-        current_entry = current_entry->Flink;
-    }
-
-    /* No listening server fcb found, so wait for one */
-
-    /* If a timeout specified */
-    if (WaitPipe->TimeoutSpecified)
-    {
-        /* NMPWAIT_USE_DEFAULT_WAIT = 0 */
-        if (WaitPipe->Timeout.QuadPart == 0)
-        {
-            TimeOut = &Fcb->TimeOut;
-        }
-        else
-        {
-            TimeOut = &WaitPipe->Timeout;
-        }
-    }
-    else
-    {
-        /* Wait forever */
-        TimeOut = NULL;
-    }
-    NpfsDereferenceFcb(Fcb);
-
-    Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
-                                   UserRequest,
-                                   Irp->RequestorMode,
-                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
-                                   TimeOut);
-    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
-        Status = STATUS_CANCELLED;
-
-    DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
 
     return Status;
 }
 
 NTSTATUS
-NpfsWaitPipe2(PIRP Irp,
-             PNPFS_CCB Ccb)
+NTAPI
+NpDisconnect(IN PDEVICE_OBJECT DeviceObject,
+             IN PIRP Irp,
+             IN PLIST_ENTRY List)
 {
-    PLIST_ENTRY current_entry;
-    PNPFS_FCB Fcb;
-    PNPFS_CCB ServerCcb;
-    PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
-    LARGE_INTEGER TimeOut;
+    ULONG NamedPipeEnd;
+    PNP_CCB Ccb;
     NTSTATUS Status;
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
-    PNPFS_VCB Vcb;
-    UNICODE_STRING PipeName;
-#endif
+    NODE_TYPE_CODE NodeTypeCode;
+    PIO_STACK_LOCATION IoStack;
+    PAGED_CODE();
 
-    DPRINT("NpfsWaitPipe\n");
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
-    /* Fail, if the CCB does not represent the root directory */
-    if (Ccb->Type != CCB_DIRECTORY)
-        return STATUS_ILLEGAL_FUNCTION;
-
-    /* Calculate the pipe name length and allocate the buffer */
-    PipeName.Length = WaitPipe->NameLength + sizeof(WCHAR);
-    PipeName.MaximumLength = PipeName.Length + sizeof(WCHAR);
-    PipeName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                            PipeName.MaximumLength,
-                                            TAG_NPFS_NAMEBLOCK);
-    if (PipeName.Buffer == NULL)
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+    if (NodeTypeCode == NPFS_NTC_CCB)
     {
-        DPRINT1("Could not allocate memory for the pipe name!\n");
-        return STATUS_NO_MEMORY;
-    }
-
-    /* Copy the pipe name into the buffer, prepend a backslash and append a 0 character */
-    PipeName.Buffer[0] = L'\\';
-    RtlCopyMemory(&PipeName.Buffer[1],
-                  &WaitPipe->Name[0],
-                  WaitPipe->NameLength);
-    PipeName.Buffer[PipeName.Length / sizeof(WCHAR)] = 0;
-
-    DPRINT("Waiting for Pipe %wZ\n", &PipeName);
-
-    /* Get the VCB */
-    Vcb = Ccb->Fcb->Vcb;
-
-    /* Lock the pipe list */
-    KeLockMutex(&Vcb->PipeListLock);
-
-    /* File a pipe with the given name */
-    Fcb = NpfsFindPipe(Vcb,
-                       &PipeName);
-
-    /* Unlock the pipe list */
-    KeUnlockMutex(&Vcb->PipeListLock);
-
-    /* Release the pipe name buffer */
-    ExFreePoolWithTag(PipeName.Buffer, TAG_NPFS_NAMEBLOCK);
-
-    /* Fail if not pipe was found */
-    if (Fcb == NULL)
-    {
-        DPRINT("No pipe found!\n");
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-    DPRINT("Fcb %p\n", Fcb);
-#else
-    Fcb = Ccb->Fcb;
-
-    if (Ccb->PipeState != 0)
-    {
-        DPRINT("Pipe is not in passive (waiting) state!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-#endif
-
-    /* search for listening server */
-    current_entry = Fcb->ServerCcbListHead.Flink;
-    while (current_entry != &Fcb->ServerCcbListHead)
-    {
-        ServerCcb = CONTAINING_RECORD(current_entry,
-            NPFS_CCB,
-            CcbListEntry);
-
-        if (ServerCcb->PipeState == FILE_PIPE_LISTENING_STATE)
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
         {
-            /* found a listening server CCB */
-            DPRINT("Listening server CCB found -- connecting\n");
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
-            NpfsDereferenceFcb(Fcb);
-#endif
-            return STATUS_SUCCESS;
+            ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+            Status = NpSetDisconnectedPipeState(Ccb, List);
+
+            NpUninitializeSecurity(Ccb);
+
+            ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
         }
-
-        current_entry = current_entry->Flink;
+        else
+        {
+            Status = STATUS_ILLEGAL_FUNCTION;
+        }
     }
-
-    /* No listening server fcb found */
-
-    /* If no timeout specified, use the default one */
-    if (WaitPipe->TimeoutSpecified)
-        TimeOut = WaitPipe->Timeout;
     else
-        TimeOut = Fcb->TimeOut;
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
-    NpfsDereferenceFcb(Fcb);
-#endif
-
-    /* Wait for one */
-    Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
-        UserRequest,
-        Irp->RequestorMode,
-        (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
-        &TimeOut);
-    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
-        Status = STATUS_CANCELLED;
-
-    DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
+    {
+        Status = STATUS_PIPE_DISCONNECTED;
+    }
 
     return Status;
 }
 
-
-/*
-* FUNCTION: Return current state of a pipe
-* ARGUMENTS:
-*     Irp   = Pointer to I/O request packet
-*     IrpSp = Pointer to current stack location of Irp
-* RETURNS:
-*     Status of operation
-*/
-
-/*
-* FUNCTION: Peek at a pipe (get information about messages)
-* ARGUMENTS:
-*     Irp = Pointer to I/O request packet
-*     IoStack = Pointer to current stack location of Irp
-* RETURNS:
-*     Status of operation
-*/
-static NTSTATUS
-NpfsPeekPipe(PIRP Irp,
-             PIO_STACK_LOCATION IoStack)
+NTSTATUS
+NTAPI
+NpListen(IN PDEVICE_OBJECT DeviceObject,
+         IN PIRP Irp,
+         IN PLIST_ENTRY List)
 {
-    ULONG OutputBufferLength;
-    ULONG ReturnLength = 0;
-    PFILE_PIPE_PEEK_BUFFER Reply;
-    //PNPFS_FCB Fcb;
-    PNPFS_CCB Ccb;
+    ULONG NamedPipeEnd;
+    PNP_CCB Ccb;
     NTSTATUS Status;
-    ULONG MessageCount = 0;
-    ULONG MessageLength;
-    ULONG ReadDataAvailable;
-    PVOID BufferPtr;
+    NODE_TYPE_CODE NodeTypeCode;
+    PIO_STACK_LOCATION IoStack;
+    PAGED_CODE();
 
-    DPRINT("NpfsPeekPipe\n");
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-    DPRINT("OutputBufferLength: %lu\n", OutputBufferLength);
-
-    /* Validate parameters */
-    if (OutputBufferLength < (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+    if (NodeTypeCode == NPFS_NTC_CCB)
     {
-        DPRINT1("Buffer too small\n");
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
+        {
+            ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+            Status = NpSetListeningPipeState(Ccb, Irp, List);
+
+            NpUninitializeSecurity(Ccb);
+
+            ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+        }
+        else
+        {
+            Status = STATUS_ILLEGAL_FUNCTION;
+        }
+    }
+    else
+    {
+        Status = STATUS_ILLEGAL_FUNCTION;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NpPeek(IN PDEVICE_OBJECT DeviceObject,
+       IN PIRP Irp,
+       IN PLIST_ENTRY List)
+{
+    PIO_STACK_LOCATION IoStack;
+    NODE_TYPE_CODE Type;
+    ULONG OutputLength;
+    ULONG NamedPipeEnd;
+    PNP_CCB Ccb;
+    PFILE_PIPE_PEEK_BUFFER PeekBuffer;
+    PNP_DATA_QUEUE DataQueue;
+    ULONG_PTR BytesPeeked;
+    IO_STATUS_BLOCK IoStatus;
+    NTSTATUS Status;
+    PNP_DATA_QUEUE_ENTRY DataEntry;
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    OutputLength = IoStack->Parameters.FileSystemControl.OutputBufferLength;
+    Type = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+
+    if (!Type)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
+
+    if ((Type != NPFS_NTC_CCB) &&
+        (OutputLength < FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data)))
+    {
         return STATUS_INVALID_PARAMETER;
     }
 
-    Ccb = IoStack->FileObject->FsContext2;
-    Reply = Irp->AssociatedIrp.SystemBuffer;
-    //Fcb = Ccb->Fcb;
-
-
-    Reply->NamedPipeState = Ccb->PipeState;
-
-    Reply->ReadDataAvailable = Ccb->ReadDataAvailable;
-    DPRINT("ReadDataAvailable: %lu\n", Ccb->ReadDataAvailable);
-
-    ExAcquireFastMutex(&Ccb->DataListLock);
-    BufferPtr = Ccb->ReadPtr;
-    DPRINT("BufferPtr = %p\n", BufferPtr);
-    if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
+    PeekBuffer = Irp->AssociatedIrp.SystemBuffer;
+    if (NamedPipeEnd != FILE_PIPE_CLIENT_END)
     {
-        DPRINT("Byte Stream Mode\n");
-        Reply->MessageLength = Ccb->ReadDataAvailable;
-        DPRINT("Reply->MessageLength  %lu\n", Reply->MessageLength);
-        MessageCount = 1;
-
-        if (OutputBufferLength >= (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[Ccb->ReadDataAvailable]))
+        if (NamedPipeEnd != FILE_PIPE_SERVER_END)
         {
-            RtlCopyMemory(Reply->Data, BufferPtr, Ccb->ReadDataAvailable);
-            ReturnLength = Ccb->ReadDataAvailable;
+            NpBugCheck(NamedPipeEnd, 0, 0);
+        }
+
+        DataQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+    }
+    else
+    {
+        DataQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+    }
+
+    if (Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE)
+    {
+        if (Ccb->NamedPipeState != FILE_PIPE_CLOSING_STATE)
+        {
+            return STATUS_INVALID_PIPE_STATE;
+        }
+
+        if (DataQueue->QueueState != WriteEntries)
+        {
+            return STATUS_PIPE_BROKEN;
+        }
+    }
+
+    PeekBuffer->NamedPipeState = 0;
+    PeekBuffer->ReadDataAvailable = 0;
+    PeekBuffer->NumberOfMessages = 0;
+    PeekBuffer->MessageLength = 0;
+    PeekBuffer->NamedPipeState = Ccb->NamedPipeState;
+    BytesPeeked = FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data);
+
+    if (DataQueue->QueueState == WriteEntries)
+    {
+        DataEntry = CONTAINING_RECORD(DataQueue->Queue.Flink,
+                                      NP_DATA_QUEUE_ENTRY,
+                                      QueueEntry);
+        ASSERT((DataEntry->DataEntryType == Buffered) || (DataEntry->DataEntryType == Unbuffered));
+
+        PeekBuffer->ReadDataAvailable = DataQueue->BytesInQueue - DataQueue->ByteOffset;
+        if (Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE)
+        {
+            PeekBuffer->NumberOfMessages = DataQueue->EntriesInQueue;
+            PeekBuffer->MessageLength = DataEntry->DataSize - DataQueue->ByteOffset;
+        }
+
+        if (OutputLength == FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data))
+        {
+            Status = PeekBuffer->ReadDataAvailable ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
+        }
+        else
+        {
+            IoStatus = NpReadDataQueue(DataQueue,
+                                       TRUE,
+                                       FALSE,
+                                       PeekBuffer->Data,
+                                       OutputLength - FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data),
+                                       Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE,
+                                       Ccb,
+                                       List);
+            Status = IoStatus.Status;
+            BytesPeeked += IoStatus.Information;
         }
     }
     else
     {
-        DPRINT("Message Mode\n");
-        ReadDataAvailable = Ccb->ReadDataAvailable;
+        Status = STATUS_SUCCESS;
+    }
 
-        if (ReadDataAvailable > 0)
+    Irp->IoStatus.Information = BytesPeeked;
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NpCompleteTransceiveIrp(IN PDEVICE_OBJECT DeviceObject,
+                        IN PIRP Irp,
+                        IN PVOID Context)
+{
+    PAGED_CODE();
+
+    if (Irp->AssociatedIrp.SystemBuffer)
+    {
+        ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+    }
+
+    IoFreeIrp(Irp);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+NTAPI
+NpTransceive(IN PDEVICE_OBJECT DeviceObject,
+             IN PIRP Irp,
+             IN PLIST_ENTRY List)
+{
+    PIO_STACK_LOCATION IoStack;
+    PVOID InBuffer, OutBuffer;
+    ULONG InLength, OutLength, BytesWritten;
+    NODE_TYPE_CODE NodeTypeCode;
+    PNP_CCB Ccb;
+    ULONG NamedPipeEnd;
+    PNP_NONPAGED_CCB NonPagedCcb;
+    PNP_DATA_QUEUE ReadQueue, WriteQueue;
+    PNP_EVENT_BUFFER EventBuffer;
+    NTSTATUS Status;
+    PIRP NewIrp;
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    InLength = IoStack->Parameters.FileSystemControl.InputBufferLength;
+    InBuffer = IoStack->Parameters.FileSystemControl.Type3InputBuffer;
+    OutLength = IoStack->Parameters.FileSystemControl.OutputBufferLength;
+    OutBuffer = Irp->UserBuffer;
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        _SEH2_TRY
         {
-            RtlCopyMemory(&Reply->MessageLength,
-                          BufferPtr,
-                          sizeof(Reply->MessageLength));
+            ProbeForRead(InBuffer, InLength, sizeof(CHAR));
+            ProbeForWrite(OutBuffer, OutLength, sizeof(CHAR));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
-            while ((ReadDataAvailable > 0) && (BufferPtr < Ccb->WritePtr))
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+    if (NodeTypeCode != NPFS_NTC_CCB)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
+
+    NonPagedCcb = Ccb->NonPagedCcb;
+    ExAcquireResourceExclusiveLite(&NonPagedCcb->Lock, TRUE);
+
+    if (Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE)
+    {
+        Status = STATUS_INVALID_PIPE_STATE;
+        goto Quickie;
+    }
+
+    if (NamedPipeEnd != FILE_PIPE_CLIENT_END)
+    {
+        if (NamedPipeEnd != FILE_PIPE_SERVER_END)
+        {
+            NpBugCheck(NamedPipeEnd, 0, 0);
+        }
+        ReadQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+        WriteQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+    }
+    else
+    {
+        ReadQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+        WriteQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+    }
+
+    EventBuffer = NonPagedCcb->EventBuffer[NamedPipeEnd];
+
+    if (Ccb->Fcb->NamedPipeConfiguration != FILE_PIPE_FULL_DUPLEX ||
+        Ccb->ReadMode[NamedPipeEnd] != FILE_PIPE_MESSAGE_MODE)
+    {
+        Status = STATUS_INVALID_PIPE_STATE;
+        goto Quickie;
+    }
+
+    if (ReadQueue->QueueState != Empty)
+    {
+        Status = STATUS_PIPE_BUSY;
+        goto Quickie;
+    }
+
+    Status = NpWriteDataQueue(WriteQueue,
+                              1,
+                              InBuffer,
+                              InLength,
+                              Ccb->Fcb->NamedPipeType,
+                              &BytesWritten,
+                              Ccb,
+                              NamedPipeEnd,
+                              Irp->Tail.Overlay.Thread,
+                              List);
+    if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+    {
+        ASSERT(WriteQueue->QueueState != ReadEntries);
+        NewIrp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+        if (!NewIrp)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Quickie;
+        }
+
+        IoSetCompletionRoutine(Irp, NpCompleteTransceiveIrp, NULL, TRUE, TRUE, TRUE);
+
+        if (BytesWritten)
+        {
+            NewIrp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                                                            BytesWritten,
+                                                                            NPFS_WRITE_BLOCK_TAG);
+            if (!NewIrp->AssociatedIrp.SystemBuffer)
             {
-                RtlCopyMemory(&MessageLength, BufferPtr, sizeof(MessageLength));
-
-                ASSERT(MessageLength > 0);
-
-                DPRINT("MessageLength = %lu\n", MessageLength);
-                ReadDataAvailable -= MessageLength;
-                MessageCount++;
-
-                /* If its the first message, copy the Message if the size of buffer is large enough */
-                if (MessageCount == 1)
-                {
-                    if (OutputBufferLength >= (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[MessageLength]))
-                    {
-                        RtlCopyMemory(Reply->Data,
-                                      (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength)),
-                                      MessageLength);
-                        ReturnLength = MessageLength;
-                    }
-                }
-
-                BufferPtr = (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength) + MessageLength);
-                DPRINT("BufferPtr = %p\n", BufferPtr);
-                DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
+                IoFreeIrp(NewIrp);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Quickie;
             }
 
-            if (ReadDataAvailable != 0)
+            _SEH2_TRY
             {
-                DPRINT1("Possible memory corruption.\n");
-                ASSERT(FALSE);
+                RtlCopyMemory(NewIrp->AssociatedIrp.SystemBuffer,
+                              (PVOID)((ULONG_PTR)InBuffer + InLength - BytesWritten),
+                              BytesWritten);
             }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(goto Quickie);
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            NewIrp->AssociatedIrp.SystemBuffer = NULL;
+        }
+
+        IoStack = IoGetNextIrpStackLocation(NewIrp);
+        IoSetNextIrpStackLocation(NewIrp);
+
+        NewIrp->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
+        NewIrp->IoStatus.Information = BytesWritten;
+
+        IoStack->Parameters.Read.Length = BytesWritten;
+        IoStack->MajorFunction = IRP_MJ_WRITE;
+
+        if (BytesWritten > 0) NewIrp->Flags = IRP_DEALLOCATE_BUFFER | IRP_BUFFERED_IO;
+        NewIrp->UserIosb = &NpUserIoStatusBlock;
+
+        Status = NpAddDataQueueEntry(NamedPipeEnd,
+                                     Ccb,
+                                     WriteQueue,
+                                     WriteEntries,
+                                     Unbuffered,
+                                     BytesWritten,
+                                     NewIrp,
+                                     NULL,
+                                     0);
+        if (Status != STATUS_PENDING)
+        {
+            NewIrp->IoStatus.Status = Status;
+            InsertTailList(List, &NewIrp->Tail.Overlay.ListEntry);
         }
     }
-    ExReleaseFastMutex(&Ccb->DataListLock);
 
-    Reply->NumberOfMessages = MessageCount;
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
-    Irp->IoStatus.Information = FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[ReturnLength]);
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+    ASSERT(ReadQueue->QueueState == Empty);
+    Status = NpAddDataQueueEntry(NamedPipeEnd,
+                                 Ccb,
+                                 ReadQueue,
+                                 ReadEntries,
+                                 Buffered,
+                                 OutLength,
+                                 Irp,
+                                 NULL,
+                                 0);
+    if (NT_SUCCESS(Status))
+    {
+        if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+    }
+
+Quickie:
+    ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    ULONG InLength, NameLength;
+    UNICODE_STRING SourceString, Prefix;
+    ULONG NamedPipeEnd;
+    PNP_CCB Ccb;
+    PFILE_PIPE_WAIT_FOR_BUFFER Buffer;
+    NTSTATUS Status;
+    NODE_TYPE_CODE NodeTypeCode;
+    PLIST_ENTRY NextEntry;
+    PNP_FCB Fcb;
+    PWCHAR OriginalBuffer;
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    InLength = IoStack->Parameters.FileSystemControl.InputBufferLength;
+
+    SourceString.Buffer = NULL;
+
+    if (NpDecodeFileObject(IoStack->FileObject,
+                           NULL,
+                           &Ccb,
+                           &NamedPipeEnd) != NPFS_NTC_ROOT_DCB)
+    {
+        Status = STATUS_ILLEGAL_FUNCTION;
+        goto Quickie;
+    }
+
+    Buffer = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+    if (InLength < sizeof(*Buffer))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    NameLength = Buffer->NameLength;
+    if ((NameLength > (0xFFFF - sizeof(UNICODE_NULL))) ||
+        ((NameLength + FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name)) > InLength))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    SourceString.Length = (USHORT)NameLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
+    SourceString.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                SourceString.Length,
+                                                NPFS_WRITE_BLOCK_TAG);
+    if (!SourceString.Buffer)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    SourceString.Buffer[0] = OBJ_NAME_PATH_SEPARATOR;
+    RtlCopyMemory(&SourceString.Buffer[1], Buffer->Name, Buffer->NameLength);
 
     Status = STATUS_SUCCESS;
+    OriginalBuffer = SourceString.Buffer;
+    //Status = NpTranslateAlias(&SourceString);
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
-    DPRINT("NpfsPeekPipe done\n");
+    Fcb = NpFindPrefix(&SourceString, 1, &Prefix);
+    Fcb = (PNP_FCB)((ULONG_PTR)Fcb & ~1);
+
+    NodeTypeCode = Fcb ? Fcb->NodeType : 0;
+    if (NodeTypeCode != NPFS_NTC_FCB)
+    {
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quickie;
+    }
+
+    for (NextEntry = Fcb->CcbList.Flink;
+         NextEntry != &Fcb->CcbList;
+         NextEntry = NextEntry->Flink)
+    {
+        Ccb = CONTAINING_RECORD(NextEntry, NP_CCB, CcbEntry);
+        if (Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE) break;
+    }
+
+    if (NextEntry != &Fcb->CcbList)
+    {
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = NpAddWaiter(&NpVcb->WaitQueue,
+                             Fcb->Timeout,
+                             Irp,
+                             OriginalBuffer == SourceString.Buffer ?
+                             NULL : &SourceString);
+    }
+
+Quickie:
+    if (SourceString.Buffer) ExFreePool(SourceString.Buffer);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                          IN PIRP Irp)
+{
+    ULONG Fsctl;
+    BOOLEAN Overflow = FALSE;
+    LIST_ENTRY DeferredList;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    InitializeListHead(&DeferredList);
+    Fsctl = IoGetCurrentIrpStackLocation(Irp)->Parameters.FileSystemControl.FsControlCode;
+
+    switch (Fsctl)
+    {
+        case FSCTL_PIPE_PEEK:
+            NpAcquireExclusiveVcb();
+            Status = NpPeek(DeviceObject, Irp, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_INTERNAL_WRITE:
+            NpAcquireSharedVcb();
+            Status = NpInternalWrite(DeviceObject, Irp, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_TRANSCEIVE:
+            NpAcquireSharedVcb();
+            Status = NpTransceive(DeviceObject, Irp, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_INTERNAL_TRANSCEIVE:
+            NpAcquireSharedVcb();
+            Status = NpInternalTransceive(DeviceObject, Irp, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_INTERNAL_READ_OVFLOW:
+            Overflow = TRUE;
+            // on purpose
+
+        case FSCTL_PIPE_INTERNAL_READ:
+            NpAcquireSharedVcb();
+            Status = NpInternalRead(DeviceObject, Irp, Overflow, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
+
+            NpAcquireSharedVcb();
+            Status = NpQueryClientProcess(DeviceObject, Irp);
+            break;
+
+        case FSCTL_PIPE_ASSIGN_EVENT:
+
+            NpAcquireExclusiveVcb();
+            Status = NpAssignEvent(DeviceObject, Irp);
+            break;
+
+        case FSCTL_PIPE_DISCONNECT:
+
+            NpAcquireExclusiveVcb();
+            Status = NpDisconnect(DeviceObject, Irp, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_LISTEN:
+
+            NpAcquireSharedVcb();
+            Status = NpListen(DeviceObject, Irp, &DeferredList);
+            break;
+
+        case FSCTL_PIPE_QUERY_EVENT:
+
+            NpAcquireExclusiveVcb();
+            Status = NpQueryEvent(DeviceObject, Irp);
+            break;
+
+        case FSCTL_PIPE_WAIT:
+
+            NpAcquireExclusiveVcb();
+            Status = NpWaitForNamedPipe(DeviceObject, Irp);
+            break;
+
+        case FSCTL_PIPE_IMPERSONATE:
+
+            NpAcquireExclusiveVcb();
+            Status = NpImpersonate(DeviceObject, Irp);
+            break;
+
+        case FSCTL_PIPE_SET_CLIENT_PROCESS:
+            NpAcquireExclusiveVcb();
+            Status = NpSetClientProcess(DeviceObject, Irp);
+            break;
+
+        default:
+            return STATUS_NOT_SUPPORTED;
+    }
+
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
 
     return Status;
 }
 
-
-NTSTATUS NTAPI
-NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                      PIRP Irp)
+NTSTATUS
+NTAPI
+NpFsdFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
-    PFILE_OBJECT FileObject;
     NTSTATUS Status;
-    //PNPFS_VCB Vcb;
-    PNPFS_FCB Fcb;
-    PNPFS_CCB Ccb;
+    PAGED_CODE();
 
-    DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+    FsRtlEnterFileSystem();
 
-    //Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DPRINT("IoStack: %p\n", IoStack);
-    FileObject = IoStack->FileObject;
-    DPRINT("FileObject: %p\n", FileObject);
-    Ccb = FileObject->FsContext2;
-    DPRINT("CCB: %p\n", Ccb);
-    Fcb = Ccb->Fcb;
-    DPRINT("Pipe: %p\n", Fcb);
-    DPRINT("PipeName: %wZ\n", &Fcb->PipeName);
+    Status = NpCommonFileSystemControl(DeviceObject, Irp);
 
-    Irp->IoStatus.Information = 0;
-
-    switch (IoStack->Parameters.FileSystemControl.FsControlCode)
-    {
-    case FSCTL_PIPE_ASSIGN_EVENT:
-        DPRINT1("Assign event not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_DISCONNECT:
-        DPRINT("Disconnecting pipe %wZ\n", &Fcb->PipeName);
-        Status = NpfsDisconnectPipe(Ccb);
-        break;
-
-    case FSCTL_PIPE_LISTEN:
-        DPRINT("Connecting pipe %wZ\n", &Fcb->PipeName);
-        Status = NpfsConnectPipe(Irp, Ccb);
-        break;
-
-    case FSCTL_PIPE_PEEK:
-        DPRINT("Peeking pipe %wZ\n", &Fcb->PipeName);
-        Status = NpfsPeekPipe(Irp, (PIO_STACK_LOCATION)IoStack);
-        break;
-
-    case FSCTL_PIPE_QUERY_EVENT:
-        DPRINT1("Query event not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_TRANSCEIVE:
-        /* If you implement this, please remove the workaround in
-        lib/kernel32/file/npipe.c function TransactNamedPipe() */
-        DPRINT1("Transceive not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_WAIT:
-        DPRINT("Waiting for pipe %wZ\n", &Fcb->PipeName);
-        Status = NpfsWaitPipe(Irp, Ccb);
-        break;
-
-    case FSCTL_PIPE_IMPERSONATE:
-        DPRINT1("Impersonate not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_SET_CLIENT_PROCESS:
-        DPRINT1("Set client process not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
-        DPRINT1("Query client process not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_INTERNAL_READ:
-        DPRINT1("Internal read not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_INTERNAL_WRITE:
-        DPRINT1("Internal write not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_INTERNAL_TRANSCEIVE:
-        DPRINT1("Internal transceive not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    case FSCTL_PIPE_INTERNAL_READ_OVFLOW:
-        DPRINT1("Internal read overflow not implemented\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-    default:
-        DPRINT1("Unrecognized IoControlCode: %x\n",
-            IoStack->Parameters.FileSystemControl.FsControlCode);
-        Status = STATUS_UNSUCCESSFUL;
-    }
+    FsRtlExitFileSystem();
 
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
     }
 
     return Status;
-}
-
-
-NTSTATUS NTAPI
-NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject,
-                 PIRP Irp)
-{
-    /* FIXME: Implement */
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

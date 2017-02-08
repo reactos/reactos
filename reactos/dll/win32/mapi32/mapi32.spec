@@ -16,8 +16,8 @@
  24 stub PRProviderInit
  25 stub LAUNCHWIZARD
  26 stub LaunchWizard@20
- 27 stdcall -private DllGetClassObject(ptr ptr ptr)
- 28 stdcall -private DllCanUnloadNow()
+ @ stdcall -private DllGetClassObject(ptr ptr ptr)
+ @ stdcall -private DllCanUnloadNow()
  29 stdcall MAPIOpenFormMgr(ptr ptr)
  30 stdcall MAPIOpenFormMgr@8(ptr ptr) MAPIOpenFormMgr
  31 stdcall MAPIOpenLocalFormContainer(ptr)
@@ -62,12 +62,12 @@
  80 stdcall LPropCompareProp@8(ptr ptr) LPropCompareProp
  81 stub HrAddColumns@16
  82 stub HrAddColumnsEx@20
-121 stdcall -ret64 FtAddFt@16(double double) MAPI32_FtAddFt
+121 stdcall -ret64 FtAddFt@16(int64 int64) MAPI32_FtAddFt
 122 stub FtAdcFt@20
-123 stdcall -ret64 FtSubFt@16(double double) MAPI32_FtSubFt
-124 stdcall -ret64 FtMulDw@12(long double) MAPI32_FtMulDw
+123 stdcall -ret64 FtSubFt@16(int64 int64) MAPI32_FtSubFt
+124 stdcall -ret64 FtMulDw@12(long int64) MAPI32_FtMulDw
 125 stdcall -ret64 FtMulDwDw@8(long long) MAPI32_FtMulDwDw
-126 stdcall -ret64 FtNegFt@8(double) MAPI32_FtNegFt
+126 stdcall -ret64 FtNegFt@8(int64) MAPI32_FtNegFt
 127 stub FtDivFtBogus@20
 128 stdcall UlAddRef@4(ptr) UlAddRef
 129 stdcall UlRelease@4(ptr) UlRelease
@@ -188,3 +188,4 @@
 253 stdcall FixMAPI@0() FixMAPI
 254 stdcall FGetComponentPath(str str ptr long long)
 255 stdcall FGetComponentPath@20(str str ptr long long) FGetComponentPath
+256 stdcall MAPISendMailW(ptr ptr ptr long long)

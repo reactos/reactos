@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 NSP
- * FILE:        include/nsp_dns.h
+ * FILE:        include/reactos/winsock/wsmobile.h
  * PURPOSE:     WinSock 2 NSP Header
  */
 

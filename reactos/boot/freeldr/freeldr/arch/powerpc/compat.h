@@ -91,7 +91,7 @@ typedef unsigned int __u32;
 
 typedef struct _pci_reg_property {
     struct {
-	int a_hi, a_mid, a_lo;
+    int a_hi, a_mid, a_lo;
     } addr;
     int size_hi, size_lo;
 } pci_reg_property;

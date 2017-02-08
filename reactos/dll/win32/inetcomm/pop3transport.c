@@ -18,27 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winnt.h"
-//#include "winuser.h"
-#include <objbase.h>
-#include <mimeole.h>
-#include <wine/debug.h>
-
 #include "inetcomm_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 enum parse_state
 {
@@ -315,11 +295,10 @@ static HRESULT parse_top_response(POP3Transport *This, POP3TOP *top)
     }
 }
 
-static void init_parser(POP3Transport *This, POP3COMMAND command, POP3CMDTYPE type)
+static void init_parser(POP3Transport *This, POP3COMMAND command)
 {
     This->state = STATE_NONE;
     This->command = command;
-    This->type = type;
 }
 
 static HRESULT POP3Transport_ParseResponse(POP3Transport *This, char *pszResponse, POP3RESPONSE *pResponse)
@@ -638,7 +617,7 @@ static void POP3Transport_CallbackRecvPASSResp(IInternetTransport *iface, char *
 
 static void POP3Transport_CallbackProcessUSERResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
 {
-    static char pass[] = "PASS ";
+    static const char pass[] = "PASS ";
     POP3Transport *This = (POP3Transport *)iface;
     POP3RESPONSE response;
     char *command;
@@ -663,7 +642,7 @@ static void POP3Transport_CallbackProcessUSERResp(IInternetTransport *iface, cha
     strcat(command, This->InetTransport.ServerInfo.szPassword);
     strcat(command, "\r\n");
 
-    init_parser(This, POP3_PASS, POP3_NONE);
+    init_parser(This, POP3_PASS);
 
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvPASSResp);
     HeapFree(GetProcessHeap(), 0, command);
@@ -679,7 +658,7 @@ static void POP3Transport_CallbackRecvUSERResp(IInternetTransport *iface, char *
 
 static void POP3Transport_CallbackSendUSERCmd(IInternetTransport *iface, char *pBuffer, int cbBuffer)
 {
-    static char user[] = "USER ";
+    static const char user[] = "USER ";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -733,7 +712,7 @@ static HRESULT WINAPI POP3Transport_QueryInterface(IPOP3Transport *iface, REFIID
         IsEqualIID(riid, &IID_IPOP3Transport))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IPOP3Transport_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;
@@ -804,7 +783,7 @@ static HRESULT WINAPI POP3Transport_Connect(IPOP3Transport *iface,
     if (FAILED(hr))
         return hr;
 
-    init_parser(This, POP3_USER, POP3_NONE);
+    init_parser(This, POP3_USER);
     return InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackSendUSERCmd);
 }
 
@@ -875,7 +854,7 @@ static HRESULT WINAPI POP3Transport_CommandAUTH(IPOP3Transport *iface, LPSTR psz
 
 static HRESULT WINAPI POP3Transport_CommandUSER(IPOP3Transport *iface, LPSTR username)
 {
-    static char user[] = "USER ";
+    static const char user[] = "USER ";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -889,7 +868,7 @@ static HRESULT WINAPI POP3Transport_CommandUSER(IPOP3Transport *iface, LPSTR use
     strcat(command, username);
     strcat(command, "\r\n");
 
-    init_parser(This, POP3_USER, POP3_NONE);
+    init_parser(This, POP3_USER);
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvUSERResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -898,7 +877,7 @@ static HRESULT WINAPI POP3Transport_CommandUSER(IPOP3Transport *iface, LPSTR use
 
 static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR password)
 {
-    static char pass[] = "PASS ";
+    static const char pass[] = "PASS ";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -912,7 +891,7 @@ static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR pas
     strcat(command, password);
     strcat(command, "\r\n");
 
-    init_parser(This, POP3_PASS, POP3_NONE);
+    init_parser(This, POP3_PASS);
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvPASSResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -922,7 +901,7 @@ static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR pas
 static HRESULT WINAPI POP3Transport_CommandLIST(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char list[] = "LIST %u\r\n";
+    static const char list[] = "LIST %u\r\n";
     static char list_all[] = "LIST\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
@@ -938,7 +917,8 @@ static HRESULT WINAPI POP3Transport_CommandLIST(
     }
     else command = list_all;
 
-    init_parser(This, POP3_LIST, cmdtype);
+    init_parser(This, POP3_LIST);
+    This->type = cmdtype;
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvLISTResp);
 
     if (dwPopId) HeapFree(GetProcessHeap(), 0, command);
@@ -948,7 +928,7 @@ static HRESULT WINAPI POP3Transport_CommandLIST(
 static HRESULT WINAPI POP3Transport_CommandTOP(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId, DWORD cPreviewLines)
 {
-    static char top[] = "TOP %u %u\r\n";
+    static const char top[] = "TOP %u %u\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -960,7 +940,8 @@ static HRESULT WINAPI POP3Transport_CommandTOP(
     sprintf(command, top, dwPopId, cPreviewLines);
 
     This->preview_lines = cPreviewLines;
-    init_parser(This, POP3_TOP, cmdtype);
+    init_parser(This, POP3_TOP);
+    This->type = cmdtype;
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvTOPResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -969,49 +950,49 @@ static HRESULT WINAPI POP3Transport_CommandTOP(
 
 static HRESULT WINAPI POP3Transport_CommandQUIT(IPOP3Transport *iface)
 {
-    static char command[] = "QUIT\r\n";
+    static const char command[] = "QUIT\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("()\n");
 
     InternetTransport_ChangeStatus(&This->InetTransport, IXP_DISCONNECTING);
 
-    init_parser(This, POP3_QUIT, POP3_NONE);
+    init_parser(This, POP3_QUIT);
     return InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvQUITResp);
 }
 
 static HRESULT WINAPI POP3Transport_CommandSTAT(IPOP3Transport *iface)
 {
-    static char stat[] = "STAT\r\n";
+    static const char stat[] = "STAT\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("\n");
 
-    init_parser(This, POP3_STAT, POP3_NONE);
+    init_parser(This, POP3_STAT);
     InternetTransport_DoCommand(&This->InetTransport, stat, POP3Transport_CallbackRecvSTATResp);
     return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandNOOP(IPOP3Transport *iface)
 {
-    static char noop[] = "NOOP\r\n";
+    static const char noop[] = "NOOP\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("\n");
 
-    init_parser(This, POP3_NOOP, POP3_NONE);
+    init_parser(This, POP3_NOOP);
     InternetTransport_DoCommand(&This->InetTransport, noop, POP3Transport_CallbackRecvNOOPResp);
     return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandRSET(IPOP3Transport *iface)
 {
-    static char rset[] = "RSET\r\n";
+    static const char rset[] = "RSET\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("\n");
 
-    init_parser(This, POP3_RSET, POP3_NONE);
+    init_parser(This, POP3_RSET);
     InternetTransport_DoCommand(&This->InetTransport, rset, POP3Transport_CallbackRecvRSETResp);
     return S_OK;
 }
@@ -1019,7 +1000,7 @@ static HRESULT WINAPI POP3Transport_CommandRSET(IPOP3Transport *iface)
 static HRESULT WINAPI POP3Transport_CommandUIDL(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char uidl[] = "UIDL %u\r\n";
+    static const char uidl[] = "UIDL %u\r\n";
     static char uidl_all[] = "UIDL\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
@@ -1035,7 +1016,8 @@ static HRESULT WINAPI POP3Transport_CommandUIDL(
     }
     else command = uidl_all;
 
-    init_parser(This, POP3_UIDL, cmdtype);
+    init_parser(This, POP3_UIDL);
+    This->type = cmdtype;
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvUIDLResp);
 
     if (dwPopId) HeapFree(GetProcessHeap(), 0, command);
@@ -1045,7 +1027,7 @@ static HRESULT WINAPI POP3Transport_CommandUIDL(
 static HRESULT WINAPI POP3Transport_CommandDELE(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char dele[] = "DELE %u\r\n";
+    static const char dele[] = "DELE %u\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -1056,7 +1038,8 @@ static HRESULT WINAPI POP3Transport_CommandDELE(
     if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
     sprintf(command, dele, dwPopId);
 
-    init_parser(This, POP3_DELE, cmdtype);
+    init_parser(This, POP3_DELE);
+    This->type = cmdtype;
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvDELEResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -1066,7 +1049,7 @@ static HRESULT WINAPI POP3Transport_CommandDELE(
 static HRESULT WINAPI POP3Transport_CommandRETR(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char retr[] = "RETR %u\r\n";
+    static const char retr[] = "RETR %u\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -1077,7 +1060,8 @@ static HRESULT WINAPI POP3Transport_CommandRETR(
     if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
     sprintf(command, retr, dwPopId);
 
-    init_parser(This, POP3_RETR, cmdtype);
+    init_parser(This, POP3_RETR);
+    This->type = cmdtype;
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvRETRResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -1143,7 +1127,7 @@ static HRESULT WINAPI POP3TransportCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

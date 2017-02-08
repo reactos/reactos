@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Runtime Library (RTL)
- * FILE:            lib/rtl/i386/except_asm.S
+ * FILE:            lib/rtl/i386/except_asm.s
  * PURPOSE:         User-mode exception support for IA-32
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)

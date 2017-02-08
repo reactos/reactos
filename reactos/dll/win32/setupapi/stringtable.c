@@ -22,8 +22,6 @@
 
 #define TABLE_DEFAULT_SIZE 256
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
-
 typedef struct _TABLE_SLOT
 {
     LPWSTR pString;
@@ -246,7 +244,7 @@ pSetupStringTableAddString(HSTRING_TABLE hStringTable,
             return (DWORD)-1;
         memset(&pNewSlots[pStringTable->dwMaxSlots], 0, sizeof(TABLE_SLOT) * (dwNewMaxSlots - pStringTable->dwMaxSlots));
         memcpy(pNewSlots, pStringTable->pSlots, sizeof(TABLE_SLOT) * pStringTable->dwMaxSlots);
-        pNewSlots = InterlockedExchangePointer(&pStringTable->pSlots, pNewSlots);
+        pNewSlots = InterlockedExchangePointer((PVOID*)&pStringTable->pSlots, pNewSlots);
         MyFree(pNewSlots);
         pStringTable->dwMaxSlots = dwNewMaxSlots;
 
@@ -786,7 +784,7 @@ pSetupStringTableStringFromIdEx(HSTRING_TABLE hStringTable,
         return FALSE;
     }
 
-    dwLength = (lstrlenW(pStringTable->pSlots[dwId - 1].pString) + 1) * sizeof(WCHAR);
+    dwLength = (lstrlenW(pStringTable->pSlots[dwId - 1].pString) + 1);
     if (dwLength <= *lpBufferLength)
     {
         lstrcpyW(lpBuffer, pStringTable->pSlots[dwId - 1].pString);

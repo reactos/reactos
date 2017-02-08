@@ -21,8 +21,6 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
-
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
@@ -213,7 +211,7 @@ CheckSectionValid(
      * Field[3] Minor version
      * Field[4] Product type
      * Field[5] Suite mask
-     * Remark: lastests fields may be NULL if the information is not provided
+     * Remark: these fields may be NULL if the information is not provided
      */
     Fields[0] = Section;
     if (Fields[0] == NULL)
@@ -604,6 +602,8 @@ DestroyDeviceInfo(struct DeviceInfo *deviceInfo)
             return FALSE;
     }
     DestroyClassInstallParams(&deviceInfo->ClassInstallParams);
+    if (deviceInfo->hmodDevicePropPageProvider)
+        FreeLibrary(deviceInfo->hmodDevicePropPageProvider);
     return HeapFree(GetProcessHeap(), 0, deviceInfo);
 }
 
@@ -624,6 +624,8 @@ DestroyDeviceInfoSet(struct DeviceInfoSet* list)
         RegCloseKey(list->HKLM);
     CM_Disconnect_Machine(list->hMachine);
     DestroyClassInstallParams(&list->ClassInstallParams);
+    if (list->hmodClassPropPageProvider)
+        FreeLibrary(list->hmodClassPropPageProvider);
     return HeapFree(GetProcessHeap(), 0, list);
 }
 
@@ -659,7 +661,7 @@ BOOL WINAPI SetupDiBuildClassInfoList(
  *              SetupDiBuildClassInfoListExA  (SETUPAPI.@)
  *
  * Returns a list of setup class GUIDs that identify the classes
- * that are installed on a local or remote macine.
+ * that are installed on a local or remote machine.
  *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
@@ -706,7 +708,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExA(
  *              SetupDiBuildClassInfoListExW  (SETUPAPI.@)
  *
  * Returns a list of setup class GUIDs that identify the classes
- * that are installed on a local or remote macine.
+ * that are installed on a local or remote machine.
  *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
@@ -1256,7 +1258,7 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
  * Create an empty DeviceInfoSet list.
  *
  * PARAMS
- *   ClassGuid [I] if not NULL only devices with GUID ClcassGuid are associated
+ *   ClassGuid [I] if not NULL only devices with GUID ClassGuid are associated
  *                 with this list.
  *   hwndParent [I] hwnd needed for interface related actions.
  *   MachineName [I] name of machine to create emtpy DeviceInfoSet list, if NULL
@@ -1727,6 +1729,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     CONFIGRET cr;
     DEVINST RootDevInst;
     DEVINST DevInst;
+    WCHAR GenInstanceId[MAX_DEVICE_ID_LEN];
 
     TRACE("%p %s %s %s %p %x %p\n", DeviceInfoSet, debugstr_w(DeviceName),
         debugstr_guid(ClassGuid), debugstr_w(DeviceDescription),
@@ -1780,12 +1783,31 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     cr = CM_Create_DevInst_ExW(&DevInst,
                                (DEVINSTID)DeviceName,
                                RootDevInst,
-                               0,
+                               (CreationFlags & DICD_GENERATE_ID) ?
+                                     CM_CREATE_DEVINST_GENERATE_ID : 0,
                                set->hMachine);
     if (cr != CR_SUCCESS)
     {
         SetLastError(GetErrorCodeFromCrCode(cr));
         return FALSE;
+    }
+
+    if (CreationFlags & DICD_GENERATE_ID)
+    {
+        /* Grab the actual instance ID that was created */
+        cr = CM_Get_Device_ID_Ex(DevInst,
+                                 GenInstanceId,
+                                 MAX_DEVICE_ID_LEN,
+                                 0,
+                                 set->hMachine);
+        if (cr != CR_SUCCESS)
+        {
+            SetLastError(GetErrorCodeFromCrCode(cr));
+            return FALSE;
+        }
+
+        DeviceName = GenInstanceId;
+        TRACE("Using generated instance ID: %s\n", debugstr_w(DeviceName));
     }
 
     if (CreateDeviceInfo(set, DeviceName, ClassGuid, &deviceInfo))
@@ -1891,7 +1913,8 @@ BOOL WINAPI SetupDiRegisterDeviceInfo(
                               ParentDevInst,
                               CM_CREATE_DEVINST_NORMAL | CM_CREATE_DEVINST_DO_NOT_INSTALL,
                               set->hMachine);
-    if (cr != CR_SUCCESS)
+    if (cr != CR_SUCCESS &&
+        cr != CR_ALREADY_SUCH_DEVINST)
     {
         dwError = ERROR_NO_SUCH_DEVINST;
     }
@@ -4696,7 +4719,7 @@ OpenHardwareProfileKey(
     rc = RegOpenKeyExW(HKLM,
                        REGSTR_PATH_HWPROFILES,
                        0,
-                       0,
+                       READ_CONTROL,
                        &hHWProfilesKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -4886,7 +4909,7 @@ SetupDiOpenDeviceInfoW(
                 list->HKLM,
                 REGSTR_PATH_SYSTEMENUM,
                 0, /* Options */
-                0,
+                READ_CONTROL,
                 &hEnumKey);
             if (rc != ERROR_SUCCESS)
             {
@@ -5674,7 +5697,7 @@ static HKEY SETUPDI_OpenDevKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM 
     HKEY enumKey, key = INVALID_HANDLE_VALUE;
     LONG l;
 
-    l = RegOpenKeyExW(RootKey, REGSTR_PATH_SYSTEMENUM, 0, 0, &enumKey);
+    l = RegOpenKeyExW(RootKey, REGSTR_PATH_SYSTEMENUM, 0, READ_CONTROL, &enumKey);
     if (!l)
     {
         l = RegOpenKeyExW(enumKey, devInfo->instanceId, 0, samDesired, &key);
@@ -5729,7 +5752,7 @@ static HKEY SETUPDI_OpenDrvKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM 
         RootKey,
         REGSTR_PATH_CLASS_NT,
         0, /* Options */
-        0,
+        READ_CONTROL,
         &hEnumKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -5754,6 +5777,8 @@ cleanup:
         RegCloseKey(hEnumKey);
     if (hKey != NULL && hKey != key)
         RegCloseKey(hKey);
+    if (DriverKey)
+        HeapFree(GetProcessHeap(), 0, DriverKey);
     return key;
 }
 

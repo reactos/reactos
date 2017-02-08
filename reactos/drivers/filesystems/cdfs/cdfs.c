@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/cdfs/cdfs.c
+ * FILE:             drivers/filesystems/cdfs/cdfs.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
@@ -32,6 +32,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#endif
+
 /* GLOBALS ******************************************************************/
 
 PCDFS_GLOBAL_DATA CdfsGlobalData;
@@ -39,6 +43,7 @@ PCDFS_GLOBAL_DATA CdfsGlobalData;
 
 /* FUNCTIONS ****************************************************************/
 
+INIT_SECTION
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
@@ -79,25 +84,29 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Initialize driver data */
     DeviceObject->Flags = DO_DIRECT_IO;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = CdfsClose;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = CdfsCleanup;
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = CdfsCreate;
-    DriverObject->MajorFunction[IRP_MJ_READ] = CdfsRead;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = CdfsWrite;
-    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-        CdfsFileSystemControl;
-    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-        CdfsDirectoryControl;
-    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-        CdfsQueryInformation;
-    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-        CdfsSetInformation;
-    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-        CdfsQueryVolumeInformation;
-    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-        CdfsSetVolumeInformation;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
-        CdfsDeviceControl;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_READ] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = CdfsFsdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = CdfsFsdDispatch;
+
+    CdfsGlobalData->FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
+    CdfsGlobalData->FastIoDispatch.FastIoCheckIfPossible = CdfsFastIoCheckIfPossible;
+    CdfsGlobalData->FastIoDispatch.FastIoRead = CdfsFastIoRead;
+    CdfsGlobalData->FastIoDispatch.FastIoWrite = CdfsFastIoWrite;
+    DriverObject->FastIoDispatch = &CdfsGlobalData->FastIoDispatch;
+
+    /* Initialize lookaside list for IRP contexts */
+    ExInitializeNPagedLookasideList(&CdfsGlobalData->IrpContextLookasideList,
+                                    NULL, NULL, 0, sizeof(CDFS_IRP_CONTEXT), 'PRIC', 0);
 
     DriverObject->DriverUnload = NULL;
 
@@ -116,28 +125,3 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 }
 
 
-BOOLEAN NTAPI
-CdfsAcquireForLazyWrite(IN PVOID Context,
-                        IN BOOLEAN Wait)
-{
-    PFCB Fcb = (PFCB)Context;
-    ASSERT(Fcb);
-    DPRINT("CdfsAcquireForLazyWrite(): Fcb %p\n", Fcb);
-
-    if (!ExAcquireResourceExclusiveLite(&(Fcb->MainResource), Wait))
-    {
-        DPRINT("CdfsAcquireForLazyWrite(): ExReleaseResourceLite failed.\n");
-        return FALSE;
-    }
-    return TRUE;
-}
-
-VOID NTAPI
-CdfsReleaseFromLazyWrite(IN PVOID Context)
-{
-    PFCB Fcb = (PFCB)Context;
-    ASSERT(Fcb);
-    DPRINT("CdfsReleaseFromLazyWrite(): Fcb %p\n", Fcb);
-
-    ExReleaseResourceLite(&(Fcb->MainResource));
-}

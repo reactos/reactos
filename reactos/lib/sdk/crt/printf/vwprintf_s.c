@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/vwprintf.c
+ * FILE:            lib/sdk/crt/printf/vwprintf_s.c
  * PURPOSE:         Implementation of vwprintf
  * PROGRAMMER:      Samuel Serapión
  */
@@ -12,8 +12,8 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 vwprintf_s(const wchar_t *format, va_list valist)
 {
-    return vfwprintf_s(stdout,format,valist);
+    return vfwprintf_s(stdout, format, valist);
 }

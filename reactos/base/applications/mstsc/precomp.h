@@ -1,25 +1,40 @@
+#ifndef _MSTSC_PCH_
+#define _MSTSC_PCH_
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
 #include <wingdi.h>
-#include <winuser.h>
 #include <wincon.h>
-#include <commdlg.h>
 #include <shlobj.h>
 #include <stdio.h>
 
-#include "uimain.h"
 #include "rdesktop.h"
-#include "bsops.h"
-#include "orders.h"
 #include "resource.h"
 
 #ifndef __TODO_MSTSC_H
 #define __TODO_MSTSC_H
+
+#define RDP_INFO_MOUSE                0x00000001
+#define RDP_INFO_DISABLECTRLALTDEL    0x00000002
+#define RDP_INFO_AUTOLOGON            0x00000008
+#define RDP_INFO_UNICODE              0x00000010
+#define RDP_INFO_MAXIMIZESHELL        0x00000020
+#define RDP_INFO_COMPRESSION          0x00000080 /* mppc compression with 8kB histroy buffer */
+#define RDP_INFO_ENABLEWINDOWSKEY     0x00000100
+#define RDP_INFO_COMPRESSION2         0x00000200 /* rdp5 mppc compression with 64kB history buffer */
+#define RDP_INFO_REMOTE_CONSOLE_AUDIO 0x00002000
+#define RDP_INFO_PASSWORD_IS_SC_PIN   0x00040000
+ 
+#define RDP5_DISABLE_NOTHING          0x00
+#define RDP5_NO_WALLPAPER             0x01
+
+#define RDP_LOGON_NORMAL (RDP_INFO_MOUSE | RDP_INFO_DISABLECTRLALTDEL | RDP_INFO_UNICODE | RDP_INFO_MAXIMIZESHELL)
 
 #define IS_PERSISTENT(id) (id < 8 && g_pstcache_fd[id] > 0)
 
@@ -110,3 +125,5 @@ BOOL SetStringToSettings(PRDPSETTINGS pRdpSettings, LPWSTR lpKey, LPWSTR lpValue
 VOID SaveAllSettings(PINFO pInfo);
 
 #endif /* __TODO_MSTSC_H */
+
+#endif /* _MSTSC_PCH_ */

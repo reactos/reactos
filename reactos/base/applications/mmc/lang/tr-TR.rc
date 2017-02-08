@@ -1,0 +1,45 @@
+/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
+        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Çıkış\tSeçenek+İ4", IDM_FILE_EXIT
+    END
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&ReactOS Yönetim Konsolu Üzerine...", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
+        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
+        MENUITEM "&Sakla", IDM_FILE_SAVE
+        MENUITEM "Ay&rı Sakla...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Çıkış\tSeçenek+İ4", IDM_FILE_EXIT
+    END
+    POPUP "&Pencereler"
+    BEGIN
+        MENUITEM "&Dizelgele", IDM_WINDOWS_LIST
+    END
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&ReactOS Yönetim Konsolu Üzerine...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Yönetim Konsolu"
+    IDS_CONSOLETITLE "Konsol%1!u!"
+END

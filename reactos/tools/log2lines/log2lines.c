@@ -566,6 +566,7 @@ int
 main(int argc, const char **argv)
 {
     int res = 0;
+    int optInit = 0;
     int optCount = 0;
 
     dbgIn = stdin;
@@ -579,9 +580,10 @@ main(int argc, const char **argv)
     memset(&revinfo, 0, sizeof(REVINFO));
     clearLastLine();
 
-    optionInit(argc, argv);
+    optInit = optionInit(argc, argv);
     optCount = optionParse(argc, argv);
-    if (optCount < 0)
+
+    if (optCount < 0 || optInit < 0)
     {
         return optCount;
     }

@@ -2,8 +2,6 @@
  * Copyright (c) 2002 Lionel ULMER
  * Copyright (c) 2006 Stefan DÖSINGER
  *
- * This file contains the implementation of Direct3DMaterial.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -19,12 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static void dump_material(const D3DMATERIAL *mat)
 {

@@ -9,6 +9,8 @@
 
 #include "serenum.h"
 
+#include <debug.h>
+
 NTSTATUS NTAPI
 SerenumAddDevice(
 	IN PDRIVER_OBJECT DriverObject,

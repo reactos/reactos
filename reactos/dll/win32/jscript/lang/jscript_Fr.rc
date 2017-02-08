@@ -1,0 +1,69 @@
+/*
+ * French resources for jscript
+ *
+ * Copyright 2009 Frédéric Delanoy
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Erreur lors de la conversion de l'objet vers un type primitif"
+    IDS_INVALID_CALL_ARG    "Appel de procédure ou argument invalide"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
+    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_CREATE_OBJ_ERROR    "Le serveur d'automatisation ne peut créer l'objet"
+    IDS_NO_PROPERTY         "Cet objet ne supporte pas cette propriété ou méthode"
+    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_ARG_NOT_OPT         "Argument non optionnel"
+    IDS_SYNTAX_ERROR        "Erreur de syntaxe"
+    IDS_SEMICOLON           "« ; » attendu"
+    IDS_LBRACKET            "« ( » attendu"
+    IDS_RBRACKET            "« ) » attendu"
+    IDS_EXPECTED_IDENTIFIER "Expected identifier"
+    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_INVALID_CHAR        "Invalid character"
+    IDS_UNTERMINATED_STR    "Constante chaîne de caractères non clôturée"
+    IDS_MISPLACED_RETURN    "'return' statement outside of function"
+    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
+    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_LABEL_REDEFINED     "Label redefined"
+    IDS_LABEL_NOT_FOUND     "Label not found"
+    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_DISABLED_CC         "Conditional compilation is turned off"
+    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_NOT_FUNC            "Fonction attendue"
+    IDS_NOT_DATE            "« [objet] » n'est pas un objet de type date"
+    IDS_NOT_NUM             "Nombre attendu"
+    IDS_OBJECT_EXPECTED     "Objet attendu"
+    IDS_ILLEGAL_ASSIGN      "Affectation illégale"
+    IDS_UNDEFINED           "« | » n'est pas défini"
+    IDS_NOT_BOOL            "Objet booléen attendu"
+    IDS_INVALID_DELETE      "Cannot delete '|'"
+    IDS_NOT_VBARRAY         "VBArray object expected"
+    IDS_JSCRIPT_EXPECTED    "Objet JScript attendu"
+    IDS_REGEXP_SYNTAX_ERROR "Erreur de syntaxe dans l'expression rationnelle"
+    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
+    IDS_URI_INVALID_CHAR    "L'URI à coder contient des caractères invalides"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
+    IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
+    IDS_INVALID_LENGTH      "La longueur d'un tableau doit être un entier positif"
+    IDS_ARRAY_EXPECTED      "Objet tableau attendu"
+}

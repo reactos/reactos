@@ -31,14 +31,13 @@
 
 #include <windef.h>
 #include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
+#include <objbase.h>
 
 /*
  * First include the version 2 headers so that we don't redefine their
  * uuids - they're already in libuuid
  */
-//#include "msxml.h"
+#include <msxml.h>
 
 /* Now we can initialize the rest of the uuids */
 #include <initguid.h>

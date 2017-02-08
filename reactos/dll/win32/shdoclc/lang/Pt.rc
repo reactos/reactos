@@ -1,0 +1,462 @@
+/*
+ * Copyright 2008 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milaré
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Explorador de Internet Wine"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "" /* Default */
+    {
+        MENUITEM "&Voltar",                                IDM_GOBACKWARD
+        MENUITEM "&Avançar",                               IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "&Salvar fundo como...",                  IDM_SAVEBACKGROUND
+        MENUITEM "D&efinir como fundo",                    IDM_SETWALLPAPER
+        MENUITEM "&Copiar Fundo",                          IDM_COPYBACKGROUND
+        MENUITEM "Definir como &item da Área de Trabalho", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "Selecionar &tudo",                       IDM_SELECTALL
+        MENUITEM "C&olar",                                 IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Criar ata&lho",                          IDM_CREATESHORTCUT
+        MENUITEM "Adicio&nar aos Favoritos",               IDM_ADDFAVORITES
+        MENUITEM "Ver código &fonte",                      IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Co&dificação",                           IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "I&mprimir",                              IDM_PRINT
+        MENUITEM "&Recarregar",                            _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",                          IDM_PROPERTIES
+    }
+
+    POPUP "" /* Image */
+    {
+        MENUITEM "&Abrir link",                               IDM_FOLLOWLINKC
+        MENUITEM "A&brir link numa nova janela",              IDM_FOLLOWLINKN
+        MENUITEM "&Salvar link como...",                      IDM_SAVETARGET
+        MENUITEM "Imprimir lin&k",                            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Mos&trar imagem",                           IDM_SHOWPICTURE
+        MENUITEM "Sal&var imagem como...",                    IDM_SAVEPICTURE
+        MENUITEM "&Enviar imagem...",                         IDM_MP_EMAILPICTURE
+        MENUITEM "I&mprimir imagem...",                       IDM_MP_PRINTPICTURE
+        MENUITEM "I&r para minhas imagens",                   IDM_MP_MYPICS
+        MENUITEM "&Definir como fundo",                       IDM_SETWALLPAPER
+        MENUITEM "Definir como &item da Área de Trabalho...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                                   IDM_CUT
+        MENUITEM "C&opiar",                                   IDM_COPY
+        MENUITEM "Copiar atal&ho",                            IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                                    IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...",               IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",                             IDM_PROPERTIES
+    }
+
+    POPUP "" /* Control */
+    {
+        MENUITEM "&Desfazer",        IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",          IDM_CUT
+        MENUITEM "C&opiar",          IDM_COPY
+        MENUITEM "Co&lar",           IDM_PASTE
+        MENUITEM "&Apagar",          IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Selecionar tudo", IDM_SELECTALL
+    }
+
+    POPUP "" /* Table */
+    {
+        POPUP "&Selecionar"
+        {
+            MENUITEM "&Célula",             IDM_CELLSELECT
+            MENUITEM "&Linha",              IDM_ROWSELECT
+            MENUITEM "C&oluna",             IDM_COLUMNSELECT
+            MENUITEM "&Tabela",             IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Propriedades da &célula", IDM_CELLPROPERTIES
+        MENUITEM "Propriedades da &tabela", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "" /* 1DSite Select */
+    {
+        MENUITEM "&Cortar",         IDM_CUT
+        MENUITEM "C&opiar",         IDM_COPY
+        MENUITEM "Co&lar",          IDM_PASTE
+        MENUITEM "Selecionar tudo", IDM_SELECTALL
+        MENUITEM "&Imprimir",       IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* Anchor */
+    {
+        MENUITEM "&Abrir",                      IDM_FOLLOWLINKC
+        MENUITEM "A&brir numa nova janela",     IDM_FOLLOWLINKN
+        MENUITEM "&Salvar link como...",        IDM_SAVETARGET
+        MENUITEM "&Imprimir link",              IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                     IDM_CUT
+        MENUITEM "C&opiar",                     IDM_COPY
+        MENUITEM "Copia&r atalho",              IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                      IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",               IDM_PROPERTIES
+    }
+
+    POPUP "" /* Context Unknown */
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* DYNSRC Image */
+    {
+        MENUITEM "&Abrir link",                               IDM_FOLLOWLINKC
+        MENUITEM "A&brir link numa nova janela",              IDM_FOLLOWLINKN
+        MENUITEM "&Salvar link como...",                      IDM_SAVETARGET
+        MENUITEM "Imprimir lin&k",                            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Mostrar imagem",                           IDM_SHOWPICTURE
+        MENUITEM "Sal&var vídeo como...",                     IDM_SAVEPICTURE
+        MENUITEM "&Definir como fundo",                       IDM_SETWALLPAPER
+        MENUITEM "Definir como &item da Área de Trabalho...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                                   IDM_CUT
+        MENUITEM "C&opiar",                                   IDM_COPY
+        MENUITEM "Copiar atal&ho",                            IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                                    IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...",               IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "I&niciar",                                  IDM_DYNSRCPLAY
+        MENUITEM "Pa&rar",                                    IDM_DYNSRCSTOP
+        MENUITEM "&Propriedades",                             IDM_PROPERTIES
+    }
+
+    POPUP "" /* ART Image */
+    {
+        MENUITEM "&Abrir link",                               IDM_FOLLOWLINKC
+        MENUITEM "A&brir link numa nova janela",              IDM_FOLLOWLINKN
+        MENUITEM "&Salvar link como...",                      IDM_SAVETARGET
+        MENUITEM "Imprimir lin&k",                            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Mostrar imagem",                           IDM_SHOWPICTURE
+        MENUITEM "Sal&var vídeo como...",                     IDM_SAVEPICTURE
+        MENUITEM "&Definir como fundo",                       IDM_SETWALLPAPER
+        MENUITEM "Definir como &item da Área de Trabalho...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                                   IDM_CUT
+        MENUITEM "C&opiar",                                   IDM_COPY
+        MENUITEM "Copiar atal&ho",                            IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                                    IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...",               IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "I&niciar",                                  IDM_IMGARTPLAY
+        MENUITEM "Pa&rar",                                    IDM_IMGARTSTOP
+        MENUITEM "R&ecomeçar",                                IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",                             IDM_PROPERTIES
+    }
+
+    POPUP "" /* Debug */
+    {
+        MENUITEM "Trace Tags",         IDM_TRACETAGS
+        MENUITEM "Resource Failures",  IDM_RESOURCEFAILURES
+        MENUITEM "Dump Tracking Info", IDM_DUMPTRACKINGINFO
+        MENUITEM "Debug Break",        IDM_DEBUGBREAK
+        MENUITEM "Debug View",         IDM_DEBUGVIEW
+        MENUITEM "Dump Tree",          IDM_DUMPTREE
+        MENUITEM "Dump Lines",         IDM_DUMPLINES
+        MENUITEM "Dump DisplayTree",   IDM_DUMPDISPLAYTREE
+        MENUITEM "Dump FormatCaches",  IDM_DUMPFORMATCACHES
+        MENUITEM "Dump LayoutRects",   IDM_DUMPLAYOUTRECTS
+        MENUITEM "Memory Monitor",     IDM_MEMORYMONITOR
+        MENUITEM "Performance Meters", IDM_PERFORMANCEMETERS
+        MENUITEM "Save HTML",          IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "&Browse View",       IDM_BROWSEMODE
+        MENUITEM "&Edit View",         IDM_EDITMODE
+    }
+
+    POPUP "" /* Vertical Scrollbar */
+    {
+        MENUITEM "Rolar aqui",       IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Topo",             IDM_SCROLL_TOP
+        MENUITEM "Fundo",            IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Página acima",     IDM_SCROLL_PAGEUP
+        MENUITEM "Página abaixo",    IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "Rolar para cima",  IDM_SCROLL_UP
+        MENUITEM "Rolar para baixo", IDM_SCROLL_DOWN
+    }
+
+    POPUP "" /* Horizontal Scrollbar */
+    {
+        MENUITEM "Rolar aqui",            IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Canto esquerdo",        IDM_SCROLL_LEFTEDGE
+        MENUITEM "Canto direito",         IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "Página à esquerda",     IDM_SCROLL_PAGELEFT
+        MENUITEM "Página à direita",      IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Rolar para a esquerda", IDM_SCROLL_LEFT
+        MENUITEM "Rolar para a direita",  IDM_SCROLL_RIGHT
+    }
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "" /* Default */
+    {
+        MENUITEM "&Retroceder",                                IDM_GOBACKWARD
+        MENUITEM "&Avançar",                                   IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "&Guardar fundo como...",                     IDM_SAVEBACKGROUND
+        MENUITEM "D&efinir como fundo",                        IDM_SETWALLPAPER
+        MENUITEM "&Copiar fundo",                              IDM_COPYBACKGROUND
+        MENUITEM "Definir como &item do Ambiente de Trabalho", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Seleccionar tudo",                          IDM_SELECTALL
+        MENUITEM "C&olar",                                     IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Criar ata&lho",                              IDM_CREATESHORTCUT
+        MENUITEM "Adicionar aos &Favoritos",                   IDM_ADDFAVORITES
+        MENUITEM "&Ver código fonte",                          IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Co&dificação",                               IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "I&mprimir",                                  IDM_PRINT
+        MENUITEM "Actuali&zar",                                _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",                              IDM_PROPERTIES
+    }
+
+    POPUP "" /* Image */
+    {
+        MENUITEM "&Abrir Ligação",                                IDM_FOLLOWLINKC
+        MENUITEM "A&brir Ligação numa Nova Janela",               IDM_FOLLOWLINKN
+        MENUITEM "&Guardar Ligação como...",                      IDM_SAVETARGET
+        MENUITEM "I&mprimir Ligação",                             IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Mos&trar imagem",                               IDM_SHOWPICTURE
+        MENUITEM "G&uardar imagem como...",                       IDM_SAVEPICTURE
+        MENUITEM "En&viar imagem...",                             IDM_MP_EMAILPICTURE
+        MENUITEM "Imprimir imag&em...",                           IDM_MP_PRINTPICTURE
+        MENUITEM "I&r para minhas imagens",                       IDM_MP_MYPICS
+        MENUITEM "&Definir como fundo",                           IDM_SETWALLPAPER
+        MENUITEM "Definir como &item do Ambiente de Trabalho...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                                       IDM_CUT
+        MENUITEM "C&opiar",                                       IDM_COPY
+        MENUITEM "Copiar atal&ho",                                IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...",                   IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",                                 IDM_PROPERTIES
+    }
+
+    POPUP "" /* Control */
+    {
+        MENUITEM "&Desfazer",         IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",           IDM_CUT
+        MENUITEM "C&opiar",           IDM_COPY
+        MENUITEM "Co&lar",            IDM_PASTE
+        MENUITEM "&Apagar",           IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Seleccionar tudo", IDM_SELECTALL
+    }
+
+    POPUP "" /* Table */
+    {
+        POPUP "&Seleccionar"
+        {
+            MENUITEM "&Célula",             IDM_CELLSELECT
+            MENUITEM "&Linha",              IDM_ROWSELECT
+            MENUITEM "C&oluna",             IDM_COLUMNSELECT
+            MENUITEM "&Tabela",             IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Propriedades da &célula", IDM_CELLPROPERTIES
+        MENUITEM "Propriedades da &tabela", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "" /* 1DSite Select */
+    {
+        MENUITEM "&Cortar",          IDM_CUT
+        MENUITEM "C&opiar",          IDM_COPY
+        MENUITEM "Co&lar",           IDM_PASTE
+        MENUITEM "Seleccionar tudo", IDM_SELECTALL
+        MENUITEM "&Imprimir",        IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* Anchor */
+    {
+        MENUITEM "&Abrir",                      IDM_FOLLOWLINKC
+        MENUITEM "A&brir numa nova janela",     IDM_FOLLOWLINKN
+        MENUITEM "&Guardar ligação como...",    IDM_SAVETARGET
+        MENUITEM "&Imprimir ligação",           IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                     IDM_CUT
+        MENUITEM "C&opiar",                     IDM_COPY
+        MENUITEM "Copia&r atalho",              IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                      IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",               IDM_PROPERTIES
+    }
+
+    POPUP "" /* Context Unknown */
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* DYNSRC Image */
+    {
+        MENUITEM "&Abrir ligação",                                IDM_FOLLOWLINKC
+        MENUITEM "A&brir ligação numa nova janela",               IDM_FOLLOWLINKN
+        MENUITEM "&Guardar ligação como...",                      IDM_SAVETARGET
+        MENUITEM "&Imprimir ligação",                             IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Mostrar imagem",                               IDM_SHOWPICTURE
+        MENUITEM "G&uardar vídeo como...",                        IDM_SAVEPICTURE
+        MENUITEM "&Definir como fundo",                           IDM_SETWALLPAPER
+        MENUITEM "D&efinir como item do Ambiente de Trabalho...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                                       IDM_CUT
+        MENUITEM "C&opiar",                                       IDM_COPY
+        MENUITEM "Copiar atal&ho",                                IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...",                   IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "I&niciar",                                      IDM_DYNSRCPLAY
+        MENUITEM "Pa&rar",                                        IDM_DYNSRCSTOP
+        MENUITEM "&Propriedades",                                 IDM_PROPERTIES
+    }
+
+    POPUP "" /* ART Image */
+    {
+        MENUITEM "&Abrir ligação",                                IDM_FOLLOWLINKC
+        MENUITEM "A&brir ligação numa nova janela",               IDM_FOLLOWLINKN
+        MENUITEM "&Guardar ligação como...",                      IDM_SAVETARGET
+        MENUITEM "&Imprimir ligação",                             IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Mostrar imagem",                               IDM_SHOWPICTURE
+        MENUITEM "G&uardar vídeo como...",                        IDM_SAVEPICTURE
+        MENUITEM "&Definir como fundo",                           IDM_SETWALLPAPER
+        MENUITEM "D&efinir como item do Ambiente de Trabalho...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Cortar",                                       IDM_CUT
+        MENUITEM "C&opiar",                                       IDM_COPY
+        MENUITEM "Copiar atal&ho",                                IDM_COPYSHORTCUT
+        MENUITEM "Co&lar",                                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Adicionar aos &Favoritos...",                   IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "I&niciar",                                      IDM_IMGARTPLAY
+        MENUITEM "&Parar",                                        IDM_IMGARTSTOP
+        MENUITEM "&Recomeçar",                                    IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM "Propriedade&s",                                 IDM_PROPERTIES
+    }
+
+    POPUP "" /* Debug */
+    {
+        MENUITEM "Trace Tags",         IDM_TRACETAGS
+        MENUITEM "Resource Failures",  IDM_RESOURCEFAILURES
+        MENUITEM "Dump Tracking Info", IDM_DUMPTRACKINGINFO
+        MENUITEM "Debug Break",        IDM_DEBUGBREAK
+        MENUITEM "Debug View",         IDM_DEBUGVIEW
+        MENUITEM "Dump Tree",          IDM_DUMPTREE
+        MENUITEM "Dump Lines",         IDM_DUMPLINES
+        MENUITEM "Dump DisplayTree",   IDM_DUMPDISPLAYTREE
+        MENUITEM "Dump FormatCaches",  IDM_DUMPFORMATCACHES
+        MENUITEM "Dump LayoutRects",   IDM_DUMPLAYOUTRECTS
+        MENUITEM "Memory Monitor",     IDM_MEMORYMONITOR
+        MENUITEM "Performance Meters", IDM_PERFORMANCEMETERS
+        MENUITEM "Save HTML",          IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "&Browse View",       IDM_BROWSEMODE
+        MENUITEM "&Edit View",         IDM_EDITMODE
+    }
+
+    POPUP "" /* Vertical Scrollbar */
+    {
+        MENUITEM "Scroll aqui",  IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Topo",         IDM_SCROLL_TOP
+        MENUITEM "Fundo",        IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Página acima", IDM_SCROLL_PAGEUP
+        MENUITEM "Página baixo", IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "Scroll cima",  IDM_SCROLL_UP
+        MENUITEM "Scroll baixo", IDM_SCROLL_DOWN
+    }
+
+    POPUP "" /* Horizontal Scrollbar */
+    {
+        MENUITEM "Scroll aqui",     IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Canto esquerdo",  IDM_SCROLL_LEFTEDGE
+        MENUITEM "Canto direito",   IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "Página esquerda", IDM_SCROLL_PAGELEFT
+        MENUITEM "Página direita",  IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Scroll esquerda", IDM_SCROLL_LEFT
+        MENUITEM "Scroll direita",  IDM_SCROLL_RIGHT
+    }
+}

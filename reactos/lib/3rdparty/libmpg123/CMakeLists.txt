@@ -13,7 +13,7 @@ add_definitions(
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
 
-add_library(libmpg123
+list(APPEND SOURCE
     compat.c
     dct64.c
     dct64_i386.c
@@ -30,7 +30,6 @@ add_library(libmpg123
     layer3.c
     libmpg123.c
     ntom.c
-    optimize.c
     parse.c
     readers.c
     stringbuf.c
@@ -38,7 +37,13 @@ add_library(libmpg123
     synth_8bit.c
     synth_real.c
     synth_s32.c
-    tabinit.c)
+    tabinit.c
+    precomp.h)
 
+add_library(libmpg123 ${SOURCE} optimize.c)
 add_dependencies(libmpg123 psdk)
-allow_warnings(libmpg123)
+add_pch(libmpg123 precomp.h SOURCE)
+
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(libmpg123 "-Wno-unused-but-set-variable")
+endif()

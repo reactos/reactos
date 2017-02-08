@@ -1,0 +1,9 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nGeben Sie ""CLIP /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_HELP "\nLeitet die Ausgabe von Befehlszeilenprogrammen in die Zwischenablage um.\n\n\
+CLIP [/?]\n\n\
+    /?  Zeigt diese Hilfe an.\n"
+END

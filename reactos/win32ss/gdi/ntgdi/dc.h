@@ -33,7 +33,10 @@ enum _DCFLAGS
     DC_FULLSCREEN        = 0x0800,
     DC_IN_CLONEPDEV      = 0x1000,
     DC_REDIRECTION       = 0x2000,
-    DC_SHAREACCESS       = 0x4000
+    DC_SHAREACCESS       = 0x4000,
+#if DBG
+    DC_PREPARED          = 0x8000
+#endif
 };
 
 typedef enum _DCTYPE
@@ -45,14 +48,6 @@ typedef enum _DCTYPE
 
 
 /* Type definitions ***********************************************************/
-
-typedef struct _ROS_DC_INFO
-{
-  HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
-
-  CLIPOBJ     *CombinedClip;
-} ROS_DC_INFO;
 
 typedef struct _DCLEVEL
 {
@@ -104,7 +99,7 @@ typedef struct _DC
   BASEOBJECT  BaseObject;
 
   DHPDEV      dhpdev;   /* <- PDEVOBJ.hPDev DHPDEV for device. */
-  INT         dctype;
+  DCTYPE      dctype;
   INT         fs;
   PPDEVOBJ    ppdev;
   PVOID       hsem;   /* PERESOURCE aka HSEMAPHORE */
@@ -121,7 +116,7 @@ typedef struct _DC
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
   PREGION     prgnAPI;
-  PREGION     prgnVis; /* Visible region (must never be 0) */
+  _Notnull_ PREGION     prgnVis; /* Visible region (must never be 0) */
   PREGION     prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;
@@ -139,10 +134,8 @@ typedef struct _DC
   ULONG       ulCopyCount;
   PVOID       pSurfInfo;
   POINTL      ptlDoBanding;
-
-  /* Reactos specific members */
-  ROS_DC_INFO rosdc;
 } DC;
+// typedef struct _DC *PDC;
 
 extern PDC defaultDCstate;
 
@@ -183,21 +176,26 @@ VOID FASTCALL DCU_SetDcUndeletable(HDC);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
 ULONG TranslateCOLORREF(PDC pdc, COLORREF crColor);
 int FASTCALL GreSetStretchBltMode(HDC hdc, int iStretchMode);
-
-
+int FASTCALL GreGetBkMode(HDC);
+int FASTCALL GreGetMapMode(HDC);
+COLORREF FASTCALL GreGetTextColor(HDC);
+COLORREF FASTCALL GreGetBkColor(HDC);
+COLORREF FASTCALL IntSetDCBrushColor(HDC,COLORREF);
+COLORREF FASTCALL IntSetDCPenColor(HDC,COLORREF);
+int FASTCALL GreGetGraphicsMode(HDC);
 
 INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
-PDC NTAPI DC_AllocDcWithHandle(VOID);
+PDC NTAPI DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType);
 BOOL NTAPI DC_bAllocDcAttr(PDC pdc);
-BOOL NTAPI DC_Cleanup(PVOID ObjectBody);
+VOID NTAPI DC_vCleanup(PVOID ObjectBody);
 BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
-VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL to);
+VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To);
 VOID FASTCALL DC_vFinishBlit(PDC pdc1, PDC pdc2);
-VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
+VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdcDest, const RECT* rcDest, PDC pdcSrc, const RECT* rcSrc);
 
 VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 
@@ -211,6 +209,7 @@ BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
+HDC APIENTRY GreCreateCompatibleDC(HDC hdc, BOOL bAltDc);
 
 VOID
 NTAPI
@@ -222,10 +221,11 @@ DC_LockDc(HDC hdc)
 {
     PDC pdc;
 
-    pdc = GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
+    pdc = (PDC)GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
     if (pdc)
     {
-        ASSERT(GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_DC_TYPE);
+        ASSERT((GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_DC_TYPE) ||
+               (GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_ALTDC_TYPE));
         ASSERT(pdc->dclevel.plfnt != NULL);
         ASSERT(GDI_HANDLE_GET_TYPE(((POBJ)pdc->dclevel.plfnt)->hHmgr) == GDILoObjType_LO_FONT_TYPE);
     }
@@ -243,8 +243,8 @@ DC_UnlockDc(PDC pdc)
     GDIOBJ_vUnlockObject(&pdc->BaseObject);
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
 {
     PSURFACE psurfOld = pdc->dclevel.pSurface;
@@ -258,8 +258,8 @@ DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
     pdc->dclevel.pSurface = psurfNew;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectFillBrush(PDC pdc, PBRUSH pbrFill)
 {
     PBRUSH pbrFillOld = pdc->dclevel.pbrFill;
@@ -270,8 +270,8 @@ DC_vSelectFillBrush(PDC pdc, PBRUSH pbrFill)
     pdc->dclevel.pbrFill = pbrFill;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
 {
     PBRUSH pbrLineOld = pdc->dclevel.pbrLine;
@@ -282,8 +282,8 @@ DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
     pdc->dclevel.pbrLine = pbrLine;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 {
     PPALETTE ppalOld = pdc->dclevel.ppal;
@@ -296,5 +296,7 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 
 extern _Notnull_ PBRUSH pbrDefaultBrush;
 extern _Notnull_ PSURFACE psurfDefaultBitmap;
+
+#define ASSERT_DC_PREPARED(pdc) NT_ASSERT((pdc)->fs & DC_PREPARED)
 
 #endif /* not __WIN32K_DC_H */

@@ -1,0 +1,43 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=Paint.chm
+Contents file=Table of Contents.hhc
+Default topic=usage.html
+Display compile progress=No
+Language=0x407 Deutsch (Deutschland)
+Title=Hilfe zu Paint für ReactOS
+
+
+[FILES]
+airbrush.png
+appwindow.png
+bezier.png
+brush.png
+color.png
+ellipse.png
+fill.png
+freesel.png
+line.png
+palette.png
+pen.png
+rect.png
+rectsel.png
+rrect.png
+rubber.png
+settings1.png
+settings2.png
+settings3.png
+settings4.png
+settings5.png
+settings6.png
+settings.html
+shape.png
+Table of Contents.hhc
+text.png
+toolbox.png
+tools.html
+usage.html
+zoom.png
+
+[INFOTYPES]
+

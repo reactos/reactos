@@ -1,0 +1,80 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "檔案(&F)"
+    {
+        POPUP "新建(&N)"
+        {
+            MENUITEM "視窗(&W)",                 ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "開啟...(&O)",                    ID_BROWSE_OPEN
+        MENUITEM "儲存(&S)",                       ID_BROWSE_SAVE
+        MENUITEM "另存為(&A)...",                 ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "列印格式...(&F)",            ID_BROWSE_PRINT_FORMAT
+        MENUITEM "列印(&I)...",                   ID_BROWSE_PRINT
+        MENUITEM "列印預覽(&W)",              ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "屬性(&P)",                 ID_BROWSE_PROPERTIES
+        MENUITEM "關閉(&C)",                      ID_BROWSE_QUIT
+    }
+    POPUP "檢視(&V)"
+    {
+        POPUP "工具欄(&T)"
+        {
+            MENUITEM "標準欄(&S)",           ID_BROWSE_BAR_STD
+            MENUITEM "位址列(&A)",            ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "收藏夾(&F)"
+    {
+        MENUITEM "添加到收藏夾...(&A)",        ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "幫助(&H)"
+    {
+        MENUITEM "關於網際網路瀏覽器(&A)", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "後退"
+    IDS_TB_FORWARD          "前進"
+    IDS_TB_STOP             "停止"
+    IDS_TB_REFRESH          "重新整理"
+    IDS_TB_HOME             "首頁"
+    IDS_TB_PRINT            "列印..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "地址"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "搜索 %s 中"
+    IDS_BEGINDOWNLOADDATA   "開始下載 %s"
+    IDS_ENDDOWNLOADDATA     "下載 %s 中"
+    IDS_SENDINGREQUEST      "要求 %s"
+}
+
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+CAPTION "開啟 URL"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "指定您希望要在 Internet Explorer 中開啟的 URL",-1, 35,5,160,25
+    LTEXT "開啟:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "確定", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 145, 50, 50, 14
+}

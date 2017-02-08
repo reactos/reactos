@@ -35,12 +35,6 @@ Author:
 #define UserMode                                HEX(1)
 
 //
-// CPU Types
-//
-#define CPU_INTEL                               HEX(1)
-#define CPU_AMD                                 HEX(2)
-
-//
 // KTSS Offsets
 //
 #define KTSS64_RSP0                             HEX(04)

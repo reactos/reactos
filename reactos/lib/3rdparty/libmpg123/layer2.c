@@ -114,7 +114,7 @@ real* init_layer12_table_mmx(mpg123_handle *fr, real *table, int m)
 
 #ifndef NO_LAYER2
 
-void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
+static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 {
 	int stereo = fr->stereo-1;
 	int sblimit = fr->II_sblimit;
@@ -191,7 +191,7 @@ void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 }
 
 
-void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale,mpg123_handle *fr,int x1)
+static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale,mpg123_handle *fr,int x1)
 {
 	int i,j,k,ba;
 	int stereo = fr->stereo;

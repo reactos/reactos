@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/i386/dib24bpp_hline.c
+ * FILE:            win32ss/gdi/dib/i386/dib24bpp_hline.s
  * PURPOSE:         ASM optimised 24bpp HLine
  * PROGRAMMERS:     Magnus Olsen
  */

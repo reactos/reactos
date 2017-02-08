@@ -137,7 +137,7 @@ NTAPI
 KiEspFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->SegCs & MODE_MASK) ||
+    if (KiUserTrap(TrapFrame) ||
         (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Return it directly */
@@ -175,7 +175,7 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     Previous = KiEspFromTrapFrame(TrapFrame);
 
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->SegCs & MODE_MASK) ||
+    if (KiUserTrap(TrapFrame) ||
         (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Write it directly */
@@ -225,7 +225,7 @@ KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
         /* Just return it */
         return TrapFrame->HardwareSegSs;
     }
-    else if (TrapFrame->SegCs & MODE_MASK)
+    else if (KiUserTrap(TrapFrame))
     {
         /* User mode, return the User SS */
         return TrapFrame->HardwareSegSs | RPL_MASK;
@@ -251,7 +251,7 @@ KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
         /* Just write it */
         TrapFrame->HardwareSegSs = Ss;
     }
-    else if (TrapFrame->SegCs & MODE_MASK)
+    else if (KiUserTrap(TrapFrame))
     {
         /* Usermode, save the User SS */
         TrapFrame->HardwareSegSs = Ss | RPL_MASK;
@@ -398,7 +398,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             TrapFrame->V86Fs = Context->SegFs;
             TrapFrame->V86Gs = Context->SegGs;
         }
-        else if (!(TrapFrame->SegCs & MODE_MASK))
+        else if (!KiUserTrap(TrapFrame))
         {
             /* For kernel mode, write the standard values */
             TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
@@ -429,7 +429,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
 
     /* Handle the extended registers */
     if (((ContextFlags & CONTEXT_EXTENDED_REGISTERS) ==
-        CONTEXT_EXTENDED_REGISTERS) && (TrapFrame->SegCs & MODE_MASK))
+        CONTEXT_EXTENDED_REGISTERS) && KiUserTrap(TrapFrame))
     {
         /* Get the FX Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -463,7 +463,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
 
     /* Handle the floating point state */
     if (((ContextFlags & CONTEXT_FLOATING_POINT) ==
-        CONTEXT_FLOATING_POINT) && (TrapFrame->SegCs & MODE_MASK))
+        CONTEXT_FLOATING_POINT) && KiUserTrap(TrapFrame))
     {
         /* Get the FX Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -549,6 +549,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         {
             /* FIXME: Handle FPU Emulation */
             //ASSERT(FALSE);
+            UNIMPLEMENTED;
         }
     }
 
@@ -692,7 +693,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Handle extended registers */
     if (((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) ==
-        CONTEXT_EXTENDED_REGISTERS) && (TrapFrame->SegCs & MODE_MASK))
+        CONTEXT_EXTENDED_REGISTERS) && KiUserTrap(TrapFrame))
     {
         /* Get the FX Save Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -712,7 +713,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Handle Floating Point */
     if (((Context->ContextFlags & CONTEXT_FLOATING_POINT) ==
-        CONTEXT_FLOATING_POINT) && (TrapFrame->SegCs & MODE_MASK))
+        CONTEXT_FLOATING_POINT) && KiUserTrap(TrapFrame))
     {
         /* Get the FX Save Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -898,7 +899,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     if (PreviousMode == KernelMode)
     {
         /* Check if this is a first-chance exception */
-        if (FirstChance == TRUE)
+        if (FirstChance != FALSE)
         {
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,
@@ -1045,6 +1046,13 @@ DispatchToUser:
                 }
             }
             _SEH2_END;
+
+            DPRINT("First chance exception in %.16s, ExceptionCode: %lx, ExceptionAddress: %p, P0: %lx, P1: %lx\n",
+                   PsGetCurrentProcess()->ImageFileName,
+                   ExceptionRecord->ExceptionCode,
+                   ExceptionRecord->ExceptionAddress,
+                   ExceptionRecord->ExceptionInformation[0],
+                   ExceptionRecord->ExceptionInformation[1]);
         }
 
         /* Try second chance */
@@ -1060,11 +1068,13 @@ DispatchToUser:
         }
 
         /* 3rd strike, kill the process */
-        DPRINT1("Kill %.16s, ExceptionCode: %lx, ExceptionAddress: %lx, BaseAddress: %lx\n",
+        DPRINT1("Kill %.16s, ExceptionCode: %lx, ExceptionAddress: %p, BaseAddress: %p, P0: %lx, P1: %lx\n",
                 PsGetCurrentProcess()->ImageFileName,
                 ExceptionRecord->ExceptionCode,
                 ExceptionRecord->ExceptionAddress,
-                PsGetCurrentProcess()->SectionBaseAddress);
+                PsGetCurrentProcess()->SectionBaseAddress,
+                ExceptionRecord->ExceptionInformation[0],
+                ExceptionRecord->ExceptionInformation[1]);
 
         ZwTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
@@ -1088,6 +1098,7 @@ DECLSPEC_NORETURN
 VOID
 NTAPI
 KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
+                                 IN ULONG Flags,
                                  IN ULONG_PTR Address,
                                  IN ULONG ParameterCount,
                                  IN ULONG_PTR Parameter1,
@@ -1099,7 +1110,7 @@ KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
 
     /* Build the exception record */
     ExceptionRecord.ExceptionCode = Code;
-    ExceptionRecord.ExceptionFlags = 0;
+    ExceptionRecord.ExceptionFlags = Flags;
     ExceptionRecord.ExceptionRecord = NULL;
     ExceptionRecord.ExceptionAddress = (PVOID)Address;
     ExceptionRecord.NumberParameters = ParameterCount;

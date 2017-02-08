@@ -10,17 +10,16 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
-
 /* FUNCTIONS ****************************************************************/
 
 #ifndef USE_GETLASTINPUTINFO
 static
 LRESULT
 CALLBACK
-KeyboardActivityProc(IN INT nCode,
-                     IN WPARAM wParam,
-                     IN LPARAM lParam)
+KeyboardActivityProc(
+    IN INT nCode,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     InterlockedExchange((LONG*)&WLSession->LastActivity, ((PKBDLLHOOKSTRUCT)lParam)->time);
     return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -30,9 +29,10 @@ KeyboardActivityProc(IN INT nCode,
 static
 LRESULT
 CALLBACK
-MouseActivityProc(IN INT nCode,
-                  IN WPARAM wParam,
-                  IN LPARAM lParam)
+MouseActivityProc(
+    IN INT nCode,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     InterlockedExchange((LONG*)&WLSession->LastActivity, ((PMSLLHOOKSTRUCT)lParam)->time);
     return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -42,7 +42,8 @@ MouseActivityProc(IN INT nCode,
 
 static
 VOID
-LoadScreenSaverParameters(OUT LPDWORD Timeout)
+LoadScreenSaverParameters(
+    OUT LPDWORD Timeout)
 {
     BOOL Enabled;
 
@@ -72,7 +73,8 @@ LoadScreenSaverParameters(OUT LPDWORD Timeout)
 static
 DWORD
 WINAPI
-ScreenSaverThreadMain(IN LPVOID lpParameter)
+ScreenSaverThreadMain(
+    IN LPVOID lpParameter)
 {
     PWLSESSION Session = (PWLSESSION)lpParameter;
     HANDLE HandleArray[3];
@@ -197,7 +199,8 @@ cleanup:
 
 
 BOOL
-InitializeScreenSaver(IN OUT PWLSESSION Session)
+InitializeScreenSaver(
+    IN OUT PWLSESSION Session)
 {
     HANDLE ScreenSaverThread;
 
@@ -249,7 +252,8 @@ InitializeScreenSaver(IN OUT PWLSESSION Session)
 
 
 VOID
-StartScreenSaver(IN PWLSESSION Session)
+StartScreenSaver(
+    IN PWLSESSION Session)
 {
     HKEY hKey = NULL, hCurrentUser = NULL;
     WCHAR szApplicationName[MAX_PATH];
@@ -273,7 +277,7 @@ StartScreenSaver(IN PWLSESSION Session)
                             &hCurrentUser);
     if (rc != ERROR_SUCCESS)
     {
-        ERR("WL: RegOpenCurrentUser Error!\n");
+        ERR("WL: RegOpenCurrentUser error %lu\n", rc);
         goto cleanup;
     }
 
@@ -284,7 +288,7 @@ StartScreenSaver(IN PWLSESSION Session)
                        &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        ERR("WL: RegOpenKeyEx Error!\n");
+        ERR("WL: RegOpenKeyEx error %lu\n", rc);
         goto cleanup;
     }
 
@@ -296,7 +300,8 @@ StartScreenSaver(IN PWLSESSION Session)
                           &bufferSize);
     if (rc != ERROR_SUCCESS || dwType != REG_SZ)
     {
-        ERR("WL: RegQueryValueEx Error!\n");
+        if (rc != ERROR_FILE_NOT_FOUND)
+            ERR("WL: RegQueryValueEx error %lu\n", rc);
         goto cleanup;
     }
 
@@ -343,6 +348,8 @@ StartScreenSaver(IN PWLSESSION Session)
 
     SystemParametersInfoW(SPI_SETSCREENSAVERRUNNING, TRUE, NULL, 0);
 
+    CallNotificationDlls(Session, StartScreenSaverHandler);
+
     /* Wait the end of the process or some other activity */
     ResetEvent(Session->hUserActivity);
     HandleArray[0] = ProcessInformation.hProcess;
@@ -357,6 +364,8 @@ StartScreenSaver(IN PWLSESSION Session)
     SetEvent(Session->hEndOfScreenSaver);
 
     CloseHandle(ProcessInformation.hProcess);
+
+    CallNotificationDlls(Session, StopScreenSaverHandler);
 
 cleanup:
     RevertToSelf();

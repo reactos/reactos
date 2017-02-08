@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep proxy
+#pragma makedep register
+
 #include "wincodec.idl"
 
 [
@@ -135,6 +138,13 @@ coclass WICUnknownMetadataReader { interface IWICMetadataReader; }
     uuid(8f914656-9d0a-4eb2-9019-0bf96d8a9ee6)
 ]
 coclass WICIfdMetadataReader { interface IWICIfdMetadataReader; }
+
+[
+    helpstring("WIC Png gAMA Metadata Reader"),
+    threading(both),
+    uuid(3692ca39-e082-4350-9e1f-3704cb083cd5)
+]
+coclass WICPngGamaMetadataReader { interface IWICMetadataReader; }
 
 [
     helpstring("WIC Png tEXt Metadata Reader"),

@@ -9,19 +9,26 @@
 /* INCLUDES *******************************************************************/
 
 #include "basesrv.h"
-#include "api.h"
+#include "vdm.h"
+
+#include <winreg.h>
 
 #define NDEBUG
 #include <debug.h>
 
+#include "api.h"
+
 /* GLOBALS ********************************************************************/
 
 HANDLE BaseSrvDllInstance = NULL;
+extern UNICODE_STRING BaseSrvKernel32DllPath;
 
 /* Memory */
 HANDLE BaseSrvHeap = NULL;          // Our own heap.
 HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectionHeap)
 PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
+
+PINIFILE_MAPPING BaseSrvIniFileMapping;
 
 // Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
 PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
@@ -30,32 +37,33 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_AP
     BaseSrvCreateThread,
     BaseSrvGetTempFile,
     BaseSrvExitProcess,
-    // BaseSrvDebugProcess,
-    // BaseSrvCheckVDM,
-    // BaseSrvUpdateVDMEntry,
-    // BaseSrvGetNextVDMCommand,
-    // BaseSrvExitVDM,
-    // BaseSrvIsFirstVDM,
-    // BaseSrvGetVDMExitCode,
-    // BaseSrvSetReenterCount,
+    BaseSrvDebugProcess,
+    BaseSrvCheckVDM,
+    BaseSrvUpdateVDMEntry,
+    BaseSrvGetNextVDMCommand,
+    BaseSrvExitVDM,
+    BaseSrvIsFirstVDM,
+    BaseSrvGetVDMExitCode,
+    BaseSrvSetReenterCount,
     BaseSrvSetProcessShutdownParam,
     BaseSrvGetProcessShutdownParam,
-    // BaseSrvNlsSetUserInfo,
-    // BaseSrvNlsSetMultipleUserInfo,
-    // BaseSrvNlsCreateSection,
-    // BaseSrvSetVDMCurDirs,
-    // BaseSrvGetVDMCurDirs,
-    // BaseSrvBatNotification,
-    // BaseSrvRegisterWowExec,
+    BaseSrvNlsSetUserInfo,
+    BaseSrvNlsSetMultipleUserInfo,
+    BaseSrvNlsCreateSection,
+    BaseSrvSetVDMCurDirs,
+    BaseSrvGetVDMCurDirs,
+    BaseSrvBatNotification,
+    BaseSrvRegisterWowExec,
     BaseSrvSoundSentryNotification,
-    // BaseSrvRefreshIniFileMapping,
+    BaseSrvRefreshIniFileMapping,
     BaseSrvDefineDosDevice,
-    // BaseSrvSetTermsrvAppInstallMode,
-    // BaseSrvNlsUpdateCacheCount,
-    // BaseSrvSetTermsrvClientTimeZone,
-    // BaseSrvSxsCreateActivationContext,
-    // BaseSrvRegisterThread,
-    // BaseSrvNlsGetUserInfo,
+    BaseSrvSetTermsrvAppInstallMode,
+    BaseSrvNlsUpdateCacheCount,
+    BaseSrvSetTermsrvClientTimeZone,
+    BaseSrvSxsCreateActivationContext,
+    BaseSrvDebugProcess,
+    BaseSrvRegisterThread,
+    BaseSrvNlsGetUserInfo,
 };
 
 BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
@@ -64,70 +72,98 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMB
     TRUE,   // BaseSrvCreateThread
     TRUE,   // BaseSrvGetTempFile
     FALSE,  // BaseSrvExitProcess
-    // FALSE,  // BaseSrvDebugProcess
-    // TRUE,   // BaseSrvCheckVDM
-    // TRUE,   // BaseSrvUpdateVDMEntry
-    // TRUE,   // BaseSrvGetNextVDMCommand
-    // TRUE,   // BaseSrvExitVDM
-    // TRUE,   // BaseSrvIsFirstVDM
-    // TRUE,   // BaseSrvGetVDMExitCode
-    // TRUE,   // BaseSrvSetReenterCount
+    FALSE,  // BaseSrvDebugProcess
+    TRUE,   // BaseSrvCheckVDM
+    TRUE,   // BaseSrvUpdateVDMEntry
+    TRUE,   // BaseSrvGetNextVDMCommand
+    TRUE,   // BaseSrvExitVDM
+    TRUE,   // BaseSrvIsFirstVDM
+    TRUE,   // BaseSrvGetVDMExitCode
+    TRUE,   // BaseSrvSetReenterCount
     TRUE,   // BaseSrvSetProcessShutdownParam
     TRUE,   // BaseSrvGetProcessShutdownParam
-    // TRUE,   // BaseSrvNlsSetUserInfo
-    // TRUE,   // BaseSrvNlsSetMultipleUserInfo
-    // TRUE,   // BaseSrvNlsCreateSection
-    // TRUE,   // BaseSrvSetVDMCurDirs
-    // TRUE,   // BaseSrvGetVDMCurDirs
-    // TRUE,   // BaseSrvBatNotification
-    // TRUE,   // BaseSrvRegisterWowExec
+    TRUE,   // BaseSrvNlsSetUserInfo
+    TRUE,   // BaseSrvNlsSetMultipleUserInfo
+    TRUE,   // BaseSrvNlsCreateSection
+    TRUE,   // BaseSrvSetVDMCurDirs
+    TRUE,   // BaseSrvGetVDMCurDirs
+    TRUE,   // BaseSrvBatNotification
+    TRUE,   // BaseSrvRegisterWowExec
     TRUE,   // BaseSrvSoundSentryNotification
-    // TRUE,   // BaseSrvRefreshIniFileMapping
+    TRUE,   // BaseSrvRefreshIniFileMapping
     TRUE,   // BaseSrvDefineDosDevice
-    // FALSE,  // BaseSrvSetTermsrvAppInstallMode
-    // FALSE,  // BaseSrvNlsUpdateCacheCount
-    // FALSE,  // BaseSrvSetTermsrvClientTimeZone
-    // FALSE,  // BaseSrvSxsCreateActivationContext
-    // FALSE,  // BaseSrvRegisterThread
-    // FALSE,  // BaseSrvNlsGetUserInfo
+    TRUE,   // BaseSrvSetTermsrvAppInstallMode
+    TRUE,   // BaseSrvNlsUpdateCacheCount
+    TRUE,   // BaseSrvSetTermsrvClientTimeZone
+    TRUE,   // BaseSrvSxsCreateActivationContext
+    FALSE,  // BaseSrvDebugProcess
+    TRUE,   // BaseSrvRegisterThread
+    TRUE,   // BaseSrvNlsGetUserInfo
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
 {
     "BaseCreateProcess",
     "BaseCreateThread",
     "BaseGetTempFile",
     "BaseExitProcess",
-    // "BaseDebugProcess",
-    // "BaseCheckVDM",
-    // "BaseUpdateVDMEntry",
-    // "BaseGetNextVDMCommand",
-    // "BaseExitVDM",
-    // "BaseIsFirstVDM",
-    // "BaseGetVDMExitCode",
-    // "BaseSetReenterCount",
+    "BaseDebugProcess",
+    "BaseCheckVDM",
+    "BaseUpdateVDMEntry",
+    "BaseGetNextVDMCommand",
+    "BaseExitVDM",
+    "BaseIsFirstVDM",
+    "BaseGetVDMExitCode",
+    "BaseSetReenterCount",
     "BaseSetProcessShutdownParam",
     "BaseGetProcessShutdownParam",
-    // "BaseNlsSetUserInfo",
-    // "BaseNlsSetMultipleUserInfo",
-    // "BaseNlsCreateSection",
-    // "BaseSetVDMCurDirs",
-    // "BaseGetVDMCurDirs",
-    // "BaseBatNotification",
-    // "BaseRegisterWowExec",
+    "BaseNlsSetUserInfo",
+    "BaseNlsSetMultipleUserInfo",
+    "BaseNlsCreateSection",
+    "BaseSetVDMCurDirs",
+    "BaseGetVDMCurDirs",
+    "BaseBatNotification",
+    "BaseRegisterWowExec",
     "BaseSoundSentryNotification",
-    // "BaseRefreshIniFileMapping",
+    "BaseRefreshIniFileMapping",
     "BaseDefineDosDevice",
-    // "BaseSetTermsrvAppInstallMode",
-    // "BaseNlsUpdateCacheCount",
-    // "BaseSetTermsrvClientTimeZone",
-    // "BaseSxsCreateActivationContext",
-    // "BaseRegisterThread",
-    // "BaseNlsGetUserInfo",
+    "BaseSetTermsrvAppInstallMode",
+    "BaseNlsUpdateCacheCount",
+    "BaseSetTermsrvClientTimeZone",
+    "BaseSxsCreateActivationContext",
+    "BaseSrvDebugProcessStop",
+    "BaseRegisterThread",
+    "BaseNlsGetUserInfo",
 };
-
+#endif
 
 /* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+NTAPI
+BaseSrvInitializeIniFileMappings(IN PBASE_STATIC_SERVER_DATA StaticServerData)
+{
+    /* Allocate the mapping blob */
+    BaseSrvIniFileMapping = RtlAllocateHeap(BaseSrvSharedHeap,
+                                            HEAP_ZERO_MEMORY,
+                                            sizeof(*BaseSrvIniFileMapping));
+    if (BaseSrvIniFileMapping == NULL)
+    {
+        DPRINT1("BASESRV: Unable to allocate memory in shared heap for IniFileMapping\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Set it*/
+    StaticServerData->IniFileMapping = BaseSrvIniFileMapping;
+
+    /* FIXME: Do the work to initialize the mappings */
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 NTAPI
@@ -254,6 +290,7 @@ NTAPI
 BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 {
     NTSTATUS Status;
+    BOOLEAN Success;
     WCHAR Buffer[MAX_PATH];
     PWCHAR HeapBuffer;
     UNICODE_STRING SystemRootString;
@@ -301,15 +338,21 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 
     /* Create the base directory */
     Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Status = RtlCreateUnicodeString(&BaseSrvWindowsDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
+    Success = RtlCreateUnicodeString(&BaseSrvWindowsDirectory,
+                                     SystemRootString.Buffer);
+    ASSERT(Success);
 
     /* Create the system directory */
     wcscat(SystemRootString.Buffer, L"\\System32");
-    Status = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
+    Success = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
+                                     SystemRootString.Buffer);
+    ASSERT(Success);
+
+    /* Create the kernel32 path */
+    wcscat(SystemRootString.Buffer, L"\\kernel32.dll");
+    Success = RtlCreateUnicodeString(&BaseSrvKernel32DllPath,
+                                     SystemRootString.Buffer);
+    ASSERT(Success);
 
     /* FIXME: Check Session ID */
     wcscpy(Buffer, L"\\BaseNamedObjects");
@@ -406,6 +449,10 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
                                       &BaseStaticServerData->SysInfo,
                                       sizeof(BaseStaticServerData->SysInfo),
                                       NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Setup the ini file mappings */
+    Status = BaseSrvInitializeIniFileMappings(BaseStaticServerData);
     ASSERT(NT_SUCCESS(Status));
 
     /* FIXME: Should query the registry for these */
@@ -516,8 +563,44 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
         ASSERT(NT_SUCCESS(Status));
     }
 
+    /* Initialize NLS */
+    BaseSrvNLSInit(BaseStaticServerData);
+
     /* Finally, set the pointer */
     LoadedServerDll->SharedSection = BaseStaticServerData;
+}
+
+NTSTATUS
+NTAPI
+BaseClientConnectRoutine(IN PCSR_PROCESS CsrProcess,
+                         IN OUT PVOID  ConnectionInfo,
+                         IN OUT PULONG ConnectionInfoLength)
+{
+    PBASESRV_API_CONNECTINFO ConnectInfo = (PBASESRV_API_CONNECTINFO)ConnectionInfo;
+
+    if ( ConnectionInfo       == NULL ||
+         ConnectionInfoLength == NULL ||
+        *ConnectionInfoLength != sizeof(*ConnectInfo) )
+    {
+        DPRINT1("BASESRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), expected %lu\n",
+                ConnectionInfo,
+                ConnectionInfoLength,
+                ConnectionInfoLength ? *ConnectionInfoLength : (ULONG)-1,
+                sizeof(*ConnectInfo));
+
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Do the NLS connection */
+    return BaseSrvNlsConnect(CsrProcess, ConnectionInfo, ConnectionInfoLength);
+}
+
+VOID
+NTAPI
+BaseClientDisconnectRoutine(IN PCSR_PROCESS CsrProcess)
+{
+    /* Cleanup VDM resources */
+    BaseSrvCleanupVDMResources(CsrProcess);
 }
 
 CSR_SERVER_DLL_INIT(ServerDllInitialization)
@@ -527,10 +610,12 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
     LoadedServerDll->HighestApiSupported = BasepMaxApiNumber;
     LoadedServerDll->DispatchTable = BaseServerApiDispatchTable;
     LoadedServerDll->ValidTable = BaseServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = BaseServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = 0;
-    LoadedServerDll->ConnectCallback = NULL;
-    LoadedServerDll->DisconnectCallback = NULL;
+    LoadedServerDll->ConnectCallback = BaseClientConnectRoutine;
+    LoadedServerDll->DisconnectCallback = BaseClientDisconnectRoutine;
     LoadedServerDll->ShutdownProcessCallback = NULL;
 
     BaseSrvDllInstance = LoadedServerDll->ServerHandle;
@@ -539,6 +624,9 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
 
     /* Initialize DOS devices management */
     BaseInitDefineDosDevice();
+
+    /* Initialize VDM support */
+    BaseInitializeVDM();
 
     /* All done */
     return STATUS_SUCCESS;

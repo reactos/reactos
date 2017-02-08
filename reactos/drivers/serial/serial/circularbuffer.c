@@ -9,6 +9,8 @@
 
 #include "serial.h"
 
+#include <debug.h>
+
 NTSTATUS
 InitializeCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer,

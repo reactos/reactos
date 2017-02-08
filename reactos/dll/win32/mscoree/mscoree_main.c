@@ -19,40 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-#include <wine/unicode.h>
-//#include "wine/library.h"
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "winnls.h"
-#include <winreg.h>
-#include <ole2.h>
-#include <ocidl.h>
-//#include "shellapi.h"
-
-#include <initguid.h>
-#include <msxml2.h>
-//#include "corerror.h"
-#include <cor.h>
-//#include "mscoree.h"
-//#include "corhdr.h"
-#include <cordebug.h>
-#include <metahost.h>
-//#include "fusion.h"
-#include <wine/list.h>
 #include "mscoree_private.h"
+
 #include <rpcproxy.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL( mscoree );
 
 static HINSTANCE MSCOREE_hInstance;
 

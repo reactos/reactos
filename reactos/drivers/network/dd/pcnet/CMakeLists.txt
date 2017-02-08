@@ -8,10 +8,10 @@ add_definitions(
 list(APPEND SOURCE
     pcnet.c
     requests.c
-    pcnet.rc)
+    pcnet.h)
 
-add_library(pcnet SHARED ${SOURCE})
-add_pch(pcnet pcnet.h)
+add_library(pcnet SHARED ${SOURCE} pcnet.rc)
+add_pch(pcnet pcnet.h SOURCE)
 set_module_type(pcnet kernelmodedriver)
 add_importlibs(pcnet ndis ntoskrnl hal)
 add_cd_file(TARGET pcnet DESTINATION reactos/system32/drivers FOR all)

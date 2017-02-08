@@ -25,12 +25,49 @@
  * UPDATE HISTORY:
  *      07/26/2005  Created
  */
+
 #include "ntmarta.h"
 
 #define NDEBUG
 #include <debug.h>
 
 HINSTANCE hDllInstance;
+
+/* FIXME: Vista+ API */
+VOID
+WINAPI
+SetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                      OUT LPDWORD DesiredAccess)
+{
+    *DesiredAccess = 0;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+        *DesiredAccess |= WRITE_OWNER;
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+        *DesiredAccess |= WRITE_DAC;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+}
+
+/* FIXME: Vista+ API */
+VOID
+WINAPI
+QuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                        OUT LPDWORD DesiredAccess)
+{
+    *DesiredAccess = 0;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION |
+                               GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
+    {
+        *DesiredAccess |= READ_CONTROL;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+}
 
 static ACCESS_MODE
 AccpGetAceAccessMode(IN PACE_HEADER AceHeader)
@@ -215,7 +252,7 @@ AccpGetTrusteeObjects(IN PTRUSTEE_W Trustee,
                 *pObjectTypeGuid = pOas->ObjectTypeGuid;
 
             if (pInheritedObjectTypeGuid != NULL && pOas->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT)
-                *pObjectTypeGuid = pOas->InheritedObjectTypeGuid;
+                *pInheritedObjectTypeGuid = pOas->InheritedObjectTypeGuid;
 
             Ret = pOas->ObjectsPresent;
             break;
@@ -476,11 +513,14 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
     *ppSid = NULL;
     *Allocated = FALSE;
 
+    /* Windows ignores this */
+#if 0
     if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
     {
         /* This is currently not supported */
         return ERROR_INVALID_PARAMETER;
     }
+#endif
 
     switch (Trustee->TrusteeForm)
     {
@@ -668,7 +708,7 @@ AccRewriteGetHandleRights(HANDLE handle,
 
         if (SecurityInfo & GROUP_SECURITY_INFORMATION && ppsidGroup != NULL)
         {
-            *ppsidOwner = NULL;
+            *ppsidGroup = NULL;
             if (!GetSecurityDescriptorGroup(pSD,
                                             ppsidGroup,
                                             &Defaulted))
@@ -887,7 +927,7 @@ AccpOpenNamedObject(LPWSTR pObjectName,
                                        NULL);
 
             Status = NtOpenFile(Handle,
-                                DesiredAccess,
+                                DesiredAccess | SYNCHRONIZE,
                                 &ObjectAttributes,
                                 &IoStatusBlock,
                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -1031,7 +1071,9 @@ ParseRegErr:
                                              (DWORD)DesiredAccess);
             if (*Handle2 == NULL)
             {
-                goto FailOpenService;
+                Ret = GetLastError();
+                ASSERT(Ret != ERROR_SUCCESS);
+                goto Cleanup;
             }
 
             DesiredAccess &= ~SC_MANAGER_CONNECT;
@@ -1040,13 +1082,11 @@ ParseRegErr:
                                           (DWORD)DesiredAccess);
             if (*Handle == NULL)
             {
-                if (*Handle2 != NULL)
-                {
-                    CloseServiceHandle((SC_HANDLE)(*Handle2));
-                }
-
-FailOpenService:
                 Ret = GetLastError();
+                ASSERT(Ret != ERROR_SUCCESS);
+                ASSERT(*Handle2 != NULL);
+                CloseServiceHandle((SC_HANDLE)(*Handle2));
+
                 goto Cleanup;
             }
             break;
@@ -1332,6 +1372,10 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
         if (needToClean)
             LocalFree((HLOCAL)pSid1);
     }
+
+    /* Succeed, if no ACL needs to be allocated */
+    if (SizeInformation.AclBytesInUse == 0)
+        goto Cleanup;
 
     /* OK, now create the new ACL */
     DPRINT("Allocating %u bytes for the new ACL\n", SizeInformation.AclBytesInUse);

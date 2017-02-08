@@ -53,7 +53,7 @@ typedef enum _EXCEPTION_DISPOSITION
     _Inout_ struct _DISPATCHER_CONTEXT *_DispatcherContext,
     _In_ unsigned __int64 _GlobalPointer);
 
-#elif defined(__x86_64)
+#elif defined(__x86_64) || defined(_M_ARM)
 
   struct _EXCEPTION_RECORD;
   struct _CONTEXT;

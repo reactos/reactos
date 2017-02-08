@@ -246,7 +246,7 @@ NtSetLowWaitHighEventPair 1
 NtSetQuotaInformationFile 4
 NtSetSecurityObject 3
 NtSetSystemEnvironmentValue 2
-NtSetSystemEnvironmentValueEx 2
+NtSetSystemEnvironmentValueEx 5
 NtSetSystemInformation 3
 NtSetSystemPowerState 3
 NtSetSystemTime 2

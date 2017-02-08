@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/process/job.c
+ * FILE:            dll/win32/kernel32/client/job.c
  * PURPOSE:         Job functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
@@ -11,6 +11,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+#include <winspool.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -38,7 +39,7 @@ CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
                  IN LPCWSTR lpName)
 {
     /* Create the NT object */
-    CreateNtObjectFromWin32Api(JobObject, JobObject, JOB, lpJobAttributes, lpName);
+    CreateNtObjectFromWin32Api(JobObject, JobObject, JOB_OBJECT, lpJobAttributes, lpName);
 }
 
 /*

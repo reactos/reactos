@@ -1,6 +1,9 @@
 [Version]
 Signature = "$ReactOS$"
 
+; Directories relative to the installation directory.
+; For specifying absolute directories, use the SystemPartitionFiles section,
+; or use names starting with \.
 [Directories]
 ; <directory_id> = <path>
 1 = "\"
@@ -13,14 +16,16 @@ Signature = "$ReactOS$"
 
 [DiskSpaceRequirements]
 ; Required free system partition disk space in MB
-FreeSysPartDiskSpace=350
+FreeSysPartDiskSpace=450
 
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
 nmidebug.sys=,,,,,,x,,,,,,4
+sacdrv.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
+vgafonts.cab=,,,,,,,,,,,,1
 bootvid.dll=,,,,,,,,,,,,2
 c_437.nls=,,,,,,,,,,,,2
 c_1252.nls=,,,,,,,,,,,,2
@@ -29,6 +34,7 @@ cdrom.sys=,,,,,,x,,,,,,4
 class2.sys=,,,,,,x,,,,,,4
 isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
+kdvbox.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
 i8042prt.sys=,,,,,,,,,,,,4
@@ -58,6 +64,12 @@ pcix.sys=,,,,,,,,,,,,4
 pcmcia.sys=,,,,,,,,,,,,4
 swenum.sys=,,,,,,,,,,,,4
 ntdll.dll=,,,,,,,,,,,,2
+wmilib.sys=,,,,,,,,,,,,4
+ksecdd.sys=,,,,,,,,,,,,4
+mountmgr.sys=,,,,,,x,,,,,,4
+btrfs.sys=,,,,,,x,,,,,,4
+
+[SystemPartitionFiles]
 
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp
@@ -85,6 +97,7 @@ GenDisk = disk
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt
+ROOT\SWENUM = swenum
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
@@ -131,57 +144,57 @@ DefaultLanguage  = 00000409
 
 [Computer]
 pci_up = "Standard PC Uniprocessor"
-pci_mp = "Standard PC Multiprocessor"
+;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
-acpi_mp = "ACPI PC Multiprocessor"
+;acpi_mp = "ACPI PC Multiprocessor"
 
 [Map.Computer]
 ;<id> = <pnp id string>
 pci_up = "PC UP"
-pci_mp = "PC MP"
+;pci_mp = "PC MP"
 acpi_up = "ACPI UP"
-acpi_mp = "ACPI MP"
+;acpi_mp = "ACPI MP"
 
 [Files.pci_up]
 ntoskrnl.exe=,,,,,,,,,,,,2
 hal.dll=,,,,,,,,,,,,2
 
-[Files.pci_mp]
-ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-halmps.dll=,,,,,,,,,,hal.dll,,2
+;[Files.pci_mp]
+;ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
+;halmps.dll=,,,,,,,,,,hal.dll,,2
 
 [Files.acpi_up]
 ntoskrnl.exe=,,,,,,,,,,,,2
 halacpi.dll=,,,,,,,,,,hal.dll,,2
 
-[Files.acpi_mp]
-ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-halacpi.dll=,,,,,,,,,,hal.dll,,2
+;[Files.acpi_mp]
+;ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
+;halacpi.dll=,,,,,,,,,,hal.dll,,2
 
 [Display]
-;<id> = <user friendly name>,<spare>,<service key name>,<hight>,<width>,<bpp>
-vga = "VGA Display (640x480x4)",,Vga,640,480,4
-vbe_640x480x8 = "VESA Display (640x480x8)",,VBE,640,480,8
-vbe_640x480x16 = "VESA Display (640x480x16)",,VBE,640,480,16
-vbe_640x480x24 = "VESA Display (640x480x24)",,VBE,640,480,24
-vbe_640x480x32 = "VESA Display (640x480x32)",,VBE,640,480,32
-vbe_800x600x8 = "VESA Display (800x600x8)",,VBE,800,600,8
-vbe = "VESA Display (800x600x16)",,VBE,800,600,16
-vbe_800x600x24 = "VESA Display (800x600x24)",,VBE,800,600,24
-vbe_800x600x32 = "VESA Display (800x600x32)",,VBE,800,600,32
-vbe_1024x768x8 = "VESA Display (1024x768x8)",,VBE,1024,768,8
-vbe_1024x768x16 = "VESA Display (1024x768x16)",,VBE,1024,768,16
-vbe_1024x768x24 = "VESA Display (1024x768x24)",,VBE,1024,768,24
-vbe_1024x768x32 = "VESA Display (1024x768x32)",,VBE,1024,768,32
-vbe_1152x864x8 = "VESA Display (1152x864x8)",,VBE,1152,864,8
-vbe_1152x864x16 = "VESA Display (1152x864x16)",,VBE,1152,864,16
-vbe_1152x864x24 = "VESA Display (1152x864x24)",,VBE,1152,864,24
-vbe_1152x864x32 = "VESA Display (1152x864x32)",,VBE,1152,864,32
-vbe_1280x1024x8 = "VESA Display (1280x1024x8)",,VBE,1280,1024,8
+;<id> = <user friendly name>,<spare>,<service key name>,<height>,<width>,<bpp>
+vga              = "VGA Display (640x480x4)",,Vga,640,480,4
+vbe_640x480x8    = "VESA Display (640x480x8)",,VBE,640,480,8
+vbe_640x480x16   = "VESA Display (640x480x16)",,VBE,640,480,16
+vbe_640x480x24   = "VESA Display (640x480x24)",,VBE,640,480,24
+vbe_640x480x32   = "VESA Display (640x480x32)",,VBE,640,480,32
+vbe_800x600x8    = "VESA Display (800x600x8)",,VBE,800,600,8
+vbe_800x600x16   = "VESA Display (800x600x16)",,VBE,800,600,16
+vbe_800x600x24   = "VESA Display (800x600x24)",,VBE,800,600,24
+vbe              = "VESA Display (800x600x32)",,VBE,800,600,32
+vbe_1024x768x8   = "VESA Display (1024x768x8)",,VBE,1024,768,8
+vbe_1024x768x16  = "VESA Display (1024x768x16)",,VBE,1024,768,16
+vbe_1024x768x24  = "VESA Display (1024x768x24)",,VBE,1024,768,24
+vbe_1024x768x32  = "VESA Display (1024x768x32)",,VBE,1024,768,32
+vbe_1152x864x8   = "VESA Display (1152x864x8)",,VBE,1152,864,8
+vbe_1152x864x16  = "VESA Display (1152x864x16)",,VBE,1152,864,16
+vbe_1152x864x24  = "VESA Display (1152x864x24)",,VBE,1152,864,24
+vbe_1152x864x32  = "VESA Display (1152x864x32)",,VBE,1152,864,32
+vbe_1280x1024x8  = "VESA Display (1280x1024x8)",,VBE,1280,1024,8
 vbe_1280x1024x16 = "VESA Display (1280x1024x16)",,VBE,1280,1024,16
 vbe_1280x1024x24 = "VESA Display (1280x1024x24)",,VBE,1280,1024,24
 vbe_1280x1024x32 = "VESA Display (1280x1024x32)",,VBE,1280,1024,32
-vbe_1600x1200x8 = "VESA Display (1600x1200x8)",,VBE,1600,1200,8
+vbe_1600x1200x8  = "VESA Display (1600x1200x8)",,VBE,1600,1200,8
 vbe_1600x1200x16 = "VESA Display (1600x1200x16)",,VBE,1600,1200,16
 vbe_1600x1200x24 = "VESA Display (1600x1200x24)",,VBE,1600,1200,24
 vbe_1600x1200x32 = "VESA Display (1600x1200x32)",,VBE,1600,1200,32
@@ -218,7 +231,8 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000042C = "Azeri (Latin)"
 0000042D = "Basque"
 00000423 = "Belarusian"
-;00000445 = "Bengali"
+00000845 = "Bengali (Bangladesh)"
+00000445 = "Bengali (India)"
 00000402 = "Bulgarian"
 ;00000455 = "Burmese"
 00000403 = "Catalan"
@@ -283,7 +297,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000427 = "Lithuanian"
 0000042F = "FYRO Macedonian"
 ;0000083E = "Malay (Brunei Darussalam)"
-;0000043E = "Malay (Malaysia)"
+0000043E = "Malay (Malaysia)"
 ;0000044E = "Marathi"
 ;00000450 = "Mongolian (Mongolia)"
 00000414 = "Norwegian (Bokmal)"
@@ -506,9 +520,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000455 = kbdbur.dll
 
 [HiveInfs.Install]
-AddReg=hivecls.inf,AddReg
-AddReg=hivedef.inf,AddReg
-AddReg=hivesft.inf,AddReg
-AddReg=hivesys.inf,AddReg
+AddReg=registry.inf,AddReg
 
 ; EOF

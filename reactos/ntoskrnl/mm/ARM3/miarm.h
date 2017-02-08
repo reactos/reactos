@@ -6,54 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#ifndef _M_AMD64
-
-#define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING   ((255 * _1MB) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_TUNING          ((19 * _1MB) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_BOOST           ((32 * _1MB) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_BOOST_BOOST     ((256 * _1MB) >> PAGE_SHIFT)
-#define MI_MAX_INIT_NONPAGED_POOL_SIZE          (128 * _1MB)
-#define MI_MAX_NONPAGED_POOL_SIZE               (128 * _1MB)
-#define MI_MAX_FREE_PAGE_LISTS                  4
-
-#define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
-
-#define MI_SESSION_VIEW_SIZE                    (20 * _1MB)
-#define MI_SESSION_POOL_SIZE                    (16 * _1MB)
-#define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
-#define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
-#define MI_SESSION_SIZE                         (MI_SESSION_VIEW_SIZE + \
-                                                 MI_SESSION_POOL_SIZE + \
-                                                 MI_SESSION_IMAGE_SIZE + \
-                                                 MI_SESSION_WORKING_SET_SIZE)
-
-#define MI_SYSTEM_VIEW_SIZE                     (32 * _1MB)
-
-#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
-#define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
-#define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
-#define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
-#define MI_PAGED_POOL_START                     (PVOID)0xE1000000
-#define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
-#define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
-
-#define MI_SYSTEM_PTE_BASE                      (PVOID)MiAddressToPte(NULL)
-
-#define MI_MIN_SECONDARY_COLORS                 8
-#define MI_SECONDARY_COLORS                     64
-#define MI_MAX_SECONDARY_COLORS                 1024
-
-#define MI_MIN_ALLOCATION_FRAGMENT              (4 * _1KB)
-#define MI_ALLOCATION_FRAGMENT                  (64 * _1KB)
-#define MI_MAX_ALLOCATION_FRAGMENT              (2  * _1MB)
-
-#define MM_HIGHEST_VAD_ADDRESS \
-    (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
-
-#define MI_DEFAULT_SYSTEM_PTE_COUNT             50000
-
-#endif /* !_M_AMD64 */
 
 /* Make the code cleaner with some definitions for size multiples */
 #define _1KB (1024u)
@@ -72,30 +25,21 @@
 /* Size of a page directory */
 #define PD_SIZE  (PDE_COUNT * sizeof(MMPDE))
 
-/* Size of all page directories for a process */
-#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
-
-/* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
-#ifdef _M_IX86
-#define PD_COUNT  1
-#define PDE_COUNT 1024
-#define PTE_COUNT 1024
-C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
-#define MiIsPteOnPdeBoundary(PointerPte) \
-    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
-#elif _M_ARM
-#define PD_COUNT  1
-#define PDE_COUNT 4096
-#define PTE_COUNT 256
-#else
+/* Stop using these! */
 #define PD_COUNT  PPE_PER_PAGE
 #define PDE_COUNT PDE_PER_PAGE
 #define PTE_COUNT PTE_PER_PAGE
+
+/* Size of all page directories for a process */
+#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+#ifdef _M_IX86
+C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 //
 // Protection Bits part of the internal memory manager Protection Mask, from:
 // http://reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
+// https://www.reactos.org/wiki/Techwiki:Memory_Protection_constants
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
@@ -106,9 +50,22 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MM_WRITECOPY           5
 #define MM_EXECUTE_READWRITE   6
 #define MM_EXECUTE_WRITECOPY   7
-#define MM_NOCACHE             8
-#define MM_DECOMMIT            0x10
-#define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+#define MM_PROTECT_ACCESS      7
+
+//
+// These are flags on top of the actual protection mask
+//
+#define MM_NOCACHE            0x08
+#define MM_GUARDPAGE          0x10
+#define MM_WRITECOMBINE       0x18
+#define MM_PROTECT_SPECIAL    0x18
+
+//
+// These are special cases
+//
+#define MM_DECOMMIT           (MM_ZERO_ACCESS | MM_GUARDPAGE)
+#define MM_NOACCESS           (MM_ZERO_ACCESS | MM_WRITECOMBINE)
+#define MM_OUTSWAPPED_KSTACK  (MM_EXECUTE_WRITECOPY | MM_WRITECOMBINE)
 #define MM_INVALID_PROTECTION  0xFFFFFFFF
 
 //
@@ -194,19 +151,6 @@ extern const ULONG MmProtectToValue[32];
     (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
 
 //
-// Corresponds to MMPTE_SOFTWARE.Protection
-//
-#ifdef _M_IX86
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
-#elif _M_ARM
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   6
-#elif _M_AMD64
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
-#else
-#error Define these please!
-#endif
-
-//
 // Creates a software PTE with the given protection
 //
 #define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
@@ -220,8 +164,13 @@ extern const ULONG MmProtectToValue[32];
 //
 // Special values for LoadedImports
 //
+#ifdef _WIN64
+#define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFFFFFFFFFEULL
+#define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFFFFFFFFFFULL
+#else
 #define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFE
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
+#endif
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
 //
@@ -260,45 +209,13 @@ extern const ULONG MmProtectToValue[32];
 #define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
-#ifndef _M_AMD64
-//
-// Decodes a Prototype PTE into the underlying PTE
-//
-#define MiProtoPteToPte(x)                  \
-    (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             (((x)->u.Proto.ProtoAddressHigh << 9) | (x)->u.Proto.ProtoAddressLow << 2))
-
-//
-// Decodes a Prototype PTE into the underlying PTE
-//
-#define MiSubsectionPteToSubsection(x)                              \
-    ((x)->u.Subsect.WhichPool == PagedPool) ?                       \
-        (PMMPTE)((ULONG_PTR)MmSubsectionBase +                      \
-                 (((x)->u.Subsect.SubsectionAddressHigh << 7) |     \
-                   (x)->u.Subsect.SubsectionAddressLow << 3)) :     \
-        (PMMPTE)((ULONG_PTR)MmNonPagedPoolEnd -                     \
-                (((x)->u.Subsect.SubsectionAddressHigh << 7) |      \
-                  (x)->u.Subsect.SubsectionAddressLow << 3))
-#endif
-
 //
 // Prototype PTEs that don't yet have a pagefile association
 //
-#ifdef _M_AMD64
+#ifdef _WIN64
 #define MI_PTE_LOOKUP_NEEDED 0xffffffffULL
 #else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
-#endif
-
-//
-// Number of session lists in the MM_SESSIONS_SPACE structure
-//
-#if defined(_M_AMD64)
-#define SESSION_POOL_LOOKASIDES 21
-#elif defined(_M_IX86)
-#define SESSION_POOL_LOOKASIDES 26
-#else
-#error Not Defined!
 #endif
 
 //
@@ -323,7 +240,7 @@ extern const ULONG MmProtectToValue[32];
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //
-#ifdef _M_AMD64
+#ifdef _WIN64
 #define POOL_BLOCK_SIZE 16
 #else
 #define POOL_BLOCK_SIZE  8
@@ -389,7 +306,7 @@ typedef struct _POOL_HEADER
     {
         struct
         {
-#ifdef _M_AMD64
+#ifdef _WIN64
             USHORT PreviousSize:8;
             USHORT PoolIndex:8;
             USHORT BlockSize:8;
@@ -403,12 +320,12 @@ typedef struct _POOL_HEADER
         };
         ULONG Ulong1;
     };
-#ifdef _M_AMD64
+#ifdef _WIN64
     ULONG PoolTag;
 #endif
     union
     {
-#ifdef _M_AMD64
+#ifdef _WIN64
         PEPROCESS ProcessBilled;
 #else
         ULONG PoolTag;
@@ -542,7 +459,7 @@ typedef struct _MM_SESSION_SPACE
     SIZE_T CommittedPages;
     PVOID PagedPoolStart;
     PVOID PagedPoolEnd;
-    PMMPTE PagedPoolBasePde;
+    PMMPDE PagedPoolBasePde;
     ULONG Color;
     LONG ResidentProcessCount;
     ULONG SessionPoolAllocationFailures[4];
@@ -562,9 +479,9 @@ typedef struct _MM_SESSION_SPACE
     PDRIVER_UNLOAD Win32KDriverUnload;
     POOL_DESCRIPTOR PagedPool;
 #if defined (_M_AMD64)
-    MMPTE PageDirectory;
+    MMPDE PageDirectory;
 #else
-    PMMPTE PageTables;
+    PMMPDE PageTables;
 #endif
 #if defined (_M_AMD64)
     PMMPTE SpecialPoolFirstPte;
@@ -680,11 +597,13 @@ extern PFN_NUMBER MiLowNonPagedPoolThreshold;
 extern PFN_NUMBER MiHighNonPagedPoolThreshold;
 extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
+extern SIZE_T MmMinimumStackCommitInBytes;
 extern PFN_COUNT MiExpansionPoolPagesInitialCharge;
 extern PFN_NUMBER MmResidentAvailablePages;
 extern PFN_NUMBER MmResidentAvailableAtInit;
 extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 extern PFN_NUMBER MmTotalSystemDriverPages;
+extern ULONG MmCritsectTimeoutSeconds;
 extern PVOID MiSessionImageStart;
 extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
@@ -714,9 +633,12 @@ extern PVOID MmHighSectionBase;
 extern SIZE_T MmSystemLockPagesCount;
 extern ULONG_PTR MmSubsectionBase;
 extern LARGE_INTEGER MmCriticalSectionTimeout;
+extern LIST_ENTRY MmWorkingSetExpansionHead;
+extern KSPIN_LOCK MmExpansionLock;
+extern PETHREAD MiExpansionLockOwner;
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFree) ||
@@ -725,8 +647,8 @@ MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderOsloaderStack));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFirmwarePermanent) ||
@@ -736,44 +658,44 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
 }
 
 #ifdef _M_AMD64
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPxe(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPpe(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPde(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPte(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
 }
 #else
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPde(PVOID Address)
 {
     return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
             (Address <= (PVOID)MiHighestUserPde));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPte(PVOID Address)
 {
     return (Address <= (PVOID)MiHighestUserPte);
@@ -783,8 +705,8 @@ MiIsUserPte(PVOID Address)
 //
 // Figures out the hardware bits for a PTE
 //
-ULONG_PTR
 FORCEINLINE
+ULONG_PTR
 MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
@@ -870,9 +792,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     ASSERT(MappingPte <= MiHighestUserPte);
 
     /* Start fresh */
-    *NewPte = ValidKernelPte;
+    NewPte->u.Long = 0;
 
     /* Set the protection and page */
+    NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -947,6 +870,14 @@ MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
     NewPte->u.Subsect.SubsectionAddressHigh = (Offset & 0xFFFFF80) >> 7;
 }
 
+FORCEINLINE
+BOOLEAN
+MI_IS_MAPPED_PTE(PMMPTE PointerPte)
+{
+    /// \todo Make this reasonable code, this is UGLY!
+    return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
+}
+
 #endif
 
 //
@@ -967,8 +898,8 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 //
 // Writes a valid PTE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
                    IN MMPTE TempPte)
 {
@@ -979,23 +910,51 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
 }
 
 //
+// Updates a valid PTE
+//
+FORCEINLINE
+VOID
+MI_UPDATE_VALID_PTE(IN PMMPTE PointerPte,
+                   IN MMPTE TempPte)
+{
+    /* Write the valid PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 1);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
+    *PointerPte = TempPte;
+}
+
+//
 // Writes an invalid PTE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
                      IN MMPTE InvalidPte)
 {
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
+    ASSERT(InvalidPte.u.Long != 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Erase the PTE completely
+//
+FORCEINLINE
+VOID
+MI_ERASE_PTE(IN PMMPTE PointerPte)
+{
+    /* Zero out the PTE */
+    ASSERT(PointerPte->u.Long != 0);
+    PointerPte->u.Long = 0;
 }
 
 //
 // Writes a valid PDE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
                    IN MMPDE TempPde)
 {
@@ -1008,13 +967,14 @@ MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
 //
 // Writes an invalid PDE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
                      IN MMPDE InvalidPde)
 {
     /* Write the invalid PDE */
     ASSERT(InvalidPde.u.Hard.Valid == 0);
+    ASSERT(InvalidPde.u.Long != 0);
     *PointerPde = InvalidPde;
 }
 
@@ -1044,11 +1004,11 @@ MI_WS_OWNER(IN PEPROCESS Process)
     /* Check if this process is the owner, and that the thread owns the WS */
     if (PsGetCurrentThread()->OwnsProcessWorkingSetExclusive == 0)
     {
-        DPRINT1("Thread: %p is not an owner\n", PsGetCurrentThread());
+        DPRINT("Thread: %p is not an owner\n", PsGetCurrentThread());
     }
     if (KeGetCurrentThread()->ApcState.Process != &Process->Pcb)
     {
-        DPRINT1("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
+        DPRINT("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
     }
     return ((KeGetCurrentThread()->ApcState.Process == &Process->Pcb) &&
             ((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||
@@ -1058,8 +1018,8 @@ MI_WS_OWNER(IN PEPROCESS Process)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsRosSectionObject(IN PVOID Section)
 {
     PROS_SECTION_OBJECT RosSection = Section;
@@ -1067,23 +1027,7 @@ MiIsRosSectionObject(IN PVOID Section)
     return FALSE;
 }
 
-#ifdef _WIN64
-// HACK ON TOP OF HACK ALERT!!!
-#define MI_GET_ROS_DATA(x) \
-    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
-                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
-#else
-#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
-#endif
-#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
-#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
-typedef struct _MMROSPFN
-{
-    PMM_RMAP_ENTRY RmapListHead;
-    SWAPENTRY SwapEntry;
-} MMROSPFN, *PMMROSPFN;
-
-#define RosMmData            AweReferenceCount
+#define MI_IS_ROS_PFN(x)     ((x)->u4.AweAllocation == TRUE)
 
 VOID
 NTAPI
@@ -1187,6 +1131,30 @@ MiUnlockProcessWorkingSet(IN PEPROCESS Process,
 
     /* Release the lock and re-enable APCs */
     ExReleasePushLockExclusive(&Process->Vm.WorkingSetMutex);
+    KeLeaveGuardedRegion();
+}
+
+//
+// Unlocks the working set for the given process
+//
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSetShared(IN PEPROCESS Process,
+                                IN PETHREAD Thread)
+{
+    /* Make sure we are the owner of a safe acquisition (because shared) */
+    ASSERT(MI_WS_OWNER(Process));
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+
+    /* Ensure we are in a shared acquisition */
+    ASSERT(Thread->OwnsProcessWorkingSetShared == TRUE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* Don't claim the lock anylonger */
+    Thread->OwnsProcessWorkingSetShared = FALSE;
+
+    /* Release the lock and re-enable APCs */
+    ExReleasePushLockShared(&Process->Vm.WorkingSetMutex);
     KeLeaveGuardedRegion();
 }
 
@@ -1305,8 +1273,8 @@ FORCEINLINE
 VOID
 MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
                                   IN PETHREAD Thread,
-                                  IN BOOLEAN Safe,
-                                  IN BOOLEAN Shared)
+                                  OUT PBOOLEAN Safe,
+                                  OUT PBOOLEAN Shared)
 {
     ASSERT(MI_WS_OWNER(Process));
 
@@ -1315,22 +1283,22 @@ MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
     {
         /* Release unsafely */
         MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-        Safe = FALSE;
-        Shared = FALSE;
+        *Safe = FALSE;
+        *Shared = FALSE;
     }
     else if (Thread->OwnsProcessWorkingSetExclusive == 1)
     {
         /* Owner is safe and exclusive, release normally */
         MiUnlockProcessWorkingSet(Process, Thread);
-        Safe = TRUE;
-        Shared = FALSE;
+        *Safe = TRUE;
+        *Shared = FALSE;
     }
     else
     {
         /* Owner is shared (implies safe), release normally */
-        ASSERT(FALSE);
-        Safe = TRUE;
-        Shared = TRUE;
+        MiUnlockProcessWorkingSetShared(Process, Thread);
+        *Safe = TRUE;
+        *Shared = TRUE;
     }
 }
 
@@ -1341,19 +1309,50 @@ MiLockProcessWorkingSetForFault(IN PEPROCESS Process,
                                 IN BOOLEAN Safe,
                                 IN BOOLEAN Shared)
 {
-    ASSERT(Shared == FALSE);
-
     /* Check if this was a safe lock or not */
     if (Safe)
     {
-        /* Reacquire safely */
-        MiLockProcessWorkingSet(Process, Thread);
+        if (Shared)
+        {
+            /* Reacquire safely & shared */
+            MiLockProcessWorkingSetShared(Process, Thread);
+        }
+        else
+        {
+            /* Reacquire safely */
+            MiLockProcessWorkingSet(Process, Thread);
+        }
     }
     else
     {
+        /* Unsafe lock cannot be shared */
+        ASSERT(Shared == FALSE);
         /* Reacquire unsafely */
         MiLockProcessWorkingSetUnsafe(Process, Thread);
     }
+}
+
+FORCEINLINE
+KIRQL
+MiAcquireExpansionLock(VOID)
+{
+    KIRQL OldIrql;
+
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    KeAcquireSpinLock(&MmExpansionLock, &OldIrql);
+    ASSERT(MiExpansionLockOwner == NULL);
+    MiExpansionLockOwner = PsGetCurrentThread();
+    return OldIrql;
+}
+
+FORCEINLINE
+VOID
+MiReleaseExpansionLock(KIRQL OldIrql)
+{
+    ASSERT(MiExpansionLockOwner == PsGetCurrentThread());
+    MiExpansionLockOwner = NULL;
+    KeReleaseSpinLock(&MmExpansionLock, OldIrql);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 }
 
 //
@@ -1698,6 +1697,12 @@ MiInitializePfnDatabase(
 
 VOID
 NTAPI
+MiInitializeSessionWsSupport(
+    VOID
+);
+
+VOID
+NTAPI
 MiInitializeSessionIds(
     VOID
 );
@@ -1895,13 +1900,6 @@ MiUnlinkPageFromList(
     IN PMMPFN Pfn
 );
 
-PFN_NUMBER
-NTAPI
-MiAllocatePfn(
-    IN PMMPTE PointerPte,
-    IN ULONG Protection
-);
-
 VOID
 NTAPI
 MiInitializePfn(
@@ -1914,7 +1912,7 @@ NTSTATUS
 NTAPI
 MiInitializeAndChargePfn(
     OUT PPFN_NUMBER PageFrameIndex,
-    IN PMMPTE PointerPde,
+    IN PMMPDE PointerPde,
     IN PFN_NUMBER ContainingPageFrame,
     IN BOOLEAN SessionAllocation
 );
@@ -1931,7 +1929,7 @@ VOID
 NTAPI
 MiInitializePfnForOtherProcess(
     IN PFN_NUMBER PageFrameIndex,
-    IN PMMPTE PointerPte,
+    IN PVOID PteAddress,
     IN PFN_NUMBER PteFrame
 );
 
@@ -2017,12 +2015,13 @@ MiLocateAddress(
     IN PVOID VirtualAddress
 );
 
-PMMADDRESS_NODE
+TABLE_SEARCH_RESULT
 NTAPI
 MiCheckForConflictingNode(
     IN ULONG_PTR StartVpn,
     IN ULONG_PTR EndVpn,
-    IN PMM_AVL_TABLE Table
+    IN PMM_AVL_TABLE Table,
+    OUT PMMADDRESS_NODE *NodeOrParent
 );
 
 TABLE_SEARCH_RESULT
@@ -2046,7 +2045,7 @@ MiFindEmptyAddressRangeDownBasedTree(
     OUT PULONG_PTR Base
 );
 
-NTSTATUS
+TABLE_SEARCH_RESULT
 NTAPI
 MiFindEmptyAddressRangeInTree(
     IN SIZE_T Length,
@@ -2065,12 +2064,15 @@ MiCheckSecuredVad(
     IN ULONG ProtectionMask
 );
 
-VOID
+NTSTATUS
 NTAPI
-MiInsertVad(
-    IN PMMVAD Vad,
-    IN PEPROCESS Process
-);
+MiInsertVadEx(
+    _Inout_ PMMVAD Vad,
+    _In_ ULONG_PTR *BaseAddress,
+    _In_ SIZE_T ViewSize,
+    _In_ ULONG_PTR HighestAddress,
+    _In_ ULONG_PTR Alignment,
+    _In_ ULONG AllocationType);
 
 VOID
 NTAPI
@@ -2195,6 +2197,12 @@ MiLocateSubsection(
     IN ULONG_PTR Vpn
 );
 
+VOID
+NTAPI
+MiDeleteARM3Section(
+    PVOID ObjectBody
+);
+
 NTSTATUS
 NTAPI
 MiQueryMemorySectionName(
@@ -2220,7 +2228,7 @@ MmDeterminePoolType(
 VOID
 NTAPI
 MiMakePdeExistAndMakeValid(
-    IN PMMPTE PointerPde,
+    IN PMMPDE PointerPde,
     IN PEPROCESS TargetProcess,
     IN KIRQL OldIrql
 );
@@ -2232,8 +2240,8 @@ MiMakePdeExistAndMakeValid(
 // then we'd like to have our own code to grab a free page and zero it out, by
 // using MiRemoveAnyPage. This macro implements this.
 //
-PFN_NUMBER
 FORCEINLINE
+PFN_NUMBER
 MiRemoveZeroPageSafe(IN ULONG Color)
 {
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);

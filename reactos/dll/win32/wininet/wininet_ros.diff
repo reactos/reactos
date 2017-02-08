@@ -1,246 +1,42 @@
---- wine-1.5.4/dlls/wininet/internet.h	2012-06-20 14:38:39 +0200
-+++ dll/win32/wininet/internet.h	2012-06-23 17:25:14 +0200
-@@ -536,7 +536,30 @@ BOOL NETCON_is_alive(netconn_t*) DECLSPE
- LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
- int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
- DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value) DECLSPEC_HIDDEN;
-+#ifndef __REACTOS__
- int sock_get_error(int) DECLSPEC_HIDDEN;
-+#else
-+#define sock_get_error(x) WSAGetLastError()
-+const char *inet_ntop(int, const void *, char *, socklen_t);
-+
-+static inline long unix_recv(int socket, void *buffer, size_t length, int flags)
-+{
-+    return recv(socket, buffer, length, flags);
-+}
-+#define recv unix_recv
-+
-+static inline int unix_ioctl(int filedes, long request, void *arg)
-+{
-+    return ioctlsocket(filedes, request, arg);
-+}
-+#define ioctlsocket unix_ioctl
-+
-+static inline int unix_getsockopt(int socket, int level, int option_name, void *option_value, socklen_t *option_len)
-+{
-+    return getsockopt(socket, level, option_name, option_value, option_len);
-+}
-+#define getsockopt unix_getsockopt
-+#endif
+diff -pudN e:\wine\dlls\wininet/http.c e:\reactos\dll\win32\wininet/http.c
+--- e:\wine\dlls\wininet/http.c	2015-07-14 15:44:36.040192300 +0100
++++ e:\reactos\dll\win32\wininet/http.c	2015-07-20 14:37:24.319646400 +0100
+@@ -143,6 +118,7 @@ static const WCHAR emptyW[] = {0};
  
- extern void URLCacheContainers_CreateDefaults(void) DECLSPEC_HIDDEN;
- extern void URLCacheContainers_DeleteAll(void) DECLSPEC_HIDDEN;
---- wine-1.5.4/dlls/wininet/netconnection.c	2012-06-20 14:38:39 +0200
-+++ dll/win32/wininet/netconnection.c	2012-06-20 15:50:06 +0200
-@@ -523,12 +523,16 @@ DWORD create_netconn(BOOL useSSL, server
-         if(result == -1)
-         {
-             if (sock_get_error(errno) == WSAEINPROGRESS) {
--                struct pollfd pfd;
-+                // ReactOS: use select instead of poll
-+                fd_set outfd;
-+                struct timeval tv;
-                 int res;
+ #define COLLECT_TIME 60000
  
--                pfd.fd = netconn->socketFD;
--                pfd.events = POLLOUT;
--                res = poll(&pfd, 1, timeout);
-+                FD_ZERO(&outfd);
-+                FD_SET(netconn->socketFD, &outfd);
-+                tv.tv_sec = timeout / 1000;
-+                tv.tv_usec = (timeout % 1000) * 1000;
-+                res = select(0, NULL, &outfd, NULL, &tv);
-                 if (!res)
-                 {
-                     closesocket(netconn->socketFD);
-@@ -612,6 +616,7 @@ void NETCON_unload(void)
- #endif
- }
++#undef ARRAYSIZE
+ #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
  
-+#ifndef __REACTOS__
- /* translate a unix error code into a winsock one */
- int sock_get_error( int err )
- {
-@@ -678,6 +683,7 @@ int sock_get_error( int err )
- #endif
-     return err;
- }
-+#endif
- 
- /******************************************************************************
-  * NETCON_secure_connect
---- wine-1.5.4/dlls/wininet/internet.c	2012-06-20 14:38:38 +0200
-+++ dll/win32/wininet/internet.c	2012-06-23 17:45:14 +0200
-@@ -292,7 +292,9 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL,
-             if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
-                 return FALSE;
- 
-+#ifndef __REACTOS__
-             URLCacheContainers_CreateDefaults();
-+#endif
- 
-             WININET_hModule = hinstDLL;
-             break;
-@@ -745,6 +747,9 @@ static VOID APPINFO_Destroy(object_heade
-     heap_free(lpwai->proxyBypass);
-     heap_free(lpwai->proxyUsername);
-     heap_free(lpwai->proxyPassword);
-+#ifdef __REACTOS__
-+    WSACleanup();
-+#endif
- }
- 
- static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
-@@ -906,6 +911,11 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR l
-     LPCWSTR lpszProxy, LPCWSTR lpszProxyBypass, DWORD dwFlags)
- {
-     appinfo_t *lpwai = NULL;
-+#ifdef __REACTOS__
-+    WSADATA wsaData;
-+    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
-+    if (error) ERR("WSAStartup failed: %d\n", error);
-+#endif
- 
-     if (TRACE_ON(wininet)) {
- #define FE(x) { x, #x }
-@@ -3716,19 +3726,23 @@ LPSTR INTERNET_GetResponseBuffer(void)
- 
- LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
- {
--    struct pollfd pfd;
-+    // ReactOS: use select instead of poll
-+    fd_set infd;
-+    struct timeval tv;
-     BOOL bSuccess = FALSE;
-     INT nRecv = 0;
-     LPSTR lpszBuffer = INTERNET_GetResponseBuffer();
- 
-     TRACE("\n");
- 
--    pfd.fd = nSocket;
--    pfd.events = POLLIN;
-+    FD_ZERO(&infd);
-+    FD_SET(nSocket,&infd);
-+    tv.tv_sec = RESPONSE_TIMEOUT;
-+    tv.tv_usec = 0;
- 
-     while (nRecv < MAX_REPLY_LEN)
-     {
--        if (poll(&pfd,1, RESPONSE_TIMEOUT * 1000) > 0)
-+        if (select(0, &infd, NULL, NULL, &tv) > 0)
-         {
-             if (recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
-             {
---- wine-1.5.4/dlls/wininet/urlcache.c	2012-06-20 14:30:41 +0200
-+++ dll/win32/wininet/urlcache.c	2012-06-20 15:50:06 +0200
-@@ -189,6 +189,8 @@ typedef struct _URLCACHECONTAINER
- 
- /* List of all containers available */
- static struct list UrlContainers = LIST_INIT(UrlContainers);
-+// ReactOS r54992
-+BOOL bDefaultContainersAdded = FALSE;
- 
- static DWORD URLCache_CreateHashTable(LPURLCACHE_HEADER pHeader, HASH_CACHEFILE_ENTRY *pPrevHash, HASH_CACHEFILE_ENTRY **ppHash);
- 
-@@ -538,6 +540,8 @@ void URLCacheContainers_CreateDefaults(v
-     static const WCHAR HistoryPrefix[] = {'V','i','s','i','t','e','d',':',0};
-     static const WCHAR CookieSuffix[] = {0};
-     static const WCHAR CookiePrefix[] = {'C','o','o','k','i','e',':',0};
-+    // ReactOS r50916
-+    static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
-     static const struct
-     {
-         int nFolder; /* CSIDL_* constant */
-@@ -551,6 +555,13 @@ void URLCacheContainers_CreateDefaults(v
-     };
-     DWORD i;
- 
-+    // ReactOS r50916
-+    if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
-+    {
-+        TRACE("Environment variable 'USERPROFILE' does not exist!\n");
-+        return;
-+    }
-+
-     for (i = 0; i < sizeof(DefaultContainerData) / sizeof(DefaultContainerData[0]); i++)
-     {
-         WCHAR wszCachePath[MAX_PATH];
-@@ -604,6 +615,10 @@ static DWORD URLCacheContainers_FindCont
-     if(!lpwszUrl)
-         return ERROR_INVALID_PARAMETER;
- 
-+    // ReactOS r54992
-+    if (!bDefaultContainersAdded)
-+        URLCacheContainers_CreateDefaults();
-+
-     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
-     {
-         int prefix_len = strlenW(pContainer->cache_prefix);
-@@ -642,6 +657,10 @@ static BOOL URLCacheContainers_Enum(LPCW
-     if (lpwszSearchPattern && dwIndex > 0)
-         return FALSE;
- 
-+    // ReactOS r54992
-+    if (!bDefaultContainersAdded)
-+        URLCacheContainers_CreateDefaults();
-+
-     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
-     {
-         if (lpwszSearchPattern)
-@@ -1579,6 +1598,10 @@ BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR l
-         return FALSE;
-     }
- 
-+    // ReactOS r54992
-+    if (!bDefaultContainersAdded)
-+        URLCacheContainers_CreateDefaults();
-+
-     LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
-     {
-         /* The URL cache has prefix L"" (unlike Cookies and History) */
---- wine-1.5.4/dlls/wininet/http.c	2012-06-20 15:19:57 +0200
-+++ dll/win32/wininet/http.c	2012-06-20 16:24:11 +0200
-@@ -73,6 +73,9 @@
- #include "wine/exception.h"
- #include "wine/unicode.h"
- 
-+// ReactOS
-+#include "inet_ntop.c"
-+
- WINE_DEFAULT_DEBUG_CHANNEL(wininet);
- 
- static const WCHAR g_szHttp1_0[] = {'H','T','T','P','/','1','.','0',0};
-@@ -241,8 +244,17 @@ void server_release(server_t *server)
+ struct HttpAuthInfo
+@@ -229,7 +205,13 @@ void server_release(server_t *server)
      if(InterlockedDecrement(&server->ref))
          return;
  
-+#ifndef __REACTOS__
-     if(!server->ref)
--        server->keep_until = GetTickCount64() + COLLECT_TIME;
-+        server->keep_until = (DWORD64)GetTickCount() + COLLECT_TIME;
-+#else
++#ifdef __REACTOS__
 +    EnterCriticalSection(&connection_pool_cs);
-+    list_remove(&server->entry);
-+    LeaveCriticalSection(&connection_pool_cs);
-+    
-+    heap_free(server->name);
-+    heap_free(server);
 +#endif
- }
+     list_remove(&server->entry);
++#ifdef __REACTOS__
++    LeaveCriticalSection(&connection_pool_cs);
++#endif
  
- static server_t *get_server(const WCHAR *name, INTERNET_PORT port)
-@@ -288,7 +300,7 @@ BOOL collect_connections(BOOL collect_al
+     if(server->cert_chain)
+         CertFreeCertificateChain(server->cert_chain);
+@@ -311,7 +293,11 @@ BOOL collect_connections(collect_type_t 
      BOOL remaining = FALSE;
      DWORD64 now;
  
--    now = GetTickCount64();
++#ifdef __REACTOS__
 +    now = GetTickCount();
++#else
+     now = GetTickCount64();
++#endif
  
      LIST_FOR_EACH_ENTRY_SAFE(server, server_safe, &connection_pool, server_t, entry) {
          LIST_FOR_EACH_ENTRY_SAFE(netconn, netconn_safe, &server->conn_pool, netconn_t, pool_entry) {
-@@ -1854,13 +1866,14 @@ static void http_release_netconn(http_re
-     if(!req->netconn)
+@@ -1973,13 +1959,14 @@ static void http_release_netconn(http_re
+     if(!is_valid_netconn(req->netconn))
          return;
  
 +#ifndef __REACTOS__
@@ -255,14 +51,110 @@
          req->netconn = NULL;
  
          run_collector = !collector_running;
-@@ -1888,6 +1901,10 @@ static void http_release_netconn(http_re
+@@ -2007,6 +1994,10 @@ static void http_release_netconn(http_re
          }
          return;
      }
 +#else
-+    // silence unused function warning
++    /* Silence unused function warning */
 +    (void)collect_connections_proc;
 +#endif
  
      INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,
                            INTERNET_STATUS_CLOSING_CONNECTION, 0, 0);
+diff -pudN e:\wine\dlls\wininet/internet.c e:\reactos\dll\win32\wininet/internet.c
+--- e:\wine\dlls\wininet/internet.c	2015-04-12 18:21:54.309796800 +0100
++++ e:\reactos\dll\win32\wininet/internet.c	2015-07-20 14:38:19.188784800 +0100
+@@ -1033,6 +996,9 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR l
+ {
+     appinfo_t *lpwai = NULL;
+ 
++#ifdef __REACTOS__
++    init_winsock();
++#endif
+     if (TRACE_ON(wininet)) {
+ #define FE(x) { x, #x }
+ 	static const wininet_flag_info access_type[] = {
+
+diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache.c
+--- e:\wine\dlls\wininet/urlcache.c	2015-07-14 15:44:36.059193400 +0100
++++ e:\reactos\dll\win32\wininet/urlcache.c	2015-07-20 14:40:55.736738800 +0100
+@@ -202,6 +179,8 @@ typedef struct
+ 
+ /* List of all containers available */
+ static struct list UrlContainers = LIST_INIT(UrlContainers);
++/* ReactOS r54992 */
++BOOL bDefaultContainersAdded = FALSE;
+ 
+ static inline char *heap_strdupWtoUTF8(LPCWSTR str)
+ {
+@@ -752,6 +731,8 @@ static void cache_containers_init(void)
+     static const WCHAR UrlSuffix[] = {'C','o','n','t','e','n','t','.','I','E','5',0};
+     static const WCHAR HistorySuffix[] = {'H','i','s','t','o','r','y','.','I','E','5',0};
+     static const WCHAR CookieSuffix[] = {0};
++    /* ReactOS r50916 */
++    static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
+     static const struct
+     {
+         int nFolder; /* CSIDL_* constant */
+@@ -766,6 +747,13 @@ static void cache_containers_init(void)
+     };
+     DWORD i;
+ 
++    /* ReactOS r50916 */
++    if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
++    {
++        TRACE("Environment variable 'USERPROFILE' does not exist!\n");
++        return;
++    }
++
+     for (i = 0; i < sizeof(DefaultContainerData) / sizeof(DefaultContainerData[0]); i++)
+     {
+         WCHAR wszCachePath[MAX_PATH];
+@@ -816,6 +804,10 @@ static void cache_containers_init(void)
+         cache_containers_add(DefaultContainerData[i].cache_prefix, wszCachePath,
+                 DefaultContainerData[i].default_entry_type, wszMutexName);
+     }
++
++#ifdef __REACTOS__
++    bDefaultContainersAdded = TRUE;
++#endif
+ }
+ 
+ static void cache_containers_free(void)
+@@ -835,6 +827,12 @@ static DWORD cache_containers_find(const
+     if(!url)
+         return ERROR_INVALID_PARAMETER;
+ 
++#ifdef __REACTOS__
++    /* ReactOS r54992 */
++    if (!bDefaultContainersAdded)
++        cache_containers_init();
++#endif
++
+     LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
+     {
+         int prefix_len = strlen(container->cache_prefix);
+@@ -861,6 +859,12 @@ static BOOL cache_containers_enum(char *
+     if (search_pattern && index > 0)
+         return FALSE;
+ 
++#ifdef __REACTOS__
++    /* ReactOS r54992 */
++    if (!bDefaultContainersAdded)
++        cache_containers_init();
++#endif
++
+     LIST_FOR_EACH_ENTRY(container, &UrlContainers, cache_container, entry)
+     {
+         if (search_pattern)
+@@ -4018,7 +4022,9 @@ BOOL init_urlcache(void)
+         return FALSE;
+     }
+ 
++#ifndef __REACTOS__
+     cache_containers_init();
++#endif
+     return TRUE;
+ }
+ 

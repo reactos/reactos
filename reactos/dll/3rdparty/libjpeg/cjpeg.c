@@ -174,6 +174,7 @@ usage (void)
 #endif
 #if JPEG_LIB_VERSION_MAJOR >= 9
   fprintf(stderr, "  -rgb1          Create RGB JPEG file with reversible color transform\n");
+  fprintf(stderr, "  -bgycc         Create big gamut YCC JPEG file\n");
 #endif
 #ifdef DCT_ISLOW_SUPPORTED
   fprintf(stderr, "  -dct int       Use integer DCT method%s\n",
@@ -322,6 +323,17 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
       cinfo->color_transform = arg[3] ? JCT_SUBTRACT_GREEN : JCT_NONE;
 #endif
       jpeg_set_colorspace(cinfo, JCS_RGB);
+
+    } else if (keymatch(arg, "bgycc", 5)) {
+      /* Force a big gamut YCC JPEG file to be generated. */
+#if JPEG_LIB_VERSION_MAJOR >= 9 && \
+      (JPEG_LIB_VERSION_MAJOR > 9 || JPEG_LIB_VERSION_MINOR >= 1)
+      jpeg_set_colorspace(cinfo, JCS_BG_YCC);
+#else
+      fprintf(stderr, "%s: sorry, BG_YCC colorspace not supported\n",
+	      progname);
+      exit(EXIT_FAILURE);
+#endif
 
     } else if (keymatch(arg, "maxmemory", 3)) {
       /* Maximum memory in Kb (or Mb with 'm'). */

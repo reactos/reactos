@@ -1146,7 +1146,7 @@ LRESULT CALLBACK preview_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             POINT pt;
             RECT rc;
-            int bHittest = FALSE;
+            int bHittest = 0;
             DWORD messagePos = GetMessagePos();
             pt.x = (short)LOWORD(messagePos);
             pt.y = (short)HIWORD(messagePos);

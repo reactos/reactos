@@ -1,0 +1,71 @@
+[Version]
+Signature = "$ReactOS$"
+
+[AddReg]
+BCD,"BCD00000000\Description\Control","System",0x00010001,1
+BCD,"BCD00000000\Description\Control","TreatAtSystem",0x00010001,1
+BCD,"BCD00000000\Description\Control","KeyName",,"BCD00000000"
+
+;
+; ReactOS Boot Manager
+;
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Description","Type",0x00010001,0x10100002                                       ; identifier={bootmgr}
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\12000004","Element",,"ReactOS Boot Manager"                            ; description
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\12000005","Element",,"en-US"                                           ; locale="en-US"
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\14000006","Element",0x10000,"{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}"   ; inherit={globalsettings}
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\23000003","Element",,"{7619dcc9-fafe-11d9-b411-000476eba25f}"          ; default={winload}
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\24000001","Element",0x10000,"{7619dcc9-fafe-11d9-b411-000476eba25f}"   ; displayorder={winload}
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\24000010","Element",0x10000,"{b2721d73-1db4-4c62-bf78-c548a880142d}"   ; toolsdisplayorder={memdiag}
+BCD,"BCD00000000\Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\25000004","Element",0x1,0x1e                                           ; timeout=30
+
+;
+; ReactOS Boot Loader
+;
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Description","Type",0x00010001,0x10200003                                       ; identifier={winload}
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\11000001","Element",0x1,\                                              ; device=boot
+    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+    05,00,00,00,\
+    00,00,00,00,\
+    48,00,00,00,\
+    00,00,00,00,\
+    00,00,00,00,\
+    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000002","Element",,"\reactos\system32\boot\rosload.efi"              ; path
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000004","Element",,"ReactOS Setup"                                   ; description
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\12000005","Element",,"en-US"                                           ; locale="en-US"
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\14000006","Element",0x10000,"{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}"   ; inherit={bootloadersettings}
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\16000060","Element",0x1,0x01                                           ; isolatedcontext=Yes
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\22000002","Element",,"\reactos"                                        ; systemroot=\Windows
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\26000010","Element",0x1,0x01                                           ; detecthal=Yes
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\26000022","Element",0x1,0x01                                           ; winpe=Yes
+BCD,"BCD00000000\Objects\{7619dcc9-fafe-11d9-b411-000476eba25f}\Elements\260000b0","Element",0x1,0x01                                           ; ems=Yes
+
+;
+; Global Settings
+;
+BCD,"BCD00000000\Objects\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\Description","Type",0x00010001,0x20100000                                       ; identifier={globalsettings}
+BCD,"BCD00000000\Objects\{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}\Elements\14000006","Element",0x10000,"{4636856e-540f-4170-a130-a84776f4c654}", \
+                                                                                                     "{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}"   ; inherit={dbgsettings,emssettings}
+
+;
+; Boot Loader Settings
+;
+BCD,"BCD00000000\Objects\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\Description","Type",0x00010001,0x20200003                                       ; identifier={bootloadersettings}
+BCD,"BCD00000000\Objects\{6efb52bf-1766-41db-a6b3-0ee5eff72bd7}\Elements\14000006","Element",0x10000,"{7ea2e1ac-2e61-4728-aaa3-896d9d0a9f0e}"   ; inherit={globalsettings}
+
+;
+; EMS Settings
+;
+BCD,"BCD00000000\Objects\{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}\Description","Type",0x00010001,0x20100000                                       ; identifier={dbgsettings}
+BCD,"BCD00000000\Objects\{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}\Elements\16000020","Element",0x1,0x01                                           ; bootems=Yes
+
+;
+; Debugger Settings
+;
+BCD,"BCD00000000\Objects\{4636856e-540f-4170-a130-a84776f4c654}\Description","Type",0x00010001,0x20100000                                       ; identifier={dbgsettings}
+BCD,"BCD00000000\Objects\{4636856e-540f-4170-a130-a84776f4c654}\Elements\15000011","Element",0x1,0x00                                           ; debugtype=Serial
+BCD,"BCD00000000\Objects\{4636856e-540f-4170-a130-a84776f4c654}\Elements\15000013","Element",0x1,0x01                                           ; debugport=1
+BCD,"BCD00000000\Objects\{4636856e-540f-4170-a130-a84776f4c654}\Elements\15000014","Element",0x1,0x00,0xc2,0x01                                 ; baudrate=115200
+
+; EOF

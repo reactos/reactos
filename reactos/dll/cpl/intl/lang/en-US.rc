@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standards and formats", -1, 5, 5, 234, 162
     LTEXT "This option affects how some programs format numbers, currencies, dates, and time.", -1, 14, 17, 220, 25
-    LTEXT "Select an item to match its properties, or click Customize to choose your own formats:", -1, 14, 37, 220, 22
+    LTEXT "&Select an item to match its properties, or click Customize to choose your own formats:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Customi&ze...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Samples", -1, 14, 73, 70, 10
@@ -22,7 +22,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geographic location", -1, 5, 172, 234, 55
-    LTEXT "Set up your location so that some services can supply you with local information; for example, news and weather reports.", -1, 14, 184, 210, 24
+    LTEXT "Se&t up your location so that some services can supply you with local information; for example, news and weather reports.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "De&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Additional language support", -1, 5, 62, 234, 82
     LTEXT "Most languages are installed by default. To install additional languages, select the appropriate check box below.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    AUTOCHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -48,11 +48,11 @@ BEGIN
     GROUPBOX "Language for non-Unicode programs", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "This system setting enables non-Unicode programs to display menus and dialogs in their native language. It does not affect Unicode programs, but it does apply to all users of this computer.", -1, 14, 18, 223, 33
-    LTEXT "Select a language to match the language version of the non-Unicode programs you want to use:", -1, 14, 55, 223, 18
-    GROUPBOX "Code page conversion tables", -1, 5, 101, 234, 88
+    LTEXT "&Select a language to match the language version of the non-Unicode programs you want to use:", -1, 14, 55, 223, 18
+    GROUPBOX "&Code page conversion tables", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Default user account settings", -1, 5, 193, 234, 30
-    CHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Default user account settings", -1, 5, 193, 234, 32
+    AUTOCHECKBOX "Apply all settings to the current user account and to the &default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -85,7 +85,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Currency"
@@ -112,7 +111,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Time"
@@ -133,10 +131,8 @@ BEGIN
     LTEXT "Time format notation\n\n\
 h = hour    m = minute    s = second    t = am or pm\n\n\
 h = 12 hour   H = 24 hour\n\
-hh, mm, ss = leading zero   h, m, s = no leading zero",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = leading zero   h, m, s = no leading zero", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -144,33 +140,32 @@ CAPTION "Date"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Calendar", -1, 7, 7, 230, 74
-    LTEXT "If year is typed as two digits, then assume it is a year between:", -1, 13, 18, 215, 8
+    LTEXT "If year is typed as two digits, then assume it is a &year between:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "and", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
-    LTEXT "Calendar type:", -1, 13, 48, 56, 10
+    LTEXT "&Calendar type:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT "Muslim Calendar:", -1, 13, 65, 60, 12
+    LTEXT "&Muslim Calendar:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Short date format", -1, 7, 83, 230, 81
+    GROUPBOX "Short date", -1, 7, 83, 230, 81
     LTEXT "Sample:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Sample - right to left read:", -1, 13, 109, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "Short format:", -1, 13, 131, 60, 10
+    LTEXT "&Short date format:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    LTEXT "Date components separator:", -1, 13, 148, 113, 10
+    LTEXT "&Date components separator:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Long date format", -1, 7, 167, 230, 64
+    GROUPBOX "Long date", -1, 7, 167, 230, 64
     LTEXT "Sample:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Sample - right to left read:", -1, 13, 193, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "Long format:", -1, 13, 215, 60, 10
+    LTEXT "&Long date format:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
-
 
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -182,7 +177,6 @@ BEGIN
     LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN
@@ -196,4 +190,27 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Regional Options"
     IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
+    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
+    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
+    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
 END

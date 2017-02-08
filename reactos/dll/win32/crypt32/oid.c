@@ -17,21 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdio.h>
-#include <stdarg.h>
-#define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "wine/list.h"
 #include "crypt32_private.h"
-#include "cryptres.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -1107,6 +1093,7 @@ static const WCHAR SpcFinancialCriteria[] = { 'S','p','c','F','i','n','a','n','c
 static const WCHAR SpcMinimalCriteria[] = { 'S','p','c','M','i','n','i','m','a','l','C','r','i','t','e','r','i','a',0 };
 static const WCHAR Email[] = { 'E','m','a','i','l',0 };
 static const WCHAR GN[] = { 'G','N',0 };
+static const WCHAR SERIALNUMBER[] = { 'S','E','R','I','A','L','N','U','M','B','E','R',0 };
 
 static const DWORD noNullFlag = CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG;
 static const DWORD mosaicFlags = CRYPT_OID_INHIBIT_SIGNATURE_FORMAT_FLAG |
@@ -1226,6 +1213,7 @@ static const struct OIDInfoConstructor {
  { 5, szOID_TELEPHONE_NUMBER,         0, Phone, &printableStringBlob },
  { 5, szOID_X21_ADDRESS,              0, X21Address, &numericStringBlob },
  { 5, szOID_DN_QUALIFIER,             0, dnQualifier, NULL },
+ { 5, szOID_DEVICE_SERIAL_NUMBER,     0, SERIALNUMBER, NULL },
 
  { 6, szOID_AUTHORITY_KEY_IDENTIFIER2, 0, (LPCWSTR)IDS_AUTHORITY_KEY_ID, NULL },
  { 6, szOID_AUTHORITY_KEY_IDENTIFIER, 0, (LPCWSTR)IDS_AUTHORITY_KEY_ID, NULL },

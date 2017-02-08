@@ -1,0 +1,46 @@
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Bilgisayarı Kapat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Şimdi bilgisayarınızı kapatmak güvenlidir.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Yeniden Başlat", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Kullanıcı Arayüzü Yanlışlığı"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Oturum Açma Kullanıcı Arayüzü %s DLL'si yüklemede başarısız oldu.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "DLL'yi yenisiyle değiştirmek veyâ özgün DLL'yi onarmak için dizge yöneticinize başvurunuz.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Yeniden Başlat", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Ağ Bağlantıları Anıklanıyor..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Bilgisayar Ayarları Uygulanıyor..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Açılış Betikleri Çalıştırılıyor..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Kapanış Betikleri Çalıştırılıyor..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Şahsî Ayarlarınız Uygulanıyor..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Oturum Kapama Betikleri Çalıştırılıyor..."
+    IDS_RUNNINGLOGONSCRIPTS "Oturum Açma Betikleri Çalıştırılıyor..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Şahsî Ayarlarınız Yükleniyor..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Ağ Bağlantıları Kapatılıyor..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS Kapatılıyor..."
+    IDS_PREPARETOSTANDBY "Uykuya Anıklanıyor..."
+    IDS_PREPARETOHIBERNATE "Anıkta Beklemeye Anıklanıyor..."
+    IDS_SAVEYOURSETTINGS "Ayarlarınız Saklanıyor..."
+    IDS_REACTOSISSTARTINGUP "ReactOS Başlatılıyor..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon, kullanıcı kabuğunu etkinleştirmede başarısız oldu."
+END

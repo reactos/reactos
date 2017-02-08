@@ -29,16 +29,21 @@
 
 #include "precomp.h"
 
-#ifndef NDEBUG
+#include <ntddk.h>
+#include <stdio.h>
+#include <scsi.h>
+#include <ntddscsi.h>
+#include <ntdddisk.h>
+#include <mountdev.h>
+
 #define NDEBUG
-#endif
 #include <debug.h>
+
+#include "scsiport_int.h"
 
 ULONG InternalDebugLevel = 0x00;
 
 #undef ScsiPortMoveMemory
-
-/* TYPES *********************************************************************/
 
 /* GLOBALS *******************************************************************/
 
@@ -1021,7 +1026,6 @@ ScsiPortInitialize(IN PVOID Argument1,
     ULONG Result;
     NTSTATUS Status;
     ULONG MaxBus;
-    ULONG BusNumber = 0;
     PCI_SLOT_NUMBER SlotNumber;
 
     PDEVICE_OBJECT PortDeviceObject;
@@ -1678,7 +1682,7 @@ CreatePortConfig:
       if (!Again)
           ConfigInfo.BusNumber++;
 
-      DPRINT("Bus: %lu  MaxBus: %lu\n", BusNumber, MaxBus);
+      DPRINT("Bus: %lu  MaxBus: %lu\n", ConfigInfo.BusNumber, MaxBus);
 
       DeviceFound = TRUE;
     }
@@ -1836,6 +1840,8 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
   //PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT1("ScsiPortLogError() called\n");
+  DPRINT1("PathId: 0x%02x  TargetId: 0x%02x  Lun: 0x%02x  ErrorCode: 0x%08lx  UniqueId: 0x%08lx\n",
+          PathId, TargetId, Lun, ErrorCode, UniqueId);
 
   //DeviceExtension = CONTAINING_RECORD(HwDeviceExtension, SCSI_PORT_DEVICE_EXTENSION, MiniPortDeviceExtension);
 
@@ -2871,8 +2877,20 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           break;
 
       default:
-          if ('M' == (Stack->Parameters.DeviceIoControl.IoControlCode >> 16)) {
-            DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          if (DEVICE_TYPE_FROM_CTL_CODE(Stack->Parameters.DeviceIoControl.IoControlCode) == MOUNTDEVCONTROLTYPE)
+          {
+            switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+            {
+            case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
+                DPRINT1("Got unexpected IOCTL_MOUNTDEV_QUERY_DEVICE_NAME\n");
+                break;
+            case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+                DPRINT1("Got unexpected IOCTL_MOUNTDEV_QUERY_UNIQUE_ID\n");
+                break;
+            default:
+                DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+                break;
+            }
           } else {
             DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
           }
@@ -3282,7 +3300,7 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
             break;
 
         ScatterGatherList->Length = Srb->DataTransferLength - TotalLength;
-        ScatterGatherList->PhysicalAddress = IoMapTransfer(NULL,
+        ScatterGatherList->PhysicalAddress = IoMapTransfer(DeviceExtension->AdapterObject,
                                                            Irp->MdlAddress,
                                                            MapRegisterBase,
                                                            DataVA + TotalLength,
@@ -5290,7 +5308,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
 			     0,
 			     NULL);
   Status = ZwCreateKey(&ScsiKey,
@@ -5317,7 +5335,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		       NameBuffer);
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     0,
+			     OBJ_KERNEL_HANDLE,
 			     ScsiKey,
 			     NULL);
   Status = ZwCreateKey(&ScsiPortKey,
@@ -6406,6 +6424,5 @@ ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
   DPRINT("ScsiPortConvertPhysicalAddressToUlong()\n");
   return(Address.u.LowPart);
 }
-
 
 /* EOF */

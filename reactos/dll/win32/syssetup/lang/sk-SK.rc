@@ -1,12 +1,12 @@
-/* TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  15-12-2009
- * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
+/* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.: 09-02-2008
+ * LAST CHANGE: 15-12-2009
+ * THANKS TO  : Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -16,62 +16,50 @@ BEGIN
     LTEXT "Kliknutím na Ďalej pokračujte v inštalácii.", IDC_STATIC, 115, 160, 189, 31
 END
 
-
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Vývojári systému ReactOS by sa chceli poďakovať nasledujúcim Open Source projektom, ktoré (alebo časti ktorých) boli použité pri vývoji systému ReactOS:",
-                    IDC_STATIC,15,7,286,19
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "Systém ReactOS je vydaný pod licenciou GPL. Pokiaľ chcete systém (alebo jeho časti) použiť alebo redistribuovať, musíte rešpektovať GPL",
-                    IDC_STATIC,15,110,228,22
-    PUSHBUTTON      "&Zobraziť GPL...",IDC_VIEWGPL,245,110,56,19
-    LTEXT           "Kliknutím na Ďalej pokračujte v inštalácii.",IDC_STATIC,15,136,
-                    195,17
+    LTEXT "Vývojári systému ReactOS by sa chceli poďakovať nasledujúcim Open Source projektom, ktoré (alebo časti ktorých) boli použité pri vývoji systému ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT "Systém ReactOS je vydaný pod licenciou GPL. Pokiaľ chcete systém (alebo jeho časti) použiť alebo redistribuovať, musíte rešpektovať GPL", IDC_STATIC, 15, 110, 228, 22
+    PUSHBUTTON "&Zobraziť GPL...", IDC_VIEWGPL, 245, 110, 56, 19
+    LTEXT "Kliknutím na Ďalej pokračujte v inštalácii.", IDC_STATIC, 15, 136, 195, 17
 END
 
-
-IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napíšte Vaše celé meno a názov Vašej firmy alebo organizácie.",
-          IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Napíšte Vaše celé meno a názov Vašej firmy alebo organizácie.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Meno:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Organizácia:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
-
-IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napíšte názov Vášho počítača v dĺžke 15 znakov alebo menej. Ak je počítač pripojený k sieti, musí býť jeho názov unikátny.",
-          IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Napíšte názov Vášho počítača v dĺžke 15 znakov alebo menej. Ak je počítač pripojený k sieti, musí býť jeho názov unikátny.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Názov počítača:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.",
-          IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Zadajte heslo účtu Administrator v dĺžke 14 znakov alebo menej.",
-          IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Zadajte heslo účtu Administrator v dĺžke 127 znakov alebo menej.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potvrdiť heslo:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
-
-IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -79,36 +67,27 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizácia systému by mala súhlasiť s jazykom aplikácií, ktoré chcete používať. Lokalizácia určí ako budú zobrazené čísla, meny a údaje kalendára.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "<text lokality>", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Pre zmenu lokalizácie systému kliknite na Zmeniť.",
-          IDC_STATIC, 53, 60, 184, 8
+    LTEXT "Pre zmenu lokalizácie systému kliknite na Zmeniť.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmeniť...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "Rozloženie kláves určí znaky, ktoré sa zobrazia, keď píšete.",
-          IDC_STATIC, 53, 86, 253, 8
+    LTEXT "Rozloženie kláves určí znaky, ktoré sa zobrazia, keď píšete.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "<text rozloženia>", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Pre zmenu rozloženia kláves, kliknite na Zmeniť.",
-          IDC_STATIC, 53, 126, 184, 8
+    LTEXT "Pre zmenu rozloženia kláves, kliknite na Zmeniť.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&meniť...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
-
-IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Dátum a čas", IDC_STATIC, 53, 7, 253, 8
-    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
-            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
     LTEXT "Časové pásmo", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
-             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automaticky posunúť hodiny pri prechode na &letný čas a späť",
-                 IDC_AUTODAYLIGHT, 53, 124, 220, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Automaticky posunúť hodiny pri prechode na &letný čas a späť", IDC_AUTODAYLIGHT, 53, 124, 220, 10
 END
-
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -120,164 +99,83 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
 
-
-IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Dokončenie inštalácie systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dokončenie sprievodcu inštaláciou systému ReactOS",IDC_FINISHTITLE,115,9,195,37
+    LTEXT "Dokončenie sprievodcu inštaláciou systému ReactOS", IDC_FINISHTITLE, 115, 9, 195, 37
     LTEXT "Sprievodca inštaláciou systému ReactOS bol úspešne dokončený.\n\nPo kliknutí na Dokončiť sa počítač reštartuje.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Ak je v mechanike inštalačné médium, vyberte ho. Potom kliknutím na Dokončiť reštartujte počítač.", IDC_STATIC, 115, 160, 195, 31
 END
-
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GNU General Public License"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
-                    ES_READONLY | WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
+    EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-
-IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Počkajte, prosím ..."
-FONT 8,"MS Shell Dlg 2",400,0,1
+FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
+    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Poďakovanie"
-    IDS_ACKSUBTITLE      "Čo je systém ReactOS a informácie o licencii"
-    IDS_OWNERTITLE       "Prispôsobte si softvér"
-    IDS_OWNERSUBTITLE    "Inštalátor použije tieto informácie pre prispôsobenie systému ReactOS."
-    IDS_COMPUTERTITLE    "Názov počítača a heslo účtu Administrator."
+    IDS_ACKTITLE "Poďakovanie"
+    IDS_ACKSUBTITLE "Čo je systém ReactOS a informácie o licencii"
+    IDS_OWNERTITLE "Prispôsobte si softvér"
+    IDS_OWNERSUBTITLE "Inštalátor použije tieto informácie pre prispôsobenie systému ReactOS."
+    IDS_COMPUTERTITLE "Názov počítača a heslo účtu Administrator."
     IDS_COMPUTERSUBTITLE "Zadajte meno a heslo pre účet Administrator."
-    IDS_LOCALETITLE      "Regionálne nastavenia"
-    IDS_LOCALESUBTITLE   "Systém ReactOS môžete prispôsobiť rôznym regiónom a jazykom."
-    IDS_DATETIMETITLE    "Dátum a čas"
+    IDS_LOCALETITLE "Regionálne nastavenia"
+    IDS_LOCALESUBTITLE "Systém ReactOS môžete prispôsobiť rôznym regiónom a jazykom."
+    IDS_DATETIMETITLE "Dátum a čas"
     IDS_DATETIMESUBTITLE "Nastavte správny čas pre Váš počítač."
-    IDS_PROCESSTITLE     "Registrácia súčastí"
-    IDS_PROCESSSUBTITLE  "Počkajte, prosím ..."
+    IDS_PROCESSTITLE "Registrácia súčastí"
+    IDS_PROCESSSUBTITLE "Počkajte, prosím ..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Stiahnuť a nainštalovať ďalšie aplikácie"
+    IDS_REACTOS_SETUP "Inštalátor systému ReactOS"
+    IDS_UNKNOWN_ERROR "Neznáma chyba"
+    IDS_REGISTERING_COMPONENTS "Registrujem súčasti..."
+    IDS_LOADLIBRARY_FAILED "LoadLibrary zlyhal: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr zlyhal: "
+    IDS_REGSVR_FAILED "DllRegisterServer zlyhal: "
+    IDS_DLLINSTALL_FAILED "DllInstall zlyhal: "
+    IDS_TIMEOUT "Vypršal časový limit registrácie"
+    IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "Vlastník"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Príslušenstvo"
-    IDS_CMT_CALC        "Spustiť Kalkulačku"
-    IDS_CMT_CMD         "Otvoriť Príkazový riadok"
-    IDS_CMT_EXPLORER    "Spustiť Prieskumníka"
-    IDS_CMT_NOTEPAD     "Spustiť Textový editor"
-    IDS_CMT_REGEDIT     "Spustiť Editor registrov"
-    IDS_CMT_WORDPAD     "Spustiť Editor dokumentov"
-    IDS_CMT_SCREENSHOT  "Uložiť obrazovku"
-    IDS_CMT_DEVMGMT     "Spustiť Správcu zariadení"
-    IDS_CMT_SERVMAN     "Spustiť Správcu služieb"
-    IDS_CMT_RDESKTOP    "Spustiť Vzdialenú pracovnú plochu"
-    IDS_CMT_EVENTVIEW   "Spustiť Zobrazovač udalostí"
-    IDS_CMT_MSCONFIG    "Spustiť Program na konfiguráciu systému"
-    IDS_CMT_PAINT       "Spustiť Skicár"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Hry"
-    IDS_CMT_SOLITAIRE   "Solitér"
-    IDS_CMT_WINEMINE    "Míny"
-    IDS_CMT_SPIDER      "Pavúčí solitér"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS       "Systémové nástroje"
-    IDS_CMT_CHARMAP     "Mapa znakov"
-    IDS_CMT_KBSWITCH    "Prepínač rozloženia klávesnice"
-    IDS_CMT_DXDIAG      "Spustiť ReactX - diagnostický program"
-END
-
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY       "Zjednodušenie ovládania" //Accessibility
-    IDS_CMT_MAGNIFY             "Lupa"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Zábava" //Entertainment
-    IDS_CMT_MPLAY32             "Spustiť Multimediálny prehrávač"
-    IDS_CMT_SNDVOL32            "Spustiť Ovládanie hlasitosti"
-    IDS_CMT_SNDREC32            "Spustiť Nahrávanie zvuku"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_REACTOS_SETUP           "Inštalátor systému ReactOS"
-    IDS_UNKNOWN_ERROR           "Neznáma chyba"
-    IDS_REGISTERING_COMPONENTS  "Registrujem súčasti..."
-    IDS_LOADLIBRARY_FAILED      "LoadLibrary zlyhal: "
-    IDS_GETPROCADDR_FAILED      "GetProcAddr zlyhal: "
-    IDS_REGSVR_FAILED           "DllRegisterServer zlyhal: "
-    IDS_DLLINSTALL_FAILED       "DllInstall zlyhal: "
-    IDS_TIMEOUT                 "Vypršal časový limit registrácie"
-    IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Príkazový riadok.lnk"
-    IDS_SHORT_EXPLORER   "Prieskumník systému ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Manažér aplikácií systému ReactOS.lnk"
-    IDS_SHORT_SERVICE    "Správca služieb.lnk"
-    IDS_SHORT_DEVICE     "Správca zariadení.lnk"
-    IDS_SHORT_MPLAY32    "Multimediálny prehrávač.lnk"
-    IDS_SHORT_CALC       "Kalkulačka.lnk"
-    IDS_SHORT_REGEDIT    "Editor registrov.lnk"
-    IDS_SHORT_NOTEPAD    "Poznámkový blok.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "Momentka.lnk" //SnapShot
-    IDS_SHORT_SOLITAIRE  "Solitér.lnk"
-    IDS_SHORT_WINEMINE   "Míny.lnk"
-    IDS_SHORT_CHARMAP    "Mapa znakov.lnk"
-    IDS_SHORT_MAGNIFY    "Lupa.lnk"
-    IDS_SHORT_RDESKTOP   "Vzdialená pracovná plocha.lnk"
-    IDS_SHORT_KBSWITCH   "Prepínač rozloženia klávesnice.lnk"
-    IDS_SHORT_EVENTVIEW  "Zobrazovač udalostí.lnk"
-    IDS_SHORT_MSCONFIG   "Program na konfiguráciu systému.lnk"
-    IDS_SHORT_SNDVOL32   "Ovládanie hlasitosti.lnk" //Volume Control
-    IDS_SHORT_SNDREC32   "Audiorekordér.lnk"
-    IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
-    IDS_SHORT_PAINT      "Skicár.lnk"
-    IDS_SHORT_SPIDER     "Pavúčí solitér.lnk"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_WZD_NAME            "Inštalácia nemôže pokračovať, kým nezadáte svoje meno."
+    IDS_WZD_NAME "Inštalácia nemôže pokračovať, kým nezadáte svoje meno."
     IDS_WZD_SETCOMPUTERNAME "Inštalátor nedokázal nastaviť názov počítača."
-    IDS_WZD_COMPUTERNAME    "Inštalácia nemôže pokračovať, kým nezadáte názov počítača."
-    IDS_WZD_PASSWORDEMPTY   "Musíte zadať heslo!"
-    IDS_WZD_PASSWORDMATCH   "Zadané heslá nesúhlasia. Zadajte požadované heslo znovu."
-    IDS_WZD_PASSWORDCHAR    "Zadané heslo obsahuje nepovolené znaky. Zadajte upravené heslo."
-    IDS_WZD_LOCALTIME       "Inštalátor nedokázal nastaviť čas."
+    IDS_WZD_COMPUTERNAME "Inštalácia nemôže pokračovať, kým nezadáte názov počítača."
+    IDS_WZD_PASSWORDEMPTY "Musíte zadať heslo!"
+    IDS_WZD_PASSWORDMATCH "Zadané heslá nesúhlasia. Zadajte požadované heslo znovu."
+    IDS_WZD_PASSWORDCHAR "Zadané heslo obsahuje nepovolené znaky. Zadajte upravené heslo."
+    IDS_WZD_LOCALTIME "Inštalátor nedokázal nastaviť čas."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV  "Inštalujem zariadenia..."
+    IDS_STATUS_INSTALL_DEV "Inštalujem zariadenia..."
 END
-
-/* EOF */

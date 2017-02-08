@@ -1,0 +1,103 @@
+/*
+ * Copyright 2003 Ulrich Czekalla for CodeWeavers
+ * Copyright 2003 Hans Leidekker
+ * Copyright 2008 Frans Kool
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+  IDS_RESULTOBJDESC	"Voeg een nieuw %s object in uw document in"
+  IDS_RESULTFILEOBJDESC	"Voeg de inhoud van het bestand als object in uw document in, zodat u het later kunt bewerken met het programma waarmee u het heeft gemaakt."
+  IDS_BROWSE            "Bladeren"
+  IDS_NOTOLEMOD         "Het bestand is geen geldig OLE bestand. De registratie is mislukt."
+  IDS_NOTOLEMODCAPTION  "Toevoegen"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+}
+
+STRINGTABLE
+{
+    IDS_PS_PASTE_DATA                     "Voegt de inhoud van het klembord in uw document in als %s."
+    IDS_PS_PASTE_OBJECT                   "Voegt de inhoud van het klembord in uw document in zodat u het kan activeren met %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Voegt de inhoud van het klembord in uw document in zodat u het kan activeren met %s. Het zal getoond worden als een icoon."
+    IDS_PS_PASTE_LINK_DATA                "Voegt de inhoud van het klembord in uw document in als %s. De data is verbonden met het bron bestand zodat wijzigingen in dat bestand worden getoond in uw document."
+    IDS_PS_PASTE_LINK_OBJECT              "Voegt een afbeelding vanuit het klembord in uw document in. De afbeelding is verbonden met het bronbestand, zodat wijzigingen in dat bestand worden getoond in uw document."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Voegt een verwijzing in die wijst naar de locatie van de inhoud van het klembord. De verwijzing is verbonden met het bronbestand, zodat wijzigingen in dat bestand worden getoond in uw document."
+    IDS_PS_NON_OLE                        "Voegt de inhoud van het klembord in uw document."
+    IDS_PS_UNKNOWN_TYPE                   "Onbekend type"
+    IDS_PS_UNKNOWN_SRC                    "Onbekende bron"
+    IDS_PS_UNKNOWN_APP                    "het programma die het gecreëerd heeft"
+}
+
+UIINSERTOBJECT DIALOGEX  0, 0, 304, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Object invoegen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Objecttype:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,231,7,66,14
+    PUSHBUTTON      "Annuleren",IDCANCEL,231,24,66,14
+    GROUPBOX        "Resultaat",IDC_RESULT,7,103,218,41
+    CONTROL         "Nieuw",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,7,20,84,10
+    CONTROL         "Creëren",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
+    CONTROL         "Bestand gebruiken",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,84,10
+    LTEXT           "",IDC_RESULTDESC,49,112,169,26
+    PUSHBUTTON      "&Toevoegen...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    CONTROL         "Als pictogram weergeven",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
+    PUSHBUTTON      "Bladeren...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
+    LTEXT           "Bestandsnaam:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+IDD_PASTESPECIAL4 DIALOGEX 3, 15, 304, 160
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Plakken (Speciaal)"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "Bron:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "&Plakken", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 73, 10
+    CONTROL       "Plak &verwijzing", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 73, 10
+    LTEXT         "&Als:", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
+    CONTROL       "Annuleren", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
+    CONTROL       "&Help", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
+    CONTROL       "Als pictogram &weergeven", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
+    CONTROL       "Wijzig p&ictogram...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 121, 42, 34
+    CONTROL       "", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 120, 159, 35
+    CONTROL       "Resultaat", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 110, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END

@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2014 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bm_devs.h
@@ -31,6 +31,11 @@ Revision History:
 
 --*/
 
+#ifndef __IDE_BUSMASTER_DEVICES_H__
+#define __IDE_BUSMASTER_DEVICES_H__
+
+#pragma pack(push, 8)
+
 #define IDE_MAX_CHAN          16
 #define IDE_DEFAULT_MAX_CHAN  2
 // Thanks to SATA Port Multipliers:
@@ -46,9 +51,6 @@ Revision History:
 
 //#define UniataGetPioTiming(LunExt)      ((LunExt->TransferMode <= ATA_PIO0) ? PIO0_TIMING : 0)
 #define UniataGetPioTiming(LunExt)      0 //ktp
-
-#ifndef __IDE_BUSMASTER_DEVICES_H__
-#define __IDE_BUSMASTER_DEVICES_H__
 
 /*#ifdef USER_MODE
 #define PVEN_STR    PCSTR
@@ -103,14 +105,6 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_ATP865A		0x00081191
 #define ATA_ATP865R		0x00091191
 
-#define ATA_AMD_ID		0x1022
-#define ATA_AMD755		0x74011022
-#define ATA_AMD756		0x74091022
-#define ATA_AMD766		0x74111022
-#define ATA_AMD768		0x74411022
-#define ATA_AMD8111		0x74691022
-#define ATA_AMD5536             0x209a1022
-
 #define ATA_ACER_LABS_ID	0x10b9
 #define ATA_ALI_1533            0x153310b9
 #define ATA_ALI_5228            0x522810b9
@@ -119,6 +113,24 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_ALI_5287            0x528710b9
 #define ATA_ALI_5288            0x528810b9
 #define ATA_ALI_5289            0x528910b9
+
+#define ATA_AMD_ID              0x1022
+#define ATA_AMD755              0x74011022
+#define ATA_AMD756              0x74091022
+#define ATA_AMD766              0x74111022
+#define ATA_AMD768              0x74411022
+#define ATA_AMD8111             0x74691022
+#define ATA_AMD5536             0x209a1022
+#define ATA_AMD_HUDSON2_S1	0x78001022
+#define ATA_AMD_HUDSON2_S2	0x78011022
+#define ATA_AMD_HUDSON2_S3	0x78021022
+#define ATA_AMD_HUDSON2_S4	0x78031022
+#define ATA_AMD_HUDSON2_S5	0x78041022
+#define ATA_AMD_HUDSON2		0x780c1022
+
+#define ATA_ADAPTEC_ID          0x9005
+#define ATA_ADAPTEC_1420        0x02419005
+#define ATA_ADAPTEC_1430        0x02439005
 
 #define ATA_ATI_ID              0x1002
 #define ATA_ATI_IXP200          0x43491002
@@ -136,6 +148,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define	ATA_ATI_IXP700_S4	0x43931002
 #define	ATA_ATI_IXP800_S1	0x43941002
 #define	ATA_ATI_IXP800_S2	0x43951002
+#define	ATA_ATI_4385            0x43851002
 
 #define ATA_CENATEK_ID          0x16ca
 #define ATA_CENATEK_ROCKET      0x000116ca
@@ -209,6 +222,10 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_I82801IB_AH4        0x29238086
 #define ATA_I82801IB_R1         0x29258086
 #define ATA_I82801IB_S2         0x29268086
+#define ATA_I82801IBM_S1        0x29288086
+#define ATA_I82801IBM_AH        0x29298086
+#define ATA_I82801IBM_R1        0x292a8086
+#define ATA_I82801IBM_S2        0x292d8086
 #define ATA_I82801JIB_S1        0x3a208086
 #define ATA_I82801JIB_AH        0x3a228086
 #define ATA_I82801JIB_R1        0x3a258086
@@ -265,13 +282,31 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_PPT_R5		0x1e0e8086
 #define ATA_PPT_R6		0x1e0f8086
 
+#define ATA_LPT_S1		0x8c008086
+#define ATA_LPT_S2		0x8c018086
+#define ATA_LPT_AH1		0x8c028086
+#define ATA_LPT_AH2		0x8c038086
+#define ATA_LPT_R1		0x8c048086
+#define ATA_LPT_R2		0x8c058086
+#define ATA_LPT_R3		0x8c068086
+#define ATA_LPT_R4		0x8c078086
+#define ATA_LPT_S3		0x8c088086
+#define ATA_LPT_S4		0x8c098086
+#define ATA_LPT_R5		0x8c0e8086
+#define ATA_LPT_R6		0x8c0f8086
+
 #define ATA_I31244              0x32008086
 #define ATA_ISCH                0x811a8086
 #define ATA_DH89XXCC            0x23238086
 
+#define ATA_COLETOCRK_AH1       0x23a38086
+#define ATA_COLETOCRK_S1        0x23a18086
+#define ATA_COLETOCRK_S2        0x23a68086
+
 #define ATA_JMICRON_ID          0x197b
 #define ATA_JMB360              0x2360197b
 #define ATA_JMB361              0x2361197b
+#define ATA_JMB362              0x2362197b
 #define ATA_JMB363              0x2363197b
 #define ATA_JMB365              0x2365197b
 #define ATA_JMB366              0x2366197b
@@ -286,12 +321,13 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_M88SX6042           0x604211ab
 #define ATA_M88SX6081           0x608111ab
 #define ATA_M88SX7042           0x704211ab
-#define ATA_M88SX6101           0x610111ab
-#define ATA_M88SX6102           0x610211ab
-#define ATA_M88SX6111           0x611111ab
-#define ATA_M88SX6121           0x612111ab
-#define ATA_M88SX6141           0x614111ab
-#define ATA_M88SX6145           0x614511ab
+#define ATA_M88SE6101           0x610111ab
+#define ATA_M88SE6102           0x610211ab
+#define ATA_M88SE6111           0x611111ab
+#define ATA_M88SE6121           0x612111ab
+#define ATA_M88SE6141           0x614111ab
+#define ATA_M88SE6145           0x614511ab
+#define ATA_M88SE9123           0x91231b4b
 #define ATA_MARVELL2_ID         0x1b4b
 
 #define ATA_MICRON_ID           0x1042
@@ -596,12 +632,14 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define PRNEW		1
 #define PRTX		2
 #define PRMIO		3
-#define PRIDX		4
 #define PRTX4		0x0100
 #define PRSX4K		0x0200
 #define PRSX6K		0x0400
 #define PRSATA		0x0800
-#define PRDUAL		0x1000
+#define PRCMBO		0x1000
+#define PRG2		0x2000
+#define PRCMBO2		(PRCMBO | PRG2)
+#define PRSATA2		(PRSATA | PRG2)
 
 #define SWKS33		0
 #define SWKS66		1
@@ -611,6 +649,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define SIIOLD          0
 #define SIICMD          1
 #define SIIMIO          2
+#define ATI700          3
 
 #define SIIINTR	        0x0100
 #define SIIENINTR       0x0200
@@ -644,11 +683,11 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define NV4OFF          0x0100
 #define NVQ             0x0200
 
-#define VIA33		0
+#define VIA33		4
 #define VIA66		1
 #define VIA100		2
 #define VIA133		3
-#define AMDNVIDIA	4
+#define AMDNVIDIA	0
 #define AMDCABLE	0x0100
 #define AMDBUG		0x0200
 #define VIABAR		0x0400
@@ -658,6 +697,11 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define VIAAST		0x4000
 #define VIAPRQ		0x8000
 #define VIASATA         0x10000
+
+#define CYRIX_OLD       0
+#define CYRIX_3x        1
+#define CYRIX_NEW       2
+#define CYRIX_35        3
 
 #define ITE_33          0
 #define ITE_133         1
@@ -692,12 +736,13 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 5229, 10b9, 0x20, ATA_UDMA2, "ALI M5229 UDMA2"  , ALIOLD                                  ),
     PCI_DEV_HW_SPEC_BM( 5229, 10b9, 0x00, ATA_WDMA2, "ALI M5229 WDMA2"  , ALIOLD                                  ),
 
-    PCI_DEV_HW_SPEC_BM( 7401, 1022, 0x00, ATA_UDMA2, "AMD 755"          , AMDNVIDIA | 0x00                        ),
-    PCI_DEV_HW_SPEC_BM( 7409, 1022, 0x00, ATA_UDMA4, "AMD 756"          , AMDNVIDIA | UNIATA_NO80CHK              ),
-    PCI_DEV_HW_SPEC_BM( 7411, 1022, 0x00, ATA_UDMA5, "AMD 766"          , AMDNVIDIA | AMDBUG                      ),
-    PCI_DEV_HW_SPEC_BM( 7441, 1022, 0x00, ATA_UDMA5, "AMD 768"          , AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 7469, 1022, 0x00, ATA_UDMA6, "AMD 8111"         , AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 209a, 1022, 0x00, ATA_UDMA5, "AMD CS5536"       , AMDNVIDIA                               ),
+    PCI_DEV_HW_SPEC_BM( 7401, 1022, 0x00, ATA_UDMA2, "AMD 755"          , 0 | 0x00                        ),
+    PCI_DEV_HW_SPEC_BM( 7409, 1022, 0x00, ATA_UDMA4, "AMD 756"          , 0 | UNIATA_NO80CHK              ),
+    PCI_DEV_HW_SPEC_BM( 7411, 1022, 0x00, ATA_UDMA5, "AMD 766"          , 0 | AMDBUG                      ),
+    PCI_DEV_HW_SPEC_BM( 7441, 1022, 0x00, ATA_UDMA5, "AMD 768"          , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 7469, 1022, 0x00, ATA_UDMA6, "AMD 8111"         , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 208F, 1022, 0x00, ATA_UDMA4, "AMD CS5535"       , CYRIX_35                        ),
+    PCI_DEV_HW_SPEC_BM( 209a, 1022, 0x00, ATA_UDMA5, "AMD CS5536"       , 0                               ),
 
     PCI_DEV_HW_SPEC_BM( 4349, 1002, 0x00, ATA_UDMA5, "ATI IXP200"       , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 4369, 1002, 0x00, ATA_UDMA6, "ATI IXP300"       , 0                                       ),
@@ -706,9 +751,21 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 4379, 1002, 0x00, ATA_SA150, "ATI IXP400"       , SIIMIO | SIIBUG | SIINOSATAIRQ | UNIATA_SATA     ),
     PCI_DEV_HW_SPEC_BM( 437a, 1002, 0x00, ATA_SA300, "ATI IXP400"       , SIIMIO | SIIBUG | SIINOSATAIRQ | UNIATA_SATA     ),
     PCI_DEV_HW_SPEC_BM( 438c, 1002, 0x00, ATA_UDMA6, "ATI IXP600"       , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 4380, 1002, 0x00, ATA_SA150, "ATI IXP600"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4380, 1002, 0x00, ATA_SA300, "ATI IXP600"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 439c, 1002, 0x00, ATA_UDMA6, "ATI IXP700"       , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 4390, 1002, 0x00, ATA_SA150, "ATI IXP700"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4390, 1002, 0x00, ATA_SA300, "ATI IXP700"       , ATI700 | UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4391, 1002, 0x00, ATA_SA300, "ATI IXP700"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4392, 1002, 0x00, ATA_SA300, "ATI IXP700"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4393, 1002, 0x00, ATA_SA300, "ATI IXP700"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4394, 1002, 0x00, ATA_SA300, "ATI IXP700/800"   , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4395, 1002, 0x00, ATA_SA300, "ATI IXP700/800"   , UNIATA_SATA | UNIATA_AHCI               ),
+
+    PCI_DEV_HW_SPEC_BM( 780c, 1002, 0x00, ATA_UDMA6, "ATI Hudson-2"     , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 7800, 1002, 0x00, ATA_SA300, "ATI Hudson-2"     , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 7801, 1002, 0x00, ATA_SA300, "ATI Hudson-2"     , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 7802, 1002, 0x00, ATA_SA300, "ATI Hudson-2"     , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 7803, 1002, 0x00, ATA_SA300, "ATI Hudson-2"     , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 7804, 1002, 0x00, ATA_SA300, "ATI Hudson-2"     , UNIATA_SATA | UNIATA_AHCI               ),
 
     PCI_DEV_HW_SPEC_BM( 0004, 1103, 0x05, ATA_UDMA6, "HighPoint HPT372" , HPT372 | 0x00   | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 0004, 1103, 0x03, ATA_UDMA5, "HighPoint HPT370" , HPT370 | 0x00   | UNIATA_RAID_CONTROLLER),
@@ -778,7 +835,6 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 
     PCI_DEV_HW_SPEC_BM( 2920, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 2926, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH2 | UNIATA_SATA                     ),
-    PCI_DEV_HW_SPEC_BM( 282a, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH2 | UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 2921, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),/* ??? */
     PCI_DEV_HW_SPEC_BM( 2922, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2923, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
@@ -846,58 +902,154 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 1e0e, 8086, 0x00, ATA_SA300, "Intel Panther Point" , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 1e0f, 8086, 0x00, ATA_SA300, "Intel Panther Point" , UNIATA_SATA | UNIATA_AHCI               ),
 
+    PCI_DEV_HW_SPEC_BM( 8c00, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , I6CH | UNIATA_SATA                      ),
+    PCI_DEV_HW_SPEC_BM( 8c01, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , I6CH | UNIATA_SATA                      ),
+    PCI_DEV_HW_SPEC_BM( 8c02, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c03, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c04, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c05, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c06, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c07, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c08, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 8c09, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 8c0e, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 8c0f, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
+
 //    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_SA150, "Intel 31244"      , UNIATA_SATA                             ),
     PCI_DEV_HW_SPEC_BM( 811a, 8086, 0x00, ATA_UDMA5, "Intel SCH"        , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2323, 8086, 0x00, ATA_SA300, "Intel DH98xxCC"   , UNIATA_SATA | UNIATA_AHCI                  ),
 
-    PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , UNIATA_SATA | UNIATA_AHCI               ),
-
-    PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_UDMA6, "JMB361"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2363, 197b, 0x00, ATA_UDMA6, "JMB363"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_UDMA6, "JMB365"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_UDMA6, "JMB366"           , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 2368, 197b, 0x00, ATA_UDMA6, "JMB368"           , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 23a3, 8086, 0x00, ATA_SA300, "COLETOCRK" , I6CH2 | UNIATA_SATA                    ),
+    PCI_DEV_HW_SPEC_BM( 23a1, 8086, 0x00, ATA_SA300, "COLETOCRK" , I6CH2 | UNIATA_SATA                    ),
+    PCI_DEV_HW_SPEC_BM( 23a6, 8086, 0x00, ATA_SA300, "COLETOCRK" , UNIATA_SATA | UNIATA_AHCI              ),
+    
+    PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_UDMA6, "JMB361"           , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 2362, 197b, 0x00, ATA_SA300, "JMB362"           , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 2363, 197b, 0x00, ATA_UDMA6, "JMB363"           , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_UDMA6, "JMB365"           , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_UDMA6, "JMB366"           , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 2368, 197b, 0x00, ATA_UDMA6, "JMB368"           , 0                               ),
 /*    
-    PCI_DEV_HW_SPEC_BM( 5040, 11ab, 0x00, ATA_SA150, "Marvell 88SX5040" , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 5041, 11ab, 0x00, ATA_SA150, "Marvell 88SX5041" , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 5080, 11ab, 0x00, ATA_SA150, "Marvell 88SX5080" , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 5081, 11ab, 0x00, ATA_SA150, "Marvell 88SX5081" , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 6041, 11ab, 0x00, ATA_SA300, "Marvell 88SX6041" , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 6081, 11ab, 0x00, ATA_SA300, "Marvell 88SX6081" , UNIATA_SATA                             ),*/
-    PCI_DEV_HW_SPEC_BM( 6101, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6101" , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 6121, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6121" , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 6145, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6145" , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 5040, 11ab, 0x00, ATA_SA150, "Marvell 88SX5040" , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 5041, 11ab, 0x00, ATA_SA150, "Marvell 88SX5041" , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 5080, 11ab, 0x00, ATA_SA150, "Marvell 88SX5080" , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 5081, 11ab, 0x00, ATA_SA150, "Marvell 88SX5081" , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 6041, 11ab, 0x00, ATA_SA300, "Marvell 88SX6041" , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 6081, 11ab, 0x00, ATA_SA300, "Marvell 88SX6081" , UNIATA_SATA                     ),*/
+    PCI_DEV_HW_SPEC_BM( 6101, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6101" , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 6102, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6102" , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 6111, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6111" , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 6121, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6121" , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 6141, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6141" , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 6145, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6145" , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 9123, 1b4b, 0x00, ATA_UDMA6, "Marvell 88SX9123" , UNIATA_SATA | UNIATA_AHCI       ),
+/*    PCI_DEV_HW_SPEC_BM( 91a4, 1b4b, 0x00, ATA_UDMA6, "Marvell 88SE912x" , 0                                       ),*/
 
-    PCI_DEV_HW_SPEC_BM( 01bc, 10de, 0x00, ATA_UDMA5, "nVidia nForce"    , AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 0065, 10de, 0x00, ATA_UDMA6, "nVidia nForce2"   , AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 0085, 10de, 0x00, ATA_UDMA6, "nVidia nForce2 Pro",AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 008e, 10de, 0x00, ATA_SA150, "nVidia nForce2 Pro S1",UNIATA_SATA                          ),
-    PCI_DEV_HW_SPEC_BM( 00d5, 10de, 0x00, ATA_UDMA6, "nVidia nForce3"   , AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 00e5, 10de, 0x00, ATA_UDMA6, "nVidia nForce3 Pro",AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 00e3, 10de, 0x00, ATA_SA150, "nVidia nForce3 Pro S1",UNIATA_SATA                          ),
-    PCI_DEV_HW_SPEC_BM( 00ee, 10de, 0x00, ATA_SA150, "nVidia nForce3 Pro S2",UNIATA_SATA                          ),
-    PCI_DEV_HW_SPEC_BM( 0035, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP", AMDNVIDIA                               ),
-    PCI_DEV_HW_SPEC_BM( 0036, 10de, 0x00, ATA_SA150, "nVidia nForce MCP S1",NV4OFF | UNIATA_SATA                  ),
-    PCI_DEV_HW_SPEC_BM( 003e, 10de, 0x00, ATA_SA150, "nVidia nForce MCP S2",NV4OFF | UNIATA_SATA                  ),
-    PCI_DEV_HW_SPEC_BM( 0053, 10de, 0x00, ATA_UDMA6, "nVidia nForce CK804", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 0054, 10de, 0x00, ATA_SA300, "nVidia nForce CK804 S1",NV4OFF | UNIATA_SATA                ),
-    PCI_DEV_HW_SPEC_BM( 0055, 10de, 0x00, ATA_SA300, "nVidia nForce CK804 S2",NV4OFF | UNIATA_SATA                ),
-    PCI_DEV_HW_SPEC_BM( 0265, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP51", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 0266, 10de, 0x00, ATA_SA300, "nVidia nForce MCP51 S1",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 0267, 10de, 0x00, ATA_SA300, "nVidia nForce MCP51 S2",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 036e, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP55", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 037e, 10de, 0x00, ATA_SA300, "nVidia nForce MCP55 S1",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 037f, 10de, 0x00, ATA_SA300, "nVidia nForce MCP55 S2",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 03ec, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP61", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 03e7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP61 S1",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 03f6, 10de, 0x00, ATA_SA300, "nVidia nForce MCP61 S2",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 03f7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP61 S3",NV4OFF | NVQ | UNIATA_SATA          ),
-    PCI_DEV_HW_SPEC_BM( 0448, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP65", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 0560, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP67", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 056c, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP73", AMDNVIDIA                             ),
-    PCI_DEV_HW_SPEC_BM( 0759, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP77", AMDNVIDIA                             ),
+    PCI_DEV_HW_SPEC_BM( 01bc, 10de, 0x00, ATA_UDMA5, "nVidia nForce"    , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 0065, 10de, 0x00, ATA_UDMA6, "nVidia nForce2"   , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 0085, 10de, 0x00, ATA_UDMA6, "nVidia nForce2 Pro",0                               ),
+    PCI_DEV_HW_SPEC_BM( 008e, 10de, 0x00, ATA_SA150, "nVidia nForce2 Pro S1",UNIATA_SATA                  ),
+    PCI_DEV_HW_SPEC_BM( 00d5, 10de, 0x00, ATA_UDMA6, "nVidia nForce3"   , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 00e5, 10de, 0x00, ATA_UDMA6, "nVidia nForce3 Pro",0                               ),
+    PCI_DEV_HW_SPEC_BM( 00e3, 10de, 0x00, ATA_SA150, "nVidia nForce3 Pro S1",UNIATA_SATA                  ),
+    PCI_DEV_HW_SPEC_BM( 00ee, 10de, 0x00, ATA_SA150, "nVidia nForce3 Pro S2",UNIATA_SATA                  ),
+    PCI_DEV_HW_SPEC_BM( 0035, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP", 0                               ),
+    PCI_DEV_HW_SPEC_BM( 0036, 10de, 0x00, ATA_SA150, "nVidia nForce MCP S1",NV4OFF | UNIATA_SATA          ),
+    PCI_DEV_HW_SPEC_BM( 003e, 10de, 0x00, ATA_SA150, "nVidia nForce MCP S2",NV4OFF | UNIATA_SATA          ),
+    PCI_DEV_HW_SPEC_BM( 0053, 10de, 0x00, ATA_UDMA6, "nVidia nForce CK804", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 0054, 10de, 0x00, ATA_SA300, "nVidia nForce CK804 S1",NV4OFF | UNIATA_SATA        ),
+    PCI_DEV_HW_SPEC_BM( 0055, 10de, 0x00, ATA_SA300, "nVidia nForce CK804 S2",NV4OFF | UNIATA_SATA        ),
+    PCI_DEV_HW_SPEC_BM( 0265, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP51", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 0266, 10de, 0x00, ATA_SA300, "nVidia nForce MCP51 S1",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 0267, 10de, 0x00, ATA_SA300, "nVidia nForce MCP51 S2",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 036e, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP55", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 037e, 10de, 0x00, ATA_SA300, "nVidia nForce MCP55 S1",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 037f, 10de, 0x00, ATA_SA300, "nVidia nForce MCP55 S2",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 03ec, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP61", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 03e7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP61 S1",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 03f6, 10de, 0x00, ATA_SA300, "nVidia nForce MCP61 S2",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 03f7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP61 S3",NV4OFF | NVQ | UNIATA_SATA  ),
+    PCI_DEV_HW_SPEC_BM( 0448, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP65", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 044c, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A0", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 044d, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A1", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 044e, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A2", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 044f, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A3", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 045c, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A4", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 045d, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A5", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 045e, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A6", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 045f, 10de, 0x00, ATA_SA300, "nVidia nForce MCP65 A7", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0560, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP67", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 0550, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A0", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0551, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A1", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0552, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A2", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0553, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A3", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0554, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A4", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0555, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A5", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0556, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A6", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0557, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A7", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0558, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A8", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0559, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 A9", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 055A, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 AA", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 055B, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 AB", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0584, 10de, 0x00, ATA_SA300, "nVidia nForce MCP67 AC", UNIATA_SATA | UNIATA_AHCI  ),
+
+    PCI_DEV_HW_SPEC_BM( 056c, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP73", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 07f0, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A0", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f1, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A1", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f2, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A2", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f3, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A3", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f4, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A4", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f5, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A5", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f6, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A6", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A7", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f8, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A8", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07f9, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 A9", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 07fa, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 AA", UNIATA_SATA | UNIATA_AHCI  ),
+
+    PCI_DEV_HW_SPEC_BM( 07fb, 10de, 0x00, ATA_SA300, "nVidia nForce MCP73 AB", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0759, 10de, 0x00, ATA_UDMA6, "nVidia nForce MCP77", 0                             ),
+    PCI_DEV_HW_SPEC_BM( 0ad0, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A0", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad1, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A1", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad2, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A2", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad3, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A3", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad4, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A4", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad5, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A5", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad6, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A6", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A7", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad8, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A8", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ad9, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 A9", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ada, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 AA", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0adb, 10de, 0x00, ATA_SA300, "nVidia nForce MCP77 AB", UNIATA_SATA | UNIATA_AHCI  ),
+
+    PCI_DEV_HW_SPEC_BM( 0ab4, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A0", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ab5, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A1", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ab6, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A2", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ab7, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A3", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ab8, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A4", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0ab9, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A5", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0aba, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A6", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0abb, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A7", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0abc, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A8", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0abd, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 A9", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0abe, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 AA", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0abf, 10de, 0x00, ATA_SA300, "nVidia nForce MCP79 AB", UNIATA_SATA | UNIATA_AHCI  ),
+
+    PCI_DEV_HW_SPEC_BM( 0d84, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A0", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d85, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A1", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d86, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A2", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d87, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A3", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d88, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A4", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d89, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A5", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d8a, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A6", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d8b, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A7", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d8c, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A8", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d8d, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 A9", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d8e, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 AA", UNIATA_SATA | UNIATA_AHCI  ),
+    PCI_DEV_HW_SPEC_BM( 0d8f, 10de, 0x00, ATA_SA300, "nVidia nForce MCP89 AB", UNIATA_SATA | UNIATA_AHCI  ),
 
     PCI_DEV_HW_SPEC_BM( 0502, 100b, 0x00, ATA_UDMA2, "National Geode SC1100", 0                                   ),
+    PCI_DEV_HW_SPEC_BM( 002d, 100b, 0x00, ATA_UDMA4, "National Geode CS5535", CYRIX_35                            ),
 
     PCI_DEV_HW_SPEC_BM( 4d33, 105a, 0x00, ATA_UDMA2, "Promise PDC20246" , PROLD | 0x00                            ),
     PCI_DEV_HW_SPEC_BM( 4d38, 105a, 0x00, ATA_UDMA4, "Promise PDC20262" , PRNEW | 0x00                            ),
@@ -913,18 +1065,28 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 7275, 105a, 0x00, ATA_UDMA6, "Promise PDC20277" , PRTX  | 0x00    | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 3318, 105a, 0x00, ATA_SA150, "Promise PDC20318" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 3319, 105a, 0x00, ATA_SA150, "Promise PDC20319" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 3371, 105a, 0x00, ATA_SA150, "Promise PDC20371" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 3375, 105a, 0x00, ATA_SA150, "Promise PDC20375" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 3376, 105a, 0x00, ATA_SA150, "Promise PDC20376" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 3377, 105a, 0x00, ATA_SA150, "Promise PDC20377" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 3373, 105a, 0x00, ATA_SA150, "Promise PDC20378" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 3372, 105a, 0x00, ATA_SA150, "Promise PDC20379" , PRMIO | PRSATA  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 6617, 105a, 0x00, ATA_UDMA6, "Promise PDC20617" , PRMIO | PRDUAL  | UNIATA_RAID_CONTROLLER),
-    PCI_DEV_HW_SPEC_BM( 6626, 105a, 0x00, ATA_UDMA6, "Promise PDC20618" , PRMIO | PRDUAL  | UNIATA_RAID_CONTROLLER),
-    PCI_DEV_HW_SPEC_BM( 6629, 105a, 0x00, ATA_UDMA6, "Promise PDC20619" , PRMIO | PRDUAL  | UNIATA_RAID_CONTROLLER),
-    PCI_DEV_HW_SPEC_BM( 6620, 105a, 0x00, ATA_UDMA6, "Promise PDC20620" , PRMIO | PRDUAL  | UNIATA_RAID_CONTROLLER),
+    PCI_DEV_HW_SPEC_BM( 3371, 105a, 0x00, ATA_SA150, "Promise PDC20371" , PRMIO | PRCMBO  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3375, 105a, 0x00, ATA_SA150, "Promise PDC20375" , PRMIO | PRCMBO  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3376, 105a, 0x00, ATA_SA150, "Promise PDC20376" , PRMIO | PRCMBO  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3377, 105a, 0x00, ATA_SA150, "Promise PDC20377" , PRMIO | PRCMBO  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3373, 105a, 0x00, ATA_SA150, "Promise PDC20378" , PRMIO | PRCMBO  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3372, 105a, 0x00, ATA_SA150, "Promise PDC20379" , PRMIO | PRCMBO  | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3571, 105a, 0x00, ATA_SA150, "Promise PDC20571" , PRMIO | PRCMBO2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3d75, 105a, 0x00, ATA_SA150, "Promise PDC20575" , PRMIO | PRCMBO2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3574, 105a, 0x00, ATA_SA150, "Promise PDC20579" , PRMIO | PRCMBO2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3570, 105a, 0x00, ATA_SA300, "Promise PDC20771" , PRMIO | PRCMBO2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3d73, 105a, 0x00, ATA_SA300, "Promise PDC40775" , PRMIO | PRCMBO2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 6617, 105a, 0x00, ATA_UDMA6, "Promise PDC20617" , PRMIO | 0x00    | UNIATA_RAID_CONTROLLER),
+    PCI_DEV_HW_SPEC_BM( 6626, 105a, 0x00, ATA_UDMA6, "Promise PDC20618" , PRMIO | 0x00    | UNIATA_RAID_CONTROLLER),
+    PCI_DEV_HW_SPEC_BM( 6629, 105a, 0x00, ATA_UDMA6, "Promise PDC20619" , PRMIO | 0x00    | UNIATA_RAID_CONTROLLER),
+    PCI_DEV_HW_SPEC_BM( 6620, 105a, 0x00, ATA_UDMA6, "Promise PDC20620" , PRMIO | 0x00    | UNIATA_RAID_CONTROLLER),
 /*    PCI_DEV_HW_SPEC_BM( 6621, 105a, 0x00, ATA_UDMA6, "Promise PDC20621" , PRMIO | PRSX4X  | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 6622, 105a, 0x00, ATA_UDMA6, "Promise PDC20622" , PRMIO | PRSX4X  | UNIATA_RAID_CONTROLLER),*/
+    PCI_DEV_HW_SPEC_BM( 3571, 105a, 0x00, ATA_SA150, "Promise PDC40518" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3d75, 105a, 0x00, ATA_SA150, "Promise PDC40519" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3574, 105a, 0x00, ATA_SA150, "Promise PDC40718" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3570, 105a, 0x00, ATA_SA300, "Promise PDC40719" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3d73, 105a, 0x00, ATA_SA300, "Promise PDC40779" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
 
     PCI_DEV_HW_SPEC_BM( 0211, 1166, 0x00, ATA_UDMA2, "ServerWorks ROSB4", SWKS33  | UNIATA_NO_DPC                 ),
     PCI_DEV_HW_SPEC_BM( 0212, 1166, 0x92, ATA_UDMA5, "ServerWorks CSB5" , SWKS100                                 ),
@@ -988,7 +1150,15 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 */
     PCI_DEV_HW_SPEC_BM( 5513, 1039, 0xc2, ATA_UDMA2, "SiS ATA-xxx"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 5513, 1039, 0x00, ATA_WDMA2, "SiS ATA-xxx"      , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 5518, 1039, 0x00, ATA_UDMA6, "SiS 962/3"        , SIS133NEW | SIS_BASE                            ),
     PCI_DEV_HW_SPEC_BM( 0601, 1039, 0x00, ATA_WDMA2, "SiS ATA-xxx"      , 0                                       ),
+
+    PCI_DEV_HW_SPEC_BM( 1183, 1039, 0x00, ATA_SA150, "SiS 1183 SATA" , SISSATA),
+    PCI_DEV_HW_SPEC_BM( 1182, 1039, 0x00, ATA_SA150, "SiS 1182"      , SISSATA   | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 0183, 1039, 0x00, ATA_SA150, "SiS 183 RAID"  , SISSATA   | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 0182, 1039, 0x00, ATA_SA150, "SiS SATA 182"  , SISSATA   | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 0181, 1039, 0x00, ATA_SA150, "SiS SATA 181"  , SISSATA   | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 0180, 1039, 0x00, ATA_SA150, "SiS SATA 180"  , SISSATA   | UNIATA_SATA),
 
 /*    PCI_DEV_HW_SPEC_BM( 0586, 1106, 0x41, ATA_UDMA2, "VIA 82C586B"      , VIA33  | 0x00                           ),
     PCI_DEV_HW_SPEC_BM( 0586, 1106, 0x40, ATA_UDMA2, "VIA 82C586B"      , VIA33  | VIAPRQ                         ),
@@ -1016,7 +1186,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 5337, 1106, 0x00, ATA_SA150, "VIA 8237S"        , 0      | UNIATA_SATA                    ),
     PCI_DEV_HW_SPEC_BM( 5372, 1106, 0x00, ATA_SA300, "VIA 8237"         , 0      | UNIATA_SATA                    ),
     PCI_DEV_HW_SPEC_BM( 7372, 1106, 0x00, ATA_SA300, "VIA 8237"         , 0      | UNIATA_SATA                    ),
-    //PCI_DEV_HW_SPEC_BM( 3349, 1106, 0x00, ATA_SA150, "VIA 8251"         , VIAAHCI| UNIATA_SATA                    ),
+    PCI_DEV_HW_SPEC_BM( 3349, 1106, 0x00, ATA_SA150, "VIA 8251"         , 0      | UNIATA_SATA | UNIATA_AHCI      ),
 
     PCI_DEV_HW_SPEC_BM( c693, 1080, 0x00, ATA_WDMA2, "Cypress 82C693"   ,0                                        ),
 
@@ -1043,9 +1213,12 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 */
     PCI_DEV_HW_SPEC_BM( 0001, 16ca, 0x00, ATA_WDMA2, "Cenatek Rocket Drive",0                                     ),
 
-    PCI_DEV_HW_SPEC_BM( 0102, 1078, 0x00, ATA_UDMA2, "Cyrix 5530"       , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 0000, 1078, 0x00, ATA_WDMA2, "Cyrix 5510"       , CYRIX_OLD                               ),
+    PCI_DEV_HW_SPEC_BM( 0002, 1078, 0x00, ATA_WDMA2, "Cyrix 5520"       , CYRIX_OLD                               ),
+    PCI_DEV_HW_SPEC_BM( 0102, 1078, 0x00, ATA_UDMA2, "Cyrix 5530"       , CYRIX_3x                                ),
 
-    PCI_DEV_HW_SPEC_BM( 0102, 1042, 0x00, ATA_PIO4,  "RZ 100x"          , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 1000, 1042, 0x00, ATA_PIO4,  "RZ 100x"          , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 1001, 1042, 0x00, ATA_PIO4,  "RZ 100x"          , 0                                       ),
 
     PCI_DEV_HW_SPEC_BM( 8172, 1283, 0x00, ATA_UDMA2, "IT8172"           , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 8213, 1283, 0x00, ATA_UDMA6, "IT8213F"          , ITE_133_NEW                             ),
@@ -1103,5 +1276,7 @@ Ata_is_dev_listed(
      (pciData)->ProgIf == PCI_DEV_PROGIF_AHCI_1_0 && \
      ((pciData)->u.type0.BaseAddresses[5] & ~0x7))
 
+
+#pragma pack(pop)
 
 #endif //__IDE_BUSMASTER_H__

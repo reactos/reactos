@@ -13,6 +13,11 @@ elseif(ARCH STREQUAL "amd64")
     if(NOT MSVC)
         list(APPEND CHKSTK_SOURCE except/amd64/chkstk_ms.s)
     endif()
+elseif(ARCH STREQUAL "arm")
+    list(APPEND CHKSTK_ASM_SOURCE except/arm/chkstk_asm.s)
+    if(NOT MSVC)
+        list(APPEND CHKSTK_SOURCE except/arm/chkstk_ms.s)
+    endif()
 elseif(ARCH STREQUAL "powerpc")
     list(APPEND CHKSTK_ASM_SOURCE except/powerpc/chkstk_asm.s)
 endif()
@@ -43,6 +48,9 @@ add_library(user32_wsprintf
 
 add_dependencies(user32_wsprintf psdk)
 add_target_compile_definitions(user32_wsprintf _USER32_WSPRINTF)
+
+add_library(memcmp mem/memcmp.c)
+add_dependencies(memcmp psdk)
 
 add_library(getopt misc/getopt.c)
 add_target_compile_definitions(getopt _DLL __USE_CRTIMP)

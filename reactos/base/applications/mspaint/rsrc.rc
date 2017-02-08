@@ -5,7 +5,7 @@
  * PURPOSE:     Managing the resources
  * PROGRAMMERS: Benedikt Freisen
  */
- 
+
 /* INCLUDES *********************************************************/
 
 #include <windef.h>
@@ -13,16 +13,37 @@
 
 #include "definitions.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Paint\0"
-#define REACTOS_STR_INTERNAL_NAME     "mspaint\0"
-#define REACTOS_STR_ORIGINAL_FILENAME "mspaint.exe\0"
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Paint"
+#define REACTOS_STR_INTERNAL_NAME     "mspaint"
+#define REACTOS_STR_ORIGINAL_FILENAME "mspaint.exe"
 
 #include <reactos/version.rc>
 
-#include "icons.rc"
+/* Icons */
 
-// UTF-8
+IDI_APPICON ICON "icons/paint.ico"
+
+IDB_TOOLBARICONS BITMAP "icons/iconbar.bmp"
+
+IDI_TRANSPARENT ICON "icons/transparent.ico"
+IDI_NONTRANSPARENT ICON "icons/nontransparent.ico"
+
+IDC_FILL ICON "icons/fill_cur.ico"
+IDC_COLOR ICON "icons/color_cur.ico"
+IDC_ZOOM ICON "icons/zoom_cur.ico"
+IDC_PEN ICON "icons/pen_cur.ico"
+IDC_AIRBRUSH ICON "icons/airbrush_cur.ico"
+
+IDI_HORZSTRETCH ICON "icons/horzstretch.ico"
+IDI_VERTSTRETCH ICON "icons/vertstretch.ico"
+IDI_HORZSKEW ICON "icons/horzskew.ico"
+IDI_VERTSKEW ICON "icons/vertskew.ico"
+
+#include <reactos/manifest_exe.rc>
+
+/* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -82,6 +103,9 @@
 #endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"

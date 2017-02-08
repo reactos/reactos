@@ -129,6 +129,7 @@ ScmWriteDependencies(HKEY hServiceKey,
             if (*lpSrc == SC_GROUP_IDENTIFIERW)
             {
                 lpSrc++;
+                cchLength--;
                 cchGroupLength += cchLength;
                 wcscpy(lpDst, lpSrc);
                 lpDst = lpDst + cchLength;

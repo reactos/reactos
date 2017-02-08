@@ -13,9 +13,21 @@
 #include "frame.h"
 
 #ifdef NO_ID3V2
+# ifdef init_id3
+#  undef init_id3
+# endif
 # define init_id3(fr)
+# ifdef exit_id3
+#  undef exit_id3
+# endif
 # define exit_id3(fr)
+# ifdef reset_id3
+#  undef reset_id3
+# endif
 # define reset_id3(fr)
+# ifdef id3_link
+#  undef id3_link
+# endif
 # define id3_link(fr)
 #else
 void init_id3(mpg123_handle *fr);

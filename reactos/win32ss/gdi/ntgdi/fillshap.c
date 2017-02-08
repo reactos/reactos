@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/fillshap.c
+ * FILE:            win32ss/gdi/ntgdi/fillshap.c
  * PURPOSE:         fillshap
  * PROGRAMMER:
  */
@@ -81,8 +81,11 @@ IntGdiPolygon(PDC    dc,
         pbrFill = dc->dclevel.pbrFill;
         pbrLine = dc->dclevel.pbrLine;
         psurf = dc->dclevel.pSurface;
-        /* FIXME: psurf can be NULL!!!! don't assert but handle this case gracefully! */
-        ASSERT(psurf);
+        if (psurf == NULL)
+        {
+            /* Memory DC without a bitmap selected, nothing to do. */
+            return TRUE;
+        }
 
         /* Now fill the polygon with the current fill brush. */
         if (!(pbrFill->flAttrs & BR_IS_NULL))
@@ -112,7 +115,7 @@ IntGdiPolygon(PDC    dc,
 //                                 Points[1].x, Points[1].y );
 
                 ret = IntEngLineTo(&psurf->SurfObj,
-                                   dc->rosdc.CombinedClip,
+                                   &dc->co.ClipObj,
                                    &dc->eboLine.BrushObject,
                                    Points[i].x,          /* From */
                                    Points[i].y,
@@ -126,7 +129,7 @@ IntGdiPolygon(PDC    dc,
             if (ret)
             {
                 ret = IntEngLineTo(&psurf->SurfObj,
-                                   dc->rosdc.CombinedClip,
+                                   &dc->co.ClipObj,
                                    &dc->eboLine.BrushObject,
                                    Points[Count-1].x, /* From */
                                    Points[Count-1].y,
@@ -159,6 +162,24 @@ IntGdiPolyPolygon(DC      *dc,
     return TRUE;
 }
 
+BOOL FASTCALL
+IntPolygon(HDC hdc, POINT *Point, int Count)
+{
+    BOOL bResult;
+    PDC pdc;
+
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    bResult = IntGdiPolygon(pdc, Point, Count);
+
+    DC_UnlockDc(pdc);
+    return bResult;
+}
 
 
 /******************************************************************************/
@@ -241,7 +262,7 @@ NtGdiEllipse(
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrush->ptPenWidth.x;
+    PenOrigWidth = PenWidth = pbrush->lWidth;
     if (pbrush->ulPenStyle == PS_NULL) PenWidth = 0;
 
     if (pbrush->ulPenStyle == PS_INSIDEFRAME)
@@ -255,7 +276,7 @@ NtGdiEllipse(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrush->ptPenWidth.x = PenWidth;
+    pbrush->lWidth = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -295,6 +316,9 @@ NtGdiEllipse(
         //tmpFillBrushObj.ptOrigin.y += RectBounds.top - Top;
         tmpFillBrushObj.ptOrigin.x += dc->ptlDCOrig.x;
         tmpFillBrushObj.ptOrigin.y += dc->ptlDCOrig.y;
+
+        DC_vPrepareDCsForBlit(dc, &RectBounds, NULL, NULL);
+
         ret = IntFillEllipse( dc,
                               CenterX - RadiusX,
                               CenterY - RadiusY,
@@ -302,17 +326,21 @@ NtGdiEllipse(
                               RadiusY*2, // Height
                               &tmpFillBrushObj);
         BRUSH_ShareUnlockBrush(pFillBrushObj);
+
+        if (ret)
+        {
+           ret = IntDrawEllipse( dc,
+                                 CenterX - RadiusX,
+                                 CenterY - RadiusY,
+                                 RadiusX*2, // Width
+                                 RadiusY*2, // Height
+                                 pbrush);
+        }
+
+        DC_vFinishBlit(dc, NULL);
     }
 
-    if (ret)
-       ret = IntDrawEllipse( dc,
-                             CenterX - RadiusX,
-                             CenterY - RadiusY,
-                             RadiusX*2, // Width
-                             RadiusY*2, // Height
-                             pbrush);
-
-    pbrush->ptPenWidth.x = PenOrigWidth;
+    pbrush->lWidth = PenOrigWidth;
     PEN_ShareUnlockPen(pbrush);
     DC_UnlockDc(dc);
     DPRINT("Ellipse Exit.\n");
@@ -440,10 +468,13 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     /* Special handling for GdiPolyPolyRgn */
     if (iFunc == GdiPolyPolyRgn)
     {
-        HRGN hRgn;
-        hRgn = IntCreatePolyPolygonRgn(SafePoints, SafeCounts, Count, (INT_PTR)hDC);
+        INT iMode = (INT)(UINT_PTR)hDC;
+        HRGN hrgn;
+
+        hrgn = GreCreatePolyPolygonRgn(SafePoints, SafeCounts, Count, iMode);
+
         ExFreePoolWithTag(pTemp, TAG_SHAPE);
-        return (ULONG_PTR)hRgn;
+        return (ULONG_PTR)hrgn;
     }
 
     dc = DC_LockDc(hDC);
@@ -462,8 +493,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return TRUE;
     }
 
-    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
+    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
@@ -549,7 +579,7 @@ IntRectangle(PDC dc,
         DestRect.bottom--;
     }
 
-    DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+    DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
@@ -582,7 +612,7 @@ IntRectangle(PDC dc,
             ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
-                               dc->rosdc.CombinedClip,
+                               &dc->co.ClipObj,
                                NULL,
                                &DestRect,
                                NULL,
@@ -601,28 +631,28 @@ IntRectangle(PDC dc,
     {
         Mix = ROP2_TO_MIX(pdcattr->jROP2);
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                                   &DestRect, // Bounding rectangle
@@ -740,7 +770,7 @@ IntRoundRect(
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrLine->ptPenWidth.x;
+    PenOrigWidth = PenWidth = pbrLine->lWidth;
     if (pbrLine->ulPenStyle == PS_NULL) PenWidth = 0;
 
     if (pbrLine->ulPenStyle == PS_INSIDEFRAME)
@@ -754,7 +784,7 @@ IntRoundRect(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrLine->ptPenWidth.x = PenWidth;
+    pbrLine->lWidth = PenWidth;
 
     RectBounds.left = Left;
     RectBounds.top = Top;
@@ -777,6 +807,9 @@ IntRoundRect(
     }
     else
     {
+
+        DC_vPrepareDCsForBlit(dc, &RectBounds, NULL, NULL);
+
         RtlCopyMemory(&brushTemp, pbrFill, sizeof(brushTemp));
         brushTemp.ptOrigin.x += RectBounds.left - Left;
         brushTemp.ptOrigin.y += RectBounds.top - Top;
@@ -789,19 +822,24 @@ IntRoundRect(
                                 yCurveDiameter,
                                 &brushTemp);
         BRUSH_ShareUnlockBrush(pbrFill);
+
+        if (ret)
+        {
+           ret = IntDrawRoundRect( dc,
+                      RectBounds.left,
+                       RectBounds.top,
+                     RectBounds.right,
+                    RectBounds.bottom,
+                       xCurveDiameter,
+                       yCurveDiameter,
+                       pbrLine);
+        }
+
+        DC_vFinishBlit(dc, NULL);
     }
 
-    if (ret)
-       ret = IntDrawRoundRect( dc,
-                  RectBounds.left,
-                   RectBounds.top,
-                 RectBounds.right,
-                RectBounds.bottom,
-                   xCurveDiameter,
-                   yCurveDiameter,
-                   pbrLine);
 
-    pbrLine->ptPenWidth.x = PenOrigWidth;
+    pbrLine->lWidth = PenOrigWidth;
     PEN_ShareUnlockPen(pbrLine);
     return ret;
 }
@@ -903,8 +941,7 @@ GreGradientFill(
         return TRUE;
     }
 
-    psurf = pdc->dclevel.pSurface;
-    if(!psurf)
+    if (!pdc->dclevel.pSurface)
     {
         /* Memory DC with no surface selected */
         DC_UnlockDc(pdc);
@@ -934,14 +971,14 @@ GreGradientFill(
     ptlDitherOrg.x += pdc->ptlDCOrig.x;
     ptlDitherOrg.y += pdc->ptlDCOrig.y;
 
+    DC_vPrepareDCsForBlit(pdc, &rclExtent, NULL, NULL);
+
+    psurf = pdc->dclevel.pSurface;
+
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0, 0);
 
-    ASSERT(pdc->rosdc.CombinedClip);
-
-    DC_vPrepareDCsForBlit(pdc, rclExtent, NULL, rclExtent);
-
     bRet = IntEngGradientFill(&psurf->SurfObj,
-                             pdc->rosdc.CombinedClip,
+                             &pdc->co.ClipObj,
                              &exlo.xlo,
                              pVertex,
                              nVertex,
@@ -1044,8 +1081,10 @@ NtGdiExtFloodFill(
     UINT  FillType)
 {
     PDC dc;
+#if 0
     PDC_ATTR   pdcattr;
-    SURFACE    *psurf = NULL;
+#endif
+    SURFACE    *psurf;
     EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
@@ -1065,29 +1104,38 @@ NtGdiExtFloodFill(
         return TRUE;
     }
 
+    if (!dc->dclevel.pSurface)
+    {
+        Ret = FALSE;
+        goto cleanup;
+    }
+
+#if 0
     pdcattr = dc->pdcattr;
-
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(dc);
-
-    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-        DC_vUpdateLineBrush(dc);
+#endif
 
     Pt.x = XStart;
     Pt.y = YStart;
     IntLPtoDP(dc, (LPPOINT)&Pt, 1);
 
-    Ret = NtGdiPtInRegion(dc->rosdc.hGCClipRgn, Pt.x, Pt.y);
-    if (Ret)
-        IntGdiGetRgnBox(dc->rosdc.hGCClipRgn,(LPRECT)&DestRect);
-    else
-        goto cleanup;
+    DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
+    /// FIXME: what about prgnVIS? And what about REAL clipping?
     psurf = dc->dclevel.pSurface;
-    if (!psurf)
+    if (dc->prgnRao)
     {
-        Ret = FALSE;
-        goto cleanup;
+        Ret = REGION_PtInRegion(dc->prgnRao, Pt.x, Pt.y);
+        if (Ret)
+            REGION_GetRgnBox(dc->prgnRao, (LPRECT)&DestRect);
+        else
+        {
+            DC_vFinishBlit(dc, NULL);
+            goto cleanup;
+        }
+    }
+    else
+    {
+        RECTL_vSetRect(&DestRect, 0, 0, psurf->SurfObj.sizlBitmap.cx, psurf->SurfObj.sizlBitmap.cy);
     }
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);
@@ -1098,6 +1146,8 @@ NtGdiExtFloodFill(
      * Version b: create a flood mask and let MaskBlt blit a masked brush */
     ConvColor = XLATEOBJ_iXlate(&exlo.xlo, Color);
     Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
+
+    DC_vFinishBlit(dc, NULL);
 
     EXLATEOBJ_vCleanup(&exlo);
 

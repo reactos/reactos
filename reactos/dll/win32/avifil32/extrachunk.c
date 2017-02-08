@@ -16,23 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "avifile_private.h"
 
-#include <assert.h>
-
-#include "extrachunk.h"
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-#include <vfw.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(avifile);
-
-/* reads a chunk outof the extrachunk-structure */
+/* reads a chunk out of the extrachunk-structure */
 HRESULT ReadExtraChunk(const EXTRACHUNKS *extra,FOURCC ckid,LPVOID lpData,LPLONG size)
 {
   LPBYTE lp;
@@ -102,7 +88,7 @@ HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPCVOID lpData, LONG siz
   return AVIERR_OK;
 }
 
-/* reads a chunk fomr the HMMIO into the extrachunk-structure */
+/* reads a chunk from the HMMIO into the extrachunk-structure */
 HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,const MMCKINFO *lpck)
 {
   LPDWORD lp;

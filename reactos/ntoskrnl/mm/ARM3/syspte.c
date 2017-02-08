@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -24,6 +24,7 @@ PMMPTE MmSystemPtesEnd[MaximumPtePoolTypes];
 MMPTE MmFirstFreeSystemPte[MaximumPtePoolTypes];
 ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 ULONG MmTotalSystemPtes;
+ULONG MiNumberOfExtraSystemPdes;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -56,8 +57,8 @@ ULONG MmTotalSystemPtes;
 // being released, which is then inserted in front of the recorded cluster.
 //
 
-ULONG
 FORCEINLINE
+ULONG
 MI_GET_CLUSTER_SIZE(IN PMMPTE Pte)
 {
     //

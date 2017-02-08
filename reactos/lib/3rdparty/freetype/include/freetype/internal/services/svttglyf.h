@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    The FreeType TrueType glyph service.                                 */
 /*                                                                         */
-/*  Copyright 2007 by David Turner.                                        */
+/*  Copyright 2007-2016 by                                                 */
+/*  David Turner.                                                          */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -14,8 +15,8 @@
 /*                                                                         */
 /***************************************************************************/
 
-#ifndef __SVTTGLYF_H__
-#define __SVTTGLYF_H__
+#ifndef SVTTGLYF_H_
+#define SVTTGLYF_H_
 
 #include FT_INTERNAL_SERVICE_H
 #include FT_TRUETYPE_TABLES_H
@@ -24,7 +25,7 @@
 FT_BEGIN_HEADER
 
 
-#define FT_SERVICE_ID_TT_GLYF "tt-glyf"
+#define FT_SERVICE_ID_TT_GLYF  "tt-glyf"
 
 
   typedef FT_ULong
@@ -37,31 +38,32 @@ FT_BEGIN_HEADER
     TT_Glyf_GetLocationFunc  get_location;
   };
 
+
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_TTGLYFREC(class_, get_location_ )   \
-  static const FT_Service_TTGlyfRec class_ =                  \
+#define FT_DEFINE_SERVICE_TTGLYFREC( class_, get_location_ )  \
+  static const FT_Service_TTGlyfRec  class_ =                 \
   {                                                           \
     get_location_                                             \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_TTGLYFREC(class_, get_location_ )   \
+#define FT_DEFINE_SERVICE_TTGLYFREC( class_, get_location_ )  \
   void                                                        \
-  FT_Init_Class_##class_( FT_Service_TTGlyfRec*  clazz )      \
+  FT_Init_Class_ ## class_( FT_Service_TTGlyfRec*  clazz )    \
   {                                                           \
     clazz->get_location = get_location_;                      \
-  } 
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 
 
 FT_END_HEADER
 
-#endif /* __SVTTGLYF_H__ */
+#endif /* SVTTGLYF_H_ */
 
 
 /* END */

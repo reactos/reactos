@@ -10,6 +10,8 @@
 
 #include "serial.h"
 
+#include <debug.h>
+
 UART_TYPE
 SerialDetectUartType(
 	IN PUCHAR BaseAddress)

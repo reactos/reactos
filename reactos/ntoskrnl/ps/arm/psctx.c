@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/ps/arm/pxctx.c
+ * FILE:            ntoskrnl/ps/arm/psctx.c
  * PURPOSE:         Process Manager: Set/Get Context for ARM
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

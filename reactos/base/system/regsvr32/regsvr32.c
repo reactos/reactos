@@ -448,7 +448,6 @@ int WINAPI _tWinMain(
 							nRetValue = EXITCODE_FAILURE;
 					}
 					else {
-						FreeLibrary(hDll);
 						// DllInstall was not found, display an error message
 						lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(tszDllInstall) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
 						_stprintf(lptMsgBuffer,MissingEntry,lptDllName,tszDllInstall,tszDllInstall,lptDllName);

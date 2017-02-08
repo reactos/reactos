@@ -19,6 +19,10 @@ Author:
 #ifndef _I386_MMTYPES_H
 #define _I386_MMTYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Dependencies
 //
@@ -30,6 +34,12 @@ Author:
 #define PAGE_SHIFT                        12L
 #define MM_ALLOCATION_GRANULARITY         0x10000
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
+#define MM_PAGE_FRAME_NUMBER_SIZE         20
+
+//
+// User space range limit
+//
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
 
 //
 // Address of the shared user page
@@ -170,5 +180,25 @@ typedef struct _MMPTE_HARDWARE
 //
 #define HARDWARE_PTE        HARDWARE_PTE_X86
 #define PHARDWARE_PTE       PHARDWARE_PTE_X86
+
+typedef struct _MMPTE
+{
+    union
+    {
+        ULONG_PTR Long;
+        HARDWARE_PTE Flush;
+        MMPTE_HARDWARE Hard;
+        MMPTE_PROTOTYPE Proto;
+        MMPTE_SOFTWARE Soft;
+        MMPTE_TRANSITION Trans;
+        MMPTE_SUBSECTION Subsect;
+        MMPTE_LIST List;
+    } u;
+} MMPTE, *PMMPTE,
+  MMPDE, *PMMPDE;
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif

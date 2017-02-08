@@ -29,6 +29,8 @@ co_IntCallHookProc(INT HookId,
                 WPARAM wParam,
                 LPARAM lParam,
                 HOOKPROC Proc,
+                INT Mod,
+                ULONG_PTR offPfn,
                 BOOLEAN Ansi,
                 PUNICODE_STRING ModuleName);
 
@@ -40,7 +42,9 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                           LONG idChild,
                    DWORD dwEventThread,
                    DWORD dwmsEventTime,
-                     WINEVENTPROC Proc);
+                     WINEVENTPROC Proc,
+                               INT Mod,
+                     ULONG_PTR offPfn);
 
 VOID FASTCALL
 IntCleanupThreadCallbacks(PTHREADINFO W32Thread);
@@ -65,3 +69,9 @@ co_IntClientLoadLibrary(PUNICODE_STRING strLibName,
 BOOL
 APIENTRY
 co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs);
+
+HANDLE FASTCALL co_IntCopyImage(HANDLE,UINT,INT,INT,UINT);
+
+BOOL FASTCALL co_IntSetWndIcons(VOID);
+VOID FASTCALL co_IntDeliverUserAPC(VOID);
+VOID FASTCALL co_IntSetupOBM(VOID);

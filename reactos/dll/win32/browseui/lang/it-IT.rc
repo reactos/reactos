@@ -1,271 +1,275 @@
-/*
- * Copyright 2009 Andrew Hill
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menus
-//
+/* Menus */
 
-IDM_CABINET_CONTEXTMENU MENUEX 
+IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
-    POPUP "",										264,MFT_STRING,MFS_ENABLED
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Bottoni standard",		IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Barra degli indirizzi",		IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Collegamenti",			IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "", -1,                            MFT_SEPARATOR
-        MENUITEM "Blocca la Tool&bar",		IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Personalizza...",		IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Etichette",		IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Bottone di 'Vai'",			IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Pulsanti standard", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Barra degli indirizzi", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Collegamenti", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Blocca b&arre degli strumenti", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Personalizza...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Etichette", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "P&ulsante di 'Vai'", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-    POPUP "&File",				FCIDM_MENU_FILE
+    POPUP "&File", FCIDM_MENU_FILE
     BEGIN
-        MENUITEM "",				-1, MFT_SEPARATOR
-        MENUITEM "&Chiudi",			IDM_FILE_CLOSE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Chiudi", IDM_FILE_CLOSE
     END
-    POPUP "&Modifica",				FCIDM_MENU_EDIT
+    POPUP "&Modifica", FCIDM_MENU_EDIT
     BEGIN
-        MENUITEM "",				-1, MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
     END
-    POPUP "&Visualizza",				FCIDM_MENU_VIEW
+    POPUP "&Visualizza", FCIDM_MENU_VIEW
     BEGIN
-        POPUP "&Toolbar",			IDM_VIEW_TOOLBARS
+        POPUP "&Barre degli strumenti", IDM_VIEW_TOOLBARS
         BEGIN
-            MENUITEM "",			-1, MFT_SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "&Barra di stato",			IDM_VIEW_STATUSBAR
-        POPUP "Barra di &Explorer",			IDM_VIEW_EXPLORERBAR
+        MENUITEM "Barra di &stato", IDM_VIEW_STATUSBAR
+        POPUP "Barra di &Explorer", IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Cerca\tCtrl+E",         IDM_EXPLORERBAR_SEARCH
-            MENUITEM "&Preferiti\tCtrl+I",      IDM_EXPLORERBAR_FAVORITES
-            MENUITEM "&Media",                  IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Recenti\tCtrl+H",        IDM_EXPLORERBAR_HISTORY
-            MENUITEM "C&artelle",                IDM_EXPLORERBAR_FOLDERS
-            MENUITEM "",                        IDM_EXPLORERBAR_SEPARATOR
+            MENUITEM "&Cerca\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Preferiti\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Recenti\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "C&artelle", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
-        MENUITEM "",				FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-        POPUP "&Vai",				FCIDM_MENU_EXPLORE
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "&Vai", FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Indietro\tAlt+Freccia sinistra",       IDM_GOTO_BACK
-            MENUITEM "&Avanti\tAlt+Freccia destra",   IDM_GOTO_FORWARD
-            MENUITEM "&Su un livello",               IDM_GOTO_UPONELEVEL
-            MENUITEM "",				-1, MFT_SEPARATOR
-            MENUITEM "Pagina &Home\tAlt+Home",        IDM_GOTO_HOMEPAGE
+            MENUITEM "&Indietro\tAlt+Freccia sinistra", IDM_GOTO_BACK
+            MENUITEM "&Avanti\tAlt+Freccia destra", IDM_GOTO_FORWARD
+            MENUITEM "&Livello superiore", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "Pagina &iniziale\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
-        MENUITEM "&Aggiorna",			IDM_VIEW_REFRESH
+        MENUITEM "&Aggiorna", IDM_VIEW_REFRESH
     END
-    POPUP "Preferiti",				FCIDM_MENU_FAVORITES
+    POPUP "&Preferiti", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Aggiungi ai Preferiti...",	IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Organizza i Preferiti...",	IDM_FAVORITES_ORGANIZEFAVORITES
-        MENUITEM "",				-1, MFT_SEPARATOR
-        MENUITEM "(Empty)",			IDM_FAVORITES_EMPTY
+        MENUITEM "&Aggiungi ai Preferiti...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizza i Preferiti...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(Vuoto)", IDM_FAVORITES_EMPTY
     END
-    POPUP "&Strumenti",				FCIDM_MENU_TOOLS
+    POPUP "&Strumenti", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Mappa disco di &rete ...",	IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "&Disconnetti disco di rete...",IDM_TOOLS_DISCONNECTNETWORKDRIVE
-        MENUITEM "&Sincronizza...",		IDM_TOOLS_SYNCHRONIZE
-        MENUITEM "",				-1, MFT_SEPARATOR
-        MENUITEM "&Opzioni della cartella...",		IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "&Connetti disco di rete ...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Disconnetti disco di rete...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Sincronizza...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Opzioni della cartella...", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Help",				FCIDM_MENU_HELP
+    POPUP "&Aiuto", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "E' legale questa copia di &ReactOS?",	IDM_HELP_ISTHISCOPYLEGAL
-        MENUITEM "&Informazioni su ReactOS",					IDM_HELP_ABOUT
+        MENUITEM "E' legale questa copia di &ReactOS?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&Informazioni su ReactOS", IDM_HELP_ABOUT
     END
 END
 
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "&Barre strumenti", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Avvio veloce", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "&Nuova barra strumenti...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+	END
+END
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialogs
-//
+/* Dialogs */
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Annulla", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
-STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Opzioni per il &testo:",-1,4,2,48,15
-    COMBOBOX        IDC_TEXTOPTIONS,52,0,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Opzioni per le &icone:",-1,4,20,48,15
-    COMBOBOX        IDC_ICONOPTIONS,52,18,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Opzioni per il &testo:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Opzioni per le &icone:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
+/* Accelerators */
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDR_ACCELERATORS ACCELERATORS 
+IDR_ACCELERATORS ACCELERATORS
 BEGIN
-    VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
-    VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
-    "R",            IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
-    VK_HOME,        IDM_GOTO_HOMEPAGE,                  VIRTKEY, ALT, NOINVERT
-    "D",            IDM_FAVORITES_ADDTOFAVORITES,       VIRTKEY, CONTROL, NOINVERT
-    "B",            IDM_FAVORITES_ORGANIZEFAVORITES,    VIRTKEY, CONTROL, NOINVERT
-    VK_LEFT,        IDM_GOTO_BACK,                      VIRTKEY, ALT
-    VK_RIGHT,       IDM_GOTO_FORWARD,                   VIRTKEY, ALT
-    "W",            IDM_FILE_CLOSE,                     VIRTKEY, CONTROL, NOINVERT
-    "E",            IDM_EXPLORERBAR_SEARCH,             VIRTKEY, CONTROL, NOINVERT
-    "I",            IDM_EXPLORERBAR_FAVORITES,          VIRTKEY, CONTROL, NOINVERT
-    "H",            IDM_EXPLORERBAR_HISTORY,            VIRTKEY, CONTROL, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
 END
 
+/* Strings */
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Strings
-//
-
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    800                       "Contiene comandi per manipolare gli elementi selezionati."
+    IDS_CANCELLING "Annullamento..."
+    IDS_REMAINING  "Rimanente"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    864                       "Contiene i comandi di modifica."
+    800 "Contiene comandi per manipolare gli elementi selezionati."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    928                       "Contiene i comandi per manipolare le viste."
+    864 "Contiene i comandi di modifica."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    992                       "Contiene i comandi per gli strumenti."
+    928 "Contiene i comandi per manipolare le viste."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    1056                      "Contiene i comandi per visualizzare l'Help."
+    992 "Contiene i comandi per gli strumenti."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9025                      "Chiude la finestra."
-    9026                      "Va su di un livello."
+    1056 "Contiene i comandi per visualizzare la guida."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9121                      "Si collaga a un disco di rete."
-    9122                      "Disconnette un disco di rete."
+    9025 "Chiude la finestra."
+    9026 "Sale al livello superiore."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9250                      "Visualizza le informazioni del programma, versione e copyright."
-    9252                      "Visualizza informazioni per il debug."
+    9121 "Connette un disco di rete."
+    9122 "Disconnette un disco di rete."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9281                      "Va alla pagina precedente."
-    9282                      "Va alla pagina successiva."
-    9283                      "Abilita la modifica delle impostazioni."
-    9285                      "Va alla pagina Home."
+    9250 "Visualizza le informazioni del programma, versione e copyright."
+    9252 "Visualizza le informazioni per il debug."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9362                      "Apre la cartella dei preferiti."
-    9363                      "Aggiunge la pagina corrente ai preferiti."
+    9281 "Va alla pagina precedente."
+    9282 "Va alla pagina successiva."
+    9283 "Abilita la modifica delle impostazioni."
+    9285 "Va alla pagina iniziale."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9505                      "Mostra o nasconde le toolbar."
-    9506                      "Mostra o nasconde la barra di stato."
-    9508                      "Visualizza la toolbar dei bottoni standard."
-    9509                      "Visualizza la barra degli indirizzi."
-    9510                      "Visualizza la barra dei collegamenti rapidi."
-    9516                      "Blocca la posizione e la dimensione delle toolbar."
+    9362 "Apre la cartella dei preferiti."
+    9363 "Aggiunge la pagina corrente ai preferiti."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9533                      "Personalizza la toolbar."
+    9505 "Mostra o nasconde le barre degli strumenti."
+    9506 "Mostra o nasconde la barra di stato."
+    9508 "Visualizza la barra dei pulsanti standard."
+    9509 "Visualizza la barra degli indirizzi."
+    9510 "Visualizza la barra dei collegamenti rapidi."
+    9516 "Blocca la posizione e la dimensione delle barre degli strumenti."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    9552                      "Mostra o nasconde la barra di Explorer."
-    9553                      "Mostra la barra per le ricerche."
-    9554                      "Mostra la barra dei preferiti."
-    9555                      "Mostra la barra dei collegamenti recenti."
-    9557                      "Mostra la barra delle cartelle."
-    9559                      "Mostra la barra dei Media."
+    9533 "Personalizza la barra degli strumenti."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_SMALLICONS            "Icone piccole"
-    IDS_LARGEICONS            "Icone larghe"
-    IDS_SHOWTEXTLABELS        "Mostra le etichette"
+    9552 "Mostra o nasconde la barra di Explorer."
+    9553 "Mostra la barra per le ricerche."
+    9554 "Mostra la barra dei preferiti."
+    9555 "Mostra la barra dei collegamenti recenti."
+    9557 "Mostra la barra delle cartelle."
+    9559 "Mostra la barra dei Media."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS          "Niente etichette"
-    IDS_SELECTIVETEXTONRIGHT  "Testo selettivo a destra"
+    IDS_SMALLICONS "Icone piccole"
+    IDS_LARGEICONS "Icone grandi"
+    IDS_SHOWTEXTLABELS "Mostra le etichette"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_GOBUTTONLABEL         "|Vai||"
-    IDS_GOBUTTONTIPTEMPLATE   "Vai a ""%s"""
+    IDS_NOTEXTLABELS "Nessuna etichetta"
+    IDS_SELECTIVETEXTONRIGHT "Testo selettivo a destra"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_SEARCHLABEL           "Cerca"
-    IDS_ADDRESSBANDLABEL      "Indirizzo"
+    IDS_GOBUTTONLABEL "|Vai||"
+    IDS_GOBUTTONTIPTEMPLATE "Vai a ""%s"""
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL          "Cartelle"
+    IDS_SEARCHLABEL "Cerca"
+    IDS_ADDRESSBANDLABEL "Indirizzo"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT           "&Recenti\tCtrl+H"
+    IDS_FOLDERSLABEL "Cartelle"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_UP                    "Su"
+    IDS_HISTORYTEXT "&Recenti\tCtrl+H"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_BACK                  "Indietro"
-    IDS_FORWARD               "Avanti"
+    IDS_UP "Su"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "Back to %s"
+    IDS_FORWARD "Forward to %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Indietro|Avanti|Livello superiore|Cerca|Cartelle|Sposta in|Copia in|Elimina|Annulla|Visualizza|Ferma|Aggiorna|Pagina iniziale|Mappa disco|Disconnette|Preferiti|Cronologia|Schermo intero|Proprietà|Taglia|Copia|Incolla|Opzioni cartella||"
 END

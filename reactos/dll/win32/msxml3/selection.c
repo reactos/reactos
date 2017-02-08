@@ -20,31 +20,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
 #ifdef HAVE_LIBXML2
-//# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-//# include <libxml/xpath.h>
 # include <libxml/xpathInternals.h>
 #endif
 
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
 #include <msxml2did.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
 
 /* This file implements the object returned by a XPath query. Note that this is
  * not the IXMLDOMNodeList returned by childNodes - it's implemented in nodelist.c.
@@ -54,8 +36,6 @@
  *  - supports IXMLDOMSelection
  *
  */
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef HAVE_LIBXML2
 
@@ -180,7 +160,6 @@ static ULONG WINAPI domselection_Release(
         xmlXPathFreeObject(This->result);
         xmldoc_release(This->node->doc);
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
-        release_dispex(&This->dispex);
         heap_free(This);
     }
 

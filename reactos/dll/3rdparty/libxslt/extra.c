@@ -10,30 +10,7 @@
  * daniel@veillard.com
  */
 
-#define IN_LIBXSLT
-#include "libxslt.h"
-
-#include <string.h>
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#include <libxml/xmlmemory.h>
-#include <libxml/tree.h>
-#include <libxml/hash.h>
-#include <libxml/xmlerror.h>
-#include <libxml/parserInternals.h>
-#include "xslt.h"
-#include "xsltInternals.h"
-#include "xsltutils.h"
-#include "extensions.h"
-#include "variables.h"
-#include "transform.h"
-#include "extra.h"
-#include "preproc.h"
+#include "precomp.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_EXTRA

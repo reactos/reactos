@@ -45,48 +45,9 @@
  *
  */
 
-// RegGetValueW is supported by Win2k3 SP1 but headers need Win Vista
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <ctype.h>
-//#include <stdlib.h>
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-//#include "winbase.h"
-#include <winternl.h>
-//#include "winnls.h"
-#include <wingdi.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <commdlg.h>
-//#include "dlgs.h"
 #include "cdlg.h"
-#include "filedlg31.h"
-#include <cderr.h>
-//#include "shellapi.h"
-//#include "shlobj.h"
-#include "filedlgbrowser.h"
-#include <shlwapi.h>
 
-#include <wine/unicode.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+#include <shellapi.h>
 
 #define UNIMPLEMENTED_FLAGS \
 (OFN_DONTADDTORECENT |\
@@ -119,7 +80,6 @@ typedef struct tagLookInInfo
  */
 
 /* Draw item constant */
-#define ICONWIDTH 18
 #define XTEXTOFFSET 3
 
 /* AddItem flags*/
@@ -260,12 +220,12 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 {
 
     LRESULT lRes;
-    LPVOID template;
+    LPCVOID origTemplate;
+    DWORD dwSize;
+    LPDLGTEMPLATEW template;
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
     HRESULT hr;
-    DWORD dwSize;
-    LPDLGTEMPLATE hDialogTemplate;
 
     /* test for missing functionality */
     if (fodInfos->ofnInfos->Flags & UNIMPLEMENTED_FLAGS)
@@ -281,17 +241,19 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
         COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
         return FALSE;
     }
-    if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hRes )) ||
-        !(dwSize = SizeofResource(COMDLG32_hInstance, hRes )) ||
-        !(hDialogTemplate = malloc(dwSize)) ||
-        !(template = LockResource( hDlgTmpl )))
+    if (!(dwSize = SizeofResource(COMDLG32_hInstance, hRes)) ||
+        !(hDlgTmpl = LoadResource(COMDLG32_hInstance, hRes)) ||
+        !(origTemplate = LockResource(hDlgTmpl)))
     {
         COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
         return FALSE;
     }
-
-    /* Copy the read only resource */
-    memcpy(hDialogTemplate, template, dwSize);
+    if (!(template = HeapAlloc(GetProcessHeap(), 0, dwSize)))
+    {
+        COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
+        return FALSE;
+    }
+    memcpy(template, origTemplate, dwSize);
 
     /* msdn: explorer style dialogs permit sizing by default.
      * The OFN_ENABLESIZING flag is only needed when a hook or
@@ -302,12 +264,12 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 
     if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
     {
-        hDialogTemplate->style |= WS_SIZEBOX;
+        template->style |= WS_SIZEBOX;
         fodInfos->sizedlg.cx = fodInfos->sizedlg.cy = 0;
         fodInfos->initial_size.x = fodInfos->initial_size.y = 0;
     }
     else
-        hDialogTemplate->style &= ~WS_SIZEBOX;
+        template->style &= ~WS_SIZEBOX;
 
 
     /* old style hook messages */
@@ -324,20 +286,20 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 
     if (fodInfos->unicode)
       lRes = DialogBoxIndirectParamW(COMDLG32_hInstance,
-                                     hDialogTemplate,
+                                     template,
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
     else
       lRes = DialogBoxIndirectParamA(COMDLG32_hInstance,
-                                     hDialogTemplate,
+                                     template,
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
-    if (SUCCEEDED(hr))
+    if (SUCCEEDED(hr)) 
         OleUninitialize();
 
-    free(hDialogTemplate);
+    HeapFree(GetProcessHeap(), 0, template);
 
     /* Unable to create the dialog */
     if( lRes == -1)
@@ -363,6 +325,12 @@ static BOOL GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
   LPWSTR defext = NULL;
   LPWSTR filter = NULL;
   LPWSTR customfilter = NULL;
+  INITCOMMONCONTROLSEX icc;
+
+  /* Initialize ComboBoxEx32 */
+  icc.dwSize = sizeof(icc);
+  icc.dwICC = ICC_USEREX_CLASSES;
+  InitCommonControlsEx(&icc);
 
   /* Initialize CommDlgExtendedError() */
   COMDLG32_SetCommDlgExtendedError(0);
@@ -463,7 +431,7 @@ static BOOL GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
       ret = GetFileName95(&fodInfos);
       break;
     default :
-      ret = 0;
+      ret = FALSE;
   }
 
   if (lpstrSavDir)
@@ -496,6 +464,12 @@ static BOOL GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
   BOOL ret;
   FileOpenDlgInfos fodInfos;
   LPWSTR lpstrSavDir = NULL;
+  INITCOMMONCONTROLSEX icc;
+
+  /* Initialize ComboBoxEx32 */
+  icc.dwSize = sizeof(icc);
+  icc.dwICC = ICC_USEREX_CLASSES;
+  InitCommonControlsEx(&icc);
 
   /* Initialize CommDlgExtendedError() */
   COMDLG32_SetCommDlgExtendedError(0);
@@ -549,7 +523,7 @@ static BOOL GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
       ret = GetFileName95(&fodInfos);
       break;
   default :
-      ret = 0;
+      ret = FALSE;
   }
 
   if (lpstrSavDir)
@@ -1158,8 +1132,9 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam)
              * move to bottom */
             switch( ctrlid)
             {
-                /* file name box and file types combo change also width */
+                /* file name (edit or comboboxex) and file types combo change also width */
                 case edt1:
+                case cmb13:
                 case cmb1:
                     DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
                             rc.right - rc.left + chgx, rc.bottom - rc.top,
@@ -1413,6 +1388,12 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
   }
 }
 
+static inline BOOL filename_is_edit( const FileOpenDlgInfos *info )
+{
+    return (info->ofnInfos->lStructSize == OPENFILENAME_SIZE_VERSION_400W) &&
+        (info->ofnInfos->Flags & (OFN_ENABLEHOOK | OFN_ENABLETEMPLATE | OFN_ENABLETEMPLATEHANDLE));
+}
+
 /***********************************************************************
  *      FILEDLG95_InitControls
  *
@@ -1420,9 +1401,9 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
  */
 static LRESULT FILEDLG95_InitControls(HWND hwnd)
 {
-  int win2000plus = 0;
-  int win98plus   = 0;
-  int handledPath = FALSE;
+  BOOL win2000plus = FALSE;
+  BOOL win98plus   = FALSE;
+  BOOL handledPath = FALSE;
   OSVERSIONINFOW osVi;
   static const WCHAR szwSlash[] = { '\\', 0 };
   static const WCHAR szwStar[] = { '*',0 };
@@ -1463,8 +1444,20 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   }
   TRACE("Running on 2000+ %d, 98+ %d\n", win2000plus, win98plus);
 
+
+  /* Use either the edit or the comboboxex for the filename control */
+  if (filename_is_edit( fodInfos ))
+  {
+      DestroyWindow( GetDlgItem( hwnd, cmb13 ) );
+      fodInfos->DlgInfos.hwndFileName = GetDlgItem( hwnd, edt1 );
+  }
+  else
+  {
+      DestroyWindow( GetDlgItem( hwnd, edt1 ) );
+      fodInfos->DlgInfos.hwndFileName = GetDlgItem( hwnd, cmb13 );
+  }
+
   /* Get the hwnd of the controls */
-  fodInfos->DlgInfos.hwndFileName = GetDlgItem(hwnd,IDC_FILENAME);
   fodInfos->DlgInfos.hwndFileTypeCB = GetDlgItem(hwnd,IDC_FILETYPE);
   fodInfos->DlgInfos.hwndLookInCB = GetDlgItem(hwnd,IDC_LOOKIN);
 
@@ -1553,56 +1546,50 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
             TRACE("Value in Filename includes path, overriding InitialDir: %s, %s\n",
                     debugstr_w(fodInfos->filename), debugstr_w(fodInfos->initdir));
          }
-         SetDlgItemTextW(hwnd, IDC_FILENAME, fodInfos->filename);
+         SetWindowTextW( fodInfos->DlgInfos.hwndFileName, fodInfos->filename );
 
       } else {
-         SetDlgItemTextW(hwnd, IDC_FILENAME, fodInfos->filename);
+         SetWindowTextW( fodInfos->DlgInfos.hwndFileName, fodInfos->filename );
       }
   }
 
   /* 2. (All platforms) If initdir is not null, then use it */
-  if ((handledPath == FALSE) && (fodInfos->initdir!=NULL) &&
-                                (*fodInfos->initdir!=0x00))
+  if (!handledPath && fodInfos->initdir && *fodInfos->initdir)
   {
-      /* Work out the proper path as supplied one might be relative          */
-      /* (Here because supplying '.' as dir browses to My Computer)          */
-      if (handledPath==FALSE) {
-          WCHAR tmpBuf[MAX_PATH];
-          WCHAR tmpBuf2[MAX_PATH];
-          WCHAR *nameBit;
-          DWORD result;
+        /* Work out the proper path as supplied one might be relative          */
+        /* (Here because supplying '.' as dir browses to My Computer)          */
+        WCHAR tmpBuf[MAX_PATH];
+        WCHAR tmpBuf2[MAX_PATH];
+        WCHAR *nameBit;
+        DWORD result;
 
-          lstrcpyW(tmpBuf, fodInfos->initdir);
-          if( PathFileExistsW(tmpBuf) ) {
-              /* initdir does not have to be a directory. If a file is
-               * specified, the dir part is taken */
-              if( PathIsDirectoryW(tmpBuf)) {
-                  if (tmpBuf[lstrlenW(tmpBuf)-1] != '\\') {
-                     lstrcatW(tmpBuf, szwSlash);
-                  }
-                  lstrcatW(tmpBuf, szwStar);
-              }
-              result = GetFullPathNameW(tmpBuf, MAX_PATH, tmpBuf2, &nameBit);
-              if (result) {
-                 *nameBit = 0x00;
-                 MemFree(fodInfos->initdir);
-                 fodInfos->initdir = MemAlloc((lstrlenW(tmpBuf2) + 1)*sizeof(WCHAR));
-                 lstrcpyW(fodInfos->initdir, tmpBuf2);
-                 handledPath = TRUE;
-                 TRACE("Value in InitDir changed to %s\n", debugstr_w(fodInfos->initdir));
-              }
-          }
-          else if (fodInfos->initdir)
-          {
-                    MemFree(fodInfos->initdir);
-                    fodInfos->initdir = NULL;
-                    TRACE("Value in InitDir is not an existing path, changed to (nil)\n");
-          }
-      }
+        lstrcpyW(tmpBuf, fodInfos->initdir);
+        if (PathFileExistsW(tmpBuf)) {
+            /* initdir does not have to be a directory. If a file is
+             * specified, the dir part is taken */
+            if (PathIsDirectoryW(tmpBuf)) {
+                PathAddBackslashW(tmpBuf);
+                lstrcatW(tmpBuf, szwStar);
+            }
+            result = GetFullPathNameW(tmpBuf, MAX_PATH, tmpBuf2, &nameBit);
+            if (result) {
+                *nameBit = 0x00;
+                MemFree(fodInfos->initdir);
+                fodInfos->initdir = MemAlloc((lstrlenW(tmpBuf2) + 1) * sizeof(WCHAR));
+                lstrcpyW(fodInfos->initdir, tmpBuf2);
+                handledPath = TRUE;
+                TRACE("Value in InitDir changed to %s\n", debugstr_w(fodInfos->initdir));
+            }
+        }
+        else if (fodInfos->initdir)
+        {
+            MemFree(fodInfos->initdir);
+            fodInfos->initdir = NULL;
+            TRACE("Value in InitDir is not an existing path, changed to (nil)\n");
+        }
   }
 
-  if ((handledPath == FALSE) && ((fodInfos->initdir==NULL) ||
-                                 (*fodInfos->initdir==0x00)))
+  if (!handledPath && (!fodInfos->initdir || !*fodInfos->initdir))
   {
       /* 3. All except w2k+: if filename contains a path use it */
       if (!win2000plus && fodInfos->filename &&
@@ -1630,11 +1617,11 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
             TRACE("Value in Filename includes path, overriding initdir: %s, %s\n",
                  debugstr_w(fodInfos->filename), debugstr_w(fodInfos->initdir));
          }
-         SetDlgItemTextW(hwnd, IDC_FILENAME, fodInfos->filename);
+         SetWindowTextW( fodInfos->DlgInfos.hwndFileName, fodInfos->filename );
       }
 
       /* 4. Win2000+: Recently used */
-      if (handledPath == FALSE && win2000plus) {
+      if (!handledPath && win2000plus) {
           fodInfos->initdir = MemAlloc(MAX_PATH * sizeof(WCHAR));
           fodInfos->initdir[0] = '\0';
 
@@ -1650,8 +1637,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
       /* 5. win98+ and win2000+ if any files of specified filter types in
             current directory, use it                                      */
-      if ( win98plus && handledPath == FALSE &&
-           fodInfos->filter && *fodInfos->filter) {
+      if (win98plus && !handledPath && fodInfos->filter && *fodInfos->filter) {
 
          LPCWSTR lpstrPos = fodInfos->filter;
          WIN32_FIND_DATAW FindFileData;
@@ -1690,7 +1676,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
       }
 
       /* 6. Win98+ and 2000+: Use personal files dir, others use current dir */
-      if (handledPath == FALSE && (win2000plus || win98plus)) {
+      if (!handledPath && (win2000plus || win98plus)) {
           fodInfos->initdir = MemAlloc(MAX_PATH*sizeof(WCHAR));
 
           if(!COMDLG32_SHGetFolderPathW(hwnd, CSIDL_PERSONAL, 0, 0, fodInfos->initdir))
@@ -1707,14 +1693,14 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
             TRACE("No initial dir specified, using personal files dir of %s\n", debugstr_w(fodInfos->initdir));
           }
           handledPath = TRUE;
-      } else if (handledPath==FALSE) {
+      } else if (!handledPath) {
           fodInfos->initdir = MemAlloc(MAX_PATH*sizeof(WCHAR));
           GetCurrentDirectoryW(MAX_PATH, fodInfos->initdir);
           handledPath = TRUE;
           TRACE("No initial dir specified, using current dir of %s\n", debugstr_w(fodInfos->initdir));
       }
   }
-  SetFocus(GetDlgItem(hwnd, IDC_FILENAME));
+  SetFocus( fodInfos->DlgInfos.hwndFileName );
   TRACE("After manipulation, file = %s, dir = %s\n", debugstr_w(fodInfos->filename), debugstr_w(fodInfos->initdir));
 
   /* Must the open as read only check box be checked ?*/
@@ -1781,12 +1767,12 @@ static LRESULT FILEDLG95_ResizeControls(HWND hwnd, WPARAM wParam, LPARAM lParam)
       flags |= SWP_NOSIZE;
       SetRectEmpty(&rc);
     }
-      SetWindowPos(fodInfos->DlgInfos.hwndCustomDlg, HWND_BOTTOM,
-          0, 0, rc.right, rc.bottom, flags);
+    SetWindowPos(fodInfos->DlgInfos.hwndCustomDlg, HWND_BOTTOM,
+                 0, 0, rc.right, rc.bottom, flags);
   }
   else
   {
-    /* Resize the height, if open as read only checkbox ad help button are
+    /* Resize the height; if opened as read-only, checkbox and help button are
      * hidden and we are not using a custom template nor a customDialog
      */
     if ( (fodInfos->ofnInfos->Flags & OFN_HIDEREADONLY) &&
@@ -1910,7 +1896,8 @@ static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam)
     FILEDLG95_SHELL_BrowseToDesktop(hwnd);
     break;
 
-  case IDC_FILENAME:
+  case edt1:
+  case cmb13:
     break;
 
   }
@@ -2532,7 +2519,8 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
               IShellView_Refresh(fodInfos->Shell.FOIShellView);
 	  }
           COMDLG32_SHFree(pidlCurrent);
-          SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
+          if (filename_is_edit( fodInfos ))
+              SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
         }
       }
       ret = FALSE;
@@ -2550,12 +2538,12 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
         /* Attach the file extension with file name*/
         ext = PathFindExtensionW(lpstrPathAndFile);
-        if (! *ext)
+        if (! *ext && fodInfos->defext)
         {
             /* if no extension is specified with file name, then */
             /* attach the extension from file filter or default one */
             
-            const WCHAR *filterExt = NULL;
+            WCHAR *filterExt = NULL;
             LPWSTR lpstrFilter = NULL;
             static const WCHAR szwDot[] = {'.',0};
             int PathLength = lstrlenW(lpstrPathAndFile);
@@ -2565,36 +2553,63 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
                                              fodInfos->ofnInfos->nFilterIndex-1);
 
             if (lpstrFilter != (LPWSTR)CB_ERR)  /* control is not empty */
-                filterExt = PathFindExtensionW(lpstrFilter);
+            {
+                WCHAR* filterSearchIndex;
+                filterExt = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(lpstrFilter) + 1) * sizeof(WCHAR));
+                strcpyW(filterExt, lpstrFilter);
 
-            if ( filterExt && *filterExt ) /* attach the file extension from file type filter*/
-                filterExt = filterExt + 1;
-            else if ( fodInfos->defext ) /* attach the default file extension*/
-                filterExt = fodInfos->defext;
+                /* if a semicolon-separated list of file extensions was given, do not include the
+                   semicolon or anything after it in the extension.
+                   example: if filterExt was "*.abc;*.def", it will become "*.abc" */
+                filterSearchIndex = strchrW(filterExt, ';');
+                if (filterSearchIndex)
+                {
+                    filterSearchIndex[0] = '\0';
+                }
 
-            /* If extension contains a glob, ignore it */
-            if ( filterExt && !strchrW(filterExt, '*') && !strchrW(filterExt, '?') )
+                /* find the file extension by searching for the first dot in filterExt */
+                /* strip the * or anything else from the extension, "*.abc" becomes "abc" */
+                /* if the extension is invalid or contains a glob, ignore it */
+                filterSearchIndex = strchrW(filterExt, '.');
+                if (filterSearchIndex++ && !strchrW(filterSearchIndex, '*') && !strchrW(filterSearchIndex, '?'))
+                {
+                    strcpyW(filterExt, filterSearchIndex);
+                }
+                else
+                {
+                    HeapFree(GetProcessHeap(), 0, filterExt);
+                    filterExt = NULL;
+                }
+            }
+
+            if (!filterExt)
+            {
+                /* use the default file extension */
+                filterExt = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(fodInfos->defext) + 1) * sizeof(WCHAR));
+                strcpyW(filterExt, fodInfos->defext);
+            }
+
+            if (*filterExt) /* ignore filterExt="" */
             {
                 /* Attach the dot*/
                 lstrcatW(lpstrPathAndFile, szwDot);
                 /* Attach the extension */
-                lstrcatW(lpstrPathAndFile, filterExt );
+                lstrcatW(lpstrPathAndFile, filterExt);
             }
+
+            HeapFree(GetProcessHeap(), 0, filterExt);
 
             /* In Open dialog: if file does not exist try without extension */
             if (!(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG) && !PathFileExistsW(lpstrPathAndFile))
                   lpstrPathAndFile[PathLength] = '\0';
-        }
 
-	if (fodInfos->defext) /* add default extension */
-	{
-	  /* Set/clear the output OFN_EXTENSIONDIFFERENT flag */
-	  if (*ext)
-	    ext++;
-	  if (!lstrcmpiW(fodInfos->defext, ext))
-	    fodInfos->ofnInfos->Flags &= ~OFN_EXTENSIONDIFFERENT;
-	  else
-	    fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
+            /* Set/clear the output OFN_EXTENSIONDIFFERENT flag */
+            if (*ext)
+                ext++;
+            if (!lstrcmpiW(fodInfos->defext, ext))
+                fodInfos->ofnInfos->Flags &= ~OFN_EXTENSIONDIFFERENT;
+            else
+                fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
 	}
 
 	/* In Save dialog: check if the file already exists */
@@ -2675,16 +2690,20 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           }
           else
           {
-               LPSTR lpszTemp;
-               LPOPENFILENAMEA ofn = (LPOPENFILENAMEA)fodInfos->ofnInfos;
+              LPSTR lpszTemp;
+              CHAR tempFileA[MAX_PATH];
+
+              /* avoid using fodInfos->ofnInfos->lpstrFile since it can be NULL */
+              WideCharToMultiByte(CP_ACP, 0, lpstrPathAndFile, -1,
+                                  tempFileA, sizeof(tempFileA), NULL, NULL);
 
               /* set filename offset */
-              lpszTemp = PathFindFileNameA(ofn->lpstrFile);
-              fodInfos->ofnInfos->nFileOffset = (lpszTemp - ofn->lpstrFile);
+              lpszTemp = PathFindFileNameA(tempFileA);
+              fodInfos->ofnInfos->nFileOffset = (lpszTemp - tempFileA);
 
               /* set extension offset */
-              lpszTemp = PathFindExtensionA(ofn->lpstrFile);
-              fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - ofn->lpstrFile) + 1 : 0;
+              lpszTemp = PathFindExtensionA(tempFileA);
+              fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - tempFileA) + 1 : 0;
           }
 
           /* set the lpstrFileTitle */
@@ -2737,7 +2756,8 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           if (fodInfos->ofnInfos->Flags & OFN_ALLOWMULTISELECT)
              size += 1;
           /* return needed size in first two bytes of lpstrFile */
-          *(WORD *)fodInfos->ofnInfos->lpstrFile = size;
+          if(fodInfos->ofnInfos->lpstrFile)
+              *(WORD *)fodInfos->ofnInfos->lpstrFile = size;
           FILEDLG95_Clean(hwnd);
           ret = EndDialog(hwnd, FALSE);
           COMDLG32_SetCommDlgExtendedError(FNERR_BUFFERTOOSMALL);
@@ -3125,7 +3145,8 @@ static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
   IShellFolder	*psfRoot, *psfDrives;
   IEnumIDList	*lpeRoot, *lpeDrives;
   LPITEMIDLIST	pidlDrives, pidlTmp, pidlTmp1, pidlAbsTmp;
-
+  HDC hdc;
+  TEXTMETRICW tm;
   LookInInfos *liInfos = MemAlloc(sizeof(LookInInfos));
 
   TRACE("\n");
@@ -3134,10 +3155,15 @@ static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
 
   SetPropA(hwndCombo, LookInInfosStr, liInfos);
 
+  hdc = GetDC( hwndCombo );
+  SelectObject( hdc, (HFONT)SendMessageW( hwndCombo, WM_GETFONT, 0, 0 ));
+  GetTextMetricsW( hdc, &tm );
+  ReleaseDC( hwndCombo, hdc );
+
   /* set item height for both text field and listbox */
-  CBSetItemHeight(hwndCombo,-1,GetSystemMetrics(SM_CYSMICON));
-  CBSetItemHeight(hwndCombo,0,GetSystemMetrics(SM_CYSMICON));
-   
+  CBSetItemHeight( hwndCombo, -1, max( tm.tmHeight, GetSystemMetrics(SM_CYSMICON) ));
+  CBSetItemHeight( hwndCombo, 0, max( tm.tmHeight, GetSystemMetrics(SM_CYSMICON) ));
+
   /* Turn on the extended UI for the combo box like Windows does */
   CBSetExtendedUI(hwndCombo, TRUE);
 
@@ -3211,7 +3237,8 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
   int iIndentation;
   TEXTMETRICW tm;
   LPSFOLDER tmpFolder;
-  LookInInfos *liInfos = GetPropA(pDIStruct->hwndItem,LookInInfosStr);
+  UINT shgfi_flags = SHGFI_PIDL | SHGFI_OPENICON | SHGFI_SYSICONINDEX | SHGFI_DISPLAYNAME;
+  UINT icon_width, icon_height;
 
   TRACE("\n");
 
@@ -3223,26 +3250,17 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
     return 0;
 
 
-  if(pDIStruct->itemID == liInfos->uSelectedItem)
+  icon_width = GetSystemMetrics(SM_CXICON);
+  icon_height = GetSystemMetrics(SM_CYICON);
+  if (pDIStruct->rcItem.bottom - pDIStruct->rcItem.top < icon_height)
   {
-    ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
-                                               0,
-                                               &sfi,
-                                               sizeof (sfi),
-                                               SHGFI_PIDL | SHGFI_SMALLICON |
-                                               SHGFI_OPENICON | SHGFI_SYSICONINDEX    |
-                                               SHGFI_DISPLAYNAME );
+      icon_width = GetSystemMetrics(SM_CXSMICON);
+      icon_height = GetSystemMetrics(SM_CYSMICON);
+      shgfi_flags |= SHGFI_SMALLICON;
   }
-  else
-  {
-    ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
-                                                  0,
-                                                  &sfi,
-                                                  sizeof (sfi),
-                                                  SHGFI_PIDL | SHGFI_SMALLICON |
-                                                  SHGFI_SYSICONINDEX |
-                                                  SHGFI_DISPLAYNAME);
-  }
+
+  ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
+                                             0, &sfi, sizeof (sfi), shgfi_flags );
 
   /* Is this item selected ? */
   if(pDIStruct->itemState & ODS_SELECTED)
@@ -3260,34 +3278,24 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
 
   /* Do not indent item if drawing in the edit of the combo */
   if(pDIStruct->itemState & ODS_COMBOBOXEDIT)
-  {
     iIndentation = 0;
-    ilItemImage = (HIMAGELIST) SHGetFileInfoW ((LPCWSTR) tmpFolder->pidlItem,
-                                                0,
-                                                &sfi,
-                                                sizeof (sfi),
-                                                SHGFI_PIDL | SHGFI_SMALLICON | SHGFI_OPENICON
-                                                | SHGFI_SYSICONINDEX | SHGFI_DISPLAYNAME  );
-
-  }
   else
-  {
     iIndentation = tmpFolder->m_iIndent;
-  }
+
   /* Draw text and icon */
 
   /* Initialise the icon display area */
-  rectIcon.left = pDIStruct->rcItem.left + ICONWIDTH/2 * iIndentation;
-  rectIcon.top = pDIStruct->rcItem.top;
-  rectIcon.right = rectIcon.left + ICONWIDTH;
-  rectIcon.bottom = pDIStruct->rcItem.bottom;
+  rectIcon.left = pDIStruct->rcItem.left + 1 + icon_width/2 * iIndentation;
+  rectIcon.top = (pDIStruct->rcItem.top + pDIStruct->rcItem.bottom - icon_height) / 2;
+  rectIcon.right = rectIcon.left + icon_width + XTEXTOFFSET;
+  rectIcon.bottom = (pDIStruct->rcItem.top + pDIStruct->rcItem.bottom + icon_height) / 2;
 
   /* Initialise the text display area */
   GetTextMetricsW(pDIStruct->hDC, &tm);
   rectText.left = rectIcon.right;
   rectText.top =
 	  (pDIStruct->rcItem.top + pDIStruct->rcItem.bottom - tm.tmHeight) / 2;
-  rectText.right = pDIStruct->rcItem.right + XTEXTOFFSET;
+  rectText.right = pDIStruct->rcItem.right;
   rectText.bottom =
 	  (pDIStruct->rcItem.top + pDIStruct->rcItem.bottom + tm.tmHeight) / 2;
 
@@ -3664,8 +3672,9 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
       }
       SetWindowTextW( fodInfos->DlgInfos.hwndFileName, lpstrAllFile );
        
-      /* Select the file name like Windows does */ 
-      SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
+      /* Select the file name like Windows does */
+      if (filename_is_edit( fodInfos ))
+          SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
     }
     HeapFree(GetProcessHeap(),0, lpstrAllFile );
 }
@@ -3716,10 +3725,10 @@ static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, U
 
 	TRACE("\n");
 
-	/* get the filenames from the edit control */
-	nStrLen = SendMessageW(fodInfos->DlgInfos.hwndFileName, WM_GETTEXTLENGTH, 0, 0);
+	/* get the filenames from the filename control */
+	nStrLen = GetWindowTextLengthW( fodInfos->DlgInfos.hwndFileName );
 	lpstrEdit = MemAlloc( (nStrLen+1)*sizeof(WCHAR) );
-	GetDlgItemTextW(hwnd, IDC_FILENAME, lpstrEdit, nStrLen+1);
+	GetWindowTextW( fodInfos->DlgInfos.hwndFileName, lpstrEdit, nStrLen+1);
 
 	TRACE("nStrLen=%u str=%s\n", nStrLen, debugstr_w(lpstrEdit));
 
@@ -4000,186 +4009,16 @@ static void MemFree(void *mem)
     HeapFree(GetProcessHeap(),0,mem);
 }
 
-/*
- * Old-style (win3.1) dialogs */
-
-/***********************************************************************
- *           FD32_GetTemplate                                  [internal]
- *
- * Get a template (or FALSE if failure) when 16 bits dialogs are used
- * by a 32 bits application
- *
- */
-BOOL FD32_GetTemplate(PFD31_DATA lfs)
+static inline BOOL valid_struct_size( DWORD size )
 {
-    LPOPENFILENAMEW ofnW = lfs->ofnW;
-    LPOPENFILENAMEA ofnA = lfs->ofnA;
-    HANDLE hDlgTmpl;
-
-    if (ofnW->Flags & OFN_ENABLETEMPLATEHANDLE)
-    {
-	if (!(lfs->template = LockResource( ofnW->hInstance )))
-	{
-	    COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
-	    return FALSE;
-	}
-    }
-    else if (ofnW->Flags & OFN_ENABLETEMPLATE)
-    {
-	HRSRC hResInfo;
-        if (ofnA)
-	    hResInfo = FindResourceA(ofnA->hInstance,
-				 ofnA->lpTemplateName,
-                                 (LPSTR)RT_DIALOG);
-        else
-	    hResInfo = FindResourceW(ofnW->hInstance,
-				 ofnW->lpTemplateName,
-                                 (LPWSTR)RT_DIALOG);
-        if (!hResInfo)
-	{
-	    COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
-	    return FALSE;
-	}
-	if (!(hDlgTmpl = LoadResource(ofnW->hInstance,
-				hResInfo)) ||
-		    !(lfs->template = LockResource(hDlgTmpl)))
-	{
-	    COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
-	    return FALSE;
-	}
-    } else { /* get it from internal Wine resource */
-	HRSRC hResInfo;
-	if (!(hResInfo = FindResourceA(COMDLG32_hInstance,
-             lfs->open? "OPEN_FILE":"SAVE_FILE", (LPSTR)RT_DIALOG)))
-	{
-	    COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
-	    return FALSE;
-        }
-        if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hResInfo )) ||
-                !(lfs->template = LockResource( hDlgTmpl )))
-        {
-            COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
-            return FALSE;
-        }
-    }
-    return TRUE;
+    return (size == OPENFILENAME_SIZE_VERSION_400W) ||
+        (size == sizeof( OPENFILENAMEW ));
 }
 
-
-/***********************************************************************
- *                              FD32_WMMeasureItem           [internal]
- */
-static LONG FD32_WMMeasureItem(LPARAM lParam)
+static inline BOOL is_win16_looks(DWORD flags)
 {
-    LPMEASUREITEMSTRUCT lpmeasure;
-
-    lpmeasure = (LPMEASUREITEMSTRUCT)lParam;
-    lpmeasure->itemHeight = FD31_GetFldrHeight();
-    return TRUE;
-}
-
-
-/***********************************************************************
- *           FileOpenDlgProc                                    [internal]
- *      Used for open and save, in fact.
- */
-static INT_PTR CALLBACK FD32_FileOpenDlgProc(HWND hWnd, UINT wMsg,
-                                             WPARAM wParam, LPARAM lParam)
-{
-    PFD31_DATA lfs = (PFD31_DATA)GetPropA(hWnd,FD31_OFN_PROP);
-
-    TRACE("msg=%x wparam=%lx lParam=%lx\n", wMsg, wParam, lParam);
-    if ((wMsg != WM_INITDIALOG) && lfs && lfs->hook)
-        {
-            INT_PTR lRet;
-            lRet  = (INT_PTR)FD31_CallWindowProc(lfs, wMsg, wParam, lParam);
-            if (lRet)
-                return lRet;         /* else continue message processing */
-        }
-    switch (wMsg)
-    {
-    case WM_INITDIALOG:
-        return FD31_WMInitDialog(hWnd, wParam, lParam);
-
-    case WM_MEASUREITEM:
-        return FD32_WMMeasureItem(lParam);
-
-    case WM_DRAWITEM:
-        return FD31_WMDrawItem(hWnd, wParam, lParam, !lfs->open, (DRAWITEMSTRUCT *)lParam);
-
-    case WM_COMMAND:
-        return FD31_WMCommand(hWnd, lParam, HIWORD(wParam), LOWORD(wParam), lfs);
-#if 0
-    case WM_CTLCOLOR:
-         SetBkColor((HDC16)wParam, 0x00C0C0C0);
-         switch (HIWORD(lParam))
-         {
-	 case CTLCOLOR_BTN:
-	     SetTextColor((HDC16)wParam, 0x00000000);
-             return hGRAYBrush;
-	case CTLCOLOR_STATIC:
-             SetTextColor((HDC16)wParam, 0x00000000);
-             return hGRAYBrush;
-	}
-      break;
-#endif
-    }
-    return FALSE;
-}
-
-
-/***********************************************************************
- *           GetFileName31A                                 [internal]
- *
- * Creates a win31 style dialog box for the user to select a file to open/save.
- */
-static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* address of structure with data*/
-                           UINT dlgType /* type dialogue : open/save */
-                           )
-{
-    BOOL bRet = FALSE;
-    PFD31_DATA lfs;
-
-    if (!lpofn || !FD31_Init()) return FALSE;
-
-    TRACE("ofn flags %08x\n", lpofn->Flags);
-    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, FALSE);
-    if (lfs)
-    {
-        bRet = DialogBoxIndirectParamA( COMDLG32_hInstance, lfs->template, lpofn->hwndOwner,
-                                        FD32_FileOpenDlgProc, (LPARAM)lfs);
-        FD31_DestroyPrivate(lfs);
-    }
-
-    TRACE("return lpstrFile='%s' !\n", lpofn->lpstrFile);
-    return bRet;
-}
-
-/***********************************************************************
- *           GetFileName31W                                 [internal]
- *
- * Creates a win31 style dialog box for the user to select a file to open/save
- */
-static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* address of structure with data*/
-                           UINT dlgType /* type dialogue : open/save */
-                           )
-{
-    BOOL bRet = FALSE;
-    PFD31_DATA lfs;
-
-    if (!lpofn || !FD31_Init()) return FALSE;
-
-    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, TRUE);
-    if (lfs)
-    {
-        bRet = DialogBoxIndirectParamW( COMDLG32_hInstance, lfs->template, lpofn->hwndOwner,
-                                        FD32_FileOpenDlgProc, (LPARAM)lfs);
-        FD31_DestroyPrivate(lfs);
-    }
-
-    TRACE("file %s, file offset %d, ext offset %d\n",
-          debugstr_w(lpofn->lpstrFile), lpofn->nFileOffset, lpofn->nFileExtension);
-    return bRet;
+    return (flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE) &&
+            !(flags & OFN_EXPLORER));
 }
 
 /* ------------------ APIs ---------------------- */
@@ -4197,18 +4036,19 @@ static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* address of structure with d
 BOOL WINAPI GetOpenFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
-    BOOL win16look = FALSE;
-
     TRACE("flags %08x\n", ofn->Flags);
+
+    if (!valid_struct_size( ofn->lStructSize ))
+    {
+        COMDLG32_SetCommDlgExtendedError( CDERR_STRUCTSIZE );
+        return FALSE;
+    }
 
     /* OFN_FILEMUSTEXIST implies OFN_PATHMUSTEXIST */
     if (ofn->Flags & OFN_FILEMUSTEXIST)
         ofn->Flags |= OFN_PATHMUSTEXIST;
 
-    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
-        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
-
-    if (win16look)
+    if (is_win16_looks(ofn->Flags))
         return GetFileName31A(ofn, OPEN_DIALOG);
     else
         return GetFileDialog95A(ofn, OPEN_DIALOG);
@@ -4227,18 +4067,19 @@ BOOL WINAPI GetOpenFileNameA(
 BOOL WINAPI GetOpenFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
-    BOOL win16look = FALSE;
-
     TRACE("flags %08x\n", ofn->Flags);
+
+    if (!valid_struct_size( ofn->lStructSize ))
+    {
+        COMDLG32_SetCommDlgExtendedError( CDERR_STRUCTSIZE );
+        return FALSE;
+    }
 
     /* OFN_FILEMUSTEXIST implies OFN_PATHMUSTEXIST */
     if (ofn->Flags & OFN_FILEMUSTEXIST)
         ofn->Flags |= OFN_PATHMUSTEXIST;
 
-    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
-        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
-
-    if (win16look)
+    if (is_win16_looks(ofn->Flags))
         return GetFileName31W(ofn, OPEN_DIALOG);
     else
         return GetFileDialog95W(ofn, OPEN_DIALOG);
@@ -4258,12 +4099,13 @@ BOOL WINAPI GetOpenFileNameW(
 BOOL WINAPI GetSaveFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
-    BOOL win16look = FALSE;
+    if (!valid_struct_size( ofn->lStructSize ))
+    {
+        COMDLG32_SetCommDlgExtendedError( CDERR_STRUCTSIZE );
+        return FALSE;
+    }
 
-    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
-        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
-
-    if (win16look)
+    if (is_win16_looks(ofn->Flags))
         return GetFileName31A(ofn, SAVE_DIALOG);
     else
         return GetFileDialog95A(ofn, SAVE_DIALOG);
@@ -4282,12 +4124,13 @@ BOOL WINAPI GetSaveFileNameA(
 BOOL WINAPI GetSaveFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
-    BOOL win16look = FALSE;
+    if (!valid_struct_size( ofn->lStructSize ))
+    {
+        COMDLG32_SetCommDlgExtendedError( CDERR_STRUCTSIZE );
+        return FALSE;
+    }
 
-    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
-        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
-
-    if (win16look)
+    if (is_win16_looks(ofn->Flags))
         return GetFileName31W(ofn, SAVE_DIALOG);
     else
         return GetFileDialog95W(ofn, SAVE_DIALOG);

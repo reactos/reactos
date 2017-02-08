@@ -21,23 +21,58 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
+#ifndef _DBGHELP_PRIVATE_H_
+#define _DBGHELP_PRIVATE_H_
+
+#include <config.h>
+
+#include <assert.h>
+#include <stdio.h>
+
+#ifdef HAVE_SYS_MMAN_H
+# include <sys/mman.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#ifndef DBGHELP_STATIC_LIB
+
+#include <wine/port.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winver.h>
+#include <winternl.h>
 #include <dbghelp.h>
 #include <objbase.h>
-//#include "oaidl.h"
-//#include "winnls.h"
-#include <wine/list.h>
-#include <wine/unicode.h>
-#include <wine/rbtree.h>
-
 #include <cvconst.h>
+#include <psapi.h>
+
+#include <wine/debug.h>
+#include <wine/mscvpdb.h>
+#include <wine/unicode.h>
+
+#else /* DBGHELP_STATIC_LIB */
+
+#include <string.h>
+#include "compat.h"
+
+#endif /* DBGHELP_STATIC_LIB */
+
+#include <wine/list.h>
+#include <wine/rbtree.h>
 
 /* #define USE_STATS */
 
@@ -356,13 +391,20 @@ struct module_format
     } u;
 };
 
+#ifdef __REACTOS__
+struct symt_idx_to_ptr
+{
+    struct hash_table_elt hash_elt;
+    DWORD idx;
+    const struct symt *sym;
+};
+#endif
+
 extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
 struct module
 {
     struct process*             process;
     IMAGEHLP_MODULEW64          module;
-    /* ANSI copy of module.ModuleName for efficiency */
-    char                        module_name[MAX_PATH];
     struct module*              next;
     enum module_type		type : 16;
     unsigned short              is_virtual : 1;
@@ -382,6 +424,9 @@ struct module
     unsigned                    sorttab_size;
     struct symt_ht**            addr_sorttab;
     struct hash_table           ht_symbols;
+#ifdef __x86_64__
+    struct hash_table           ht_symaddr;
+#endif
 
     /* types */
     struct hash_table           ht_types;
@@ -469,6 +514,55 @@ struct cpu_stack_walk
     } u;
 };
 
+struct dump_memory
+{
+    ULONG64                             base;
+    ULONG                               size;
+    ULONG                               rva;
+};
+
+struct dump_module
+{
+    unsigned                            is_elf;
+    ULONG64                             base;
+    ULONG                               size;
+    DWORD                               timestamp;
+    DWORD                               checksum;
+    WCHAR                               name[MAX_PATH];
+};
+
+struct dump_thread
+{
+    ULONG                               tid;
+    ULONG                               prio_class;
+    ULONG                               curr_prio;
+};
+
+struct dump_context
+{
+    /* process & thread information */
+    HANDLE                              hProcess;
+    DWORD                               pid;
+    unsigned                            flags_out;
+    /* thread information */
+    struct dump_thread*                 threads;
+    unsigned                            num_threads;
+    /* module information */
+    struct dump_module*                 modules;
+    unsigned                            num_modules;
+    unsigned                            alloc_modules;
+    /* exception information */
+    /* output information */
+    MINIDUMP_TYPE                       type;
+    HANDLE                              hFile;
+    RVA                                 rva;
+    struct dump_memory*                 mem;
+    unsigned                            num_mem;
+    unsigned                            alloc_mem;
+    /* callback information */
+    MINIDUMP_CALLBACK_INFORMATION*      cb;
+};
+
 enum cpu_addr {cpu_addr_pc, cpu_addr_stack, cpu_addr_frame};
 struct cpu
 {
@@ -477,7 +571,7 @@ struct cpu
     DWORD       frame_regno;
 
     /* address manipulation */
-    unsigned    (*get_addr)(HANDLE hThread, const CONTEXT* ctx,
+    BOOL        (*get_addr)(HANDLE hThread, const CONTEXT* ctx,
                             enum cpu_addr, ADDRESS64* addr);
 
     /* stack manipulation */
@@ -487,18 +581,21 @@ struct cpu
     void*       (*find_runtime_function)(struct module*, DWORD64 addr);
 
     /* dwarf dedicated information */
-    unsigned    (*map_dwarf_register)(unsigned regno);
+    unsigned    (*map_dwarf_register)(unsigned regno, BOOL eh_frame);
 
     /* context related manipulation */
     void*       (*fetch_context_reg)(CONTEXT* context, unsigned regno, unsigned* size);
     const char* (*fetch_regname)(unsigned regno);
+
+    /* minidump per CPU extension */
+    BOOL        (*fetch_minidump_thread)(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx);
+    BOOL        (*fetch_minidump_module)(struct dump_context* dc, unsigned index, unsigned flags);
 };
 
 extern struct cpu*      dbghelp_current_cpu DECLSPEC_HIDDEN;
 
 /* dbghelp.c */
 extern struct process* process_find_by_handle(HANDLE hProcess) DECLSPEC_HIDDEN;
-extern HANDLE hMsvcrt DECLSPEC_HIDDEN;
 extern BOOL         validate_addr64(DWORD64 addr) DECLSPEC_HIDDEN;
 extern BOOL         pcs_callback(const struct process* pcs, ULONG action, void* data) DECLSPEC_HIDDEN;
 extern void*        fetch_buffer(struct process* pcs, unsigned size) DECLSPEC_HIDDEN;
@@ -523,15 +620,16 @@ struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
 /* macho_module.c */
-#define MACHO_NO_MAP    ((const void*)-1)
 extern BOOL         macho_enum_modules(HANDLE hProc, enum_modules_cb, void*) DECLSPEC_HIDDEN;
-extern BOOL         macho_fetch_file_info(const WCHAR* name, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
-struct macho_file_map;
-extern BOOL         macho_load_debug_info(struct module* module, struct macho_file_map* fmap) DECLSPEC_HIDDEN;
+extern BOOL         macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
+extern BOOL         macho_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
                     macho_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
 extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
 extern BOOL         macho_synchronize_module_list(struct process* pcs) DECLSPEC_HIDDEN;
+
+/* minidump.c */
+void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva) DECLSPEC_HIDDEN;
 
 /* module.c */
 extern const WCHAR      S_ElfW[] DECLSPEC_HIDDEN;
@@ -539,7 +637,7 @@ extern const WCHAR      S_WineLoaderW[] DECLSPEC_HIDDEN;
 extern const WCHAR      S_SlashW[] DECLSPEC_HIDDEN;
 
 extern struct module*
-                    module_find_by_addr(const struct process* pcs, unsigned long addr,
+                    module_find_by_addr(const struct process* pcs, DWORD64 addr,
                                         enum module_type type) DECLSPEC_HIDDEN;
 extern struct module*
                     module_find_by_nameW(const struct process* pcs,
@@ -597,7 +695,6 @@ extern struct module*
 extern BOOL         pe_load_debug_info(const struct process* pcs,
                                        struct module* module) DECLSPEC_HIDDEN;
 extern const char*  pe_map_directory(struct module* module, int dirno, DWORD* size) DECLSPEC_HIDDEN;
-extern void         pe_unmap_directoy(struct module* module, int dirno) DECLSPEC_HIDDEN;
 
 /* source.c */
 extern unsigned     source_new(struct module* module, const char* basedir, const char* source) DECLSPEC_HIDDEN;
@@ -621,13 +718,16 @@ extern BOOL         dwarf2_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR 
                                           CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
 
 /* stack.c */
+#ifndef DBGHELP_STATIC_LIB
 extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz) DECLSPEC_HIDDEN;
+#endif
 extern DWORD64      sw_xlat_addr(struct cpu_stack_walk* csw, ADDRESS64* addr) DECLSPEC_HIDDEN;
 extern void*        sw_table_access(struct cpu_stack_walk* csw, DWORD64 addr) DECLSPEC_HIDDEN;
 extern DWORD64      sw_module_base(struct cpu_stack_walk* csw, DWORD64 addr) DECLSPEC_HIDDEN;
 
 /* symbol.c */
 extern const char*  symt_get_name(const struct symt* sym) DECLSPEC_HIDDEN;
+extern WCHAR*       symt_get_nameW(const struct symt* sym) DECLSPEC_HIDDEN;
 extern BOOL         symt_get_address(const struct symt* type, ULONG64* addr) DECLSPEC_HIDDEN;
 extern int          symt_cmp_addr(const void* p1, const void* p2) DECLSPEC_HIDDEN;
 extern void         copy_symbolW(SYMBOL_INFOW* siw, const SYMBOL_INFO* si) DECLSPEC_HIDDEN;
@@ -741,3 +841,7 @@ extern struct symt_pointer*
 extern struct symt_typedef*
                     symt_new_typedef(struct module* module, struct symt* ref, 
                                      const char* name) DECLSPEC_HIDDEN;
+
+#include "image_private.h"
+
+#endif /* _DBGHELP_PRIVATE_H_ */

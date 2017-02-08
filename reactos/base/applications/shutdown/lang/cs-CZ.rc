@@ -1,0 +1,107 @@
+/* FILE:       base/applications/shutdown/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2013-06-01
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Dialog */
+IDD_GUI DIALOGEX 0, 0, 240, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Vzdálené vypnutí"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "&Storno", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "Počít&ače:", IDC_STATIC, 9, 9, 35, 36
+    LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
+    PUSHBUTTON "Při&dat...", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "&Odebrat", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "P&rocházet...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "Akce", IDC_ACTION, 11, 81, 20, 14
+    COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX "&Upozornit uživatele", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&Zobrazit upozornění", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
+    LTEXT "sekund", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "Přehled událostí vypnutí", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "Dů&vod:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "&Plánováno", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
+    LTEXT "Kom&entář:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE
+BEGIN
+    IDS_USAGE "ReactOS nástroj na vypínání\n\
+\n\
+Použití: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+       [/m \\\\počítač][/t xxx][/d [p|u:]xx:yy [/c ""komentář""]]\n\
+\n\
+    Bez parametrů či s parametrem /?    Zobrazí tuto nápovědu.\n\
+    /i      Zobrazí grafické uživatelské rozhraní (GUI). Tento parametr musí být\n\
+            uveden jako první.\n\
+    /l      Odhlásí se pouze z místního systému. Nelze použít s /m nebo /d.\n\
+    /s      Vypne počítač.\n\
+    /r      Restartuje počítač.\n\
+    /g      Restartuje počítač a restartuje všechny registrované aplikace.\n\
+    /a      Zruší zpožděné vypnutí. Může být použito pouze během doby zpoždění.\n\
+    /p      Vypne místní počítač bez jakéhokoliv zpoždění či varování. Lze\n\
+            použít s /d nebo /f.\n\
+    /h      Hibernuje místni počítač. Použitelné s /f.\n\
+    /e      Uvede důvod pro neočekávané vypnutí počítače.\n\
+    /m \\\\počítač  Specifikuje cílový počítač (UNC/IP adresa).\n\
+    /t xxx  Nastaví dobu zpoždění na xxx sekund před vypnutím počítače.\n\
+            Platný rozsah je 0-315360000 (10 let), výchozí hodnota je 30.\n\
+    /c ""komentář""  Zadejte komentář k důvodu vypnutí či restartu.\n\
+            Povolené maximum je 512 znaků.\n\
+    /f      Vynutí ukončení běžících aplikací bez varování uživatelů. Pokud\n\
+            nebude specifikován žádný další parametr, tato volba také provede\n\
+            odhlášení.\n\
+    /d [p|u:]xx:yy  Zadejte důvod pro vypnutí či restart systému.\n\
+            p značí, že vypnutí či restartování systému je plánované.\n\
+            u značí, že důvod je určen uživatelem.\n\
+            Pokud p ani u nejsou specifikovány, vypnutí či restart jsou\n\
+            neplánované.\n\
+            xx je hlavní číslo důvodu (celé kladné číslo menší než 256).\n\
+            yy je vedlejší číslo důvodu (celé kladné číslo menší než 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT "CHYBA: Nelze vypnout a restartovat zároveň.\n"
+    IDS_ERROR_TIMEOUT "CHYBA: Hodnota zpoždění %u je mimo povolený rozsah (0-315360000).\n"
+    IDS_ERROR_ABORT "CHYBA: Nelze přerušit vypnutí systému.\n"
+    IDS_ERROR_LOGOFF "CHYBA: Nelze se odhlásit ze systému.\n"
+    IDS_ERROR_SHUTDOWN "CHYBA: Nelze vypnout systém.\n"
+    IDS_ERROR_RESTART "CHYBA: Nelze restartovat systém.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "CHYBA: Délka komentáře přesahuje maximální povolenou délku.\n"
+    IDS_ERROR_HIBERNATE "CHYBA: Nelze uvést systém do režimu hibernace.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "CHYBA: Režim hibernace nemůže být spuštěn vzdáleně.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "CHYBA: Režim hibernace není zapnutý.\n"
+    IDS_ERROR_DIALOG_CAPTION "Vzdálené vypnutí"
+    IDS_ERROR_DIALOG_INIT "Nelze zobrazit grafické uživatelské rozhraní."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN "Vypnutí systému"
+    IDS_ACTION_RESTART "Restart systému"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Zaznamenat neočekávané vypnutí"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE
+BEGIN
+    IDS_REASON_OTHER "Jiný"
+    IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Údržba"
+    IDS_REASON_HARDWARE_INSTALL "Hardware: Instalace"
+    IDS_REASON_OS_RECOVER "Operační systém: Obnovení"
+    IDS_REASON_OS_RECONFIGURE "Operační systém: Změna konfigurace"
+    IDS_REASON_APP_MAINTENANCE "Aplikace: Údržba"
+    IDS_REASON_APP_INSTALL "Aplikace: Instalace"
+    IDS_REASON_APP_UNRESPONSIVE "Aplikace: Neodpovídá"
+    IDS_REASON_APP_UNSTABLE "Aplikace: Nestabilní"
+    IDS_REASON_SECURITY "Potíže se zabezpečním"
+    IDS_REASON_NETWORK "Ztráta síťového připojení"
+END

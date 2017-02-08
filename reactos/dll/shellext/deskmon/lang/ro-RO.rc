@@ -1,8 +1,8 @@
-/* 
- * FILE:             dll/shellext/deskmon/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:       2011-09-02  initial translation
+/*
+ * FILE:       dll/shellext/deskmon/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG: 2011-09-02  initial translation
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -12,18 +12,19 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ecran"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  GROUPBOX      "Tipul de ecran", -1, 7, 3, 237, 52
-  LTEXT         "",          IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
-  LISTBOX                    IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
-  PUSHBUTTON    "&Proprietăți…", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-  GROUPBOX      "Configurație ecran", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-  LTEXT         "&Rata de împrospătare:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
-  COMBOBOX                   IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-  AUTOCHECKBOX  "Asc&unde modurile incompatibile", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    GROUPBOX "Tipul de ecran", -1, 7, 3, 237, 52
+    ICON IDC_MONITORICO, IDC_MONITORICO, 13, 11, 21, 20, SS_ICON
+    LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
+    LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
+    PUSHBUTTON "&Proprietăți…", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+    GROUPBOX "Configurație ecran", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "&Rata de împrospătare:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
+    AUTOCHECKBOX "Asc&unde modurile incompatibile", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-  IDS_USEDEFFRQUENCY  "Utilizează configurația fizică implicită"
-  IDS_FREQFMT         "%u Hertz"
+    IDS_USEDEFFRQUENCY "Utilizează configurația fizică implicită"
+    IDS_FREQFMT "%u Hertz"
 END

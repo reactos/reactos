@@ -1,0 +1,10 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Yanlışlık: Komut yatacı desteklenmiyor\n"
+    STRING_ALIAS_NOT_FOUND, "Yanlışlık: Başka ad bulunamadı\n"
+    STRING_INVALID_QUERY, "Yanlışlık: Geçersiz sorgu\n"
+}

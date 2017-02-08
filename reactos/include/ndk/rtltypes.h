@@ -26,6 +26,10 @@ Author:
 #include <mmtypes.h>
 #include <ldrtypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Maximum Atom Length
 //
@@ -68,16 +72,38 @@ Author:
 #define RTL_RANGE_CONFLICT                                  0x02
 
 //
-// Activation Context Frame Flags
+// Flags in RTL_ACTIVATION_CONTEXT_STACK_FRAME (from Checked NTDLL)
 //
-#define RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER \
-                                                            0x1
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_RELEASE_ON_DEACTIVATION         0x01
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_NO_DEACTIVATE                   0x02
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ON_FREE_LIST                    0x04
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_HEAP_ALLOCATED                  0x08
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_NOT_REALLY_ACTIVATED            0x10
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_ACTIVATED                       0x20
+#define RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED                     0x40
 
 //
-// RtlActivateActivationContextEx Flags
+// Activation Context Frame Flags (from Checked NTDLL)
 //
-#define RTL_ACTIVATE_ACTIVATION_CONTEXT_EX_FLAG_RELEASE_ON_STACK_DEALLOCATION \
-                                                            0x1
+#define RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER     0x01
+
+//
+// RtlActivateActivationContextEx Flags (from Checked NTDLL)
+//
+#define RTL_ACTIVATE_ACTIVATION_CONTEXT_EX_FLAG_RELEASE_ON_STACK_DEALLOCATION   0x01
+
+//
+// RtlDeactivateActivationContext Flags (based on Win32 flag and name of above)
+//
+#define RTL_DEACTIVATE_ACTIVATION_CONTEXT_FLAG_FORCE_EARLY_DEACTIVATION         0x01
+
+//
+// RtlQueryActivationContext Flags (based on Win32 flag and name of above)
+//
+#define RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT         0x01
+#define RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_HMODULE                            0x02
+#define RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_ADDRESS                            0x04
+#define RTL_QUERY_ACTIVATION_CONTEXT_FLAG_NO_ADDREF                             0x80000000
 
 //
 // Public Heap Flags
@@ -808,6 +834,27 @@ typedef struct _UNICODE_PREFIX_TABLE
     PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
 } UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
 
+#ifdef NTOS_MODE_USER
+//
+// Pfx* routines' table structures
+//
+typedef struct _PREFIX_TABLE_ENTRY
+{
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
+  RTL_SPLAY_LINKS Links;
+  PSTRING Prefix;
+} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
+
+typedef struct _PREFIX_TABLE
+{
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PPREFIX_TABLE_ENTRY NextPrefixTree;
+} PREFIX_TABLE, *PPREFIX_TABLE;
+#endif
+
 //
 // Time Structure for RTL Time calls
 //
@@ -822,11 +869,6 @@ typedef struct _TIME_FIELDS
     CSHORT Milliseconds;
     CSHORT Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
-
-//
-// Activation Context
-//
-typedef PVOID PACTIVATION_CONTEXT;
 
 //
 // Activation Context Frame
@@ -859,6 +901,13 @@ typedef struct _RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED
 typedef RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME;
 typedef PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME;
 
+typedef struct _RTL_HEAP_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME
+{
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME Frame;
+    ULONG_PTR Cookie;
+    PVOID ActivationStackBackTrace[8];
+} RTL_HEAP_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME, *PRTL_HEAP_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME;
+
 #if (NTDDI_VERSION >= NTDDI_WS03)
 typedef struct _ACTIVATION_CONTEXT_STACK
 {
@@ -877,6 +926,28 @@ typedef struct _ACTIVATION_CONTEXT_STACK
     LIST_ENTRY FrameListCache;
 } ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
 #endif
+
+typedef struct _ACTIVATION_CONTEXT_DATA
+{
+    ULONG Magic;
+    ULONG HeaderSize;
+    ULONG FormatVersion;
+    ULONG TotalSize;
+    ULONG DefaultTocOffset;
+    ULONG ExtendedTocOffset;
+    ULONG AssemblyRosterOffset;
+    ULONG Flags;
+} ACTIVATION_CONTEXT_DATA, *PACTIVATION_CONTEXT_DATA;
+
+typedef struct _ACTIVATION_CONTEXT_STACK_FRAMELIST
+{
+    ULONG Magic;
+    ULONG FramesInUse;
+    LIST_ENTRY Links;
+    ULONG Flags;
+    ULONG NotFramesInUse;
+    RTL_HEAP_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME Frames[32];
+} ACTIVATION_CONTEXT_STACK_FRAMELIST, *PACTIVATION_CONTEXT_STACK_FRAMELIST;
 
 #endif /* NTOS_MODE_USER */
 
@@ -1144,6 +1215,7 @@ typedef struct _RTL_HANDLE_TABLE
     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
+#ifdef NTOS_MODE_USER
 //
 // Exception Record
 //
@@ -1152,6 +1224,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
     struct _EXCEPTION_REGISTRATION_RECORD *Next;
     PEXCEPTION_ROUTINE Handler;
 } EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+#endif /* NTOS_MODE_USER */
 
 //
 // Current Directory Structures
@@ -1343,6 +1416,98 @@ typedef struct _RTL_USER_PROCESS_INFORMATION
     SECTION_IMAGE_INFORMATION ImageInformation;
 } RTL_USER_PROCESS_INFORMATION, *PRTL_USER_PROCESS_INFORMATION;
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef enum _RTL_UMS_SCHEDULER_REASON
+{
+    UmsSchedulerStartup = 0,
+    UmsSchedulerThreadBlocked = 1,
+    UmsSchedulerThreadYield = 2,
+} RTL_UMS_SCHEDULER_REASON, *PRTL_UMS_SCHEDULER_REASON;
+
+enum _RTL_UMSCTX_FLAGS
+{
+    UMSCTX_SCHEDULED_THREAD_BIT = 0,
+#if (NTDDI_VERSION < NTDDI_WIN8)
+    UMSCTX_HAS_QUANTUM_REQ_BIT,
+    UMSCTX_HAS_AFFINITY_REQ_BIT,
+    UMSCTX_HAS_PRIORITY_REQ_BIT,
+#endif
+    UMSCTX_SUSPENDED_BIT,
+    UMSCTX_VOLATILE_CONTEXT_BIT,
+    UMSCTX_TERMINATED_BIT,
+    UMSCTX_DEBUG_ACTIVE_BIT,
+    UMSCTX_RUNNING_ON_SELF_THREAD_BIT,
+    UMSCTX_DENY_RUNNING_ON_SELF_THREAD_BIT
+
+} RTL_UMSCTX_FLAGS, *PRTL_UMSCTX_FLAGS;
+
+#define UMSCTX_SCHEDULED_THREAD_MASK (1 << UMSCTX_SCHEDULED_THREAD_BIT)
+#define UMSCTX_SUSPENDED_MASK        (1 << UMSCTX_SUSPENDED_BIT)
+#define UMSCTX_VOLATILE_CONTEXT_MASK (1 << UMSCTX_VOLATILE_CONTEXT_BIT)
+#define UMSCTX_TERMINATED_MASK       (1 << UMSCTX_TERMINATED_BIT)
+#define UMSCTX_DEBUG_ACTIVE_MASK     (1 << UMSCTX_DEBUG_ACTIVE_BIT)
+#define UMSCTX_RUNNING_ON_SELF_THREAD_MASK (1 << UMSCTX_RUNNING_ON_SELF_THREAD_BIT)
+#define UMSCTX_DENY_RUNNING_ON_SELF_THREAD_MASK (1 << UMSCTX_DENY_RUNNING_ON_SELF_THREAD_BIT)
+
+//
+// UMS Context
+//
+typedef struct DECLSPEC_ALIGN(16) _RTL_UMS_CONTEXT
+{
+    SINGLE_LIST_ENTRY Link;
+    CONTEXT Context;
+    PVOID Teb;
+    PVOID UserContext;
+    union
+    {
+        struct
+        {
+            ULONG ScheduledThread : 1;
+#if (NTDDI_VERSION < NTDDI_WIN8)
+            ULONG HasQuantumReq : 1;
+            ULONG HasAffinityReq : 1;
+            ULONG HasPriorityReq : 1;
+#endif
+            ULONG Suspended : 1;
+            ULONG VolatileContext : 1;
+            ULONG Terminated : 1;
+            ULONG DebugActive : 1;
+            ULONG RunningOnSelfThread : 1;
+            ULONG DenyRunningOnSelfThread : 1;
+#if (NTDDI_VERSION < NTDDI_WIN8)
+            ULONG ReservedFlags : 22;
+#endif
+        };
+        LONG Flags;
+    };
+    union
+    {
+        struct
+        {
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+            ULONG64 KernelUpdateLock : 2;
+#else
+            ULONG64 KernelUpdateLock : 1;
+            ULONG64 Reserved : 1;
+#endif
+            ULONG64 PrimaryClientID : 62;
+        };
+        ULONG64 ContextLock;
+    };
+#if (NTDDI_VERSION < NTDDI_WIN8)
+    ULONG64 QuantumValue;
+    GROUP_AFFINITY AffinityMask;
+    LONG Priority;
+#endif
+    struct _RTL_UMS_CONTEXT* PrimaryUmsContext;
+    ULONG SwitchCount;
+    ULONG KernelYieldCount;
+    ULONG MixedYieldCount;
+    ULONG YieldCount;
+} RTL_UMS_CONTEXT, *PRTL_UMS_CONTEXT;
+#endif // #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 //
 // RTL Atom Table Structures
 //
@@ -1463,6 +1628,12 @@ typedef struct _STACK_TRACE_DATABASE
     RTL_CRITICAL_SECTION CriticalSection;
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
 
+//
+// Trace Database
+//
+
+typedef ULONG (NTAPI *RTL_TRACE_HASH_FUNCTION) (ULONG Count, PVOID *Trace);
+
 typedef struct _RTL_TRACE_BLOCK
 {
     ULONG Magic;
@@ -1474,6 +1645,50 @@ typedef struct _RTL_TRACE_BLOCK
     struct _RTL_TRACE_BLOCK *Next;
     PVOID *Trace;
 } RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
+
+typedef struct _RTL_TRACE_DATABASE
+{
+    ULONG Magic;
+    ULONG Flags;
+    ULONG Tag;
+    struct _RTL_TRACE_SEGMENT *SegmentList;
+    SIZE_T MaximumSize;
+    SIZE_T CurrentSize;
+    PVOID Owner;
+#ifdef NTOS_MODE_USER
+    RTL_CRITICAL_SECTION Lock;
+#else
+    union
+    {
+        KSPIN_LOCK SpinLock;
+        FAST_MUTEX FastMutex;
+    } u;
+#endif
+    ULONG NoOfBuckets;
+    struct _RTL_TRACE_BLOCK **Buckets;
+    RTL_TRACE_HASH_FUNCTION HashFunction;
+    SIZE_T NoOfTraces;
+    SIZE_T NoOfHits;
+    ULONG HashCounter[16];
+} RTL_TRACE_DATABASE, *PRTL_TRACE_DATABASE;
+
+typedef struct _RTL_TRACE_SEGMENT
+{
+    ULONG Magic;
+    struct _RTL_TRACE_DATABASE *Database;
+    struct _RTL_TRACE_SEGMENT *NextSegment;
+    SIZE_T TotalSize;
+    PCHAR SegmentStart;
+    PCHAR SegmentEnd;
+    PCHAR SegmentFree;
+} RTL_TRACE_SEGMENT, *PRTL_TRACE_SEGMENT;
+
+typedef struct _RTL_TRACE_ENUMERATE
+{
+    struct _RTL_TRACE_DATABASE *Database;
+    ULONG Index;
+    struct _RTL_TRACE_BLOCK *Block;
+} RTL_TRACE_ENUMERATE, * PRTL_TRACE_ENUMERATE;
 
 //
 // Auto-Managed Rtl* String Buffer
@@ -1521,4 +1736,47 @@ typedef struct _MESSAGE_RESOURCE_DATA
 } MESSAGE_RESOURCE_DATA, *PMESSAGE_RESOURCE_DATA;
 
 #endif /* !NTOS_MODE_USER */
+
+#ifdef NTOS_MODE_USER
+
+//
+// Memory Stream
+//
+#ifndef CONST_VTBL
+#ifdef CONST_VTABLE
+#define CONST_VTBL const
+#else
+#define CONST_VTBL
+#endif
+#endif
+
+struct IStreamVtbl;
+struct IStream;
+struct tagSTATSTG;
+
+typedef struct _RTL_MEMORY_STREAM RTL_MEMORY_STREAM, *PRTL_MEMORY_STREAM;
+
+typedef VOID
+(NTAPI *PRTL_MEMORY_STREAM_FINAL_RELEASE_ROUTINE)(
+    _In_ PRTL_MEMORY_STREAM Stream
+);
+
+struct _RTL_MEMORY_STREAM
+{
+    CONST_VTBL struct IStreamVtbl *Vtbl;
+    LONG RefCount;
+    ULONG Unk1;
+    PVOID Current;
+    PVOID Start;
+    PVOID End;
+    PRTL_MEMORY_STREAM_FINAL_RELEASE_ROUTINE FinalRelease;
+    HANDLE ProcessHandle;
+};
+
+#endif /* NTOS_MODE_USER */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* !_RTLTYPES_H */

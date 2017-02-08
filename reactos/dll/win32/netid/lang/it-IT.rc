@@ -1,24 +1,25 @@
-// Italian language resource file (Paolo Devoti, devotip@tiscali.it, 2007-01-20)
+/* Italian translation by Paolo Devoti, devotip@tiscali.it, 2007-01-20 */
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nome del Computer"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS usa le informazioni seguenti per identificare questo computer nella rete.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Descrizione del computer:", IDC_STATIC, 6, 37, 78, 16
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Nome esteso del computer:", IDC_STATIC, 6, 67, 78, 16
-    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Gruppo di lavoro:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Per usare il wizard per la Identificazione in rete per collegarsi a un dominio e creare un utente locale, click ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
-    PUSHBUTTON  "&ID di rete...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT       "Per cambiare il nome a questo computer o collegarsi a un dominio, clicca ""Modifica"".", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON  "&Modifica...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "Nota: Solo gli amministratori possono cambiare il nome di questo computer.", IDC_STATIC, 6, 179, 300, 9
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "ReactOS usa le informazioni seguenti per identificare questo computer nella rete.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Descrizione del computer:", IDC_STATIC, 6, 37, 78, 16
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Nome esteso del computer:", IDC_STATIC, 6, 67, 78, 16
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Gruppo di lavoro:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Per usare il wizard per la Identificazione in rete per collegarsi a un dominio e creare un utente locale, click ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
+    PUSHBUTTON "&ID di rete...", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT "Per cambiare il nome a questo computer o collegarsi a un dominio, clicca ""Modifica"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON "&Modifica...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT "Nota: Solo gli amministratori possono cambiare il nome di questo computer.", IDC_STATIC, 6, 179, 300, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

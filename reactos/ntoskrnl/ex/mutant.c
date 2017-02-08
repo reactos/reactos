@@ -69,6 +69,7 @@ ExpInitializeMutantImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteMutant;
     ObjectTypeInitializer.ValidAccessMask = MUTANT_ALL_ACCESS;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExMutantObjectType);
     if (!NT_SUCCESS(Status)) return FALSE;
     return TRUE;
@@ -325,7 +326,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(MutantHandle,
-                                       MUTANT_QUERY_STATE,
+                                       0, /* No access rights required */
                                        ExMutantObjectType,
                                        PreviousMode,
                                        (PVOID*)&Mutant,

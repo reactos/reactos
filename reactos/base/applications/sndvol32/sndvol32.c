@@ -19,10 +19,13 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        subsys/system/sndvol32/sndvol32.c
+ * FILE:        base/applications/sndvol32/sndvol32.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
+
 #include "sndvol32.h"
+
+#include <shellapi.h>
 
 HINSTANCE hAppInstance;
 ATOM MainWindowClass;
@@ -1015,9 +1018,13 @@ MainWindowProc(HWND hwnd,
         {
             MixerWindow = GetWindowData(hwnd,
                                         MIXER_WINDOW);
-            if (MixerWindow->Mixer != NULL)
+            if (MixerWindow != NULL)
             {
-                SndMixerDestroy(MixerWindow->Mixer);
+                if (MixerWindow->Mixer != NULL)
+                {
+                    SndMixerDestroy(MixerWindow->Mixer);
+                }
+                HeapFree(hAppHeap, 0, MixerWindow);
             }
             break;
         }

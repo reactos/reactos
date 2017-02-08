@@ -22,6 +22,8 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
 	4 "Het opgegeven installatie pakket kon niet worden geopend.  Verifieer het bestandspad en probeer opnieuw."

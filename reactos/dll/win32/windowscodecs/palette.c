@@ -17,27 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winreg.h"
-#include <objbase.h>
-#include <wincodec.h>
-
-//#include "wincodecs_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+#include "wincodecs_private.h"
 
 typedef struct {
     IWICPalette IWICPalette_iface;
@@ -596,7 +576,7 @@ static HRESULT WINAPI PaletteImpl_IsGrayscale(IWICPalette *iface, BOOL *pfIsGray
 static HRESULT WINAPI PaletteImpl_HasAlpha(IWICPalette *iface, BOOL *pfHasAlpha)
 {
     PaletteImpl *This = impl_from_IWICPalette(iface);
-    int i;
+    UINT i;
 
     TRACE("(%p,%p)\n", iface, pfHasAlpha);
 

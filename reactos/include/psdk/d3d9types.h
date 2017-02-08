@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2003 Jason Edmeades
+ * Copyright (C) 2002-2003 Jason Edmeades 
  * Copyright (C) 2002-2003 Raphael Junqueira
  * Copyright (C) 2005 Oliver Stieber
  *
@@ -21,9 +21,9 @@
 #ifndef __WINE_D3D9TYPES_H
 #define __WINE_D3D9TYPES_H
 
-#if(DIRECT3D_VERSION >= 0x0900)
-
-#pragma pack(push, 4)
+#ifdef __i386__
+#include <pshpack4.h>
+#endif
 
 /*****************************************************************************
  * Direct 3D v9 #defines
@@ -60,10 +60,10 @@
 #define D3DCS_PLANE5                 0x800L
 #define D3DCS_ALL                    0xFFFL
 
-#define D3DFVF_TEXTUREFORMAT1 3
-#define D3DFVF_TEXTUREFORMAT2 0
-#define D3DFVF_TEXTUREFORMAT3 1
-#define D3DFVF_TEXTUREFORMAT4 2
+#define D3DFVF_TEXTUREFORMAT1 3u
+#define D3DFVF_TEXTUREFORMAT2 0u
+#define D3DFVF_TEXTUREFORMAT3 1u
+#define D3DFVF_TEXTUREFORMAT4 2u
 #define D3DFVF_TEXCOORDSIZE1(CoordIndex) (D3DFVF_TEXTUREFORMAT1 << (CoordIndex*2 + 16))
 #define D3DFVF_TEXCOORDSIZE2(CoordIndex) (D3DFVF_TEXTUREFORMAT2)
 #define D3DFVF_TEXCOORDSIZE3(CoordIndex) (D3DFVF_TEXTUREFORMAT3 << (CoordIndex*2 + 16))
@@ -112,9 +112,6 @@
 #define D3DUSAGE_DYNAMIC            0x00000200L
 #define D3DUSAGE_AUTOGENMIPMAP      0x00000400L
 #define D3DUSAGE_DMAP               0x00004000L
-#ifndef D3D_DISABLE_9EX
-#define D3DUSAGE_TEXTAPI            0x10000000L
-#endif
 
 #define D3DUSAGE_QUERY_FILTER                   0x00020000L
 #define D3DUSAGE_QUERY_LEGACYBUMPMAP            0x00008000L
@@ -135,7 +132,7 @@
 #define MAX_DEVICE_IDENTIFIER_STRING        512
 
 #define D3DFVF_RESERVED0           0x0001
-#define D3DFVF_POSITION_MASK       0x000E
+#define D3DFVF_POSITION_MASK       0x400E
 #define D3DFVF_XYZ                 0x0002
 #define D3DFVF_XYZRHW              0x0004
 #define D3DFVF_XYZB1               0x0006
@@ -181,8 +178,8 @@
 
 #define D3DPV_DONOTCOPYDATA         (1 << 0)
 
-#define D3DSTREAMSOURCE_INDEXEDDATA  (1 << 30)
-#define D3DSTREAMSOURCE_INSTANCEDATA (2 << 30)
+#define D3DSTREAMSOURCE_INDEXEDDATA  (1u << 30)
+#define D3DSTREAMSOURCE_INSTANCEDATA (2u << 30)
 
 #define D3D_MAX_SIMULTANEOUS_RENDERTARGETS 4
 
@@ -210,11 +207,12 @@
 #define D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL 0x00000002 /* Discard Z buffer */
 #define D3DPRESENTFLAG_DEVICECLIP           0x00000004 /* Clip the window blited into the client area 2k + xp only */
 #define D3DPRESENTFLAG_VIDEO                0x00000010 /* backbuffer 'may' contain video data */
+#define D3DPRESENTFLAG_NOAUTOROTATE         0x00000020 /* d3d9ex, ignore display rotation */
+#define D3DPRESENTFLAG_UNPRUNEDMODE         0x00000040 /* d3d9ex, specify invalid display modes */
 
-#define D3DPRESENT_BACK_BUFFERS_MAX         3L
 #define D3DPRESENT_RATE_DEFAULT             0x00000000
 
-/****************************
+/**************************** 
  * Vertex Shaders Declaration
  */
 
@@ -222,27 +220,18 @@ typedef enum _D3DDECLUSAGE {
   D3DDECLUSAGE_POSITION     = 0,
   D3DDECLUSAGE_BLENDWEIGHT  = 1,
   D3DDECLUSAGE_BLENDINDICES = 2,
-  D3DDECLUSAGE_NORMAL       = 3,
-  D3DDECLUSAGE_PSIZE        = 4,
-  D3DDECLUSAGE_TEXCOORD     = 5,
-  D3DDECLUSAGE_TANGENT      = 6,
-  D3DDECLUSAGE_BINORMAL     = 7,
-  D3DDECLUSAGE_TESSFACTOR   = 8,
-  D3DDECLUSAGE_POSITIONT    = 9,
-  D3DDECLUSAGE_COLOR        = 10,
-  D3DDECLUSAGE_FOG          = 11,
-  D3DDECLUSAGE_DEPTH        = 12,
-  D3DDECLUSAGE_SAMPLE       = 13
+  D3DDECLUSAGE_NORMAL       = 3,      
+  D3DDECLUSAGE_PSIZE        = 4,       
+  D3DDECLUSAGE_TEXCOORD     = 5,    
+  D3DDECLUSAGE_TANGENT      = 6,     
+  D3DDECLUSAGE_BINORMAL     = 7,    
+  D3DDECLUSAGE_TESSFACTOR   = 8,  
+  D3DDECLUSAGE_POSITIONT    = 9,   
+  D3DDECLUSAGE_COLOR        = 10,       
+  D3DDECLUSAGE_FOG          = 11,        
+  D3DDECLUSAGE_DEPTH        = 12,      
+  D3DDECLUSAGE_SAMPLE       = 13     
 } D3DDECLUSAGE;
-
-/* MSDN is quite confussing at this point...
-http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/directx9_c/directx/graphics/reference/d3d/constants/OTHER_D3D.asp
-says D3DMAX, and D3DMAXDECLUSAGE = D3DDECLUSAGE_DEPTH
-http://msdn.microsoft.com/library/default.asp?url=/archive/en-us/directx9_c_summer_03/directx/graphics/reference/d3d/constants/other_d3d.asp
-says MAXD3D, and D3DDECLUSAGE_SAMPLE
-
-So both are defined
-*/
 
 #define D3DMAXDECLUSAGE         D3DDECLUSAGE_SAMPLE
 #define D3DMAXDECLUSAGEINDEX    15
@@ -448,7 +437,7 @@ typedef enum _D3DSHADER_INSTRUCTION_OPCODE_TYPE {
   D3DSIO_SETP         = 94,
   D3DSIO_TEXLDL       = 95,
   D3DSIO_BREAKP       = 96,
-
+  
   D3DSIO_PHASE        = 0xFFFD,
   D3DSIO_COMMENT      = 0xFFFE,
   D3DSIO_END          = 0XFFFF,
@@ -460,6 +449,9 @@ typedef enum _D3DSHADER_INSTRUCTION_OPCODE_TYPE {
 #define D3DSINCOSCONST2   -0.020833334f,    -0.12500000f,      1.0f,          0.50000000f
 
 #define D3DSHADER_INSTRUCTION_PREDICATED    (1 << 28)
+
+#define D3DSI_TEXLD_PROJECT 0x00010000
+#define D3DSI_TEXLD_BIAS    0x00020000
 
 /** for parallelism */
 #define D3DSI_COISSUE 0x40000000
@@ -515,7 +507,7 @@ typedef enum _D3DSHADER_PARAM_DSTMOD_TYPE {
 #define D3DSP_REGTYPE_MASK2      0x00001800
 
 typedef enum _D3DSHADER_PARAM_REGISTER_TYPE {
-  D3DSPR_TEMP         =  0,
+  D3DSPR_TEMP         =  0, 
   D3DSPR_INPUT        =  1,
   D3DSPR_CONST        =  2,
   D3DSPR_ADDR         =  3,
@@ -654,8 +646,6 @@ typedef enum _D3DBACKBUFFER_TYPE {
     D3DBACKBUFFER_TYPE_FORCE_DWORD  = 0x7fffffff
 } D3DBACKBUFFER_TYPE;
 
-#define D3DPRESENT_BACK_BUFFER_MAX 3L
-
 typedef enum _D3DBASISTYPE {
    D3DBASIS_BEZIER        = 0,
    D3DBASIS_BSPLINE       = 1,
@@ -737,7 +727,7 @@ typedef enum _D3DDEGREETYPE {
     D3DDEGREE_QUADRATIC   = 2,
     D3DDEGREE_CUBIC       = 3,
     D3DDEGREE_QUINTIC     = 5,
-
+    
     D3DDEGREE_FORCE_DWORD   = 0x7fffffff
 } D3DDEGREETYPE;
 
@@ -787,7 +777,7 @@ typedef enum _D3DFORMAT {
     D3DFMT_G16R16               =  34,
     D3DFMT_A2R10G10B10          =  35,
     D3DFMT_A16B16G16R16         =  36,
-
+  
 
     D3DFMT_A8P8                 =  40,
     D3DFMT_P8                   =  41,
@@ -825,11 +815,6 @@ typedef enum _D3DFORMAT {
     D3DFMT_D32F_LOCKABLE        =  82,
     D3DFMT_D24FS8               =  83,
 
-#ifndef D3D_DISABLE_9EX
-    D3DFMT_D32_LOCKABLE         =  84,
-    D3DFMT_S8_LOCKABLE          =  85,
-#endif
-
     D3DFMT_VERTEXDATA           = 100,
     D3DFMT_INDEX16              = 101,
     D3DFMT_INDEX32              = 102,
@@ -838,12 +823,12 @@ typedef enum _D3DFORMAT {
     D3DFMT_R16F                 = 111,
     D3DFMT_G16R16F              = 112,
     D3DFMT_A16B16G16R16F        = 113,
-
+    
     /* IEEE formats */
     D3DFMT_R32F                 = 114,
     D3DFMT_G32R32F              = 115,
     D3DFMT_A32B32G32R32F        = 116,
-
+    
     D3DFMT_CxV8U8               = 117,
 
 
@@ -1080,6 +1065,8 @@ typedef enum _D3DSWAPEFFECT {
     D3DSWAPEFFECT_DISCARD         = 1,
     D3DSWAPEFFECT_FLIP            = 2,
     D3DSWAPEFFECT_COPY            = 3,
+    D3DSWAPEFFECT_OVERLAY         = 4,
+    D3DSWAPEFFECT_FLIPEX          = 5,
     D3DSWAPEFFECT_FORCE_DWORD     = 0xFFFFFFFF
 } D3DSWAPEFFECT;
 
@@ -1148,21 +1135,9 @@ typedef enum _D3DTEXTURESTAGESTATETYPE {
     D3DTSS_BUMPENVMAT10          =  9,
     D3DTSS_BUMPENVMAT11          = 10,
     D3DTSS_TEXCOORDINDEX         = 11,
-#if 1 /* TODO: remove once samplerstates are implemented.  */
-    D3DTSS_ADDRESSU              = 13,
-    D3DTSS_ADDRESSV              = 14,
-    D3DTSS_BORDERCOLOR           = 15,
-    D3DTSS_MAGFILTER             = 16,
-    D3DTSS_MINFILTER             = 17,
-    D3DTSS_MIPFILTER             = 18,
-    D3DTSS_MIPMAPLODBIAS         = 19,
-    D3DTSS_MAXMIPLEVEL           = 20,
-    D3DTSS_MAXANISOTROPY         = 21,
-#endif
     D3DTSS_BUMPENVLSCALE         = 22,
     D3DTSS_BUMPENVLOFFSET        = 23,
     D3DTSS_TEXTURETRANSFORMFLAGS = 24,
-    D3DTSS_ADDRESSW              = 25,
     D3DTSS_COLORARG0             = 26,
     D3DTSS_ALPHAARG0             = 27,
     D3DTSS_RESULTARG             = 28,
@@ -1228,7 +1203,7 @@ typedef enum _D3DSAMPLERSTATETYPE {
     D3DSAMP_SRGBTEXTURE    = 11,
     D3DSAMP_ELEMENTINDEX   = 12,
     D3DSAMP_DMAPOFFSET     = 13,
-
+                                
     D3DSAMP_FORCE_DWORD   = 0x7fffffff,
 } D3DSAMPLERSTATETYPE;
 
@@ -1248,7 +1223,7 @@ typedef struct _D3DADAPTER_IDENTIFIER9 {
     char            Driver[MAX_DEVICE_IDENTIFIER_STRING];
     char            Description[MAX_DEVICE_IDENTIFIER_STRING];
     char            DeviceName[32];
-    LARGE_INTEGER   DriverVersion;
+    LARGE_INTEGER   DriverVersion; 
 
     DWORD           VendorId;
     DWORD           DeviceId;
@@ -1328,13 +1303,13 @@ typedef struct _D3DDEVINFO_D3D9STAGETIMINGS {
 /* Vertex cache optimization hints. */
 typedef struct D3DDEVINFO_VCACHE {
     /* Must be a 4 char code FOURCC (e.g. CACH) */
-    DWORD         Pattern;
+    DWORD         Pattern; 
     /* 0 to get the longest  strips, 1 vertex cache */
-    DWORD         OptMethod;
+    DWORD         OptMethod; 
      /* Cache size to use (only valid if OptMethod==1) */
     DWORD         CacheSize;
-    /* internal for deciding when to restart strips, non user modifyable (only valid if OptMethod==1) */
-    DWORD         MagicNumber;
+    /* internal for deciding when to restart strips, non user modifiable (only valid if OptMethod==1) */
+    DWORD         MagicNumber; 
 } D3DDEVINFO_VCACHE;
 
 typedef struct D3DRESOURCESTATS {
@@ -1543,6 +1518,7 @@ typedef struct _D3DVOLUME_DESC {
     UINT                Depth;
 } D3DVOLUME_DESC;
 
+/* Parts added with d3d9ex */
 #if !defined(D3D_DISABLE_9EX)
 typedef enum D3DSCANLINEORDERING
 {
@@ -1584,10 +1560,32 @@ typedef enum _D3DCOMPOSERECTSOP{
     D3DCOMPOSERECTS_NEG,
     D3DCOMPOSERECTS_FORCE_DWORD = 0x7fffffff
 } D3DCOMPOSERECTSOP;
+
+typedef struct _D3DPRESENTSTATS
+{
+    UINT          PresentCount;
+    UINT          PresentRefreshCount;
+    UINT          SyncRefreshCount;
+    LARGE_INTEGER SyncQPCTime;
+    LARGE_INTEGER SyncGPUTime;
+} D3DPRESENTSTATS;
+
 #endif /* D3D_DISABLE_9EX */
 
-#pragma pack(pop)
+typedef enum _D3DSHADER_COMPARISON
+{
+    D3DSPC_RESERVED0 = 0,
+    D3DSPC_GT,
+    D3DSPC_EQ,
+    D3DSPC_GE,
+    D3DSPC_LT,
+    D3DSPC_NE,
+    D3DSPC_LE,
+    D3DSPC_RESERVED1,
+} D3DSHADER_COMPARISON;
 
-#endif /* DIRECT3D_VERSION >= 0x0900 */
+#ifdef __i386__
+#include <poppack.h>
+#endif
 
 #endif /* __WINE_D3D9TYPES_H */

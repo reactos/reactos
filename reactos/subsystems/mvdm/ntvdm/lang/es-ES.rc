@@ -1,0 +1,24 @@
+/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
+    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_VDM_MENU     , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT ,   "Volcar memoria (&texto)"
+    IDS_VDM_DUMPMEM_BIN ,   "Volcar memoria (&binario)"
+    IDS_VDM_MOUNT_FLOPPY,   "Insertar disquete en la unidad %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Expulsar disquete de la unidad %d"
+    IDS_VDM_QUIT        ,   "&Salir de ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "Sin disco"
+END

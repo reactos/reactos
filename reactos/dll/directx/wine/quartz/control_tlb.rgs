@@ -1,0 +1,20 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{56A868B0-0AD4-11CE-B03A-0020AF0BA770}'
+        {
+            '1.0' = s 'QuartzTypeLib'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+    }
+}

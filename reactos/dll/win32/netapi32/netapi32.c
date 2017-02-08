@@ -16,22 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#include <config.h>
+#include "netapi32.h"
 
-#include <wine/debug.h>
-//#include "lm.h"
-#include "netbios.h"
+#include <lmserver.h>
 
-#define NTOS_MODE_USER
-#include <ndk/rtlfuncs.h>
-//#include "netapi32.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(netbios);
-
-static HMODULE NETAPI32_hModule;
-
-BOOL NETAPI_IsLocalComputer(LMCSTR ServerName);
+WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -39,18 +28,14 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
-        {
             DisableThreadLibraryCalls(hinstDLL);
-            NETAPI32_hModule = hinstDLL;
             NetBIOSInit();
             NetBTInit();
             break;
-        }
         case DLL_PROCESS_DETACH:
-        {
+            if (lpvReserved) break;
             NetBIOSShutdown();
             break;
-        }
     }
 
     return TRUE;
@@ -92,10 +77,28 @@ NET_API_STATUS WINAPI NetServerEnumEx(
     LMCSTR domain,
     LMCSTR FirstNameToReturn)
 {
-    FIXME("Stub (%s %d %p %d %p %p %d %s %p)\n", debugstr_w(ServerName),
-     Level, Bufptr, PrefMaxlen, EntriesRead, totalentries, servertype,
-     debugstr_w(domain), debugstr_w(FirstNameToReturn));
-                                                                                
+    FIXME("Stub (%s %d %p %d %p %p %d %s %s)\n",
+           debugstr_w(ServerName), Level, Bufptr, PrefMaxlen, EntriesRead, totalentries,
+           servertype, debugstr_w(domain), debugstr_w(FirstNameToReturn));
+
+    return ERROR_NO_BROWSER_SERVERS_FOUND;
+}
+
+/************************************************************
+ *                NetServerDiskEnum (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI NetServerDiskEnum(
+    LMSTR ServerName,
+    DWORD Level,
+    LPBYTE *Bufptr,
+    DWORD PrefMaxlen,
+    LPDWORD EntriesRead,
+    LPDWORD totalentries,
+    LPDWORD Resume_Handle)
+{
+    FIXME("Stub (%s %d %p %d %p %p %p)\n", debugstr_w(ServerName),
+     Level, Bufptr, PrefMaxlen, EntriesRead, totalentries, Resume_Handle);
+
     return ERROR_NO_BROWSER_SERVERS_FOUND;
 }
 
@@ -171,62 +174,30 @@ NET_API_STATUS WINAPI NetStatisticsGet(LMSTR server, LMSTR service,
     return NERR_InternalError;
 }
 
-DWORD WINAPI NetpNetBiosStatusToApiStatus(DWORD nrc)
-{
-    DWORD ret;
-
-    switch (nrc)
-    {
-        case NRC_GOODRET:
-            ret = NO_ERROR;
-            break;
-        case NRC_NORES:
-            ret = NERR_NoNetworkResource;
-            break;
-        case NRC_DUPNAME:
-            ret = NERR_AlreadyExists;
-            break;
-        case NRC_NAMTFUL:
-            ret = NERR_TooManyNames;
-            break;
-        case NRC_ACTSES:
-            ret = NERR_DeleteLater;
-            break;
-        case NRC_REMTFUL:
-            ret = ERROR_REM_NOT_LIST;
-            break;
-        case NRC_NOCALL:
-            ret = NERR_NameNotFound;
-            break;
-        case NRC_NOWILD:
-            ret = ERROR_INVALID_PARAMETER;
-            break;
-        case NRC_INUSE:
-            ret = NERR_DuplicateName;
-            break;
-        case NRC_NAMERR:
-            ret = ERROR_INVALID_PARAMETER;
-            break;
-        case NRC_NAMCONF:
-            ret = NERR_DuplicateName;
-            break;
-        default:
-            ret = NERR_NetworkError;
-    }
-    return ret;
-}
-
 NET_API_STATUS
 WINAPI
 NetpNtStatusToApiStatus(NTSTATUS Status)
 {
-    return RtlNtStatusToDosError(Status);
-}
+    NET_API_STATUS ApiStatus;
 
-NET_API_STATUS WINAPI NetUseEnum(LMSTR server, DWORD level, LPBYTE* bufptr, DWORD prefmaxsize,
-                          LPDWORD entriesread, LPDWORD totalentries, LPDWORD resumehandle)
-{
-    FIXME("stub (%p, %d, %p, %d, %p, %p, %p)\n", server, level, bufptr, prefmaxsize,
-           entriesread, totalentries, resumehandle);
-    return ERROR_NOT_SUPPORTED;
+    switch (Status)
+    {
+        case STATUS_SUCCESS:
+            ApiStatus = NERR_Success;
+            break;
+
+        case STATUS_INVALID_ACCOUNT_NAME:
+            ApiStatus = NERR_BadUsername;
+            break;
+
+        case STATUS_PASSWORD_RESTRICTION:
+            ApiStatus = NERR_PasswordTooShort;
+            break;
+
+        default:
+            ApiStatus = RtlNtStatusToDosError(Status);
+            break;
+    }
+
+    return ApiStatus;
 }

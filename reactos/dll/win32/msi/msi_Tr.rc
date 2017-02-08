@@ -1,7 +1,7 @@
 /*
  * Turkish resources for MSI
  *
- * Copyright 2006 Fatih A��c�
+ * Copyrights: 2006 Fatih Aşıcı; 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,15 +22,17 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
-	5 "%s yolu bulunamad�"
-	9 "%s nolu diski yerle�tirin"
-	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
-	11 "%s ��esini i�eren dizini girin"
-	12 "eksik �zellik i�in kurulum kayna��"
-	13 "eksik �zellik i�in a� s�r�c�s�"
-	14 "�zellik buradan:"
-	15 "%s ��esini i�eren dizini se�in"
+	4 "Belirtilen kurulum paketi açılamadı. Lütfen, kütüğün yolunu denetleyiniz ve yeiden deneyiniz."
+	5 "%s yolu bulunamadı."
+	9 "%s diskini takınız."
+	10 "Windows Yükleyici %s\n\nKullanım:\nmsiexec komut {gerekli değişkenler} [seçimlik değişkenler]\n\nBir ürün yükle:\n\t/i {paket|ürün kodu} [husûsiyet]\n\t/package {paket|ürün kodu} [husûsiyet]\n\t/a paket [husûsiyet]\nBir kurulum onar:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paket|ürün kodu}\nBir ürün kaldır:\n\t/uninstall {paket|ürün kodu} [husûsiyet]\n\t/x {paket|ürün kodu} [husûsiyet]\nBir ürün bildir:\n\t/j[u|m] paket [/t dönüşüm] [/g dil kimliği]\nBir yama uygula:\n\t/p yama paketi [husûsiyet]\n\t/p yama paketi /a paket [husûsiyet]\nYukarıdaki komutlar için kayıt ve kullanıcı arayüzü tümleyicileri:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] kayıt kütüğü\n\t/q{|n|b|r|f|n+|b+|b-}\nMSI hizmetini sakla:\n\t/y\nMSI hizmetinin kaydını sil:\n\t/z\nBu yardımı görüntüle:\n\t/help\n\t/?\n"
+	11 "%s içeren dizini giriniz."
+	12 "Husûsiyet eksikliği için kurulum kaynağı"
+	13 "Husûsiyet eksikliği için ağ sürücüsü"
+	14 "Şuradan özellik:"
+	15 "%s içeren dizini seçiniz."
 }

@@ -18,28 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
 #include "qmgr.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
 static ULONG WINAPI
-BITS_IClassFactory_AddRef(LPCLASSFACTORY iface)
+BITS_IClassFactory_AddRef(IClassFactory *iface)
 {
-    return 2;
+    return 2; /* non-heap based object */
 }
 
 static HRESULT WINAPI
-BITS_IClassFactory_QueryInterface(LPCLASSFACTORY iface, REFIID riid,
-                                  LPVOID *ppvObj)
+BITS_IClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppvObj)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl *) iface;
-
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = &This->lpVtbl;
+        *ppvObj = &BITS_ClassFactory.IClassFactory_iface;
         return S_OK;
     }
 
@@ -48,14 +40,14 @@ BITS_IClassFactory_QueryInterface(LPCLASSFACTORY iface, REFIID riid,
 }
 
 static ULONG WINAPI
-BITS_IClassFactory_Release(LPCLASSFACTORY iface)
+BITS_IClassFactory_Release(IClassFactory *iface)
 {
-    return 1;
+    return 1; /* non-heap based object */
 }
 
 static HRESULT WINAPI
-BITS_IClassFactory_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnkOuter,
-                                  REFIID riid, LPVOID *ppvObj)
+BITS_IClassFactory_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter, REFIID riid,
+                                  void **ppvObj)
 {
     HRESULT res;
     IUnknown *punk = NULL;
@@ -65,7 +57,7 @@ BITS_IClassFactory_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnkOuter,
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    res = BackgroundCopyManagerConstructor(pUnkOuter, (LPVOID*) &punk);
+    res = BackgroundCopyManagerConstructor((LPVOID*) &punk);
     if (FAILED(res))
         return res;
 
@@ -75,7 +67,7 @@ BITS_IClassFactory_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnkOuter,
 }
 
 static HRESULT WINAPI
-BITS_IClassFactory_LockServer(LPCLASSFACTORY iface, BOOL fLock)
+BITS_IClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
 {
     FIXME("Not implemented\n");
     return E_NOTIMPL;
@@ -92,5 +84,5 @@ static const IClassFactoryVtbl BITS_IClassFactory_Vtbl =
 
 ClassFactoryImpl BITS_ClassFactory =
 {
-    &BITS_IClassFactory_Vtbl
+    { &BITS_IClassFactory_Vtbl }
 };

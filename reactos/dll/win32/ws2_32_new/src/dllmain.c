@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dllmain.c
+ * FILE:        dll/win32/ws2_32_new/src/dllmain.c
  * PURPOSE:     DLL Entrypoint
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
@@ -13,6 +13,7 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
 
 /* DATA **********************************************************************/
@@ -43,13 +44,13 @@ DllMain(HANDLE hModule,
 
             /* TLS Allocation */
             if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
-			{
-				GlobalTlsIndex = TlsAlloc();
-				if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
-				{
-					return FALSE;
-				}
-			}
+            {
+                GlobalTlsIndex = TlsAlloc();
+                if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
+                {
+                    return FALSE;
+                }
+            }
 
             /* Initialize some critical sections */
             WsCreateStartupSynchronization();

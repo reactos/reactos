@@ -1,26 +1,6 @@
-/*
- * Copyright (C) 2004 Filip Navara
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
-
-IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -30,62 +10,50 @@ BEGIN
     LTEXT "Πατήστε το κουμπί 'Επόμενο' για να συνεχίσει η εγκατάσταση.", IDC_STATIC, 115, 169, 195, 17
 END
 
-
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Οι υπεύθυνοι για την ανάπτυξη του ReactOS θα ήθελαν να αναγνωρίσουν τις παρακάτω εργασίες ελεύθερου λογισμικού, (μέρη των οποίων) χρησιμοποιήθηκαν για την ανάπτυξη του ReactOS:",
-                    IDC_STATIC,15,4,286,25
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "Το ReactOS σας έχει δοθεί σύμφωνα με την άδεια GPL, έτσι αν θέλετε να ξαναχρησιμοποιήσετε ή να επαναδιανείμετε μέρη του ή ολόκληρο το ReactOS, πρέπει να τηρείτε την GPL.",
-                    IDC_STATIC,15,110,227,24
-    PUSHBUTTON      "&Άδεια...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Πατήστε το κουμπί 'Επόμενο' για να συνεχίσετε.",IDC_STATIC,15,136,
-                    195,17
+    LTEXT "Οι υπεύθυνοι για την ανάπτυξη του ReactOS θα ήθελαν να αναγνωρίσουν τις παρακάτω εργασίες ελεύθερου λογισμικού, (μέρη των οποίων) χρησιμοποιήθηκαν για την ανάπτυξη του ReactOS:", IDC_STATIC,15,4,286,25
+    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT "Το ReactOS σας έχει δοθεί σύμφωνα με την άδεια GPL, έτσι αν θέλετε να ξαναχρησιμοποιήσετε ή να επαναδιανείμετε μέρη του ή ολόκληρο το ReactOS, πρέπει να τηρείτε την GPL.", IDC_STATIC, 15, 110, 227, 24
+    PUSHBUTTON "&Άδεια...", IDC_VIEWGPL, 251, 110, 50, 19
+    LTEXT "Πατήστε το κουμπί 'Επόμενο' για να συνεχίσετε.", IDC_STATIC, 15, 136, 195, 17
 END
 
-
-IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Εισάγετε το όνομά σας και το όνομα της εταιρίας ή του οργανισμού σας.",
-          IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Εισάγετε το όνομά σας και το όνομα της εταιρίας ή του οργανισμού σας.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "Ό&νομα:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Οργανισμός:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
-
-IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Εισάγετε το όνομα του υπολογιστή σας, το οποίο δεν πρέπει να ξεπερνά τους 15 χαρακτήρες. Άν ο υπολογιστής ανήκει σε κάποιο δίκτυο, το όνομά του πρέπει να είναι μοναδικό.",
-          IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Εισάγετε το όνομα του υπολογιστή σας, το οποίο δεν πρέπει να ξεπερνά τους 15 χαρακτήρες. Άν ο υπολογιστής ανήκει σε κάποιο δίκτυο, το όνομά του πρέπει να είναι μοναδικό.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Όνομα υπολογιστή:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Η εγκατάσταση θα δημιουργήσει ένα λογαριαρισμό διαχειριστή στον υπολογιστή σας με το όνομα Administrator. Με το λογιαριασμό διαχειριστή μπορείτε να αποκτήσετε τον πλήρη έλεγχο του υπολογιστή.",
-          IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Εισάγετε παρακάτω τον κωδικό πρόσβασης διαχειριστή ο οποίος δεν πρέπει να ξεπερνά τους 14 χαρακτήρες.",
-          IDC_STATIC, 54, 83, 250, 16
+    LTEXT "Η εγκατάσταση θα δημιουργήσει ένα λογαριαρισμό διαχειριστή στον υπολογιστή σας με το όνομα Administrator. Με το λογιαριασμό διαχειριστή μπορείτε να αποκτήσετε τον πλήρη έλεγχο του υπολογιστή.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Εισάγετε παρακάτω τον κωδικό πρόσβασης διαχειριστή ο οποίος δεν πρέπει να ξεπερνά τους 127 χαρακτήρες.", IDC_STATIC, 54, 83, 250, 16
     LTEXT "&Κωδικός πρόσβασης:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Επιβεβαίωση κωδικού:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
-
-IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -93,36 +61,27 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Οι τοπικές ρυθμισεις πρέπει να ταιριάζουν με τη γλώσσα των εφαρμογών  που θέλετε να χρησιμοποιήσετε. Επίσης ελέγχουν τον τρόπο  με τον οποίο θα εμφανίζονται οι αριθμοί, τα νομίσματα και οι ημερομηνίες.", IDC_STATIC, 53, 7, 253, 31
     LTEXT "", IDC_LOCALETEXT, 53, 31, 250, 16
-    LTEXT "Για να αλλάξετε τις τοπικές ρυθμίσεις, πατήστε το κουμπί 'Προσαρμογή'.",
-          IDC_STATIC, 53, 57, 184, 16
+    LTEXT "Για να αλλάξετε τις τοπικές ρυθμίσεις, πατήστε το κουμπί 'Προσαρμογή'.", IDC_STATIC, 53, 57, 184, 16
     PUSHBUTTON "&Προσαρμογή...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "Η διάταξη πληκτρολογίου έλέγχει τους χαρακτήρες που θα εμφανίζονται καθώς πληκτρολογείτε.",
-          IDC_STATIC, 53, 86, 253, 20
+    LTEXT "Η διάταξη πληκτρολογίου έλέγχει τους χαρακτήρες που θα εμφανίζονται καθώς πληκτρολογείτε.", IDC_STATIC, 53, 86, 253, 20
     LTEXT "", IDC_LAYOUTTEXT, 53, 102, 253, 16
-    LTEXT "Για να αλλάξετε τη διάταξη του πληκτρολογίου, πατήστε το κουμπί 'Προσαρμογή'.",
-          IDC_STATIC, 53, 122, 184, 16
+    LTEXT "Για να αλλάξετε τη διάταξη του πληκτρολογίου, πατήστε το κουμπί 'Προσαρμογή'.", IDC_STATIC, 53, 122, 184, 16
     PUSHBUTTON "Π&ροσαρμογή...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
-
-IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Ημερομηνία και ώρα", IDC_STATIC, 53, 7, 253, 8
-    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
-            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
     LTEXT "Ζώνη ώρας", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
-             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "&Αυτόματη ρύθμιση με την αλλαγή θερινής ώρας",
-                 IDC_AUTODAYLIGHT, 53, 114, 190, 20
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "&Αυτόματη ρύθμιση με την αλλαγή θερινής ώρας", IDC_AUTODAYLIGHT, 53, 114, 190, 20
 END
-
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -131,12 +90,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
     LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
-            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
 
-
-IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ολοκλήρωση της εγκατάστασης του ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -147,152 +104,72 @@ BEGIN
     LTEXT "Αν υπάρχει κάποιο CD/DVD σε κάποια μονάδα, βγάλτε το. Μετά, πατήστε το κουμπί 'Ολοκλήρωση' και ο υπολογιστής θα επανεκκινηθεί.", IDC_STATIC, 115, 160, 195, 25
 END
 
-
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Γενική Άδεια Χρήσης GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
-                    ES_READONLY | WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
+    EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-
-IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Παρακαλώ περιμένετε..."
-FONT 8,"MS Shell Dlg 2",400,0,1
+FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
+    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Αναγνωρίσεις"
-    IDS_ACKSUBTITLE      "Τα στηρίγματα του ReactOS και πληροφορίες για την άδειά του"
-    IDS_OWNERTITLE       "Εξατομίκευση του λογισμικού σας"
-    IDS_OWNERSUBTITLE    "Η εγκατάσταση χρησιμοποιεί τις παρακάτω πληροφορίες για να εξατομικεύσει το ReactOS."
-    IDS_COMPUTERTITLE    "Όνομα υπολογιστή και κωδικός πρόσβασης διαχειριστή"
+    IDS_ACKTITLE "Αναγνωρίσεις"
+    IDS_ACKSUBTITLE "Τα στηρίγματα του ReactOS και πληροφορίες για την άδειά του"
+    IDS_OWNERTITLE "Εξατομίκευση του λογισμικού σας"
+    IDS_OWNERSUBTITLE "Η εγκατάσταση χρησιμοποιεί τις παρακάτω πληροφορίες για να εξατομικεύσει το ReactOS."
+    IDS_COMPUTERTITLE "Όνομα υπολογιστή και κωδικός πρόσβασης διαχειριστή"
     IDS_COMPUTERSUBTITLE "Πρέπει να δώσετε ένα όνομα και έναν κωδικό πρόσβασης για τον υπολογιστή σας."
-    IDS_LOCALETITLE      "Τοπικές ρυθμίσεις"
-    IDS_LOCALESUBTITLE   "Μπορείτε να προσαρμόσετε το ReactOS για διαφορετικές περιοχές και γλώσσες."
-    IDS_DATETIMETITLE    "Ημερομηνία και ώρα"
+    IDS_LOCALETITLE "Τοπικές ρυθμίσεις"
+    IDS_LOCALESUBTITLE "Μπορείτε να προσαρμόσετε το ReactOS για διαφορετικές περιοχές και γλώσσες."
+    IDS_DATETIMETITLE "Ημερομηνία και ώρα"
     IDS_DATETIMESUBTITLE "Ορίστε τη σωστή ημερομηνία και ώρα για τον υπολογιστή σας."
-    IDS_PROCESSTITLE     "Τίτλος"
-    IDS_PROCESSSUBTITLE  "Υπότιτλος"
+    IDS_PROCESSTITLE "Τίτλος"
+    IDS_PROCESSSUBTITLE "Υπότιτλος"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Download and install various applications"
+    IDS_REACTOS_SETUP "Εγκατάσταση του ReactOS"
+    IDS_UNKNOWN_ERROR "Άγνωστο σφάλμα"
+    IDS_REGISTERING_COMPONENTS "Καταχώρηση στοιχείων στο μητρώο..."
+    IDS_LOADLIBRARY_FAILED "Το LoadLibrary απέτυχε: "
+    IDS_GETPROCADDR_FAILED "Το GetProcAddr απέτυχε: "
+    IDS_REGSVR_FAILED "Το DllRegisterServer απέτυχε: "
+    IDS_DLLINSTALL_FAILED "Το DllInstall απέτυχε: "
+    IDS_TIMEOUT "Λήξη χρόνου καταχώρησης"
+    IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "Κάτοχος"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Βοηθήματα"
-    IDS_CMT_CALC        "Αριθμομηχανή"
-    IDS_CMT_CMD         "Open command prompt"
-    IDS_CMT_EXPLORER    "Εξερευνητής"
-    IDS_CMT_NOTEPAD     "Σημειωματάριο"
-    IDS_CMT_REGEDIT     "Επεξεργαστής μητρώου"
-    IDS_CMT_WORDPAD     "Launch Document Editor"
-    IDS_CMT_SCREENSHOT  "Take screenshot"
-    IDS_CMT_DEVMGMT     "Διαχείριση Συσκευών"
-    IDS_CMT_SERVMAN     "Υπηρεσίες"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
-    IDS_CMT_EVENTVIEW   "Προβολή Συμβάντων"
-    IDS_CMT_MSCONFIG    "Βοηθητικό πρόγραμμα ρύθμισης παραμέτρων"
-    IDS_CMT_PAINT       "Launch Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES		    "Παιχνίδια"
-    IDS_CMT_SOLITAIRE	"Πασιέντζα"
-    IDS_CMT_WINEMINE	"Ναρκαλιευτής"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Εργαλεία Συστήματος"
-	IDS_CMT_CHARMAP      "Πίνακας Χαρακτήρων"
-	IDS_CMT_KBSWITCH     "Αλλαγή Διάταξης Πληκτρολογίου"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Για άτομα με ειδικές ανάγκες"
-	IDS_CMT_MAGNIFY      	     "Μεγεθυντικός φακός"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_REACTOS_SETUP		    "Εγκατάσταση του ReactOS"
-    IDS_UNKNOWN_ERROR           "Άγνωστο σφάλμα"
-    IDS_REGISTERING_COMPONENTS  "Καταχώρηση στοιχείων στο μητρώο..."
-    IDS_LOADLIBRARY_FAILED	    "Το LoadLibrary απέτυχε: "
-    IDS_GETPROCADDR_FAILED	    "Το GetProcAddr απέτυχε: "
-    IDS_REGSVR_FAILED           "Το DllRegisterServer απέτυχε: "
-    IDS_DLLINSTALL_FAILED	    "Το DllInstall απέτυχε: "
-    IDS_TIMEOUT			        "Λήξη χρόνου καταχώρησης"
-    IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Γραμμή εντολών.lnk"
-    IDS_SHORT_EXPLORER   "Εξερεύνηση του ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_SERVICE    "Υπηρεσίες.lnk"
-    IDS_SHORT_DEVICE     "Διαχείριση συσκευών.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "Αριθμομηχανή.lnk"
-    IDS_SHORT_REGEDIT    "Επεξεργαστής μητρώου.lnk"
-    IDS_SHORT_NOTEPAD    "Σημειωματάριο.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Πασιέντζα.lnk"
-    IDS_SHORT_WINEMINE   "Ναρκαλιευτής.lnk"
-    IDS_SHORT_CHARMAP    "Πίνακας Χαρακτήρων.lnk"
-    IDS_SHORT_MAGNIFY    "Μεγεθυντικός φακός.lnk"
-    IDS_SHORT_RDESKTOP   "Σύνδεση απομακρυσμένης επιφάνειας εργασίας.lnk"
-    IDS_SHORT_KBSWITCH   "Αλλαγή Διάταξης Πληκτρολογίου.lnk"
-    IDS_SHORT_EVENTVIEW  "Προβολή Συμβάντων.lnk"
-    IDS_SHORT_MSCONFIG   "Βοηθητικό πρόγραμμα ρύθμισης παραμέτρων.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_WZD_NAME         "Για να συνεχίσει η εγκατάσταση, πρέπει να εισάγετε το όνομά σας."
-    IDS_WZD_SETCOMPUTERNAME  "Η εγκατάσταση απέτυχε να ορίσει το όνομα του υπολογιστή σας."
-    IDS_WZD_COMPUTERNAME  "Για να συνεχίσει η εγκατάσταση, πρέπει να εισάγετε το όνομά του υπολογιστή."
-    IDS_WZD_PASSWORDEMPTY  "Πρέπει να εισάγετε έναν κωδικό πρόσβασης !"
-    IDS_WZD_PASSWORDMATCH  "Οι κωδικοί πρόσβασης που εισαγάγατε δεν είναι ίδιοι. Εισάγετε ξανά τον κωδικό προσβασης."
-    IDS_WZD_PASSWORDCHAR  "Ο κωδικός πρόσβασης που εισαγάγατε περιέχει μη έγκυρους χαρακτήρες. Παρακαλώ εισάγετε έναν άλλο κωδικό πρόσβασης."
-    IDS_WZD_LOCALTIME    "Η εγκατάσταση απέτυχε να ρυθμίσει την ώρα του υπολογιστή σας."
+    IDS_WZD_NAME "Για να συνεχίσει η εγκατάσταση, πρέπει να εισάγετε το όνομά σας."
+    IDS_WZD_SETCOMPUTERNAME "Η εγκατάσταση απέτυχε να ορίσει το όνομα του υπολογιστή σας."
+    IDS_WZD_COMPUTERNAME "Για να συνεχίσει η εγκατάσταση, πρέπει να εισάγετε το όνομά του υπολογιστή."
+    IDS_WZD_PASSWORDEMPTY "Πρέπει να εισάγετε έναν κωδικό πρόσβασης !"
+    IDS_WZD_PASSWORDMATCH "Οι κωδικοί πρόσβασης που εισαγάγατε δεν είναι ίδιοι. Εισάγετε ξανά τον κωδικό προσβασης."
+    IDS_WZD_PASSWORDCHAR "Ο κωδικός πρόσβασης που εισαγάγατε περιέχει μη έγκυρους χαρακτήρες. Παρακαλώ εισάγετε έναν άλλο κωδικό πρόσβασης."
+    IDS_WZD_LOCALTIME "Η εγκατάσταση απέτυχε να ρυθμίσει την ώρα του υπολογιστή σας."
 END
 
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Εγκατάσταση συσκευών..."
 END
-
-/* EOF */

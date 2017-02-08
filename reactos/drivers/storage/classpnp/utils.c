@@ -22,7 +22,6 @@ Revision History:
 --*/
 
 #include "classp.h"
-#include "debug.h"
 
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(PAGE, ClassGetDeviceParameter)
@@ -31,7 +30,7 @@ Revision History:
 #endif
 
 // custom string match -- careful!
-BOOLEAN NTAPI ClasspMyStringMatches(IN PCHAR StringToMatch OPTIONAL, IN PCHAR TargetString)
+BOOLEAN NTAPI ClasspMyStringMatches(IN PCSTR StringToMatch OPTIONAL, IN PCSTR TargetString)
 {
     ULONG length;  // strlen returns an int, not size_t (!)
     PAGED_CODE();
@@ -217,10 +216,10 @@ VOID NTAPI ClassScanForSpecial(
     IN PCLASS_SCAN_FOR_SPECIAL_HANDLER Function)
 {
     PSTORAGE_DEVICE_DESCRIPTOR deviceDescriptor;
-    PUCHAR vendorId;
-    PUCHAR productId;
-    PUCHAR productRevision;
-    UCHAR nullString[] = "";
+    PCSTR vendorId;
+    PCSTR productId;
+    PCSTR productRevision;
+    CHAR nullString[] = "";
     //ULONG j;
 
     PAGED_CODE();
@@ -242,21 +241,21 @@ VOID NTAPI ClassScanForSpecial(
 
     if (deviceDescriptor->VendorIdOffset != 0 &&
         deviceDescriptor->VendorIdOffset != -1) {
-        vendorId = ((PUCHAR)deviceDescriptor);
+        vendorId = ((PCSTR)deviceDescriptor);
         vendorId += deviceDescriptor->VendorIdOffset;
     } else {
         vendorId = nullString;
     }
     if (deviceDescriptor->ProductIdOffset != 0 &&
         deviceDescriptor->ProductIdOffset != -1) {
-        productId = ((PUCHAR)deviceDescriptor);
+        productId = ((PCSTR)deviceDescriptor);
         productId += deviceDescriptor->ProductIdOffset;
     } else {
         productId = nullString;
     }
     if (deviceDescriptor->VendorIdOffset != 0 &&
         deviceDescriptor->VendorIdOffset != -1) {
-        productRevision = ((PUCHAR)deviceDescriptor);
+        productRevision = ((PCSTR)deviceDescriptor);
         productRevision += deviceDescriptor->ProductRevisionOffset;
     } else {
         productRevision = nullString;
@@ -342,7 +341,7 @@ ClasspPerfIncrementErrorCount(
     KeAcquireSpinLock(&fdoData->SpinLock, &oldIrql);
 
     fdoData->Perf.SuccessfulIO = 0; // implicit interlock
-    errors = InterlockedIncrement(&FdoExtension->ErrorCount);
+    errors = InterlockedIncrement((PLONG)&FdoExtension->ErrorCount);
 
     if (errors >= CLASS_ERROR_LEVEL_1) {
 
@@ -405,7 +404,7 @@ ClasspPerfIncrementSuccessfulIo(
         return;
     }
 
-    succeeded = InterlockedIncrement(&fdoData->Perf.SuccessfulIO);
+    succeeded = InterlockedIncrement((PLONG)&fdoData->Perf.SuccessfulIO);
     if (succeeded < fdoData->Perf.ReEnableThreshhold) {
         return;
     }
@@ -433,7 +432,7 @@ ClasspPerfIncrementSuccessfulIo(
         fdoData->Perf.SuccessfulIO = 0; // implicit interlock
 
         ASSERT(FdoExtension->ErrorCount > 0);
-        errors = InterlockedDecrement(&FdoExtension->ErrorCount);
+        errors = InterlockedDecrement((PLONG)&FdoExtension->ErrorCount);
 
         //
         // note: do in reverse order of the sets "just in case"

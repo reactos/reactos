@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/time.c
+ * FILE:            dll/win32/kernel32/wine/timezone.c
  * PURPOSE:         Time conversion functions
  * PROGRAMMER:      Ariadne
  *                  DOSDATE and DOSTIME structures from Onno Hovers
@@ -120,7 +120,7 @@ static
 DWORD
 TIME_CompTimeZoneID( const TIME_ZONE_INFORMATION *pTZinfo, FILETIME *lpFileTime, BOOL islocal )
 {
-    int ret;
+    int ret, year;
     BOOL beforeStandardDate, afterDaylightDate;
     DWORD retval = TIME_ZONE_ID_INVALID;
     LONGLONG llTime = 0; /* initialized to prevent gcc complaining */
@@ -145,20 +145,29 @@ TIME_CompTimeZoneID( const TIME_ZONE_INFORMATION *pTZinfo, FILETIME *lpFileTime,
 
         if (!islocal) {
             FILETIME2LL( lpFileTime, llTime );
-            llTime -= ( pTZinfo->Bias + pTZinfo->DaylightBias )
-                * (LONGLONG)TICKSPERMIN;
+            llTime -= pTZinfo->Bias * (LONGLONG)TICKSPERMIN;
             LL2FILETIME( llTime, &ftTemp)
             lpFileTime = &ftTemp;
         }
 
         FileTimeToSystemTime(lpFileTime, &SysTime);
-        
-         /* check for daylight savings */
-        ret = TIME_DayLightCompareDate( &SysTime, &pTZinfo->StandardDate);
-        if (ret == -2)
-          return TIME_ZONE_ID_INVALID;
+        year = SysTime.wYear;
 
-        beforeStandardDate = ret < 0;
+        if (!islocal) {
+            llTime -= pTZinfo->DaylightBias * (LONGLONG)TICKSPERMIN;
+            LL2FILETIME( llTime, &ftTemp)
+            FileTimeToSystemTime(lpFileTime, &SysTime);
+        }
+        
+        /* check for daylight savings */
+        if(year == SysTime.wYear) {
+            ret = TIME_DayLightCompareDate( &SysTime, &pTZinfo->StandardDate);
+            if (ret == -2)
+                return TIME_ZONE_ID_INVALID;
+
+            beforeStandardDate = ret < 0;
+        } else
+            beforeStandardDate = SysTime.wYear < year;
 
         if (!islocal) {
             llTime -= ( pTZinfo->StandardBias - pTZinfo->DaylightBias )
@@ -167,11 +176,14 @@ TIME_CompTimeZoneID( const TIME_ZONE_INFORMATION *pTZinfo, FILETIME *lpFileTime,
             FileTimeToSystemTime(lpFileTime, &SysTime);
         }
 
-        ret = TIME_DayLightCompareDate( &SysTime, &pTZinfo->DaylightDate);
-        if (ret == -2)
-          return TIME_ZONE_ID_INVALID;
+        if(year == SysTime.wYear) {
+            ret = TIME_DayLightCompareDate( &SysTime, &pTZinfo->DaylightDate);
+            if (ret == -2)
+                return TIME_ZONE_ID_INVALID;
 
-        afterDaylightDate = ret >= 0;
+            afterDaylightDate = ret >= 0;
+        } else
+            afterDaylightDate = SysTime.wYear > year;
 
         retval = TIME_ZONE_ID_STANDARD;
         if( pTZinfo->DaylightDate.wMonth <  pTZinfo->StandardDate.wMonth ) {

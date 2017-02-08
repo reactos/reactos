@@ -17,20 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winnls.h"
-
-//#include "objbase.h"
-
-//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 GpStatus WINGDIPAPI GdipCreateStringFormat(INT attr, LANGID lang,
     GpStringFormat **format)
@@ -40,7 +27,7 @@ GpStatus WINGDIPAPI GdipCreateStringFormat(INT attr, LANGID lang,
     if(!format)
         return InvalidParameter;
 
-    *format = GdipAlloc(sizeof(GpStringFormat));
+    *format = heap_alloc_zero(sizeof(GpStringFormat));
     if(!*format)   return OutOfMemory;
 
     (*format)->attr = attr;
@@ -66,9 +53,9 @@ GpStatus WINGDIPAPI GdipDeleteStringFormat(GpStringFormat *format)
     if(!format)
         return InvalidParameter;
 
-    GdipFree(format->character_ranges);
-    GdipFree(format->tabs);
-    GdipFree(format);
+    heap_free(format->character_ranges);
+    heap_free(format->tabs);
+    heap_free(format);
 
     return Ok;
 }
@@ -260,11 +247,11 @@ GpStatus WINGDIPAPI GdipSetStringFormatMeasurableCharacterRanges(
 
     TRACE("%p, %d, %p\n", format, rangeCount, ranges);
 
-    new_ranges = GdipAlloc(rangeCount * sizeof(CharacterRange));
+    new_ranges = heap_alloc_zero(rangeCount * sizeof(CharacterRange));
     if (!new_ranges)
         return OutOfMemory;
 
-    GdipFree(format->character_ranges);
+    heap_free(format->character_ranges);
     format->character_ranges = new_ranges;
     memcpy(format->character_ranges, ranges, sizeof(CharacterRange) * rangeCount);
     format->range_count = rangeCount;
@@ -284,14 +271,14 @@ GpStatus WINGDIPAPI GdipSetStringFormatTabStops(GpStringFormat *format, REAL fir
         if(firsttab < 0.0)  return NotImplemented;
         /* first time allocation */
         if(format->tabcount == 0){
-            format->tabs = GdipAlloc(sizeof(REAL)*count);
+            format->tabs = heap_alloc_zero(sizeof(REAL)*count);
             if(!format->tabs)
                 return OutOfMemory;
         }
         /* reallocation */
         if((format->tabcount < count) && (format->tabcount > 0)){
             REAL *ptr;
-            ptr = HeapReAlloc(GetProcessHeap(), 0, format->tabs, sizeof(REAL)*count);
+            ptr = heap_realloc(format->tabs, sizeof(REAL)*count);
             if(!ptr)
                 return OutOfMemory;
             format->tabs = ptr;
@@ -334,15 +321,15 @@ GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat *format, GpSt
     if(!format || !newFormat)
         return InvalidParameter;
 
-    *newFormat = GdipAlloc(sizeof(GpStringFormat));
+    *newFormat = heap_alloc_zero(sizeof(GpStringFormat));
     if(!*newFormat)    return OutOfMemory;
 
     **newFormat = *format;
 
     if(format->tabcount > 0){
-        (*newFormat)->tabs = GdipAlloc(sizeof(REAL) * format->tabcount);
+        (*newFormat)->tabs = heap_alloc_zero(sizeof(REAL) * format->tabcount);
         if(!(*newFormat)->tabs){
-            GdipFree(*newFormat);
+            heap_free(*newFormat);
             return OutOfMemory;
         }
         memcpy((*newFormat)->tabs, format->tabs, sizeof(REAL) * format->tabcount);
@@ -351,10 +338,10 @@ GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat *format, GpSt
         (*newFormat)->tabs = NULL;
 
     if(format->range_count > 0){
-        (*newFormat)->character_ranges = GdipAlloc(sizeof(CharacterRange) * format->range_count);
+        (*newFormat)->character_ranges = heap_alloc_zero(sizeof(CharacterRange) * format->range_count);
         if(!(*newFormat)->character_ranges){
-            GdipFree((*newFormat)->tabs);
-            GdipFree(*newFormat);
+            heap_free((*newFormat)->tabs);
+            heap_free(*newFormat);
             return OutOfMemory;
         }
         memcpy((*newFormat)->character_ranges, format->character_ranges,

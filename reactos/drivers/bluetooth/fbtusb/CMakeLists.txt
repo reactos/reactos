@@ -7,18 +7,16 @@ list(APPEND SOURCE
     fbtpwr.c
     fbtrwr.c
 #   fbtwmi.c
-    fbtusb.c)
+    fbtusb.c
+    precomp.h)
 
-add_library(fbtusb SHARED
-    ${SOURCE}
-    fbtusb.rc)
+add_library(fbtusb SHARED ${SOURCE} fbtusb.rc)
 
-# FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(NOT MSVC)
-    #allow_warnings(fbtusb)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(fbtusb "-Wno-unused-but-set-variable")
 endif()
 
 set_module_type(fbtusb kernelmodedriver)
 add_importlibs(fbtusb ntoskrnl hal usbd)
+add_pch(fbtusb precomp.h SOURCE)
 add_cd_file(TARGET fbtusb DESTINATION reactos/system32/drivers FOR all)

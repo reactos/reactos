@@ -164,3 +164,10 @@ LpcpSetPortToThread(IN PETHREAD Thread,
     Thread->LpcWaitingOnPort = (PVOID)(((ULONG_PTR)Port) |
                                        LPCP_THREAD_FLAG_IS_PORT);
 }
+
+FORCEINLINE
+PLPCP_DATA_INFO
+LpcpGetDataInfoFromMessage(PPORT_MESSAGE Message)
+{
+    return (PLPCP_DATA_INFO)((PUCHAR)Message + Message->u2.s2.DataInfoOffset);
+}

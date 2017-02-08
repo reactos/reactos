@@ -2,7 +2,7 @@
  * jddctmgr.c
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
- * Modified 2002-2010 by Guido Vollbeding.
+ * Modified 2002-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -368,7 +368,7 @@ jinit_inverse_dct (j_decompress_ptr cinfo)
   idct = (my_idct_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(my_idct_controller));
-  cinfo->idct = (struct jpeg_inverse_dct *) idct;
+  cinfo->idct = &idct->pub;
   idct->pub.start_pass = start_pass;
 
   for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;

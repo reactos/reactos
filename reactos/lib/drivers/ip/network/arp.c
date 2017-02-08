@@ -271,7 +271,7 @@ VOID ARPReceive(
     AddrInitIPv4(&SrcAddress, *((PULONG)SenderProtoAddress));
 
     /* Check if we know the sender */
-    NCE = NBLocateNeighbor(&SrcAddress);
+    NCE = NBLocateNeighbor(&SrcAddress, Interface);
     if (NCE) {
         /* We know the sender. Update the hardware address
            and state in our neighbor address cache */

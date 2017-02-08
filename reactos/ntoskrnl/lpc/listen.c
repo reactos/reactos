@@ -24,7 +24,7 @@ NtListenPort(IN HANDLE PortHandle,
 {
     NTSTATUS Status;
     PAGED_CODE();
-    LPCTRACE(LPC_LISTEN_DEBUG, "Handle: %lx\n", PortHandle);
+    LPCTRACE(LPC_LISTEN_DEBUG, "Handle: %p\n", PortHandle);
 
     /* Wait forever for a connection request. */
     for (;;)

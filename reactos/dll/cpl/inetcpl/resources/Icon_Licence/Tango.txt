@@ -1,0 +1,11 @@
+The following icons are the property of the Tango project and are 
+released under Creative Commons Attribution-ShareAlike 2.5 License.
+Please see COPYING for details
+
+certificates.ico
+history.ico
+home.ico
+restricted.ico
+trusted.ico
+
+The file trusted.ico was retrieved from http://bit.ly/1dzQSgh.

@@ -1,0 +1,145 @@
+/*
+ * PROJECT:    ReactOS Event Viewer
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/mscutils/eventvwr/lang/sq-AL.rc
+ * PURPOSE:    Albanian Language File for ReactOS Event Viewer
+ * TRANSLATOR: Ardit Dani
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDM_EVENTVWR MENU
+BEGIN
+    POPUP "&Log"
+    BEGIN
+        MENUITEM "Save &Protocol...", IDM_SAVE_PROTOCOL, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Dil", IDM_EXIT
+    END
+    POPUP "&Vëzhgo"
+    BEGIN
+        MENUITEM "&Rifresko", IDM_REFRESH
+    END
+    MENUITEM "&Opsione", IDM_OPTIONS
+    POPUP "Ndihmë"
+    BEGIN
+        MENUITEM "Ndihmë", IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Rreth...", IDM_ABOUT
+    END
+END
+
+IDA_EVENTVWR ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Rreth"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
+    LTEXT "ReactOS Event Viewer Versioni 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
+    DEFPUSHBUTTON "OK", IDOK, 90, 48, 42, 16, WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
+CAPTION "Prit.."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CTEXT "Ngarkim loget e ngjarjeve. Ju lutem prisniPlease wait ...", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
+END
+
+IDD_EVENTPROPERTIES DIALOGEX 0, 0, 266, 251
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Detaje te ngjarjeve"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT "Data:", IDC_STATIC, 8, 5, 31, 8
+    EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Burimi:", IDC_STATIC, 103, 5, 36, 8
+    EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Ora:", IDC_STATIC, 8, 15, 31, 8
+    EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Kategoria:", IDC_STATIC, 103, 15, 36, 8
+    EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Tipi:", IDC_STATIC, 8, 25, 31, 8
+    EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "NgjarjeID:", IDC_STATIC, 103, 25, 36, 8
+    EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Përdoruesi:", IDC_STATIC, 8, 35, 36, 8
+    EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Kompjuteri:", IDC_STATIC, 8, 45, 36, 8
+    EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+
+    PUSHBUTTON "", IDC_PREVIOUS, 225, 5, 28, 14, BS_ICON
+    PUSHBUTTON "", IDC_NEXT, 225, 21, 28, 14, BS_ICON
+    PUSHBUTTON "", IDC_COPY, 225, 37, 28, 14, BS_ICON
+
+    LTEXT "Përshkrimi:", IDC_STATIC, 8, 65, 39, 8
+    EDITTEXT IDC_EVENTTEXTEDIT, 8, 76, 247, 88, ES_MULTILINE | ES_READONLY
+
+    LTEXT "D&ata:", IDC_STATIC, 8, 169, 20, 8
+    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 169, 34, 8
+    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 169, 33, 8
+    EDITTEXT IDC_EVENTDATAEDIT, 8, 179, 247, 44, ES_MULTILINE | ES_READONLY
+
+    PUSHBUTTON "Ndihmë", IDHELP, 8, 228, 50, 14
+    DEFPUSHBUTTON "Mbylle", IDOK, 206, 228, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Shikues ngjarjesh"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
+    IDS_EVENTSTRINGIDNOTFOUND "Përshkrimi për ngjarjet ID ( %lu ) në burim ( %s ) nuk gjindet. Kompjuter vendas mund të mos ketë informacionin e regjistrit te nevojshem ose mesazhin për dokumentat DLL për të shfaqur nga një kompjuter në distancë."
+    IDS_EVENTLOG_ERROR_TYPE "Error"
+    IDS_EVENTLOG_WARNING_TYPE "Paralajmërim"
+    IDS_EVENTLOG_INFORMATION_TYPE "Informacion"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Audit me Sukses"
+    IDS_EVENTLOG_AUDIT_FAILURE "Audit dështoj"
+    IDS_EVENTLOG_SUCCESS "Sukses"
+    IDS_EVENTLOG_UNKNOWN_TYPE "Ngjraje e panjohur"
+    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE "Tipi"
+    IDS_COLUMNDATE "Data"
+    IDS_COLUMNTIME "Ora"
+    IDS_COLUMNSOURCE "Burimi"
+    IDS_COLUMNCATEGORY "Kategoria"
+    IDS_COLUMNEVENT "Ngjarja"
+    IDS_COLUMNUSER "Përdoruesi"
+    IDS_COLUMNCOMPUTER "Kompjuter"
+    IDS_COLUMNEVENTDATA "Data e Ngjarjes"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COPY "Event Type:     %s\r\n\
+Event Source:   %s\r\n\
+Event Category: %s\r\n\
+Event ID:       %s\r\n\
+Date:           %s\r\n\
+Time:           %s\r\n\
+User:           %s\r\n\
+Computer:       %s\r\n\
+Description:\r\n%s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE "Asnje"
+    IDS_NOT_AVAILABLE "N/A"
+END

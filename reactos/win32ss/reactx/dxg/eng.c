@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
- * FILE:             drivers/directx/dxg/main.c
+ * FILE:             win32ss/reactx/dxg/eng.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       30/12-2007   Magnus Olsen
@@ -42,3 +42,18 @@ DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 
     return retVal;
 }
+
+BOOL
+NTAPI
+DxDdEnableDirectDraw(PVOID arg1, BOOL arg2/*What for?*/)
+{
+    // taken from CORE-4490
+    //PDEV_WIN32K pdev = (PDEV_WIN32K) arg1 ;
+    //return pdev->DriverFunctions.EnableDirectDraw(pdev->dhpdev,
+    //                                       &pdev->EDDgpl.ddCallbacks,
+    //                                       &pdev->EDDgpl.ddSurfaceCallbacks,
+    //                                       &pdev->EDDgpl.ddPaletteCallbacks) ;
+
+    return TRUE;
+}
+

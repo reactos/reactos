@@ -1,5 +1,5 @@
 
-add_library(sermouse SHARED
+list(APPEND SOURCE
     createclose.c
     detect.c
     fdo.c
@@ -7,9 +7,10 @@ add_library(sermouse SHARED
     misc.c
     readmouse.c
     sermouse.c
-    sermouse.rc)
+    sermouse.h)
 
+add_library(sermouse SHARED ${SOURCE} sermouse.rc)
 set_module_type(sermouse kernelmodedriver)
-add_pch(sermouse sermouse.h)
+add_pch(sermouse sermouse.h SOURCE)
 add_importlibs(sermouse ntoskrnl hal)
 add_cd_file(TARGET sermouse DESTINATION reactos/system32/drivers FOR all)

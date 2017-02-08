@@ -18,29 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <winreg.h>
-
-#include <winspool.h>
-#include <ddk/winsplp.h>
 #include "localspl_private.h"
 
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
-
-
-WINE_DEFAULT_DEBUG_CHANNEL(localspl);
+#include "resource.h"
 
 /*****************************************************/
 
@@ -515,7 +495,6 @@ cleanup:
 static BOOL WINAPI localmon_OpenPortW(LPWSTR pName, PHANDLE phPort)
 {
     port_t * port;
-    DWORD   len;
     DWORD   type;
 
     TRACE("%s, %p)\n", debugstr_w(pName), phPort);
@@ -527,12 +506,11 @@ static BOOL WINAPI localmon_OpenPortW(LPWSTR pName, PHANDLE phPort)
     type = get_type_from_local_name(pName);
     if (!type) return FALSE;
 
-    len = (lstrlenW(pName) + 1) * sizeof(WCHAR);
-    port = heap_alloc(sizeof(port_t) + len);
+    port = heap_alloc(FIELD_OFFSET(port_t, nameW[lstrlenW(pName) + 1]));
     if (!port) return FALSE;
 
     port->type = type;
-    memcpy(port->nameW, pName, len);
+    lstrcpyW(port->nameW, pName);
     *phPort = port;
 
     EnterCriticalSection(&port_handles_cs);
@@ -736,16 +714,14 @@ static DWORD WINAPI localmon_XcvDataPort(HANDLE hXcv, LPCWSTR pszDataName, PBYTE
  */
 static BOOL WINAPI localmon_XcvOpenPort(LPCWSTR pName, ACCESS_MASK GrantedAccess, PHANDLE phXcv)
 {
-    DWORD   len;
     xcv_t * xcv;
 
     TRACE("%s, 0x%x, %p)\n", debugstr_w(pName), GrantedAccess, phXcv);
     /* No checks for any field is done in Windows */
-    len = (lstrlenW(pName) + 1) * sizeof(WCHAR);
-    xcv = heap_alloc( sizeof(xcv_t) + len);
+    xcv = heap_alloc(FIELD_OFFSET(xcv_t, nameW[lstrlenW(pName) + 1]));
     if (xcv) {
         xcv->GrantedAccess = GrantedAccess;
-        memcpy(xcv->nameW, pName, len);
+        lstrcpyW(xcv->nameW, pName);
         *phXcv = xcv;
         EnterCriticalSection(&xcv_handles_cs);
         list_add_tail(&xcv_handles, &xcv->entry);

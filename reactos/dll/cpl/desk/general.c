@@ -26,37 +26,45 @@ InitFontSizeList(HWND hWnd)
     {
         if (SetupFindFirstLine(hInf, _T("Font Sizes"), NULL, &Context))
         {
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI"),
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts"),
                              0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                dwSize = MAX_PATH;
+                dwType = REG_DWORD;
+
+                if (!RegQueryValueEx(hKey, _T("LogPixels"), NULL,
+                                    &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+                {
+                    dwValue = 0;
+                }
+
+                RegCloseKey(hKey);
+            }
+
             for (;;)
             {
+                TCHAR Buffer[LINE_LEN];
                 TCHAR Desc[LINE_LEN];
 
-                if (SetupGetStringField(&Context, 0, Desc, sizeof(Desc), NULL) &&
+                if (SetupGetStringField(&Context, 0, Buffer, sizeof(Buffer) / sizeof(TCHAR), NULL) &&
                     SetupGetIntField(&Context, 1, &ci))
                 {
-                    _stprintf(Desc, _T("%s (%d DPI)"), Desc, ci);
+                    _stprintf(Desc, _T("%s (%d DPI)"), Buffer, ci);
                     i = SendMessage(hFontSize, CB_ADDSTRING, 0, (LPARAM)Desc);
                     if (i != CB_ERR)
                         SendMessage(hFontSize, CB_SETITEMDATA, (WPARAM)i, (LPARAM)ci);
 
-                    dwSize = MAX_PATH;
-                    dwType = REG_DWORD;
-
-                    if (RegQueryValueEx(hKey, _T("LogPixels"), NULL,
-                                        &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+                    if ((int)dwValue == ci)
                     {
-                        if ((int)dwValue == ci)
-                        {
-                            SendMessage(hFontSize, CB_SETCURSEL, (WPARAM)i, 0);
-                            SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_COSTOM), Desc);
-                        }
+                        SendMessage(hFontSize, CB_SETCURSEL, (WPARAM)i, 0);
+                        SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_CUSTOM), Desc);
                     }
+                    else
+                        SendMessage(hFontSize, CB_SETCURSEL, 0, 0);
                 }
 
                 if (!SetupFindNextLine(&Context, &Context))
                 {
-                    RegCloseKey(hKey);
                     break;
                 }
             }
@@ -94,9 +102,13 @@ InitRadioButtons(HWND hWnd)
                     break;
             }
         }
+        else
+            SendDlgItemMessage(hWnd, IDC_WITHOUTREBOOT_RB, BM_SETCHECK, 1, 1);
 
         RegCloseKey(hKey);
     }
+    else
+        SendDlgItemMessage(hWnd, IDC_WITHOUTREBOOT_RB, BM_SETCHECK, 1, 1);
 }
 
 INT_PTR CALLBACK

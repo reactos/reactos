@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/vga/palette.c
+ * FILE:            win32ss/drivers/displays/vga_new/palette.c
  * PURPOSE:         Palette Support
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  */

@@ -147,8 +147,8 @@ ExInitializeZone(PZONE_HEADER Zone,
         Entry += Zone->BlockSize;
     }
 
-    /* Update Segment Size */
-    Zone->TotalSegmentSize += i;
+    /* Set Segment Size */
+    Zone->TotalSegmentSize = i;
 
     /* Return success */
     return STATUS_SUCCESS;

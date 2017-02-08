@@ -16,31 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winreg.h"
-#include <ole2.h>
-
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-
 #include "mshtml_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
-
 #define NS_PROMPTSERVICE_CONTRACTID "@mozilla.org/embedcomp/prompt-service;1"
-#define NS_WINDOWWATCHER_CONTRACTID "@mozilla.org/embedcomp/window-watcher;1"
 #define NS_TOOLTIPTEXTPROVIDER_CONTRACTID "@mozilla.org/embedcomp/tooltiptextprovider;1"
 
 #define NS_TOOLTIPTEXTPROVIDER_CLASSNAME "nsTooltipTextProvider"
@@ -50,75 +28,8 @@ static const nsIID NS_PROMPTSERVICE_CID =
 static const nsIID NS_TOOLTIPTEXTPROVIDER_CID =
     {0x0b666e3e,0x569a,0x462c,{0xa7,0xf0,0xb1,0x6b,0xb1,0x5d,0x42,0xff}};
 
-static nsresult NSAPI nsWindowCreator_QueryInterface(nsIWindowCreator2 *iface, nsIIDRef riid,
-                                               nsQIResult result)
-{
-    *result = NULL;
-
-    if(IsEqualGUID(&IID_nsISupports, riid)) {
-        TRACE("(IID_nsISupports %p)\n", result);
-        *result = iface;
-    }else if(IsEqualGUID(&IID_nsIWindowCreator, riid)) {
-        TRACE("(IID_nsIWindowCreator %p)\n", result);
-        *result = iface;
-    }else if(IsEqualGUID(&IID_nsIWindowCreator2, riid)) {
-        TRACE("(IID_nsIWindowCreator2 %p)\n", result);
-        *result = iface;
-    }
-
-    if(*result) {
-        nsIWindowCreator_AddRef(iface);
-        return NS_OK;
-    }
-
-    WARN("(%s %p)\n", debugstr_guid(riid), result);
-    return NS_NOINTERFACE;
-}
-
-static nsrefcnt NSAPI nsWindowCreator_AddRef(nsIWindowCreator2 *iface)
-{
-    return 2;
-}
-
-static nsrefcnt NSAPI nsWindowCreator_Release(nsIWindowCreator2 *iface)
-{
-    return 1;
-}
-
-static nsresult NSAPI nsWindowCreator_CreateChromeWindow(nsIWindowCreator2 *iface,
-        nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval)
-{
-    TRACE("(%p %08x %p)\n", parent, chromeFlags, _retval);
-    return nsIWindowCreator2_CreateChromeWindow2(iface, parent, chromeFlags, 0, NULL,
-                                                 NULL, _retval);
-}
-
-static nsresult NSAPI nsWindowCreator_CreateChromeWindow2(nsIWindowCreator2 *iface,
-        nsIWebBrowserChrome *parent, PRUint32 chromeFlags, PRUint32 contextFlags,
-        nsIURI *uri, PRBool *cancel, nsIWebBrowserChrome **_retval)
-{
-    TRACE("(%p %08x %08x %p %p %p)\n", parent, chromeFlags, contextFlags, uri,
-          cancel, _retval);
-
-    if(cancel)
-        *cancel = FALSE;
-
-    *_retval = NSWBCHROME(NSContainer_Create(NULL, (NSContainer*)parent));
-    return NS_OK;
-}
-
-static const nsIWindowCreator2Vtbl nsWindowCreatorVtbl = {
-    nsWindowCreator_QueryInterface,
-    nsWindowCreator_AddRef,
-    nsWindowCreator_Release,
-    nsWindowCreator_CreateChromeWindow,
-    nsWindowCreator_CreateChromeWindow2
-};
-
-static nsIWindowCreator2 nsWindowCreator = { &nsWindowCreatorVtbl };
-
 static nsresult NSAPI nsPromptService_QueryInterface(nsIPromptService *iface,
-                                                     nsIIDRef riid, nsQIResult result)
+        nsIIDRef riid, void **result)
 {
     *result = NULL;
 
@@ -150,7 +61,7 @@ static nsrefcnt NSAPI nsPromptService_Release(nsIPromptService *iface)
 static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, nsIDOMWindow *aParent,
         const PRUnichar *aDialogTitle, const PRUnichar *aText)
 {
-    HTMLWindow *window;
+    HTMLOuterWindow *window;
     BSTR text;
 
     TRACE("(%p %s %s)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText));
@@ -162,7 +73,7 @@ static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, nsIDOMWindo
     }
 
     text = SysAllocString(aText);
-    IHTMLWindow2_alert(HTMLWINDOW2(window), text);
+    IHTMLWindow2_alert(&window->base.IHTMLWindow2_iface, text);
     SysFreeString(text);
 
     return NS_OK;
@@ -170,7 +81,7 @@ static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, nsIDOMWindo
 
 static nsresult NSAPI nsPromptService_AlertCheck(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
-        const PRUnichar *aText, const PRUnichar *aCheckMsg, PRBool *aCheckState)
+        const PRUnichar *aText, const PRUnichar *aCheckMsg, cpp_bool *aCheckState)
 {
     FIXME("(%p %s %s %s %p)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText),
           debugstr_w(aCheckMsg), aCheckState);
@@ -179,7 +90,7 @@ static nsresult NSAPI nsPromptService_AlertCheck(nsIPromptService *iface,
 
 static nsresult NSAPI nsPromptService_Confirm(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle, const PRUnichar *aText,
-        PRBool *_retval)
+        cpp_bool *_retval)
 {
     FIXME("(%p %s %s %p)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText), _retval);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -187,8 +98,8 @@ static nsresult NSAPI nsPromptService_Confirm(nsIPromptService *iface,
 
 static nsresult NSAPI nsPromptService_ConfirmCheck(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
-        const PRUnichar *aText, const PRUnichar *aCheckMsg, PRBool *aCheckState,
-        PRBool *_retval)
+        const PRUnichar *aText, const PRUnichar *aCheckMsg, cpp_bool *aCheckState,
+        cpp_bool *_retval)
 {
     FIXME("(%p %s %s %s %p %p)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText),
         debugstr_w(aCheckMsg), aCheckState, _retval);
@@ -197,9 +108,9 @@ static nsresult NSAPI nsPromptService_ConfirmCheck(nsIPromptService *iface,
 
 static nsresult NSAPI nsPromptService_ConfirmEx(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
-        const PRUnichar *aText, PRUint32 aButtonFlags, const PRUnichar *aButton0Title,
+        const PRUnichar *aText, UINT32 aButtonFlags, const PRUnichar *aButton0Title,
         const PRUnichar *aButton1Title, const PRUnichar *aButton2Title,
-        const PRUnichar *aCheckMsg, PRBool *aCheckState, PRInt32 *_retval)
+        const PRUnichar *aCheckMsg, cpp_bool *aCheckState, LONG *_retval)
 {
     static const PRUnichar wszContinue[] = {'C','o','n','t','i','n','u','e',0};
 
@@ -228,7 +139,7 @@ static nsresult NSAPI nsPromptService_ConfirmEx(nsIPromptService *iface,
 static nsresult NSAPI nsPromptService_Prompt(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, PRUnichar **aValue, const PRUnichar *aCheckMsg,
-        PRBool *aCheckState, PRBool *_retval)
+        cpp_bool *aCheckState, cpp_bool *_retval)
 {
     FIXME("(%p %s %s %p %s %p %p)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText),
           aValue, debugstr_w(aCheckMsg), aCheckState, _retval);
@@ -238,7 +149,7 @@ static nsresult NSAPI nsPromptService_Prompt(nsIPromptService *iface,
 static nsresult NSAPI nsPromptService_PromptUsernameAndPassword(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, PRUnichar **aUsername, PRUnichar **aPassword,
-        const PRUnichar *aCheckMsg, PRBool *aCheckState, PRBool *_retval)
+        const PRUnichar *aCheckMsg, cpp_bool *aCheckState, cpp_bool *_retval)
 {
     FIXME("(%p %s %s %p %p %s %p %p)\n", aParent, debugstr_w(aDialogTitle),
         debugstr_w(aText), aUsername, aPassword, debugstr_w(aCheckMsg), aCheckState,
@@ -249,7 +160,7 @@ static nsresult NSAPI nsPromptService_PromptUsernameAndPassword(nsIPromptService
 static nsresult NSAPI nsPromptService_PromptPassword(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, PRUnichar **aPassword, const PRUnichar *aCheckMsg,
-        PRBool *aCheckState, PRBool *_retval)
+        cpp_bool *aCheckState, cpp_bool *_retval)
 {
     FIXME("(%p %s %s %p %s %p %p)\n", aParent, debugstr_w(aDialogTitle),
           debugstr_w(aText), aPassword, debugstr_w(aCheckMsg), aCheckState, _retval);
@@ -258,8 +169,8 @@ static nsresult NSAPI nsPromptService_PromptPassword(nsIPromptService *iface,
 
 static nsresult NSAPI nsPromptService_Select(nsIPromptService *iface,
         nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
-        const PRUnichar *aText, PRUint32 aCount, const PRUnichar **aSelectList,
-        PRInt32 *aOutSelection, PRBool *_retval)
+        const PRUnichar *aText, UINT32 aCount, const PRUnichar **aSelectList,
+        LONG *aOutSelection, cpp_bool *_retval)
 {
     FIXME("(%p %s %s %d %p %p %p)\n", aParent, debugstr_w(aDialogTitle),
         debugstr_w(aText), aCount, aSelectList, aOutSelection, _retval);
@@ -284,7 +195,7 @@ static const nsIPromptServiceVtbl PromptServiceVtbl = {
 static nsIPromptService nsPromptService = { &PromptServiceVtbl };
 
 static nsresult NSAPI nsTooltipTextProvider_QueryInterface(nsITooltipTextProvider *iface,
-                                                          nsIIDRef riid, nsQIResult result)
+        nsIIDRef riid, void **result)
 {
     *result = NULL;
 
@@ -316,7 +227,7 @@ static nsrefcnt NSAPI nsTooltipTextProvider_Release(nsITooltipTextProvider *ifac
 }
 
 static nsresult NSAPI nsTooltipTextProvider_GetNodeText(nsITooltipTextProvider *iface,
-        nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval)
+        nsIDOMNode *aNode, PRUnichar **aText, cpp_bool *_retval)
 {
     nsIDOMHTMLElement *nselem;
     nsIDOMNode *node = aNode, *parent;
@@ -382,27 +293,28 @@ static const nsITooltipTextProviderVtbl nsTooltipTextProviderVtbl = {
 static nsITooltipTextProvider nsTooltipTextProvider = { &nsTooltipTextProviderVtbl };
 
 typedef struct {
-    const nsIFactoryVtbl *lpFactoryVtbl;
+    nsIFactory nsIFactory_iface;
     nsISupports *service;
 } nsServiceFactory;
 
-#define NSFACTORY(x)  ((nsIFactory*)  &(x)->lpFactoryVtbl)
-
-#define NSFACTORY_THIS(iface) DEFINE_THIS(nsServiceFactory, Factory, iface)
+static inline nsServiceFactory *impl_from_nsIFactory(nsIFactory *iface)
+{
+    return CONTAINING_RECORD(iface, nsServiceFactory, nsIFactory_iface);
+}
 
 static nsresult NSAPI nsServiceFactory_QueryInterface(nsIFactory *iface, nsIIDRef riid,
-                                                    nsQIResult result)
+        void **result)
 {
-    nsServiceFactory *This = NSFACTORY_THIS(iface);
+    nsServiceFactory *This = impl_from_nsIFactory(iface);
 
     *result = NULL;
 
     if(IsEqualGUID(&IID_nsISupports, riid)) {
         TRACE("(%p)->(IID_nsISupports %p)\n", This, result);
-        *result = NSFACTORY(This);
+        *result = &This->nsIFactory_iface;
     }else if(IsEqualGUID(&IID_nsIFactory, riid)) {
         TRACE("(%p)->(IID_nsIFactory %p)\n", This, result);
-        *result = NSFACTORY(This);
+        *result = &This->nsIFactory_iface;
     }
 
     if(*result)
@@ -425,21 +337,19 @@ static nsrefcnt NSAPI nsServiceFactory_Release(nsIFactory *iface)
 static nsresult NSAPI nsServiceFactory_CreateInstance(nsIFactory *iface,
         nsISupports *aOuter, const nsIID *iid, void **result)
 {
-    nsServiceFactory *This = NSFACTORY_THIS(iface);
+    nsServiceFactory *This = impl_from_nsIFactory(iface);
 
     TRACE("(%p)->(%p %s %p)\n", This, aOuter, debugstr_guid(iid), result);
 
     return nsISupports_QueryInterface(This->service, iid, result);
 }
 
-static nsresult NSAPI nsServiceFactory_LockFactory(nsIFactory *iface, PRBool lock)
+static nsresult NSAPI nsServiceFactory_LockFactory(nsIFactory *iface, cpp_bool lock)
 {
-    nsServiceFactory *This = NSFACTORY_THIS(iface);
+    nsServiceFactory *This = impl_from_nsIFactory(iface);
     WARN("(%p)->(%x)\n", This, lock);
     return NS_OK;
 }
-
-#undef NSFACTORY_THIS
 
 static const nsIFactoryVtbl nsServiceFactoryVtbl = {
     nsServiceFactory_QueryInterface,
@@ -450,40 +360,27 @@ static const nsIFactoryVtbl nsServiceFactoryVtbl = {
 };
 
 static nsServiceFactory nsPromptServiceFactory = {
-    &nsServiceFactoryVtbl,
+    { &nsServiceFactoryVtbl },
     (nsISupports*)&nsPromptService
 };
 
 static nsServiceFactory nsTooltipTextFactory = {
-    &nsServiceFactoryVtbl,
+    { &nsServiceFactoryVtbl },
     (nsISupports*)&nsTooltipTextProvider
 };
 
 void register_nsservice(nsIComponentRegistrar *registrar, nsIServiceManager *service_manager)
 {
-    nsIWindowWatcher *window_watcher;
     nsresult nsres;
 
     nsres = nsIComponentRegistrar_RegisterFactory(registrar, &NS_PROMPTSERVICE_CID,
-            "Prompt Service", NS_PROMPTSERVICE_CONTRACTID, NSFACTORY(&nsPromptServiceFactory));
+            "Prompt Service", NS_PROMPTSERVICE_CONTRACTID, &nsPromptServiceFactory.nsIFactory_iface);
     if(NS_FAILED(nsres))
         ERR("RegisterFactory failed: %08x\n", nsres);
 
-    nsres = nsIServiceManager_GetServiceByContractID(service_manager, NS_WINDOWWATCHER_CONTRACTID,
-            &IID_nsIWindowWatcher, (void**)&window_watcher);
-    if(NS_SUCCEEDED(nsres)) {
-        nsres = nsIWindowWatcher_SetWindowCreator(window_watcher,
-                                                  (nsIWindowCreator*)&nsWindowCreator);
-        if(NS_FAILED(nsres))
-            ERR("SetWindowCreator failed: %08x\n", nsres);
-        nsIWindowWatcher_Release(window_watcher);
-    }else {
-        ERR("Could not get WindowWatcher object: %08x\n", nsres);
-    }
-
     nsres = nsIComponentRegistrar_RegisterFactory(registrar, &NS_TOOLTIPTEXTPROVIDER_CID,
             NS_TOOLTIPTEXTPROVIDER_CLASSNAME, NS_TOOLTIPTEXTPROVIDER_CONTRACTID,
-            NSFACTORY(&nsTooltipTextFactory));
+            &nsTooltipTextFactory.nsIFactory_iface);
     if(NS_FAILED(nsres))
         ERR("RegisterFactory failed: %08x\n", nsres);
 }

@@ -1,10 +1,9 @@
-/*
-* Traslated by Baruch Rutman
- */
+/* Traslated by Baruch Rutman */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "טעינת ספרייה '%s' נכשלה"
-    IDS_MissingEntry,   "חסרה נקודת כניסה:%s\nב %s"
+    IDS_DllNotLoaded "טעינת ספרייה '%s' נכשלה"
+    IDS_MissingEntry "חסרה נקודת כניסה:%s\nב %s"
 END

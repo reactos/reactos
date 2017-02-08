@@ -2,8 +2,6 @@
  * Copyright (c) 2002 Lionel ULMER
  * Copyright (c) 2006 Stefan DÖSINGER
  *
- * This file contains the implementation of Direct3DVertexBuffer COM object
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -19,12 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static inline struct d3d_vertex_buffer *impl_from_IDirect3DVertexBuffer(IDirect3DVertexBuffer *iface)
 {
@@ -159,8 +152,6 @@ static ULONG WINAPI d3d_vertex_buffer7_Release(IDirect3DVertexBuffer7 *iface)
                 0, &curVB, &offset, &stride);
         if (curVB == buffer->wineD3DVertexBuffer)
             wined3d_device_set_stream_source(buffer->ddraw->wined3d_device, 0, NULL, 0, 0);
-        if (curVB)
-            wined3d_buffer_decref(curVB); /* For the GetStreamSource */
 
         wined3d_vertex_declaration_decref(buffer->wineD3DVertexDeclaration);
         wined3d_buffer_decref(buffer->wineD3DVertexBuffer);
@@ -245,7 +236,7 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
         wined3d_flags |= WINED3D_MAP_READONLY;
     if (flags & DDLOCK_NOOVERWRITE)
         wined3d_flags |= WINED3D_MAP_NOOVERWRITE;
-    if (flags & DDLOCK_DISCARDCONTENTS && buffer->read_since_last_map)
+    if (flags & DDLOCK_DISCARDCONTENTS)
     {
         wined3d_flags |= WINED3D_MAP_DISCARD;
 
@@ -278,9 +269,6 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
     }
 
     hr = wined3d_buffer_map(buffer->wineD3DVertexBuffer, 0, 0, (BYTE **)data, wined3d_flags);
-
-    if (SUCCEEDED(hr))
-        buffer->read_since_last_map = FALSE;
 
     wined3d_mutex_unlock();
 

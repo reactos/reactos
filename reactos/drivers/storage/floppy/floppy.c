@@ -42,6 +42,12 @@
 
 #include "precomp.h"
 
+#include <ntddk.h>
+#include <debug.h>
+
+#include "ioctl.h"
+#include "readwrite.h"
+
 /*
  * Global controller info structures.  Each controller gets one.  Since the system
  * will probably have only one, with four being a very unlikely maximum, a static
@@ -674,7 +680,11 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     TRACE_(FLOPPY, "InitController called with Controller 0x%p\n", ControllerInfo);
 
     /* Get controller in a known state */
-    HwConfigure(ControllerInfo, FALSE, TRUE, TRUE, 0, 0);
+    if(HwConfigure(ControllerInfo, FALSE, TRUE, TRUE, 0, 0) != STATUS_SUCCESS)
+    {
+        WARN_(FLOPPY, "InitController: unable to configure controller\n");
+        return STATUS_IO_DEVICE_ERROR;
+    }
 
     /* Get the controller version */
     ControllerVersion = HwGetVersion(ControllerInfo);
@@ -755,9 +765,9 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     HeadLoadTime = SPECIFY_HLT_500K;
     HeadUnloadTime = SPECIFY_HUT_500K;
     StepRateTime = SPECIFY_SRT_500K;
-    
+
     INFO_(FLOPPY, "InitController: setting data rate\n");
-    
+
     /* Set data rate */
     if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
     {
@@ -977,6 +987,11 @@ AddControllers(PDRIVER_OBJECT DriverObject)
 
             /* 3k: Clear the DO_DEVICE_INITIALIZING flag */
             gControllerInfo[i].DriveInfo[j].DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+            /* 3l: Attempt to get drive info - if a floppy is already present */
+            StartMotor(&gControllerInfo[i].DriveInfo[j]);
+            RWDetermineMediaType(&gControllerInfo[i].DriveInfo[j], TRUE);
+            StopMotor(gControllerInfo[i].DriveInfo[j].ControllerInfo);
         }
     }
 
@@ -1170,7 +1185,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, PsThreadType, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
+    if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, *PsThreadType, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
     {
         WARN_(FLOPPY, "Unable to reference returned thread handle; failing init\n");
         return STATUS_UNSUCCESSFUL;
@@ -1192,4 +1207,3 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
     return STATUS_SUCCESS;
 }
-

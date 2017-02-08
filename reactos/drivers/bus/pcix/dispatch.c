@@ -9,10 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <pci.h>
+
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS ********************************************************************/
 
 /* FUNCTIONS ******************************************************************/
 
@@ -31,7 +30,7 @@ PciSetEventCompletion(IN PDEVICE_OBJECT DeviceObject,
     UNREFERENCED_PARAMETER(Irp);
 
     /* Set the event and return the appropriate status code */
-    KeSetEvent(Event, FALSE, IO_NO_INCREMENT);
+    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 

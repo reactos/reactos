@@ -43,6 +43,6 @@ Arguments are:
   --rasterize              Call FT_Render_Glyph as well as loading it.
   --result <dir>           This is the directory in which test files are
                            placed.
-  --test <file>            Run a single test on a pre-generated testcase. 
+  --test <file>            Run a single test on a pre-generated testcase.
                            Done in the current process so it can be debugged
                            more easily.

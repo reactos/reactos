@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <string.h>
 
-size_t _strxspn(const char *s1, const char *s2)
+size_t __cdecl _strxspn(const char *s1, const char *s2)
 {
  unsigned char char_map[1 << CHAR_BIT * sizeof(char)];
  const unsigned char * us2 = (const unsigned char *)s2;

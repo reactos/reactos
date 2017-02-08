@@ -23,12 +23,14 @@
 #ifndef __WINE_D3D8_PRIVATE_H
 #define __WINE_D3D8_PRIVATE_H
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include <config.h>
 
 #include <assert.h>
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
@@ -36,7 +38,10 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
+
 #include <d3d8.h>
 #include <wine/wined3d.h>
 
@@ -148,6 +153,13 @@ struct FvfToDecl
     struct d3d8_vertex_declaration *declaration;
 };
 
+enum d3d8_device_state
+{
+    D3D8_DEVICE_STATE_OK,
+    D3D8_DEVICE_STATE_LOST,
+    D3D8_DEVICE_STATE_NOT_RESET,
+};
+
 struct d3d8_device
 {
     /* IUnknown fields */
@@ -170,25 +182,48 @@ struct d3d8_device
     UINT                   index_buffer_size;
     UINT                   index_buffer_pos;
 
+    LONG device_state;
     /* Avoids recursion with nested ReleaseRef to 0 */
     BOOL                    inDestruction;
-    BOOL lost;
+
+    /* The d3d8 API supports only one implicit swapchain (no D3DCREATE_ADAPTERGROUP_DEVICE,
+     * no GetSwapchain, GetBackBuffer doesn't accept a swapchain number). */
+    struct d3d8_swapchain   *implicit_swapchain;
 };
 
 HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wined3d *wined3d, UINT adapter,
         D3DDEVTYPE device_type, HWND focus_window, DWORD flags, D3DPRESENT_PARAMETERS *parameters) DECLSPEC_HIDDEN;
 
+static inline struct d3d8_device *impl_from_IDirect3DDevice8(IDirect3DDevice8 *iface)
+{
+    return CONTAINING_RECORD(iface, struct d3d8_device, IDirect3DDevice8_iface);
+}
+
+struct d3d8_resource
+{
+    LONG refcount;
+    struct wined3d_private_store private_store;
+};
+
+void d3d8_resource_cleanup(struct d3d8_resource *resource) DECLSPEC_HIDDEN;
+HRESULT d3d8_resource_free_private_data(struct d3d8_resource *resource, const GUID *guid) DECLSPEC_HIDDEN;
+HRESULT d3d8_resource_get_private_data(struct d3d8_resource *resource, const GUID *guid,
+        void *data, DWORD *data_size) DECLSPEC_HIDDEN;
+void d3d8_resource_init(struct d3d8_resource *resource) DECLSPEC_HIDDEN;
+HRESULT d3d8_resource_set_private_data(struct d3d8_resource *resource, const GUID *guid,
+        const void *data, DWORD data_size, DWORD flags) DECLSPEC_HIDDEN;
+
 struct d3d8_volume
 {
     IDirect3DVolume8 IDirect3DVolume8_iface;
-    LONG refcount;
-    struct wined3d_volume *wined3d_volume;
-    IUnknown *container;
-    IUnknown *forwardReference;
+    struct d3d8_resource resource;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
+    struct d3d8_texture *texture;
 };
 
-HRESULT volume_init(struct d3d8_volume *volume, struct d3d8_device *device, UINT width, UINT height,
-        UINT depth, DWORD usage, enum wined3d_format_id format, enum wined3d_pool pool) DECLSPEC_HIDDEN;
+void volume_init(struct d3d8_volume *volume, struct wined3d_texture *wined3d_texture,
+        unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d8_swapchain
 {
@@ -204,26 +239,25 @@ HRESULT d3d8_swapchain_create(struct d3d8_device *device, struct wined3d_swapcha
 struct d3d8_surface
 {
     IDirect3DSurface8 IDirect3DSurface8_iface;
-    LONG refcount;
-    struct wined3d_surface *wined3d_surface;
+    struct d3d8_resource resource;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
+    struct list rtv_entry;
+    struct wined3d_rendertarget_view *wined3d_rtv;
     IDirect3DDevice8 *parent_device;
-
-    /* The surface container */
-    IUnknown                    *container;
-
-    /* If set forward refcounting to this object */
-    IUnknown                    *forwardReference;
+    IUnknown *container;
+    struct d3d8_texture *texture;
 };
 
-HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device, UINT width, UINT height,
-        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
-        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
+struct wined3d_rendertarget_view *d3d8_surface_get_rendertarget_view(struct d3d8_surface *surface) DECLSPEC_HIDDEN;
+void surface_init(struct d3d8_surface *surface, struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
+        const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d8_surface *unsafe_impl_from_IDirect3DSurface8(IDirect3DSurface8 *iface) DECLSPEC_HIDDEN;
 
 struct d3d8_vertexbuffer
 {
     IDirect3DVertexBuffer8 IDirect3DVertexBuffer8_iface;
-    LONG refcount;
+    struct d3d8_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice8 *parent_device;
     DWORD fvf;
@@ -236,7 +270,7 @@ struct d3d8_vertexbuffer *unsafe_impl_from_IDirect3DVertexBuffer8(IDirect3DVerte
 struct d3d8_indexbuffer
 {
     IDirect3DIndexBuffer8 IDirect3DIndexBuffer8_iface;
-    LONG refcount;
+    struct d3d8_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice8 *parent_device;
     enum wined3d_format_id format;
@@ -249,9 +283,10 @@ struct d3d8_indexbuffer *unsafe_impl_from_IDirect3DIndexBuffer8(IDirect3DIndexBu
 struct d3d8_texture
 {
     IDirect3DBaseTexture8 IDirect3DBaseTexture8_iface;
-    LONG refcount;
+    struct d3d8_resource resource;
     struct wined3d_texture *wined3d_texture;
     IDirect3DDevice8 *parent_device;
+    struct list rtv_list;
 };
 
 HRESULT cubetexture_init(struct d3d8_texture *texture, struct d3d8_device *device,

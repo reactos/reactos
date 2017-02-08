@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/misc/usrapihk.c
+ * FILE:            win32ss/user/user32/misc/usrapihk.c
  * PURPOSE:         User32.dll User32 Api Hook interface and support functions
  * PROGRAMMER:
  *
@@ -28,12 +28,13 @@ INT WINAPI RealSetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
 BOOL WINAPI RealSystemParametersInfoA(UINT,UINT,PVOID,UINT);
 BOOL WINAPI RealSystemParametersInfoW(UINT,UINT,PVOID,UINT);
 DWORD WINAPI GetRealWindowOwner(HWND);
+LRESULT WINAPI RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags);
 
 /* GLOBALS *******************************************************************/
 
 DWORD gcLoadUserApiHook = 0;
 LONG gcCallUserApiHook = 0;
-DWORD gfUserApiHook;
+DWORD gfUserApiHook = 0;
 HINSTANCE ghmodUserApiHook = NULL;
 USERAPIHOOKPROC gpfnInitUserApi;
 RTL_CRITICAL_SECTION gcsUserApiHook;
@@ -132,21 +133,21 @@ ResetUserApiHook(PUSERAPIHOOK puah)
 {
   // Setup Structure.....
   puah->size = sizeof(USERAPIHOOK);
-  puah->DefWindowProcA = (WNDPROC)RealDefWindowProcA;
-  puah->DefWindowProcW = (WNDPROC)RealDefWindowProcW;
+  puah->DefWindowProcA = RealDefWindowProcA;
+  puah->DefWindowProcW = RealDefWindowProcW;
   puah->DefWndProcArray.MsgBitArray = NULL;
   puah->DefWndProcArray.Size = 0;
   puah->GetScrollInfo = (FARPROC)RealGetScrollInfo;
   puah->SetScrollInfo = (FARPROC)RealSetScrollInfo;
   puah->EnableScrollBar = (FARPROC)NtUserEnableScrollBar;
   puah->AdjustWindowRectEx = (FARPROC)RealAdjustWindowRectEx;
-  puah->SetWindowRgn = (FARPROC)NtUserSetWindowRgn;
-  puah->PreWndProc = (WNDPROC_OWP)DefaultOWP;
-  puah->PostWndProc = (WNDPROC_OWP)DefaultOWP;
+  puah->SetWindowRgn = NtUserSetWindowRgn;
+  puah->PreWndProc = DefaultOWP;
+  puah->PostWndProc = DefaultOWP;
   puah->WndProcArray.MsgBitArray = NULL;
   puah->WndProcArray.Size = 0;
-  puah->PreDefDlgProc = (WNDPROC_OWP)DefaultOWP;
-  puah->PostDefDlgProc = (WNDPROC_OWP)DefaultOWP;
+  puah->PreDefDlgProc = DefaultOWP;
+  puah->PostDefDlgProc = DefaultOWP;
   puah->DlgProcArray.MsgBitArray = NULL;
   puah->DlgProcArray.Size = 0;
   puah->GetSystemMetrics = (FARPROC)RealGetSystemMetrics;
@@ -154,7 +155,7 @@ ResetUserApiHook(PUSERAPIHOOK puah)
   puah->SystemParametersInfoW = (FARPROC)RealSystemParametersInfoW;
   puah->ForceResetUserApiHook = (FARPROC)ForceResetUserApiHook;
   puah->DrawFrameControl = (FARPROC)RealDrawFrameControl;
-  puah->DrawCaption = (FARPROC)NtUserDrawCaption;
+  puah->DrawCaption = (FARPROC)RealUserDrawCaption;
   puah->MDIRedrawFrame = (FARPROC)RealMDIRedrawFrame;
   puah->GetRealWindowOwner = (FARPROC)GetRealWindowOwner;
 }
@@ -343,19 +344,19 @@ MDIRedrawFrame(HWND hWnd, DWORD flags)
 USERAPIHOOK guah =
 {
   sizeof(USERAPIHOOK),
-  (WNDPROC)RealDefWindowProcA,
-  (WNDPROC)RealDefWindowProcW,
+  RealDefWindowProcA,
+  RealDefWindowProcW,
   {NULL, 0},
   (FARPROC)RealGetScrollInfo,
   (FARPROC)RealSetScrollInfo,
   (FARPROC)NtUserEnableScrollBar,
   (FARPROC)RealAdjustWindowRectEx,
-  (FARPROC)NtUserSetWindowRgn,
-  (WNDPROC_OWP)DefaultOWP,
-  (WNDPROC_OWP)DefaultOWP,
+  NtUserSetWindowRgn,
+  DefaultOWP,
+  DefaultOWP,
   {NULL, 0},
-  (WNDPROC_OWP)DefaultOWP,
-  (WNDPROC_OWP)DefaultOWP,
+  DefaultOWP,
+  DefaultOWP,
   {NULL, 0},
   (FARPROC)RealGetSystemMetrics,
   (FARPROC)RealSystemParametersInfoA,

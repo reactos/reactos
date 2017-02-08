@@ -1,0 +1,9 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "NT 物件名稱空間"
+    IDS_REGISTRY_NAME "系統註冊表"
+END

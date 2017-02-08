@@ -8,6 +8,9 @@
 
 #include "sysaudio.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 NTAPI
 Pin_fnDeviceIoControl(
@@ -32,7 +35,7 @@ Pin_fnDeviceIoControl(
     ASSERT(Context);
 
     /* acquire real pin file object */
-    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         Irp->IoStatus.Information = 0;
@@ -91,7 +94,7 @@ Pin_fnWrite(
     }
 
     /* acquire real pin file object */
-    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("failed\n");
@@ -232,8 +235,8 @@ CreateMixerPinAndSetFormat(
     }
 
     Status = ObReferenceObjectByHandle(PinHandle,
-                                       GENERIC_READ | GENERIC_WRITE, 
-                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+                                       GENERIC_READ | GENERIC_WRITE,
+                                       *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
 
     if (!NT_SUCCESS(Status))
     {

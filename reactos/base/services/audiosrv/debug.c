@@ -2,6 +2,8 @@
 
 #include "audiosrv.h"
 
+#include <stdio.h>
+
 void logmsg(char* string, ...)
 {
     va_list args;

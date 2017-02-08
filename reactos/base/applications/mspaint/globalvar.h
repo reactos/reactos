@@ -1,62 +1,50 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/paint/globalvar.h
+ * FILE:        base/applications/mspaint/globalvar.h
  * PURPOSE:     Declaring global variables for later initialization
  * PROGRAMMERS: Benedikt Freisen
  */
- 
-/* INCLUDES *********************************************************/
 
-//#include <windows.h>
-//#include "definitions.h"
+/* TYPES ************************************************************/
+
+typedef struct tagSTRETCHSKEW {
+    POINT percentage;
+    POINT angle;
+} STRETCHSKEW;
 
 /* VARIABLES declared in main.c *************************************/
 
-extern HDC hDrawingDC;
-extern HDC hSelDC;
-extern int *bmAddress;
-extern BITMAPINFO bitmapinfo;
-extern int imgXRes;
-extern int imgYRes;
+extern int widthSetInDlg;
+extern int heightSetInDlg;
 
-extern HBITMAP hBms[HISTORYSIZE];
-extern int currInd;
-extern int undoSteps;
-extern int redoSteps;
-extern BOOL imageSaved;
+extern STRETCHSKEW stretchSkew;
 
-extern LONG startX;
-extern LONG startY;
-extern LONG lastX;
-extern LONG lastY;
-extern int lineWidth;
-extern int shapeStyle;
-extern int brushStyle;
-extern int activeTool;
-extern int airBrushWidth;
-extern int rubberRadius;
-extern int transpBg;
-extern int zoom;
-extern int rectSel_src[4];
-extern int rectSel_dest[4];
-extern HWND hSelection;
-extern HWND hImageArea;
-extern HBITMAP hSelBm;
-extern HBITMAP hSelMask;
+class RegistrySettings;
+extern RegistrySettings registrySettings;
 
-extern int palColors[28];
+class ImageModel;
+extern ImageModel imageModel;
+extern BOOL askBeforeEnlarging;
 
-extern int fgColor;
-extern int bgColor;
+extern POINT start;
+extern POINT last;
+
+class ToolsModel;
+extern ToolsModel toolsModel;
+
+class SelectionModel;
+extern SelectionModel selectionModel;
+
+extern LOGFONT lfTextFont;
+extern HFONT hfontTextFont;
+extern LPTSTR textToolText;
+extern int textToolTextMaxLen;
+
+class PaletteModel;
+extern PaletteModel paletteModel;
 
 extern HWND hStatusBar;
-extern HWND hScrollbox;
-extern HWND hMainWnd;
-extern HWND hPalWin;
-extern HWND hToolBoxContainer;
-extern HWND hToolSettings;
-extern HWND hTrackbarZoom;
 extern CHOOSECOLOR choosecolor;
 extern OPENFILENAME ofn;
 extern OPENFILENAME sfn;
@@ -69,12 +57,10 @@ extern HCURSOR hCurZoom;
 extern HCURSOR hCurPen;
 extern HCURSOR hCurAirbrush;
 
-extern HWND hScrlClient;
-
 extern HWND hToolBtn[16];
 
 extern HINSTANCE hProgInstance;
-    
+
 extern TCHAR filename[256];
 extern TCHAR filepathname[1000];
 extern BOOL isAFile;
@@ -86,20 +72,39 @@ extern SYSTEMTIME fileTime;
 extern BOOL showGrid;
 extern BOOL showMiniature;
 
-extern HWND hwndMiniature;
+class CMainWindow;
+class CFullscreenWindow;
+class CMiniatureWindow;
+class CToolBox;
+class CToolSettingsWindow;
+class CPaletteWindow;
+class CScrollboxWindow;
+class CSelectionWindow;
+class CImgAreaWindow;
+class CSizeboxWindow;
+class CTextEditWindow;
 
-extern HWND hSizeboxLeftTop;
-extern HWND hSizeboxCenterTop;
-extern HWND hSizeboxRightTop;
-extern HWND hSizeboxLeftCenter;
-extern HWND hSizeboxRightCenter;
-extern HWND hSizeboxLeftBottom;
-extern HWND hSizeboxCenterBottom;
-extern HWND hSizeboxRightBottom;
+extern CMainWindow mainWindow;
+extern CFullscreenWindow fullscreenWindow;
+extern CMiniatureWindow miniature;
+extern CToolBox toolBoxContainer;
+extern CToolSettingsWindow toolSettingsWindow;
+extern CPaletteWindow paletteWindow;
+extern CScrollboxWindow scrollboxWindow;
+extern CScrollboxWindow scrlClientWindow;
+extern CSelectionWindow selectionWindow;
+extern CImgAreaWindow imageArea;
+extern CSizeboxWindow sizeboxLeftTop;
+extern CSizeboxWindow sizeboxCenterTop;
+extern CSizeboxWindow sizeboxRightTop;
+extern CSizeboxWindow sizeboxLeftCenter;
+extern CSizeboxWindow sizeboxRightCenter;
+extern CSizeboxWindow sizeboxLeftBottom;
+extern CSizeboxWindow sizeboxCenterBottom;
+extern CSizeboxWindow sizeboxRightBottom;
+extern CTextEditWindow textEditWindow;
 
 /* VARIABLES declared in mouse.c ************************************/
 
 extern POINT pointStack[256];
 extern short pointSP;
-extern POINT *ptStack;
-extern int ptSP;

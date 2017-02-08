@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/infcache.h
+ * FILE:            boot/freeldr/freeldr/include/inffile.h
  * PURPOSE:         INF file parser that caches contents of INF file in memory
  * PROGRAMMER:      Royce Mitchell III
  *                  Eric Kohl
@@ -49,8 +49,8 @@ typedef struct _INFCONTEXT
 
 BOOLEAN
 InfOpenFile (PHINF InfHandle,
-	     PCSTR FileName,
-	     PULONG ErrorLine);
+         PCSTR FileName,
+         PULONG ErrorLine);
 
 VOID
 InfCloseFile (HINF InfHandle);
@@ -58,28 +58,28 @@ InfCloseFile (HINF InfHandle);
 
 BOOLEAN
 InfFindFirstLine (HINF InfHandle,
-		  PCSTR Section,
-		  PCSTR Key,
-		  PINFCONTEXT Context);
+          PCSTR Section,
+          PCSTR Key,
+          PINFCONTEXT Context);
 
 BOOLEAN
 InfFindNextLine (PINFCONTEXT ContextIn,
-		 PINFCONTEXT ContextOut);
+         PINFCONTEXT ContextOut);
 
 BOOLEAN
 InfFindFirstMatchLine (PINFCONTEXT ContextIn,
-		       PCHAR Key,
-		       PINFCONTEXT ContextOut);
+               PCHAR Key,
+               PINFCONTEXT ContextOut);
 
 BOOLEAN
 InfFindNextMatchLine (PINFCONTEXT ContextIn,
-		      PCHAR Key,
-		      PINFCONTEXT ContextOut);
+              PCHAR Key,
+              PINFCONTEXT ContextOut);
 
 
 LONG
 InfGetLineCount (HINF InfHandle,
-		 PCHAR Section);
+         PCHAR Section);
 
 LONG
 InfGetFieldCount (PINFCONTEXT Context);
@@ -87,40 +87,40 @@ InfGetFieldCount (PINFCONTEXT Context);
 
 BOOLEAN
 InfGetBinaryField (PINFCONTEXT Context,
-		   ULONG FieldIndex,
-		   PUCHAR ReturnBuffer,
-		   ULONG ReturnBufferSize,
-		   PULONG RequiredSize);
+           ULONG FieldIndex,
+           PUCHAR ReturnBuffer,
+           ULONG ReturnBufferSize,
+           PULONG RequiredSize);
 
 BOOLEAN
 InfGetIntField (PINFCONTEXT Context,
-		ULONG FieldIndex,
-		LONG *IntegerValue);
+        ULONG FieldIndex,
+        LONG *IntegerValue);
 
 BOOLEAN
 InfGetMultiSzField (PINFCONTEXT Context,
-		    ULONG FieldIndex,
-		    PCHAR ReturnBuffer,
-		    ULONG ReturnBufferSize,
-		    PULONG RequiredSize);
+            ULONG FieldIndex,
+            PCHAR ReturnBuffer,
+            ULONG ReturnBufferSize,
+            PULONG RequiredSize);
 
 BOOLEAN
 InfGetStringField (PINFCONTEXT Context,
-		   ULONG FieldIndex,
-		   PCHAR ReturnBuffer,
-		   ULONG ReturnBufferSize,
-		   PULONG RequiredSize);
+           ULONG FieldIndex,
+           PCHAR ReturnBuffer,
+           ULONG ReturnBufferSize,
+           PULONG RequiredSize);
 
 
 
 BOOLEAN
 InfGetData (PINFCONTEXT Context,
-	    PCHAR *Key,
-	    PCHAR *Data);
+        PCHAR *Key,
+        PCHAR *Data);
 
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
-		 ULONG FieldIndex,
-		 PCSTR *Data);
+         ULONG FieldIndex,
+         PCSTR *Data);
 
 /* EOF */

@@ -12,26 +12,17 @@ list(APPEND SOURCE
     sysdm.c
     userprofile.c
     virtmem.c
+    precomp.h)
+
+file(GLOB sysdm_rc_deps resources/*.*)
+add_rc_deps(sysdm.rc ${sysdm_rc_deps})
+
+add_library(sysdm SHARED
+    ${SOURCE}
     sysdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
 
-add_library(sysdm SHARED ${SOURCE})
 set_module_type(sysdm cpl UNICODE)
-
-add_importlibs(sysdm
-    msvcrt
-    advapi32
-    setupapi
-    user32
-    gdi32
-    comctl32
-    msimg32
-    shell32
-    shlwapi
-    ole32
-    powrprof
-    kernel32
-    ntdll)
-
-add_pch(sysdm precomp.h)
+add_importlibs(sysdm advapi32 setupapi user32 gdi32 comctl32 msimg32 shell32 shlwapi ole32 powrprof msvcrt kernel32 ntdll)
+add_pch(sysdm precomp.h SOURCE)
 add_cd_file(TARGET sysdm DESTINATION reactos/system32 FOR all)

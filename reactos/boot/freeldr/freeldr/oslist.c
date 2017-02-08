@@ -17,92 +17,80 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
+
+#define TAG_STRING  ' rtS'
+#define TAG_OS_ITEM 'tISO'
+
+/* FUNCTIONS ******************************************************************/
 
 static PCSTR CopyString(PCSTR Source)
 {
-	PSTR Dest;
+    PSTR Dest;
 
-	if (!Source)
-		return NULL;
-	Dest = MmHeapAlloc(strlen(Source) + 1);
-	if (Dest)
-	{
-		strcpy(Dest, Source);
-	}
+    if (!Source)
+        return NULL;
 
-	return Dest;
+    Dest = FrLdrHeapAlloc(strlen(Source) + 1, TAG_STRING);
+    if (Dest)
+        strcpy(Dest, Source);
+
+    return Dest;
 }
 
 OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer)
 {
-	ULONG Idx;
-	CHAR SettingName[260];
-	CHAR SettingValue[260];
-	ULONG_PTR SectionId;
-	PCHAR TitleStart, TitleEnd;
-	PCSTR OsLoadOptions;
-	ULONG Count;
-	OperatingSystemItem* Items;
+    ULONG Idx;
+    CHAR SettingName[260];
+    CHAR SettingValue[260];
+    ULONG_PTR SectionId;
+    PCHAR TitleStart, TitleEnd;
+    PCSTR OsLoadOptions;
+    ULONG Count;
+    OperatingSystemItem* Items;
 
-	//
-	// Open the [FreeLoader] section
-	//
-	if (!IniOpenSection("Operating Systems", &SectionId))
-	{
-		return NULL;
-	}
+    /* Open the [FreeLoader] section */
+    if (!IniOpenSection("Operating Systems", &SectionId))
+        return NULL;
 
-	//
-	// Count number of operating systems in the section
-	//
-	Count = IniGetNumSectionItems(SectionId);
+    /* Count number of operating systems in the section */
+    Count = IniGetNumSectionItems(SectionId);
 
-	//
-	// Allocate memory to hold operating system lists
-	//
-	Items = MmHeapAlloc(Count * sizeof(OperatingSystemItem));
-	if (!Items)
-	{
-		return NULL;
-	}
+    /* Allocate memory to hold operating system lists */
+    Items = FrLdrHeapAlloc(Count * sizeof(OperatingSystemItem), TAG_OS_ITEM);
+    if (!Items)
+        return NULL;
 
-	//
-	// Now loop through and read the operating system section and display names
-	//
-	for (Idx = 0; Idx < Count; Idx++)
-	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
+    /* Now loop through and read the operating system section and display names */
+    for (Idx = 0; Idx < Count; Idx++)
+    {
+        IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
-		//
-		// Search start and end of the title
-		//
-		OsLoadOptions = NULL;
-		TitleStart = SettingValue;
-		while (*TitleStart == ' ' || *TitleStart == '"')
-			TitleStart++;
-		TitleEnd = TitleStart;
-		if (*TitleEnd != ANSI_NULL)
-			TitleEnd++;
-		while (*TitleEnd != ANSI_NULL && *TitleEnd != '"')
-			TitleEnd++;
-		if (*TitleEnd != ANSI_NULL)
-		{
-			*TitleEnd = ANSI_NULL;
-			OsLoadOptions = TitleEnd + 1;
-		}
+        /* Search start and end of the title */
+        OsLoadOptions = NULL;
+        TitleStart = SettingValue;
+        while (*TitleStart == ' ' || *TitleStart == '"')
+            TitleStart++;
+        TitleEnd = TitleStart;
+        if (*TitleEnd != ANSI_NULL)
+            TitleEnd++;
+        while (*TitleEnd != ANSI_NULL && *TitleEnd != '"')
+            TitleEnd++;
+        if (*TitleEnd != ANSI_NULL)
+        {
+            *TitleEnd = ANSI_NULL;
+            OsLoadOptions = TitleEnd + 1;
+        }
 
-		//
-		// Copy the system partition, identifier and options
-		//
-		Items[Idx].SystemPartition = CopyString(SettingName);
-		Items[Idx].LoadIdentifier = CopyString(TitleStart);
-		Items[Idx].OsLoadOptions = CopyString(OsLoadOptions);
-	}
+        /* Copy the system partition, identifier and options */
+        Items[Idx].SystemPartition = CopyString(SettingName);
+        Items[Idx].LoadIdentifier = CopyString(TitleStart);
+        Items[Idx].OsLoadOptions = CopyString(OsLoadOptions);
+    }
 
-	//
-	// Return success
-	//
-	*OperatingSystemCountPointer = Count;
-	return Items;
+    /* Return success */
+    *OperatingSystemCountPointer = Count;
+    return Items;
 }

@@ -1,15 +1,16 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        startup.c
+ * FILE:        dll/win32/ws2_32_new/src/startup.c
  * PURPOSE:     Startup/Cleanup Support
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* DATA **********************************************************************/
@@ -155,16 +156,16 @@ WSAStartup(IN WORD wVersionRequested,
         default:
 
             /* Return 2.2 */
-            VersionReturned = MAKEWORD(2, 2);;
+            VersionReturned = MAKEWORD(2, 2);
             break;
     }
 
-    /* Return the Version Requsted, unless error */
+    /* Return the Version Requested, unless error */
     lpWSAData->wVersion = VersionReturned;
 
     /* We support Winsock 2.2 */
     lpWSAData->wHighVersion = MAKEWORD(2,2);
-    lstrcpy(lpWSAData->szDescription, "WinSock 2.2");
+    lstrcpy(lpWSAData->szDescription, "WinSock 2.0");
     lstrcpy(lpWSAData->szSystemStatus, "Running");
 
     /* 
@@ -182,7 +183,7 @@ WSAStartup(IN WORD wVersionRequested,
         lpWSAData->iMaxUdpDg = 0;
     }
 
-    /* Enter the startup syncronization lock */
+    /* Enter the startup synchronization lock */
     WsStartupLock();
 
     /* Now setup all our objects */

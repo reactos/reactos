@@ -243,7 +243,7 @@ int
 ata_send_ioctl(
     HANDLE h,
     PSCSI_ADDRESS addr,
-    PCHAR  Signature,
+    PCCH   Signature,
     ULONG  Ioctl,
     PVOID  inBuffer,
     ULONG  inBufferLength,
@@ -727,11 +727,12 @@ ata_check_unit(
                 }
                 */
 
+                addr.Length = sizeof(addr);
                 addr.PortNumber = -1;
                 addr.PathId   = inquiryData->PathId;
                 addr.TargetId = inquiryData->TargetId;
                 addr.Lun      = inquiryData->Lun;
-                status = ata_send_ioctl(h, &addr, (PCHAR)"-UNIATA-",
+                status = ata_send_ioctl(h, &addr, "-UNIATA-",
                                         IOCTL_SCSI_MINIPORT_UNIATA_GET_MODE,
                                         NULL, 0,
                                         &IoMode, sizeof(IoMode),
@@ -753,7 +754,7 @@ ata_check_unit(
                 // probably, we shall change this in future to support SATA splitters
                 pin.bDriveNumber = inquiryData->PathId*2+inquiryData->TargetId;
 
-                status = ata_send_ioctl(h, NULL, (PCHAR)"SCSIDISK",
+                status = ata_send_ioctl(h, NULL, "SCSIDISK",
                                         IOCTL_SCSI_MINIPORT_IDENTIFY,
                                         &pin, sizeof(pin),
                                         buff, sizeof(buff),
@@ -767,7 +768,7 @@ ata_check_unit(
                     // probably, we shall change this in future to support SATA splitters
                     pin.bDriveNumber = inquiryData->PathId*2+inquiryData->TargetId;
 
-                    status = ata_send_ioctl(h, NULL, (PCHAR)"SCSIDISK",
+                    status = ata_send_ioctl(h, NULL, "SCSIDISK",
                                             IOCTL_SCSI_MINIPORT_IDENTIFY,
                                             &pin, sizeof(pin),
                                             buff, sizeof(buff),
@@ -986,12 +987,14 @@ ata_adapter_info(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length     = sizeof(addr);
     addr.PortNumber = bus_id;
 
     len = sizeof(ADAPTERINFO)+sizeof(CHANINFO)*AHCI_MAX_PORT;
     if(!g_AdapterInfo) {
         AdapterInfo = (PADAPTERINFO)GlobalAlloc(GMEM_FIXED, len);
         if(!AdapterInfo) {
+            ata_close_dev(h);
             return FALSE;
         }
     } else {
@@ -999,7 +1002,7 @@ ata_adapter_info(
     }
     memset(AdapterInfo, 0, len);
 
-    status = ata_send_ioctl(h, &addr, (PCHAR)"-UNIATA-",
+    status = ata_send_ioctl(h, &addr, "-UNIATA-",
                             IOCTL_SCSI_MINIPORT_UNIATA_ADAPTER_INFO,
                             AdapterInfo, len,
                             AdapterInfo, len,
@@ -1111,6 +1114,7 @@ ata_mode(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length   = sizeof(addr);
     addr.PortNumber = bus_id;
     addr.PathId   = (UCHAR)(dev_id >> 16);
     addr.TargetId = (UCHAR)(dev_id >> 8);
@@ -1121,7 +1125,7 @@ ata_mode(
 //    IoMode.ApplyImmediately = TRUE;
     IoMode.OrigMode = mode;
 
-    status = ata_send_ioctl(h, &addr, (PCHAR)"-UNIATA-",
+    status = ata_send_ioctl(h, &addr, "-UNIATA-",
                             IOCTL_SCSI_MINIPORT_UNIATA_SET_MAX_MODE,
                             &IoMode, sizeof(IoMode),
                             NULL, 0,
@@ -1155,6 +1159,7 @@ ata_reset(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length   = sizeof(addr);
     addr.PortNumber = bus_id;
     addr.PathId   = (UCHAR)(dev_id >> 16);
     addr.TargetId = (UCHAR)(dev_id >> 8);
@@ -1213,6 +1218,7 @@ ata_hide(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length   = sizeof(addr);
     addr.PortNumber = bus_id;
     addr.PathId   = (UCHAR)(dev_id >> 16);
     addr.TargetId = (UCHAR)(dev_id >> 8);
@@ -1225,7 +1231,7 @@ ata_hide(
     if(lock) {
         printf("ATTENTION: you have %d seconds to disconnect cable\n", lock);
     }
-    status = ata_send_ioctl(h, &addr, (PCHAR)"-UNIATA-",
+    status = ata_send_ioctl(h, &addr, "-UNIATA-",
                             IOCTL_SCSI_MINIPORT_UNIATA_DELETE_DEVICE,
                             &to, sizeof(to),
                             NULL, 0,
@@ -1268,6 +1274,7 @@ ata_scan(
     if((UCHAR)(dev_id) != 0xff &&
        (UCHAR)(dev_id >> 8) != 0xff) {
 
+        addr.Length   = sizeof(addr);
         addr.PortNumber = bus_id;
         addr.PathId   = (UCHAR)(dev_id >> 16);
         addr.TargetId = 0;
@@ -1280,7 +1287,7 @@ ata_scan(
         if(lock) {
             printf("You have %d seconds to connect device.\n", lock);
         }
-        status = ata_send_ioctl(h, &addr, (PCHAR)"-UNIATA-",
+        status = ata_send_ioctl(h, &addr, "-UNIATA-",
                                 IOCTL_SCSI_MINIPORT_UNIATA_FIND_DEVICES,
                                 &to, sizeof(to),
                                 NULL, 0,
@@ -1425,7 +1432,7 @@ ata_bblk(
         addr.TargetId = (UCHAR)(dev_id >> 8);
         addr.Lun      = (UCHAR)(dev_id);
 
-        status = ata_send_ioctl(h, &addr, (PCHAR)"-UNIATA-",
+        status = ata_send_ioctl(h, &addr, "-UNIATA-",
                                 IOCTL_SCSI_MINIPORT_UNIATA_RESETBB,
                                 NULL, 0,
                                 NULL, 0,

@@ -211,8 +211,8 @@ cpp_quote("#endif /* _WINGDI_ */")
             [in] single VerticalComponent);
         [id(0x00000003)] HRESULT Rotate(
             [in] single Degrees,
-            [in, optional, defaultvalue(0)] single x,
-            [in, optional, defaultvalue(0)] single y);
+            [in, defaultvalue(0)] single x,
+            [in, defaultvalue(0)] single y);
         [id(0x00000004)] HRESULT Reflect(
             [in] VARIANT_BOOL Horizontally,
             [in] VARIANT_BOOL Vertically);
@@ -336,7 +336,7 @@ cpp_quote("#endif /* _WINGDI_ */")
         [id(0x00000014), propget]    HRESULT Deleted(
             [out, retval] VARIANT_BOOL* Deleted);
         [id(0x00000003)]             HRESULT GetBoundingBox(
-            [in, optional, defaultvalue(0)] InkBoundingBoxMode BoundingBoxMode,
+            [in, defaultvalue(0)] InkBoundingBoxMode BoundingBoxMode,
             [out, retval] IInkRectangle** Rectangle);
         [id(0x00000005)]             HRESULT FindIntersections(
             [in] IInkStrokes* Strokes,
@@ -354,7 +354,7 @@ cpp_quote("#endif /* _WINGDI_ */")
         [id(0x00000009)]             HRESULT NearestPoint(
             [in] long x,
             [in] long y,
-            [in, out, optional, defaultvalue(0)] single* Distance,
+            [in, out, defaultvalue(0)] single* Distance,
             [out, retval] single* Point);
         [id(0x0000000a)]             HRESULT Split(
             [in] single SplitAt,
@@ -366,35 +366,35 @@ cpp_quote("#endif /* _WINGDI_ */")
             [out] TabletPropertyMetricUnit* Units,
             [out] single* Resolution);
         [id(0x00000016)]             HRESULT GetPoints(
-            [in, optional, defaultvalue(0)] long Index,
-            [in, optional, defaultvalue(-1)] long Count,
+            [in, defaultvalue(0)] long Index,
+            [in, defaultvalue(-1)] long Count,
             [out, retval] VARIANT* Points);
         [id(0x00000017)]             HRESULT SetPoints(
             [in] VARIANT Points,
-            [in, optional, defaultvalue(0)] long Index,
-            [in, optional, defaultvalue(-1)] long Count,
+            [in, defaultvalue(0)] long Index,
+            [in, defaultvalue(-1)] long Count,
             [out, retval] long* NumberOfPointsSet);
         [id(0x00000018)]             HRESULT GetPacketData(
-            [in, optional, defaultvalue(0)] long Index,
-            [in, optional, defaultvalue(-1)] long Count,
+            [in, defaultvalue(0)] long Index,
+            [in, defaultvalue(-1)] long Count,
             [out, retval] VARIANT* PacketData);
         [id(0x00000019)]             HRESULT GetPacketValuesByProperty(
             [in] BSTR propertyName,
-            [in, optional, defaultvalue(0)] long Index,
-            [in, optional, defaultvalue(-1)] long Count,
+            [in, defaultvalue(0)] long Index,
+            [in, defaultvalue(-1)] long Count,
             [out, retval] VARIANT* PacketValues);
         [id(0x0000001a)]             HRESULT SetPacketValuesByProperty(
             [in] BSTR bstrPropertyName,
             [in] VARIANT PacketValues,
-            [in, optional, defaultvalue(0)] long Index,
-            [in, optional, defaultvalue(-1)] long Count,
+            [in, defaultvalue(0)] long Index,
+            [in, defaultvalue(-1)] long Count,
             [out, retval] long* NumberOfPacketsSet);
         [id(0x0000001b)]             HRESULT GetFlattenedBezierPoints(
-            [in, optional, defaultvalue(0)] long FittingError,
+            [in, defaultvalue(0)] long FittingError,
             [out, retval] VARIANT* FlattenedBezierPoints);
         [id(0x0000001d)]             HRESULT Transform(
             [in] IInkTransform* Transform,
-            [in, optional, defaultvalue(0)] VARIANT_BOOL ApplyOnPenWidth);
+            [in, defaultvalue(0)] VARIANT_BOOL ApplyOnPenWidth);
         [id(0x0000001c)]             HRESULT ScaleToRectangle(
             [in] IInkRectangle* Rectangle);
         [id(0x0000001e)]             HRESULT Move(
@@ -402,8 +402,8 @@ cpp_quote("#endif /* _WINGDI_ */")
             [in] single VerticalComponent);
         [id(0x0000001f)]             HRESULT Rotate(
             [in] single Degrees,
-            [in, optional, defaultvalue(0)] single x,
-            [in, optional, defaultvalue(0)] single y);
+            [in, defaultvalue(0)] single x,
+            [in, defaultvalue(0)] single y);
         [id(0x00000020)]             HRESULT Shear(
             [in] single HorizontalMultiplier,
             [in] single VerticalMultiplier);
@@ -693,7 +693,7 @@ cpp_quote("#endif /* _WINGDI_ */")
         HRESULT DrawStroke(
             [in] long hDC,
             [in] IInkStrokeDisp* Stroke,
-            [in, optional, defaultvalue(0)]
+            [in, defaultvalue(0)]
             IInkDrawingAttributes* DrawingAttributes);
         HRESULT PixelToInkSpace(
             [in] long hDC,
@@ -714,19 +714,19 @@ cpp_quote("#endif /* _WINGDI_ */")
             [out, retval] IInkRectangle** Rectangle);
         HRESULT MeasureStroke(
             [in] IInkStrokeDisp* Stroke,
-            [in, optional, defaultvalue(0)] IInkDrawingAttributes* DrawingAttributes,
+            [in, defaultvalue(0)] IInkDrawingAttributes* DrawingAttributes,
             [out, retval] IInkRectangle** Rectangle);
         HRESULT Move(
             [in] single HorizontalComponent,
             [in] single VerticalComponent);
         HRESULT Rotate(
             [in] single Degrees,
-            [in, optional, defaultvalue(0)] single x,
-            [in, optional, defaultvalue(0)] single y);
+            [in, defaultvalue(0)] single x,
+            [in, defaultvalue(0)] single y);
         HRESULT ScaleTransform(
             [in] single HorizontalMultiplier,
             [in] single VerticalMultiplier,
-            [in, optional, defaultvalue(-1)] VARIANT_BOOL ApplyOnPenWidth);
+            [in, defaultvalue(-1)] VARIANT_BOOL ApplyOnPenWidth);
     };
 
     typedef enum {
@@ -996,7 +996,7 @@ cpp_quote("#endif /* _WINGDI_ */")
         [id(0x00000017)]             HRESULT SetWindowInputRectangle(
             [in] IInkRectangle* WindowInputRectangle);
         [id(0x0000001a)]             HRESULT SetAllTabletsMode(
-            [in, optional, defaultvalue(-1)] VARIANT_BOOL UseMouseForInput);
+            [in, defaultvalue(-1)] VARIANT_BOOL UseMouseForInput);
         [id(0x0000001b)]             HRESULT SetSingleTabletIntegratedMode(
             [in] IInkTablet* Tablet);
         [id(0x0000000b)]             HRESULT GetEventInterest(

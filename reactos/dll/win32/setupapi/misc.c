@@ -21,11 +21,24 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
+#include <winver.h>
+#include <lzexpand.h>
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR TranslationRegKey[] = {'\\','V','e','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0};
+
+/* Handles and critical sections for the SetupLog API */
+static HANDLE setupact = INVALID_HANDLE_VALUE;
+static HANDLE setuperr = INVALID_HANDLE_VALUE;
+static CRITICAL_SECTION setupapi_cs;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &setupapi_cs,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+    0, 0, { (DWORD_PTR)(__FILE__ ": setupapi_cs") }
+};
+static CRITICAL_SECTION setupapi_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 DWORD
 GetFunctionPointer(
@@ -1089,7 +1102,7 @@ pSetupCenterWindowRelativeToParent(HWND hwnd)
     posX = ((nOwnerWidth - nWindowWidth) / 2) + ptOrigin.x;
     posY = ((nOwnerHeight - nWindowHeight) / 2) + ptOrigin.y;
 
-    MoveWindow(hwnd, posX, posY, nWindowHeight, nWindowWidth, 0);
+    MoveWindow(hwnd, posX, posY, nWindowWidth, nWindowHeight, 0);
 }
 
 
@@ -1214,6 +1227,34 @@ DWORD WINAPI InstallCatalog( LPCSTR catalog, LPCSTR basename, LPSTR fullname )
 {
     FIXME("%s, %s, %p\n", debugstr_a(catalog), debugstr_a(basename), fullname);
     return 0;
+}
+
+/***********************************************************************
+ *      pSetupInstallCatalog  (SETUPAPI.@)
+ */
+DWORD WINAPI pSetupInstallCatalog( LPCWSTR catalog, LPCWSTR basename, LPWSTR fullname )
+{
+    HCATADMIN admin;
+    HCATINFO cat;
+
+    TRACE ("%s, %s, %p\n", debugstr_w(catalog), debugstr_w(basename), fullname);
+
+    if (!CryptCATAdminAcquireContext(&admin,NULL,0))
+        return GetLastError();
+
+    if (!(cat = CryptCATAdminAddCatalog( admin, (PWSTR)catalog, (PWSTR)basename, 0 )))
+    {
+        DWORD rc = GetLastError();
+        CryptCATAdminReleaseContext(admin, 0);
+        return rc;
+    }
+    CryptCATAdminReleaseCatalogContext(admin, cat, 0);
+    CryptCATAdminReleaseContext(admin,0);
+
+    if (fullname)
+        FIXME("not returning full installed catalog path\n");
+
+    return NO_ERROR;
 }
 
 static UINT detect_compression_type( LPCWSTR file )
@@ -1535,26 +1576,29 @@ static DWORD decompress_file_lz( LPCWSTR source, LPCWSTR target )
     return ret;
 }
 
+struct callback_context
+{
+    BOOL has_extracted;
+    LPCWSTR target;
+};
+
 static UINT CALLBACK decompress_or_copy_callback( PVOID context, UINT notification, UINT_PTR param1, UINT_PTR param2 )
 {
+    struct callback_context *context_info = context;
     FILE_IN_CABINET_INFO_W *info = (FILE_IN_CABINET_INFO_W *)param1;
 
     switch (notification)
     {
     case SPFILENOTIFY_FILEINCABINET:
     {
-        LPCWSTR filename, targetname = context;
-        WCHAR *p;
+        if (context_info->has_extracted)
+            return FILEOP_ABORT;
 
-        if ((p = strrchrW( targetname, '\\' ))) filename = p + 1;
-        else filename = targetname;
-
-        if (!lstrcmpiW( filename, info->NameInCabinet ))
-        {
-            strcpyW( info->FullTargetName, targetname );
-            return FILEOP_DOIT;
-        }
-        return FILEOP_SKIP;
+        TRACE("Requesting extraction of cabinet file %s\n",
+              wine_dbgstr_w(info->NameInCabinet));
+        strcpyW( info->FullTargetName, context_info->target );
+        context_info->has_extracted = TRUE;
+        return FILEOP_DOIT;
     }
     default: return NO_ERROR;
     }
@@ -1562,9 +1606,10 @@ static UINT CALLBACK decompress_or_copy_callback( PVOID context, UINT notificati
 
 static DWORD decompress_file_cab( LPCWSTR source, LPCWSTR target )
 {
+    struct callback_context context = {0, target};
     BOOL ret;
 
-    ret = SetupIterateCabinetW( source, 0, decompress_or_copy_callback, (PVOID)target );
+    ret = SetupIterateCabinetW( source, 0, decompress_or_copy_callback, &context );
 
     if (ret) return ERROR_SUCCESS;
     else return GetLastError();
@@ -1577,7 +1622,7 @@ static DWORD decompress_file_cab( LPCWSTR source, LPCWSTR target )
  */
 DWORD WINAPI SetupDecompressOrCopyFileA( PCSTR source, PCSTR target, PUINT type )
 {
-    DWORD ret = FALSE;
+    DWORD ret = 0;
     WCHAR *sourceW = NULL, *targetW = NULL;
 
     if (source && !(sourceW = pSetupMultiByteToUnicode( source, CP_ACP ))) return FALSE;
@@ -1931,4 +1976,143 @@ BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
     SetLastError(ERROR_SUCCESS);
 
     return TRUE;
+}
+
+/***********************************************************************
+ *      SetupCloseLog(SETUPAPI.@)
+ */
+void WINAPI SetupCloseLog(void)
+{
+    EnterCriticalSection(&setupapi_cs);
+
+    CloseHandle(setupact);
+    setupact = INVALID_HANDLE_VALUE;
+
+    CloseHandle(setuperr);
+    setuperr = INVALID_HANDLE_VALUE;
+
+    LeaveCriticalSection(&setupapi_cs);
+}
+
+/***********************************************************************
+ *      SetupOpenLog(SETUPAPI.@)
+ */
+BOOL WINAPI SetupOpenLog(BOOL reserved)
+{
+    WCHAR path[MAX_PATH];
+
+    static const WCHAR setupactlog[] = {'\\','s','e','t','u','p','a','c','t','.','l','o','g',0};
+    static const WCHAR setuperrlog[] = {'\\','s','e','t','u','p','e','r','r','.','l','o','g',0};
+
+    EnterCriticalSection(&setupapi_cs);
+
+    if (setupact != INVALID_HANDLE_VALUE && setuperr != INVALID_HANDLE_VALUE)
+    {
+        LeaveCriticalSection(&setupapi_cs);
+        return TRUE;
+    }
+
+    GetWindowsDirectoryW(path, MAX_PATH);
+    lstrcatW(path, setupactlog);
+
+    setupact = CreateFileW(path, FILE_GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
+                           NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (setupact == INVALID_HANDLE_VALUE)
+    {
+        LeaveCriticalSection(&setupapi_cs);
+        return FALSE;
+    }
+
+    SetFilePointer(setupact, 0, NULL, FILE_END);
+
+    GetWindowsDirectoryW(path, MAX_PATH);
+    lstrcatW(path, setuperrlog);
+
+    setuperr = CreateFileW(path, FILE_GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
+                           NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (setuperr == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(setupact);
+        setupact = INVALID_HANDLE_VALUE;
+        LeaveCriticalSection(&setupapi_cs);
+        return FALSE;
+    }
+
+    SetFilePointer(setuperr, 0, NULL, FILE_END);
+
+    LeaveCriticalSection(&setupapi_cs);
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupLogErrorA(SETUPAPI.@)
+ */
+BOOL WINAPI SetupLogErrorA(LPCSTR message, LogSeverity severity)
+{
+    static const char null[] = "(null)";
+    BOOL ret;
+    DWORD written;
+    DWORD len;
+
+    EnterCriticalSection(&setupapi_cs);
+
+    if (setupact == INVALID_HANDLE_VALUE || setuperr == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_FILE_INVALID);
+        ret = FALSE;
+        goto done;
+    }
+
+    if (message == NULL)
+        message = null;
+
+    len = lstrlenA(message);
+
+    ret = WriteFile(setupact, message, len, &written, NULL);
+    if (!ret)
+        goto done;
+
+    if (severity >= LogSevMaximum)
+    {
+        ret = FALSE;
+        goto done;
+    }
+
+    if (severity > LogSevInformation)
+        ret = WriteFile(setuperr, message, len, &written, NULL);
+
+done:
+    LeaveCriticalSection(&setupapi_cs);
+    return ret;
+}
+
+/***********************************************************************
+ *      SetupLogErrorW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupLogErrorW(LPCWSTR message, LogSeverity severity)
+{
+    LPSTR msg = NULL;
+    DWORD len;
+    BOOL ret;
+
+    if (message)
+    {
+        len = WideCharToMultiByte(CP_ACP, 0, message, -1, NULL, 0, NULL, NULL);
+        msg = HeapAlloc(GetProcessHeap(), 0, len);
+        if (msg == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+        WideCharToMultiByte(CP_ACP, 0, message, -1, msg, len, NULL, NULL);
+    }
+
+    /* This is the normal way to proceed. The log files are ASCII files
+     * and W is to be converted.
+     */
+    ret = SetupLogErrorA(msg, severity);
+
+    HeapFree(GetProcessHeap(), 0, msg);
+    return ret;
 }

@@ -1,0 +1,32 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH "%SystemDrive%\\文档和设置"
+    IDS_APPDATA "应用程序数据"
+    IDS_DESKTOP "桌面"
+    IDS_FAVORITES "收藏夹"
+    IDS_STARTMENU "开始菜单"
+    IDS_PROGRAMS "开始菜单\\应用程序"
+    IDS_ADMINTOOLS "开始菜单\\应用程序\\管理工具"
+    IDS_STARTUP "开始菜单\\应用程序\\启动"
+    IDS_MYDOCUMENTS "我的文档"
+    IDS_MYPICTURES "我的文档\\我的图片"
+    IDS_MYMUSIC "我的文档\\我的音乐"
+    IDS_MYVIDEOS "我的文档\\我的视频"
+    IDS_TEMPLATES "模板"
+    IDS_RECENT "最近"
+    IDS_SENDTO "为必填项"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_NETHOOD "NetHood"
+    IDS_LOCALSETTINGS "本地设置"
+    IDS_LOCALAPPDATA "本地设置\\应用程序数据"
+    IDS_TEMP "本地设置\\Temp"
+    IDS_CACHE "本地设置\\互联网临时文件"
+    IDS_HISTORY "本地设置\\历史"
+    IDS_COOKIES "小型文字檔案"
+    IDS_PROGRAMFILES "%SystemDrive%\\程序文件"
+    IDS_COMMONFILES "共同文件"
+END

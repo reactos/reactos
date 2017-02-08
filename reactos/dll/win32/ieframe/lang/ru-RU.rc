@@ -1,0 +1,80 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "&Файл"
+    {
+        POPUP "&Открыть"
+        {
+            MENUITEM "&Окно",                 ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "&Открыть...",                    ID_BROWSE_OPEN
+        MENUITEM "Со&хранить",                       ID_BROWSE_SAVE
+        MENUITEM "&Сохранить как...",                 ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Параме&тры страницы...",            ID_BROWSE_PRINT_FORMAT
+        MENUITEM "Пе&чать...",                   ID_BROWSE_PRINT
+        MENUITEM "Пред&варительный просмотр...",              ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "Сво&йства",                 ID_BROWSE_PROPERTIES
+        MENUITEM "Выхо&д",                      ID_BROWSE_QUIT
+    }
+    POPUP "&Вид"
+    {
+        POPUP "Па&нели инструментов"
+        {
+            MENUITEM "&Стандартная панель",           ID_BROWSE_BAR_STD
+            MENUITEM "&Адресная строка",            ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "&Избранное"
+    {
+        MENUITEM "Добавить в &избранное...",        ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "&Справка"
+    {
+        MENUITEM "&О программе Internet Explorer", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "Назад"
+    IDS_TB_FORWARD          "Вперед"
+    IDS_TB_STOP             "Остановить"
+    IDS_TB_REFRESH          "Обновить"
+    IDS_TB_HOME             "Домой"
+    IDS_TB_PRINT            "Печать..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "Адрес"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "Поиск %s"
+    IDS_BEGINDOWNLOADDATA   "Начало закачивания %s"
+    IDS_ENDDOWNLOADDATA     "Закачивание %s"
+    IDS_SENDINGREQUEST      "Опрашивание %s"
+}
+
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+CAPTION "Открыть URL"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Укажите URL, который вы хотите открыть в Internet Explorer",-1, 35,5,160,25
+    LTEXT "Открыть:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "OK", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 145, 50, 50, 14
+}

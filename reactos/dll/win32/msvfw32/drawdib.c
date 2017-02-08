@@ -20,21 +20,7 @@
  * Handle palettes
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-#include <vfw.h>
-
-#include <wine/debug.h>
+#include "msvideo_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvideo);
 
@@ -250,9 +236,18 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         DWORD dwSize;
         /* No compression */
         TRACE("Not compressed!\n");
-        dwSize = lpbi->biSize + num_colours(lpbi)*sizeof(RGBQUAD);
-        whdd->lpbiOut = HeapAlloc(GetProcessHeap(), 0, dwSize);
-        memcpy(whdd->lpbiOut, lpbi, dwSize);
+        if (lpbi->biHeight <= 0)
+        {
+            /* we don't draw inverted DIBs */
+            TRACE("detected inverted DIB\n");
+            ret = FALSE;
+        }
+        else
+        {
+            dwSize = lpbi->biSize + num_colours(lpbi)*sizeof(RGBQUAD);
+            whdd->lpbiOut = HeapAlloc(GetProcessHeap(), 0, dwSize);
+            memcpy(whdd->lpbiOut, lpbi, dwSize);
+        }
     }
 
     if (ret) 
@@ -308,7 +303,8 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
                         UINT wFlags)
 {
     WINE_HDD *whdd;
-    BOOL ret = TRUE;
+    BOOL ret;
+    int reopen = 0;
 
     TRACE("(%p,%p,%d,%d,%d,%d,%p,%p,%d,%d,%d,%d,0x%08x)\n",
           hdd, hdc, xDst, yDst, dxDst, dyDst, lpbi, lpBits, xSrc, ySrc, dxSrc, dySrc, wFlags);
@@ -330,17 +326,40 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
 #define CHANGED(x) (whdd->x != x)
 
-    if ((!whdd->begun) || 
-        (!(wFlags & DDF_SAME_HDC) && CHANGED(hdc)) || 
-        (!(wFlags & DDF_SAME_DRAW) && (CHANGED(lpbi) || CHANGED(dxSrc) || CHANGED(dySrc) || CHANGED(dxDst) || CHANGED(dyDst)))) 
+    /* Check if anything changed from the parameters passed and our struct.
+     * If anything changed we need to run DrawDibBegin again to ensure we
+     * can support the changes.
+     */
+    if (!whdd->begun)
+        reopen = 1;
+    else if (!(wFlags & DDF_SAME_HDC) && CHANGED(hdc))
+        reopen = 2;
+    else if (!(wFlags & DDF_SAME_DRAW))
     {
-        TRACE("Something changed!\n");
+        if (CHANGED(lpbi) && memcmp(lpbi, whdd->lpbi, sizeof(*lpbi))) reopen = 3;
+        else if (CHANGED(dxSrc)) reopen = 4;
+        else if (CHANGED(dySrc)) reopen = 5;
+        else if (CHANGED(dxDst)) reopen = 6;
+        else if (CHANGED(dyDst)) reopen = 7;
+    }
+    if (reopen)
+    {
+        TRACE("Something changed (reason %d)!\n", reopen);
         ret = DrawDibBegin(hdd, hdc, dxDst, dyDst, lpbi, dxSrc, dySrc, 0);
+        if (!ret)
+            return ret;
     }
 
 #undef CHANGED
 
-    if ((dxDst == -1) && (dyDst == -1)) 
+    /* If source dimensions are not specified derive them from bitmap header */
+    if (dxSrc == -1 && dySrc == -1)
+    {
+        dxSrc = lpbi->biWidth;
+        dySrc = lpbi->biHeight;
+    }
+    /* If destination dimensions are not specified derive them from source */
+    if (dxDst == -1 && dyDst == -1)
     {
         dxDst = dxSrc;
         dyDst = dySrc;
@@ -348,12 +367,6 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
     if (!(wFlags & DDF_UPDATE)) 
     {
-        DWORD biSizeImage = lpbi->biSizeImage;
-
-        /* biSizeImage may be set to 0 for BI_RGB (uncompressed) bitmaps */
-        if ((lpbi->biCompression == BI_RGB) && (biSizeImage == 0))
-            biSizeImage = ((lpbi->biWidth * lpbi->biBitCount + 31) / 32) * 4 * lpbi->biHeight;
-
         if (lpbi->biCompression) 
         {
             DWORD flags = 0;
@@ -367,6 +380,8 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
         }
         else
         {
+            /* BI_RGB: lpbi->biSizeImage isn't reliable */
+            DWORD biSizeImage = ((lpbi->biWidth * lpbi->biBitCount + 31) / 32) * 4 * lpbi->biHeight;
             memcpy(whdd->lpvbits, lpBits, biSizeImage);
         }
     }
@@ -378,9 +393,10 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
          SelectPalette(hdc, whdd->hpal, FALSE);
     }
 
-    if (!(StretchBlt(whdd->hdc, xDst, yDst, dxDst, dyDst, whdd->hMemDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY)))
-        ret = FALSE;
-    
+    ret = StretchBlt(whdd->hdc, xDst, yDst, dxDst, dyDst, whdd->hMemDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY);
+    TRACE("Painting %dx%d at %d,%d from %dx%d at %d,%d -> %d\n",
+          dxDst, dyDst, xDst, yDst, dxSrc, dySrc, xSrc, ySrc, ret);
+
     return ret;
 }
 
@@ -469,7 +485,7 @@ UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground)
     whdd = MSVIDEO_GetHddPtr(hdd);
     if (!whdd) return FALSE;
 
-    if (!whdd || !(whdd->begun)) 
+    if (!whdd->begun)
     {
         ret = 0;
         goto out;

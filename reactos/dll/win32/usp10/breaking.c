@@ -18,27 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include <config.h>
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
 
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <wingdi.h>
-//#include "winnls.h"
-#include <usp10.h>
-//#include "winternl.h"
-
-#include <wine/debug.h>
 #include "usp10_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
 extern const unsigned short wine_linebreak_table[];
 
-enum breaking_types { b_BK=1, b_CR, b_LF, b_CM, b_SG, b_GL, b_CB, b_SP, b_ZW, b_NL, b_WJ, b_JL, b_JV, b_JT, b_H2, b_H3, b_XX, b_OP, b_CL, b_CP, b_QU, b_NS, b_EX, b_SY, b_IS, b_PR, b_PO, b_NU, b_AL, b_ID, b_IN, b_HY, b_BB, b_BA, b_SA, b_AI, b_B2};
+enum breaking_types { b_BK=1, b_CR, b_LF, b_CM, b_SG, b_GL, b_CB, b_SP, b_ZW, b_NL, b_WJ, b_JL, b_JV, b_JT, b_H2, b_H3, b_XX, b_OP, b_CL, b_CP, b_QU, b_NS, b_EX, b_SY, b_IS, b_PR, b_PO, b_NU, b_AL, b_ID, b_IN, b_HY, b_BB, b_BA, b_SA, b_AI, b_B2, b_HL, b_CJ, b_RI};
 
 enum breaking_class {b_r=1, b_s, b_x};
 
@@ -97,6 +84,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                 break;
             case b_CM:
                 la[i].fCharStop = FALSE;
+                break;
         }
     }
 
@@ -111,6 +99,10 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
             case b_SG:
             case b_XX:
                 break_class[i] = b_AL;
+                break;
+            case b_CJ:
+                break_class[i] = b_NS;
+                break;
         }
     }
 
@@ -273,6 +265,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                 else_break(&break_before[i],b_s);
                 if (i < count-1)
                     else_break(&break_before[i+1],b_s);
+                break;
             /* LB21 */
             case b_BA:
             case b_HY:
@@ -283,6 +276,16 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                 if (i < count-1)
                     else_break(&break_before[i+1],b_x);
                 break;
+            /* LB21a */
+            case b_HL:
+                if (i < count-2)
+                    switch (break_class[i+1])
+                    {
+                    case b_HY:
+                    case b_BA:
+                        else_break(&break_before[i+2], b_x);
+                    }
+                break;
             /* LB22 */
             case b_IN:
                 if (i > 0)
@@ -290,6 +293,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                     switch (break_class[i-1])
                     {
                         case b_AL:
+                        case b_HL:
                         case b_ID:
                         case b_IN:
                         case b_NU:
@@ -304,12 +308,16 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
             /* LB23 */
             if ((break_class[i] == b_ID && break_class[i+1] == b_PO) ||
                 (break_class[i] == b_AL && break_class[i+1] == b_NU) ||
-                (break_class[i] == b_NU && break_class[i+1] == b_AL))
+                (break_class[i] == b_HL && break_class[i+1] == b_NU) ||
+                (break_class[i] == b_NU && break_class[i+1] == b_AL) ||
+                (break_class[i] == b_NU && break_class[i+1] == b_HL))
                     else_break(&break_before[i+1],b_x);
             /* LB24 */
             if ((break_class[i] == b_PR && break_class[i+1] == b_ID) ||
                 (break_class[i] == b_PR && break_class[i+1] == b_AL) ||
-                (break_class[i] == b_PO && break_class[i+1] == b_AL))
+                (break_class[i] == b_PR && break_class[i+1] == b_HL) ||
+                (break_class[i] == b_PO && break_class[i+1] == b_AL) ||
+                (break_class[i] == b_PO && break_class[i+1] == b_HL))
                     else_break(&break_before[i+1],b_x);
 
             /* LB25 */
@@ -373,19 +381,27 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
             }
 
             /* LB28 */
-            if (break_class[i] == b_AL && break_class[i+1] == b_AL)
+            if ((break_class[i] == b_AL && break_class[i+1] == b_AL) ||
+                (break_class[i] == b_AL && break_class[i+1] == b_HL) ||
+                (break_class[i] == b_HL && break_class[i+1] == b_AL) ||
+                (break_class[i] == b_HL && break_class[i+1] == b_HL))
                 else_break(&break_before[i+1],b_x);
 
             /* LB29 */
-            if (break_class[i] == b_IS && break_class[i+1] == b_AL)
+            if ((break_class[i] == b_IS && break_class[i+1] == b_AL) ||
+                (break_class[i] == b_IS && break_class[i+1] == b_HL))
                 else_break(&break_before[i+1],b_x);
 
             /* LB30 */
-            if ((break_class[i] == b_AL || break_class[i] == b_NU) &&
+            if ((break_class[i] == b_AL || break_class[i] == b_HL || break_class[i] == b_NU) &&
                  break_class[i+1] == b_OP)
                 else_break(&break_before[i+1],b_x);
             if (break_class[i] == b_CP &&
-                (break_class[i+1] == b_AL || break_class[i] == b_NU))
+                (break_class[i+1] == b_AL || break_class[i] == b_HL || break_class[i] == b_NU))
+                else_break(&break_before[i+1],b_x);
+
+            /* LB30a */
+            if (break_class[i] == b_RI && break_class[i+1] == b_RI)
                 else_break(&break_before[i+1],b_x);
         }
     }

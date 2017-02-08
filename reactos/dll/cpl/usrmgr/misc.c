@@ -9,7 +9,6 @@
 
 #include "usrmgr.h"
 
-
 VOID
 DebugPrintf(LPTSTR szFormat, ...)
 {

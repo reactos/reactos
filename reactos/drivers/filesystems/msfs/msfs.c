@@ -13,7 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI
@@ -24,6 +23,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     PDEVICE_OBJECT DeviceObject;
     UNICODE_STRING DeviceName;
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     DPRINT("Mailslot FSD 0.0.1\n");
 

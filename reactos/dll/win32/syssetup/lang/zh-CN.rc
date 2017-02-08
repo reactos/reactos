@@ -1,17 +1,6 @@
-/*
- * PROJECT:     System Setup
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/lang/zh-CN.rc
- * PURPOSE:     Chinese translation
- * TRANSLATOR:  Copyright (C) 2007 张冰(e_zb@21cn.com, ezb@mail.gywb.cn,
- *              www.gywz.gz.cn/zb) 中文支持
- *
- */
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-
-IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装向导"
 FONT 9, "MS Shell Dlg"
@@ -21,60 +10,50 @@ BEGIN
     LTEXT "要继续，请单击“下一步”。.", IDC_STATIC, 115, 169, 195, 17
 END
 
-
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装向导 "
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOS 的开发人员就以下的自由软件项目表示感谢。在建立 ReactOS 时使用了其中的代码 :",
-                    IDC_STATIC,15,7,286,19
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS 是基于GPL协议发布的，因此如果您需要再用或重新发布 ReactOS (或部分)必须遵循GPL许可。",
-                    IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "查看GPL(&V)...",IDC_VIEWGPL,245,110,65,15
-    LTEXT           "继续安装单击 “ 下一步 ” 。",IDC_STATIC,15,136,195,17
+    LTEXT "ReactOS 的开发人员就以下的自由软件项目表示感谢。在建立 ReactOS 时使用了其中的代码 :", IDC_STATIC, 15, 7, 286, 19
+    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT "ReactOS 是基于GPL协议发布的，因此如果您需要再用或重新发布 ReactOS (或部分)必须遵循GPL许可。", IDC_STATIC, 15, 110, 227, 19
+    PUSHBUTTON "查看GPL(&V)...", IDC_VIEWGPL, 245, 110, 65, 15
+    LTEXT "继续安装单击 “ 下一步 ” 。", IDC_STATIC, 15, 136, 195, 17
 END
 
-
-IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装向导 "
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "输入您的姓名以及公司或单位的名称。",IDC_STATIC, 54, 7, 242, 21
-    LTEXT "姓名(&M):", IDC_STATIC,54,37,44,8
+    LTEXT "输入您的姓名以及公司或单位的名称。", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "姓名(&M):", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "单位(&O):", IDC_STATIC,54,57,60,20
+    LTEXT "单位(&O):", IDC_STATIC, 54, 57, 60, 20
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
-
-IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装向导 "
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "请输入不超过63个字符的计算机名。每一个在您网络上的计算机都必须有一个唯一的名称。",
-          IDC_STATIC, 54, 7, 250, 24
-    LTEXT "计算机名(&C):", IDC_STATIC,54,38,75,8
+    LTEXT "请输入不超过63个字符的计算机名。每一个在您网络上的计算机都必须有一个唯一的名称。", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "计算机名(&C):", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "安装程序会创建一个称为 Administrator (系统管理员)的用户帐户。需要完全控制计算机时，可以使用这个帐户。",
-          IDC_STATIC, 54, 57, 250, 25
-    LTEXT "请键入不超过14个字符的系统管理员密码。",
-          IDC_STATIC, 54, 87, 250, 8
-    LTEXT "系统管理员密码(&A):", IDC_STATIC,54,104,75,8
+    LTEXT "安装程序会创建一个称为 Administrator (系统管理员)的用户帐户。需要完全控制计算机时，可以使用这个帐户。", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "请键入不超过127个字符的系统管理员密码。", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "系统管理员密码(&A):", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "确认密码(&O):", IDC_STATIC,54,123,75,8
+    LTEXT "确认密码(&O):", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
-
-IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装向导 "
 FONT 9, "MS Shell Dlg"
@@ -82,36 +61,27 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系统区域用于设置应用使用的语言，用户区域用于设置数值，货币，日期的显示方式 ", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "要更改系统和用户的区域设置，请单击 “自定义” 。",
-          IDC_STATIC, 53, 60, 184, 8
+    LTEXT "要更改系统和用户的区域设置，请单击 “自定义” 。", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "自定义(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "“文字输入语言”让您使用多种输入方法和设备用\r\n许多不同的语言输入文字。",
-          IDC_STATIC, 53, 86, 253, 20
+    LTEXT "“文字输入语言”让您使用多种输入方法和设备用\r\n许多不同的语言输入文字。", IDC_STATIC, 53, 86, 253, 20
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "要查看或改变当前配置，请单击“自定义”。",
-          IDC_STATIC, 53, 124, 184, 8
+    LTEXT "要查看或改变当前配置，请单击“自定义”。", IDC_STATIC, 53, 124, 184, 8
     PUSHBUTTON "自定义(&U)...", IDC_CUSTOMLAYOUT, 245, 120, 50, 14
 END
 
-
-IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装向导 "
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT   "日期和时间", IDC_STATIC,53,7,253,8
-    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
-            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT   "时间区域", IDC_STATIC,53,42,253,8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
-             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "夏时制自动调整时间(&D)",
-                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    LTEXT "日期和时间", IDC_STATIC, 53, 7, 253, 8
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    LTEXT "时间区域", IDC_STATIC, 53, 42, 253, 8
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "夏时制自动调整时间(&D)", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
-
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -120,168 +90,86 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
     LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
-            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
 
-
-IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装完成 "
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "正在完成 ReactOS 安装向导", IDC_FINISHTITLE,115,8,195,24
+    LTEXT "正在完成 ReactOS 安装向导", IDC_FINISHTITLE,115, 8, 195, 24
     LTEXT "ReactOS 安装程序已顺利完成。\n\n要重新启动计算机，请单击“完成”。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "如果驱动器里有CD，请将其取出要重新启动计算机，请单击“完成”。", IDC_STATIC, 115, 160, 195, 17
 END
-
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GNU 通用公共许可证"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
-                    ES_READONLY | WS_VSCROLL
-    DEFPUSHBUTTON   "确定",IDOK,141,209,50,14
+    EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON "确定", IDOK, 141, 209, 50, 14
 END
 
-
-IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "请等待..."
-FONT 9,"MS Shell Dlg 2",400,0,1
+FONT 9, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
+    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "致谢"
-    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information "
-    IDS_OWNERTITLE       "自定义软件"
-    IDS_OWNERSUBTITLE    "安装程序将使用您提供的个人信息，自定义您的 ReactOS 软件。"
-    IDS_COMPUTERTITLE    "计算机名和系统管理员密码"
+    IDS_ACKTITLE "致谢"
+    IDS_ACKSUBTITLE "ReactOS 所依赖的开源项目及其许可证信息"
+    IDS_OWNERTITLE "自定义软件"
+    IDS_OWNERSUBTITLE "安装程序将使用您提供的个人信息，自定义您的 ReactOS 软件。"
+    IDS_COMPUTERTITLE "计算机名和系统管理员密码"
     IDS_COMPUTERSUBTITLE "您必须提供计算机名和系统管理员密码。"
-    IDS_LOCALETITLE      "区域设置 "
-    IDS_LOCALESUBTITLE   "您可以为不同的区域和语言自定义 ReactOS。"
-    IDS_DATETIMETITLE    "日期和时间 "
+    IDS_LOCALETITLE "区域设置 "
+    IDS_LOCALESUBTITLE "您可以为不同的区域和语言自定义 ReactOS。"
+    IDS_DATETIMETITLE "日期和时间 "
     IDS_DATETIMESUBTITLE "为您的计算机配置正确的日期和时间。"
-    IDS_PROCESSTITLE     "正在安装"
-    IDS_PROCESSSUBTITLE  "正在完成 ReactOS 最后的安装"
+    IDS_PROCESSTITLE "正在安装"
+    IDS_PROCESSSUBTITLE "正在完成 ReactOS 最后的安装"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "下载并安装其他应用软件"
+    IDS_REACTOS_SETUP "ReactOS 安装程序"
+    IDS_UNKNOWN_ERROR "未知的错误"
+    IDS_REGISTERING_COMPONENTS "请稍候，安装程序正在安装组件。"
+    IDS_LOADLIBRARY_FAILED "LoadLibrary 失败: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr 失败: "
+    IDS_REGSVR_FAILED "DllRegisterServer 失败: "
+    IDS_DLLINSTALL_FAILED "DllInstall 失败: "
+    IDS_TIMEOUT "在注册期间超时"
+    IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "所有者"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "附件"
-    IDS_CMT_CALC        "计算器"
-    IDS_CMT_CMD         "命令提示符"
-    IDS_CMT_EXPLORER    "ReactOS 资源管理器"
-    IDS_CMT_NOTEPAD     "记事本"
-    IDS_CMT_REGEDIT     "注册表编辑器"
-    IDS_CMT_WORDPAD     "写字板"
-    IDS_CMT_SCREENSHOT  "屏幕截图"
-    IDS_CMT_DEVMGMT     "设备管理"
-    IDS_CMT_SERVMAN     "服务"
-    IDS_CMT_RDESKTOP    "远程桌面连接"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
-    IDS_CMT_PAINT       "Launch Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES            "游戏"
-    IDS_CMT_SOLITAIRE    "纸牌"
-    IDS_CMT_WINEMINE     "扫雷"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "系统工具"
-	IDS_CMT_CHARMAP      "字符映射表"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "放大镜"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS 安装程序"
-    IDS_UNKNOWN_ERROR           "Unknown error"
-    IDS_REGISTERING_COMPONENTS  "请稍候，安装程序正在安装组件。"
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary 失败: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr 失败: "
-    IDS_REGSVR_FAILED           "DllRegisterServer 失败: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall 失败: "
-    IDS_TIMEOUT			        "Timeout during registration"
-    IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "命令提示符.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS 资源管理器.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_SERVICE    "服务.lnk"
-    IDS_SHORT_DEVICE     "设备管理.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "计算器.lnk"
-    IDS_SHORT_REGEDIT    "注册表编辑器.lnk"
-    IDS_SHORT_NOTEPAD    "记事本.lnk"
-    IDS_SHORT_WORDPAD    "写字板.lnk"
-    IDS_SHORT_SNAP       "屏幕截图.lnk"
-    IDS_SHORT_SOLITAIRE  "纸牌.lnk"
-    IDS_SHORT_WINEMINE   "扫雷.lnk"
-    IDS_SHORT_CHARMAP    "字符映射表.lnk"
-    IDS_SHORT_MAGNIFY    "放大镜.lnk"
-    IDS_SHORT_RDESKTOP   "远程桌面连接.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_WZD_NAME         "请填写您的姓名否则安装程序无法继续"
-    IDS_WZD_SETCOMPUTERNAME  "请输入有效的计算机名"
-    IDS_WZD_COMPUTERNAME  "请填写计算机名否则安装程序无法继续"
-    IDS_WZD_PASSWORDEMPTY  "请输入密码"
-    IDS_WZD_PASSWORDMATCH  "您两次输入的密码不一致请重新输入"
-    IDS_WZD_PASSWORDCHAR  "密码中包含无效字符，请重新输入"
-    IDS_WZD_LOCALTIME    "安装程序无法设置本地时间"
+    IDS_WZD_NAME "请填写您的姓名否则安装程序无法继续"
+    IDS_WZD_SETCOMPUTERNAME "请输入有效的计算机名"
+    IDS_WZD_COMPUTERNAME "请填写计算机名否则安装程序无法继续"
+    IDS_WZD_PASSWORDEMPTY "请输入密码"
+    IDS_WZD_PASSWORDMATCH "您两次输入的密码不一致请重新输入"
+    IDS_WZD_PASSWORDCHAR "密码中包含无效字符，请重新输入"
+    IDS_WZD_LOCALTIME "安装程序无法设置本地时间"
 END
 
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "安装设备驱动程序..."
 END
-
-/* EOF */

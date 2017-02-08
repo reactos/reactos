@@ -19,6 +19,7 @@ InitIdtVector(
 }
 
 void
+__cdecl
 InitIdt(void)
 {
     InitIdtVector(0, i386DivideByZero, 0x8e00);

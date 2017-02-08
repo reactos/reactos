@@ -1,6 +1,7 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary は '%s' の読み込みに失敗しました。"
-    IDS_MissingEntry,   "エントリ ポイントがありません:%s\n( %s 中)"
+    IDS_DllNotLoaded "LoadLibrary は '%s' の読み込みに失敗しました。"
+    IDS_MissingEntry "エントリ ポイントがありません:%s\n( %s 中)"
 END

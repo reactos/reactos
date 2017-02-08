@@ -1,25 +1,21 @@
 #ifndef __CPL_PRECOMP_H
 #define __CPL_PRECOMP_H
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
+#include <stdarg.h>
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
-#include <winnls.h>
 #include <wincon.h>
-#include <powrprof.h>
 #include <tchar.h>
-#include <cpl.h>
 #include <shellapi.h>
-#include <shlwapi.h>
 #include <shlobj.h>
-#include <regstr.h>
-#include <setupapi.h>
 
 #include "resource.h"
 
@@ -55,8 +51,11 @@ INT_PTR CALLBACK LicenceDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 typedef struct _PAGEFILE
 {
     TCHAR  szDrive[3];
-    UINT   InitialSize;
-    UINT   MaximumSize;
+    LPTSTR pszVolume;
+    INT    OldMinSize;
+    INT    OldMaxSize;
+    INT    NewMinSize;
+    INT    NewMaxSize;
     UINT   FreeSize;
     BOOL   bUsed;
 } PAGEFILE, *PPAGEFILE;
@@ -68,7 +67,7 @@ typedef struct _VIRTMEM
     LPTSTR szPagingFiles;
     TCHAR  szDrive[10];
     INT    Count;
-    BOOL   bSave;
+    BOOL   bModified;
     PAGEFILE  Pagefile[26];
 } VIRTMEM, *PVIRTMEM;
 
@@ -80,5 +79,14 @@ typedef struct _BOOTRECORD
   WCHAR szOptions[512];
 
 }BOOTRECORD, *PBOOTRECORD;
+
+INT
+ResourceMessageBox(
+    IN HINSTANCE hInstance,
+    IN HWND hwnd,
+    IN UINT uType,
+    IN UINT uCaption,
+    IN UINT uText);
+
 
 #endif /* __CPL_SYSDM_H */

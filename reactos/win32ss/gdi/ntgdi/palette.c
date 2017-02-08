@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           GDI Palette Functions
- * FILE:              subsystems/win32/win32k/objects/palette.c
+ * FILE:              win32ss/gdi/ntgdi/palette.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
  */
@@ -60,12 +60,12 @@ unsigned short GetNumberOfBits(unsigned int dwMask)
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitPaletteImpl()
+InitPaletteImpl(VOID)
 {
     // Create default palette (20 system colors)
     gppalDefault = PALETTE_AllocPalWithHandle(PAL_INDEXED,
                                               20,
-                                              (PULONG)g_sysPalTemplate,
+                                              g_sysPalTemplate,
                                               0, 0, 0);
     GDIOBJ_vReferenceObjectByPointer(&gppalDefault->BaseObject);
     PALETTE_UnlockPalette(gppalDefault);
@@ -132,7 +132,7 @@ NTAPI
 PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue)
@@ -174,12 +174,10 @@ PALETTE_AllocPalette(
     if (iMode & PAL_INDEXED)
     {
         /* Check if we got a color array */
-        if (pulColors)
+        if (pEntries)
         {
             /* Copy the entries */
-            RtlCopyMemory(ppal->IndexedColors,
-                          pulColors,
-                          cColors * sizeof(ULONG));
+            RtlCopyMemory(ppal->IndexedColors, pEntries, cColors * sizeof(pEntries[0]));
         }
     }
     else if (iMode & PAL_BITFIELDS)
@@ -208,7 +206,7 @@ NTAPI
 PALETTE_AllocPalWithHandle(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue)
@@ -216,7 +214,7 @@ PALETTE_AllocPalWithHandle(
     PPALETTE ppal;
 
     /* Allocate the palette without a handle */
-    ppal = PALETTE_AllocPalette(iMode, cColors, pulColors, flRed, flGreen, flBlue);
+    ppal = PALETTE_AllocPalette(iMode, cColors, pEntries, flRed, flGreen, flBlue);
     if (!ppal) return NULL;
 
     /* Insert the palette into the handle table */
@@ -230,17 +228,15 @@ PALETTE_AllocPalWithHandle(
     return ppal;
 }
 
-BOOL
+VOID
 NTAPI
-PALETTE_Cleanup(PVOID ObjectBody)
+PALETTE_vCleanup(PVOID ObjectBody)
 {
     PPALETTE pPal = (PPALETTE)ObjectBody;
     if (pPal->IndexedColors && pPal->IndexedColors != pPal->apalColors)
     {
         ExFreePoolWithTag(pPal->IndexedColors, TAG_PALETTE);
     }
-
-    return TRUE;
 }
 
 INT
@@ -384,7 +380,7 @@ EngCreatePalette(
     PPALETTE ppal;
     HPALETTE hpal;
 
-    ppal = PALETTE_AllocPalette(iMode, cColors, pulColors, flRed, flGreen, flBlue);
+    ppal = PALETTE_AllocPalette(iMode, cColors, (PPALETTEENTRY)pulColors, flRed, flGreen, flBlue);
     if (!ppal) return NULL;
 
     hpal = GDIOBJ_hInsertObject(&ppal->BaseObject, GDI_OBJ_HMGR_PUBLIC);
@@ -456,7 +452,7 @@ GreCreatePaletteInternal(
     pLogPal->palNumEntries = cEntries;
     ppal = PALETTE_AllocPalWithHandle(PAL_INDEXED,
                                       cEntries,
-                                      (PULONG)pLogPal->palPalEntry,
+                                      pLogPal->palPalEntry,
                                       0, 0, 0);
 
     if (ppal != NULL)
@@ -514,107 +510,81 @@ NtGdiCreatePaletteInternal(
     return hpal;
 }
 
-HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
+HPALETTE
+APIENTRY
+NtGdiCreateHalftonePalette(HDC  hDC)
 {
     int i, r, g, b;
-    struct {
-        WORD Version;
-        WORD NumberOfEntries;
-        PALETTEENTRY aEntries[256];
-        } Palette;
+    PALETTEENTRY PalEntries[256];
+    PPALETTE ppal;
+    PDC pdc;
+    HPALETTE hpal = NULL;
 
-    Palette.Version = 0x300;
-    Palette.NumberOfEntries = 256;
-    if (IntGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
-        /* From WINE, more that 256 color math */
-        Palette.NumberOfEntries = 20;
-        for (i = 0; i < Palette.NumberOfEntries; i++)
-        {
-            Palette.aEntries[i].peRed=0xff;
-            Palette.aEntries[i].peGreen=0xff;
-            Palette.aEntries[i].peBlue=0xff;
-            Palette.aEntries[i].peFlags=0x00;
-        }
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
 
-        Palette.aEntries[0].peRed=0x00;
-        Palette.aEntries[0].peBlue=0x00;
-        Palette.aEntries[0].peGreen=0x00;
+    RtlZeroMemory(PalEntries, sizeof(PalEntries));
 
-        /* The first 6 */
-        for (i=1; i <= 6; i++)
-        {
-            Palette.aEntries[i].peRed=(i%2)?0x80:0;
-            Palette.aEntries[i].peGreen=(i==2)?0x80:(i==3)?0x80:(i==6)?0x80:0;
-            Palette.aEntries[i].peBlue=(i>3)?0x80:0;
-        }
+    /* First and last ten entries are default ones */
+    for (i = 0; i < 10; i++)
+    {
+        PalEntries[i].peRed = g_sysPalTemplate[i].peRed;
+        PalEntries[i].peGreen = g_sysPalTemplate[i].peGreen;
+        PalEntries[i].peBlue = g_sysPalTemplate[i].peBlue;
 
-        for (i=7;  i <= 12; i++)
-        {
-            switch(i)
-            {
-                case 7:
-                    Palette.aEntries[i].peRed=0xc0;
-                    Palette.aEntries[i].peBlue=0xc0;
-                    Palette.aEntries[i].peGreen=0xc0;
-                    break;
-                case 8:
-                    Palette.aEntries[i].peRed=0xc0;
-                    Palette.aEntries[i].peGreen=0xdc;
-                    Palette.aEntries[i].peBlue=0xc0;
-                    break;
-                case 9:
-                    Palette.aEntries[i].peRed=0xa6;
-                    Palette.aEntries[i].peGreen=0xca;
-                    Palette.aEntries[i].peBlue=0xf0;
-                    break;
-                case 10:
-                    Palette.aEntries[i].peRed=0xff;
-                    Palette.aEntries[i].peGreen=0xfb;
-                    Palette.aEntries[i].peBlue=0xf0;
-                    break;
-                case 11:
-                    Palette.aEntries[i].peRed=0xa0;
-                    Palette.aEntries[i].peGreen=0xa0;
-                    Palette.aEntries[i].peBlue=0xa4;
-                    break;
-            case 12:
-                Palette.aEntries[i].peRed=0x80;
-                Palette.aEntries[i].peGreen=0x80;
-                Palette.aEntries[i].peBlue=0x80;
-            }
-        }
+        PalEntries[246 + i].peRed = g_sysPalTemplate[10 + i].peRed;
+        PalEntries[246 + i].peGreen = g_sysPalTemplate[10 + i].peGreen;
+        PalEntries[246 + i].peBlue = g_sysPalTemplate[10 + i].peBlue;
+    }
 
-        for (i=13; i <= 18; i++)
-        {
-            Palette.aEntries[i].peRed=(i%2)?0xff:0;
-            Palette.aEntries[i].peGreen=(i==14)?0xff:(i==15)?0xff:(i==18)?0xff:0;
-            Palette.aEntries[i].peBlue=(i>15)?0xff:0x00;
-        }
+    ppal = PALETTE_ShareLockPalette(pdc->dclevel.hpal);
+    if (ppal && (ppal->flFlags & PAL_INDEXED))
+    {
+        /* FIXME: optimize the palette for the current palette */
+        UNIMPLEMENTED
     }
     else
     {
-        /* 256 color table */
         for (r = 0; r < 6; r++)
+        {
             for (g = 0; g < 6; g++)
+            {
                 for (b = 0; b < 6; b++)
                 {
                     i = r + g*6 + b*36 + 10;
-                    Palette.aEntries[i].peRed = r * 51;
-                    Palette.aEntries[i].peGreen = g * 51;
-                    Palette.aEntries[i].peBlue = b * 51;
+                    PalEntries[i].peRed = r * 51;
+                    PalEntries[i].peGreen = g * 51;
+                    PalEntries[i].peBlue = b * 51;
                 }
+            }
+        }
 
         for (i = 216; i < 246; i++)
         {
             int v = (i - 216) << 3;
-            Palette.aEntries[i].peRed = v;
-            Palette.aEntries[i].peGreen = v;
-            Palette.aEntries[i].peBlue = v;
+            PalEntries[i].peRed = v;
+            PalEntries[i].peGreen = v;
+            PalEntries[i].peBlue = v;
         }
     }
 
-   return GreCreatePaletteInternal((LOGPALETTE *)&Palette, Palette.NumberOfEntries);
+    if (ppal)
+        PALETTE_ShareUnlockPalette(ppal);
+
+    DC_UnlockDc(pdc);
+
+    ppal = PALETTE_AllocPalWithHandle(PAL_INDEXED, 256, PalEntries, 0, 0, 0);
+    if (ppal)
+    {
+        hpal = ppal->BaseObject.hHmgr;
+        PALETTE_UnlockPalette(ppal);
+    }
+
+    return hpal;
 }
 
 BOOL
@@ -702,15 +672,16 @@ NtGdiGetNearestColor(
         EngSetLastError(ERROR_INVALID_HANDLE);
         return CLR_INVALID;
     }
-    
+
+    /// FIXME: shouldn't dereference pSurface while the PDEV is not locked
     if(dc->dclevel.pSurface == NULL)
         ppal = gppalMono;
     else
         ppal = dc->dclevel.pSurface->ppal;
-    
+
     /* Translate the color to the DC format */
     Color = TranslateCOLORREF(dc, Color);
-    
+
     /* XLATE it back to RGB color space */
     EXLATEOBJ_vInitialize(&exlo,
         ppal,
@@ -718,11 +689,11 @@ NtGdiGetNearestColor(
         0,
         RGB(0xff, 0xff, 0xff),
         RGB(0, 0, 0));
-    
+
     nearest = XLATEOBJ_iXlate(&exlo.xlo, Color);
-    
+
     EXLATEOBJ_vCleanup(&exlo);
-    
+
     /* We're done */
     DC_UnlockDc(dc);
 
@@ -761,7 +732,7 @@ IntGdiRealizePalette(HDC hDC)
     PALETTE *ppalSurf, *ppalDC;
 
     pdc = DC_LockDc(hDC);
-    if(!pdc)
+    if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
@@ -771,17 +742,18 @@ IntGdiRealizePalette(HDC hDC)
     {
         goto cleanup;
     }
-	
-	if(pdc->dctype == DCTYPE_DIRECT)
-	{
-		UNIMPLEMENTED;
-		goto cleanup;
-	}
 
+    if (pdc->dctype == DCTYPE_DIRECT)
+    {
+        UNIMPLEMENTED;
+        goto cleanup;
+    }
+
+    /// FIXME: shouldn't dereference pSurface while the PDEV is not locked
     ppalSurf = pdc->dclevel.pSurface->ppal;
     ppalDC = pdc->dclevel.ppal;
 
-    if(!(ppalSurf->flFlags & PAL_INDEXED))
+    if (!(ppalSurf->flFlags & PAL_INDEXED))
     {
         // FIXME: Set error?
         goto cleanup;
@@ -792,7 +764,7 @@ IntGdiRealizePalette(HDC hDC)
     // FIXME: Should we resize ppalSurf if it's too small?
     realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
-    for(i=0; i<realize; i++)
+    for (i=0; i<realize; i++)
     {
         InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
     }
@@ -814,9 +786,6 @@ IntAnimatePalette(HPALETTE hPal,
     {
         PPALETTE palPtr;
         UINT pal_entries;
-        HDC hDC;
-        PDC dc;
-        PWND Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
         palPtr = PALETTE_ShareLockPalette(hPal);
@@ -844,6 +813,16 @@ IntAnimatePalette(HPALETTE hPal,
 
         PALETTE_ShareUnlockPalette(palPtr);
 
+#if 0
+/* FIXME: This is completely broken! We cannot call UserGetDesktopWindow
+   without first acquiring the USER lock. But the whole process here is
+   screwed anyway. Instead of messing with the desktop DC, we need to
+   check, whether the palette is associated with a PDEV and whether that
+   PDEV supports palette operations. Then we need to call pfnDrvSetPalette.
+   But since IntGdiRealizePalette() is not even implemented for direct DCs,
+   we can as well just do nothing, that will at least not ASSERT!
+   I leave the whole thing here, to scare people away, who want to "fix" it. */
+
         /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
         hDC =  UserGetWindowDC(Wnd);
@@ -859,6 +838,7 @@ IntAnimatePalette(HPALETTE hPal,
                 DC_UnlockDc(dc);
         }
         UserReleaseDC(Wnd,hDC, FALSE);
+#endif // 0
     }
     return ret;
 }
@@ -1023,14 +1003,15 @@ GreGetSetColorTable(
         return 0;
     }
 
-    /* Get the surace from the DC */
+    /* Get the surface from the DC */
     psurf = pdc->dclevel.pSurface;
 
     /* Check if we have the default surface */
     if (psurf == NULL)
     {
         /* Use a mono palette */
-        if(!bSet) ppal = gppalMono;
+        if (!bSet)
+            ppal = gppalMono;
     }
     else if (psurf->SurfObj.iType == STYPE_BITMAP)
     {
@@ -1082,39 +1063,38 @@ GreGetSetColorTable(
     return iResult;
 }
 
-W32KAPI
+__kernel_entry
 LONG
 APIENTRY
 NtGdiDoPalette(
-    IN HGDIOBJ hObj,
-    IN WORD iStart,
-    IN WORD cEntries,
-    IN LPVOID pUnsafeEntries,
-    IN DWORD iFunc,
-    IN BOOL bInbound)
+    _In_ HGDIOBJ hObj,
+    _In_ WORD iStart,
+    _In_ WORD cEntries,
+    _When_(bInbound!=0, _In_reads_bytes_(cEntries*sizeof(PALETTEENTRY)))
+    _When_(bInbound==0, _Out_writes_bytes_(cEntries*sizeof(PALETTEENTRY))) LPVOID pUnsafeEntries,
+    _In_ DWORD iFunc,
+    _In_ BOOL bInbound)
 {
 	LONG ret;
 	LPVOID pEntries = NULL;
-
-	/* FIXME: Handle bInbound correctly */
-
-	if (bInbound &&
-	    (pUnsafeEntries == NULL || cEntries == 0))
-	{
-		return 0;
-	}
+	SIZE_T cjSize;
 
 	if (pUnsafeEntries)
 	{
-		pEntries = ExAllocatePoolWithTag(PagedPool, cEntries * sizeof(PALETTEENTRY), TAG_PALETTE);
+		if (cEntries == 0)
+			return 0;
+
+		cjSize = cEntries * sizeof(PALETTEENTRY);
+		pEntries = ExAllocatePoolWithTag(PagedPool, cjSize, TAG_PALETTE);
 		if (!pEntries)
 			return 0;
+
 		if (bInbound)
 		{
 			_SEH2_TRY
 			{
-				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				memcpy(pEntries, pUnsafeEntries, cEntries * sizeof(PALETTEENTRY));
+				ProbeForRead(pUnsafeEntries, cjSize, 1);
+				memcpy(pEntries, pUnsafeEntries, cjSize);
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
@@ -1126,7 +1106,7 @@ NtGdiDoPalette(
 		else
 		{
 		    /* Zero it out, so we don't accidentally leak kernel data */
-		    RtlZeroMemory(pEntries, cEntries * sizeof(PALETTEENTRY));
+		    RtlZeroMemory(pEntries, cjSize);
 		}
 	}
 
@@ -1164,12 +1144,13 @@ NtGdiDoPalette(
 
 	if (pEntries)
 	{
-		if (!bInbound)
+		if (!bInbound && (ret > 0))
 		{
+			cjSize = min(cEntries, ret) * sizeof(PALETTEENTRY);
 			_SEH2_TRY
 			{
-				ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				memcpy(pUnsafeEntries, pEntries, cEntries * sizeof(PALETTEENTRY));
+				ProbeForWrite(pUnsafeEntries, cjSize, 1);
+				memcpy(pUnsafeEntries, pEntries, cjSize);
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{

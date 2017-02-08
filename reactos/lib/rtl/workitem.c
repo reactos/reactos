@@ -912,8 +912,30 @@ RtlSetIoCompletionCallback(IN HANDLE FileHandle,
                            IN PIO_APC_ROUTINE Callback,
                            IN ULONG Flags)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_COMPLETION_INFORMATION FileCompletionInfo;
+    NTSTATUS Status;
+
+    DPRINT("RtlSetIoCompletionCallback(0x%p, 0x%p, 0x%x)\n", FileHandle, Callback, Flags);
+
+    /* Initialize the thread pool if not already initialized */
+    if (!IsThreadPoolInitialized())
+    {
+        Status = RtlpInitializeThreadPool();
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    FileCompletionInfo.Port = ThreadPoolCompletionPort;
+    FileCompletionInfo.Key = (PVOID)Callback;
+
+    Status = NtSetInformationFile(FileHandle,
+                                  &IoStatusBlock,
+                                  &FileCompletionInfo,
+                                  sizeof(FileCompletionInfo),
+                                  FileCompletionInformation);
+
+    return Status;
 }
 
 /*

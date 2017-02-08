@@ -1,0 +1,75 @@
+/*
+ * Directory Service Setup interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef enum _DSROLE_MACHINE_ROLE {
+    DsRole_RoleStandaloneWorkstation,
+    DsRole_RoleMemberWorkstation,
+    DsRole_RoleStandaloneServer,
+    DsRole_RoleMemberServer,
+    DsRole_RoleBackupDomainController,
+    DsRole_RolePrimaryDomainController
+} DSROLE_MACHINE_ROLE;
+
+typedef enum _DSROLE_SERVER_STATE {
+    DsRoleServerUnknown = 0,
+    DsRoleServerPrimary,
+    DsRoleServerBackup
+} DSROLE_SERVER_STATE, *PDSROLE_SERVER_STATE;
+
+typedef enum _DSROLE_PRIMARY_DOMAIN_INFO_LEVEL {
+    DsRolePrimaryDomainInfoBasic = 1,
+    DsRoleUpgradeStatus,
+    DsRoleOperationState
+} DSROLE_PRIMARY_DOMAIN_INFO_LEVEL;
+
+typedef struct _DSROLE_UPGRADE_STATUS_INFO {
+    ULONG OperationState;
+    DSROLE_SERVER_STATE PreviousServerState;
+} DSROLE_UPGRADE_STATUS_INFO, *PDSROLE_UPGRADE_STATUS_INFO;
+
+typedef enum _DSROLE_OPERATION_STATE {
+    DsRoleOperationIdle = 0,
+    DsRoleOperationActive,
+    DsRoleOperationNeedReboot
+} DSROLE_OPERATION_STATE;
+
+typedef struct _DSROLE_OPERATION_STATE_INFO {
+    DSROLE_OPERATION_STATE OperationState;
+} DSROLE_OPERATION_STATE_INFO, *PDSROLE_OPERATION_STATE_INFO;
+
+typedef struct _DSROLER_PRIMARY_DOMAIN_INFO_BASIC {
+    DSROLE_MACHINE_ROLE MachineRole;
+    ULONG Flags;
+    [unique, string] wchar_t *DomainNameFlat;
+    [unique, string] wchar_t *DomainNameDns;
+    [unique, string] wchar_t *DomainForestName;
+    GUID DomainGuid;
+} DSROLER_PRIMARY_DOMAIN_INFO_BASIC, *PDSROLER_PRIMARY_DOMAIN_INFO_BASIC;
+
+typedef [switch_type(DSROLE_PRIMARY_DOMAIN_INFO_LEVEL)] union _DSROLER_PRIMARY_DOMAIN_INFORMATION {
+    [case(DsRolePrimaryDomainInfoBasic)] DSROLER_PRIMARY_DOMAIN_INFO_BASIC DomainInfoBasic;
+    [case(DsRoleUpgradeStatus)] DSROLE_UPGRADE_STATUS_INFO UpgradStatusInfo;
+    [case(DsRoleOperationState)] DSROLE_OPERATION_STATE_INFO OperationStateInfo;
+} DSROLER_PRIMARY_DOMAIN_INFORMATION, *PDSROLER_PRIMARY_DOMAIN_INFORMATION;
+
+[
+    uuid(3919286a-b10c-11d0-9ba8-00c04fd92ef5),
+    version(0.0),
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\lsarpc]")
+#ifndef __midl
+    ,explicit_handle
+#endif
+]
+interface dssetup
+{
+    DWORD
+    __stdcall
+    DsRolerGetPrimaryDomainInformation(
+        [in] handle_t hBinding,
+        [in] DSROLE_PRIMARY_DOMAIN_INFO_LEVEL InfoLevel,
+        [out, switch_is(InfoLevel)] PDSROLER_PRIMARY_DOMAIN_INFORMATION *DomainInfo);
+}

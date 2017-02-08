@@ -17,104 +17,136 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-
-#define COBJMACROS
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-
 #include "d3dx9_36_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
-
-/* ID3DXBuffer IUnknown parts follow: */
-static HRESULT WINAPI ID3DXBufferImpl_QueryInterface(LPD3DXBUFFER iface, REFIID riid, LPVOID* ppobj)
+struct ID3DXBufferImpl
 {
-    ID3DXBufferImpl *This = (ID3DXBufferImpl *)iface;
+    ID3DXBuffer ID3DXBuffer_iface;
+    LONG ref;
+
+    void *buffer;
+    DWORD size;
+};
+
+static inline struct ID3DXBufferImpl *impl_from_ID3DXBuffer(ID3DXBuffer *iface)
+{
+    return CONTAINING_RECORD(iface, struct ID3DXBufferImpl, ID3DXBuffer_iface);
+}
+
+static HRESULT WINAPI ID3DXBufferImpl_QueryInterface(ID3DXBuffer *iface, REFIID riid, void **ppobj)
+{
+    TRACE("iface %p, riid %s, object %p\n", iface, debugstr_guid(riid), ppobj);
 
     if (IsEqualGUID(riid, &IID_IUnknown)
       || IsEqualGUID(riid, &IID_ID3DXBuffer))
     {
         IUnknown_AddRef(iface);
-        *ppobj = This;
+        *ppobj = iface;
         return D3D_OK;
     }
 
-    WARN("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppobj);
+    WARN("%s not implemented, returning E_NOINTERFACE\n", debugstr_guid(riid));
+
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI ID3DXBufferImpl_AddRef(LPD3DXBUFFER iface)
+static ULONG WINAPI ID3DXBufferImpl_AddRef(ID3DXBuffer *iface)
 {
-    ID3DXBufferImpl *This = (ID3DXBufferImpl *)iface;
+    struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) : AddRef from %d\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u\n", This, ref);
 
     return ref;
 }
 
-static ULONG WINAPI ID3DXBufferImpl_Release(LPD3DXBUFFER iface)
+static ULONG WINAPI ID3DXBufferImpl_Release(ID3DXBuffer *iface)
 {
-    ID3DXBufferImpl *This = (ID3DXBufferImpl *)iface;
+    struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) : ReleaseRef to %d\n", This, ref);
+    TRACE("%p decreasing refcount to %u\n", This, ref);
 
     if (ref == 0)
     {
         HeapFree(GetProcessHeap(), 0, This->buffer);
         HeapFree(GetProcessHeap(), 0, This);
     }
+
     return ref;
 }
 
-/* ID3DXBuffer Interface follow: */
-static LPVOID WINAPI ID3DXBufferImpl_GetBufferPointer(LPD3DXBUFFER iface)
+static void * WINAPI ID3DXBufferImpl_GetBufferPointer(ID3DXBuffer *iface)
 {
-    ID3DXBufferImpl *This = (ID3DXBufferImpl *)iface;
+    struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
+
+    TRACE("iface %p\n", iface);
+
     return This->buffer;
 }
 
-static DWORD WINAPI ID3DXBufferImpl_GetBufferSize(LPD3DXBUFFER iface)
+static DWORD WINAPI ID3DXBufferImpl_GetBufferSize(ID3DXBuffer *iface)
 {
-    ID3DXBufferImpl *This = (ID3DXBufferImpl *)iface;
-    return This->bufferSize;
+    struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
+
+    TRACE("iface %p\n", iface);
+
+    return This->size;
 }
 
-const ID3DXBufferVtbl D3DXBuffer_Vtbl =
+static const struct ID3DXBufferVtbl ID3DXBufferImpl_Vtbl =
 {
+    /* IUnknown methods */
     ID3DXBufferImpl_QueryInterface,
     ID3DXBufferImpl_AddRef,
     ID3DXBufferImpl_Release,
+    /* ID3DXBuffer methods */
     ID3DXBufferImpl_GetBufferPointer,
     ID3DXBufferImpl_GetBufferSize
 };
 
-HRESULT WINAPI D3DXCreateBuffer(DWORD NumBytes, LPD3DXBUFFER* ppBuffer)
+static HRESULT d3dx9_buffer_init(struct ID3DXBufferImpl *buffer, DWORD size)
 {
-    ID3DXBufferImpl *object;
+    buffer->ID3DXBuffer_iface.lpVtbl = &ID3DXBufferImpl_Vtbl;
+    buffer->ref = 1;
+    buffer->size = size;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ID3DXBufferImpl));
-    if (object == NULL)
+    buffer->buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    if (!buffer->buffer)
     {
-        *ppBuffer = NULL;
+        ERR("Failed to allocate buffer memory\n");
         return E_OUTOFMEMORY;
     }
-    object->lpVtbl = &D3DXBuffer_Vtbl;
-    object->ref = 1;
-    object->bufferSize = NumBytes;
-    object->buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, NumBytes);
-    if (object->buffer == NULL)
+
+    return D3D_OK;
+}
+
+HRESULT WINAPI D3DXCreateBuffer(DWORD size, ID3DXBuffer **buffer)
+{
+    struct ID3DXBufferImpl *object;
+    HRESULT hr;
+
+    if (!buffer)
     {
+        WARN("Invalid buffer specified.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+        return E_OUTOFMEMORY;
+
+    hr = d3dx9_buffer_init(object, size);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize buffer, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);
-        *ppBuffer = NULL;
-        return E_OUTOFMEMORY;
+        return hr;
     }
 
-    *ppBuffer = (LPD3DXBUFFER)object;
+    *buffer = &object->ID3DXBuffer_iface;
+
+    TRACE("Created ID3DXBuffer %p.\n", *buffer);
+
     return D3D_OK;
 }

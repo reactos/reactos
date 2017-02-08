@@ -17,7 +17,7 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/section.c
+ * FILE:            ntoskrnl/cache/section/io.c
  * PURPOSE:         Implements section objects
  *
  * PROGRAMMERS:     Rex Jolliff
@@ -187,7 +187,9 @@ MiSimpleRead(PFILE_OBJECT FileObject,
     }
 
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-    Status = ReadStatus->Status == STATUS_END_OF_FILE ? STATUS_SUCCESS : ReadStatus->Status;
+    /* When "ReadStatus->Information > 0" is false and "ReadStatus->Status == STATUS_END_OF_FILE" is true
+     * it means that read pointer is out of file, so we must fail */
+    Status = ReadStatus->Status == STATUS_END_OF_FILE && ReadStatus->Information > 0 ? STATUS_SUCCESS : ReadStatus->Status;
     return Status;
 }
 

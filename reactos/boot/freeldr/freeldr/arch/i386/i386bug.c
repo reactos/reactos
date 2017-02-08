@@ -13,31 +13,32 @@ typedef struct _FRAME
 char *i386ExceptionDescriptionText[] =
 {
     "Exception 00: DIVIDE BY ZERO\n\n",
-	"Exception 01: DEBUG EXCEPTION\n\n",
-	"Exception 02: NON-MASKABLE INTERRUPT EXCEPTION\n\n",
-	"Exception 03: BREAKPOINT (INT 3)\n\n",
-	"Exception 04: OVERFLOW\n\n",
-	"Exception 05: BOUND EXCEPTION\n\n",
-	"Exception 06: INVALID OPCODE\n\n",
-	"Exception 07: FPU NOT AVAILABLE\n\n",
-	"Exception 08: DOUBLE FAULT\n\n",
-	"Exception 09: COPROCESSOR SEGMENT OVERRUN\n\n",
-	"Exception 0A: INVALID TSS\n\n",
-	"Exception 0B: SEGMENT NOT PRESENT\n\n",
-	"Exception 0C: STACK EXCEPTION\n\n",
-	"Exception 0D: GENERAL PROTECTION FAULT\n\n",
-	"Exception 0E: PAGE FAULT\n\n",
-	"Exception 0F: Reserved\n\n",
-	"Exception 10: COPROCESSOR ERROR\n\n",
-	"Exception 11: ALIGNMENT CHECK\n\n",
-	"Exception 12: MACHINE CHECK\n\n"
+    "Exception 01: DEBUG EXCEPTION\n\n",
+    "Exception 02: NON-MASKABLE INTERRUPT EXCEPTION\n\n",
+    "Exception 03: BREAKPOINT (INT 3)\n\n",
+    "Exception 04: OVERFLOW\n\n",
+    "Exception 05: BOUND EXCEPTION\n\n",
+    "Exception 06: INVALID OPCODE\n\n",
+    "Exception 07: FPU NOT AVAILABLE\n\n",
+    "Exception 08: DOUBLE FAULT\n\n",
+    "Exception 09: COPROCESSOR SEGMENT OVERRUN\n\n",
+    "Exception 0A: INVALID TSS\n\n",
+    "Exception 0B: SEGMENT NOT PRESENT\n\n",
+    "Exception 0C: STACK EXCEPTION\n\n",
+    "Exception 0D: GENERAL PROTECTION FAULT\n\n",
+    "Exception 0E: PAGE FAULT\n\n",
+    "Exception 0F: Reserved\n\n",
+    "Exception 10: COPROCESSOR ERROR\n\n",
+    "Exception 11: ALIGNMENT CHECK\n\n",
+    "Exception 12: MACHINE CHECK\n\n"
 };
 
-#define SCREEN_ATTR 0x1f
+#define SCREEN_ATTR 0x1F    // Bright white on blue background
+
 void
 i386PrintChar(char chr, ULONG x, ULONG y)
 {
-	MachVideoPutChar(chr, SCREEN_ATTR, x, y);
+    MachVideoPutChar(chr, SCREEN_ATTR, x, y);
 }
 
 /* Used to store the current X and Y position on the screen */
@@ -86,11 +87,11 @@ i386PrintFrames(PKTRAP_FRAME TrapFrame)
     PrintText("Frames:\n");
 #ifdef _M_IX86
     for (Frame = (FRAME*)TrapFrame->Ebp;
-         Frame != 0 && (ULONG_PTR)Frame < STACK32ADDR;
+         Frame != 0 && (ULONG_PTR)Frame < STACKADDR;
          Frame = Frame->Next)
 #else
     for (Frame = (FRAME*)TrapFrame->TrapFrame;
-         Frame != 0 && (ULONG_PTR)Frame < STACK32ADDR;
+         Frame != 0 && (ULONG_PTR)Frame < STACKADDR;
          Frame = Frame->Next)
 #endif
     {
@@ -102,15 +103,14 @@ void
 NTAPI
 i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGISTERS Special)
 {
-	PUCHAR InstructionPointer;
+    PUCHAR InstructionPointer;
 
-	MachVideoClearScreen(SCREEN_ATTR);
-	i386_ScreenPosX = 0;
-	i386_ScreenPosY = 0;
+    MachVideoClearScreen(SCREEN_ATTR);
+    i386_ScreenPosX = 0;
+    i386_ScreenPosY = 0;
 
-    PrintText("An error occured in FreeLoader\n"
-              VERSION"\n"
-	          "Report this error to the ReactOS Development mailing list <ros-dev@reactos.org>\n\n"
+    PrintText("An error occured in " VERSION "\n"
+              "Report this error to the ReactOS Development mailing list <ros-dev@reactos.org>\n\n"
               "0x%02lx: %s\n", TrapIndex, i386ExceptionDescriptionText[TrapIndex]);
 #ifdef _M_IX86
     PrintText("EAX: %.8lx        ESP: %.8lx        CR0: %.8lx        DR0: %.8lx\n",
@@ -138,8 +138,8 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
     PrintText("SS: %.4lx        LDTR: %.4lx TR: %.4lx\n\n",
               TrapFrame->HardwareSegSs, Special->Ldtr, Special->Idtr.Limit);
 
-	i386PrintFrames(TrapFrame);						// Display frames
-	InstructionPointer = (PUCHAR)TrapFrame->Eip;
+    i386PrintFrames(TrapFrame);                        // Display frames
+    InstructionPointer = (PUCHAR)TrapFrame->Eip;
 #else
     PrintText("RAX: %.8lx        R8:  %.8lx        R12: %.8lx        RSI: %.8lx\n",
               TrapFrame->Rax, TrapFrame->R8, 0, TrapFrame->Rsi);
@@ -162,13 +162,50 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               TrapFrame->SegGs, Special->Idtr.Base, Special->Idtr.Limit);
     PrintText("SS: %.4lx        LDTR: %.4lx TR: %.4lx\n\n",
               TrapFrame->SegSs, Special->Ldtr, Special->Idtr.Limit);
-	InstructionPointer = (PUCHAR)TrapFrame->Rip;
+    InstructionPointer = (PUCHAR)TrapFrame->Rip;
 #endif
-    PrintText("\nInstructionstream: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x \n",
+    PrintText("\nInstruction stream: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x \n",
               InstructionPointer[0], InstructionPointer[1],
               InstructionPointer[2], InstructionPointer[3],
               InstructionPointer[4], InstructionPointer[5],
               InstructionPointer[6], InstructionPointer[7]);
+}
+
+VOID
+FrLdrBugCheckWithMessage(
+    ULONG BugCode,
+    PCHAR File,
+    ULONG Line,
+    PSTR Format,
+    ...)
+{
+    CHAR Buffer[1024];
+    va_list argptr;
+
+    /* Blue screen for the win */
+    MachVideoClearScreen(SCREEN_ATTR);
+    i386_ScreenPosX = 0;
+    i386_ScreenPosY = 0;
+
+    PrintText("A problem has been detected and FreeLoader boot has been aborted.\n\n");
+
+    PrintText("%ld: %s\n\n", BugCode, BugCodeStrings[BugCode]);
+
+    if (File)
+    {
+        PrintText("Location: %s:%ld\n\n", File, Line);
+    }
+
+    va_start(argptr, Format);
+    _vsnprintf(Buffer, sizeof(Buffer), Format, argptr);
+    va_end(argptr);
+    Buffer[sizeof(Buffer) - 1] = 0;
+
+    i386PrintText(Buffer);
+
+    _disable();
+    __halt();
+    for (;;);
 }
 
 void
@@ -203,4 +240,3 @@ FrLdrBugCheck(ULONG BugCode)
 {
     FrLdrBugCheckEx(BugCode, 0, 0);
 }
-

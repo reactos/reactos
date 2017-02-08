@@ -1,10 +1,10 @@
 
 /*
- *	Virtual Folder
- *	common definitions
+ *  Virtual Folder
+ *  common definitions
  *
- *	Copyright 1997			Marcus Meissner
- *	Copyright 1998, 1999, 2002	Juergen Schmied
+ *  Copyright 1997 Marcus Meissner
+ *  Copyright 1998, 1999, 2002 Juergen Schmied
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,22 +36,51 @@ typedef struct {
 #define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
 
-BOOL SHELL32_GetCustomFolderAttribute (LPCITEMIDLIST pidl, LPCWSTR pwszHeading, LPCWSTR pwszAttribute, LPWSTR pwszValue, DWORD cchValue);
-
 LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut);
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc, LPITEMIDLIST * pidlInOut,
-				  LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes);
-HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
-HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf, LPCITEMIDLIST pidl, DWORD dwFlags, LPWSTR szOut,
-				       DWORD dwOutLen);
+                  LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes);
 
-HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
-			     LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut);
+HRESULT HCR_GetClassName(REFIID riid, LPSTRRET strRet);
 
-HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf, LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
+
+HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
+                 LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut);
+
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
-static int __inline SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
+HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
+                               PCUIDLIST_RELATIVE pidl,
+                               LPBC pbcReserved,
+                               REFIID riid,
+                               LPVOID *ppvOut);
+
+HRESULT SHELL32_GetGuidItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
+
+HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
+
+HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
+
+HRESULT SHELL32_SetNameOfGuidItem(PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
+
+HRESULT SHELL32_GetDetailsOfGuidItem(IShellFolder2* psf, PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
+
+HRESULT SH_ParseGuidDisplayName(IShellFolder2 * pFolder,
+                                HWND hwndOwner,
+                                LPBC pbc,
+                                LPOLESTR lpszDisplayName,
+                                DWORD *pchEaten,
+                                PIDLIST_RELATIVE *ppidl,
+                                DWORD *pdwAttributes);
+
+HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+
+HRESULT SHELL32_CompareGuidItems(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+
+extern "C"
+BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
+
+static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
     return sprintf(str, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
             guid.Data1, guid.Data2, guid.Data3,
@@ -59,7 +88,7 @@ static int __inline SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
             guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
-static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
+static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 {
     static const WCHAR fmtW[] =
      { '{','%','0','8','l','x','-','%','0','4','x','-','%','0','4','x','-',
@@ -75,4 +104,4 @@ static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
 
-#endif // _SHFLDR_H_
+#endif /* _SHFLDR_H_ */

@@ -8,15 +8,14 @@
 /* INCLUDES **************************************************************/
 
 #include "Mke2fs.h"
+
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 #include <debug.h>
-
-/* DEFINITIONS ***********************************************************/
-
-
 
 /* FUNCTIONS *************************************************************/
 
-PCCHAR
+PCCH
 Ext2StatusToString ( IN NTSTATUS Status )
 {
     switch (Status)
@@ -954,14 +953,14 @@ Ext2StatusToString ( IN NTSTATUS Status )
  *     Length      : Data Length to be read
  *     Buffer      : ...
  *
- * RETURNS: 
+ * RETURNS:
  *     Success: STATUS_SUCCESS
  *     Fail:  ...
  *
- * NOTES: 
+ * NOTES:
  *     Both Length and Offset should be SECTOR_SIZE aligned.
  */
-NTSTATUS 
+NTSTATUS
 Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
               ULONGLONG      Offset,
               ULONG          Length,
@@ -1024,11 +1023,11 @@ Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
             goto errorout;
         }
 
-        RtlCopyMemory( Buffer, 
+        RtlCopyMemory( Buffer,
                        (PUCHAR)NonPagedBuffer + (ULONG)(Offset - Address.QuadPart),
                        Length );
     }
- 
+
 errorout:
 
     if (NonPagedBuffer)
@@ -1048,11 +1047,11 @@ errorout:
  *     Length      : Data Length to be written
  *     Buffer      : Data to be written ...
  *
- * RETURNS: 
+ * RETURNS:
  *     Success: STATUS_SUCCESS
  *     Fail:  ...
  *
- * NOTES: 
+ * NOTES:
  *     Both Length and Offset should be SECTOR_SIZE aligned.
  */
 
@@ -1152,10 +1151,10 @@ errorout:
  * ARGUMENTS:
  *     VolumeHandle:    Volume handle.
  *
- * RETURNS: 
+ * RETURNS:
  *     Success or Fail
  *
- * NOTES: 
+ * NOTES:
  *     N/A
  */
 
@@ -1201,10 +1200,10 @@ errorout:
  * ARGUMENTS:
  *     VolumeHandle:    Volume handle.
  *
- * RETURNS: 
+ * RETURNS:
  *     Success or Fail
  *
- * NOTES: 
+ * NOTES:
  *     N/A
  */
 

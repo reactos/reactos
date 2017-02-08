@@ -6,7 +6,11 @@
  * PROGRAMMERS: 
  * REVISIONS:
  */
+
 #include "vfatxlib.h"
+
+#include <ndk/kefuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <debug.h>

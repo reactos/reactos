@@ -163,42 +163,12 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         8,
         13,
-        "- Встановлювач не пiдтримує бiльше нiж один первинний роздiл на диск.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Встановлювач не може видалити первинний роздiл з диску",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  поки на диску наявний розширений роздiл.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Встановлювач не може видалити перший розширений роздiл з диску",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  поки на диску iснують iншi розширенi роздiли.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Встановлювач пiдтримує лише файлову систему FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Перевiрка файлової системи ще не впроваджена.",
         TEXT_STYLE_NORMAL
     },
@@ -508,6 +478,7 @@ static MUI_ENTRY ukUARepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ukUAComputerPageEntries[] =
 {
     {
@@ -825,12 +796,25 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Натиснiть C щоб створити новий роздiл.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Натиснiть C щоб створити новий роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Натиснiть D щоб видалити iснуючий роздiл.",
         TEXT_STYLE_NORMAL
     },
@@ -838,6 +822,100 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
         0,
         0,
         "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ukUAConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1285,6 +1363,10 @@ static MUI_ENTRY ukUARegistryEntries[] =
 MUI_ERROR ukUAErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS не був повнiстю встановлений на Ваш\n"
         "комп'ютер. Якщо ви вийдете з встановлювача зараз,\n"
@@ -1359,7 +1441,7 @@ MUI_ERROR ukUAErrorEntries[] =
           "\n"
           "  \x07  Натиснiть F3 для виходу з встановлювача.\n"
           "  \x07  Натиснiть ENTER щоб продовжити.",
-          "F3= Вийти  ENTER = Продовжити"
+          "F3 = Вийти  ENTER = Продовжити"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1490,10 +1572,38 @@ MUI_ERROR ukUAErrorEntries[] =
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Недостатньо вiльного мiсця на обраному роздiлi.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Натиснiть будь-яку клавiшу для продовження.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1542,6 +1652,10 @@ MUI_PAGE ukUAPages[] =
     {
         SELECT_PARTITION_PAGE,
         ukUASelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        ukUAConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1606,13 +1720,23 @@ MUI_STRING ukUAStrings[] =
     {STRING_PLEASEWAIT,
      "   Будь-ласка, зачекайте..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Встановити   D = Видалити Роздiл   F3 = Вийти"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Розмiр нового роздiлу:"},
     {STRING_CHOOSENEWPARTITION,
-     "Ви хочете створити новий роздiл на"},
+     "You have chosen to create a primary partition on"},
+//     "Ви хочете створити новий роздiл на"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Будь-ласка, введiть розмiр нового роздiлу в мегабайтах."},
     {STRING_CREATEPARTITION,
@@ -1621,12 +1745,18 @@ MUI_STRING ukUAStrings[] =
     "Цей роздiл буде вiдформатовано."},
     {STRING_NONFORMATTEDPART,
     "Ви вибрали встановлення ReactOS на новий або неформатований роздiл."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "ReactOS встановлюється на роздiл"},
     {STRING_CHECKINGPART,
     "Встановлювач перевiряє вибраний роздiл."},
+    {STRING_CONTINUE,
+    "ENTER = Продовжити"},
     {STRING_QUITCONTINUE,
-    "F3= Вийти  ENTER = Продовжити"},
+    "F3 = Вийти  ENTER = Продовжити"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезавантажити комп'ютер"},
     {STRING_TXTSETUPFAILED,
@@ -1652,11 +1782,11 @@ MUI_STRING ukUAStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Перезавантажити комп'ютер"},
     {STRING_CONSOLEFAIL1,
-    "Не вдалось вiдкрити консоль\n\n"},
+    "Не вдалось вiдкрити консоль\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Найбiльш ймовiрна причина цього -  використання USB клавiатури\n"},
+    "Найбiльш ймовiрна причина цього -  використання USB клавiатури\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB клавiатури ще не пiдтримуються повнiстю\n"},
+    "USB клавiатури ще не пiдтримуються повнiстю\r\n"},
     {STRING_FORMATTINGDISK,
     "Встановлювач форматує ваш диск"},
     {STRING_CHECKINGDISK,
@@ -1672,7 +1802,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1680,11 +1810,11 @@ MUI_STRING ukUAStrings[] =
     {STRING_HDINFOPARTZEROED,
     "Жорсткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Type %lu    %I64u %s"},
+    "%c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "на Жорсткому диску %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
@@ -1692,9 +1822,11 @@ MUI_STRING ukUAStrings[] =
     {STRING_NEWPARTITION,
     "Встановлювач створив новий роздiл на"},
     {STRING_UNPSPACE,
-    "    Нерозмiчена область              %6lu %s"},
+    "    %sНерозмiчена область%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (макс. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Новий (Неформатований)"},
     {STRING_FORMATUNUSED,

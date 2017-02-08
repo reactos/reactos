@@ -4,117 +4,44 @@
  *
  ******************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
-
-#define __RSXFACE_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -127,18 +54,18 @@
 /* Local macros for 16,32-bit to 64-bit conversion */
 
 #define ACPI_COPY_FIELD(Out, In, Field)  ((Out)->Field = (In)->Field)
-#define ACPI_COPY_ADDRESS(Out, In)                      \
+#define ACPI_COPY_ADDRESS(Out, In)                       \
     ACPI_COPY_FIELD(Out, In, ResourceType);              \
     ACPI_COPY_FIELD(Out, In, ProducerConsumer);          \
     ACPI_COPY_FIELD(Out, In, Decode);                    \
     ACPI_COPY_FIELD(Out, In, MinAddressFixed);           \
     ACPI_COPY_FIELD(Out, In, MaxAddressFixed);           \
     ACPI_COPY_FIELD(Out, In, Info);                      \
-    ACPI_COPY_FIELD(Out, In, Granularity);               \
-    ACPI_COPY_FIELD(Out, In, Minimum);                   \
-    ACPI_COPY_FIELD(Out, In, Maximum);                   \
-    ACPI_COPY_FIELD(Out, In, TranslationOffset);         \
-    ACPI_COPY_FIELD(Out, In, AddressLength);             \
+    ACPI_COPY_FIELD(Out, In, Address.Granularity);       \
+    ACPI_COPY_FIELD(Out, In, Address.Minimum);           \
+    ACPI_COPY_FIELD(Out, In, Address.Maximum);           \
+    ACPI_COPY_FIELD(Out, In, Address.TranslationOffset); \
+    ACPI_COPY_FIELD(Out, In, Address.AddressLength);     \
     ACPI_COPY_FIELD(Out, In, ResourceSource);
 
 
@@ -423,6 +350,52 @@ AcpiSetCurrentResources (
 ACPI_EXPORT_SYMBOL (AcpiSetCurrentResources)
 
 
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiGetEventResources
+ *
+ * PARAMETERS:  DeviceHandle    - Handle to the device object for the
+ *                                device we are getting resources
+ *              InBuffer        - Pointer to a buffer containing the
+ *                                resources to be set for the device
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: This function is called to get the event resources for a
+ *              specific device. The caller must first acquire a handle for
+ *              the desired device. The resource data is passed to the routine
+ *              the buffer pointed to by the InBuffer variable. Uses the
+ *              _AEI method.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiGetEventResources (
+    ACPI_HANDLE             DeviceHandle,
+    ACPI_BUFFER             *RetBuffer)
+{
+    ACPI_STATUS             Status;
+    ACPI_NAMESPACE_NODE     *Node;
+
+
+    ACPI_FUNCTION_TRACE (AcpiGetEventResources);
+
+
+    /* Validate parameters then dispatch to internal routine */
+
+    Status = AcpiRsValidateParameters (DeviceHandle, RetBuffer, &Node);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    Status = AcpiRsGetAeiMethodData (Node, RetBuffer);
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiGetEventResources)
+
+
 /******************************************************************************
  *
  * FUNCTION:    AcpiResourceToAddress64
@@ -460,13 +433,15 @@ AcpiResourceToAddress64 (
     {
     case ACPI_RESOURCE_TYPE_ADDRESS16:
 
-        Address16 = ACPI_CAST_PTR (ACPI_RESOURCE_ADDRESS16, &Resource->Data);
+        Address16 = ACPI_CAST_PTR (
+            ACPI_RESOURCE_ADDRESS16, &Resource->Data);
         ACPI_COPY_ADDRESS (Out, Address16);
         break;
 
     case ACPI_RESOURCE_TYPE_ADDRESS32:
 
-        Address32 = ACPI_CAST_PTR (ACPI_RESOURCE_ADDRESS32, &Resource->Data);
+        Address32 = ACPI_CAST_PTR (
+            ACPI_RESOURCE_ADDRESS32, &Resource->Data);
         ACPI_COPY_ADDRESS (Out, Address32);
         break;
 
@@ -474,10 +449,11 @@ AcpiResourceToAddress64 (
 
         /* Simple copy for 64 bit source */
 
-        ACPI_MEMCPY (Out, &Resource->Data, sizeof (ACPI_RESOURCE_ADDRESS64));
+        memcpy (Out, &Resource->Data, sizeof (ACPI_RESOURCE_ADDRESS64));
         break;
 
     default:
+
         return (AE_BAD_PARAMETER);
     }
 
@@ -500,7 +476,7 @@ ACPI_EXPORT_SYMBOL (AcpiResourceToAddress64)
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Walk a resource template for the specified evice to find a
+ * DESCRIPTION: Walk a resource template for the specified device to find a
  *              vendor-defined resource that matches the supplied UUID and
  *              UUID subtype. Returns a ACPI_RESOURCE of type Vendor.
  *
@@ -530,8 +506,8 @@ AcpiGetVendorResource (
 
     /* Walk the _CRS or _PRS resource list for this device */
 
-    Status = AcpiWalkResources (DeviceHandle, Name, AcpiRsMatchVendorResource,
-                &Info);
+    Status = AcpiWalkResources (
+        DeviceHandle, Name, AcpiRsMatchVendorResource, &Info);
     if (ACPI_FAILURE (Status))
     {
         return (Status);
@@ -584,7 +560,7 @@ AcpiRsMatchVendorResource (
      */
     if ((Vendor->ByteLength < (ACPI_UUID_LENGTH + 1)) ||
         (Vendor->UuidSubtype != Info->Uuid->Subtype)  ||
-        (ACPI_MEMCMP (Vendor->Uuid, Info->Uuid->Data, ACPI_UUID_LENGTH)))
+        (memcmp (Vendor->Uuid, Info->Uuid->Data, ACPI_UUID_LENGTH)))
     {
         return (AE_OK);
     }
@@ -600,7 +576,7 @@ AcpiRsMatchVendorResource (
 
     /* Found the correct resource, copy and return it */
 
-    ACPI_MEMCPY (Buffer->Pointer, Resource, Resource->Length);
+    memcpy (Buffer->Pointer, Resource, Resource->Length);
     Buffer->Length = Resource->Length;
 
     /* Found the desired descriptor, terminate resource walk */
@@ -612,72 +588,64 @@ AcpiRsMatchVendorResource (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiWalkResources
+ * FUNCTION:    AcpiWalkResourceBuffer
  *
- * PARAMETERS:  DeviceHandle    - Handle to the device object for the
- *                                device we are querying
- *              Name            - Method name of the resources we want
- *                                (METHOD_NAME__CRS or METHOD_NAME__PRS)
+ * PARAMETERS:  Buffer          - Formatted buffer returned by one of the
+ *                                various Get*Resource functions
  *              UserFunction    - Called for each resource
  *              Context         - Passed to UserFunction
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Retrieves the current or possible resource list for the
- *              specified device. The UserFunction is called once for
- *              each resource in the list.
+ * DESCRIPTION: Walks the input resource template. The UserFunction is called
+ *              once for each resource in the list.
  *
  ******************************************************************************/
 
 ACPI_STATUS
-AcpiWalkResources (
-    ACPI_HANDLE                 DeviceHandle,
-    char                        *Name,
+AcpiWalkResourceBuffer (
+    ACPI_BUFFER                 *Buffer,
     ACPI_WALK_RESOURCE_CALLBACK UserFunction,
     void                        *Context)
 {
-    ACPI_STATUS                 Status;
-    ACPI_BUFFER                 Buffer;
+    ACPI_STATUS                 Status = AE_OK;
     ACPI_RESOURCE               *Resource;
     ACPI_RESOURCE               *ResourceEnd;
 
 
-    ACPI_FUNCTION_TRACE (AcpiWalkResources);
+    ACPI_FUNCTION_TRACE (AcpiWalkResourceBuffer);
 
 
     /* Parameter validation */
 
-    if (!DeviceHandle || !UserFunction || !Name ||
-        (!ACPI_COMPARE_NAME (Name, METHOD_NAME__CRS) &&
-         !ACPI_COMPARE_NAME (Name, METHOD_NAME__PRS)))
+    if (!Buffer || !Buffer->Pointer || !UserFunction)
     {
         return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
 
-    /* Get the _CRS or _PRS resource list */
+    /* Buffer contains the resource list and length */
 
-    Buffer.Length = ACPI_ALLOCATE_LOCAL_BUFFER;
-    Status = AcpiRsGetMethodData (DeviceHandle, Name, &Buffer);
-    if (ACPI_FAILURE (Status))
-    {
-        return_ACPI_STATUS (Status);
-    }
-
-    /* Buffer now contains the resource list */
-
-    Resource = ACPI_CAST_PTR (ACPI_RESOURCE, Buffer.Pointer);
-    ResourceEnd = ACPI_ADD_PTR (ACPI_RESOURCE, Buffer.Pointer, Buffer.Length);
+    Resource = ACPI_CAST_PTR (ACPI_RESOURCE, Buffer->Pointer);
+    ResourceEnd = ACPI_ADD_PTR (
+        ACPI_RESOURCE, Buffer->Pointer, Buffer->Length);
 
     /* Walk the resource list until the EndTag is found (or buffer end) */
 
     while (Resource < ResourceEnd)
     {
-        /* Sanity check the resource */
+        /* Sanity check the resource type */
 
         if (Resource->Type > ACPI_RESOURCE_TYPE_MAX)
         {
             Status = AE_AML_INVALID_RESOURCE_TYPE;
             break;
+        }
+
+        /* Sanity check the length. It must not be zero, or we loop forever */
+
+        if (!Resource->Length)
+        {
+            return_ACPI_STATUS (AE_AML_BAD_RESOURCE_LENGTH);
         }
 
         /* Invoke the user function, abort on any error returned */
@@ -703,9 +671,71 @@ AcpiWalkResources (
 
         /* Get the next resource descriptor */
 
-        Resource = ACPI_ADD_PTR (ACPI_RESOURCE, Resource, Resource->Length);
+        Resource = ACPI_NEXT_RESOURCE (Resource);
     }
 
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiWalkResourceBuffer)
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiWalkResources
+ *
+ * PARAMETERS:  DeviceHandle    - Handle to the device object for the
+ *                                device we are querying
+ *              Name            - Method name of the resources we want.
+ *                                (METHOD_NAME__CRS, METHOD_NAME__PRS, or
+ *                                METHOD_NAME__AEI)
+ *              UserFunction    - Called for each resource
+ *              Context         - Passed to UserFunction
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Retrieves the current or possible resource list for the
+ *              specified device. The UserFunction is called once for
+ *              each resource in the list.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiWalkResources (
+    ACPI_HANDLE                 DeviceHandle,
+    char                        *Name,
+    ACPI_WALK_RESOURCE_CALLBACK UserFunction,
+    void                        *Context)
+{
+    ACPI_STATUS                 Status;
+    ACPI_BUFFER                 Buffer;
+
+
+    ACPI_FUNCTION_TRACE (AcpiWalkResources);
+
+
+    /* Parameter validation */
+
+    if (!DeviceHandle || !UserFunction || !Name ||
+        (!ACPI_COMPARE_NAME (Name, METHOD_NAME__CRS) &&
+         !ACPI_COMPARE_NAME (Name, METHOD_NAME__PRS) &&
+         !ACPI_COMPARE_NAME (Name, METHOD_NAME__AEI)))
+    {
+        return_ACPI_STATUS (AE_BAD_PARAMETER);
+    }
+
+    /* Get the _CRS/_PRS/_AEI resource list */
+
+    Buffer.Length = ACPI_ALLOCATE_LOCAL_BUFFER;
+    Status = AcpiRsGetMethodData (DeviceHandle, Name, &Buffer);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    /* Walk the resource list and cleanup */
+
+    Status = AcpiWalkResourceBuffer (&Buffer, UserFunction, Context);
     ACPI_FREE (Buffer.Pointer);
     return_ACPI_STATUS (Status);
 }

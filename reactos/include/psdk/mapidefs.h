@@ -446,12 +446,12 @@ typedef struct _SPropProblemArray
 } SPropProblemArray, *LPSPropProblemArray;
 
 /* FPropContainsProp flags */
-#define FL_FULLSTRING     0x00000ul /* Exact string match */
-#define FL_SUBSTRING      0x00001ul /* Substring match */
-#define FL_PREFIX         0x00002ul /* Prefix match */
-#define FL_IGNORECASE     0x10000ul /* Case insensitive */
-#define FL_IGNORENONSPACE 0x20000ul /* Ignore non spacing characters */
-#define FL_LOOSE          0x40000ul /* Try very hard to match */
+#define FL_FULLSTRING     ((ULONG)0x00000) /* Exact string match */
+#define FL_SUBSTRING      ((ULONG)0x00001) /* Substring match */
+#define FL_PREFIX         ((ULONG)0x00002) /* Prefix match */
+#define FL_IGNORECASE     ((ULONG)0x10000) /* Case insensitive */
+#define FL_IGNORENONSPACE ((ULONG)0x20000) /* Ignore non spacing characters */
+#define FL_LOOSE          ((ULONG)0x40000) /* Try very hard to match */
 
 
 /* Table types returned by IMAPITable_GetStatus() */
@@ -649,18 +649,18 @@ typedef struct _MAPINAMEID
 } MAPINAMEID, *LPMAPINAMEID;
 
 /* Desired notification types (bitflags) */
-#define fnevCriticalError        0x00000001UL
-#define fnevNewMail              0x00000002UL
-#define fnevObjectCreated        0x00000004UL
-#define fnevObjectDeleted        0x00000008UL
-#define fnevObjectModified       0x00000010UL
-#define fnevObjectMoved          0x00000020UL
-#define fnevObjectCopied         0x00000040UL
-#define fnevSearchComplete       0x00000080UL
-#define fnevTableModified        0x00000100UL
-#define fnevStatusObjectModified 0x00000200UL
-#define fnevReservedForMapi      0x40000000UL
-#define fnevExtended             0x80000000UL
+#define fnevCriticalError        ((ULONG)0x00000001)
+#define fnevNewMail              ((ULONG)0x00000002)
+#define fnevObjectCreated        ((ULONG)0x00000004)
+#define fnevObjectDeleted        ((ULONG)0x00000008)
+#define fnevObjectModified       ((ULONG)0x00000010)
+#define fnevObjectMoved          ((ULONG)0x00000020)
+#define fnevObjectCopied         ((ULONG)0x00000040)
+#define fnevSearchComplete       ((ULONG)0x00000080)
+#define fnevTableModified        ((ULONG)0x00000100)
+#define fnevStatusObjectModified ((ULONG)0x00000200)
+#define fnevReservedForMapi      ((ULONG)0x40000000)
+#define fnevExtended             ((ULONG)0x80000000)
 
 /* Type of notification event */
 #define TABLE_CHANGED       1U

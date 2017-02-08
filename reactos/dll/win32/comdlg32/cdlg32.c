@@ -19,28 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-#include <winuser.h>
-//#include "objbase.h"
-//#include "rpcproxy.h"
-#include <commdlg.h>
-#include <cderr.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
-
 #include "cdlg.h"
-
 
 DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
 
@@ -116,6 +95,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 		break;
 
 	case DLL_PROCESS_DETACH:
+            if (Reserved) break;
             if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES) TlsFree(COMDLG32_TlsIndex);
             if(SHFOLDER_hInstance) FreeLibrary(SHFOLDER_hInstance);
             break;
@@ -177,7 +157,7 @@ DWORD WINAPI CommDlgExtendedError(void)
 	  return 0; /* we never set an error, so there isn't one */
 }
 
-#if 0 // Win 7
+#ifndef __REACTOS__ /* Win 7 */
 
 /*************************************************************************
  * Implement the CommDlg32 class factory
@@ -288,7 +268,11 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
+#ifdef __REACTOS__
     return E_FAIL; // FIXME: __wine_register_resources(COMDLG32_hInstance);
+#else
+    return __wine_register_resources(COMDLG32_hInstance);
+#endif
 }
 
 /***********************************************************************
@@ -296,7 +280,11 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
+#ifdef __REACTOS__
     return E_FAIL; // FIXME: __wine_unregister_resources(COMDLG32_hInstance);
+#else
+    return __wine_unregister_resources(COMDLG32_hInstance);
+#endif
 }
 
-#endif // Win 7
+#endif /* Win 7 */

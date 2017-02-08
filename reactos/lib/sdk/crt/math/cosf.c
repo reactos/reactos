@@ -7,7 +7,12 @@
 #include <math.h>
 #undef cosf
 
-float cosf(float _X)
+#if defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_AMD64))
+#pragma warning(suppress:4164) /* intrinsic not declared */
+#pragma function(cosf)
+#endif /* _MSC_VER */
+
+float cosf(float x)
 {
-  return ((float)cos((double)_X));
+    return ((float)cos((double)x));
 }

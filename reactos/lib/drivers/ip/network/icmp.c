@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include <icmp.h>
+
 NTSTATUS ICMPStartup()
 {
     IPRegisterProtocol(IPPROTO_ICMP, ICMPReceive);
@@ -173,7 +175,7 @@ NTSTATUS ICMPSendDatagram(
     }
     else
     {
-        if(!(NCE = NBLocateNeighbor( &LocalAddress )))
+        if(!(NCE = NBLocateNeighbor( &LocalAddress, NULL )))
         {
             UnlockObject(AddrFile, OldIrql);
             return STATUS_INVALID_PARAMETER;

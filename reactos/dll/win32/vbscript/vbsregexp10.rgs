@@ -1,0 +1,38 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{3F4DACA7-160D-11D2-A8E9-00104B365C9F}'
+        {
+            '1.0' = s 'Microsoft VBScript Regular Expressions 1.0'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{3F4DACA0-160D-11D2-A8E9-00104B365C9F}' = s 'IRegExp'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3F4DACA7-160D-11D2-A8E9-00104B365C9F}' { val Version = s '1.0' }
+        }
+        '{3F4DACA1-160D-11D2-A8E9-00104B365C9F}' = s 'IMatch'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3F4DACA7-160D-11D2-A8E9-00104B365C9F}' { val Version = s '1.0' }
+        }
+        '{3F4DACA2-160D-11D2-A8E9-00104B365C9F}' = s 'IMatchCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3F4DACA7-160D-11D2-A8E9-00104B365C9F}' { val Version = s '1.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+    }
+}

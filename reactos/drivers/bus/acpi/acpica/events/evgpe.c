@@ -4,114 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "acpi.h"
 #include "accommon.h"
@@ -120,6 +48,8 @@
 
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evgpe")
+
+#if (!ACPI_REDUCED_HARDWARE) /* Entire module */
 
 /* Local prototypes */
 
@@ -162,7 +92,7 @@ AcpiEvUpdateGpeEnableMask (
         return_ACPI_STATUS (AE_NOT_EXIST);
     }
 
-    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo, GpeRegisterInfo);
+    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo);
 
     /* Clear the run bit up front */
 
@@ -175,6 +105,7 @@ AcpiEvUpdateGpeEnableMask (
         ACPI_SET_BIT (GpeRegisterInfo->EnableForRun, (UINT8) RegisterBit);
     }
 
+    GpeRegisterInfo->EnableMask = GpeRegisterInfo->EnableForRun;
     return_ACPI_STATUS (AE_OK);
 }
 
@@ -200,18 +131,6 @@ AcpiEvEnableGpe (
 
     ACPI_FUNCTION_TRACE (EvEnableGpe);
 
-
-    /*
-     * We will only allow a GPE to be enabled if it has either an associated
-     * method (_Lxx/_Exx) or a handler, or is using the implicit notify
-     * feature. Otherwise, the GPE will be immediately disabled by
-     * AcpiEvGpeDispatch the first time it fires.
-     */
-    if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
-        ACPI_GPE_DISPATCH_NONE)
-    {
-        return_ACPI_STATUS (AE_NO_HANDLER);
-    }
 
     /* Clear the GPE (of stale events) */
 
@@ -408,7 +327,7 @@ AcpiEvGetGpeEventInfo (
         for (i = 0; i < ACPI_MAX_GPE_BLOCKS; i++)
         {
             GpeInfo = AcpiEvLowGetGpeInfo (GpeNumber,
-                        AcpiGbl_GpeFadtBlocks[i]);
+                AcpiGbl_GpeFadtBlocks[i]);
             if (GpeInfo)
             {
                 return (GpeInfo);
@@ -453,7 +372,11 @@ AcpiEvGpeDetect (
 {
     ACPI_STATUS             Status;
     ACPI_GPE_BLOCK_INFO     *GpeBlock;
+    ACPI_NAMESPACE_NODE     *GpeDevice;
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo;
+    UINT32                  GpeNumber;
+    ACPI_GPE_HANDLER_INFO   *GpeHandlerInfo;
     UINT32                  IntStatus = ACPI_INTERRUPT_NOT_HANDLED;
     UINT8                   EnabledStatusByte;
     UINT32                  StatusReg;
@@ -484,6 +407,8 @@ AcpiEvGpeDetect (
     GpeBlock = GpeXruptList->GpeBlockListHead;
     while (GpeBlock)
     {
+        GpeDevice = GpeBlock->Node;
+
         /*
          * Read all of the 8-bit GPE status and enable registers in this GPE
          * block, saving all of them. Find all currently active GP events.
@@ -501,6 +426,13 @@ AcpiEvGpeDetect (
             if (!(GpeRegisterInfo->EnableForRun |
                   GpeRegisterInfo->EnableForWake))
             {
+                ACPI_DEBUG_PRINT ((ACPI_DB_INTERRUPTS,
+                    "Ignore disabled registers for GPE %02X-%02X: "
+                    "RunEnable=%02X, WakeEnable=%02X\n",
+                    GpeRegisterInfo->BaseGpeNumber,
+                    GpeRegisterInfo->BaseGpeNumber + (ACPI_GPE_REGISTER_WIDTH - 1),
+                    GpeRegisterInfo->EnableForRun,
+                    GpeRegisterInfo->EnableForWake));
                 continue;
             }
 
@@ -521,8 +453,13 @@ AcpiEvGpeDetect (
             }
 
             ACPI_DEBUG_PRINT ((ACPI_DB_INTERRUPTS,
-                "Read GPE Register at GPE%02X: Status=%02X, Enable=%02X\n",
-                GpeRegisterInfo->BaseGpeNumber, StatusReg, EnableReg));
+                "Read registers for GPE %02X-%02X: Status=%02X, Enable=%02X, "
+                "RunEnable=%02X, WakeEnable=%02X\n",
+                GpeRegisterInfo->BaseGpeNumber,
+                GpeRegisterInfo->BaseGpeNumber + (ACPI_GPE_REGISTER_WIDTH - 1),
+                StatusReg, EnableReg,
+                GpeRegisterInfo->EnableForRun,
+                GpeRegisterInfo->EnableForWake));
 
             /* Check if there is anything active at all in this register */
 
@@ -540,16 +477,55 @@ AcpiEvGpeDetect (
             {
                 /* Examine one GPE bit */
 
+                GpeEventInfo = &GpeBlock->EventInfo[((ACPI_SIZE) i *
+                    ACPI_GPE_REGISTER_WIDTH) + j];
+                GpeNumber = j + GpeRegisterInfo->BaseGpeNumber;
+
                 if (EnabledStatusByte & (1 << j))
                 {
-                    /*
-                     * Found an active GPE. Dispatch the event to a handler
-                     * or method.
-                     */
-                    IntStatus |= AcpiEvGpeDispatch (GpeBlock->Node,
-                        &GpeBlock->EventInfo[((ACPI_SIZE) i *
-                            ACPI_GPE_REGISTER_WIDTH) + j],
-                        j + GpeRegisterInfo->BaseGpeNumber);
+                    /* Invoke global event handler if present */
+
+                    AcpiGpeCount++;
+                    if (AcpiGbl_GlobalEventHandler)
+                    {
+                        AcpiGbl_GlobalEventHandler (ACPI_EVENT_TYPE_GPE,
+                            GpeDevice, GpeNumber,
+                            AcpiGbl_GlobalEventHandlerContext);
+                    }
+
+                    /* Found an active GPE */
+
+                    if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+                        ACPI_GPE_DISPATCH_RAW_HANDLER)
+                    {
+                        /* Dispatch the event to a raw handler */
+
+                        GpeHandlerInfo = GpeEventInfo->Dispatch.Handler;
+
+                        /*
+                         * There is no protection around the namespace node
+                         * and the GPE handler to ensure a safe destruction
+                         * because:
+                         * 1. The namespace node is expected to always
+                         *    exist after loading a table.
+                         * 2. The GPE handler is expected to be flushed by
+                         *    AcpiOsWaitEventsComplete() before the
+                         *    destruction.
+                         */
+                        AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+                        IntStatus |= GpeHandlerInfo->Address (
+                            GpeDevice, GpeNumber, GpeHandlerInfo->Context);
+                        Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+                    }
+                    else
+                    {
+                        /*
+                         * Dispatch the event to a standard handler or
+                         * method.
+                         */
+                        IntStatus |= AcpiEvGpeDispatch (GpeDevice,
+                            GpeEventInfo, GpeNumber);
+                    }
                 }
             }
         }
@@ -585,57 +561,19 @@ AcpiEvAsynchExecuteGpeMethod (
     void                    *Context)
 {
     ACPI_GPE_EVENT_INFO     *GpeEventInfo = Context;
-    ACPI_STATUS             Status;
-    ACPI_GPE_EVENT_INFO     *LocalGpeEventInfo;
+    ACPI_STATUS             Status = AE_OK;
     ACPI_EVALUATE_INFO      *Info;
+    ACPI_GPE_NOTIFY_INFO    *Notify;
 
 
     ACPI_FUNCTION_TRACE (EvAsynchExecuteGpeMethod);
 
 
-    /* Allocate a local GPE block */
-
-    LocalGpeEventInfo = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_GPE_EVENT_INFO));
-    if (!LocalGpeEventInfo)
-    {
-        ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
-            "while handling a GPE"));
-        return_VOID;
-    }
-
-    Status = AcpiUtAcquireMutex (ACPI_MTX_EVENTS);
-    if (ACPI_FAILURE (Status))
-    {
-        return_VOID;
-    }
-
-    /* Must revalidate the GpeNumber/GpeBlock */
-
-    if (!AcpiEvValidGpeEvent (GpeEventInfo))
-    {
-        Status = AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
-        return_VOID;
-    }
-
-    /*
-     * Take a snapshot of the GPE info for this level - we copy the info to
-     * prevent a race condition with RemoveHandler/RemoveBlock.
-     */
-    ACPI_MEMCPY (LocalGpeEventInfo, GpeEventInfo,
-        sizeof (ACPI_GPE_EVENT_INFO));
-
-    Status = AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
-    if (ACPI_FAILURE (Status))
-    {
-        return_VOID;
-    }
-
     /* Do the correct dispatch - normal method or implicit notify */
 
-    switch (LocalGpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK)
+    switch (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags))
     {
     case ACPI_GPE_DISPATCH_NOTIFY:
-
         /*
          * Implicit notify.
          * Dispatch a DEVICE_WAKE notify to the appropriate handler.
@@ -643,10 +581,18 @@ AcpiEvAsynchExecuteGpeMethod (
          * completes. The notify handlers are NOT invoked synchronously
          * from this thread -- because handlers may in turn run other
          * control methods.
+         *
+         * June 2012: Expand implicit notify mechanism to support
+         * notifies on multiple device objects.
          */
-        Status = AcpiEvQueueNotifyRequest (
-                    LocalGpeEventInfo->Dispatch.DeviceNode,
-                    ACPI_NOTIFY_DEVICE_WAKE);
+        Notify = GpeEventInfo->Dispatch.NotifyList;
+        while (ACPI_SUCCESS (Status) && Notify)
+        {
+            Status = AcpiEvQueueNotifyRequest (
+                Notify->DeviceNode, ACPI_NOTIFY_DEVICE_WAKE);
+
+            Notify = Notify->Next;
+        }
         break;
 
     case ACPI_GPE_DISPATCH_METHOD:
@@ -664,7 +610,7 @@ AcpiEvAsynchExecuteGpeMethod (
              * Invoke the GPE Method (_Lxx, _Exx) i.e., evaluate the
              * _Lxx/_Exx control method that corresponds to this GPE
              */
-            Info->PrefixNode = LocalGpeEventInfo->Dispatch.MethodNode;
+            Info->PrefixNode = GpeEventInfo->Dispatch.MethodNode;
             Info->Flags = ACPI_IGNORE_RETURN_VALUE;
 
             Status = AcpiNsEvaluate (Info);
@@ -675,23 +621,26 @@ AcpiEvAsynchExecuteGpeMethod (
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
                 "while evaluating GPE method [%4.4s]",
-                AcpiUtGetNodeName (LocalGpeEventInfo->Dispatch.MethodNode)));
+                AcpiUtGetNodeName (GpeEventInfo->Dispatch.MethodNode)));
         }
-
         break;
 
     default:
-        return_VOID; /* Should never happen */
+
+        goto ErrorExit; /* Should never happen */
     }
 
     /* Defer enabling of GPE until all notify handlers are done */
 
     Status = AcpiOsExecute (OSL_NOTIFY_HANDLER,
-                AcpiEvAsynchEnableGpe, LocalGpeEventInfo);
-    if (ACPI_FAILURE (Status))
+        AcpiEvAsynchEnableGpe, GpeEventInfo);
+    if (ACPI_SUCCESS (Status))
     {
-        ACPI_FREE (LocalGpeEventInfo);
+        return_VOID;
     }
+
+ErrorExit:
+    AcpiEvAsynchEnableGpe (GpeEventInfo);
     return_VOID;
 }
 
@@ -715,11 +664,13 @@ AcpiEvAsynchEnableGpe (
     void                    *Context)
 {
     ACPI_GPE_EVENT_INFO     *GpeEventInfo = Context;
+    ACPI_CPU_FLAGS          Flags;
 
 
+    Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
     (void) AcpiEvFinishGpe (GpeEventInfo);
+    AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
 
-    ACPI_FREE (GpeEventInfo);
     return;
 }
 
@@ -760,7 +711,7 @@ AcpiEvFinishGpe (
 
     /*
      * Enable this GPE, conditionally. This means that the GPE will
-     * only be physically enabled if the EnableForRun bit is set
+     * only be physically enabled if the EnableMask bit is set
      * in the EventInfo.
      */
     (void) AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_CONDITIONAL_ENABLE);
@@ -798,31 +749,6 @@ AcpiEvGpeDispatch (
     ACPI_FUNCTION_TRACE (EvGpeDispatch);
 
 
-    /* Invoke global event handler if present */
-
-    AcpiGpeCount++;
-    if (AcpiGbl_GlobalEventHandler)
-    {
-        AcpiGbl_GlobalEventHandler (ACPI_EVENT_TYPE_GPE, GpeDevice,
-             GpeNumber, AcpiGbl_GlobalEventHandlerContext);
-    }
-
-    /*
-     * If edge-triggered, clear the GPE status bit now. Note that
-     * level-triggered events are cleared after the GPE is serviced.
-     */
-    if ((GpeEventInfo->Flags & ACPI_GPE_XRUPT_TYPE_MASK) ==
-            ACPI_GPE_EDGE_TRIGGERED)
-    {
-        Status = AcpiHwClearGpe (GpeEventInfo);
-        if (ACPI_FAILURE (Status))
-        {
-            ACPI_EXCEPTION ((AE_INFO, Status,
-                "Unable to clear GPE%02X", GpeNumber));
-            return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
-        }
-    }
-
     /*
      * Always disable the GPE so that it does not keep firing before
      * any asynchronous activity completes (either from the execution
@@ -836,8 +762,26 @@ AcpiEvGpeDispatch (
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status,
-            "Unable to disable GPE%02X", GpeNumber));
+            "Unable to disable GPE %02X", GpeNumber));
         return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
+    }
+
+    /*
+     * If edge-triggered, clear the GPE status bit now. Note that
+     * level-triggered events are cleared after the GPE is serviced.
+     */
+    if ((GpeEventInfo->Flags & ACPI_GPE_XRUPT_TYPE_MASK) ==
+            ACPI_GPE_EDGE_TRIGGERED)
+    {
+        Status = AcpiHwClearGpe (GpeEventInfo);
+        if (ACPI_FAILURE (Status))
+        {
+            ACPI_EXCEPTION ((AE_INFO, Status,
+                "Unable to clear GPE %02X", GpeNumber));
+            (void) AcpiHwLowSetGpe (
+                GpeEventInfo, ACPI_GPE_CONDITIONAL_ENABLE);
+            return_UINT32 (ACPI_INTERRUPT_NOT_HANDLED);
+        }
     }
 
     /*
@@ -847,7 +791,7 @@ AcpiEvGpeDispatch (
      * If there is neither a handler nor a method, leave the GPE
      * disabled.
      */
-    switch (GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK)
+    switch (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags))
     {
     case ACPI_GPE_DISPATCH_HANDLER:
 
@@ -867,30 +811,28 @@ AcpiEvGpeDispatch (
 
     case ACPI_GPE_DISPATCH_METHOD:
     case ACPI_GPE_DISPATCH_NOTIFY:
-
         /*
          * Execute the method associated with the GPE
          * NOTE: Level-triggered GPEs are cleared after the method completes.
          */
         Status = AcpiOsExecute (OSL_GPE_HANDLER,
-                    AcpiEvAsynchExecuteGpeMethod, GpeEventInfo);
+            AcpiEvAsynchExecuteGpeMethod, GpeEventInfo);
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
-                "Unable to queue handler for GPE%02X - event disabled",
+                "Unable to queue handler for GPE %02X - event disabled",
                 GpeNumber));
         }
         break;
 
     default:
-
         /*
          * No handler or method to run!
          * 03/2010: This case should no longer be possible. We will not allow
          * a GPE to be enabled if it has no handler or method.
          */
         ACPI_ERROR ((AE_INFO,
-            "No handler or method for GPE%02X, disabling event",
+            "No handler or method for GPE %02X, disabling event",
             GpeNumber));
         break;
     }
@@ -898,3 +840,4 @@ AcpiEvGpeDispatch (
     return_UINT32 (ACPI_INTERRUPT_HANDLED);
 }
 
+#endif /* !ACPI_REDUCED_HARDWARE */

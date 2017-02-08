@@ -30,14 +30,15 @@ typedef enum _MODE {
 #define SEMAPHORE_MODIFY_STATE (0x0002)
 #define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
-typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
-  RelationProcessorCore,
-  RelationNumaNode,
-  RelationCache,
-  RelationProcessorPackage,
-  RelationGroup,
-  RelationAll = 0xffff
-} LOGICAL_PROCESSOR_RELATIONSHIP;
+$endif(_WDMDDK_)
+$if(_WDMDDK_ || _WINNT_)
+
+typedef struct _PROCESSOR_GROUP_INFO {
+  UCHAR MaximumProcessorCount;
+  UCHAR ActiveProcessorCount;
+  UCHAR Reserved[38];
+  KAFFINITY ActiveProcessorMask;
+} PROCESSOR_GROUP_INFO, *PPROCESSOR_GROUP_INFO;
 
 typedef enum _PROCESSOR_CACHE_TYPE {
   CacheUnified,
@@ -53,28 +54,6 @@ typedef struct _CACHE_DESCRIPTOR {
   ULONG Size;
   PROCESSOR_CACHE_TYPE Type;
 } CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
-
-typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
-  ULONG_PTR ProcessorMask;
-  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
-  _ANONYMOUS_UNION union {
-    struct {
-      UCHAR Flags;
-    } ProcessorCore;
-    struct {
-      ULONG NodeNumber;
-    } NumaNode;
-    CACHE_DESCRIPTOR Cache;
-    ULONGLONG Reserved[2];
-  } DUMMYUNIONNAME;
-} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
-
-typedef struct _PROCESSOR_RELATIONSHIP {
-  UCHAR Flags;
-  UCHAR Reserved[21];
-  USHORT GroupCount;
-  _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
-} PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
 
 typedef struct _NUMA_NODE_RELATIONSHIP {
   ULONG NodeNumber;
@@ -92,19 +71,43 @@ typedef struct _CACHE_RELATIONSHIP {
   GROUP_AFFINITY GroupMask;
 } CACHE_RELATIONSHIP, *PCACHE_RELATIONSHIP;
 
-typedef struct _PROCESSOR_GROUP_INFO {
-  UCHAR MaximumProcessorCount;
-  UCHAR ActiveProcessorCount;
-  UCHAR Reserved[38];
-  KAFFINITY ActiveProcessorMask;
-} PROCESSOR_GROUP_INFO, *PPROCESSOR_GROUP_INFO;
-
 typedef struct _GROUP_RELATIONSHIP {
   USHORT MaximumGroupCount;
   USHORT ActiveGroupCount;
   UCHAR Reserved[20];
   PROCESSOR_GROUP_INFO GroupInfo[ANYSIZE_ARRAY];
 } GROUP_RELATIONSHIP, *PGROUP_RELATIONSHIP;
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+  RelationProcessorCore,
+  RelationNumaNode,
+  RelationCache,
+  RelationProcessorPackage,
+  RelationGroup,
+  RelationAll = 0xffff
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+typedef struct _PROCESSOR_RELATIONSHIP {
+  UCHAR Flags;
+  UCHAR Reserved[21];
+  USHORT GroupCount;
+  _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
+} PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
+  ULONG_PTR ProcessorMask;
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  _ANONYMOUS_UNION union {
+    struct {
+      UCHAR Flags;
+    } ProcessorCore;
+    struct {
+      ULONG NodeNumber;
+    } NumaNode;
+    CACHE_DESCRIPTOR Cache;
+    ULONGLONG Reserved[2];
+  } DUMMYUNIONNAME;
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
 typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
   LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
@@ -115,57 +118,75 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
     CACHE_RELATIONSHIP Cache;
     GROUP_RELATIONSHIP Group;
   } DUMMYUNIONNAME;
-} SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;;
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;
+
+$endif(_WDMDDK_ || _WINNT_)
+$if(_WDMDDK_)
 
 /* Processor features */
-#define PF_FLOATING_POINT_PRECISION_ERRATA  0
-#define PF_FLOATING_POINT_EMULATED          1
-#define PF_COMPARE_EXCHANGE_DOUBLE          2
-#define PF_MMX_INSTRUCTIONS_AVAILABLE       3
-#define PF_PPC_MOVEMEM_64BIT_OK             4
-#define PF_ALPHA_BYTE_INSTRUCTIONS          5
-#define PF_XMMI_INSTRUCTIONS_AVAILABLE      6
-#define PF_3DNOW_INSTRUCTIONS_AVAILABLE     7
-#define PF_RDTSC_INSTRUCTION_AVAILABLE      8
-#define PF_PAE_ENABLED                      9
-#define PF_XMMI64_INSTRUCTIONS_AVAILABLE   10
-#define PF_SSE_DAZ_MODE_AVAILABLE          11
-#define PF_NX_ENABLED                      12
-#define PF_SSE3_INSTRUCTIONS_AVAILABLE     13
-#define PF_COMPARE_EXCHANGE128             14
-#define PF_COMPARE64_EXCHANGE128           15
-#define PF_CHANNELS_ENABLED                16
-#define PF_XSAVE_ENABLED                   17
+#define PF_FLOATING_POINT_PRECISION_ERRATA       0
+#define PF_FLOATING_POINT_EMULATED               1
+#define PF_COMPARE_EXCHANGE_DOUBLE               2
+#define PF_MMX_INSTRUCTIONS_AVAILABLE            3
+#define PF_PPC_MOVEMEM_64BIT_OK                  4
+#define PF_ALPHA_BYTE_INSTRUCTIONS               5
+#define PF_XMMI_INSTRUCTIONS_AVAILABLE           6
+#define PF_3DNOW_INSTRUCTIONS_AVAILABLE          7
+#define PF_RDTSC_INSTRUCTION_AVAILABLE           8
+#define PF_PAE_ENABLED                           9
+#define PF_XMMI64_INSTRUCTIONS_AVAILABLE        10
+#define PF_SSE_DAZ_MODE_AVAILABLE               11
+#define PF_NX_ENABLED                           12
+#define PF_SSE3_INSTRUCTIONS_AVAILABLE          13
+#define PF_COMPARE_EXCHANGE128                  14
+#define PF_COMPARE64_EXCHANGE128                15
+#define PF_CHANNELS_ENABLED                     16
+#define PF_XSAVE_ENABLED                        17
+#define PF_ARM_VFP_32_REGISTERS_AVAILABLE       18
+#define PF_ARM_NEON_INSTRUCTIONS_AVAILABLE      19
+#define PF_SECOND_LEVEL_ADDRESS_TRANSLATION     20
+#define PF_VIRT_FIRMWARE_ENABLED                21
+#define PF_RDWRFSGSBASE_AVAILABLE               22
+#define PF_FASTFAIL_AVAILABLE                   23
+#define PF_ARM_DIVIDE_INSTRUCTION_AVAILABLE     24
+#define PF_ARM_64BIT_LOADSTORE_ATOMIC           25
+#define PF_ARM_EXTERNAL_CACHE_AVAILABLE         26
+#define PF_ARM_FMAC_INSTRUCTIONS_AVAILABLE      27
+#define PF_RDRAND_INSTRUCTION_AVAILABLE         28
+#define PF_ARM_V8_INSTRUCTIONS_AVAILABLE        29
+#define PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE 30
+#define PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE  31
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
-#define ASSERT_APC(Object) NT_ASSERT((Object)->Type == ApcObject)
+#define ASSERT_APC(Object) \
+    NT_ASSERT((Object)->Type == ApcObject)
 
 #define ASSERT_DPC(Object) \
-    ASSERT(((Object)->Type == 0) || \
-           ((Object)->Type == DpcObject) || \
-           ((Object)->Type == ThreadedDpcObject))
+    NT_ASSERT(((Object)->Type == 0) || \
+              ((Object)->Type == DpcObject) || \
+              ((Object)->Type == ThreadedDpcObject))
 
-#define ASSERT_GATE(object) \
-    NT_ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
-              (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
+#define ASSERT_GATE(Object) \
+    NT_ASSERT((((Object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
+              (((Object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
 
 #define ASSERT_DEVICE_QUEUE(Object) \
     NT_ASSERT((Object)->Type == DeviceQueueObject)
 
-#define ASSERT_TIMER(E) \
-    NT_ASSERT(((E)->Header.Type == TimerNotificationObject) || \
-              ((E)->Header.Type == TimerSynchronizationObject))
+#define ASSERT_TIMER(Object) \
+    NT_ASSERT(((Object)->Header.Type == TimerNotificationObject) || \
+              ((Object)->Header.Type == TimerSynchronizationObject))
 
-#define ASSERT_MUTANT(E) \
-    NT_ASSERT((E)->Header.Type == MutantObject)
+#define ASSERT_MUTANT(Object) \
+    NT_ASSERT((Object)->Header.Type == MutantObject)
 
-#define ASSERT_SEMAPHORE(E) \
-    NT_ASSERT((E)->Header.Type == SemaphoreObject)
+#define ASSERT_SEMAPHORE(Object) \
+    NT_ASSERT((Object)->Header.Type == SemaphoreObject)
 
-#define ASSERT_EVENT(E) \
-    NT_ASSERT(((E)->Header.Type == NotificationEvent) || \
-              ((E)->Header.Type == SynchronizationEvent))
+#define ASSERT_EVENT(Object) \
+    NT_ASSERT(((Object)->Header.Type == NotificationEvent) || \
+              ((Object)->Header.Type == SynchronizationEvent))
 
 #define DPC_NORMAL 0
 #define DPC_THREADED 1
@@ -476,6 +497,7 @@ typedef enum _KD_OPTION {
   KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
 
+#ifdef _NTSYSTEM_
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
   IN PVOID NormalContext OPTIONAL,
@@ -493,6 +515,7 @@ typedef VOID
   IN OUT PVOID *NormalContext OPTIONAL,
   IN OUT PVOID *SystemArgument1 OPTIONAL,
   IN OUT PVOID *SystemArgument2 OPTIONAL);
+#endif
 
 typedef struct _KAPC {
   UCHAR Type;
@@ -502,9 +525,13 @@ typedef struct _KAPC {
   ULONG SpareLong0;
   struct _KTHREAD *Thread;
   LIST_ENTRY ApcListEntry;
+#ifdef _NTSYSTEM_
   PKKERNEL_ROUTINE KernelRoutine;
   PKRUNDOWN_ROUTINE RundownRoutine;
   PKNORMAL_ROUTINE NormalRoutine;
+#else
+  PVOID Reserved[3];
+#endif
   PVOID NormalContext;
   PVOID SystemArgument1;
   PVOID SystemArgument2;
@@ -986,11 +1013,18 @@ extern NTSYSAPI volatile CCHAR KeNumberProcessors;
 #elif (NTDDI_VERSION >= NTDDI_WINXP)
 extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
+__CREATE_NTOS_DATA_IMPORT_ALIAS(KeNumberProcessors)
 extern PCCHAR KeNumberProcessors;
 #endif
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Next;
+  PEXCEPTION_ROUTINE Handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
 typedef struct _NT_TIB {
   struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
@@ -1070,10 +1104,10 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 #define XSTATE_LEGACY_SSE                   1
 #define XSTATE_GSSE                         2
 
-#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
-#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
+#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1LL << (XSTATE_LEGACY_FLOATING_POINT))
+#define XSTATE_MASK_LEGACY_SSE              (1LL << (XSTATE_LEGACY_SSE))
 #define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
-#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
+#define XSTATE_MASK_GSSE                    (1LL << (XSTATE_GSSE))
 
 #define MAXIMUM_XSTATE_FEATURES             64
 

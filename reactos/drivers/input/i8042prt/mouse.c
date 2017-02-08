@@ -14,7 +14,12 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
+
+static KDEFERRED_ROUTINE i8042MouDpcRoutine;
+static KDEFERRED_ROUTINE i8042DpcRoutineMouseTimeout;
 
 /*
  * These functions are callbacks for filter driver custom interrupt
@@ -173,7 +178,7 @@ i8042MouHandle(
 			break;
 
 		default:
-			ERR_(I8042PRT, "Unexpected state 0x%u!\n", DeviceExtension->MouseState);
+			ERR_(I8042PRT, "Unexpected state 0x%lx!\n", DeviceExtension->MouseState);
 			ASSERT(FALSE);
 	}
 }
@@ -212,7 +217,7 @@ i8042MouHandleButtons(
 		(DeviceExtension->MouseButtonState & ~Mask) | (NewButtonData & Mask);
 }
 
-/* Does lastest initializations for the mouse. This method
+/* Does final initializations for the mouse. This method
  * is called just before connecting the interrupt.
  */
 NTSTATUS
@@ -267,7 +272,8 @@ i8042MouDpcRoutine(
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
-	DeviceExtension = (PI8042_MOUSE_EXTENSION)DeferredContext;
+	__analysis_assume(DeferredContext != NULL);
+	DeviceExtension = DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
 	switch (DeviceExtension->MouseTimeoutState)
@@ -356,7 +362,8 @@ i8042DpcRoutineMouseTimeout(
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
-	DeviceExtension = (PI8042_MOUSE_EXTENSION)DeferredContext;
+	__analysis_assume(DeferredContext != NULL);
+	DeviceExtension = DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
 	Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
@@ -904,7 +911,8 @@ i8042MouInterruptService(
 
 	UNREFERENCED_PARAMETER(Interrupt);
 
-	DeviceExtension = (PI8042_MOUSE_EXTENSION)Context;
+	__analysis_assume(Context != NULL);
+	DeviceExtension = Context;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 	Counter = PortDeviceExtension->Settings.PollStatusIterations;
 

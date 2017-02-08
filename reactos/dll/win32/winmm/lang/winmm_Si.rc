@@ -1,0 +1,127 @@
+/*
+ * Copyright 2002-2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+STRINGTABLE LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"Navedeni ukaz je bil izveden."
+MMSYSERR_ERROR, 		"Neznana zunanja napaka."
+MMSYSERR_BADDEVICEID, 		"Uporabljena identifikacijska oznaka naprave je zunaj dopustnega obsega za vaš sistem."
+MMSYSERR_NOTENABLED, 		"Gonilnik ni bil omogočen."
+MMSYSERR_ALLOCATED, 		"Navedena naprava je že v uporabi. Počakajte, da bo spet prosta, in poskusite znova."
+MMSYSERR_INVALHANDLE, 		"Navedena koda za dostop do naprave ni veljavna."
+MMSYSERR_NODRIVER, 		"Noben gonilnik ni nameščen !\n"
+MMSYSERR_NOMEM, 		"Za to opravilo ni na voljo dovolj pomnilnika. Končajte enega ali več programov in poskusite znova."
+MMSYSERR_NOTSUPPORTED, 		"Ta funkcija ni podprta. Če želite ugotoviti, katere funkcije podpira gonilnik, uporabite možnost 'Funkcije'."
+MMSYSERR_BADERRNUM, 		"Navedena je bila številka napake, ki v sistemu ni definirana."
+MMSYSERR_INVALFLAG, 		"Sistemska funkcija je prejela neveljavno zastavico."
+MMSYSERR_INVALPARAM, 		"Sistemska funkcija je prejela neveljaven parameter."
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"Navedena oblika zapisa ni podprta ali pa je ni mogoče prevesti. Če želite ugotoviti, katere oblike so podprte, uporabite možnost 'Funkcije'."
+WAVERR_STILLPLAYING, 		"Predvajanje še traja. Ponastavite napravo ali pa počakajte do konca predvajanja."
+WAVERR_UNPREPARED, 		"Glava podatkov vrste wave ni bila pripravljena. Pripravite glavo, tako da uporabite funkcijo 'Pripravi' (Prepare), in poskusite znova."
+WAVERR_SYNC, 			"Brez zastavice WAVE_ALLOWSYNC ni mogoče odpreti naprave. Uporabite jo in poskusite znova."
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"MIDI glava ni bila pripravljena. Pripravite glavo, tako da uporabite funkcijo 'Pripravi' (Prepare), in poskusite znova."
+MIDIERR_STILLPLAYING, 		"Predvajanje še traja. Ponastavite napravo ali pa počakajte do konca predvajanja."
+MIDIERR_NOMAP, 			"Razporeditve MIDI ni mogo1e najti. To je lahko posledica težav z gonilnikom, ali pa manjkajoč ali poškodovane datoteke MIDIMAP.CFG."
+MIDIERR_NOTREADY, 		"Prek vrat poteka prenos podatkov do naprave. Počakajte, da se prenos konča in poskusite znova."
+MIDIERR_NODEVICE, 		"Trenutna nastavitev MIDI se sklicuje na MIDI napravo, ki ni prisotna. Uporabite MIDI Mapper in spremenite nastavitve."
+MIDIERR_INVALIDSETUP, 		"Trenutna nastavitev MIDI je pošodovana. Namestite originalno datoteko MIDIMAP.CFG v sistemsko mapo ReactOS (System) in poskusite znova."
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"Neveljavna identifikacijska oznaka MCI naprave. Uporabite oznako, ki jo vrne odpiranje MCI naprave."
+MCIERR_UNRECOGNIZED_KEYWORD, 	"Naveden parameter ukaza ni definiran v naboru MCI ukazov."
+MCIERR_UNRECOGNIZED_COMMAND,	"Naveden ukaz ni veljaven MCI ukaz."
+MCIERR_HARDWARE, 		"S predstavnostno napravo so težave. Preverite, ali naprava deluje pravilno ali pa se posvetujte z izdelovalcem."
+MCIERR_INVALID_DEVICE_NAME, 	"To ni registrirana MCI naprava."
+MCIERR_OUT_OF_MEMORY, 		"Za to opravilo ni na voljo dovolj pomnilnika. \nKončajte enega ali več programov in poskusite znova."
+MCIERR_DEVICE_OPEN, 		"Ta program že uporablja ta vzdevek. Namesto imena naprave uporabite še neuporabljen  vzdevek."
+MCIERR_CANNOT_LOAD_DRIVER, 	"Naprave ni bilo mogoče naložiti. Preverite, ali je gonilnik pravilno nameščen."
+MCIERR_MISSING_COMMAND_STRING, 	"Ukazni niz je prazen."
+MCIERR_PARAM_OVERFLOW, 		"Izhodni niz je bil prevelik, da bi ga bilo mogoče shraniti v povratni medpomnilnik. Povečajte medpomnilnik."
+MCIERR_MISSING_STRING_ARGUMENT, "Navedeni ukaz zahteva parameter (niz znakov). Vnesite ga."
+MCIERR_BAD_INTEGER, 		"Vneseno celo število za ta ukaz ni veljavno. Vnesite število."
+MCIERR_PARSER_INTERNAL, 	"Gonilnik za napravo je vrnil neveljavno vrsto vrednosti. Od izdelovalca naprave poskusite dobiti nov gonilnik."
+MCIERR_DRIVER_INTERNAL, 	"Z gonilnikom za napravo so težave. Od izdelovalca naprave poskusite dobiti nov gonilnik."
+MCIERR_MISSING_PARAMETER, 	"V navedenem ukazu manjka parameter. Vnesite ga."
+MCIERR_UNSUPPORTED_FUNCTION, 	"MCI naprava, ki jo uporabljate, ne podpira navedenega ukaza."
+MCIERR_FILE_NOT_FOUND, 		"Navedene datoteke ni mogoče najti. Preverite, ali ste pravilno vnesli ime in pot do datoteke."
+MCIERR_DEVICE_NOT_READY, 	"Gonilnik za napravo ni pripravljen. Malo počakajte in nato poskusite znova."
+MCIERR_INTERNAL, 		"Pri inicializaciji MCI naprave je prišlo do težav. Znova zaženite ReactOS."
+MCIERR_DRIVER, 			"Zaradi napake, značilne za gonilnik, je bil gonilnik zaprt. Ponovite ukaz."
+MCIERR_CANNOT_USE_ALL, 		"V tem ukazu uporabite ime točno določene naprave."
+MCIERR_MULTIPLE, 		"V več napravah je prišlo do napak. Ločeno vnesite vsak ukaz in vsako napravo. Tako boste lahko ugotovili, katere naprave povzročajo napake."
+MCIERR_EXTENSION_NOT_FOUND, 	"Iz pripone datoteke ni mogoče ugotoviti vrste zahtevane naprave."
+MCIERR_OUTOFRANGE, 		"Parameter je zunaj dovoljenega obsega za naveden ukaz."
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"Navedenih parametrov ne smete uporabiti hkrati."
+MCIERR_FILE_NOT_SAVED, 		"Navedene datoteke ni mogoče shraniti. Preverite, ali je na disku dovolj prostora oz. ali je vaš računalnik še povezan z omrežjem."
+MCIERR_DEVICE_TYPE_REQUIRED, 	"Navedene naprave ni mogoče najti. Preverite, ali je naprava nameščena oz. ali je bilo njeno ime pravilno navedeno."
+MCIERR_DEVICE_LOCKED, 		"Poteka zapiranje navedene naprave. Malo počakajte in poskusite znova."
+MCIERR_DUPLICATE_ALIAS, 	"Ta program že uporablja navedeni vzdevek. Uporabite še neuporabljen vzdevek."
+MCIERR_BAD_CONSTANT, 		"Uporabljena konstanta v tem ukazu ni veljavna."
+MCIERR_MUST_USE_SHAREABLE, 	"Gonilnik naprave je že v uporabi. Če ga želite dati v skupno rabo, z vsakim ukazom 'open' uporabite parameter 'shareable'."
+MCIERR_MISSING_DEVICE_NAME, 	"Navedeni ukaz zahteva vzdevek, datoteko, gonilnik ali ime naprave. Vnesite ustrezno ime."
+MCIERR_BAD_TIME_FORMAT, 	"Navedena vrednost za obliko zapisa časa ni veljavna. Veljavne oblike poiščite v dokumentaciji MCI naprave."
+MCIERR_NO_CLOSING_QUOTE, 	"V vrednosti za parameter manjka zaključni dvojni narekovaj. Vnesite ga."
+MCIERR_DUPLICATE_FLAGS, 	"Parameter ali vrednost ste navedli dvakrat. Navedite ga samo enkrat."
+MCIERR_INVALID_FILE, 		"Te datoteke ne morete predvajati z navedeno MCI napravo. Datoteka je morda poškodovana ali pa ima napačno obliko zapisa."
+MCIERR_NULL_PARAMETER_BLOCK, 	"MCI napravi je bil predan 'null parameter block'."
+MCIERR_UNNAMED_RESOURCE, 	"Datoteke brez imena ni mogoče shraniti. Vnesite ime."
+MCIERR_NEW_REQUIRES_ALIAS, 	"Ko uporabljate parameter 'new', morate navesti vzdevek."
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"Zastavice 'notify' ni mogoče uporabiti pri napravah, ki se samodejno odpirajo."
+MCIERR_NO_ELEMENT_ALLOWED, 	"V povezavi z navedeno napravo ne morete uporabiti imena datoteke."
+MCIERR_NONAPPLICABLE_FUNCTION, 	"Ukazov v navedenem zaporedju ni mogoče izvesti. Spremenite zaporedje in poskusite znova."
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"Ukaza ni mogoče izvesti v povezavi z napravo, ki se samodejno odpre. Počakajte, da se naprava zapre, in poskusite znova."
+MCIERR_FILENAME_REQUIRED, 	"Ime datoteke ni veljavno."
+MCIERR_EXTRA_CHARACTERS, 	"Za nizom znakov, ki je obdan z narekovaji, ni mogoče zapisati dodatnih znakov."
+MCIERR_DEVICE_NOT_INSTALLED, 	"Naprava ni nameščena. Če želite namestiti nov gonilnik, na nadzorni plošči dvokliknite ikono 'Dodajanje strojne opreme'."
+MCIERR_GET_CD, 			"Dostop do navedene datoteke ali MCI naprave ni mogoč. Zamenjajte imenik ali pa znova zaženite računalnik."
+MCIERR_SET_CD, 			"Dostop do navedene datoteke ali MCI naprave ni mogoč, ker program ne more zamenjati imenika."
+MCIERR_SET_DRIVE, 		"Dostop do navedene datoteke ali MCI naprave ni mogoč, ker program ne more zamenjati pogona."
+MCIERR_DEVICE_LENGTH, 		"Navedite ime za napravo ali gonilnik, ki je krajše od 79 znakov."
+MCIERR_DEVICE_ORD_LENGTH, 	"Navedite ime za napravo ali gonilnik, ki je krajše od 69 znakov."
+MCIERR_NO_INTEGER, 		"Navedeni ukaz zahteva številčni parameter (npr. 'play to 10'). Vnesite ga."
+MCIERR_WAVE_OUTPUTSINUSE, 	"Vse naprave, ki lahko predvajajo datoteke v obliki wave, so v uporabi. Poskusite znova, ko bo katera od njih na voljo."
+MCIERR_WAVE_SETOUTPUTINUSE, 	"Trenutna wave naprava je v uporabi. Počakajte, da bo prosta, in poskusite znova."
+MCIERR_WAVE_INPUTSINUSE, 	"Vse naprave, ki lahko snemajo datoteke v obliki wave, so v uporabi. Poskusite znova, ko bo katera od njih na voljo."
+MCIERR_WAVE_SETINPUTINUSE, 	"Trenutna wave naprava je v uporabi. Počakajte, da bo prosta, in poskusite znova."
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"Predvajalna naprava je v uporabi. Poskusite znova, ko bo predvajanje končano."
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"Snemalna naprava je v uporabi. Poskusite znova, ko bo snemanje končano."
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"Nameščena ni nobena naprava za wave, ki bi lahko predvajala datoteke v trenutni obliki."
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"Naprava ne prepozna trenutne oblike zapisa datoteke. Izberite drugo napravo in poskusite znova."
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"Nameščena ni nobena naprava za wave, ki bi lahko snemala datoteke v trenutni obliki."
+MCIERR_WAVE_SETINPUTUNSUITABLE, "Naprava ne prepozna trenutne oblike zapisa datoteke. Izberite drugo napravo in poskusite znova."
+MCIERR_NO_WINDOW, 		"Ni okna za prikaz."
+MCIERR_CREATEWINDOW, 		"Okna ni bilo mogoče ustvariti ali uporabiti."
+MCIERR_FILE_READ, 		"Te datoteke ni mogoče brati. Preverite, ali ni bila morda izbrisana. Preverite tudi svoj disk in omrežne povezave."
+MCIERR_FILE_WRITE, 		"V navedeno datoteko ni mogoče pisati. Preverite, ali je na disku še dovolj prostora oz. ali je vaš računalnik še povezan z omrežjem."
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"Hkrati ni mogoče uporabiti oblik zapisa časa 'song-pointer' in SMPTE."
+MCIERR_SEQ_NOMIDIPRESENT, 	"V sistemu ni nameščena nobena MIDI naprava. Za namestitev MIDI gonilnika uporabite možnost 'Drivers' na Nadzorni plošči."
+MCIERR_SEQ_PORT_INUSE, 		"Navedena MIDI naprava je že v uporabi. Počakajte, da bo prosta, in poskusite znova."
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"Trenutna nastavitev MIDI se sklicuje na napravo, ki ni nameščena. Uporabite možnost 'MIDI Mapper' na Nadzorni plošči in spremenite nastavitev."
+MCIERR_SEQ_PORT_MISCERROR, 	"Na navedenih vratih je prišlo do napake."
+MCIERR_SEQ_PORT_NONEXISTENT, 	"Ta naprava ni nameščena. Če želite namestiti nov gonilnik, na nadzorni plošči dvokliknite ikono 'Dodajanje strojne opreme'."
+MCIERR_SEQ_PORTUNSPECIFIED, 	"Zahtevana MIDI vrata niso nameščena."
+MCIERR_SEQ_TIMER, 		"Vsi večpredstavnostni števci so zasedeni. Zaprite eno od aplikacij in poskusite znova."
+
+END

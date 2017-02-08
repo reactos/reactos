@@ -197,11 +197,19 @@ typedef struct _EXCEPTION_POINTERS {
   PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
-/* MS definition is broken! */
-extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
-extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
+#ifdef _NTSYSTEM_
+extern BOOLEAN NlsMbCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+extern BOOLEAN NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbCodePageTag)
+extern BOOLEAN *NlsMbCodePageTag;
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbOemCodePageTag)
+extern BOOLEAN *NlsMbOemCodePageTag;
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif
 
 #define SHORT_LEAST_SIGNIFICANT_BIT       0
 #define SHORT_MOST_SIGNIFICANT_BIT        1
@@ -551,11 +559,11 @@ typedef VOID
 (NTAPI *PRTL_FREE_STRING_ROUTINE)(
   _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer);
 
-extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
-extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
+extern NTKERNELAPI const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
+extern NTKERNELAPI const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 
 #if _WIN32_WINNT >= 0x0600
-extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
+extern NTKERNELAPI const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #endif
 
 _Function_class_(RTL_HEAP_COMMIT_ROUTINE)

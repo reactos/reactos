@@ -9,12 +9,13 @@
  * UPDATE HISTORY:
  *                       Mar 16, 2004: Created skeleton implementation
  */
-#include "mmdrv.h"
-#include "wave.h"
 
+#include "mmdrv.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "wave.h"
 
 APIENTRY DWORD auxMessage(UINT dwId,
                   UINT uMessage,

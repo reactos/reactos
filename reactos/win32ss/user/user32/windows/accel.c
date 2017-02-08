@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            win32ss/user/user32/windows/accel.c
  * PURPOSE:         Accelerator tables
  * PROGRAMMER:      KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:
@@ -344,21 +344,26 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
  */
 int WINAPI TranslateAcceleratorA(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
 {
- MSG mCopy = *lpMsg;
- CHAR cChar;
- WCHAR wChar;
- NTSTATUS Status;
+    switch (lpMsg->message)
+    {
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+        return TranslateAcceleratorW( hWnd, hAccTable, lpMsg );
 
- if(!U32IsValidAccelMessage(lpMsg->message)) return 0;
+    case WM_CHAR:
+    case WM_SYSCHAR:
+        {
+            MSG msgW = *lpMsg;
+            char ch = LOWORD(lpMsg->wParam);
+            WCHAR wch;
+            MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wch, 1);
+            msgW.wParam = MAKEWPARAM(wch, HIWORD(lpMsg->wParam));
+            return TranslateAcceleratorW( hWnd, hAccTable, &msgW );
+        }
 
- Status = RtlMultiByteToUnicodeN(&wChar, sizeof(wChar), NULL, &cChar, sizeof(cChar));
- if(!NT_SUCCESS(Status))
- {
-  SetLastError(RtlNtStatusToDosError(Status));
-  return 0;
- }
-
- return TranslateAcceleratorW(hWnd, hAccTable, &mCopy);
+    default:
+        return 0;
+    }
 }
 
 /* EOF */

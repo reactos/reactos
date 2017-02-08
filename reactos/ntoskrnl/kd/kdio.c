@@ -247,7 +247,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 2)
     {
-        HalDisplayString("\n   File log debugging enabled\n\n");
+        HalDisplayString("\r\n   File log debugging enabled\r\n\r\n");
     }
     else if (BootPhase == 3)
     {
@@ -385,7 +385,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 2)
     {
-        HalDisplayString("\n   Serial debugging enabled\n\n");
+        HalDisplayString("\r\n   Serial debugging enabled\r\n\r\n");
     }
 }
 
@@ -560,7 +560,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 2)
     {
-        HalDisplayString("\n   Screen debugging enabled\n\n");
+        HalDisplayString("\r\n   Screen debugging enabled\r\n\r\n");
     }
 }
 

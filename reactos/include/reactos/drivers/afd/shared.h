@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver
- * FILE:        include/afd/shared.h
+ * FILE:        include/reactos/drivers/afd/shared.h
  * PURPOSE:     Shared definitions for AFD.SYS and MSAFD.DLL
  */
 #ifndef __AFD_SHARED_H

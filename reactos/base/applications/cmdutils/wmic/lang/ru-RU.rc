@@ -1,0 +1,8 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Ошибка: Командная строка не поддерживается\n"
+    STRING_ALIAS_NOT_FOUND, "Ошибка: Псевдоним не найден\n"
+    STRING_INVALID_QUERY, "Ошибка: Неверный запрос\n"
+}

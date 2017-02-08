@@ -9,23 +9,59 @@
 /* INCLUDES *******************************************************************/
 
 #include "basesrv.h"
+#include "vdm.h"
 
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+/* User notification procedure to be called when a process is created */
+static BASE_PROCESS_CREATE_NOTIFY_ROUTINE UserNotifyProcessCreate = NULL;
+
 /* PUBLIC SERVER APIS *********************************************************/
+
+CSR_API(BaseSrvDebugProcess)
+{
+    /* Deprecated */
+    return STATUS_UNSUCCESSFUL;
+}
+
+CSR_API(BaseSrvRegisterThread)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(BaseSrvSxsCreateActivationContext)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(BaseSrvSetTermsrvAppInstallMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(BaseSrvSetTermsrvClientTimeZone)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 CSR_API(BaseSrvGetTempFile)
 {
     static UINT BaseGetTempFileUnique = 0;
-    PBASE_GET_TEMP_FILE GetTempFile = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetTempFile;
+    PBASE_GET_TEMP_FILE GetTempFile = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetTempFileRequest;
 
     /* Return 16-bits ID */
     GetTempFile->UniqueID = (++BaseGetTempFileUnique & 0xFFFF);
 
     DPRINT("Returning: %u\n", GetTempFile->UniqueID);
 
-    return STATUS_SUCCESS;
+    return GetTempFile->UniqueID;
 }
 
 CSR_API(BaseSrvCreateProcess)
@@ -35,7 +71,7 @@ CSR_API(BaseSrvCreateProcess)
     HANDLE ProcessHandle, ThreadHandle;
     PCSR_THREAD CsrThread;
     PCSR_PROCESS Process;
-    ULONG Flags = 0, VdmPower = 0, DebugFlags = 0;
+    ULONG Flags = 0, DebugFlags = 0, VdmPower = 0;
 
     /* Get the current client thread */
     CsrThread = CsrGetClientThread();
@@ -47,6 +83,13 @@ CSR_API(BaseSrvCreateProcess)
     Flags = (ULONG_PTR)CreateProcessRequest->ProcessHandle & 3;
     CreateProcessRequest->ProcessHandle = (HANDLE)((ULONG_PTR)CreateProcessRequest->ProcessHandle & ~3);
 
+    /* Some things should be done if this is a VDM process */
+    if (CreateProcessRequest->VdmBinaryType)
+    {
+        /* We need to set the VDM power later on */
+        VdmPower = 1;
+    }
+
     /* Duplicate the process handle */
     Status = NtDuplicateObject(Process->ProcessHandle,
                                CreateProcessRequest->ProcessHandle,
@@ -57,7 +100,7 @@ CSR_API(BaseSrvCreateProcess)
                                DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to duplicate process handle\n");
+        DPRINT1("Failed to duplicate process handle: %lx\n", Status);
         return Status;
     }
 
@@ -71,15 +114,14 @@ CSR_API(BaseSrvCreateProcess)
                                DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to duplicate process handle\n");
+        DPRINT1("Failed to duplicate thread handle: %lx\n", Status);
         NtClose(ProcessHandle);
         return Status;
     }
 
-    /* See if this is a VDM process */
+    /* If this is a VDM process, request VDM power */
     if (VdmPower)
     {
-        /* Request VDM powers */
         Status = NtSetInformationProcess(ProcessHandle,
                                          ProcessWx86Information,
                                          &VdmPower,
@@ -130,9 +172,39 @@ CSR_API(BaseSrvCreateProcess)
         return Status;
     }
 
-    /* FIXME: Should notify user32 */
+    /* Call the user notification procedure */
+    if (UserNotifyProcessCreate)
+    {
+        UserNotifyProcessCreate(CreateProcessRequest->ClientId.UniqueProcess,
+                                Process->ClientId.UniqueThread,
+                                0,
+                                Flags);
+    }
 
-    /* FIXME: VDM vodoo */
+    /* Check if this is a VDM process */
+    if (CreateProcessRequest->VdmBinaryType)
+    {
+        PVDM_CONSOLE_RECORD ConsoleRecord;
+
+        if (CreateProcessRequest->VdmTask != 0)
+        {
+            /* Get the console record using the task ID */
+            Status = GetConsoleRecordBySessionId(CreateProcessRequest->VdmTask,
+                                                 &ConsoleRecord);
+        }
+        else
+        {
+            /* Get the console record using the console handle */
+            Status = BaseSrvGetConsoleRecord(CreateProcessRequest->hVDM,
+                                             &ConsoleRecord);
+        }
+
+        /* Check if it failed */
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Store the process ID of the VDM in the console record */
+        ConsoleRecord->ProcessId = HandleToUlong(CreateProcessRequest->ClientId.UniqueProcess);
+    }
 
     /* Return the result of this operation */
     return Status;
@@ -211,36 +283,45 @@ CSR_API(BaseSrvExitProcess)
 
 CSR_API(BaseSrvGetProcessShutdownParam)
 {
-    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.ShutdownParametersRequest;
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
-    GetShutdownParametersRequest->Level = CsrThread->Process->ShutdownLevel;
-    GetShutdownParametersRequest->Flags = CsrThread->Process->ShutdownFlags;
+    ShutdownParametersRequest->ShutdownLevel = CsrThread->Process->ShutdownLevel;
+    /* Only SHUTDOWN_NORETRY flag is valid for this API. The other private flags are for CSRSRV/WINSRV only. */
+    ShutdownParametersRequest->ShutdownFlags = CsrThread->Process->ShutdownFlags & SHUTDOWN_NORETRY;
 
     return STATUS_SUCCESS;
 }
 
 CSR_API(BaseSrvSetProcessShutdownParam)
 {
-    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.SetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.ShutdownParametersRequest;
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
-    CsrThread->Process->ShutdownLevel = SetShutdownParametersRequest->Level;
-    CsrThread->Process->ShutdownFlags = SetShutdownParametersRequest->Flags;
+    /* Only SHUTDOWN_NORETRY flag is valid for this API. The other private flags are for CSRSRV/WINSRV only. */
+    if (ShutdownParametersRequest->ShutdownFlags & ~SHUTDOWN_NORETRY)
+    {
+        /* If there were other flags specified, fail the call */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    CsrThread->Process->ShutdownLevel = ShutdownParametersRequest->ShutdownLevel;
+    /* Notice that all the possible other private flags are reinitialized here */
+    CsrThread->Process->ShutdownFlags = ShutdownParametersRequest->ShutdownFlags;
 
     return STATUS_SUCCESS;
 }
 
 /* PUBLIC API *****************************************************************/
 
-NTSTATUS
+VOID
 NTAPI
 BaseSetProcessCreateNotify(IN BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc)
 {
-    DPRINT("BASESRV: %s(%08lx) called\n", __FUNCTION__, ProcessCreateNotifyProc);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Set the user notification procedure to be called when a process is created */
+    UserNotifyProcessCreate = ProcessCreateNotifyProc;
 }
 
 /* EOF */

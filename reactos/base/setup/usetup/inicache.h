@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/inicache.h
+ * FILE:            base/setup/usetup/inicache.h
  * PURPOSE:         INI file parser that caches contents of INI file in memory
  * PROGRAMMER:      Royce Mitchell III
  *                  Eric Kohl
@@ -29,99 +29,107 @@
 
 typedef struct _INICACHEKEY
 {
-  PWCHAR Name;
-  PWCHAR Data;
+    PWCHAR Name;
+    PWCHAR Data;
 
-  struct _INICACHEKEY *Next;
-  struct _INICACHEKEY *Prev;
+    struct _INICACHEKEY *Next;
+    struct _INICACHEKEY *Prev;
 } INICACHEKEY, *PINICACHEKEY;
 
 
 typedef struct _INICACHESECTION
 {
-  PWCHAR Name;
+    PWCHAR Name;
 
-  PINICACHEKEY FirstKey;
-  PINICACHEKEY LastKey;
+    PINICACHEKEY FirstKey;
+    PINICACHEKEY LastKey;
 
-  struct _INICACHESECTION *Next;
-  struct _INICACHESECTION *Prev;
+    struct _INICACHESECTION *Next;
+    struct _INICACHESECTION *Prev;
 } INICACHESECTION, *PINICACHESECTION;
 
 
 typedef struct _INICACHE
 {
-  PINICACHESECTION FirstSection;
-  PINICACHESECTION LastSection;
+    PINICACHESECTION FirstSection;
+    PINICACHESECTION LastSection;
 } INICACHE, *PINICACHE;
 
 
 typedef struct _PINICACHEITERATOR
 {
-  PINICACHESECTION Section;
-  PINICACHEKEY Key;
+    PINICACHESECTION Section;
+    PINICACHEKEY Key;
 } INICACHEITERATOR, *PINICACHEITERATOR;
 
 
 typedef enum
 {
-  INSERT_FIRST,
-  INSERT_BEFORE,
-  INSERT_AFTER,
-  INSERT_LAST
+    INSERT_FIRST,
+    INSERT_BEFORE,
+    INSERT_AFTER,
+    INSERT_LAST
 } INSERTATION_TYPE;
 
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-IniCacheLoad(PINICACHE *Cache,
-	     PUNICODE_STRING FileName,
-	     BOOLEAN String);
+IniCacheLoad(
+    PINICACHE *Cache,
+    PWCHAR FileName,
+    BOOLEAN String);
 
 VOID
-IniCacheDestroy(PINICACHE Cache);
+IniCacheDestroy(
+    PINICACHE Cache);
 
 PINICACHESECTION
-IniCacheGetSection(PINICACHE Cache,
-		   PWCHAR Name);
+IniCacheGetSection(
+    PINICACHE Cache,
+    PWCHAR Name);
 
 NTSTATUS
-IniCacheGetKey(PINICACHESECTION Section,
-	       PWCHAR KeyName,
-	       PWCHAR *KeyData);
-
-
+IniCacheGetKey(
+    PINICACHESECTION Section,
+    PWCHAR KeyName,
+    PWCHAR *KeyData);
 
 PINICACHEITERATOR
-IniCacheFindFirstValue(PINICACHESECTION Section,
-		       PWCHAR *KeyName,
-		       PWCHAR *KeyData);
+IniCacheFindFirstValue(
+    PINICACHESECTION Section,
+    PWCHAR *KeyName,
+    PWCHAR *KeyData);
 
 BOOLEAN
-IniCacheFindNextValue(PINICACHEITERATOR Iterator,
-		      PWCHAR *KeyName,
-		      PWCHAR *KeyData);
+IniCacheFindNextValue(
+    PINICACHEITERATOR Iterator,
+    PWCHAR *KeyName,
+    PWCHAR *KeyData);
 
 VOID
-IniCacheFindClose(PINICACHEITERATOR Iterator);
+IniCacheFindClose(
+    PINICACHEITERATOR Iterator);
 
 
 PINICACHEKEY
-IniCacheInsertKey(PINICACHESECTION Section,
-		  PINICACHEKEY AnchorKey,
-		  INSERTATION_TYPE InsertationType,
-		  PWCHAR Name,
-		  PWCHAR Data);
+IniCacheInsertKey(
+    PINICACHESECTION Section,
+    PINICACHEKEY AnchorKey,
+    INSERTATION_TYPE InsertationType,
+    PWCHAR Name,
+    PWCHAR Data);
 
 PINICACHE
 IniCacheCreate(VOID);
 
 NTSTATUS
-IniCacheSave(PINICACHE Cache,
-	     PWCHAR FileName);
+IniCacheSave(
+    PINICACHE Cache,
+    PWCHAR FileName);
 
 PINICACHESECTION
-IniCacheAppendSection(PINICACHE Cache,
-		      PWCHAR Name);
+IniCacheAppendSection(
+    PINICACHE Cache,
+    PWCHAR Name);
 
 /* EOF */

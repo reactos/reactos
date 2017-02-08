@@ -157,49 +157,19 @@ static MUI_ENTRY ptBRIntroPageEntries[] =
     },
     {
         8,
-        13,
-        "- O instalador n∆o suporta mais de uma partiá∆o prim†ria por disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- O instalador n∆o pode excluir uma partiá∆o prim†ria de um disco",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  se houverem partiá‰es estendidas no mesmo disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- O instalador n∆o pode remover a primeira partiá∆o estendida de um",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  disco se existirem outras partiá‰es estendidas no mesmo disco.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
+        12,
         "- O instalador suporta somente o sistema de arquivos FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        13,
         "- O verificador de integridade de sistema de arquivos ainda n∆o est†",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
+        14,
         "  implementado.",
         TEXT_STYLE_NORMAL
     },
@@ -503,6 +473,7 @@ static MUI_ENTRY ptBRRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ptBRComputerPageEntries[] =
 {
     {
@@ -838,12 +809,25 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Para criar uma partiá∆o no espaáo n∆o particionado, pressione C.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Para criar uma partiá∆o no espaáo n∆o particionado, pressione C.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Para excluir a partiá∆o selecionada, pressione D.",
         TEXT_STYLE_NORMAL
     },
@@ -851,6 +835,100 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
         0,
         0,
         "Por favor, aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptBRConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaá∆o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1316,6 +1394,10 @@ static MUI_ENTRY ptBRRegistryEntries[] =
 MUI_ERROR ptBRErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "O ReactOS n∆o est† completamente instalado no computador.\n"
         "Se vocà sair da instalaá∆o agora, precisar† executa-la\n"
@@ -1520,10 +1602,38 @@ MUI_ERROR ptBRErrorEntries[] =
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "N∆o h† espaáo suficiente na partiá∆o selecionada.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Pressione qualquer tecla para continuar.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1572,6 +1682,10 @@ MUI_PAGE ptBRPages[] =
     {
         SELECT_PARTITION_PAGE,
         ptBRSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        ptBRConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1636,13 +1750,23 @@ MUI_STRING ptBRStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER=Instalar  C=Criar partiá∆o  F3=Sair"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//    "   ENTER=Instalar  C=Criar partiá∆o  F3=Sair"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
     "   ENTER=Instalar  D=Apagar partiá∆o  F3=Sair"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova partiá∆o:"},
     {STRING_CHOOSENEWPARTITION,
-    "Vocà solicitou a criaá∆o de uma nova partiá∆o em"},
+     "You have chosen to create a primary partition on"},
+//    "Vocà solicitou a criaá∆o de uma nova partiá∆o em"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Por favor, insira o tamanho da nova partiá∆o em megabytes (MB)."},
     {STRING_CREATEPARTITION,
@@ -1651,10 +1775,16 @@ MUI_STRING ptBRStrings[] =
     "Esta partiá∆o ser† formatada logo em seguida."},
     {STRING_NONFORMATTEDPART,
     "Vocà solicitou instalar o ReactOS em uma partiá∆o nova ou sem formato."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "O instalador instala o ReactOS na partiá∆o"},
     {STRING_CHECKINGPART,
     "O instalador est† verificando a partiá∆o selecionada."},
+    {STRING_CONTINUE,
+    "ENTER=Continuar"},
     {STRING_QUITCONTINUE,
     "F3=Sair  ENTER=Continuar"},
     {STRING_REBOOTCOMPUTER,
@@ -1682,11 +1812,11 @@ MUI_STRING ptBRStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER=Reiniciar"},
     {STRING_CONSOLEFAIL1,
-    "N∆o foi poss°vel abrir o console\n\n"},
+    "N∆o foi poss°vel abrir o console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "A causa mais com£m Ç a utilizaá∆o de um teclado USB\n"},
+    "A causa mais com£m Ç a utilizaá∆o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Os teclados USB ainda n∆o s∆o completamente suportados\n"},
+    "Os teclados USB ainda n∆o s∆o completamente suportados\r\n"},
     {STRING_FORMATTINGDISK,
     "O instalador est† formatando o disco"},
     {STRING_CHECKINGDISK,
@@ -1702,7 +1832,7 @@ MUI_STRING ptBRStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Tipo %lu    %I64u %s"},
+    "   %c%c  Tipo 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "em %I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1710,11 +1840,11 @@ MUI_STRING ptBRStrings[] =
     {STRING_HDINFOPARTZEROED,
     "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Tipo %lu    %I64u %s"},
+    "%c%c  Tipo 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "em Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Tipo %-3u                         %6lu %s"},
+    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %S"},
     {STRING_HDDINFOUNK6,
@@ -1722,9 +1852,11 @@ MUI_STRING ptBRStrings[] =
     {STRING_NEWPARTITION,
     "O instalador criou uma nova partiá∆o em"},
     {STRING_UNPSPACE,
-    "    Espaáo n∆o particionado              %6lu %s"},
+    "    %sEspaáo n∆o particionado%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Novo (sem formato)"},
     {STRING_FORMATUNUSED,

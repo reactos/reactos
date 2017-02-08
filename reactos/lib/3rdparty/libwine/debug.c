@@ -35,6 +35,8 @@
 #include <rtlfuncs.h>
 #include <cmfuncs.h>
 
+WINE_DECLARE_DEBUG_CHANNEL(tid);
+
 ULONG
 NTAPI
 vDbgPrintExWithPrefix(
@@ -247,7 +249,23 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
     if (!(__wine_dbg_get_channel_flags( channel ) & (1 << cls))) return -1;
 
     va_start(valist, format);
-    ret = funcs.dbg_vlog( cls, channel, func, format, valist );
+    ret = funcs.dbg_vlog( cls, channel, NULL, func, 0, format, valist );
+    va_end(valist);
+    return ret;
+}
+
+
+/* ReactOS compliant debug format wrapper for funcs.dbg_vlog */
+int ros_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                  const char *file, const char *func, const int line, const char *format, ... )
+{
+    int ret;
+    va_list valist;
+
+    if (!(__wine_dbg_get_channel_flags( channel ) & (1 << cls))) return -1;
+
+    va_start(valist, format);
+    ret = funcs.dbg_vlog( cls, channel, file, func, line, format, valist );
     va_end(valist);
     return ret;
 }
@@ -396,12 +414,21 @@ static int default_dbg_vprintf( const char *format, va_list args )
 
 /* default implementation of wine_dbg_vlog */
 static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                             const char *func, const char *format, va_list args )
+                             const char *file, const char *func, const int line, const char *format, va_list args )
 {
     int ret = 0;
 
+    if (TRACE_ON(tid))
+        ret += wine_dbg_printf("%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueThread));
+
     if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
-        ret += wine_dbg_printf( "%s:%s:%s ", debug_classes[cls], channel->name, func );
+        ret += wine_dbg_printf( "%s:", debug_classes[cls] );
+
+	if (file && line)
+        ret += wine_dbg_printf ( "(%s:%d) ", file, line );
+    else
+        ret += wine_dbg_printf( "%s:%s: ", channel->name, func );
+
     if (format)
         ret += funcs.dbg_vprintf( format, args );
     return ret;

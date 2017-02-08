@@ -20,6 +20,15 @@
 
 #include "3dtext.h"
 
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <scrnsave.h>
+#include <math.h>
+#include <GL/glu.h>
+
+#include "resource.h"
+
 static HGLRC hRC;       // Permanent Rendering Context
 static HDC hDC;         // Private GDI Device Context
 

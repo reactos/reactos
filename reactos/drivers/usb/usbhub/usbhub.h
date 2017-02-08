@@ -1,18 +1,10 @@
-#pragma once
+#ifndef _USBHUB_H_
+#define _USBHUB_H_
 
-#define NDEBUG
-#include <ntifs.h>
-#include <ntddk.h>
-#include <wdmguid.h>
+#include <wdm.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
-#include <usbioctl.h>
-#include <usb.h>
-#include <stdio.h>
 #include <usbdlib.h>
-#include <debug.h>
-//BROKEN: #include <usbprotocoldefs.h>
-#include <pseh/pseh2.h>
 
 #define USB_HUB_TAG 'hbsu'
 #define USB_MAXCHILDREN 127
@@ -194,3 +186,5 @@ NTSTATUS
 USBHUB_ParentFDOStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+#endif /* _USBHUB_H_ */

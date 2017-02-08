@@ -1,0 +1,11 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n输入 ""CLIP /?"" 知道用法信息。\n"
+    IDS_HELP "\n将命令行程序的输出重定向到剪贴板。\n\n\
+CLIP [/?]\n\n\
+    /?  显示此帮助消息。\n"
+END

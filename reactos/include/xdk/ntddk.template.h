@@ -93,6 +93,7 @@ typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 
 $define (_NTDDK_)
 $include (extypes.h)
+$include (cmtypes.h)
 $include (iotypes.h)
 $include (haltypes.h)
 $include (ketypes.h)
@@ -116,6 +117,7 @@ $include(ppc/ke.h)
 $include(mips/ke.h)
 #elif defined(_M_ARM)
 $include(arm/ke.h)
+$include(arm/mm.h)
 #else
 #error Unknown Architecture
 #endif

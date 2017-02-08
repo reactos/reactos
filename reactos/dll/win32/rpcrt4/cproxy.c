@@ -17,31 +17,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- * 
+ *
  * TODO: Handle non-i386 architectures
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <objbase.h>
-#include <rpcproxy.h>
-
-#include "cpsf.h"
-//#include "ndr_misc.h"
-//#include "ndr_stubless.h"
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -170,6 +150,30 @@ static inline void init_thunk( struct thunk *thunk, unsigned int index )
     thunk->call_stubless = call_stubless_func;
 }
 
+#elif defined(__arm__)
+
+extern void call_stubless_func(void);
+__ASM_GLOBAL_FUNC(call_stubless_func,
+                  "DCD 0xDEFC\n\t" // _assertfail
+                  "" );
+
+#include "pshpack1.h"
+struct thunk
+{
+    DWORD assertfail;
+};
+#include "poppack.h"
+
+static const struct thunk thunk_template =
+{
+    { 0xDEFC }            /* _assertfail */
+};
+
+static inline void init_thunk( struct thunk *thunk, unsigned int index )
+{
+    *thunk = thunk_template;
+}
+
 #else  /* __i386__ */
 
 #warning You must implement stubless proxies for your CPU
@@ -195,13 +199,14 @@ static const struct thunk *allocate_block( unsigned int num )
 {
     unsigned int i;
     struct thunk *prev, *block;
+    DWORD oldprot;
 
     block = VirtualAlloc( NULL, BLOCK_SIZE * sizeof(*block),
                           MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE );
     if (!block) return NULL;
 
     for (i = 0; i < BLOCK_SIZE; i++) init_thunk( &block[i], BLOCK_SIZE * num + i + 3 );
-    VirtualProtect( block, BLOCK_SIZE * sizeof(*block), PAGE_EXECUTE_READ, NULL );
+    VirtualProtect( block, BLOCK_SIZE * sizeof(*block), PAGE_EXECUTE_READ, &oldprot );
     prev = InterlockedCompareExchangePointer( (void **)&method_blocks[num], block, NULL );
     if (prev) /* someone beat us to it */
     {

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/i386/thread.c
+ * FILE:            ntoskrnl/ke/amd64/thrdini.c
  * PURPOSE:         amd64 Thread Context Creation
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  *                  Alex Ionescu (alex@relsoft.net)
@@ -132,8 +132,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     StartFrame->P2Home = (ULONG64)StartContext;
     StartFrame->P3Home = 0;
     StartFrame->P4Home = (ULONG64)SystemRoutine;
-    StartFrame->P5Home = 0;
-
+    StartFrame->Reserved = 0;
 }
 
 BOOLEAN

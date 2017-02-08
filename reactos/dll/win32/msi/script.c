@@ -18,25 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <stdarg.h>
-#include <windef.h>
-//#include "winbase.h"
-//#include "winerror.h"
-//#include "winuser.h"
-//#include "msidefs.h"
 #include "msipriv.h"
-#include <activscp.h>
-#include <oleauto.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
-//#include "msiserver.h"
+#include <activscp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -277,6 +261,20 @@ static HRESULT create_activescriptsite(MsiActiveScriptSite **obj)
     return S_OK;
 }
 
+static UINT map_return_value(LONG val)
+{
+    switch (val)
+    {
+    case 0:
+    case IDOK:
+    case IDIGNORE:  return ERROR_SUCCESS;
+    case IDCANCEL:  return ERROR_INSTALL_USEREXIT;
+    case IDRETRY:   return ERROR_INSTALL_SUSPEND;
+    case IDABORT:
+    default:        return ERROR_INSTALL_FAILURE;
+    }
+}
+
 /*
  * Call a script.
  */
@@ -346,7 +344,7 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
     if (FAILED(hr)) goto done;
 
     /* Call a function if necessary through the IDispatch interface */
-    if (function != NULL && strlenW(function) > 0) {
+    if (function && function[0]) {
         TRACE("Calling function %s\n", debugstr_w(function));
 
         hr = IActiveScript_GetScriptDispatch(pActiveScript, NULL, &pDispatch);
@@ -358,13 +356,10 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
         hr = IDispatch_Invoke(pDispatch, dispid, &IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispparamsNoArgs, &var, NULL, NULL);
         if (FAILED(hr)) goto done;
 
-        /* Check return value, if it's not IDOK we failed */
         hr = VariantChangeType(&var, &var, 0, VT_I4);
         if (FAILED(hr)) goto done;
 
-        if (V_I4(&var) == IDOK)
-            ret = ERROR_SUCCESS;
-        else ret = ERROR_INSTALL_FAILURE;
+        ret = map_return_value(V_I4(&var));
 
         VariantClear(&var);
     } else {

@@ -11,6 +11,8 @@
 
 #include "appwiz.h"
 
+#include <tchar.h>
+
 BOOL
 IsShortcut(HKEY hKey)
 {
@@ -81,7 +83,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
 
     if (IsExtensionAShortcut(lpExtension))
     {
-        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLink, (void**)&pSourceShellLink);
+        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
 
         if (hr != S_OK)
             return FALSE;
@@ -116,7 +118,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     }
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL,
-                   &IID_IShellLink, (void**)&pShellLink);
+                   &IID_IShellLinkW, (void**)&pShellLink);
 
     if (hr != S_OK)
         return FALSE;
@@ -189,11 +191,11 @@ WelcomeDlgProc(HWND hwndDlg,
                     brws.pszDisplayName = szPath;
                     brws.ulFlags = BIF_BROWSEINCLUDEFILES;
                     brws.lpfn = NULL;
-                    pidllist = SHBrowseForFolder(&brws);
+                    pidllist = SHBrowseForFolderW(&brws);
                     if (!pidllist)
                         break;
 
-                    if (SHGetPathFromIDList(pidllist, szPath))
+                    if (SHGetPathFromIDListW(pidllist, szPath))
                         SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETTEXT, 0, (LPARAM)szPath);
 
                     /* Free memory, if possible */
@@ -224,11 +226,7 @@ WelcomeDlgProc(HWND hwndDlg,
                         LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, MAX_PATH) < MAX_PATH)
                     {
                         WCHAR szError[MAX_PATH + 100];
-#ifdef _MSC_VER
-                        _swprintf(szError, szPath, pContext->szTarget);
-#else
                         swprintf(szError, szPath, pContext->szTarget);
-#endif
                         MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
                     }
                     SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
@@ -362,14 +360,14 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.hInstance = hApplet;
     psp.pfnDlgProc = WelcomeDlgProc;
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_SHORTCUT_LOCATION);
+    psp.pszTemplate = MAKEINTRESOURCEW(IDD_SHORTCUT_LOCATION);
     psp.lParam = (LPARAM)pContext;
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.pfnDlgProc = FinishDlgProc;
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_SHORTCUT_FINISH);
+    psp.pszTemplate = MAKEINTRESOURCEW(IDD_SHORTCUT_FINISH);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
 
@@ -381,28 +379,13 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     psh.nPages = nPages;
     psh.nStartPage = 0;
     psh.phpage = ahpsp;
-    psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+    psh.pszbmWatermark = MAKEINTRESOURCEW(IDB_SHORTCUT);
 
     /* Display the wizard */
     PropertySheet(&psh);
     HeapFree(GetProcessHeap(), 0, pContext);
     return TRUE;
 }
-
-
-LONG
-CALLBACK
-NewLinkHere(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
-{
-    WCHAR szFile[MAX_PATH];
-
-    if (MultiByteToWideChar(CP_ACP, 0, (LPSTR) lParam1, -1, szFile, MAX_PATH))
-    {
-        return ShowCreateShortcutWizard(hwndCPl, szFile);
-    }
-    return -1;
-}
-
 
 LONG
 CALLBACK

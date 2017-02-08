@@ -16,35 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <config.h>
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#ifdef HAVE_LIBXML2
-#include <libxml/parser.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
 #include <wingdi.h>
-#include <ole2.h>
-#include <msxml6.h>
 #include <mshtml.h>
 #include <mshtmhst.h>
 #include <perhist.h>
-//#include "docobj.h"
-
-#include <wine/debug.h>
-
-#include "msxml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef HAVE_LIBXML2
 
@@ -403,7 +380,7 @@ static inline HRESULT handle_xml_load(BindStatusCallback *This)
     if(FAILED(hres))
         return display_error_page(This);
 
-    hres = DOMDocument_create(MSXML_DEFAULT, NULL, (void**)&xml);
+    hres = DOMDocument_create(MSXML_DEFAULT, (void**)&xml);
     if(FAILED(hres))
         return display_error_page(This);
 
@@ -479,7 +456,7 @@ static inline HRESULT handle_xml_load(BindStatusCallback *This)
         return display_error_page(This);
     }
 
-    hres = DOMDocument_create(MSXML_DEFAULT, NULL, (void**)&xsl);
+    hres = DOMDocument_create(MSXML_DEFAULT, (void**)&xsl);
     if(FAILED(hres)) {
         VariantClear(&var);
         IXMLDOMDocument3_Release(xml);
@@ -1428,15 +1405,12 @@ static IOleObjectVtbl XMLView_OleObjectVtbl = {
     XMLView_OleObject_SetColorScheme
 };
 
-HRESULT XMLView_create(IUnknown *outer, void **ppObj)
+HRESULT XMLView_create(void **ppObj)
 {
     XMLView *This;
     HRESULT hres;
 
-    TRACE("(%p %p)\n", outer, ppObj);
-
-    if(outer)
-        return E_FAIL;
+    TRACE("(%p)\n", ppObj);
 
     This = heap_alloc_zero(sizeof(*This));
     if(!This)
@@ -1461,7 +1435,7 @@ HRESULT XMLView_create(IUnknown *outer, void **ppObj)
 
 #else
 
-HRESULT XMLView_create(IUnknown *outer, void **ppObj)
+HRESULT XMLView_create(void **ppObj)
 {
     MESSAGE("This program tried to use a XMLView object, but\n"
             "libxml2 support was not present at compile time.\n");

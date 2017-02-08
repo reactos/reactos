@@ -65,7 +65,6 @@ extern BOOL   bDelayedExpansion;
 extern INT    nErrorLevel;
 extern SHORT  maxx;
 extern SHORT  maxy;
-extern OSVERSIONINFO osvi;
 extern BOOL bUnicodeOutput;
 
 
@@ -114,7 +113,6 @@ BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
 LPTSTR DoDelayedExpansion(LPTSTR Line);
 INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
-int cmd_main (int argc, const TCHAR *argv[]);
 
 extern HANDLE CMD_ModuleHandle;
 
@@ -130,21 +128,20 @@ BOOL ReadCommand (LPTSTR, INT);
 
 typedef struct tagCOMMAND
 {
-	LPTSTR name;
-	INT    flags;
-	INT    (*func)(LPTSTR);
+    LPTSTR name;
+    INT    flags;
+    INT    (*func)(LPTSTR);
 } COMMAND, *LPCOMMAND;
 
-extern COMMAND cmds[];		/* The internal command table */
+extern COMMAND cmds[];  /* The internal command table */
 
 VOID PrintCommandList (VOID);
-VOID PrintCommandListDetail (VOID);
 
 
 LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
 
 /* Prototypes for COLOR.C */
-VOID SetScreenColor(WORD wArgColor, BOOL bFill);
+BOOL SetScreenColor(WORD wColor, BOOL bNoFill);
 INT CommandColor (LPTSTR);
 
 VOID ConInDummy (VOID);
@@ -296,7 +293,6 @@ INT  cmd_rmdir (LPTSTR);
 INT  CommandExit (LPTSTR);
 INT  CommandRem (LPTSTR);
 INT  CommandShowCommands (LPTSTR);
-INT  CommandShowCommandsDetail (LPTSTR);
 
 /* Prototypes for LABEL.C */
 INT cmd_label (LPTSTR);
@@ -367,33 +363,33 @@ INT CommandMsgbox (LPTSTR);
 enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
-	struct _PARSED_COMMAND *Subcommands;
-	struct _PARSED_COMMAND *Next;
-	struct _REDIRECTION *Redirections;
-	BYTE Type;
-	union
-	{
-		struct
-		{
-			TCHAR *Rest;
-			TCHAR First[];
-		} Command;
-		struct
-		{
-			BYTE Flags;
-			BYTE Operator;
-			TCHAR *LeftArg;
-			TCHAR *RightArg;
-		} If;
-		struct
-		{
-			BYTE Switches;
-			TCHAR Variable;
-			LPTSTR Params;
-			LPTSTR List;
-			struct tagFORCONTEXT *Context;
-		} For;
-	};
+    struct _PARSED_COMMAND *Subcommands;
+    struct _PARSED_COMMAND *Next;
+    struct _REDIRECTION *Redirections;
+    BYTE Type;
+    union
+    {
+        struct
+        {
+            TCHAR *Rest;
+            TCHAR First[];
+        } Command;
+        struct
+        {
+            BYTE Flags;
+            BYTE Operator;
+            TCHAR *LeftArg;
+            TCHAR *RightArg;
+        } If;
+        struct
+        {
+            BYTE Switches;
+            TCHAR Variable;
+            LPTSTR Params;
+            LPTSTR List;
+            struct tagFORCONTEXT *Context;
+        } For;
+    };
 } PARSED_COMMAND;
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);
@@ -406,6 +402,7 @@ INT cmd_path (LPTSTR);
 
 
 /* Prototypes from PROMPT.C */
+VOID InitPrompt (VOID);
 VOID PrintPrompt (VOID);
 INT  cmd_prompt (LPTSTR);
 
@@ -413,17 +410,17 @@ INT  cmd_prompt (LPTSTR);
 /* Prototypes for REDIR.C */
 typedef enum _REDIR_MODE
 {
-	REDIR_READ   = 0,
-	REDIR_WRITE  = 1,
-	REDIR_APPEND = 2
+    REDIR_READ   = 0,
+    REDIR_WRITE  = 1,
+    REDIR_APPEND = 2
 } REDIR_MODE;
 typedef struct _REDIRECTION
 {
-	struct _REDIRECTION *Next;
-	HANDLE OldHandle;
-	BYTE Number;
-	REDIR_MODE Mode;
-	TCHAR Filename[];
+    struct _REDIRECTION *Next;
+    HANDLE OldHandle;
+    BYTE Number;
+    REDIR_MODE Mode;
+    TCHAR Filename[];
 } REDIRECTION;
 BOOL PerformRedirection(REDIRECTION *);
 VOID UndoRedirection(REDIRECTION *, REDIRECTION *End);
@@ -474,7 +471,8 @@ INT cmd_type (LPTSTR);
 
 
 /* Prototypes for VER.C */
-VOID ShortVersion (VOID);
+VOID InitOSVersion(VOID);
+VOID PrintOSVersion(VOID);
 INT  cmd_ver (LPTSTR);
 
 

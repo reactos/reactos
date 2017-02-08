@@ -16,35 +16,105 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/*
+ * jsstr_t is a common header for all string representations. The exact layout of the string
+ * representation may be:
+ *
+ * - inline string - string bytes directly follow string headers.
+ * - heap string - a structure containing a pointer to buffer on the heap.
+ * - roper string - a product of concatenation of two strings. Instead of copying whole
+ *   buffers, we may store just references to concatenated strings.
+ *
+ * String layout may change over life time of the string. Currently possible transformation
+ * is when a rope string becomes a heap stream. That happens when we need a real, linear
+ * zero-terminated buffer (a flat buffer). At this point the type of the string is changed
+ * and the new buffer is stored in the string, so that subsequent operations requiring
+ * a flat string won't need to flatten it again.
+ *
+ * In the future more layouts and transformations may be added.
+ */
+
+#pragma once
+
 struct _jsstr_t {
     unsigned length_flags;
     unsigned ref;
-    WCHAR str[1];
 };
 
 #define JSSTR_LENGTH_SHIFT 4
 #define JSSTR_MAX_LENGTH (1 << (32-JSSTR_LENGTH_SHIFT))
 #define JSSTR_FLAGS_MASK ((1 << JSSTR_LENGTH_SHIFT)-1)
 
-#define JSSTR_FLAG_NULLBSTR 1
+#define JSSTR_FLAG_LBIT     1
+#define JSSTR_FLAG_FLAT     2
+#define JSSTR_FLAG_TAG_MASK 3
+
+typedef enum {
+    JSSTR_INLINE = JSSTR_FLAG_FLAT,
+    JSSTR_HEAP   = JSSTR_FLAG_FLAT|JSSTR_FLAG_LBIT,
+    JSSTR_ROPE   = JSSTR_FLAG_LBIT
+} jsstr_tag_t;
 
 static inline unsigned jsstr_length(jsstr_t *str)
 {
     return str->length_flags >> JSSTR_LENGTH_SHIFT;
 }
 
+static inline jsstr_tag_t jsstr_tag(jsstr_t *str)
+{
+    return str->length_flags & JSSTR_FLAG_TAG_MASK;
+}
+
+static inline BOOL jsstr_is_inline(jsstr_t *str)
+{
+    return jsstr_tag(str) == JSSTR_INLINE;
+}
+
+static inline BOOL jsstr_is_heap(jsstr_t *str)
+{
+    return jsstr_tag(str) == JSSTR_HEAP;
+}
+
+static inline BOOL jsstr_is_rope(jsstr_t *str)
+{
+    return jsstr_tag(str) == JSSTR_ROPE;
+}
+
+typedef struct {
+    jsstr_t str;
+    WCHAR buf[1];
+} jsstr_inline_t;
+
+typedef struct {
+    jsstr_t str;
+    WCHAR *buf;
+} jsstr_heap_t;
+
+typedef struct {
+    jsstr_t str;
+    jsstr_t *left;
+    jsstr_t *right;
+    unsigned depth;
+} jsstr_rope_t;
+
 jsstr_t *jsstr_alloc_len(const WCHAR*,unsigned) DECLSPEC_HIDDEN;
-jsstr_t *jsstr_alloc_buf(unsigned) DECLSPEC_HIDDEN;
+WCHAR *jsstr_alloc_buf(unsigned,jsstr_t**) DECLSPEC_HIDDEN;
 
 static inline jsstr_t *jsstr_alloc(const WCHAR *str)
 {
     return jsstr_alloc_len(str, strlenW(str));
 }
 
+void jsstr_free(jsstr_t*) DECLSPEC_HIDDEN;
+
 static inline void jsstr_release(jsstr_t *str)
 {
-    if(!--str->ref)
-        heap_free(str);
+    if(!--str->ref) {
+        if(jsstr_is_inline(str))
+            heap_free(str);
+        else
+            jsstr_free(str);
+    }
 }
 
 static inline jsstr_t *jsstr_addref(jsstr_t *str)
@@ -53,30 +123,73 @@ static inline jsstr_t *jsstr_addref(jsstr_t *str)
     return str;
 }
 
-static inline BOOL jsstr_eq(jsstr_t *str1, jsstr_t *str2)
+static inline jsstr_inline_t *jsstr_as_inline(jsstr_t *str)
 {
-    unsigned len = jsstr_length(str1);
-    return len == jsstr_length(str2) && !memcmp(str1->str, str2->str, len*sizeof(WCHAR));
+    return CONTAINING_RECORD(str, jsstr_inline_t, str);
 }
+
+static inline jsstr_heap_t *jsstr_as_heap(jsstr_t *str)
+{
+    return CONTAINING_RECORD(str, jsstr_heap_t, str);
+}
+
+static inline jsstr_rope_t *jsstr_as_rope(jsstr_t *str)
+{
+    return CONTAINING_RECORD(str, jsstr_rope_t, str);
+}
+
+const WCHAR *jsstr_rope_flatten(jsstr_rope_t*) DECLSPEC_HIDDEN;
+
+static inline const WCHAR *jsstr_flatten(jsstr_t *str)
+{
+    return jsstr_is_inline(str) ? jsstr_as_inline(str)->buf
+        : jsstr_is_heap(str) ? jsstr_as_heap(str)->buf
+        : jsstr_rope_flatten(jsstr_as_rope(str));
+}
+
+void jsstr_extract(jsstr_t*,unsigned,unsigned,WCHAR*) DECLSPEC_HIDDEN;
 
 static inline unsigned jsstr_flush(jsstr_t *str, WCHAR *buf)
 {
     unsigned len = jsstr_length(str);
-    memcpy(buf, str->str, len*sizeof(WCHAR));
+    if(jsstr_is_inline(str)) {
+        memcpy(buf, jsstr_as_inline(str)->buf, len*sizeof(WCHAR));
+    }else if(jsstr_is_heap(str)) {
+        memcpy(buf, jsstr_as_heap(str)->buf, len*sizeof(WCHAR));
+    }else {
+        jsstr_rope_t *rope = jsstr_as_rope(str);
+        jsstr_flush(rope->left, buf);
+        jsstr_flush(rope->right, buf+jsstr_length(rope->left));
+    }
     return len;
 }
 
 static inline jsstr_t *jsstr_substr(jsstr_t *str, unsigned off, unsigned len)
 {
-    return jsstr_alloc_len(str->str+off, len);
+    jsstr_t *ret;
+    WCHAR *ptr;
+
+    ptr = jsstr_alloc_buf(len, &ret);
+    if(ptr)
+        jsstr_extract(str, off, len, ptr);
+    return ret;
 }
 
 int jsstr_cmp(jsstr_t*,jsstr_t*) DECLSPEC_HIDDEN;
+
+static inline BOOL jsstr_eq(jsstr_t *left, jsstr_t *right)
+{
+    return jsstr_length(left) == jsstr_length(right) && !jsstr_cmp(left, right);
+}
+
 jsstr_t *jsstr_concat(jsstr_t*,jsstr_t*) DECLSPEC_HIDDEN;
 
 jsstr_t *jsstr_nan(void) DECLSPEC_HIDDEN;
 jsstr_t *jsstr_empty(void) DECLSPEC_HIDDEN;
 jsstr_t *jsstr_undefined(void) DECLSPEC_HIDDEN;
+
+jsstr_t *jsstr_null_bstr(void) DECLSPEC_HIDDEN;
+BOOL is_null_bstr(jsstr_t*) DECLSPEC_HIDDEN;
 
 BOOL init_strings(void) DECLSPEC_HIDDEN;
 void free_strings(void) DECLSPEC_HIDDEN;

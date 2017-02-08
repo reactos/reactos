@@ -26,8 +26,8 @@ int ErrorMessageBox(HWND hWnd, LPCWSTR lpTitle, DWORD dwErrorCode, ...)
     int iRet = 0;
     LPWSTR lpMsgBuf = NULL;
     DWORD Status = 0;
+    va_list args;
 
-    va_list args = NULL;
     va_start(args, dwErrorCode);
 
     Status = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -52,8 +52,8 @@ int InfoMessageBox(HWND hWnd, UINT uType, LPCWSTR lpTitle, LPCWSTR lpMessage, ..
 {
     int iRet = 0;
     LPWSTR lpMsgBuf = NULL;
+    va_list args;
 
-    va_list args = NULL;
     va_start(args, lpMessage);
 
     if (lpMessage)

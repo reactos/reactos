@@ -1,13 +1,15 @@
 /*
  * PROJECT:     ReactX Diagnosis Application
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/dxdiag/dxdiag.c
+ * FILE:        base/applications/dxdiag/network.c
  * PURPOSE:     ReactX diagnosis network page
  * COPYRIGHT:   Copyright 2008 Johannes Anderwald
  *
  */
 
 #include "precomp.h"
+
+#include <winver.h>
 
 typedef struct
 {
@@ -280,7 +282,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 {
                     RegProviders |= (1 << ProviderIndex);
                     szResult[0] = L'\0';
-                    LoadStringW(hInst, IDS_REG_SUCCESS, szResult, sizeof(szResult));
+                    LoadStringW(hInst, IDS_REG_SUCCESS, szResult, sizeof(szResult) / sizeof(WCHAR));
                     Item.iSubItem = 1;
 
                     Item.iItem = ProviderIndex + ItemCount;
@@ -313,6 +315,10 @@ InitializeDirectPlayDialog(HWND hwndDlg)
         return;
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LIST_PROVIDER);
+
+    /* Highlights the entire row instead of just the selected item in the first column */
+    SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT);
+
     /* initialize list ctrl */
     InitListViewColumns(hDlgCtrl);
 

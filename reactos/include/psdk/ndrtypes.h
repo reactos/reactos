@@ -83,7 +83,11 @@ typedef struct
      *  routine @ NotifyIndex. */
     unsigned char HasNotify2 : 1; /* 0x10 - should call MIDL [notify_flag] routine @ 
      *  NotifyIndex. */
-    unsigned char Unused : 3;
+
+    /* The following bits are in fact used by midl but haven't yet been
+       named in the SDK. */
+    unsigned char Unused : 3; /* 0x20 - has complex return */
+                              /* 0x40 - has range on conformance */
 } INTERPRETER_OPT_FLAGS2, *PINTERPRETER_OPT_FLAGS2;
 
 /* Win2000 extensions */

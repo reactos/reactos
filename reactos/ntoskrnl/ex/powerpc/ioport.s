@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ex/i386/ioport.S
+ * FILE:            ntoskrnl/ex/powerpc/ioport.s
  * PURPOSE:         FASTCALL Interlocked Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

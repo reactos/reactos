@@ -1,0 +1,29 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  06-02-2014
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Ndërtuar"
+    IDS_GROUP_NONE_NAME "Asnjë"
+    IDS_GROUP_NONE_COMMENT "Përdorues Zakonshëm"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Administratori"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Administratorët kanë akses të pakufizuar në kompjuter ose domain."
+    IDS_ALIAS_GUESTS_NAME "Vizitor"
+    IDS_ALIAS_GUESTS_COMMENT "Vizitorët kanë të njëjtat të drejta e një anëtarë të grupit Përdorues nga parazgjedhje."
+    IDS_ALIAS_POWER_USERS_NAME "Përdorues të Fuqishëm"
+    IDS_ALIAS_POWER_USERS_COMMENT "Përdorues të Fuqishëm katë të drejta administrative me disa kufizime."
+    IDS_ALIAS_USERS_NAME "Përdoruesit"
+    IDS_ALIAS_USERS_COMMENT "Përdoruesit janë të penguar për ndryshim bërje të gjërave të sistemit."
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administratorër"
+    IDS_USER_ADMINISTRATOR_COMMENT "Llogaria Ndërtimit të përdorura për të administruar kompjuterin ose domain."
+    IDS_USER_GUEST_NAME "Vizitorë"
+    IDS_USER_GUEST_COMMENT "Llogari Ndërtuese për akses vizitori në kompjuter ose domain."
+END

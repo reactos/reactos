@@ -2,14 +2,13 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Clipping Functions
- * FILE:              subsystems/win32/win32k/eng/clip.c
+ * FILE:              win32ss/gdi/eng/clip.c
  * PROGRAMER:         Jason Filby
  */
 
 #include <win32k.h>
+DBG_DEFAULT_CHANNEL(EngClip);
 
-#define NDEBUG
-#include <debug.h>
 
 static __inline int
 CompareRightDown(
@@ -154,99 +153,65 @@ CompareLeftUp(
     return Cmp;
 }
 
-static __inline int
-CompareSpans(
-    const SPAN *Span1,
-    const SPAN *Span2)
+VOID
+FASTCALL
+IntEngInitClipObj(XCLIPOBJ *Clip)
 {
-    int Cmp;
-
-    if (Span1->Y < Span2->Y)
-    {
-        Cmp = -1;
-    }
-    else if (Span2->Y < Span1->Y)
-    {
-        Cmp = +1;
-    }
-    else
-    {
-        if (Span1->X < Span2->X)
-        {
-            Cmp = -1;
-        }
-        else if (Span2->X < Span1->X)
-        {
-            Cmp = +1;
-        }
-        else
-        {
-            Cmp = 0;
-        }
-    }
-
-    return Cmp;
+    Clip->Rects = &Clip->ClipObj.rclBounds;
 }
+
+VOID FASTCALL
+IntEngFreeClipResources(XCLIPOBJ *Clip)
+{
+    if (Clip->Rects != &Clip->ClipObj.rclBounds)
+        EngFreeMem(Clip->Rects);
+}
+
 
 VOID
 FASTCALL
-IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
+IntEngUpdateClipRegion(
+    XCLIPOBJ* Clip,
+    ULONG count,
+    const RECTL* pRect,
+    const RECTL* rcBounds)
 {
-    EngFreeMem(ObjToGDI(ClipObj, CLIP));
-}
-
-CLIPOBJ*
-FASTCALL
-IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
-{
-    CLIPGDI *Clip;
-
     if(count > 1)
     {
-        RECTL *dest;
+        RECTL* NewRects = EngAllocMem(0, FIELD_OFFSET(ENUMRECTS, arcl[count]), GDITAG_CLIPOBJ);
 
-        Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), GDITAG_CLIPOBJ);
-
-        if(Clip != NULL)
+        if(NewRects != NULL)
         {
-            Clip->EnumRects.c = count;
+            Clip->RectCount = count;
             Clip->EnumOrder = CD_ANY;
-            for(dest = Clip->EnumRects.arcl;count > 0; count--, dest++, pRect++)
-            {
-                *dest = *pRect;
-            }
+            RtlCopyMemory(NewRects, pRect, count * sizeof(RECTL));
 
             Clip->ClipObj.iDComplexity = DC_COMPLEX;
-            Clip->ClipObj.iFComplexity = ((Clip->EnumRects.c <= 4) ? FC_RECT4 : FC_COMPLEX);
+            Clip->ClipObj.iFComplexity = ((Clip->RectCount <= 4) ? FC_RECT4 : FC_COMPLEX);
             Clip->ClipObj.iMode = TC_RECTANGLES;
             Clip->ClipObj.rclBounds = *rcBounds;
 
-            return GDIToObj(Clip, CLIP);
+            if (Clip->Rects != &Clip->ClipObj.rclBounds)
+                EngFreeMem(Clip->Rects);
+            Clip->Rects = NewRects;
         }
     }
     else
     {
-        Clip = EngAllocMem(0, sizeof(CLIPGDI), GDITAG_CLIPOBJ);
+        Clip->EnumOrder = CD_ANY;
 
-        if(Clip != NULL)
-        {
-            Clip->EnumRects.c = 1;
-            Clip->EnumOrder = CD_ANY;
-            Clip->EnumRects.arcl[0] = *rcBounds;
+        Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
+                                     (rcBounds->left == rcBounds->right))
+                                     ? DC_TRIVIAL : DC_RECT);
 
-            Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
-                                         (rcBounds->left == rcBounds->right))
-                                         ? DC_TRIVIAL : DC_RECT);
-
-            Clip->ClipObj.iFComplexity = FC_RECT;
-            Clip->ClipObj.iMode = TC_RECTANGLES;
-            Clip->ClipObj.rclBounds = *rcBounds;
-
-            return GDIToObj(Clip, CLIP);
-        }
+        Clip->ClipObj.iFComplexity = FC_RECT;
+        Clip->ClipObj.iMode = TC_RECTANGLES;
+        Clip->ClipObj.rclBounds = *rcBounds;
+        Clip->RectCount = 1;
+        if (Clip->Rects != &Clip->ClipObj.rclBounds)
+            EngFreeMem(Clip->Rects);
+        Clip->Rects = &Clip->ClipObj.rclBounds;
     }
-
-    return NULL;
 }
 
 /*
@@ -256,12 +221,15 @@ CLIPOBJ *
 APIENTRY
 EngCreateClip(VOID)
 {
-    CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), GDITAG_CLIPOBJ);
+    XCLIPOBJ *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(XCLIPOBJ), GDITAG_CLIPOBJ);
     if(Clip != NULL)
     {
-        return GDIToObj(Clip, CLIP);
+        IntEngInitClipObj(Clip);
+        TRACE("Created Clip Obj %p.\n", Clip);
+        return &Clip->ClipObj;
     }
 
+    ERR("Clip object allocation failed!\n");
     return NULL;
 }
 
@@ -273,7 +241,10 @@ APIENTRY
 EngDeleteClip(
     _In_ _Post_ptr_invalid_ CLIPOBJ *pco)
 {
-    EngFreeMem(ObjToGDI(pco, CLIP));
+    XCLIPOBJ* pxco = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    TRACE("Deleting %p.\n", pco);
+    IntEngFreeClipResources(pxco);
+    EngFreeMem(pxco);
 }
 
 /*
@@ -288,13 +259,13 @@ CLIPOBJ_cEnumStart(
     _In_ ULONG iDirection,
     _In_ ULONG cMaxRects)
 {
-    CLIPGDI *ClipGDI = ObjToGDI(pco, CLIP);
+    XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
     SORTCOMP CompareFunc;
 
-    ClipGDI->EnumPos = 0;
-    ClipGDI->EnumMax = (cMaxRects > 0) ? cMaxRects : ClipGDI->EnumRects.c;
+    Clip->EnumPos = 0;
+    Clip->EnumMax = (cMaxRects > 0) ? cMaxRects : Clip->RectCount;
 
-    if (CD_ANY != iDirection && ClipGDI->EnumOrder != iDirection)
+    if (CD_ANY != iDirection && Clip->EnumOrder != iDirection)
     {
         switch (iDirection)
         {
@@ -315,27 +286,27 @@ CLIPOBJ_cEnumStart(
                 break;
 
             default:
-                DPRINT1("Invalid iDirection %lu\n", iDirection);
-                iDirection = ClipGDI->EnumOrder;
+                ERR("Invalid iDirection %lu\n", iDirection);
+                iDirection = Clip->EnumOrder;
                 CompareFunc = NULL;
                 break;
         }
 
         if (NULL != CompareFunc)
         {
-            EngSort((PBYTE) ClipGDI->EnumRects.arcl, sizeof(RECTL), ClipGDI->EnumRects.c, CompareFunc);
+            EngSort((PBYTE) Clip->Rects, sizeof(RECTL), Clip->RectCount, CompareFunc);
         }
 
-        ClipGDI->EnumOrder = iDirection;
+        Clip->EnumOrder = iDirection;
     }
 
     /* Return the number of rectangles enumerated */
-    if ((cMaxRects > 0) && (ClipGDI->EnumRects.c > cMaxRects))
+    if ((cMaxRects > 0) && (Clip->RectCount > cMaxRects))
     {
         return 0xFFFFFFFF;
     }
 
-    return ClipGDI->EnumRects.c;
+    return Clip->RectCount;
 }
 
 /*
@@ -348,14 +319,14 @@ CLIPOBJ_bEnum(
     _In_ ULONG cj,
     _Out_bytecap_(cj) ULONG *pulEnumRects)
 {
-    RECTL *dest, *src;
-    CLIPGDI *ClipGDI = ObjToGDI(pco, CLIP);
-    ULONG nCopy, i;
+    const RECTL* src;
+    XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    ULONG nCopy;
     ENUMRECTS* pERects = (ENUMRECTS*)pulEnumRects;
 
     // Calculate how many rectangles we should copy
-    nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
-            min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
+    nCopy = min( Clip->EnumMax - Clip->EnumPos,
+            min( Clip->RectCount - Clip->EnumPos,
             (cj - sizeof(ULONG)) / sizeof(RECTL)));
 
     if(nCopy == 0)
@@ -364,17 +335,14 @@ CLIPOBJ_bEnum(
     }
 
     /* Copy rectangles */
-    src = ClipGDI->EnumRects.arcl + ClipGDI->EnumPos;
-    for(i = 0, dest = pERects->arcl; i < nCopy; i++, dest++, src++)
-    {
-        *dest = *src;
-    }
+    src = &Clip->Rects[Clip->EnumPos];
+    RtlCopyMemory(pERects->arcl, src, nCopy * sizeof(RECTL));
 
     pERects->c = nCopy;
 
-    ClipGDI->EnumPos+=nCopy;
+    Clip->EnumPos+=nCopy;
 
-    return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
+    return Clip->EnumPos < Clip->RectCount;
 }
 
 /* EOF */

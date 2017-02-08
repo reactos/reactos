@@ -21,31 +21,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
 
-//#include <assert.h>
-//#include <stdarg.h>
-#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include "winerror.h"
-#include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-//#include "winuser.h"
-#include <wine/list.h>
-#include <wine/unicode.h>
-#include <objbase.h>
-#include <oleauto.h>    /* for SysAllocString(....) */
-//#include "ole2.h"
-#include <olectl.h>
-#include <wine/debug.h>
-#include "connpt.h" /* for CreateConnectionPoint */
-//#include "oaidl.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -356,9 +333,9 @@ HRESULT WINAPI OleCreateFontIndirect(
     fd.cySize.s.Hi    = 0;
     fd.sWeight 	      = 0;
     fd.sCharset       = 0;
-    fd.fItalic	      = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
     lpFontDesc = &fd;
   }
 
@@ -391,7 +368,7 @@ static void OLEFont_SendNotify(OLEFontImpl* this, DISPID dispID)
   static const WCHAR wszUnder[] = {'U','n','d','e','r','l','i','n','e',0};
   static const WCHAR wszStrike[] = {'S','t','r','i','k','e','t','h','r','o','u','g','h',0};
   static const WCHAR wszWeight[] = {'W','e','i','g','h','t',0};
-  static const WCHAR wszCharset[] = {'C','h','a','r','s','s','e','t',0};
+  static const WCHAR wszCharset[] = {'C','h','a','r','s','e','t',0};
   static const LPCWSTR dispid_mapping[] =
   {
     wszName,
@@ -417,7 +394,7 @@ static void OLEFont_SendNotify(OLEFontImpl* this, DISPID dispID)
     while(IEnumConnections_Next(pEnum, 1, &CD, NULL) == S_OK) {
       IPropertyNotifySink *sink;
 
-      IUnknown_QueryInterface(CD.pUnk, &IID_IPropertyNotifySink, (LPVOID)&sink);
+      IUnknown_QueryInterface(CD.pUnk, &IID_IPropertyNotifySink, (void**)&sink);
       IPropertyNotifySink_OnChanged(sink, dispID);
       IPropertyNotifySink_Release(sink);
       IUnknown_Release(CD.pUnk);
@@ -443,7 +420,7 @@ static void OLEFont_SendNotify(OLEFontImpl* this, DISPID dispID)
     while(IEnumConnections_Next(pEnum, 1, &CD, NULL) == S_OK) {
         IFontEventsDisp *disp;
 
-        IUnknown_QueryInterface(CD.pUnk, &IID_IFontEventsDisp, (LPVOID)&disp);
+        IUnknown_QueryInterface(CD.pUnk, &IID_IFontEventsDisp, (void**)&disp);
         IFontEventsDisp_Invoke(disp, DISPID_FONT_CHANGED, &IID_NULL,
                                LOCALE_NEUTRAL, INVOKE_FUNC, &dispparams, NULL,
                                NULL, NULL);
@@ -1086,7 +1063,12 @@ static HRESULT WINAPI OLEFontImpl_SetRatio(
   TRACE("(%p)->(%d, %d)\n", this, cyLogical, cyHimetric);
 
   if(cyLogical == 0 || cyHimetric == 0)
-    return E_INVALIDARG;
+    return E_FAIL;
+
+  /* cyLogical and cyHimetric both set to 1 is a special case that
+     does not change the scaling but also does not fail */
+  if(cyLogical == 1 && cyHimetric == 1)
+    return S_OK;
 
   this->cyLogical  = cyLogical;
   this->cyHimetric = cyHimetric;
@@ -1303,9 +1285,6 @@ static HRESULT WINAPI OLEFontImpl_GetIDsOfNames(
 /************************************************************************
  * OLEFontImpl_Invoke (IDispatch)
  * 
- * Note: Do not call _put_Xxx methods, since setting things here
- * should not call notify functions as I found out debugging the generic
- * MS VB5 installer.
  */
 static HRESULT WINAPI OLEFontImpl_Invoke(
   IDispatch*  iface,
@@ -1851,13 +1830,11 @@ static HRESULT WINAPI OLEFontImpl_FindConnectionPoint(
   TRACE("(%p)->(%s, %p)\n", this, debugstr_guid(riid), ppCp);
 
   if(IsEqualIID(riid, &IID_IPropertyNotifySink)) {
-    return IConnectionPoint_QueryInterface(this->pPropertyNotifyCP,
-                                           &IID_IConnectionPoint,
-                                           (LPVOID)ppCp);
+    return IConnectionPoint_QueryInterface(this->pPropertyNotifyCP, &IID_IConnectionPoint,
+                                           (void**)ppCp);
   } else if(IsEqualIID(riid, &IID_IFontEventsDisp)) {
-    return IConnectionPoint_QueryInterface(this->pFontEventsCP,
-                                           &IID_IConnectionPoint,
-                                           (LPVOID)ppCp);
+    return IConnectionPoint_QueryInterface(this->pFontEventsCP, &IID_IConnectionPoint,
+                                           (void**)ppCp);
   } else {
     FIXME("no connection point for %s\n", debugstr_guid(riid));
     return CONNECT_E_NOCONNECTION;

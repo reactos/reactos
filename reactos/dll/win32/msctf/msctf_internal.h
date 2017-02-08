@@ -21,6 +21,30 @@
 #ifndef __WINE_MSCTF_I_H
 #define __WINE_MSCTF_I_H
 
+#include <wine/config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <olectl.h>
+#include <msctf.h>
+#include <shlwapi.h>
+
+#include <wine/list.h>
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msctf);
+
 #define COOKIE_MAGIC_TMSINK  0x0010
 #define COOKIE_MAGIC_CONTEXTSINK 0x0020
 #define COOKIE_MAGIC_GUIDATOM 0x0030
@@ -58,13 +82,14 @@ extern DWORD enumerate_Cookie(DWORD magic, DWORD *index) DECLSPEC_HIDDEN;
 /* activated text services functions */
 extern HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp) DECLSPEC_HIDDEN;
 extern BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *lp) DECLSPEC_HIDDEN;
-extern HRESULT activate_textservices(ITfThreadMgr *tm) DECLSPEC_HIDDEN;
+extern HRESULT activate_textservices(ITfThreadMgrEx *tm) DECLSPEC_HIDDEN;
 extern HRESULT deactivate_textservices(void) DECLSPEC_HIDDEN;
 
 extern CLSID get_textservice_clsid(TfClientId tid) DECLSPEC_HIDDEN;
 extern HRESULT get_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown** sink) DECLSPEC_HIDDEN;
 extern HRESULT set_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown* sink) DECLSPEC_HIDDEN;
 
-extern const WCHAR szwSystemTIPKey[];
-extern const WCHAR szwSystemCTFKey[];
+extern const WCHAR szwSystemTIPKey[] DECLSPEC_HIDDEN;
+extern const WCHAR szwSystemCTFKey[] DECLSPEC_HIDDEN;
+
 #endif /* __WINE_MSCTF_I_H */

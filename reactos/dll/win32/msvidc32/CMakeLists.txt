@@ -1,19 +1,16 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_definitions(
     -D__WINESRC__
     -D_WINE)
 
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(msvidc32.dll msvidc32.spec)
 
 list(APPEND SOURCE
     msvideo1.c
-    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msvidc32.def)
 
-add_library(msvidc32 SHARED ${SOURCE})
-
+add_library(msvidc32 SHARED ${SOURCE} rsrc.rc)
 set_module_type(msvidc32 win32dll)
 target_link_libraries(msvidc32 wine)
 add_importlibs(msvidc32 user32 msvcrt kernel32 ntdll)

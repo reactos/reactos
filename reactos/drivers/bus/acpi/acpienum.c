@@ -6,11 +6,8 @@
  * UPDATE HISTORY:
  *      01-05-2001  CSH  Created
  */
-#include <acpi.h>
-#include <acpisys.h>
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
-#include <list.h>
+
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -121,7 +118,7 @@ Bus_PlugInDevice (
 		index++;
 		temp[++index] = UNICODE_NULL;
 
-		pdoData->HardwareIDs  = ExAllocatePoolWithTag(NonPagedPool, index*sizeof(WCHAR), 'IPCA');
+		pdoData->HardwareIDs = ExAllocatePoolWithTag(NonPagedPool, index*sizeof(WCHAR), 'DpcA');
 
 
     if (!pdoData->HardwareIDs) {

@@ -37,6 +37,9 @@ typedef struct
 
 static HDPA        sic_hdpa = 0;
 
+static HIMAGELIST ShellSmallIconList;
+static HIMAGELIST ShellBigIconList;
+
 namespace
 {
 extern CRITICAL_SECTION SHELL32_SicCS;
@@ -64,14 +67,14 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
      * loaded from, their resource index and the fact if they have a shortcut
      * icon overlay or not.
      */
-    if (e1->dwSourceIndex != e2->dwSourceIndex || /* first the faster one */
-        (e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT))
-      return 1;
+    /* first the faster one */
+    if (e1->dwSourceIndex != e2->dwSourceIndex)
+      return (e1->dwSourceIndex < e2->dwSourceIndex) ? -1 : 1;
 
-    if (wcsicmp(e1->sSourceFile,e2->sSourceFile))
-      return 1;
-
-    return 0;
+    if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT)) 
+      return ((e1->dwFlags & GIL_FORSHORTCUT) < (e2->dwFlags & GIL_FORSHORTCUT)) ? -1 : 1;
+  
+    return wcsicmp(e1->sSourceFile,e2->sSourceFile);
 }
 
 /* declare SIC_LoadOverlayIcon() */
@@ -308,7 +311,7 @@ fail:
     if (NULL != TargetIconInfo.hbmColor) DeleteObject(TargetIconInfo.hbmColor);
     if (NULL != TargetIconInfo.hbmMask) DeleteObject(TargetIconInfo.hbmMask);
     if (NULL != ShortcutIconInfo.hbmColor) DeleteObject(ShortcutIconInfo.hbmColor);
-    if (NULL != ShortcutIconInfo.hbmMask) DeleteObject(ShortcutIconInfo.hbmColor);
+    if (NULL != ShortcutIconInfo.hbmMask) DeleteObject(ShortcutIconInfo.hbmMask);
     if (NULL != ShortcutIcon) DestroyIcon(ShortcutIcon);
 
     return NULL;
@@ -338,7 +341,8 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 
     EnterCriticalSection(&SHELL32_SicCS);
 
-    indexDPA = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
+    indexDPA = DPA_Search (sic_hdpa, lpsice, 0, SIC_CompareEntries, 0, DPAS_SORTED|DPAS_INSERTAFTER);
+    indexDPA = DPA_InsertPtr(sic_hdpa, indexDPA, lpsice);
     if ( -1 == indexDPA )
     {
         ret = INVALID_INDEX;
@@ -388,23 +392,9 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
     HICON hiconLarge=0;
     HICON hiconSmall=0;
     UINT ret;
-    static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
 
-    if (!PrivateExtractIconExW)
-    {
-        HMODULE hUser32 = GetModuleHandleA("user32");
-        PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
-    }
-
-    if (PrivateExtractIconExW)
-    {
-        PrivateExtractIconExW(sSourceFile, dwSourceIndex, &hiconLarge, &hiconSmall, 1);
-    }
-    else
-    {
-        PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, 0);
-        PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, 0);
-    }
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
     if ( !hiconLarge ||  !hiconSmall)
     {
@@ -468,7 +458,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
     if (NULL != DPA_GetPtr (sic_hdpa, 0))
     {
       /* search linear from position 0*/
-      index = DPA_Search (sic_hdpa, &sice, 0, SIC_CompareEntries, 0, 0);
+      index = DPA_Search (sic_hdpa, &sice, 0, SIC_CompareEntries, 0, DPAS_SORTED);
     }
 
     if ( INVALID_INDEX == index )
@@ -745,7 +735,7 @@ BOOL PidlToSicIndex (
 
     TRACE("sf=%p pidl=%p %s\n", sh, pidl, bBigIcon?"Big":"Small");
 
-    if (SUCCEEDED (sh->GetUIObjectOf(0, 1, &pidl, IID_IExtractIconW, 0, (void **)&ei)))
+    if (SUCCEEDED (sh->GetUIObjectOf(0, 1, &pidl, IID_NULL_PPV_ARG(IExtractIconW, &ei))))
     {
       if (SUCCEEDED(ei->GetIconLocation(uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
       {
@@ -853,6 +843,11 @@ EXTERN_C INT WINAPI Shell_GetCachedImageIndexAW(LPCVOID szPath, INT nIndex, BOOL
 {    if( SHELL_OsIsUnicode())
       return Shell_GetCachedImageIndexW((LPCWSTR)szPath, nIndex, bSimulateDoc);
     return Shell_GetCachedImageIndexA((LPCSTR)szPath, nIndex, bSimulateDoc);
+}
+
+EXTERN_C INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc)
+{
+    return Shell_GetCachedImageIndexAW(szPath, nIndex, bSimulateDoc);
 }
 
 /*************************************************************************

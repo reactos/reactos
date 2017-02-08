@@ -3,7 +3,7 @@
 /*
  * @implemented
  */
-int _strnicmp(const char *s1, const char *s2, size_t n)
+int CDECL _strnicmp(const char *s1, const char *s2, size_t n)
 {
 
   if (n == 0)

@@ -1,0 +1,37 @@
+[Section]
+Name = NirLauncher
+Version = 1.19.79
+License = Freeware
+Description = A package of more than 180 utilities for Windows.
+Size = 45.1 MiB
+Category = 12
+URLSite = http://launcher.nirsoft.net/
+URLDownload = https://www.accessibiliteprogrammes.fr/t%C3%A9l%C3%A9chargement/nirsoft_package_1.19.79.zip
+SHA1 = 42e87b3acd2bba6df06eaf31ecd413957d73848e
+CDPath = none
+
+[Section.0407]
+Description = Paket von mehr als 180 Utilities für Windows.
+Size = 45,1 MiB
+
+[Section.040c]
+Description = Un ensemble de plus de 180 utilitaires pour Windows.
+Size = 45,1 Mio
+
+[Section.0a]
+Licence = Gratuita
+Description = Un paquete con más de 180 utilidades.
+
+[Section.0418]
+Licence = Gratuită
+Description = Pachet cu peste 180 de utilitare.
+Size = 45,1 Mio
+
+[Section.041f]
+License = Ücretsiz
+Description = Windows için 180 araçtan daha çoğunun bir paketi.
+Size = 45,1 MiB
+
+[Section.0804]
+Description = 超过 180 实用程序可用于 Windows 的一整套行动。
+

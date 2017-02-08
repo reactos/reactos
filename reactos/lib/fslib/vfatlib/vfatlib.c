@@ -4,17 +4,45 @@
  * FILE:        lib\fslib\vfatlib\vfatlib.c
  * PURPOSE:     Main API
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISIONS:
- *   CSH 05/04-2003 Created
+ *              Aleksey Bragin (aleksey@reactos.org)
+ *              Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
+/* fsck.fat.c - User interface
+
+   Copyright (C) 1993 Werner Almesberger <werner.almesberger@lrc.di.epfl.ch>
+   Copyright (C) 1998 Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>
+   Copyright (C) 2008-2014 Daniel Baumann <mail@daniel-baumann.ch>
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+   The complete text of the GNU General Public License
+   can be found in /usr/share/common-licenses/GPL-3 file.
+*/
+
+/* INCLUDES *******************************************************************/
+
 #include "vfatlib.h"
 
 #define NDEBUG
 #include <debug.h>
 
+
+/* GLOBALS & FUNCTIONS ********************************************************/
+
 PFMIFSCALLBACK ChkdskCallback = NULL;
-PVOID FsCheckMemQueue;
 ULONG FsCheckFlags;
+PVOID FsCheckMemQueue;
 ULONG FsCheckTotalFiles;
 
 NTSTATUS
@@ -49,7 +77,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                        FILE_GENERIC_READ | FILE_GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &Iosb,
                         FILE_SHARE_READ,
@@ -105,12 +133,6 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
             NtClose(FileHandle);
             return Status;
         }
-
-        /*
-         * FIXME: This is a hack!
-         *        Partitioning software MUST set the correct number of hidden sectors!
-         */
-        PartitionInfo.HiddenSectors = DiskGeometry.SectorsPerTrack;
     }
     else
     {
@@ -149,7 +171,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
             
             if (PartitionInfo.PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
             {
-                /* FAT16 CHS partition (partiton size < 32MB) */
+                /* FAT16 CHS partition (partition size < 32MB) */
                 PartitionInfo.PartitionType = PARTITION_FAT_16;
             }
             else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
@@ -251,6 +273,22 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         Status = STATUS_INVALID_PARAMETER;
     }
 
+    /* Attempt to dismount formatted volume */
+    LockStatus = NtFsControlFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &Iosb,
+                                 FSCTL_DISMOUNT_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("Failed to umount volume (Status: 0x%x)\n", LockStatus);
+    }
+
     LockStatus = NtFsControlFile(FileHandle,
                                  NULL,
                                  NULL,
@@ -271,7 +309,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     if (Callback != NULL)
     {
         Context.Success = (BOOLEAN)(NT_SUCCESS(Status));
-        Callback (DONE, 0, (PVOID)&Context.Success);
+        Callback(DONE, 0, (PVOID)&Context.Success);
     }
 
     DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
@@ -288,7 +326,6 @@ UpdateProgress(PFORMAT_CONTEXT Context,
 
     Context->CurrentSectorCount += (ULONGLONG)Increment;
 
-
     NewPercent = (Context->CurrentSectorCount * 100ULL) / Context->TotalSectorCount;
 
     if (NewPercent > Context->Percent)
@@ -296,30 +333,40 @@ UpdateProgress(PFORMAT_CONTEXT Context,
         Context->Percent = NewPercent;
         if (Context->Callback != NULL)
         {
-            Context->Callback (PROGRESS, 0, &Context->Percent);
+            Context->Callback(PROGRESS, 0, &Context->Percent);
         }
     }
 }
 
 
 VOID
-VfatPrint(PCHAR Format, ...)
+VfatPrintV(PCHAR Format, va_list args)
 {
     TEXTOUTPUT TextOut;
     CHAR TextBuf[512];
-    va_list valist;
 
-    va_start(valist, Format);
-    _vsnprintf(TextBuf, sizeof(TextBuf), Format, valist);
-    va_end(valist);
+    _vsnprintf(TextBuf, sizeof(TextBuf), Format, args);
 
     /* Prepare parameters */
     TextOut.Lines = 1;
     TextOut.Output = TextBuf;
 
+    DPRINT1("VfatPrint -- %s", TextBuf);
+
     /* Do the callback */
     if (ChkdskCallback)
         ChkdskCallback(OUTPUT, 0, &TextOut);
+}
+
+
+VOID
+VfatPrint(PCHAR Format, ...)
+{
+    va_list args;
+
+    va_start(args, Format);
+    VfatPrintV(Format, args);
+    va_end(args);
 }
 
 
@@ -332,12 +379,12 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN ScanDrive,
            IN PFMIFSCALLBACK Callback)
 {
-#if 0
     BOOLEAN verify;
     BOOLEAN salvage_files;
-#endif
-    //ULONG free_clusters;
-    //DOS_FS fs;
+    ULONG free_clusters;
+    DOS_FS fs;
+
+    RtlZeroMemory(&fs, sizeof(fs));
 
     /* Store callback pointer */
     ChkdskCallback = Callback;
@@ -347,23 +394,25 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     FsCheckFlags = 0;
     if (Verbose)
         FsCheckFlags |= FSCHECK_VERBOSE;
+    if (FixErrors)
+        FsCheckFlags |= FSCHECK_READ_WRITE;
 
     FsCheckTotalFiles = 0;
 
-#if 0
     verify = TRUE;
     salvage_files = TRUE;
 
     /* Open filesystem */
-    fs_open(DriveRoot,FixErrors);
+    fs_open(DriveRoot, FsCheckFlags & FSCHECK_READ_WRITE);
 
     if (CheckOnlyIfDirty && !fs_isdirty())
     {
         /* No need to check FS */
-        return fs_close(FALSE);
+        return (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
     }
 
     read_boot(&fs);
+
     if (verify)
         VfatPrint("Starting check/repair pass.\n");
 
@@ -383,6 +432,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     qfree(&FsCheckMemQueue);
     if (verify)
     {
+        FsCheckTotalFiles = 0;
         VfatPrint("Starting verification pass.\n");
         read_fat(&fs);
         scan_root(&fs);
@@ -392,23 +442,29 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
 
     if (fs_changed())
     {
-        if (FixErrors)
+        if (FsCheckFlags & FSCHECK_READ_WRITE)
         {
             if (FsCheckFlags & FSCHECK_INTERACTIVE)
-                FixErrors = get_key("yn","Perform changes ? (y/n)") == 'y';
+            {
+                FixErrors = get_key("yn", "Perform changes ? (y/n)") == 'y';
+                if (FixErrors)
+                    FsCheckFlags |= FSCHECK_READ_WRITE;
+                else
+                    FsCheckFlags &= ~FSCHECK_READ_WRITE;
+            }
             else
                 VfatPrint("Performing changes.\n");
         }
         else
         {
-            VfatPrint("Leaving file system unchanged.\n");
+            VfatPrint("Leaving filesystem unchanged.\n");
         }
     }
 
     VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
-        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters );
+        FsCheckTotalFiles, fs.data_clusters - free_clusters, fs.data_clusters);
 
-    if (FixErrors)
+    if (FsCheckFlags & FSCHECK_READ_WRITE)
     {
         /* Dismount the volume */
         fs_dismount();
@@ -417,11 +473,11 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
         fs_lock(FALSE);
     }
 
+    // https://technet.microsoft.com/en-us/library/cc730714.aspx
+    // https://support.microsoft.com/en-us/kb/265533
+
     /* Close the volume */
-    return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-#else
-    return STATUS_SUCCESS;
-#endif
+    return (fs_close(FsCheckFlags & FSCHECK_READ_WRITE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
 }
 
 /* EOF */

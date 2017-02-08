@@ -1,6 +1,14 @@
 #pragma once
 
-PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
+FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
+{
+   PMENU pMenu = UserGetObject(gHandleTable, hMenu, TYPE_MENU);
+   if (!pMenu)
+   {
+      EngSetLastError(ERROR_INVALID_MENU_HANDLE);
+   }
+   return pMenu;
+}
 
 #define ASSERT_REFS_CO(_obj_) \
 { \
@@ -37,9 +45,15 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 
 PWND FASTCALL IntGetWindowObject(HWND hWnd);
 
+/*************** DDE.C ****************/
+
+BOOL FASTCALL IntDdeSendMessageHook(PWND,UINT,WPARAM,LPARAM);
+BOOL APIENTRY IntDdePostMessageHook(IN PWND,IN UINT,IN WPARAM,IN OUT LPARAM*,IN OUT LONG_PTR*);
+BOOL APIENTRY IntDdeGetMessageHook(PMSG,LONG_PTR);
+
 /*************** MAIN.C ***************/
 
-NTSTATUS NTAPI UserCreateThreadInfo(struct _ETHREAD *Thread);
+NTSTATUS NTAPI InitThreadCallback(PETHREAD Thread);
 
 /*************** WINSTA.C ***************/
 
@@ -88,14 +102,11 @@ UserSystemParametersInfo(
 VOID FASTCALL IntSetWindowState(PWND, UINT);
 VOID FASTCALL IntClearWindowState(PWND, UINT);
 PTHREADINFO FASTCALL IntTID2PTI(HANDLE);
+HBRUSH FASTCALL GetControlBrush(PWND pwnd,HDC  hdc,UINT ctlType);
 
 /*************** MESSAGE.C ***************/
 
-BOOL FASTCALL
-UserPostMessage(HWND Wnd,
-        UINT Msg,
-        WPARAM wParam,
-        LPARAM lParam);
+BOOL FASTCALL UserPostMessage(HWND Wnd,UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /*************** WINDOW.C ***************/
 
@@ -103,18 +114,40 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd);
 VOID FASTCALL co_DestroyThreadWindows(struct _ETHREAD *Thread);
 HWND FASTCALL UserGetShellWindow(VOID);
 HDC FASTCALL UserGetDCEx(PWND Window OPTIONAL, HANDLE ClipRegion, ULONG Flags);
-BOOLEAN FASTCALL co_UserDestroyWindow(PWND Wnd);
+BOOLEAN co_UserDestroyWindow(PVOID Object);
 PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type);
+BOOL APIENTRY DefSetText(PWND Wnd, PCWSTR WindowText);
+DWORD FASTCALL IntGetWindowContextHelpId( PWND pWnd );
 
 /*************** MENU.C ***************/
 
-HMENU FASTCALL UserCreateMenu(BOOL PopupMenu);
-BOOL FASTCALL UserSetMenuDefaultItem(PMENU_OBJECT Menu, UINT uItem, UINT fByPos);
+HMENU FASTCALL UserCreateMenu(PDESKTOP Desktop, BOOL PopupMenu);
+BOOL FASTCALL UserSetMenuDefaultItem(PMENU Menu, UINT uItem, UINT fByPos);
 BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
-/*************** SCROLLBAR.C ***************/
+/************** NONCLIENT **************/
 
-DWORD FASTCALL
-co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV);
+VOID FASTCALL DefWndDoSizeMove(PWND pwnd, WORD wParam);
+LRESULT NC_DoNCPaint(PWND,HDC,INT);
+void FASTCALL NC_GetSysPopupPos(PWND, RECT *);
+LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam );
+LRESULT NC_HandleNCCalcSize( PWND wnd, WPARAM wparam, RECTL *winRect, BOOL Suspended );
+VOID NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyle);
+VOID UserDrawCaptionBar( PWND pWnd, HDC hDC, INT Flags);
+void FASTCALL NC_GetInsideRect(PWND Wnd, RECT *rect);
+LRESULT NC_HandleNCLButtonDown(PWND Wnd, WPARAM wParam, LPARAM lParam);
+LRESULT NC_HandleNCLButtonDblClk(PWND Wnd, WPARAM wParam, LPARAM lParam);
+LRESULT NC_HandleNCRButtonDown( PWND wnd, WPARAM wParam, LPARAM lParam );
+
+/************** DEFWND **************/
+
+HBRUSH FASTCALL DefWndControlColor(HDC hDC,UINT ctlType);
+BOOL UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down);
+BOOL UserPaintCaption(PWND pWnd, INT Flags);
+
+/************** LAYERED **************/
+
+BOOL FASTCALL SetLayeredStatus(PWND pWnd, BYTE set);
+BOOL FASTCALL GetLayeredStatus(PWND pWnd);
 
 /* EOF */

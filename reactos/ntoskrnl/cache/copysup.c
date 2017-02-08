@@ -186,7 +186,6 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
                WriteBuf,
                Bcb->BaseAddress);
 
-        //MiZeroFillSection(WriteBuf, &CurrentOffset, WriteLen);
         RtlCopyMemory(WriteBuf, ((PCHAR)Buffer) + Count, WriteLen);
         Count += WriteLen;
         Length -= WriteLen;

@@ -197,7 +197,7 @@ typedef struct _IDE_DRIVE_IDENTIFY
   char  FirmwareRev[8];      /*23*/
   char  ModelNumber[40];     /*27*/
   USHORT   RWMultImplemented;   /*47*/
-  USHORT   DWordIo;	     /*48*/
+  USHORT   DWordIo;         /*48*/
   USHORT   Capabilities;        /*49*/
 #define IDE_DRID_STBY_SUPPORTED   0x2000
 #define IDE_DRID_IORDY_SUPPORTED  0x0800
@@ -343,29 +343,29 @@ XboxDiskPolledRead(ULONG CommandPort,
     {
       Status = IDEReadStatus(CommandPort);
       if (!(Status & IDE_SR_BUSY))
-	{
-	  if (Status & IDE_SR_ERR)
-	    {
-	      IDEWriteDriveControl(ControlPort, 0);
-	      StallExecutionProcessor(50);
-	      IDEReadStatus(CommandPort);
+    {
+      if (Status & IDE_SR_ERR)
+        {
+          IDEWriteDriveControl(ControlPort, 0);
+          StallExecutionProcessor(50);
+          IDEReadStatus(CommandPort);
 
-	      return FALSE;
-	    }
+          return FALSE;
+        }
 
-	  if (Status & IDE_SR_DRQ)
-	    {
-	      break;
-	    }
-	  else
-	    {
-	      IDEWriteDriveControl(ControlPort, 0);
-	      StallExecutionProcessor(50);
-	      IDEReadStatus(CommandPort);
+      if (Status & IDE_SR_DRQ)
+        {
+          break;
+        }
+      else
+        {
+          IDEWriteDriveControl(ControlPort, 0);
+          StallExecutionProcessor(50);
+          IDEReadStatus(CommandPort);
 
-	      return FALSE;
-	    }
-	}
+          return FALSE;
+        }
+    }
       StallExecutionProcessor(10);
     }
 
@@ -383,55 +383,55 @@ XboxDiskPolledRead(ULONG CommandPort,
     {
       /*  Read data into buffer  */
       if (Junk == FALSE)
-	{
-	  IDEReadBlock(CommandPort, Buffer, IDE_SECTOR_BUF_SZ);
-	  Buffer = (PVOID)((ULONG_PTR)Buffer + IDE_SECTOR_BUF_SZ);
-	}
+    {
+      IDEReadBlock(CommandPort, Buffer, IDE_SECTOR_BUF_SZ);
+      Buffer = (PVOID)((ULONG_PTR)Buffer + IDE_SECTOR_BUF_SZ);
+    }
       else
-	{
-	  UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
-	  IDEReadBlock(CommandPort, JunkBuffer, IDE_SECTOR_BUF_SZ);
-	}
+    {
+      UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
+      IDEReadBlock(CommandPort, JunkBuffer, IDE_SECTOR_BUF_SZ);
+    }
       SectorCount++;
 
       /*  Check for error or more sectors to read  */
       for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-	{
-	  Status = IDEReadStatus(CommandPort);
-	  if (!(Status & IDE_SR_BUSY))
-	    {
-	      if (Status & IDE_SR_ERR)
-		{
-		  IDEWriteDriveControl(ControlPort, 0);
-		  StallExecutionProcessor(50);
-		  IDEReadStatus(CommandPort);
+    {
+      Status = IDEReadStatus(CommandPort);
+      if (!(Status & IDE_SR_BUSY))
+        {
+          if (Status & IDE_SR_ERR)
+        {
+          IDEWriteDriveControl(ControlPort, 0);
+          StallExecutionProcessor(50);
+          IDEReadStatus(CommandPort);
 
-		  return FALSE;
-		}
-	      if (Status & IDE_SR_DRQ)
-		{
-		  if (SectorCount >= SectorCnt)
-		    {
-		      TRACE("Buffer size exceeded!\n");
-		      Junk = TRUE;
-		    }
-		  break;
-		}
-	      else
-		{
-		  if (SectorCount > SectorCnt)
-		    {
-		      TRACE("Read %lu sectors of junk!\n",
+          return FALSE;
+        }
+          if (Status & IDE_SR_DRQ)
+        {
+          if (SectorCount >= SectorCnt)
+            {
+              TRACE("Buffer size exceeded!\n");
+              Junk = TRUE;
+            }
+          break;
+        }
+          else
+        {
+          if (SectorCount > SectorCnt)
+            {
+              TRACE("Read %lu sectors of junk!\n",
                     SectorCount - SectorCnt);
-		    }
-		  IDEWriteDriveControl(ControlPort, 0);
-		  StallExecutionProcessor(50);
-		  IDEReadStatus(CommandPort);
+            }
+          IDEWriteDriveControl(ControlPort, 0);
+          StallExecutionProcessor(50);
+          IDEReadStatus(CommandPort);
 
-		  return TRUE;
-		}
-	    }
-	}
+          return TRUE;
+        }
+        }
+    }
     }
 }
 

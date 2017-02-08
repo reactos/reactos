@@ -1,0 +1,491 @@
+/*
+ * Resources for Common Dialogs
+ *
+ * Copyright 1999 Bertho Stultiens
+ * Copyright 1999 Klaas van Gend
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_FILENOTFOUND        "ファイルが見つかりません。"
+    IDS_VERIFYFILE          "ファイル名を確認してください。"
+    IDS_CREATEFILE          "このファイルは存在しません。\n\
+作成しますか?"
+    IDS_OVERWRITEFILE       "ファイルは既に存在します。\n\
+上書きしますか?"
+    IDS_INVALID_FILENAME_TITLE "ファイル名に使えない文字"
+    IDS_INVALID_FILENAME    "ファイル名には以下の文字は使えません:\n\
+                          / : < > |"
+    IDS_PATHNOTEXISTING     "パスが見つかりません"
+    IDS_FILENOTEXISTING     "ファイルが見つかりません"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+}
+
+STRINGTABLE
+{
+    IDS_UPFOLDER         "一つ上のフォルダへ"
+    IDS_NEWFOLDER        "新しいフォルダの作成"
+    IDS_LISTVIEW         "一覧"
+    IDS_REPORTVIEW       "詳細"
+    IDS_TODESKTOP        "デスクトップを参照"
+}
+
+STRINGTABLE
+{
+    PD32_PRINT_TITLE       "印刷"
+
+    PD32_VALUE_UREADABLE                  ""
+    PD32_INVALID_PAGE_RANGE "この値はページの範囲に含まれません。\n\
+%1!d! から %2!d! までの値を入力してください。"
+    PD32_FROM_NOT_ABOVE_TO                "開始ページの値は、終了ページの値を超えない値にしてください。"
+    PD32_MARGINS_OVERLAP                  "余白が重なっているか、用紙の境界を超えています。\n\
+余白を再入力してください。"
+    PD32_NR_OF_COPIES_EMPTY               "部数は、空にできません。"
+    PD32_TOO_LARGE_COPIES                 "部数がプリンタがサポートしている範囲を超えています。\n\
+1 から %d までの値を入力してください。"
+    PD32_PRINT_ERROR                      "プリンタ エラーが発生しました。"
+    PD32_NO_DEFAULT_PRINTER               "既定のプリンタが定義されていません。"
+    PD32_CANT_FIND_PRINTER                "プリンタが見つかりません。"
+    PD32_OUT_OF_MEMORY                    "メモリ不足です。"
+    PD32_GENERIC_ERROR                    "エラーが発生しました。"
+    PD32_DRIVER_UNKNOWN                   "プリンタ ドライバが不明です。"
+    PD32_NO_DEVICES                       "ページ設定や文書を印刷するなどのプリンタ関連のタスクを実施する前に、プリンタをインストールする必要があります。 プリンタをインストールしてから再度実行してください。"
+
+    PD32_DEFAULT_PRINTER                  "既定のプリンタ "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "キューに %d つの文書"
+    PD32_MARGINS_IN_INCHES                "余白 [インチ]"
+    PD32_MARGINS_IN_MILLIMETERS           "余白 [mm]"
+    PD32_MILLIMETERS                      "mm"
+
+    PD32_PRINTER_STATUS_READY             "待機中"
+    PD32_PRINTER_STATUS_PAUSED            "一時停止 -"
+    PD32_PRINTER_STATUS_ERROR             "エラー -"
+    PD32_PRINTER_STATUS_PENDING_DELETION  "削除待ち -"
+    PD32_PRINTER_STATUS_PAPER_JAM         "紙詰まり -"
+    PD32_PRINTER_STATUS_PAPER_OUT         "用紙切れ -"
+    PD32_PRINTER_STATUS_MANUAL_FEED       "手差し -"
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "用紙の問題 -"
+    PD32_PRINTER_STATUS_OFFLINE           "オフライン -"
+    PD32_PRINTER_STATUS_IO_ACTIVE         "入出力中 -"
+    PD32_PRINTER_STATUS_BUSY              "ビジー -"
+    PD32_PRINTER_STATUS_PRINTING          "印刷中 -"
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "出力トレイが満杯 -"
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "利用不可 -"
+    PD32_PRINTER_STATUS_WAITING           "待機中 -"
+    PD32_PRINTER_STATUS_PROCESSING        "処理中 -"
+    PD32_PRINTER_STATUS_INITIALIZING      "初期化中 -"
+    PD32_PRINTER_STATUS_WARMING_UP        "ウォーミング アップ -"
+    PD32_PRINTER_STATUS_TONER_LOW         "トナー少量 -"
+    PD32_PRINTER_STATUS_NO_TONER          "トナーなし -"
+    PD32_PRINTER_STATUS_PAGE_PUNT         "処理不能 -"
+    PD32_PRINTER_STATUS_USER_INTERVENTION "ユーザー操作が必要 -"
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "メモリ不足 -"
+    PD32_PRINTER_STATUS_DOOR_OPEN         "プリンタ カバー開放 -"
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "プリント サーバ不明 -"
+    PD32_PRINTER_STATUS_POWER_SAVE        "省電力モード -"
+}
+
+STRINGTABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "標準"
+    IDS_FONT_BOLD          "太字"
+    IDS_FONT_ITALIC        "斜体"
+    IDS_FONT_BOLD_ITALIC   "太字 斜体"
+}
+
+STRINGTABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "黒"
+    IDS_COLOR_MAROON    "茶色"
+    IDS_COLOR_GREEN     "緑"
+    IDS_COLOR_OLIVE     "オリーブ"
+    IDS_COLOR_NAVY      "紺"
+    IDS_COLOR_PURPLE    "紫"
+    IDS_COLOR_TEAL      "青緑"
+    IDS_COLOR_GRAY      "灰色"
+    IDS_COLOR_SILVER    "銀色"
+    IDS_COLOR_RED       "赤"
+    IDS_COLOR_LIME      "黄緑"
+    IDS_COLOR_YELLOW    "黄"
+    IDS_COLOR_BLUE      "青"
+    IDS_COLOR_FUCHSIA   "赤紫"
+    IDS_COLOR_AQUA      "水色"
+    IDS_COLOR_WHITE     "白"
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SIZE   "フォントサイズを %1!d! ポイントから %2!d! ポイントの間で選択してください。"
+    IDS_SAVE_BUTTON "保存(&S)"
+    IDS_SAVE_IN     "保存する場所(&I):"
+    IDS_SAVE        "保存"
+    IDS_SAVE_AS     "名前を付けて保存"
+    IDS_OPEN_FILE   "ファイルを開く"
+    IDS_SELECT_FOLDER "Select Folder"
+    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+}
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+OPEN_FILE DIALOG 36, 24, 275, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "開く"
+FONT 9, "MS UI Gothic"
+{
+ LTEXT "ファイル名(&N):", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "ディレクトリ(&D):", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "ファイルの種類(&T):", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "ドライブ(&V):", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "開く", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "キャンセル", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "読み取り専用(&R)", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG 36, 24, 275, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "名前をつけて保存..."
+FONT 9, "MS UI Gothic"
+{
+ LTEXT "ファイル名(&N):", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "ディレクトリ(&D):", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "ファイルの種類(&T):", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "ドライブ(&V):", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "名前を付けて保存", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "キャンセル", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "読み取り専用(&R)", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG 36, 24, 264, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "印刷"
+FONT 9, "MS UI Gothic"
+{
+ LTEXT "使用するプリンタ:", stc1, 6, 6, 40, 9
+ LTEXT "", stc2, 60, 6, 150, 9
+ GROUPBOX "印刷範囲", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "すべて(&A)", rad1, 16, 45, 60, 12
+ RADIOBUTTON "選択した部分(&E)", rad2, 16, 60, 60, 12
+ RADIOBUTTON "ページ設定(&P)", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "印刷", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "キャンセル", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "プリンタの設定(&S)", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "ページから(&F):", stc3, 60, 80, 30, 9
+ LTEXT "ページまで(&T):", stc4, 120, 80, 30, 9
+ LTEXT "印字品質(&Q):", stc5, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "ファイルへ出力(&L)", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "縮小", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG 36, 24, 264, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "プリンタの設定"
+FONT 9, "MS UI Gothic"
+{
+ GROUPBOX "プリンタの選択", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "通常使うプリンタ(&D)", rad1, 16, 16, 150, 12
+ LTEXT "[なし]", stc1, 35, 30, 120, 9
+ RADIOBUTTON "その他のプリンタ(&P)", rad2, 16, 44, 150, 12
+ COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "キャンセル", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "プリンタの設定(&S)", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "方向", grp2, 6, 82, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "縦(&R)", rad3, 50, 95, 50, 12
+ RADIOBUTTON "横(&L)", rad4, 50, 110, 50, 12
+ ICON "LANDSCAP", stc10, 10, 95, 32, 32
+ ICON "PORTRAIT", stc11, 10, 95, 32, 32
+ GROUPBOX "用紙", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ LTEXT "用紙サイズ(&Z)", stc2, 126, 95, 35, 9
+ LTEXT "給紙方法(&S)", stc3, 126, 110, 35, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG  13, 54, 274, 147
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "フォントの指定"
+FONT 9, "MS UI Gothic"
+{
+    LTEXT           "フォント名(&F):",stc1 ,6,3,90,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "スタイル(&Y):",stc2 ,108,3,60,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "サイズ(&S):",stc3,179,3,32,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "OK",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "キャンセル",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "適用(&A)", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "ヘルプ(&H)" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "文字飾り",grp1,6,72,84,36,WS_GROUP
+    CHECKBOX	    "取り消し線(&K)", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "下線(&U)", chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    LTEXT           "配色(&C):", stc4 ,6,114,80,9
+    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "サンプル",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "文字セット(&I):",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG 36, 24, 300, 185
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "色の設定"
+FONT 9, "MS UI Gothic"
+{
+ LTEXT "基本色(&B):",   stc1, 4,    4,  140, 10
+ LTEXT "作成した色(&C):",  stc2, 4,   106, 140, 10
+ LTEXT "色 |  純色(&I)",  stc3, 150, 151,  48, 10
+ LTEXT   "赤(&R):", IDC_COLOR_RL /*1094*/,247,126,27,10
+ EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "緑(&G):", IDC_COLOR_GL /*1095*/,247,140,27,10
+ EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "青(&B):", IDC_COLOR_BL /*1096*/,247,154,27,10
+ EDITTEXT IDC_COLOR_EDIT_B, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "色合い(&H):" , IDC_COLOR_HL /*1091*/,200,126,24,10
+ EDITTEXT IDC_COLOR_EDIT_H, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "鮮やかさ(&S):", IDC_COLOR_SL /*1092*/,200,140,24,10
+ EDITTEXT IDC_COLOR_EDIT_S, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "明るさ(&L):", IDC_COLOR_LL /*1093*/,200,154,24,10
+ EDITTEXT IDC_COLOR_EDIT_L, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" , IDC_COLOR_PREDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" , IDC_COLOR_USRDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" , IDC_COLOR_GRAPH, "STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" , IDC_COLOR_LUMBAR, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" , IDC_COLOR_RESULT, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "OK",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "キャンセル", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ", pshHelp,100,166, 44, 14
+ PUSHBUTTON "色の追加(&A)",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "色の作成(&D) >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "色 |  純色(&I)", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
+}
+
+
+FINDDLGORD DIALOG 36, 24, 276, 62
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "検索"
+FONT 9, "MS UI Gothic"
+{
+ LTEXT "検索する文字列(&N):", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "単語単位で検索(&W)", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "大文字と小文字を区別する(&C)", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "検索する方向", grp1, 147, 21, 58, 38
+ CONTROL "上(&U)", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+ CONTROL "下(&D)", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+
+ DEFPUSHBUTTON "次を検索(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "キャンセル", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ(&H)", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG 36, 24, 276, 94
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "文字列の置換"
+FONT 9, "MS UI Gothic"
+{
+ LTEXT "検索する文字列(&N):", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "置換後の文字列(&P):", -1, 4, 26, 52, 8
+ EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "単語単位で検索(&W)", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "大文字と小文字を区別する(&C)", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "次を検索(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "置換して次に(&R)", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "すべてを置換(&A)", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "キャンセル", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ(&H)", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG  32, 32, 288, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "印刷"
+FONT 9, "MS UI Gothic"
+{
+    DEFPUSHBUTTON   "OK",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "キャンセル", IDCANCEL, 230,164, 50,14, WS_GROUP
+    PUSHBUTTON      "ヘルプ(&H)",  pshHelp,  50, 161, 50,14, WS_GROUP
+
+    GROUPBOX        "プリンタの選択",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "ファイルへ出力(&L)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "プロパティ(&P)",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "名前(&N):",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "状態:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "種類:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "場所:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "コメント:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "印刷部数",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "部数(&C):",stc5,168,105,68,8
+    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "部単位で印刷(&O)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "印刷範囲",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "すべて(&A)",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "ページ指定(&G)",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "選択した部分(&S)",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "ページから(&F):",         stc2,  52,124,  20,8
+    RTEXT           "ページまで(&T):",           stc3,  99,124,  20,8
+}
+
+PRINT32_SETUP DIALOG  32, 32, 288, 178
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "プリンタの設定"
+FONT 9, "MS UI Gothic"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,176,156,50,14,WS_GROUP
+    PUSHBUTTON      "キャンセル",IDCANCEL,230,156,50,14
+/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "プリンタの選択",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "プロパティ(&P)",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "名前(&N):",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "状態:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "種類:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "場所:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "コメント:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "用紙",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "サイズ(&Z):",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Source:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "方向",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "縦(&O)",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "横(&A)",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG 32, 32, 240, 240
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ページ設定"
+FONT 9, "MS UI Gothic"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "用紙", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "サイズ(&S):", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "給紙方法(&T):", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "方向", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "縦(&P)", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "横(&L)", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "余白", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "左(&E):", stc15, 88, 172, 30, 8
+  EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "右(&R):", stc16, 159, 172, 30, 8
+  EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "上(&O):", stc17, 88, 192, 30, 8
+  EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "下(&B):", stc18, 159, 192, 30, 8
+  EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "OK", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "キャンセル", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "プリンタ(&R)...", psh3, 182, 220, 50, 14
+END
+
+NEWFILEOPENORD DIALOG 0, 0, 280, 164
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "開く"
+FONT 9, "MS UI Gothic"
+{
+    LTEXT	"ファイルの場所(&I):",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"ファイル名(&N):",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+    CONTROL     "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
+
+    LTEXT	"ファイルの種類(&T):",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"読み取り専用ファイルとして開く(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+
+    DEFPUSHBUTTON	"開く(&O)",		 IDOK,222,110,54,14
+    PUSHBUTTON		"キャンセル",		 IDCANCEL,222,128,54,14
+    PUSHBUTTON		"ヘルプ(&H)",		 pshHelp,222,145,54,14
+}
+
+NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
+      WS_THICKFRAME
+CAPTION "開く"
+FONT 9, "MS UI Gothic"
+{
+    LTEXT           "ファイル名:", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
+
+    LTEXT           "ファイルの種類:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+                    CBS_HASSTRINGS | CBS_DROPDOWNLIST
+
+    DEFPUSHBUTTON   "開く(&O)",  IDOK,     350, 240, 40, 14, WS_GROUP
+    PUSHBUTTON      "キャンセル", IDCANCEL, 395, 240, 40, 14
+    PUSHBUTTON      "ヘルプ(&H)",  pshHelp,  350, 272, 40, 14
+}

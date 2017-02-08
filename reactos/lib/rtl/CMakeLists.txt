@@ -9,6 +9,7 @@ list(APPEND SOURCE
     access.c
     acl.c
     actctx.c
+    appverifier.c
     assert.c
     atom.c
     avltable.c
@@ -33,6 +34,7 @@ list(APPEND SOURCE
     heapuser.c
     image.c
     interlck.c
+    memstream.c
     message.c
     largeint.c
     luid.c
@@ -40,6 +42,7 @@ list(APPEND SOURCE
     nls.c
     path.c
     ppb.c
+    prefix.c
     priv.c
     process.c
     propvar.c
@@ -48,6 +51,7 @@ list(APPEND SOURCE
     registry.c
     res.c
     resource.c
+    rxact.c
     sd.c
     security.c
     slist.c
@@ -58,12 +62,14 @@ list(APPEND SOURCE
     time.c
     timezone.c
     timerqueue.c
+    trace.c
     unicode.c
     unicodeprefix.c
     vectoreh.c
     version.c
     wait.c
-    workitem.c)
+    workitem.c
+    rtl.h)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
@@ -90,6 +96,7 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE arm/debug_asm.S)
     list(APPEND SOURCE
+        arm/except.c
         byteswap.c
         mem.c)
 elseif(ARCH STREQUAL "powerpc")
@@ -106,5 +113,5 @@ endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
-add_pch(rtl rtl.h)
+add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)

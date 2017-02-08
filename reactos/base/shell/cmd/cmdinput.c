@@ -112,503 +112,572 @@ static BOOL bInsert = TRUE;
 
 
 static VOID
-ClearCommandLine (LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
+ClearCommandLine(LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
 {
-	INT count;
+    INT count;
 
-	SetCursorXY (orgx, orgy);
-	for (count = 0; count < (INT)_tcslen (str); count++)
-		ConOutChar (_T(' '));
-	_tcsnset (str, _T('\0'), maxlen);
-	SetCursorXY (orgx, orgy);
+    SetCursorXY (orgx, orgy);
+    for (count = 0; count < (INT)_tcslen (str); count++)
+        ConOutChar (_T(' '));
+    _tcsnset (str, _T('\0'), maxlen);
+    SetCursorXY (orgx, orgy);
 }
 
 
 /* read in a command line */
-BOOL ReadCommand (LPTSTR str, INT maxlen)
+BOOL ReadCommand(LPTSTR str, INT maxlen)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	SHORT orgx;			/* origin x/y */
-	SHORT orgy;
-	SHORT curx;			/*current x/y cursor position*/
-	SHORT cury;
-	SHORT tempscreen;
-	INT   count;		/*used in some for loops*/
-	INT   current = 0;	/*the position of the cursor in the string (str)*/
-	INT   charcount = 0;/*chars in the string (str)*/
-	INPUT_RECORD ir;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    SHORT orgx;     /* origin x/y */
+    SHORT orgy;
+    SHORT curx;     /*current x/y cursor position*/
+    SHORT cury;
+    SHORT tempscreen;
+    INT   count;    /*used in some for loops*/
+    INT   current = 0;  /*the position of the cursor in the string (str)*/
+    INT   charcount = 0;/*chars in the string (str)*/
+    INPUT_RECORD ir;
+    DWORD dwControlKeyState;
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
-	WORD   wLastKey = 0;
+    WORD   wLastKey = 0;
 #endif
-	TCHAR  ch;
-	BOOL bReturn = FALSE;
-	BOOL bCharInput;
+    TCHAR  ch;
+    BOOL bReturn = FALSE;
+    BOOL bCharInput;
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
-	TCHAR szPath[MAX_PATH];
+    TCHAR szPath[MAX_PATH];
 #endif
 #ifdef FEATURE_HISTORY
-	//BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
-	TCHAR PreviousChar;
+    //BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
+    TCHAR PreviousChar;
 #endif
 
-	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
-	{
-		/* No console */
-		HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-		DWORD dwRead;
-		CHAR chr;
-		do
-		{
-			if (!ReadFile(hStdin, &chr, 1, &dwRead, NULL) || !dwRead)
-				return FALSE;
+    if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+    {
+        /* No console */
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD dwRead;
+        CHAR chr;
+        do
+        {
+            if (!ReadFile(hStdin, &chr, 1, &dwRead, NULL) || !dwRead)
+                return FALSE;
 #ifdef _UNICODE
-			MultiByteToWideChar(InputCodePage, 0, &chr, 1, &str[charcount++], 1);
+            MultiByteToWideChar(InputCodePage, 0, &chr, 1, &str[charcount++], 1);
 #endif
-		} while (chr != '\n' && charcount < maxlen);
-		str[charcount] = _T('\0');
-		return TRUE;
-	}
+        } while (chr != '\n' && charcount < maxlen);
+        str[charcount] = _T('\0');
+        return TRUE;
+    }
 
-	/* get screen size */
-	maxx = csbi.dwSize.X;
-	maxy = csbi.dwSize.Y;
+    /* get screen size */
+    maxx = csbi.dwSize.X;
+    maxy = csbi.dwSize.Y;
 
-	curx = orgx = csbi.dwCursorPosition.X;
-	cury = orgy = csbi.dwCursorPosition.Y;
+    curx = orgx = csbi.dwCursorPosition.X;
+    cury = orgy = csbi.dwCursorPosition.Y;
 
-	memset (str, 0, maxlen * sizeof (TCHAR));
+    memset (str, 0, maxlen * sizeof (TCHAR));
 
-	SetCursorType (bInsert, TRUE);
+    SetCursorType (bInsert, TRUE);
 
-	do
-	{
+    do
+    {
+        bReturn = FALSE;
+        ConInKey (&ir);
 
-		bReturn = FALSE;
+        dwControlKeyState = ir.Event.KeyEvent.dwControlKeyState;
 
-		ConInKey (&ir);
-
-		if (ir.Event.KeyEvent.dwControlKeyState &
-			(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED|
-			RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) )
-		{
-
-			switch (ir.Event.KeyEvent.wVirtualKeyCode)
-			{
-
+        if (dwControlKeyState &
+            (RIGHT_ALT_PRESSED |LEFT_ALT_PRESSED|
+             RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) )
+        {
+            switch (ir.Event.KeyEvent.wVirtualKeyCode)
+            {
 #ifdef FEATURE_HISTORY
+                case 'K':
+                    /*add the current command line to the history*/
+                    if (dwControlKeyState &
+                        (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+                    {
+                        if (str[0])
+                            History(0,str);
 
-				case 'K':
-					/*add the current command line to the history*/
-					if (ir.Event.KeyEvent.dwControlKeyState &
-						(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
-					{
+                        ClearCommandLine (str, maxlen, orgx, orgy);
+                        current = charcount = 0;
+                        curx = orgx;
+                        cury = orgy;
+                        //bContinue=TRUE;
+                        break;
+                    }
 
-						if (str[0])
-							History(0,str);
+                case 'D':
+                    /*delete current history entry*/
+                    if (dwControlKeyState &
+                        (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+                    {
+                        ClearCommandLine (str, maxlen, orgx, orgy);
+                        History_del_current_entry(str);
+                        current = charcount = _tcslen (str);
+                        ConOutPrintf (_T("%s"), str);
+                        GetCursorXY (&curx, &cury);
+                        //bContinue=TRUE;
+                        break;
+                    }
 
-						ClearCommandLine (str, maxlen, orgx, orgy);
-						current = charcount = 0;
-						curx = orgx;
-						cury = orgy;
-						//bContinue=TRUE;
-						break;
-					}
+#endif /*FEATURE_HISTORY*/
+            }
+        }
 
-				case 'D':
-					/*delete current history entry*/
-					if (ir.Event.KeyEvent.dwControlKeyState &
-						(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
-					{
-						ClearCommandLine (str, maxlen, orgx, orgy);
-						History_del_current_entry(str);
-						current = charcount = _tcslen (str);
-						ConOutPrintf (_T("%s"), str);
-						GetCursorXY (&curx, &cury);
-						//bContinue=TRUE;
-						break;
-					}
+        bCharInput = FALSE;
 
-#endif/*FEATURE_HISTORY*/
-			}
+        switch (ir.Event.KeyEvent.wVirtualKeyCode)
+        {
+            case VK_BACK:
+                /* <BACKSPACE> - delete character to left of cursor */
+                if (current > 0 && charcount > 0)
+                {
+                    if (current == charcount)
+                    {
+                        /* if at end of line */
+                        str[current - 1] = _T('\0');
+                        if (GetCursorX () != 0)
+                        {
+                            ConOutPrintf (_T("\b \b"));
+                            curx--;
+                        }
+                        else
+                        {
+                            SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
+                            ConOutChar (_T(' '));
+                            SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
+                            cury--;
+                            curx = maxx - 1;
+                        }
+                    }
+                    else
+                    {
+                        for (count = current - 1; count < charcount; count++)
+                            str[count] = str[count + 1];
+                        if (GetCursorX () != 0)
+                        {
+                            SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
+                            curx--;
+                        }
+                        else
+                        {
+                            SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
+                            cury--;
+                            curx = maxx - 1;
+                        }
+                        GetCursorXY (&curx, &cury);
+                        ConOutPrintf (_T("%s "), &str[current - 1]);
+                        SetCursorXY (curx, cury);
+                    }
+                    charcount--;
+                    current--;
+                }
+                break;
 
+            case VK_INSERT:
+                /* toggle insert/overstrike mode */
+                bInsert ^= TRUE;
+                SetCursorType (bInsert, TRUE);
+                break;
 
+            case VK_DELETE:
+                /* delete character under cursor */
+                if (current != charcount && charcount > 0)
+                {
+                    for (count = current; count < charcount; count++)
+                        str[count] = str[count + 1];
+                    charcount--;
+                    GetCursorXY (&curx, &cury);
+                    ConOutPrintf (_T("%s "), &str[current]);
+                    SetCursorXY (curx, cury);
+                }
+                break;
 
+            case VK_HOME:
+                /* goto beginning of string */
+                if (current != 0)
+                {
+                    SetCursorXY (orgx, orgy);
+                    curx = orgx;
+                    cury = orgy;
+                    current = 0;
+                }
+                break;
 
-		}
+            case VK_END:
+                /* goto end of string */
+                if (current != charcount)
+                {
+                    SetCursorXY (orgx, orgy);
+                    ConOutPrintf (_T("%s"), str);
+                    GetCursorXY (&curx, &cury);
+                    current = charcount;
+                }
+                break;
 
-		bCharInput = FALSE;
-
-		switch (ir.Event.KeyEvent.wVirtualKeyCode)
-		{
-			case VK_BACK:
-				/* <BACKSPACE> - delete character to left of cursor */
-				if (current > 0 && charcount > 0)
-				{
-					if (current == charcount)
-					{
-						/* if at end of line */
-						str[current - 1] = _T('\0');
-						if (GetCursorX () != 0)
-						{
-							ConOutPrintf (_T("\b \b"));
-							curx--;
-						}
-						else
-						{
-							SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
-							ConOutChar (_T(' '));
-							SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
-							cury--;
-							curx = maxx - 1;
-						}
-					}
-					else
-					{
-						for (count = current - 1; count < charcount; count++)
-							str[count] = str[count + 1];
-						if (GetCursorX () != 0)
-						{
-							SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
-							curx--;
-						}
-						else
-						{
-							SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
-							cury--;
-							curx = maxx - 1;
-						}
-						GetCursorXY (&curx, &cury);
-						ConOutPrintf (_T("%s "), &str[current - 1]);
-						SetCursorXY (curx, cury);
-					}
-					charcount--;
-					current--;
-				}
-				break;
-
-			case VK_INSERT:
-				/* toggle insert/overstrike mode */
-				bInsert ^= TRUE;
-				SetCursorType (bInsert, TRUE);
-				break;
-
-			case VK_DELETE:
-				/* delete character under cursor */
-				if (current != charcount && charcount > 0)
-				{
-					for (count = current; count < charcount; count++)
-						str[count] = str[count + 1];
-					charcount--;
-					GetCursorXY (&curx, &cury);
-					ConOutPrintf (_T("%s "), &str[current]);
-					SetCursorXY (curx, cury);
-				}
-				break;
-
-			case VK_HOME:
-				/* goto beginning of string */
-				if (current != 0)
-				{
-					SetCursorXY (orgx, orgy);
-					curx = orgx;
-					cury = orgy;
-					current = 0;
-				}
-				break;
-
-			case VK_END:
-				/* goto end of string */
-				if (current != charcount)
-				{
-					SetCursorXY (orgx, orgy);
-					ConOutPrintf (_T("%s"), str);
-					GetCursorXY (&curx, &cury);
-					current = charcount;
-				}
-				break;
-
-			case VK_TAB:
+            case VK_TAB:
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
-				/* expand current file name */
-				if ((current == charcount) ||
-				    (current == charcount - 1 &&
-				     str[current] == _T('"'))) /* only works at end of line*/
-				{
-					if (wLastKey != VK_TAB)
-					{
-						/* if first TAB, complete filename*/
-						tempscreen = charcount;
-						CompleteFilename (str, charcount);
-						charcount = _tcslen (str);
-						current = charcount;
+                /* expand current file name */
+                if ((current == charcount) ||
+                    (current == charcount - 1 &&
+                     str[current] == _T('"'))) /* only works at end of line*/
+                {
+                    if (wLastKey != VK_TAB)
+                    {
+                        /* if first TAB, complete filename*/
+                        tempscreen = charcount;
+                        CompleteFilename (str, charcount);
+                        charcount = _tcslen (str);
+                        current = charcount;
 
-						SetCursorXY (orgx, orgy);
-						ConOutPrintf (_T("%s"), str);
+                        SetCursorXY (orgx, orgy);
+                        ConOutPrintf (_T("%s"), str);
 
-						if (tempscreen > charcount)
-						{
-							GetCursorXY (&curx, &cury);
-							for (count = tempscreen - charcount; count--; )
-								ConOutChar (_T(' '));
-							SetCursorXY (curx, cury);
-						}
-						else
-						{
-							if (((charcount + orgx) / maxx) + orgy > maxy - 1)
-								orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
-						}
+                        if (tempscreen > charcount)
+                        {
+                            GetCursorXY (&curx, &cury);
+                            for (count = tempscreen - charcount; count--; )
+                                ConOutChar (_T(' '));
+                            SetCursorXY (curx, cury);
+                        }
+                        else
+                        {
+                            if (((charcount + orgx) / maxx) + orgy > maxy - 1)
+                                orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
+                        }
 
-						/* set cursor position */
-						SetCursorXY ((orgx + current) % maxx,
-							     orgy + (orgx + current) / maxx);
-						GetCursorXY (&curx, &cury);
-					}
-					else
-					{
-						/*if second TAB, list matches*/
-						if (ShowCompletionMatches (str, charcount))
-						{
-							PrintPrompt ();
-							GetCursorXY (&orgx, &orgy);
-							ConOutPrintf (_T("%s"), str);
+                        /* set cursor position */
+                        SetCursorXY ((orgx + current) % maxx,
+                                 orgy + (orgx + current) / maxx);
+                        GetCursorXY (&curx, &cury);
+                    }
+                    else
+                    {
+                        /*if second TAB, list matches*/
+                        if (ShowCompletionMatches (str, charcount))
+                        {
+                            PrintPrompt();
+                            GetCursorXY(&orgx, &orgy);
+                            ConOutPrintf(_T("%s"), str);
 
-							/* set cursor position */
-							SetCursorXY ((orgx + current) % maxx,
-								     orgy + (orgx + current) / maxx);
-							GetCursorXY (&curx, &cury);
-						}
+                            /* set cursor position */
+                            SetCursorXY((orgx + current) % maxx,
+                                         orgy + (orgx + current) / maxx);
+                            GetCursorXY(&curx, &cury);
+                        }
 
-					}
-				}
-				else
-				{
-					MessageBeep (-1);
-				}
+                    }
+                }
+                else
+                {
+                    MessageBeep(-1);
+                }
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
+                /* used to later see if we went down to the next line */
+                tempscreen = charcount;
+                szPath[0]=_T('\0');
 
-				/* used to later see if we went down to the next line */
-				tempscreen = charcount;
-				szPath[0]=_T('\0');
+                /* str is the whole things that is on the current line
+                   that is and and out.  arg 2 is weather it goes back
+                    one file or forward one file */
+                CompleteFilename(str, !(ir.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED), szPath, current);
+                /* Attempt to clear the line */
+                ClearCommandLine (str, maxlen, orgx, orgy);
+                curx = orgx;
+                cury = orgy;
+                current = charcount = 0;
 
-				/* str is the whole things that is on the current line
-				   that is and and out.  arg 2 is weather it goes back
-					one file or forward one file */
-				CompleteFilename(str, !(ir.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED), szPath, current);
-				/* Attempt to clear the line */
-				ClearCommandLine (str, maxlen, orgx, orgy);
-				curx = orgx;
-				cury = orgy;
-				current = charcount = 0;
+                /* Everything is deleted, lets add it back in */
+                _tcscpy(str,szPath);
 
-				/* Everything is deleted, lets add it back in */
-				_tcscpy(str,szPath);
+                /* Figure out where cusor is going to be after we print it */
+                charcount = _tcslen(str);
+                current = charcount;
 
-				/* Figure out where cusor is going to be after we print it */
-				charcount = _tcslen (str);
-				current = charcount;
+                SetCursorXY(orgx, orgy);
+                /* Print out what we have now */
+                ConOutPrintf(_T("%s"), str);
 
-				SetCursorXY (orgx, orgy);
-				/* Print out what we have now */
-				ConOutPrintf (_T("%s"), str);
-
-				/* Move cursor accordingly */
-				if(tempscreen > charcount)
-				{
-					GetCursorXY (&curx, &cury);
-					for(count = tempscreen - charcount; count--; )
-						ConOutChar (_T(' '));
-					SetCursorXY (curx, cury);
-				}
-				else
-				{
-					if(((charcount + orgx) / maxx) + orgy > maxy - 1)
-						orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
-				}
-				SetCursorXY((short)(((int)orgx + current) % maxx), (short)((int)orgy + ((int)orgx + current) / maxx));
-				GetCursorXY(&curx, &cury);
-
+                /* Move cursor accordingly */
+                if (tempscreen > charcount)
+                {
+                    GetCursorXY(&curx, &cury);
+                    for(count = tempscreen - charcount; count--; )
+                        ConOutChar(_T(' '));
+                    SetCursorXY(curx, cury);
+                }
+                else
+                {
+                    if (((charcount + orgx) / maxx) + orgy > maxy - 1)
+                        orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
+                }
+                SetCursorXY((short)(((int)orgx + current) % maxx), (short)((int)orgy + ((int)orgx + current) / maxx));
+                GetCursorXY(&curx, &cury);
 #endif
-				break;
+                break;
 
-			case _T('M'):
-			case _T('C'):
-				/* ^M does the same as return */
-				bCharInput = TRUE;
-				if(!(ir.Event.KeyEvent.dwControlKeyState &
-					(RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
-				{
-					break;
-				}
+            case _T('M'):
+            case _T('C'):
+                /* ^M does the same as return */
+                bCharInput = TRUE;
+                if (!(ir.Event.KeyEvent.dwControlKeyState &
+                    (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
+                {
+                    break;
+                }
 
-			case VK_RETURN:
-				/* end input, return to main */
+            case VK_RETURN:
+                /* end input, return to main */
 #ifdef FEATURE_HISTORY
-				/* add to the history */
-				if (str[0])
-					History (0, str);
+                /* add to the history */
+                if (str[0])
+                    History (0, str);
 #endif
-				str[charcount++] = _T('\n');
-				str[charcount] = _T('\0');
-				ConOutChar (_T('\n'));
-			bReturn = TRUE;
-				break;
+                str[charcount++] = _T('\n');
+                str[charcount] = _T('\0');
+                ConOutChar(_T('\n'));
+            bReturn = TRUE;
+                break;
 
-			case VK_ESCAPE:
-				/* clear str  Make this callable! */
-				ClearCommandLine (str, maxlen, orgx, orgy);
-				curx = orgx;
-				cury = orgy;
-				current = charcount = 0;
-				break;
+            case VK_ESCAPE:
+                /* clear str  Make this callable! */
+                ClearCommandLine (str, maxlen, orgx, orgy);
+                curx = orgx;
+                cury = orgy;
+                current = charcount = 0;
+                break;
 
 #ifdef FEATURE_HISTORY
-			case VK_F3:
-				History_move_to_bottom();
+            case VK_F3:
+                History_move_to_bottom();
 #endif
-			case VK_UP:
+            case VK_UP:
 #ifdef FEATURE_HISTORY
-				/* get previous command from buffer */
-				ClearCommandLine (str, maxlen, orgx, orgy);
-				History (-1, str);
-				current = charcount = _tcslen (str);
-				if (((charcount + orgx) / maxx) + orgy > maxy - 1)
-					orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
-				ConOutPrintf (_T("%s"), str);
-				GetCursorXY (&curx, &cury);
+                /* get previous command from buffer */
+                ClearCommandLine (str, maxlen, orgx, orgy);
+                History (-1, str);
+                current = charcount = _tcslen (str);
+                if (((charcount + orgx) / maxx) + orgy > maxy - 1)
+                    orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
+                ConOutPrintf (_T("%s"), str);
+                GetCursorXY (&curx, &cury);
 #endif
-				break;
+                break;
 
-			case VK_DOWN:
+            case VK_DOWN:
 #ifdef FEATURE_HISTORY
-				/* get next command from buffer */
-				ClearCommandLine (str, maxlen, orgx, orgy);
-				History (1, str);
-				current = charcount = _tcslen (str);
-				if (((charcount + orgx) / maxx) + orgy > maxy - 1)
-					orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
-				ConOutPrintf (_T("%s"), str);
-				GetCursorXY (&curx, &cury);
+                /* get next command from buffer */
+                ClearCommandLine (str, maxlen, orgx, orgy);
+                History (1, str);
+                current = charcount = _tcslen (str);
+                if (((charcount + orgx) / maxx) + orgy > maxy - 1)
+                    orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
+                ConOutPrintf (_T("%s"), str);
+                GetCursorXY (&curx, &cury);
 #endif
-				break;
+                break;
 
-			case VK_LEFT:
-				/* move cursor left */
-				if (current > 0)
-				{
-					current--;
-					if (GetCursorX () == 0)
-					{
-						SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
-						curx = maxx - 1;
-						cury--;
-					}
-					else
-					{
-						SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
-						curx--;
-					}
-				}
-				else
-				{
-					MessageBeep (-1);
-				}
-				break;
+            case VK_LEFT:
+                if (dwControlKeyState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED))
+                {
+                    /* move cursor to the previous word */
+                    if (current > 0)
+                    {
+                        while (current > 0 && str[current - 1] == _T(' '))
+                        {
+                            current--;
+                            if (curx == 0)
+                            {
+                                cury--;
+                                curx = maxx -1;
+                            }
+                            else
+                            {
+                                curx--;
+                            }
+                        }
 
-			case VK_RIGHT:
-				/* move cursor right */
-				if (current != charcount)
-				{
-					current++;
-					if (GetCursorX () == maxx - 1)
-					{
-						SetCursorXY (0, (SHORT)(GetCursorY () + 1));
-						curx = 0;
-						cury++;
-					}
-					else
-					{
-						SetCursorXY ((SHORT)(GetCursorX () + 1), GetCursorY ());
-						curx++;
-					}
-				}
+                        while (current > 0 && str[current -1] != _T(' '))
+                        {
+                            current--;
+                            if (curx == 0)
+                            {
+                                cury--;
+                                curx = maxx -1;
+                            }
+                            else
+                            {
+                                curx--;
+                            }
+                        }
+
+                        SetCursorXY(curx, cury);
+                    }
+                }
+                else
+                {
+                    /* move cursor left */
+                    if (current > 0)
+                    {
+                        current--;
+                        if (GetCursorX () == 0)
+                        {
+                            SetCursorXY ((SHORT)(maxx - 1), (SHORT)(GetCursorY () - 1));
+                            curx = maxx - 1;
+                            cury--;
+                        }
+                        else
+                        {
+                            SetCursorXY ((SHORT)(GetCursorX () - 1), GetCursorY ());
+                            curx--;
+                        }
+                    }
+                    else
+                    {
+                        MessageBeep (-1);
+                    }
+                }
+                break;
+
+            case VK_RIGHT:
+                if (dwControlKeyState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED))
+                {
+                    /* move cursor to the next word */
+                    if (current != charcount)
+                    {
+                        while (current != charcount && str[current] != _T(' '))
+                        {
+                            current++;
+                            if (curx == maxx - 1)
+                            {
+                                cury++;
+                                curx = 0;
+                            }
+                            else
+                            {
+                                curx++;
+                            }
+                        }
+
+                        while (current != charcount && str[current] == _T(' '))
+                        {
+                            current++;
+                            if (curx == maxx - 1)
+                            {
+                                cury++;
+                                curx = 0;
+                            }
+                            else
+                            {
+                                curx++;
+                            }
+                        }
+
+                        SetCursorXY(curx, cury);
+                    }
+                }
+                else
+                {
+                    /* move cursor right */
+                    if (current != charcount)
+                    {
+                        current++;
+                        if (GetCursorX () == maxx - 1)
+                        {
+                            SetCursorXY (0, (SHORT)(GetCursorY () + 1));
+                            curx = 0;
+                            cury++;
+                        }
+                        else
+                        {
+                            SetCursorXY ((SHORT)(GetCursorX () + 1), GetCursorY ());
+                            curx++;
+                        }
+                    }
 #ifdef FEATURE_HISTORY
-				else
-				{
-					LPCTSTR last = PeekHistory(-1);
-					if (last && charcount < (INT)_tcslen (last))
-					{
-						PreviousChar = last[current];
-						ConOutChar(PreviousChar);
-						GetCursorXY(&curx, &cury);
-						str[current++] = PreviousChar;
-						charcount++;
-					}
-				}
+                    else
+                    {
+                        LPCTSTR last = PeekHistory(-1);
+                        if (last && charcount < (INT)_tcslen (last))
+                        {
+                            PreviousChar = last[current];
+                            ConOutChar(PreviousChar);
+                            GetCursorXY(&curx, &cury);
+                            str[current++] = PreviousChar;
+                            charcount++;
+                        }
+                    }
 #endif
-				break;
+                }
+                break;
 
-			default:
-				/* This input is just a normal char */
-				bCharInput = TRUE;
+            default:
+                /* This input is just a normal char */
+                bCharInput = TRUE;
 
-			}
+            }
 #ifdef _UNICODE
-			ch = ir.Event.KeyEvent.uChar.UnicodeChar;
-			if (ch >= 32 && (charcount != (maxlen - 2)) && bCharInput)
+            ch = ir.Event.KeyEvent.uChar.UnicodeChar;
+            if (ch >= 32 && (charcount != (maxlen - 2)) && bCharInput)
 #else
-			ch = ir.Event.KeyEvent.uChar.AsciiChar;
-			if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)) && bCharInput)
+            ch = ir.Event.KeyEvent.uChar.AsciiChar;
+            if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)) && bCharInput)
 #endif /* _UNICODE */
-			{
-				/* insert character into string... */
-				if (bInsert && current != charcount)
-				{
-					/* If this character insertion will cause screen scrolling,
-					 * adjust the saved origin of the command prompt. */
-					tempscreen = _tcslen(str + current) + curx;
-					if ((tempscreen % maxx) == (maxx - 1) &&
-						(tempscreen / maxx) + cury == (maxy - 1))
-					{
-						orgy--;
-						cury--;
-					}
+            {
+                /* insert character into string... */
+                if (bInsert && current != charcount)
+                {
+                    /* If this character insertion will cause screen scrolling,
+                     * adjust the saved origin of the command prompt. */
+                    tempscreen = _tcslen(str + current) + curx;
+                    if ((tempscreen % maxx) == (maxx - 1) &&
+                        (tempscreen / maxx) + cury == (maxy - 1))
+                    {
+                        orgy--;
+                        cury--;
+                    }
 
-					for (count = charcount; count > current; count--)
-						str[count] = str[count - 1];
-					str[current++] = ch;
-					if (curx == maxx - 1)
-						curx = 0, cury++;
-					else
-						curx++;
-					ConOutPrintf (_T("%s"), &str[current - 1]);
-					SetCursorXY (curx, cury);
-					charcount++;
-				}
-				else
-				{
-					if (current == charcount)
-						charcount++;
-					str[current++] = ch;
-					if (GetCursorX () == maxx - 1 && GetCursorY () == maxy - 1)
-						orgy--, cury--;
-					if (GetCursorX () == maxx - 1)
-						curx = 0, cury++;
-					else
-						curx++;
-					ConOutChar (ch);
-				}
-			}
+                    for (count = charcount; count > current; count--)
+                        str[count] = str[count - 1];
+                    str[current++] = ch;
+                    if (curx == maxx - 1)
+                        curx = 0, cury++;
+                    else
+                        curx++;
+                    ConOutPrintf (_T("%s"), &str[current - 1]);
+                    SetCursorXY (curx, cury);
+                    charcount++;
+                }
+                else
+                {
+                    if (current == charcount)
+                        charcount++;
+                    str[current++] = ch;
+                    if (GetCursorX () == maxx - 1 && GetCursorY () == maxy - 1)
+                        orgy--, cury--;
+                    if (GetCursorX () == maxx - 1)
+                        curx = 0, cury++;
+                    else
+                        curx++;
+                    ConOutChar (ch);
+                }
+            }
 
-		//wLastKey = ir.Event.KeyEvent.wVirtualKeyCode;
-	}
-	while (!bReturn);
+        //wLastKey = ir.Event.KeyEvent.wVirtualKeyCode;
+    }
+    while (!bReturn);
 
-	SetCursorType (bInsert, TRUE);
+    SetCursorType (bInsert, TRUE);
 
 #ifdef FEATURE_ALIASES
-	/* expand all aliases */
-	ExpandAlias (str, maxlen);
+    /* expand all aliases */
+    ExpandAlias (str, maxlen);
 #endif /* FEATURE_ALIAS */
-	return TRUE;
+    return TRUE;
 }

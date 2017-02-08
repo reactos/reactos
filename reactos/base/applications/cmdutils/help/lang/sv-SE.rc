@@ -1,0 +1,70 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
+help kommando\n\
+kommando /?     For mer informasjon om en bestemt kommando\n\n\
+?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
+ALIAS    Sett, fjern eller vis alias.\n\
+ATTRIB   Viser eller ändra fil attributter.\n\
+BEEP     Piper i høyttaleren.\n\
+CALL     Starte et satsvis program fra et annet.\n\
+CD       Vis namnet på eller endrer aktuell mapp.\n\
+CHCP     Viser eller anger nummer på aktiv tegntabell.\n\
+CHOICE   Venter til bruken väljer en av et sett av val.\n\
+CLS      Tømmer skjermen.\n\
+CMD      Start en ny forekomst av ReactOS kommandotolk.\n\
+COLOR    Anger standard forgrunn- och bakgrunnsfargr for konsollen.\n\
+COPY     Kopierer en eller flere filer til en annen plassering.\n\
+DATE     Viser eller anger datoen.\n\
+DELETE   Sletter en eller flere filer.\n\
+DIR      Viser en liste over filer och undermappar i en mapp.\n\
+ECHO     Viser meldinger, eller slår kommandoecho på eller av.\n\
+ERASE    Sletter en eller flere filer.\n\
+EXIT     Avslutter programmet CMD.EXE program (kommandotolken).\n\
+FOR      Kjør en bestemt kommando for hver fil i et sett av filer.\n\
+FREE     Viser ledig diskplass.\n\
+GOTO     Leder ReactOS kommandotolk til en merket linje i\n\
+         et satsvis program.\n\
+HELP     Viser hjelpeinformasjon for ReactOS-kommandoer.\n\
+HISTORY  Lister alle kommandoer som har blitt brukt\n\
+IF       Utføre betinget behandling i satsvise programmer.\n\
+LABEL    Oppretter, endrer, eller sletter volumnamnet på en disk.\n\
+MD       Oppretter en mapp.\n\
+MKDIR    Oppretter en mapp.\n\
+MKLINK   Creates a filesystem link object.\n\
+MOVE     Flytter en eller flere filer fra en mapp til en annen.\n\
+PATH     Vis eller sett en søkesti for kjørbare filer.\n\
+PAUSE    Avbryter behandling av en satsvis fil, och viser en melding.\n\
+POPD     Fjenoppretter den forige verdien av aktuell mapp, lagret av\n\
+         PUSHD.\n\
+PROMPT   Ändra kommandoledeteksten.\n\
+PUSHD    Lagre aktuell mapp och endrer den etterpå.\n\
+RD       Fjerner en mapp.\n\
+REM      Anger kommentarer i satsvise filer.\n\
+REN      Gir nytt namn til en eller flere filer.\n\
+RENAME   Gir nytt namn til en eller flere filer.\n\
+RMDIR    Fjerner en mapp.\n\
+SCREEN   Flytter markør.\n\
+SET      Vis, sett, eller fjern ReactOS miljøvariabel.\n\
+SHIFT    Shift plass for erstattelige parameter i satsvise filer.\n"
+    IDS_HELP2 "START    Start et separat vindu til att kjøre et spesifisert program eller kommando.\n\
+         Utfører kommando.\n\
+TIME     Vis eller sett system tid.\n\
+TIMER    Håndtere stoppeklokker (maks 10 stk).\n\
+TITLE    Sett vindustittel for CMD.EXE sesjon.\n\
+TYPE     Vis innholdet i en text fil.\n\
+VER      Viser ReactOS version.\n\
+VERIFY   Forteller ReactOS om att bekrefte om dine filer är skrevet\n\
+         riktig til disk.\n\
+VOL      Vis et volums namn och serienummer.\n"
+END

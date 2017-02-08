@@ -11,6 +11,18 @@ _exp:
     mov ebp, esp
 
     fld qword ptr [ebp + 8]
+    fxam
+    fstsw ax
+    fwait
+    sahf
+    jnp .not_inf
+    jnc .not_inf
+    test ah, 2
+    jz .done
+    fstp st
+    fldz
+    jmp .done
+.not_inf:
     fldl2e
     fmul st, st(1)
     fst st(1)
@@ -22,7 +34,7 @@ _exp:
     faddp st(1), st
     fscale
     fstp st(1)
-
+.done:
     pop ebp
     ret
 

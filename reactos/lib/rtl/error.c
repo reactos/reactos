@@ -3,6 +3,7 @@
  *
  * Copyright 2000 Alexandre Julliard
  * Copyright 2002 Andriy Palamarchuk
+ * Copyright 2010 André Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -251,10 +252,10 @@ static const DWORD table_00000102[32] =
    ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY   /* 00000121 (STATUS_DS_MEMBERSHIP_EVALUATED_LOCALLY) */
 };
 
-static const DWORD table_40000002[12] =
+static const DWORD table_40000002[36] =
 {
    ERROR_INVALID_PARAMETER,                /* 40000002 (STATUS_WORKING_SET_LIMIT_RANGE) */
-   0,                                      /* 40000003 (STATUS_IMAGE_NOT_AT_BASE) */
+   ERROR_IMAGE_NOT_AT_BASE,                /* 40000003 (STATUS_IMAGE_NOT_AT_BASE) */
    0,                                      /* 40000004 (STATUS_RXACT_STATE_CREATED) */
    0,                                      /* 40000005 (STATUS_SEGMENT_NOTIFICATION) */
    ERROR_LOCAL_USER_SESSION_KEY,           /* 40000006 (STATUS_LOCAL_USER_SESSION_KEY) */
@@ -264,7 +265,31 @@ static const DWORD table_40000002[12] =
    0,                                      /* 4000000a (STATUS_FT_READ_RECOVERY_FROM_BACKUP) */
    0,                                      /* 4000000b (STATUS_FT_WRITE_RECOVERY) */
    ERROR_COUNTER_TIMEOUT,                  /* 4000000c (STATUS_SERIAL_COUNTER_TIMEOUT) */
-   ERROR_NULL_LM_PASSWORD                  /* 4000000d (STATUS_NULL_LM_PASSWORD) */
+   ERROR_NULL_LM_PASSWORD,                 /* 4000000d (STATUS_NULL_LM_PASSWORD) */
+   ERROR_IMAGE_MACHINE_TYPE_MISMATCH,      /* 4000000e (STATUS_IMAGE_MACHINE_TYPE_MISMATCH) */
+   ERROR_RECEIVE_PARTIAL,                  /* 4000000f (STATUS_RECEIVE_PARTIAL) */
+   ERROR_RECEIVE_EXPEDITED,                /* 40000010 (STATUS_RECEIVE_EXPEDITED) */
+   ERROR_RECEIVE_PARTIAL_EXPEDITED,        /* 40000011 (STATUS_RECEIVE_PARTIAL_EXPEDITED) */
+   ERROR_EVENT_DONE,                       /* 40000012 (STATUS_EVENT_DONE) */
+   ERROR_EVENT_PENDING,                    /* 40000013 (STATUS_EVENT_PENDING) */
+   ERROR_CHECKING_FILE_SYSTEM,             /* 40000014 (STATUS_CHECKING_FILE_SYSTEM) */
+   ERROR_FATAL_APP_EXIT,                   /* 40000015 (STATUS_FATAL_APP_EXIT) */
+   ERROR_PREDEFINED_HANDLE,                /* 40000016 (STATUS_PREDEFINED_HANDLE) */
+   ERROR_WAS_UNLOCKED,                     /* 40000017 (STATUS_WAS_UNLOCKED) */
+   ERROR_SERVICE_NOTIFICATION,             /* 40000018 (STATUS_SERVICE_NOTIFICATION) */
+   ERROR_WAS_LOCKED,                       /* 40000019 (STATUS_WAS_LOCKED) */
+   ERROR_LOG_HARD_ERROR,                   /* 4000001a (STATUS_LOG_HARD_ERROR) */
+   ERROR_ALREADY_WIN32,                    /* 4000001b (STATUS_ALREADY_WIN32) */
+   0,                                      /* 4000001c (STATUS_WX86_UNSIMULATE) */
+   0,                                      /* 4000001d (STATUS_WX86_CONTINUE) */
+   0,                                      /* 4000001e (STATUS_WX86_SINGLE_STEP) */
+   0,                                      /* 4000001f (STATUS_WX86_BREAKPOINT) */
+   0,                                      /* 40000020 (STATUS_WX86_EXCEPTION_CONTINUE) */
+   0,                                      /* 40000021 (STATUS_WX86_EXCEPTION_LASTCHANCE) */
+   0,                                      /* 40000022 (STATUS_WX86_EXCEPTION_CHAIN) */
+   ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE,  /* 40000023 (STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE) */
+   ERROR_NO_YIELD_PERFORMED,               /* 40000024 (STATUS_NO_YIELD_PERFORMED) */
+   ERROR_TIMER_RESUME_IGNORED              /* 40000025 (STATUS_TIMER_RESUME_IGNORED) */
 };
 
 static const DWORD table_40000370[1] =
@@ -293,7 +318,7 @@ static const DWORD table_80000001[39] =
    0,                                      /* 80000007 (STATUS_WAKE_SYSTEM_DEBUGGER) */
    0,                                      /* 80000008 */
    0,                                      /* 80000009 */
-   0,                                      /* 8000000a (STATUS_HANDLES_CLOSED) */
+   ERROR_HANDLES_CLOSED,                   /* 8000000a (STATUS_HANDLES_CLOSED) */
    ERROR_NO_INHERITANCE,                   /* 8000000b (STATUS_NO_INHERITANCE) */
    0,                                      /* 8000000c (STATUS_GUID_SUBSTITUTION_MADE) */
    ERROR_PARTIAL_COPY,                     /* 8000000d (STATUS_PARTIAL_COPY) */
@@ -710,9 +735,9 @@ static const DWORD table_c0000001[411] =
    0,                                      /* c0000115 (STATUS_ABIOS_SELECTOR_NOT_AVAILABLE) */
    0,                                      /* c0000116 (STATUS_ABIOS_INVALID_SELECTOR) */
    ERROR_INVALID_THREAD_ID,                /* c0000117 (STATUS_NO_LDT) */
-   0,                                      /* c0000118 (STATUS_INVALID_LDT_SIZE) */
-   0,                                      /* c0000119 (STATUS_INVALID_LDT_OFFSET) */
-   0,                                      /* c000011a (STATUS_INVALID_LDT_DESCRIPTOR) */
+   ERROR_INVALID_LDT_SIZE,                 /* c0000118 (STATUS_INVALID_LDT_SIZE) */
+   ERROR_INVALID_LDT_OFFSET,               /* c0000119 (STATUS_INVALID_LDT_OFFSET) */
+   ERROR_INVALID_LDT_DESCRIPTOR,           /* c000011a (STATUS_INVALID_LDT_DESCRIPTOR) */
    ERROR_BAD_EXE_FORMAT,                   /* c000011b (STATUS_INVALID_IMAGE_NE_FORMAT) */
    ERROR_RXACT_INVALID_STATE,              /* c000011c (STATUS_RXACT_INVALID_STATE) */
    ERROR_RXACT_COMMIT_FAILURE,             /* c000011d (STATUS_RXACT_COMMIT_FAILURE) */
@@ -740,11 +765,11 @@ static const DWORD table_c0000001[411] =
    ERROR_TIME_SKEW,                        /* c0000133 (STATUS_TIME_DIFFERENCE_AT_DC) */
    0,                                      /* c0000134 (STATUS_SYNCHRONIZATION_REQUIRED) */
    ERROR_MOD_NOT_FOUND,                    /* c0000135 (STATUS_DLL_NOT_FOUND) */
-   0,                                      /* c0000136 (STATUS_OPEN_FAILED) */
-   0,                                      /* c0000137 (STATUS_IO_PRIVILEGE_FAILED) */
+   ERROR_NET_OPEN_FAILED,                  /* c0000136 (STATUS_OPEN_FAILED) */
+   ERROR_IO_PRIVILEGE_FAILED,              /* c0000137 (STATUS_IO_PRIVILEGE_FAILED) */
    ERROR_INVALID_ORDINAL,                  /* c0000138 (STATUS_ORDINAL_NOT_FOUND) */
    ERROR_PROC_NOT_FOUND,                   /* c0000139 (STATUS_ENTRYPOINT_NOT_FOUND) */
-   0,                                      /* c000013a (STATUS_CONTROL_C_EXIT) */
+   ERROR_CONTROL_C_EXIT,                   /* c000013a (STATUS_CONTROL_C_EXIT) */
    ERROR_NETNAME_DELETED,                  /* c000013b (STATUS_LOCAL_DISCONNECT) */
    ERROR_NETNAME_DELETED,                  /* c000013c (STATUS_REMOTE_DISCONNECT) */
    ERROR_REM_NOT_LIST,                     /* c000013d (STATUS_REMOTE_RESOURCES) */
@@ -753,18 +778,18 @@ static const DWORD table_c0000001[411] =
    ERROR_UNEXP_NET_ERR,                    /* c0000140 (STATUS_INVALID_CONNECTION) */
    ERROR_UNEXP_NET_ERR,                    /* c0000141 (STATUS_INVALID_ADDRESS) */
    ERROR_DLL_INIT_FAILED,                  /* c0000142 (STATUS_DLL_INIT_FAILED) */
-   0,                                      /* c0000143 (STATUS_MISSING_SYSTEMFILE) */
-   0,                                      /* c0000144 (STATUS_UNHANDLED_EXCEPTION) */
-   0,                                      /* c0000145 (STATUS_APP_INIT_FAILURE) */
-   0,                                      /* c0000146 (STATUS_PAGEFILE_CREATE_FAILED) */
-   0,                                      /* c0000147 (STATUS_NO_PAGEFILE) */
+   ERROR_MISSING_SYSTEMFILE,               /* c0000143 (STATUS_MISSING_SYSTEMFILE) */
+   ERROR_UNHANDLED_EXCEPTION,              /* c0000144 (STATUS_UNHANDLED_EXCEPTION) */
+   ERROR_APP_INIT_FAILURE,                 /* c0000145 (STATUS_APP_INIT_FAILURE) */
+   ERROR_PAGEFILE_CREATE_FAILED,           /* c0000146 (STATUS_PAGEFILE_CREATE_FAILED) */
+   ERROR_NO_PAGEFILE,                      /* c0000147 (STATUS_NO_PAGEFILE) */
    ERROR_INVALID_LEVEL,                    /* c0000148 (STATUS_INVALID_LEVEL) */
    ERROR_INVALID_PASSWORD,                 /* c0000149 (STATUS_WRONG_PASSWORD_CORE) */
-   0,                                      /* c000014a (STATUS_ILLEGAL_FLOAT_CONTEXT) */
+   ERROR_ILLEGAL_FLOAT_CONTEXT,            /* c000014a (STATUS_ILLEGAL_FLOAT_CONTEXT) */
    ERROR_BROKEN_PIPE,                      /* c000014b (STATUS_PIPE_BROKEN) */
    ERROR_BADDB,                            /* c000014c (STATUS_REGISTRY_CORRUPT) */
    ERROR_REGISTRY_IO_FAILED,               /* c000014d (STATUS_REGISTRY_IO_FAILED) */
-   0,                                      /* c000014e (STATUS_NO_EVENT_PAIR) */
+   ERROR_NO_EVENT_PAIR,                    /* c000014e (STATUS_NO_EVENT_PAIR) */
    ERROR_UNRECOGNIZED_VOLUME,              /* c000014f (STATUS_UNRECOGNIZED_VOLUME) */
    ERROR_SERIAL_NO_DEVICE,                 /* c0000150 (STATUS_SERIAL_NO_DEVICE_INITED) */
    ERROR_NO_SUCH_ALIAS,                    /* c0000151 (STATUS_NO_SUCH_ALIAS) */
@@ -780,7 +805,7 @@ static const DWORD table_c0000001[411] =
    ERROR_LOGON_TYPE_NOT_GRANTED,           /* c000015b (STATUS_LOGON_TYPE_NOT_GRANTED) */
    ERROR_NOT_REGISTRY_FILE,                /* c000015c (STATUS_NOT_REGISTRY_FILE) */
    ERROR_NT_CROSS_ENCRYPTION_REQUIRED,     /* c000015d (STATUS_NT_CROSS_ENCRYPTION_REQUIRED) */
-   0,                                      /* c000015e (STATUS_DOMAIN_CTRLR_CONFIG_ERROR) */
+   ERROR_DOMAIN_CTRLR_CONFIG_ERROR,        /* c000015e (STATUS_DOMAIN_CTRLR_CONFIG_ERROR) */
    ERROR_IO_DEVICE,                        /* c000015f (STATUS_FT_MISSING_MEMBER) */
    0,                                      /* c0000160 (STATUS_ILL_FORMED_SERVICE_ENTRY) */
    0,                                      /* c0000161 (STATUS_ILLEGAL_CHARACTER) */
@@ -886,8 +911,8 @@ static const DWORD table_c0000202[396] =
    0,                                      /* c0000227 (STATUS_RECOVERY_FAILURE) */
    0,                                      /* c0000228 (STATUS_STACK_OVERFLOW_READ) */
    ERROR_INVALID_PARAMETER,                /* c0000229 (STATUS_FAIL_CHECK) */
-   STATUS_DUPLICATE_OBJECTID,              /* c000022a (STATUS_DUPLICATE_OBJECTID) */
-   STATUS_OBJECTID_EXISTS,                 /* c000022b (STATUS_OBJECTID_EXISTS) */
+   ERROR_OBJECT_ALREADY_EXISTS,            /* c000022a (STATUS_DUPLICATE_OBJECTID) */
+   ERROR_OBJECT_ALREADY_EXISTS,            /* c000022b (STATUS_OBJECTID_EXISTS) */
    0,                                      /* c000022c (STATUS_CONVERT_TO_LARGE) */
    ERROR_RETRY,                            /* c000022d (STATUS_RETRY) */
    0,                                      /* c000022e (STATUS_FOUND_OUT_OF_SCOPE) */
@@ -927,7 +952,7 @@ static const DWORD table_c0000202[396] =
    0,                                      /* c0000250 (STATUS_INSUFFICIENT_LOGON_INFO) */
    0,                                      /* c0000251 (STATUS_BAD_DLL_ENTRYPOINT) */
    0,                                      /* c0000252 (STATUS_BAD_SERVICE_ENTRYPOINT) */
-   ERROR_INTERNAL_ERROR,                   /* c0000253 (STATUS_LPC_REPLY_LOST) */
+   ERROR_CONNECTION_ABORTED,               /* c0000253 (STATUS_LPC_REPLY_LOST) */
    0,                                      /* c0000254 (STATUS_IP_ADDRESS_CONFLICT1) */
    0,                                      /* c0000255 (STATUS_IP_ADDRESS_CONFLICT2) */
    0,                                      /* c0000256 (STATUS_REGISTRY_QUOTA_LIMIT) */
@@ -1460,7 +1485,7 @@ static const DWORD table_c0130001[22] =
    ERROR_CLUSTER_NETWORK_NOT_INTERNAL      /* c0130016 (STATUS_CLUSTER_NETWORK_NOT_INTERNAL) */
 };
 
-static const DWORD table_c0150001[14] =
+static const DWORD table_c0150001[39] =
 {
    ERROR_SXS_SECTION_NOT_FOUND,            /* c0150001 (STATUS_SXS_SECTION_NOT_FOUND) */
    ERROR_SXS_CANT_GEN_ACTCTX,              /* c0150002 (STATUS_SXS_CANT_GEN_ACTCTX) */
@@ -1470,18 +1495,43 @@ static const DWORD table_c0150001[14] =
    ERROR_SXS_MANIFEST_PARSE_ERROR,         /* c0150006 (STATUS_SXS_MANIFEST_PARSE_ERROR) */
    ERROR_SXS_ACTIVATION_CONTEXT_DISABLED,  /* c0150007 (STATUS_SXS_ACTIVATION_CONTEXT_DISABLED) */
    ERROR_SXS_KEY_NOT_FOUND,                /* c0150008 (STATUS_SXS_KEY_NOT_FOUND) */
-   0,                                      /* c0150009 (STATUS_SXS_VERSION_CONFLICT) */
+   ERROR_SXS_VERSION_CONFLICT,             /* c0150009 (STATUS_SXS_VERSION_CONFLICT) */
    ERROR_SXS_WRONG_SECTION_TYPE,           /* c015000a (STATUS_SXS_WRONG_SECTION_TYPE) */
    ERROR_SXS_THREAD_QUERIES_DISABLED,      /* c015000b (STATUS_SXS_THREAD_QUERIES_DISABLED) */
-   0,                                      /* c015000c (STATUS_SXS_ASSEMBLY_MISSING) */
+   ERROR_SXS_ASSEMBLY_MISSING,             /* c015000c (STATUS_SXS_ASSEMBLY_MISSING) */
    0,                                      /* c015000d */
-   ERROR_SXS_PROCESS_DEFAULT_ALREADY_SET   /* c015000e (STATUS_SXS_PROCESS_DEFAULT_ALREADY_SET) */
+   ERROR_SXS_PROCESS_DEFAULT_ALREADY_SET,  /* c015000e (STATUS_SXS_PROCESS_DEFAULT_ALREADY_SET) */
+   ERROR_SXS_EARLY_DEACTIVATION,           /* c015000f (STATUS_SXS_EARLY_DEACTIVATION) */
+   ERROR_SXS_INVALID_DEACTIVATION,         /* c0150010 (STATUS_SXS_INVALID_DEACTIVATION) */
+   ERROR_SXS_MULTIPLE_DEACTIVATION,        /* c0150011 (STATUS_SXS_MULTIPLE_DEACTIVATION) */
+   ERROR_SXS_SYSTEM_DEFAULT_ACTIVATION_CONTEXT_EMPTY,          /* c0150012 (STATUS_SXS_SYSTEM_DEFAULT_ACTIVATION_CONTEXT_EMPTY) */
+   ERROR_SXS_PROCESS_TERMINATION_REQUESTED,                    /* c0150013 (STATUS_SXS_PROCESS_TERMINATION_REQUESTED) */
+   ERROR_SXS_CORRUPT_ACTIVATION_STACK,     /* c0150014 (STATUS_SXS_CORRUPT_ACTIVATION_STACK) */
+   ERROR_SXS_CORRUPTION,                   /* c0150015 (STATUS_SXS_CORRUPTION) */
+   ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE,                 /* c0150016 (STATUS_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE) */
+   ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_NAME,                  /* c0150017 (STATUS_SXS_INVALID_IDENTITY_ATTRIBUTE_NAME) */
+   ERROR_SXS_IDENTITY_DUPLICATE_ATTRIBUTE, /* c0150018 (STATUS_SXS_IDENTITY_DUPLICATE_ATTRIBUTE) */
+   ERROR_SXS_IDENTITY_PARSE_ERROR,         /* c0150019 (STATUS_SXS_IDENTITY_PARSE_ERROR) */
+   ERROR_SXS_COMPONENT_STORE_CORRUPT,      /* c015001a (STATUS_SXS_COMPONENT_STORE_CORRUPT) */
+   ERROR_SXS_FILE_HASH_MISMATCH,           /* c015001b (STATUS_SXS_FILE_HASH_MISMATCH) */
+   ERROR_SXS_MANIFEST_IDENTITY_SAME_BUT_CONTENTS_DIFFERENT,    /* c015001c (STATUS_SXS_MANIFEST_IDENTITY_SAME_BUT_CONTENTS_DIFFERENT) */
+   ERROR_SXS_IDENTITIES_DIFFERENT,         /* c015001d (STATUS_SXS_IDENTITIES_DIFFERENT) */
+   ERROR_SXS_ASSEMBLY_IS_NOT_A_DEPLOYMENT, /* c015001e (STATUS_SXS_ASSEMBLY_IS_NOT_A_DEPLOYMENT) */
+   ERROR_SXS_FILE_NOT_PART_OF_ASSEMBLY,    /* c015001f (STATUS_SXS_FILE_NOT_PART_OF_ASSEMBLY) */
+   ERROR_ADVANCED_INSTALLER_FAILED,        /* c0150020 (STATUS_ADVANCED_INSTALLER_FAILED) */
+   ERROR_XML_ENCODING_MISMATCH,            /* c0150021 (STATUS_XML_ENCODING_MISMATCH) */
+   ERROR_SXS_MANIFEST_TOO_BIG,             /* c0150022 (STATUS_SXS_MANIFEST_TOO_BIG) */
+   ERROR_SXS_SETTING_NOT_REGISTERED,       /* c0150023 (STATUS_SXS_SETTING_NOT_REGISTERED) */
+   ERROR_SXS_TRANSACTION_CLOSURE_INCOMPLETE,                   /* c0150024 (STATUS_SXS_TRANSACTION_CLOSURE_INCOMPLETE) */
+   ERROR_SMI_PRIMITIVE_INSTALLER_FAILED,                       /* c0150025 (STATUS_SMI_PRIMITIVE_INSTALLER_FAILED) */
+   ERROR_GENERIC_COMMAND_FAILED,           /* c0150026 (STATUS_GENERIC_COMMAND_FAILED) */
+   ERROR_SXS_FILE_HASH_MISSING             /* c0150027 (STATUS_SXS_FILE_HASH_MISSING) */
 };
 
 static const struct error_table error_table[] =
 {
     { 0x00000102, 0x00000122, table_00000102 },
-    { 0x40000002, 0x4000000e, table_40000002 },
+    { 0x40000002, 0x40000026, table_40000002 },
     { 0x40000370, 0x40000371, table_40000370 },
     { 0x40020056, 0x40020057, table_40020056 },
     { 0x400200af, 0x400200b0, table_400200af },
@@ -1498,7 +1548,6 @@ static const struct error_table error_table[] =
     { 0xc0030059, 0xc0030062, table_c0030059 },
     { 0xc00a0001, 0xc00a0037, table_c00a0001 },
     { 0xc0130001, 0xc0130017, table_c0130001 },
-    { 0xc0150001, 0xc015000f, table_c0150001 },
-    { 0, 0, 0 }  /* last entry */
+    { 0xc0150001, 0xc0150028, table_c0150001 },
+    { 0, 0, NULL }  /* last entry */
 };
-

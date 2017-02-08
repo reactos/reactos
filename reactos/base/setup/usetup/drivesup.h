@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/drivesup.h
+ * FILE:            base/setup/usetup/drivesup.h
  * PURPOSE:         Drive support functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -27,8 +27,9 @@
 #pragma once
 
 NTSTATUS
-GetSourcePaths(PUNICODE_STRING SourcePath,
-	       PUNICODE_STRING SourceRootPath,
-	       PUNICODE_STRING SourceRootDir);
+GetSourcePaths(
+    PUNICODE_STRING SourcePath,
+    PUNICODE_STRING SourceRootPath,
+    PUNICODE_STRING SourceRootDir);
 
 /* EOF */

@@ -21,9 +21,12 @@ Revision History:
 
 --*/
 
-#define CLASS_INIT_GUID 1
 #include "classp.h"
-#include "debug.h"
+
+#include <stddef.h>
+
+#include <initguid.h>
+#include <mountdev.h>
 
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(INIT, DriverEntry)
@@ -238,7 +241,7 @@ ClassInitialize(
     status = IoAllocateDriverObjectExtension(DriverObject,
                                              CLASS_DRIVER_EXTENSION_KEY,
                                              sizeof(CLASS_DRIVER_EXTENSION),
-                                             &driverExtension);
+                                             (PVOID *)&driverExtension);
 
     if(NT_SUCCESS(status)) {
 
@@ -539,13 +542,10 @@ ClassDispatchPnp(
     PCLASS_DEV_INFO devInfo;
 
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
-    PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
 
     NTSTATUS status = Irp->IoStatus.Status;
     BOOLEAN completeRequest = TRUE;
     BOOLEAN lockReleased = FALSE;
-
-    ULONG isRemoved;
 
     PAGED_CODE();
 
@@ -566,7 +566,7 @@ ClassDispatchPnp(
             devInfo = &(initData->PdoData);
         }
 
-        isRemoved = ClassAcquireRemoveLock(DeviceObject, Irp);
+        ClassAcquireRemoveLock(DeviceObject, Irp);
 
         DebugPrint((2, "ClassDispatchPnp (%p,%p): minor code %#x for %s %p\n",
                        DeviceObject, Irp,
@@ -804,12 +804,12 @@ ClassDispatchPnp(
                     status = devInfo->ClassStopDevice(DeviceObject,
                                                       irpStack->MinorFunction);
                     ASSERTMSG("ClassDispatchPnp !! CANCEL_STOP_DEVICE should "
-                              "never be failed\n", NT_SUCCESS(status));
+                              L"never be failed\n", NT_SUCCESS(status));
                 } else {
                     status = devInfo->ClassRemoveDevice(DeviceObject,
                                                         irpStack->MinorFunction);
                     ASSERTMSG("ClassDispatchPnp !! CANCEL_REMOVE_DEVICE should "
-                              "never be failed\n", NT_SUCCESS(status));
+                              L"never be failed\n", NT_SUCCESS(status));
                 }
 
                 Irp->IoStatus.Status = status;
@@ -877,7 +877,7 @@ ClassDispatchPnp(
                 status = devInfo->ClassStopDevice(DeviceObject, IRP_MN_STOP_DEVICE);
 
                 ASSERTMSG("ClassDispatchPnp !! STOP_DEVICE should "
-                          "never be failed\n", NT_SUCCESS(status));
+                          L"never be failed\n", NT_SUCCESS(status));
 
                 if(isFdo) {
                     status = ClassForwardIrpSynchronous(commonExtension, Irp);
@@ -894,7 +894,6 @@ ClassDispatchPnp(
             case IRP_MN_REMOVE_DEVICE:
             case IRP_MN_SURPRISE_REMOVAL: {
 
-                PDEVICE_OBJECT lowerDeviceObject = commonExtension->LowerDeviceObject;
                 UCHAR removeType = irpStack->MinorFunction;
 
                 if (commonExtension->PagingPathCount != 0) {
@@ -1044,7 +1043,7 @@ ClassDispatchPnp(
                         if (NT_SUCCESS(status)) {
 
                             IoAdjustPagingPathCount(
-                                &commonExtension->PagingPathCount,
+                                (PLONG)&commonExtension->PagingPathCount,
                                 irpStack->Parameters.UsageNotification.InPath);
 
                             if (irpStack->Parameters.UsageNotification.InPath) {
@@ -1097,13 +1096,13 @@ ClassDispatchPnp(
                     case DeviceUsageTypeHibernation: {
 
                         IoAdjustPagingPathCount(
-                            &commonExtension->HibernationPathCount,
+                            (PLONG)&commonExtension->HibernationPathCount,
                             irpStack->Parameters.UsageNotification.InPath
                             );
                         status = ClassForwardIrpSynchronous(commonExtension, Irp);
                         if (!NT_SUCCESS(status)) {
                             IoAdjustPagingPathCount(
-                                &commonExtension->HibernationPathCount,
+                                (PLONG)&commonExtension->HibernationPathCount,
                                 !irpStack->Parameters.UsageNotification.InPath
                                 );
                         }
@@ -1113,13 +1112,13 @@ ClassDispatchPnp(
 
                     case DeviceUsageTypeDumpFile: {
                         IoAdjustPagingPathCount(
-                            &commonExtension->DumpPathCount,
+                            (PLONG)&commonExtension->DumpPathCount,
                             irpStack->Parameters.UsageNotification.InPath
                             );
                         status = ClassForwardIrpSynchronous(commonExtension, Irp);
                         if (!NT_SUCCESS(status)) {
                             IoAdjustPagingPathCount(
-                                &commonExtension->DumpPathCount,
+                                (PLONG)&commonExtension->DumpPathCount,
                                 !irpStack->Parameters.UsageNotification.InPath
                                 );
                         }
@@ -1362,7 +1361,7 @@ NTSTATUS NTAPI ClassPnpStartDevice(IN PDEVICE_OBJECT DeviceObject)
             status = ClassGetDescriptor(
                         commonExtension->LowerDeviceObject,
                         &propertyId,
-                        &fdoExtension->AdapterDescriptor);
+                        (PSTORAGE_DESCRIPTOR_HEADER *)&fdoExtension->AdapterDescriptor);
 
             if(!NT_SUCCESS(status)) {
 
@@ -1384,7 +1383,7 @@ NTSTATUS NTAPI ClassPnpStartDevice(IN PDEVICE_OBJECT DeviceObject)
             status = ClassGetDescriptor(
                         commonExtension->LowerDeviceObject,
                         &propertyId,
-                        &fdoExtension->DeviceDescriptor);
+                        (PSTORAGE_DESCRIPTOR_HEADER *)&fdoExtension->DeviceDescriptor);
 
             if(!NT_SUCCESS(status)) {
 
@@ -2113,7 +2112,7 @@ ClassSendStartUnit(
     ClassAcquireRemoveLock(Fdo, irp);
 
     IoSetCompletionRoutine(irp,
-                           (PIO_COMPLETION_ROUTINE)ClassAsynchronousCompletion,
+                           ClassAsynchronousCompletion,
                            context,
                            TRUE,
                            TRUE,
@@ -2838,7 +2837,7 @@ retry:
 
             DebugPrint((1, "ClassSendSrbSynchronous: Exception %lx "
                            "locking buffer\n", status));
-            return status;
+            _SEH2_YIELD(return status);
         } _SEH2_END;
     }
 
@@ -3003,7 +3002,6 @@ ClassInterpretSenseInfo(
     )
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExtension->PrivateFdoData;
 
     PSENSE_DATA       senseBuffer = Srb->SenseInfoBuffer;
@@ -3453,7 +3451,7 @@ ClassInterpretSenseInfo(
             // count for the physical device
             //
 
-            count = InterlockedIncrement(&fdoExtension->MediaChangeCount);
+            count = InterlockedIncrement((PLONG)&fdoExtension->MediaChangeCount);
             DebugPrint((ClassDebugSenseInfo, "ClassInterpretSenseInfo: "
                         "Media change count for device %d incremented to %#lx\n",
                         fdoExtension->DeviceNumber, count));
@@ -3918,7 +3916,7 @@ ClassInterpretSenseInfo(
         ULONG totalSize;
         ULONG senseBufferSize = 0;
         IO_ERROR_LOG_PACKET staticErrLogEntry = {0};
-        CLASS_ERROR_LOG_DATA staticErrLogData = {0};
+        CLASS_ERROR_LOG_DATA staticErrLogData = { { { 0 } } };
 
         //
         // Calculate the total size of the error log entry.
@@ -4215,7 +4213,7 @@ ClassFindModePage(
     IN BOOLEAN Use6Byte
     )
 {
-    PUCHAR limit;
+    PCHAR limit;
     ULONG  parameterHeaderLength;
     PVOID result = NULL;
 
@@ -6516,9 +6514,11 @@ NTAPI
 ClassSignalCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
-    IN PKEVENT Event
+    IN PVOID Context
     )
 {
+    PKEVENT Event = Context;
+
     KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 
     return STATUS_MORE_PROCESSING_REQUIRED;
@@ -6557,7 +6557,6 @@ ClassPnpQueryFdoRelations(
     PCLASS_DRIVER_EXTENSION
         driverExtension = IoGetDriverObjectExtension(Fdo->DriverObject,
                                                      CLASS_DRIVER_EXTENSION_KEY);
-    NTSTATUS status;
 
     PAGED_CODE();
 
@@ -6566,8 +6565,8 @@ ClassPnpQueryFdoRelations(
     // one.
     //
 
-    if(InterlockedIncrement(&(fdoExtension->EnumerationInterlock)) == 1) {
-        status = driverExtension->InitData.ClassEnumerateDevice(Fdo);
+    if(InterlockedIncrement((PLONG)&fdoExtension->EnumerationInterlock) == 1) {
+        driverExtension->InitData.ClassEnumerateDevice(Fdo);
     }
 
     Irp->IoStatus.Information = (ULONG_PTR) NULL;
@@ -6576,7 +6575,7 @@ ClassPnpQueryFdoRelations(
                                 Fdo,
                                 BusRelations,
                                 (PDEVICE_RELATIONS*)&Irp->IoStatus.Information);
-    InterlockedDecrement(&(fdoExtension->EnumerationInterlock));
+    InterlockedDecrement((PLONG)&fdoExtension->EnumerationInterlock);
 
     return Irp->IoStatus.Status;
 } // end ClassPnpQueryFdoRelations()
@@ -6929,10 +6928,10 @@ ClassInvalidateBusRelations(
     ASSERT_FDO(Fdo);
     ASSERT(driverExtension->InitData.ClassEnumerateDevice != NULL);
 
-    if(InterlockedIncrement(&(fdoExtension->EnumerationInterlock)) == 1) {
+    if(InterlockedIncrement((PLONG)&fdoExtension->EnumerationInterlock) == 1) {
         status = driverExtension->InitData.ClassEnumerateDevice(Fdo);
     }
-    InterlockedDecrement(&(fdoExtension->EnumerationInterlock));
+    InterlockedDecrement((PLONG)&fdoExtension->EnumerationInterlock);
 
     if(!NT_SUCCESS(status)) {
 
@@ -7124,7 +7123,7 @@ ClassRemoveDevice(
                  *  to delete it ourselves.
                  */
                 ClassAcquireChildLock(fdoExtension);
-                while (child = ClassRemoveChild(fdoExtension, NULL, FALSE)){
+                while ((child = ClassRemoveChild(fdoExtension, NULL, FALSE))){
 
                     //
                     // Yank the pdo.  This routine will unlink the device from the
@@ -7328,11 +7327,10 @@ ClassUpdateInformationInRegistry(
     IN ULONG              InquiryDataLength
     )
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     NTSTATUS          status;
     SCSI_ADDRESS      scsiAddress;
     OBJECT_ATTRIBUTES objectAttributes;
-    PUCHAR            buffer;
+    PSTR              buffer;
     STRING            string;
     UNICODE_STRING    unicodeName;
     UNICODE_STRING    unicodeRegistryPath;
@@ -7344,7 +7342,6 @@ ClassUpdateInformationInRegistry(
     PAGED_CODE();
 
     ASSERT(DeviceName);
-    fdoExtension = Fdo->DeviceExtension;
     buffer = NULL;
     targetKey = NULL;
     RtlZeroMemory(&unicodeName,         sizeof(UNICODE_STRING));
@@ -7447,7 +7444,7 @@ ClassUpdateInformationInRegistry(
 
         RtlInitUnicodeString(&unicodeName, L"DeviceName");
 
-        sprintf(buffer, "%s%d", DeviceName, DeviceNumber);
+        sprintf(buffer, "%s%lu", DeviceName, DeviceNumber);
         RtlInitString(&string, buffer);
         status = RtlAnsiStringToUnicodeString(&unicodeData,
                                               &string,
@@ -8704,11 +8701,12 @@ VOID
 NTAPI
 ClasspRetryRequestDpc(
     IN PKDPC Dpc,
-    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID Context,
     IN PVOID Arg1,
     IN PVOID Arg2
     )
 {
+    PDEVICE_OBJECT deviceObject = Context;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData;
@@ -8716,9 +8714,9 @@ ClasspRetryRequestDpc(
     KIRQL irql;
 
 
-    commonExtension = DeviceObject->DeviceExtension;
+    commonExtension = deviceObject->DeviceExtension;
     ASSERT(commonExtension->IsFdo);
-    fdoExtension = DeviceObject->DeviceExtension;
+    fdoExtension = deviceObject->DeviceExtension;
     fdoData = fdoExtension->PrivateFdoData;
 
 

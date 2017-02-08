@@ -2,6 +2,7 @@
  * File cvconst.h - MS debug information
  *
  * Copyright (C) 2004, Eric Pouech
+ * Copyright (C) 2012, André Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -132,6 +133,9 @@ enum CV_HREG_e
     CV_ALLREG_HANDLE    = 30007,
     CV_ALLREG_PARAMS    = 30008,
     CV_ALLREG_LOCALS    = 30009,
+    CV_ALLREG_TID       = 30010,
+    CV_ALLREG_ENV       = 30011,
+    CV_ALLREG_CMDLN     = 30012,
 
     /* Intel x86 CPU */
     CV_REG_NONE         = 0,
@@ -224,6 +228,33 @@ enum CV_HREG_e
     CV_REG_MM70         = 250,
     CV_REG_MM71         = 251,
 
+    CV_REG_YMM0         = 252, /* this includes YMM1 to YMM7 */
+    CV_REG_YMM0H        = 260, /* this includes YMM1H to YMM7H */
+    CV_REG_YMM0I0       = 268, /* this includes YMM0I1 to YMM0I3 */
+    CV_REG_YMM1I0       = 272, /* this includes YMM1I1 to YMM1I3 */
+    CV_REG_YMM2I0       = 276, /* this includes YMM2I1 to YMM2I3 */
+    CV_REG_YMM3I0       = 280, /* this includes YMM3I1 to YMM3I3 */
+    CV_REG_YMM4I0       = 284, /* this includes YMM4I1 to YMM4I3 */
+    CV_REG_YMM5I0       = 288, /* this includes YMM5I1 to YMM5I3 */
+    CV_REG_YMM6I0       = 292, /* this includes YMM6I1 to YMM6I3 */
+    CV_REG_YMM7I0       = 296, /* this includes YMM7I1 to YMM7I3 */
+    CV_REG_YMM0F0       = 300, /* this includes YMM0F1 to YMM0F7 */
+    CV_REG_YMM1F0       = 308, /* this includes YMM1F1 to YMM1F7 */
+    CV_REG_YMM2F0       = 316, /* this includes YMM2F1 to YMM2F7 */
+    CV_REG_YMM3F0       = 324, /* this includes YMM3F1 to YMM3F7 */
+    CV_REG_YMM4F0       = 332, /* this includes YMM4F1 to YMM4F7 */
+    CV_REG_YMM5F0       = 340, /* this includes YMM5F1 to YMM5F7 */
+    CV_REG_YMM6F0       = 348, /* this includes YMM6F1 to YMM6F7 */
+    CV_REG_YMM7F0       = 356, /* this includes YMM7F1 to YMM7F7 */
+    CV_REG_YMM0D0       = 364, /* this includes YMM0D1 to YMM0D3 */
+    CV_REG_YMM1D0       = 368, /* this includes YMM1D1 to YMM1D3 */
+    CV_REG_YMM2D0       = 372, /* this includes YMM2D1 to YMM2D3 */
+    CV_REG_YMM3D0       = 376, /* this includes YMM3D1 to YMM3D3 */
+    CV_REG_YMM4D0       = 380, /* this includes YMM4D1 to YMM4D3 */
+    CV_REG_YMM5D0       = 384, /* this includes YMM5D1 to YMM5D3 */
+    CV_REG_YMM6D0       = 388, /* this includes YMM6D1 to YMM6D3 */
+    CV_REG_YMM7D0       = 392, /* this includes YMM7D1 to YMM7D3 */
+
     /* Motorola 68K CPU */
     CV_R68_D0           = 0, /* this includes D1 to D7 too */
     CV_R68_A0           = 8, /* this includes A1 to A7 too */
@@ -287,7 +318,7 @@ enum CV_HREG_e
     CV_M4_Psr           = 51,
     CV_M4_FltF0         = 60, /* this includes FltF1 to Flt31 */
     CV_M4_FltFsr        = 92,
-    
+
     /* Alpha AXP CPU */
     CV_ALPHA_NOREG      = CV_REG_NONE,
     CV_ALPHA_FltF0      = 10, /* this includes FltF1 to FltF31 */
@@ -311,7 +342,7 @@ enum CV_HREG_e
     CV_ALPHA_Psr        = 76,
     CV_ALPHA_FltFsr     = 77,
     CV_ALPHA_SoftFpcr   = 78,
-    
+
     /* Motorola & IBM PowerPC CPU */
     CV_PPC_GPR0         = 1, /* this includes GPR1 to GPR31 */
     CV_PPC_CR           = 33,
@@ -321,7 +352,53 @@ enum CV_HREG_e
     CV_PPC_FPSCR        = 74,
     CV_PPC_MSR          = 75,
     CV_PPC_SR0          = 76, /* this includes SR1 to SR15 */
-    /* some PPC registers missing */
+    CV_PPC_PC           = 99,
+    CV_PPC_MQ           = 100,
+    CV_PPC_XER          = 101,
+    CV_PPC_RTCU         = 104,
+    CV_PPC_RTCL         = 105,
+    CV_PPC_LR           = 108,
+    CV_PPC_CTR          = 109,
+    CV_PPC_COMPARE      = 110,
+    CV_PPC_COUNT        = 111,
+    CV_PPC_DSISR        = 118,
+    CV_PPC_DAR          = 119,
+    CV_PPC_DEC          = 122,
+    CV_PPC_SDR1         = 125,
+    CV_PPC_SRR0         = 126,
+    CV_PPC_SRR1         = 127,
+    CV_PPC_SPRG0        = 372, /* this includes SPRG1 to SPRG3 */
+    CV_PPC_ASR          = 280,
+    CV_PPC_EAR          = 382,
+    CV_PPC_PVR          = 287,
+    CV_PPC_BAT0U        = 628,
+    CV_PPC_BAT0L        = 629,
+    CV_PPC_BAT1U        = 630,
+    CV_PPC_BAT1L        = 631,
+    CV_PPC_BAT2U        = 632,
+    CV_PPC_BAT2L        = 633,
+    CV_PPC_BAT3U        = 634,
+    CV_PPC_BAT3L        = 635,
+    CV_PPC_DBAT0U       = 636,
+    CV_PPC_DBAT0L       = 637,
+    CV_PPC_DBAT1U       = 638,
+    CV_PPC_DBAT1L       = 639,
+    CV_PPC_DBAT2U       = 640,
+    CV_PPC_DBAT2L       = 641,
+    CV_PPC_DBAT3U       = 642,
+    CV_PPC_DBAT3L       = 643,
+    CV_PPC_PMR0         = 1044, /* this includes PMR1 to PMR15 */
+    CV_PPC_DMISS        = 1076,
+    CV_PPC_DCMP         = 1077,
+    CV_PPC_HASH1        = 1078,
+    CV_PPC_HASH2        = 1079,
+    CV_PPC_IMISS        = 1080,
+    CV_PPC_ICMP         = 1081,
+    CV_PPC_RPA          = 1082,
+    CV_PPC_HID0         = 1108, /* this includes HID1 to HID15 */
+
+    /* Java */
+    CV_JAVA_PC          = 1,
 
     /* Hitachi SH3 CPU */
     CV_SH3_NOREG        = CV_REG_NONE,
@@ -357,7 +434,48 @@ enum CV_HREG_e
     CV_ARM_LR           = 24,
     CV_ARM_PC           = 25,
     CV_ARM_CPSR         = 26,
-    
+    CV_ARM_ACC0         = 27,
+    CV_ARM_FPSCR        = 40,
+    CV_ARM_FPEXC        = 41,
+    CV_ARM_FS0          = 50, /* this includes FS1 to FS31 */
+    CV_ARM_FPEXTRA0     = 90, /* this includes FPEXTRA1 to FPEXTRA7 */
+    CV_ARM_WR0          = 128, /* this includes WR1 to WR15 */
+    CV_ARM_WCID         = 144,
+    CV_ARM_WCON         = 145,
+    CV_ARM_WCSSF        = 146,
+    CV_ARM_WCASF        = 147,
+    CV_ARM_WC4          = 148,
+    CV_ARM_WC5          = 149,
+    CV_ARM_WC6          = 150,
+    CV_ARM_WC7          = 151,
+    CV_ARM_WCGR0        = 152, /* this includes WCGR1 to WCGR3 */
+    CV_ARM_WC12         = 156,
+    CV_ARM_WC13         = 157,
+    CV_ARM_WC14         = 158,
+    CV_ARM_WC15         = 159,
+    CV_ARM_FS32         = 200, /* this includes FS33 to FS63 */
+    CV_ARM_ND0          = 300, /* this includes ND1 to ND31 */
+    CV_ARM_NQ0          = 400, /* this includes NQ1 to NQ15 */
+
+    /* ARM64 CPU */
+    CV_ARM64_NOREG        = CV_REG_NONE,
+    CV_ARM64_W0           = 10, /* this includes W0 to W30 */
+    CV_ARM64_WZR          = 41,
+    CV_ARM64_PC           = 42, /* Wine extension */
+    CV_ARM64_PSTATE       = 43, /* Wine extension */
+    CV_ARM64_X0           = 50, /* this includes X0 to X28 */
+    CV_ARM64_IP0          = 66, /* Same as X16 */
+    CV_ARM64_IP1          = 67, /* Same as X17 */
+    CV_ARM64_FP           = 79,
+    CV_ARM64_LR           = 80,
+    CV_ARM64_SP           = 81,
+    CV_ARM64_ZR           = 82,
+    CV_ARM64_NZCV         = 90,
+    CV_ARM64_S0           = 100, /* this includes S0 to S31 */
+    CV_ARM64_D0           = 140, /* this includes D0 to D31 */
+    CV_ARM64_Q0           = 180, /* this includes Q0 to Q31 */
+    CV_ARM64_FPSR         = 220,
+
     /* Intel IA64 CPU */
     CV_IA64_NOREG       = CV_REG_NONE,
     CV_IA64_Br0         = 512, /* this includes Br1 to Br7 */
@@ -395,7 +513,31 @@ enum CV_HREG_e
     CV_TRI_EA10         = 55,
     CV_TRI_EA12         = 56,
     CV_TRI_EA14         = 57,
-    /* some TriCode registers missing */
+    CV_TRI_PSW          = 58,
+    CV_TRI_PCXI         = 59,
+    CV_TRI_PC           = 60,
+    CV_TRI_FCX          = 61,
+    CV_TRI_LCX          = 62,
+    CV_TRI_ISP          = 63,
+    CV_TRI_ICR          = 64,
+    CV_TRI_BIV          = 65,
+    CV_TRI_BTV          = 66,
+    CV_TRI_SYSCON       = 67,
+    CV_TRI_DPRx_0       = 68, /* includes DPRx_1 to DPRx_3 */
+    CV_TRI_CPRx_0       = 68, /* includes CPRx_1 to CPRx_3 */
+    CV_TRI_DPMx_0       = 68, /* includes DPMx_1 to DPMx_3 */
+    CV_TRI_CPMx_0       = 68, /* includes CPMx_1 to CPMx_3 */
+    CV_TRI_DBGSSR       = 72,
+    CV_TRI_EXEVT        = 73,
+    CV_TRI_SWEVT        = 74,
+    CV_TRI_CREVT        = 75,
+    CV_TRI_TRnEVT       = 76,
+    CV_TRI_MMUCON       = 77,
+    CV_TRI_ASI          = 78,
+    CV_TRI_TVA          = 79,
+    CV_TRI_TPA          = 80,
+    CV_TRI_TPX          = 81,
+    CV_TRI_TFA          = 82,
 
     /* AM33 (and the likes) CPU */
     CV_AM33_NOREG       = CV_REG_NONE,
@@ -403,6 +545,17 @@ enum CV_HREG_e
     CV_AM33_A0          = 20, /* this includes A1 to A3 */
     CV_AM33_D0          = 30, /* this includes D1 to D3 */
     CV_AM33_FS0         = 40, /* this includes FS1 to FS31 */
+    CV_AM33_SP          = 80,
+    CV_AM33_PC          = 81,
+    CV_AM33_MDR         = 82,
+    CV_AM33_MDRQ        = 83,
+    CV_AM33_MCRH        = 84,
+    CV_AM33_MCRL        = 85,
+    CV_AM33_MCVF        = 86,
+    CV_AM33_EPSW        = 87,
+    CV_AM33_FPCR        = 88,
+    CV_AM33_LIR         = 89,
+    CV_AM33_LAR         = 90,
 
     /* Mitsubishi M32R CPU */
     CV_M32R_NOREG       = CV_REG_NONE,
@@ -530,19 +683,6 @@ enum CV_HREG_e
     CV_AMD64_R13        = 341,
     CV_AMD64_R14        = 342,
     CV_AMD64_R15        = 343,
-
-    /* Wine extension */
-    CV_SPARC_NOREG      = CV_REG_NONE,
-    CV_SPARC_G0         = 10, /* includes g0 to g7 */
-    CV_SPARC_O0         = 18, /* includes o0 to o7 */
-    CV_SPARC_L0         = 26, /* includes l0 to l7 */
-    CV_SPARC_I0         = 34, /* includes i0 to i7 */
-    CV_SPARC_PSR        = 42,
-    CV_SPARC_PC         = 43,
-    CV_SPARC_NPC        = 44,
-    CV_SPARC_Y          = 45,
-    CV_SPARC_WIM        = 46,
-    CV_SPARC_TBR        = 47,
 };
 
 typedef enum

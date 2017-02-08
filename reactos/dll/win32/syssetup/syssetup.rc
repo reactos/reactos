@@ -5,16 +5,16 @@
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"System Setup DLL\0"
-#define REACTOS_STR_INTERNAL_NAME	"syssetup\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"syssetup.dll\0"
+#define REACTOS_STR_FILE_DESCRIPTION  "System Setup DLL"
+#define REACTOS_STR_INTERNAL_NAME     "syssetup"
+#define REACTOS_STR_ORIGINAL_FILENAME "syssetup.dll"
 #include <reactos/version.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Bitmaps */
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
-IDB_HEADER    BITMAP "resources/header.bmp"
+IDB_HEADER BITMAP "resources/header.bmp"
 
 IDI_ICON1 ICON "resources/1.ico"
 IDI_ICON2 ICON "resources/2.ico"
@@ -22,14 +22,14 @@ IDI_ICON3 ICON "resources/3.ico"
 IDI_ICON4 ICON "resources/4.ico"
 IDI_ICON5 ICON "resources/5.ico"
 
+#include <reactos/manifest_dll.rc>
 
 STRINGTABLE
 BEGIN
-    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nExpat - http://expat.sourceforge.net\nDJGPP - http://www.delorie.com/djgpp\nSYSLINUX - http://syslinux.zytor.com\nXbox Linux - http://www.xbox-linux.org\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nFreeBSD - http://www.freebsd.org\nadns - http://adns.jgaa.com\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://winext2fsd.sourceforge.net/\nX - http://www.x.org/\n"
+    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://winext2fsd.sourceforge.net/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/"
 END
 
 IDR_GPL RT_TEXT "COPYING"
-
 
 /*
  * Everything specific to any language goes in one of the specific
@@ -37,8 +37,9 @@ IDR_GPL RT_TEXT "COPYING"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
-// UTF-8
+/* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -98,6 +99,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"

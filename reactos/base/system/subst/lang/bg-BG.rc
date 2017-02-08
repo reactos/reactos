@@ -1,9 +1,3 @@
-/* Превод на Български/ Bulgarian translation */
-/* http://www.reactos.org/wiki/Bulgarian_translation */
-/* LOCATION: \base\applications\subst\lang */
-
-/* НЕДОВЪРШЕН- да се провери за грешки */
-#include "resource.h"
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -11,8 +5,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Неправилен брой ключове - %s\n"
     IDS_INVALID_PARAMETER "Неправилен брой ключове - %s\n"
     IDS_INVALID_PARAMETER2 "Недопустим ключ - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Устройството вече е подложено на SUBST\n"
-    IDS_FAILED_WITH_ERROCODE "Грешка номер: 0x%x: %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Устройството вече е подложено на SUBST\n"
+    IDS_FAILED_WITH_ERRORCODE "Грешка номер: 0x%x: %s\n"
     IDS_USAGE "Обвързва път с име на устройство (дял).\n\nSUBST [drive1: [drive2:]path]\nSUBST drive1: /D\n\n   drive1:        \
                Указва мнимото устройство и пъта, с който искате да обвържете пътя.\n   \
                [drive2:]path  Указва действително устройство и пътя, с който искате да обвържете\n                  \

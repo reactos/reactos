@@ -19,14 +19,10 @@
  */
 
 #ifndef _MAPI_UTIL_H
-
 #define _MAPI_UTIL_H
 
-#include <mapi.h>
-//#include <mapix.h>
-
-extern void load_mapi_providers(void);
-extern void unload_mapi_providers(void);
+extern void load_mapi_providers(void) DECLSPEC_HIDDEN;
+extern void unload_mapi_providers(void) DECLSPEC_HIDDEN;
 
 typedef struct MAPI_FUNCTIONS {
     LPMAPIADDRESS        MAPIAddress;
@@ -41,6 +37,7 @@ typedef struct MAPI_FUNCTIONS {
     LPMAPIRESOLVENAME    MAPIResolveName;
     LPMAPISAVEMAIL       MAPISaveMail;
     LPMAPISENDMAIL       MAPISendMail;
+    LPMAPISENDMAILW      MAPISendMailW;
     LPMAPISENDDOCUMENTS  MAPISendDocuments;
     LPMAPIUNINITIALIZE   MAPIUninitialize;
 
@@ -58,9 +55,10 @@ typedef struct MAPI_FUNCTIONS {
     HRESULT  (WINAPI *HrQueryAllRows)             (LPMAPITABLE, LPSPropTagArray, LPSRestriction, LPSSortOrderSet, LONG, LPSRowSet *);
     HRESULT  (WINAPI *OpenStreamOnFile)           (LPALLOCATEBUFFER, LPFREEBUFFER, ULONG, LPWSTR, LPWSTR, LPSTREAM *);
     SCODE    (WINAPI *ScInitMapiUtil)             (ULONG ulReserved);
+    HRESULT  (WINAPI *WrapCompressedRTFStream)    (LPSTREAM, ULONG, LPSTREAM *);
 } MAPI_FUNCTIONS;
 
-extern MAPI_FUNCTIONS mapiFunctions;
-extern HINSTANCE hInstMAPI32;
+extern MAPI_FUNCTIONS mapiFunctions DECLSPEC_HIDDEN;
+extern HINSTANCE hInstMAPI32 DECLSPEC_HIDDEN;
 
-#endif
+#endif /* _MAPI_UTIL_H */

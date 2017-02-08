@@ -124,9 +124,9 @@ typedef struct tagHlpFileFile
     unsigned short              charset;
     unsigned short              tbsize;     /* topic block size */
     unsigned short              dsize;      /* decompress size */
-    unsigned short              compressed;
-    unsigned                    hasPhrases;   /* file has |Phrases */
-    unsigned                    hasPhrases40; /* file has |PhrIndex/|PhrImage */
+    BOOL                        compressed;
+    BOOL                        hasPhrases;   /* file has |Phrases */
+    BOOL                        hasPhrases40; /* file has |PhrIndex/|PhrImage */
     UINT                        num_phrases;
     unsigned*                   phrases_offsets;
     char*                       phrases_buffer;

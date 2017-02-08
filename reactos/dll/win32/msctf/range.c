@@ -18,31 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <wine/debug.h>
-//#include "windef.h"
-#include <winbase.h>
-//#include "winreg.h"
-//#include "winuser.h"
-//#include "shlwapi.h"
-//#include "winerror.h"
-#include <objbase.h>
-
-//#include "wine/unicode.h"
-
-#include <msctf.h>
-//#include "msctf_internal.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msctf);
+#include "msctf_internal.h"
 
 typedef struct tagRange {
     ITfRange ITfRange_iface;
@@ -76,12 +52,12 @@ static HRESULT WINAPI Range_QueryInterface(ITfRange *iface, REFIID iid, LPVOID *
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfRange))
     {
-        *ppvOut = This;
+        *ppvOut = &This->ITfRange_iface;
     }
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfRange_AddRef(iface);
         return S_OK;
     }
 
@@ -349,7 +325,7 @@ HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD l
     This->anchorEnd = anchorEnd;
 
     *ppOut = &This->ITfRange_iface;
-    TRACE("returning %p\n", This);
+    TRACE("returning %p\n", *ppOut);
 
     return S_OK;
 }
@@ -363,7 +339,7 @@ HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_AC
     if (!tf || !tsAcp || !tf->range)
         return E_INVALIDARG;
 
-    This = (Range *)tf->range;
+    This = impl_from_ITfRange(tf->range);
 
     tsAcp->acpStart = This->anchorStart;
     tsAcp->acpEnd = This->anchorEnd;

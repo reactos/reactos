@@ -1,0 +1,58 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDD_CHARMAP DIALOGEX 6, 6, 292, 224
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
+BEGIN
+    LTEXT "Font:", IDC_STATIC, 6, 7, 24, 9
+    COMBOBOX IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE |
+             WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+    PUSHBUTTON "Ndihmë", IDC_CMHELP, 249, 5, 35, 13
+    CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+            WS_VSCROLL, 20, 22, 266, 156
+    LTEXT "Karaktere për kopjim:", IDC_STATIC, 6, 188, 66, 9
+    CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+    DEFPUSHBUTTON "Perzgjedh", IDC_SELECT, 194, 186, 44, 13
+    PUSHBUTTON "Kopjo", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+    CONTROL "Vezhgim i Avancuar", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 8, 208, 95, 10
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 292, 64
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Set karakteresh:", IDC_STATIC, 8, 8, 48, 8
+    COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Grupo nga:", IDC_STATIC, 8, 28, 50, 8
+    COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Kerko", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Kerko per:", IDC_STATIC, 8, 48, 42, 8
+    LTEXT "Unicode:", IDC_STATIC, 200, 8, 30, 8
+    EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
+CAPTION "Informacion mbi karakterep map"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    LTEXT "Karakteret Map v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
+    ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
+             WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE "Ky program eshte falas; ju mund ta shperndani ose modifikoni nen termat e liçenses publike te GNU nga Free Software Foundation; ose versionin 2 te Liçenses, ose (opsionet tend) versionet me te reja.\r\n\r\nKy program shperndahet me shpresen qe do te jete i nevojshem, POR PA ASNJE GARANCI; madje dhe pa nënkuptimin e garancisë së tregtimit apo përshtatshmerise për qëllim të veçantë. Shiko liçensen publike te GNU per me shume detaje.\r\n\r\nJu duhet te jeni paisur me nje kopje te liçenses GNU perkrah ketij programi; nese jo, shkruani Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_ABOUT "R&reth..."
+    IDS_TITLE "Karakter Map"
+END

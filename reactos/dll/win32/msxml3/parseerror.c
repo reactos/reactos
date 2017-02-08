@@ -18,31 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include "precomp.h"
 
 typedef struct
 {
@@ -111,7 +87,6 @@ static ULONG WINAPI parseError_Release(
         SysFreeString(This->url);
         SysFreeString(This->reason);
         SysFreeString(This->srcText);
-        release_dispex(&This->dispex);
         heap_free( This );
     }
 

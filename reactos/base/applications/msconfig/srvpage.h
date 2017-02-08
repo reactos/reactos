@@ -6,4 +6,4 @@ extern HWND hServicesListCtrl;
 
 INT_PTR CALLBACK ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-#endif
+#endif /* _SVRPAGE_H_ */

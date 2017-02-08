@@ -27,25 +27,7 @@
  *   - New Windows Vista features
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-#include <stdlib.h>
-//#include <string.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wine/unicode.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <vssym32.h>
-#include <uxtheme.h>
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(header);
 
@@ -293,6 +275,41 @@ static void HEADER_GetHotDividerRect(const HEADER_INFO *infoPtr, RECT *r)
     }
 }
 
+static void
+HEADER_FillItemFrame(HEADER_INFO *infoPtr, HDC hdc, RECT *r, const HEADER_ITEM *item, BOOL hottrack)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+
+    if (theme) {
+        int state = (item->bDown) ? HIS_PRESSED : (hottrack ? HIS_HOT : HIS_NORMAL);
+        DrawThemeBackground (theme, hdc, HP_HEADERITEM, state, r, NULL);
+        GetThemeBackgroundContentRect (theme, hdc, HP_HEADERITEM, state, r, r);
+    }
+    else
+    {
+        HBRUSH hbr = CreateSolidBrush(GetBkColor(hdc));
+        FillRect(hdc, r, hbr);
+        DeleteObject(hbr);
+    }
+}
+
+static void
+HEADER_DrawItemFrame(HEADER_INFO *infoPtr, HDC hdc, RECT *r, const HEADER_ITEM *item)
+{
+    if (GetWindowTheme(infoPtr->hwndSelf)) return;
+
+    if (!(infoPtr->dwStyle & HDS_FLAT))
+    {
+        if (infoPtr->dwStyle & HDS_BUTTONS) {
+            if (item->bDown)
+                DrawEdge (hdc, r, BDR_RAISEDOUTER, BF_RECT | BF_FLAT | BF_ADJUST);
+            else
+                DrawEdge (hdc, r, EDGE_RAISED, BF_RECT | BF_SOFT | BF_ADJUST);
+        }
+        else
+            DrawEdge (hdc, r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
+    }
+}
 
 static INT
 HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags)
@@ -302,12 +319,16 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
     INT  oldBkMode;
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
     NMCUSTOMDRAW nmcd;
+    int state = 0;
 
     TRACE("DrawItem(iItem %d bHotTrack %d unicode flag %d)\n", iItem, bHotTrack, (infoPtr->nNotifyFormat == NFR_UNICODE));
 
     r = phdi->rect;
     if (r.right - r.left == 0)
 	return phdi->rect.right;
+
+    if (theme)
+        state = (phdi->bDown) ? HIS_PRESSED : (bHotTrack ? HIS_HOT : HIS_NORMAL);
 
     /* Set the colors before sending NM_CUSTOMDRAW so that it can change them */
     SetTextColor(hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
@@ -329,43 +350,13 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
             return phdi->rect.right;
     }
 
-    if (theme != NULL) {
-        int state = (phdi->bDown) ? HIS_PRESSED :
-            (bHotTrack ? HIS_HOT : HIS_NORMAL);
-        DrawThemeBackground (theme, hdc, HP_HEADERITEM, state,
-            &r, NULL);
-        GetThemeBackgroundContentRect (theme, hdc, HP_HEADERITEM, state,
-            &r, &r);
-    }
-    else {
-        HBRUSH hbr;
+    /* Fill background, owner could draw over it. */
+    HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
 
-        if (!(infoPtr->dwStyle & HDS_FLAT))
-        {
-            if (infoPtr->dwStyle & HDS_BUTTONS) {
-                if (phdi->bDown) {
-                    DrawEdge (hdc, &r, BDR_RAISEDOUTER,
-                                BF_RECT | BF_FLAT | BF_MIDDLE | BF_ADJUST);
-                }
-                else
-                    DrawEdge (hdc, &r, EDGE_RAISED,
-                                BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
-            }
-            else
-                DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
-        }
-
-        hbr = CreateSolidBrush(GetBkColor(hdc));
-        FillRect(hdc, &r, hbr);
-        DeleteObject(hbr);
-    }
-    if (phdi->bDown) {
-        r.left += 2;
-        r.top  += 2;
-    }
-
-    if (phdi->fmt & HDF_OWNERDRAW) {
+    if (phdi->fmt & HDF_OWNERDRAW)
+    {
 	DRAWITEMSTRUCT dis;
+        BOOL ret;
 
 	dis.CtlType    = ODT_HEADER;
 	dis.CtlID      = GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_ID);
@@ -377,11 +368,29 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	dis.rcItem     = phdi->rect;
 	dis.itemData   = phdi->lParam;
         oldBkMode = SetBkMode(hdc, TRANSPARENT);
-        SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
+        ret = SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         if (oldBkMode != TRANSPARENT)
             SetBkMode(hdc, oldBkMode);
+
+        if (!ret)
+            HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
+
+        /* Edges are always drawn if we don't have attached theme. */
+        HEADER_DrawItemFrame(infoPtr, hdc, &r, phdi);
+        /* If application processed WM_DRAWITEM we should skip label painting,
+           edges are drawn no matter what. */
+        if (ret) return phdi->rect.right;
     }
-    else {
+    else
+        HEADER_DrawItemFrame(infoPtr, hdc, &r, phdi);
+
+    if (phdi->bDown) {
+        r.left += 2;
+        r.top  += 2;
+    }
+
+    /* Now text and image */
+    {
 	UINT rw, rh, /* width and height of r */
 	     *x = NULL, *w = NULL; /* x and width of the pic (bmp or img) which is part of cnt */
 	  /* cnt,txt,img,bmp */
@@ -391,7 +400,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	BITMAP bmp;
 
         HEADER_PrepareCallbackItems(infoPtr, iItem, HDI_TEXT|HDI_IMAGE);
-	cw = tw = iw = bw = 0;
+        cw = iw = bw = 0;
 	rw = r.right - r.left;
 	rh = r.bottom - r.top;
 
@@ -399,8 +408,14 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	    RECT textRect;
 
             SetRectEmpty(&textRect);
-	    DrawTextW (hdc, phdi->pszText, -1,
-	               &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+
+	    if (theme) {
+		GetThemeTextExtent(theme, hdc, HP_HEADERITEM, state, phdi->pszText, -1,
+		    DT_LEFT|DT_VCENTER|DT_SINGLELINE, NULL, &textRect);
+	    } else {
+		DrawTextW (hdc, phdi->pszText, -1,
+			&textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+	    }
 	    cw = textRect.right - textRect.left + 2 * infoPtr->iMargin;
 	}
 
@@ -493,13 +508,19 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	    oldBkMode = SetBkMode(hdc, TRANSPARENT);
 	    r.left  = tx;
 	    r.right = tx + tw;
-	    DrawTextW (hdc, phdi->pszText, -1,
-	               &r, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
+	    if (theme) {
+		DrawThemeText(theme, hdc, HP_HEADERITEM, state, phdi->pszText,
+			    -1, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE,
+			    0, &r);
+	    } else {
+		DrawTextW (hdc, phdi->pszText, -1,
+			&r, DT_LEFT|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
+	    }
 	    if (oldBkMode != TRANSPARENT)
 	        SetBkMode(hdc, oldBkMode);
         }
         HEADER_FreeCallbackItems(phdi);
-    }/*Ownerdrawn*/
+    }
 
     return phdi->rect.right;
 }
@@ -864,7 +885,7 @@ HEADER_SendNotifyWithIntFieldT(const HEADER_INFO *infoPtr, UINT code, INT iItem,
  * Prepare callback items
  *   depends on NMHDDISPINFOW having same structure as NMHDDISPINFOA 
  *   (so we handle the two cases only doing a specific cast for pszText).
- * Checks if any of the required field are callback. If there are sends a 
+ * Checks if any of the required fields is a callback. If this is the case sends a
  * NMHDISPINFO notify to retrieve these items. The items are stored in the
  * HEADER_ITEM pszText and iImage fields. They should be freed with
  * HEADER_FreeCallbackItems.

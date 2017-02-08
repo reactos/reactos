@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _MSC_VER
+#pragma warning(disable:4200) // zero-sized array in struct/union
+#endif // _MSC_VER
+
 // Palette mode flags
 enum _PALFLAGS
 {
@@ -44,7 +48,7 @@ typedef struct _PALETTE
     ULONG ulBlueShift;
     HDEV  hPDev;
     PALETTEENTRY apalColors[0];
-} PALETTE;
+} PALETTE, *PPALETTE;
 
 extern PALETTE gpalRGB, gpalBGR, gpalRGB555, gpalRGB565, *gppalMono, *gppalDefault;
 extern PPALETTE appalSurfaceDefault[];
@@ -65,7 +69,7 @@ NTAPI
 PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
@@ -75,7 +79,7 @@ NTAPI
 PALETTE_AllocPalWithHandle(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
@@ -117,12 +121,12 @@ PALETTE_vGetBitMasks(
     PPALETTE ppal,
     PULONG pulColors);
 
-BOOL
+VOID
 NTAPI
-PALETTE_Cleanup(PVOID ObjectBody);
+PALETTE_vCleanup(PVOID ObjectBody);
 
-ULONG
 FORCEINLINE
+ULONG
 CalculateShift(ULONG ulMask1, ULONG ulMask2)
 {
     ULONG ulShift1, ulShift2;

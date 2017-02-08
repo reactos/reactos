@@ -21,13 +21,11 @@ Revision History:
 
 --*/
 
-#define CLASS_INIT_GUID 0
 #include "classp.h"
-#include "debug.h"
 
 ULONG BreakOnClose = 0;
 
-PUCHAR LockTypeStrings[] = {
+PCSTR LockTypeStrings[] = {
     "Simple",
     "Secure",
     "Internal"
@@ -194,10 +192,10 @@ Return Value:
 
             status = AllocateDictionaryEntry(
                         &commonExtension->FileObjectDictionary,
-                        (ULONGLONG) irpStack->FileObject,
+                        (ULONG_PTR)irpStack->FileObject,
                         sizeof(FILE_OBJECT_EXTENSION),
                         CLASS_TAG_FILE_OBJECT_EXTENSION,
-                        &fsContext);
+                        (PVOID *)&fsContext);
 
             if(NT_SUCCESS(status)) {
 
@@ -340,7 +338,7 @@ ClasspCleanupProtectedLocks(
 
         do {
 
-            InterlockedDecrement(&FsContext->LockCount);
+            InterlockedDecrement((PLONG)&FsContext->LockCount);
 
             newDeviceLockCount =
                 InterlockedDecrement(&fdoExtension->ProtectedLockCount);
@@ -417,8 +415,6 @@ ClasspCleanupDisableMcn(
 
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension =
         commonExtension->PartitionZeroExtension;
-
-    ULONG newCount = 1;
 
     PAGED_CODE();
 
@@ -977,5 +973,5 @@ ClasspGetFsContext(
 {
     PAGED_CODE();
     return GetDictionaryEntry(&(CommonExtension->FileObjectDictionary),
-                              (ULONGLONG) FileObject);
+                              (ULONG_PTR)FileObject);
 }

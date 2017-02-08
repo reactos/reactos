@@ -18,28 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "ole2.h"
-#include <objbase.h>
-#include <rpcproxy.h>
-#include <wuapi.h>
-
-#include <wine/debug.h>
 #include "wuapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
+#include <rpcproxy.h>
 
-typedef HRESULT (*fnCreateInstance)( IUnknown *pUnkOuter, LPVOID *ppObj );
+typedef HRESULT (*fnCreateInstance)( LPVOID *ppObj );
 
 typedef struct _wucf
 {
@@ -89,14 +72,11 @@ static HRESULT WINAPI wucf_CreateInstance( IClassFactory *iface, LPUNKNOWN pOute
     if (pOuter)
         return CLASS_E_NOAGGREGATION;
 
-    r = This->pfnCreateInstance( pOuter, (LPVOID *)&punk );
+    r = This->pfnCreateInstance( (LPVOID *)&punk );
     if (FAILED(r))
         return r;
 
     r = IUnknown_QueryInterface( punk, riid, ppobj );
-    if (FAILED(r))
-        return r;
-
     IUnknown_Release( punk );
     return r;
 }
@@ -131,8 +111,6 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
     case DLL_PROCESS_ATTACH:
         instance = hinst;
         DisableThreadLibraryCalls( hinst );
-        break;
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;

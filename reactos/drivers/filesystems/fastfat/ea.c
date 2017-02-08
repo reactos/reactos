@@ -21,24 +21,26 @@
  * FILE:             drivers/fs/vfat/ea.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
-
  */
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
-			  PVOID Ea,
-			  ULONG EaLength)
+VfatSetExtendedAttributes(
+    PFILE_OBJECT FileObject,
+    PVOID Ea,
+    ULONG EaLength)
 {
-	UNREFERENCED_PARAMETER(FileObject);
-	UNREFERENCED_PARAMETER(Ea);
-	UNREFERENCED_PARAMETER(EaLength);
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Ea);
+    UNREFERENCED_PARAMETER(EaLength);
 
-  return(STATUS_EAS_NOT_SUPPORTED);
+    return STATUS_EAS_NOT_SUPPORTED;
 }

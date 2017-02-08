@@ -20,7 +20,6 @@ ULONG DbgPrint(PCH Format,...);
 #define UNIMPLEMENTED \
   DbgPrint("ACLEDIT:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
 
-
 DWORD
 WINAPI
 EditAuditInfo(DWORD Unknown)

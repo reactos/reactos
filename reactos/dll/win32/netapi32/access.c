@@ -22,8 +22,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
-BOOL NETAPI_IsLocalComputer(LPCWSTR ServerName);
-
 /************************************************************
  *                ACCESS_QueryAdminDisplayInformation
  *
@@ -263,133 +261,14 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
   return NERR_DCNotFound; /* say we can't find a domain controller */  
 }
 
-/******************************************************************************
- * NetUserModalsGet  (NETAPI32.@)
+/************************************************************
+ *                NetEnumerateTrustedDomains  (NETAPI32.@)
  *
- * Retrieves global information for all users and global groups in the security
- * database.
- *
- * PARAMS
- *  szServer   [I] Specifies the DNS or the NetBIOS name of the remote server
- *                 on which the function is to execute.
- *  level      [I] Information level of the data.
- *     0   Return global passwords parameters. bufptr points to a
- *         USER_MODALS_INFO_0 struct.
- *     1   Return logon server and domain controller information. bufptr
- *         points to a USER_MODALS_INFO_1 struct.
- *     2   Return domain name and identifier. bufptr points to a 
- *         USER_MODALS_INFO_2 struct.
- *     3   Return lockout information. bufptr points to a USER_MODALS_INFO_3
- *         struct.
- *  pbuffer    [I] Buffer that receives the data.
- *
- * RETURNS
- *  Success: NERR_Success.
- *  Failure: 
- *     ERROR_ACCESS_DENIED - the user does not have access to the info.
- *     NERR_InvalidComputer - computer name is invalid.
+ * On success, *DomainNames is a multi-sz allocated using NetApiBufferAllocate
  */
-NET_API_STATUS WINAPI NetUserModalsGet(
-    LPCWSTR szServer, DWORD level, LPBYTE *pbuffer)
+NTSTATUS WINAPI
+NetEnumerateTrustedDomains(LPWSTR ServerName, LPWSTR *DomainNames)
 {
-    TRACE("(%s %d %p)\n", debugstr_w(szServer), level, pbuffer);
-    
-    switch (level)
-    {
-        case 0:
-            /* return global passwords parameters */
-            FIXME("level 0 not implemented!\n");
-            *pbuffer = NULL;
-            return NERR_InternalError;
-        case 1:
-            /* return logon server and domain controller info */
-            FIXME("level 1 not implemented!\n");
-            *pbuffer = NULL;
-            return NERR_InternalError;
-        case 2:
-        {
-            /* return domain name and identifier */
-            PUSER_MODALS_INFO_2 umi;
-            LSA_HANDLE policyHandle;
-            LSA_OBJECT_ATTRIBUTES objectAttributes;
-            PPOLICY_ACCOUNT_DOMAIN_INFO domainInfo;
-            NTSTATUS ntStatus;
-            PSID domainIdentifier = NULL;
-            int domainNameLen, domainIdLen;
-
-            ZeroMemory(&objectAttributes, sizeof(objectAttributes));
-            objectAttributes.Length = sizeof(objectAttributes);
-
-            ntStatus = LsaOpenPolicy(NULL, &objectAttributes,
-                                     POLICY_VIEW_LOCAL_INFORMATION,
-                                     &policyHandle);
-            if (ntStatus != STATUS_SUCCESS)
-            {
-                WARN("LsaOpenPolicy failed with NT status %x\n",
-                     LsaNtStatusToWinError(ntStatus));
-                return ntStatus;
-            }
-
-            ntStatus = LsaQueryInformationPolicy(policyHandle,
-                                                 PolicyAccountDomainInformation,
-                                                 (PVOID *)&domainInfo);
-            if (ntStatus != STATUS_SUCCESS)
-            {
-                WARN("LsaQueryInformationPolicy failed with NT status %x\n",
-                     LsaNtStatusToWinError(ntStatus));
-                LsaClose(policyHandle);
-                return ntStatus;
-            }
-
-            domainIdentifier = domainInfo->DomainSid;
-            domainIdLen = (domainIdentifier) ? GetLengthSid(domainIdentifier) : 0;
-            domainNameLen = lstrlenW(domainInfo->DomainName.Buffer) + 1;
-            LsaClose(policyHandle);
-
-            ntStatus = NetApiBufferAllocate(sizeof(USER_MODALS_INFO_2) +
-                                            domainIdLen +
-                                            domainNameLen * sizeof(WCHAR),
-                                            (LPVOID *)pbuffer);
-
-            if (ntStatus != NERR_Success)
-            {
-                WARN("NetApiBufferAllocate() failed\n");
-                LsaFreeMemory(domainInfo);
-                return ntStatus;
-            }
-
-            umi = (USER_MODALS_INFO_2 *) *pbuffer;
-            umi->usrmod2_domain_id = (domainIdLen > 0) ? (*pbuffer + sizeof(USER_MODALS_INFO_2)) : NULL;
-            umi->usrmod2_domain_name = (LPWSTR)(*pbuffer +
-                sizeof(USER_MODALS_INFO_2) + domainIdLen);
-
-            lstrcpynW(umi->usrmod2_domain_name,
-                      domainInfo->DomainName.Buffer,
-                      domainNameLen);
-            if (domainIdLen > 0)
-                CopySid(GetLengthSid(domainIdentifier), umi->usrmod2_domain_id,
-                        domainIdentifier);
-
-            LsaFreeMemory(domainInfo);
-
-            break;
-        } 
-        case 3:
-            /* return lockout information */
-            FIXME("level 3 not implemented!\n");
-            *pbuffer = NULL;
-            return NERR_InternalError;
-        default:
-            TRACE("Invalid level %d is specified\n", level);
-            *pbuffer = NULL;
-            return ERROR_INVALID_LEVEL;
-    }
-
-    return NERR_Success;
-}
-
-NET_API_STATUS WINAPI NetUseAdd(LMSTR servername, DWORD level, LPBYTE bufptr, LPDWORD parm_err)
-{
-    FIXME("%s %d %p %p stub\n", debugstr_w(servername), level, bufptr, parm_err);
-    return NERR_Success;
+    FIXME("(%s, %p) stub!\n", debugstr_w(ServerName), DomainNames);
+    return STATUS_NOT_IMPLEMENTED;
 }

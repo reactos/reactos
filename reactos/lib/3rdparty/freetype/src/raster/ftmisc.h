@@ -5,7 +5,7 @@
 /*    Miscellaneous macros for stand-alone rasterizer (specification       */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 2005, 2009, 2010 by                                          */
+/*  Copyright 2005-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -24,8 +24,8 @@
   /*                                                 */
   /***************************************************/
 
-#ifndef __FTMISC_H__
-#define __FTMISC_H__
+#ifndef FTMISC_H_
+#define FTMISC_H_
 
 
   /* memset */
@@ -37,7 +37,7 @@
 #define FT_LOCAL_DEF( x )   static x
 
 
-  /* from include/freetype2/fttypes.h */
+  /* from include/freetype/fttypes.h */
 
   typedef unsigned char  FT_Byte;
   typedef signed int     FT_Int;
@@ -54,7 +54,7 @@
               (FT_ULong)_x4         )
 
 
-  /* from include/freetype2/ftsystem.h */
+  /* from include/freetype/ftsystem.h */
 
   typedef struct FT_MemoryRec_*  FT_Memory;
 
@@ -115,7 +115,28 @@
     return ( s > 0 ) ? d : -d;
   }
 
-#endif /* __FTMISC_H__ */
+
+  static FT_Long
+  FT_MulDiv_No_Round( FT_Long  a,
+                      FT_Long  b,
+                      FT_Long  c )
+  {
+    FT_Int   s;
+    FT_Long  d;
+
+
+    s = 1;
+    if ( a < 0 ) { a = -a; s = -1; }
+    if ( b < 0 ) { b = -b; s = -s; }
+    if ( c < 0 ) { c = -c; s = -s; }
+
+    d = (FT_Long)( c > 0 ? (FT_Int64)a * b / c
+                         : 0x7FFFFFFFL );
+
+    return ( s > 0 ) ? d : -d;
+  }
+
+#endif /* FTMISC_H_ */
 
 
 /* END */

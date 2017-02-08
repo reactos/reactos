@@ -7,8 +7,10 @@
  */
 
 #include <advapi32.h>
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+#include <winefs.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /*
  * @unimplemented

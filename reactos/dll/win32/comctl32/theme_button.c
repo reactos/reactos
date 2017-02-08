@@ -19,17 +19,8 @@
  *
  */
 
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <uxtheme.h>
-#include <vssym32.h>
 #include "comctl32.h"
+WINE_DEFAULT_DEBUG_CHANNEL(theme_button);
 
 #define BUTTON_TYPE 0x0f /* bit mask for the available button types */
 
@@ -43,7 +34,7 @@ typedef enum
 	STATE_DEFAULTED
 } ButtonState;
 
-typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags);
+typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags, BOOL focused);
 
 static UINT get_drawtext_flags(DWORD style, DWORD ex_style)
 {
@@ -96,7 +87,7 @@ static inline WCHAR *get_button_text(HWND hwnd)
     return text;
 }
 
-static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags)
+static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 {
     static const int states[] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
 
@@ -118,10 +109,25 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (focused)
+    {
+        MARGINS margins;
+        RECT focusRect = bgRect;
+
+        GetThemeMargins(theme, hDC, BP_PUSHBUTTON, state, TMT_CONTENTMARGINS, NULL, &margins);
+
+        focusRect.left += margins.cxLeftWidth;
+        focusRect.top += margins.cyTopHeight;
+        focusRect.right -= margins.cxRightWidth;
+        focusRect.bottom -= margins.cyBottomHeight;
+
+        DrawFocusRect( hDC, &focusRect );
+    }
+
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
-static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags)
+static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 {
     static const int cb_states[3][5] =
     {
@@ -136,11 +142,9 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         { RBS_CHECKEDNORMAL, RBS_CHECKEDDISABLED, RBS_CHECKEDHOT, RBS_CHECKEDPRESSED, RBS_CHECKEDNORMAL }
     };
 
-    static const int cb_size = 13;
-
+    SIZE sz;
     RECT bgRect, textRect;
-    HFONT font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
+    HFONT font, hPrevFont = NULL;
     LRESULT checkState = SendMessageW(hwnd, BM_GETCHECK, 0, 0);
     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     int part = ((dwStyle & BUTTON_TYPE) == BS_RADIOBUTTON) || ((dwStyle & BUTTON_TYPE) == BS_AUTORADIOBUTTON)
@@ -150,39 +154,90 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
               ? cb_states[ checkState ][ drawState ]
               : rb_states[ checkState ][ drawState ];
     WCHAR *text = get_button_text(hwnd);
+    LOGFONTW lf;
+    BOOL created_font = FALSE;
+
+    HRESULT hr = GetThemeFont(theme, hDC, part, state, TMT_FONT, &lf);
+    if (SUCCEEDED(hr)) {
+        font = CreateFontIndirectW(&lf);
+        if (!font)
+            TRACE("Failed to create font\n");
+        else {
+            TRACE("font = %s\n", debugstr_w(lf.lfFaceName));
+            hPrevFont = SelectObject(hDC, font);
+            created_font = TRUE;
+        }
+    } else {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+        hPrevFont = SelectObject(hDC, font);
+    }
+
+    if (FAILED(GetThemePartSize(theme, hDC, part, state, NULL, TS_DRAW, &sz)))
+        sz.cx = sz.cy = 13;
 
     GetClientRect(hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, part, state, &bgRect, &textRect);
 
     if (dtFlags & DT_SINGLELINE) /* Center the checkbox / radio button to the text. */
-        bgRect.top = bgRect.top + (textRect.bottom - textRect.top - cb_size) / 2;
+        bgRect.top = bgRect.top + (textRect.bottom - textRect.top - sz.cy) / 2;
 
     /* adjust for the check/radio marker */
-    bgRect.bottom = bgRect.top + cb_size;
-    bgRect.right = bgRect.left + cb_size;
+    bgRect.bottom = bgRect.top + sz.cy;
+    bgRect.right = bgRect.left + sz.cx;
     textRect.left = bgRect.right + 6;
 
-    if (IsThemeBackgroundPartiallyTransparent(theme, part, state))
-        DrawThemeParentBackground(hwnd, hDC, NULL);
+    DrawThemeParentBackground(hwnd, hDC, NULL);
+
     DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
     if (text)
     {
         DrawThemeText(theme, hDC, part, state, text, lstrlenW(text), dtFlags, 0, &textRect);
+
+        if (focused)
+        {
+            RECT focusRect;
+
+            focusRect = textRect;
+
+            DrawTextW(hDC, text, lstrlenW(text), &focusRect, dtFlags | DT_CALCRECT);
+
+            if (focusRect.right < textRect.right) focusRect.right++;
+            focusRect.bottom = textRect.bottom;
+
+            DrawFocusRect( hDC, &focusRect );
+        }
+
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (created_font) DeleteObject(font);
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
-static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags)
+static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 {
     static const int states[] = { GBS_NORMAL, GBS_DISABLED, GBS_NORMAL, GBS_NORMAL, GBS_NORMAL };
 
     RECT bgRect, textRect, contentRect;
-    HFONT font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
     int state = states[ drawState ];
     WCHAR *text = get_button_text(hwnd);
+    LOGFONTW lf;
+    HFONT font, hPrevFont = NULL;
+    BOOL created_font = FALSE;
+
+    HRESULT hr = GetThemeFont(theme, hDC, BP_GROUPBOX, state, TMT_FONT, &lf);
+    if (SUCCEEDED(hr)) {
+        font = CreateFontIndirectW(&lf);
+        if (!font)
+            TRACE("Failed to create font\n");
+        else {
+            hPrevFont = SelectObject(hDC, font);
+            created_font = TRUE;
+        }
+    } else {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+        hPrevFont = SelectObject(hDC, font);
+    }
 
     GetClientRect(hwnd, &bgRect);
     textRect = bgRect;
@@ -216,6 +271,7 @@ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (created_font) DeleteObject(font);
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
@@ -250,9 +306,6 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     ButtonState drawState;
     pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
 
-    if(!paint)
-        return FALSE;
-
     if(IsWindowEnabled(hwnd))
     {
         if(state & BST_PUSHED) drawState = STATE_PRESSED;
@@ -263,7 +316,7 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     else drawState = STATE_DISABLED;
 
     hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
-    paint(theme, hwnd, hDC, drawState, dtFlags);
+    if (paint) paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
     if (!hParamDC) EndPaint(hwnd, &ps);
     return TRUE;
 }
@@ -313,9 +366,11 @@ LRESULT CALLBACK THEMING_ButtonSubclassProc(HWND hwnd, UINT msg,
 
     case WM_ENABLE:
         theme = GetWindowTheme(hwnd);
-        if (theme) RedrawWindow(hwnd, NULL, NULL,
-                                RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
-        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
+        if (theme) {
+            RedrawWindow(hwnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
+            return 0;
+        } else
+            return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
 
     case WM_MOUSEMOVE:
     {
@@ -347,6 +402,14 @@ LRESULT CALLBACK THEMING_ButtonSubclassProc(HWND hwnd, UINT msg,
         InvalidateRect(hwnd, NULL, FALSE);
         break;
     }
+
+    case BM_SETCHECK:
+    case BM_SETSTATE:
+        theme = GetWindowTheme(hwnd);
+        if (theme) {
+            InvalidateRect(hwnd, NULL, FALSE);
+        }
+        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
 
     default:
 	/* Call old proc */

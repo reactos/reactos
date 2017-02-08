@@ -19,6 +19,8 @@
  *
  */
 
+#pragma once
+
 #include <epm_c.h>
 
 #define EPM_PROTOCOL_DNET_NSP		0x04

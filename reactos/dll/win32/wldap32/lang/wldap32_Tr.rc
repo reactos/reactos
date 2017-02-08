@@ -1,0 +1,123 @@
+/*
+ * Turkish resources for WLDAP32
+ *
+ * Copyrights: 2006 Fatih Aşıcı; 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "Başarılı"
+    1 "İşlem Yanlışlığı"
+    2 "İletişim Kâidesi Yanlışlığı"
+    3 "Zaman Hududu Aşıldı"
+    4 "Boyut Hududu Aşıldı"
+    5 "Karşılaştırma Yanlış"
+    6 "Karşılaştırma Doğru"
+    7 "Kimlik Doğrulaması Yöntemi Desteklenmiyor"
+    8 "Güçlü Kimlik Doğrulaması Gerekli"
+    9 "Başvuru (Sürüm 2)"
+    10 "Başvuru"
+    11 "Yönetim Hududu Aşıldı"
+    12 "Olmayan Önemli Eklenti"
+    13 "Gizlilik Gerekli"
+    14 ""
+    15 ""
+    16 "Böyle Öz Nitelik Yok"
+    17 "Tanımlanmamış Tür"
+    18 "Uygunsuz Eşleşme"
+    19 "Kısıtlama Çiğnemi"
+    20 "Var Olan Öz Nitelik ya da Değer"
+    21 "Geçersiz Söz Dizimi"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "Böyle Nesne Yok"
+    33 "Başka Ad Sorunu"
+    34 "Geçersiz DN Söz Dizimi"
+    35 "Alt Düzey"
+    36 "Başka Ad Başvurudan Ayırma Sorunu"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "Uygunsuz Kimlik Doğrulaması"
+    49 "Geçersiz Kimlik Bilgileri"
+    50 "Eksik Yetkiler"
+    51 "Dolu"
+    52 "Kullanılamaz"
+    53 "Yürütmeye İsteksiz"
+    54 "Döngü Algılandı"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "Dizme Denetimi Eksik"
+    61 "Dizin Aralığı Yanlışlığı"
+    62 ""
+    63 ""
+    64 "Adlandırma Çiğnemi"
+    65 "Nesne Sınıfı Çiğnemi"
+    66 "Alt Düzey Olmayan Üzerinde İzinli Değil"
+    67 "RDN üzerinde İzinli Değil"
+    68 "Önceden Var"
+    69 "Nesne Sınıfı Kipleri Yok"
+    70 "Sonuçlar Çok Büyük"
+    71 "Çoklu DSA'ları Etkiler"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "Başka"
+    81 "Sunucu Edilgin"
+    82 "Yerli Yanlışlık"
+    83 "Kodlama Yanlışlığı"
+    84 "Çözme Yanlışlığı"
+    85 "Süre Aşımı"
+    86 "Yetkili Bilinmiyor"
+    87 "Süzgeç Yanlışlığı"
+    88 "Kullanıcı İptal Etti"
+    89 "Değişken Yanlışlığı"
+    90 "Bellek Yok"
+    91 "LDAP Sunucusuna Bağlanılamıyor"
+    92 "İşlem LDAP İletişim Kâidesinin Bu Sürümünce Desteklenmiyor"
+    93 "İletide Belirtilen Denetim Bulunamadı"
+    94 "İletide Sonuç Yok"
+    95 "Daha Çok Sonuç Dönürüldü"
+    96 "Başvuruları İşlerken Dön"
+    97 "Başvuru Atlama Hududu Aşıldı"
+}

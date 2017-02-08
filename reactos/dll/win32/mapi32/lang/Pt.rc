@@ -1,0 +1,39 @@
+/*
+* MAPI32 Portuguese resources
+*
+* Copyright 2010 Ricardo Filipe
+* Copyright 2010 Gustavo Henrique Milaré
+*
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation; either
+* version 2.1 of the License, or (at your option) any later version.
+*
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this library; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+*
+*/
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE
+{
+   IDS_NO_MAPI_CLIENT, "O envio do e-mail falhou porque não existe um cliente de e-mail MAPI instalado."
+   IDS_SEND_MAIL, "Enviar E-mail"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+   IDS_NO_MAPI_CLIENT, "O envio de correio falhou porque não existe um cliente de correio MAPI instalado."
+   IDS_SEND_MAIL, "Enviar Correio"
+}

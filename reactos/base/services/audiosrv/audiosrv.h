@@ -6,17 +6,14 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
+#ifndef _AUDIOSRV_PCH_
+#define _AUDIOSRV_PCH_
+
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <mmsystem.h>
-#include <assert.h>
-#include <setupapi.h>
-#include <ksmedia.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <malloc.h>
 #include <dbt.h>
 #include <audiosrv/audiosrv.h>
 
@@ -70,3 +67,5 @@ StartSystemAudioServices(VOID);
 void logmsg(char* string, ...);
 
 #endif
+
+#endif /* _AUDIOSRV_PCH_ */

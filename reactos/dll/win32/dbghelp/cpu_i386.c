@@ -18,23 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
-#include "wine/winbase16.h"
-#include "winternl.h"
-#include "wine/debug.h"
+
+#ifndef DBGHELP_STATIC_LIB
+#include <wine/winbase16.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-#define STEP_FLAG 0x00000100 /* single step flag */
 #define V86_FLAG  0x00020000
 
 #define IS_VM86_MODE(ctx) (ctx->EFlags & V86_FLAG)
 
-#ifdef __i386__
+#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
 static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD sel)
 {
     LDT_ENTRY	le;
@@ -48,8 +44,8 @@ static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD s
     return -1;
 }
 
-static unsigned i386_build_addr(HANDLE hThread, const CONTEXT* ctx, ADDRESS64* addr,
-                                unsigned seg, unsigned long offset)
+static BOOL i386_build_addr(HANDLE hThread, const CONTEXT* ctx, ADDRESS64* addr,
+                            unsigned seg, unsigned long offset)
 {
     addr->Mode    = AddrModeFlat;
     addr->Segment = seg;
@@ -73,8 +69,9 @@ static unsigned i386_build_addr(HANDLE hThread, const CONTEXT* ctx, ADDRESS64* a
 }
 #endif
 
-static unsigned i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                              enum cpu_addr ca, ADDRESS64* addr)
+#ifndef DBGHELP_STATIC_LIB
+static BOOL i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                          enum cpu_addr ca, ADDRESS64* addr)
 {
 #ifdef __i386__
     switch (ca)
@@ -86,8 +83,9 @@ static unsigned i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
 #endif
     return FALSE;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
-#ifdef __i386__
+#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
 /* fetch_next_frame32()
  *
  * modify (at least) context.{eip, esp, ebp} using unwind information
@@ -110,11 +108,14 @@ static BOOL fetch_next_frame32(struct cpu_stack_walk* csw,
     cpair[2].name = "$eip";      cpair[2].pvalue = &context->Eip;
     cpair[3].name = NULL;        cpair[3].pvalue = NULL;
 
+#ifndef DBGHELP_STATIC_LIB
     if (!pdb_virtual_unwind(csw, curr_pc, context, cpair))
+#endif
     {
         /* do a simple unwind using ebp
          * we assume a "regular" prologue in the function has been used
          */
+        if (!context->Ebp) return FALSE;
         context->Esp = context->Ebp + 2 * sizeof(DWORD);
         if (!sw_read_mem(csw, context->Ebp + sizeof(DWORD), &val32, sizeof(DWORD)))
         {
@@ -147,6 +148,7 @@ enum st_mode {stm_start, stm_32bit, stm_16bit, stm_done};
 #define set_curr_mode(m) {frame->Reserved[__CurrentModeCount] &= ~0x0F; frame->Reserved[__CurrentModeCount] |= (m & 0x0F);}
 #define inc_curr_count() (frame->Reserved[__CurrentModeCount] += 0x10)
 
+#ifndef DBGHELP_STATIC_LIB
 static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
 {
     STACK32FRAME        frame32;
@@ -219,7 +221,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
         if (NtQueryInformationThread(csw->hThread, ThreadBasicInformation, &info,
                                      sizeof(info), NULL) == STATUS_SUCCESS)
         {
-            curr_switch = (unsigned long)info.TebBaseAddress + FIELD_OFFSET(TEB, WOW32Reserved);
+            curr_switch = (DWORD_PTR)info.TebBaseAddress + FIELD_OFFSET(TEB, WOW32Reserved);
             if (!sw_read_mem(csw, curr_switch, &p, sizeof(p)))
             {
                 WARN("Can't read TEB:WOW32Reserved\n");
@@ -261,7 +263,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
             }
         }
         else
-            /* FIXME: this will allow to work when we're not attached to a live target,
+            /* FIXME: this will allow it to work when we're not attached to a live target,
              * but the 16 <=> 32 switch facility won't be available.
              */
             curr_switch = 0;
@@ -273,7 +275,6 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
     }
     else
     {
-        if (frame->AddrFrame.Offset == 0) goto done_err;
         if (frame->AddrFrame.Mode == AddrModeFlat)
         {
             assert(curr_mode == stm_32bit);
@@ -339,13 +340,13 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
                 }
 
                 TRACE("Got a 16 bit stack switch:"
-                      "\n\tframe32: %08lx"
+                      "\n\tframe32: %p"
                       "\n\tedx:%08x ecx:%08x ebp:%08x"
                       "\n\tds:%04x es:%04x fs:%04x gs:%04x"
                       "\n\tcall_from_ip:%08x module_cs:%04x relay=%08x"
                       "\n\tentry_ip:%04x entry_point:%08x"
                       "\n\tbp:%04x ip:%04x cs:%04x\n",
-                      (unsigned long)frame16.frame32,
+                      frame16.frame32,
                       frame16.edx, frame16.ecx, frame16.ebp,
                       frame16.ds, frame16.es, frame16.fs, frame16.gs,
                       frame16.callfrom_ip, frame16.module_cs, frame16.relay,
@@ -389,7 +390,8 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
                 frame->AddrPC = frame->AddrReturn;
                 frame->AddrStack.Offset = frame->AddrFrame.Offset + 2 * sizeof(WORD);
                 /* "pop up" previous BP value */
-                if (!sw_read_mem(csw, sw_xlat_addr(csw, &frame->AddrFrame),
+                if (!frame->AddrFrame.Offset ||
+                    !sw_read_mem(csw, sw_xlat_addr(csw, &frame->AddrFrame),
                                  &val16, sizeof(WORD)))
                     goto done_err;
                 frame->AddrFrame.Offset = val16;
@@ -512,8 +514,9 @@ done_err:
     set_curr_mode(stm_done);
     return FALSE;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
-static unsigned i386_map_dwarf_register(unsigned regno)
+static unsigned i386_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     unsigned    reg;
 
@@ -523,8 +526,17 @@ static unsigned i386_map_dwarf_register(unsigned regno)
     case  1: reg = CV_REG_ECX; break;
     case  2: reg = CV_REG_EDX; break;
     case  3: reg = CV_REG_EBX; break;
-    case  4: reg = CV_REG_ESP; break;
-    case  5: reg = CV_REG_EBP; break;
+    case  4:
+    case  5:
+#ifdef __APPLE__
+        /* On OS X, DWARF eh_frame uses a different mapping for the registers.  It's
+           apparently the mapping as emitted by GCC, at least at some point in its history. */
+        if (eh_frame)
+            reg = (regno == 4) ? CV_REG_EBP : CV_REG_ESP;
+        else
+#endif
+            reg = (regno == 4) ? CV_REG_ESP : CV_REG_EBP;
+        break;
     case  6: reg = CV_REG_ESI; break;
     case  7: reg = CV_REG_EDI; break;
     case  8: reg = CV_REG_EIP; break;
@@ -574,14 +586,16 @@ static void* i386_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size
     case CV_REG_ESP: *size = sizeof(ctx->Esp); return &ctx->Esp;
     case CV_REG_EIP: *size = sizeof(ctx->Eip); return &ctx->Eip;
 
-    case CV_REG_ST0 + 0: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[0*sizeof(long double)];
-    case CV_REG_ST0 + 1: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[1*sizeof(long double)];
-    case CV_REG_ST0 + 2: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[2*sizeof(long double)];
-    case CV_REG_ST0 + 3: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[3*sizeof(long double)];
-    case CV_REG_ST0 + 4: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[4*sizeof(long double)];
-    case CV_REG_ST0 + 5: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[5*sizeof(long double)];
-    case CV_REG_ST0 + 6: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[6*sizeof(long double)];
-    case CV_REG_ST0 + 7: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[7*sizeof(long double)];
+    /* These are x87 floating point registers... They do not match a C type in
+     * the Linux ABI, so hardcode their 80-bitness. */
+    case CV_REG_ST0 + 0: *size = 10; return &ctx->FloatSave.RegisterArea[0*10];
+    case CV_REG_ST0 + 1: *size = 10; return &ctx->FloatSave.RegisterArea[1*10];
+    case CV_REG_ST0 + 2: *size = 10; return &ctx->FloatSave.RegisterArea[2*10];
+    case CV_REG_ST0 + 3: *size = 10; return &ctx->FloatSave.RegisterArea[3*10];
+    case CV_REG_ST0 + 4: *size = 10; return &ctx->FloatSave.RegisterArea[4*10];
+    case CV_REG_ST0 + 5: *size = 10; return &ctx->FloatSave.RegisterArea[5*10];
+    case CV_REG_ST0 + 6: *size = 10; return &ctx->FloatSave.RegisterArea[6*10];
+    case CV_REG_ST0 + 7: *size = 10; return &ctx->FloatSave.RegisterArea[7*10];
 
     case CV_REG_CTRL: *size = sizeof(DWORD); return &ctx->FloatSave.ControlWord;
     case CV_REG_STAT: *size = sizeof(DWORD); return &ctx->FloatSave.StatusWord;
@@ -659,14 +673,50 @@ static const char* i386_fetch_regname(unsigned regno)
     return NULL;
 }
 
+#ifndef DBGHELP_STATIC_LIB
+static BOOL i386_fetch_minidump_thread(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx)
+{
+    if (ctx->ContextFlags && (flags & ThreadWriteInstructionWindow))
+    {
+        /* FIXME: crop values across module boundaries, */
+#ifdef __i386__
+        ULONG base = ctx->Eip <= 0x80 ? 0 : ctx->Eip - 0x80;
+        minidump_add_memory_block(dc, base, ctx->Eip + 0x80 - base, 0);
+#endif
+    }
+
+    return TRUE;
+}
+#endif
+
+static BOOL i386_fetch_minidump_module(struct dump_context* dc, unsigned index, unsigned flags)
+{
+    /* FIXME: actually, we should probably take care of FPO data, unless it's stored in
+     * function table minidump stream
+     */
+    return FALSE;
+}
+
 DECLSPEC_HIDDEN struct cpu cpu_i386 = {
     IMAGE_FILE_MACHINE_I386,
     4,
     CV_REG_EBP,
+#ifndef DBGHELP_STATIC_LIB
     i386_get_addr,
     i386_stack_walk,
+#else
+    NULL,
+    NULL,
+#endif
     NULL,
     i386_map_dwarf_register,
     i386_fetch_context_reg,
     i386_fetch_regname,
+#ifndef DBGHELP_STATIC_LIB
+    i386_fetch_minidump_thread,
+    i386_fetch_minidump_module,
+#else
+    NULL,
+    NULL,
+#endif
 };

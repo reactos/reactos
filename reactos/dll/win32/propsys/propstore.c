@@ -18,30 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "propsys_private.h"
 
-#define COBJMACROS
-#include <config.h>
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-//#include "rpcproxy.h"
-#include <propsys.h>
-#include <wine/debug.h>
-//#include "wine/unicode.h"
 #include <wine/list.h>
 
 #include <initguid.h>
-//#include "propsys_private.h"
-
 DEFINE_GUID(FMTID_NamedProperties, 0xd5cdd505, 0x2e9c, 0x101b, 0x93, 0x97, 0x08, 0x00, 0x2b, 0x2c, 0xf9, 0xae);
-
-WINE_DEFAULT_DEBUG_CHANNEL(propsys);
 
 typedef struct {
     struct list entry;
@@ -208,7 +190,7 @@ static HRESULT WINAPI PropertyStore_GetAt(IPropertyStoreCache *iface,
 }
 
 static HRESULT PropertyStore_LookupValue(PropertyStore *This, REFPROPERTYKEY key,
-    int insert, propstore_value **result)
+                                         BOOL insert, propstore_value **result)
 {
     propstore_format *format=NULL, *format_candidate;
     propstore_value *value=NULL, *value_candidate;
@@ -286,7 +268,7 @@ static HRESULT WINAPI PropertyStore_GetValue(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(pv, &value->propvar);
@@ -313,7 +295,7 @@ static HRESULT WINAPI PropertyStore_SetValue(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 1, &value);
+    hr = PropertyStore_LookupValue(This, key, TRUE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(&temp, propvar);
@@ -346,7 +328,7 @@ static HRESULT WINAPI PropertyStore_GetState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         *pstate = value->state;
@@ -370,7 +352,7 @@ static HRESULT WINAPI PropertyStore_GetValueAndState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(ppropvar, &value->propvar);
@@ -400,7 +382,7 @@ static HRESULT WINAPI PropertyStore_SetState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         value->state = pstate;
@@ -422,7 +404,7 @@ static HRESULT WINAPI PropertyStore_SetValueAndState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 1, &value);
+    hr = PropertyStore_LookupValue(This, key, TRUE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(&temp, ppropvar);

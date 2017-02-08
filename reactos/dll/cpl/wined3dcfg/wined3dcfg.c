@@ -1,5 +1,7 @@
 #include "wined3dcfg.h"
 
+#include <cpl.h>
+
 HINSTANCE hApplet = 0;
 
 LONG CALLBACK AppletInit(HWND hWnd)

@@ -16,14 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "wincodecs_private.h"
 
-#include <config.h>
-#include <wine/port.h>
-
-#include <stdarg.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -31,22 +25,17 @@
 #include <tiffio.h>
 #endif
 
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-//#include "wincodec.h"
-#include <wincodecsdk.h>
-
-#include "wincodecs_private.h"
-
-#include <wine/debug.h>
-#include <wine/library.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
-
 #ifdef SONAME_LIBTIFF
+
+/* Workaround for broken libtiff 4.x headers on some 64-bit hosts which
+ * define TIFF_UINT64_T/toff_t as 32-bit for 32-bit builds, while they
+ * are supposed to be always 64-bit.
+ * TIFF_UINT64_T doesn't exist in libtiff 3.x, it was introduced in 4.x.
+ */
+#ifdef TIFF_UINT64_T
+# undef toff_t
+# define toff_t UINT64
+#endif
 
 static CRITICAL_SECTION init_tiff_cs;
 static CRITICAL_SECTION_DEBUG init_tiff_cs_debug =
@@ -57,6 +46,9 @@ static CRITICAL_SECTION_DEBUG init_tiff_cs_debug =
     0, 0, { (DWORD_PTR)(__FILE__ ": init_tiff_cs") }
 };
 static CRITICAL_SECTION init_tiff_cs = { &init_tiff_cs_debug, -1, 0, 0, 0, 0 };
+
+static const WCHAR wszTiffCompressionMethod[] = {'T','i','f','f','C','o','m','p','r','e','s','s','i','o','n','M','e','t','h','o','d',0};
+static const WCHAR wszCompressionQuality[] = {'C','o','m','p','r','e','s','s','i','o','n','Q','u','a','l','i','t','y',0};
 
 static void *libtiff_handle;
 #define MAKE_FUNCPTR(f) static typeof(f) * p##f
@@ -210,15 +202,15 @@ static TIFF* tiff_open_stream(IStream *stream, const char *mode)
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
 
     return pTIFFClientOpen("<IStream object>", mode, stream, tiff_stream_read,
-        tiff_stream_write, tiff_stream_seek, tiff_stream_close,
-        tiff_stream_size, tiff_stream_map, tiff_stream_unmap);
+        tiff_stream_write, (void *)tiff_stream_seek, tiff_stream_close,
+        (void *)tiff_stream_size, (void *)tiff_stream_map, (void *)tiff_stream_unmap);
 }
 
 typedef struct {
     IWICBitmapDecoder IWICBitmapDecoder_iface;
     LONG ref;
     IStream *stream;
-    CRITICAL_SECTION lock; /* Must be held when tiff is used or initiailzed is set */
+    CRITICAL_SECTION lock; /* Must be held when tiff is used or initialized is set */
     TIFF *tiff;
     BOOL initialized;
 } TiffDecoder;
@@ -227,7 +219,7 @@ typedef struct {
     const WICPixelFormatGUID *format;
     int bps;
     int samples;
-    int bpp;
+    int bpp, source_bpp;
     int planar;
     int indexed;
     int reverse_bgr;
@@ -317,23 +309,63 @@ static HRESULT tiff_get_decode_info(TIFF *tiff, tiff_decode_info *decode_info)
         decode_info->invert_grayscale = 1;
         /* fall through */
     case 1: /* BlackIsZero */
-        if (samples != 1)
+        if (samples == 2)
         {
-            FIXME("unhandled grayscale sample count %u\n", samples);
+            ret = pTIFFGetField(tiff, TIFFTAG_EXTRASAMPLES, &extra_sample_count, &extra_samples);
+            if (!ret)
+            {
+                extra_sample_count = 1;
+                extra_sample = 0;
+                extra_samples = &extra_sample;
+            }
+        }
+        else if (samples != 1)
+        {
+            FIXME("unhandled %dbpp sample count %u\n", bps, samples);
             return E_FAIL;
         }
 
-        decode_info->bpp = bps;
+        decode_info->bpp = bps * samples;
+        decode_info->source_bpp = decode_info->bpp;
         switch (bps)
         {
         case 1:
+            if (samples != 1)
+            {
+                FIXME("unhandled 1bpp sample count %u\n", samples);
+                return E_FAIL;
+            }
             decode_info->format = &GUID_WICPixelFormatBlackWhite;
             break;
         case 4:
+            if (samples != 1)
+            {
+                FIXME("unhandled 4bpp grayscale sample count %u\n", samples);
+                return E_FAIL;
+            }
             decode_info->format = &GUID_WICPixelFormat4bppGray;
             break;
         case 8:
-            decode_info->format = &GUID_WICPixelFormat8bppGray;
+            if (samples == 1)
+                decode_info->format = &GUID_WICPixelFormat8bppGray;
+            else
+            {
+                decode_info->bpp = 32;
+
+                switch(extra_samples[0])
+                {
+                case 1: /* Associated (pre-multiplied) alpha data */
+                    decode_info->format = &GUID_WICPixelFormat32bppPBGRA;
+                    break;
+                case 0: /* Unspecified data */
+                case 2: /* Unassociated alpha data */
+                    decode_info->format = &GUID_WICPixelFormat32bppBGRA;
+                    break;
+                default:
+                    FIXME("unhandled extra sample type %u\n", extra_samples[0]);
+                    return E_FAIL;
+                }
+            }
             break;
         default:
             FIXME("unhandled greyscale bit count %u\n", bps);
@@ -934,6 +966,22 @@ static HRESULT TiffFrameDecode_ReadTile(TiffFrameDecode *This, UINT tile_x, UINT
             hr = E_FAIL;
     }
 
+    /* 8bpp grayscale with extra alpha */
+    if (hr == S_OK && This->decode_info.source_bpp == 16 && This->decode_info.samples == 2 && This->decode_info.bpp == 32)
+    {
+        BYTE *src;
+        DWORD *dst, count = This->decode_info.tile_width * This->decode_info.tile_height;
+
+        src = This->cached_tile + This->decode_info.tile_width * This->decode_info.tile_height * 2 - 2;
+        dst = (DWORD *)(This->cached_tile + This->decode_info.tile_size - 4);
+
+        while (count--)
+        {
+            *dst-- = src[0] | (src[0] << 8) | (src[0] << 16) | (src[1] << 24);
+            src -= 2;
+        }
+    }
+
     if (hr == S_OK && This->decode_info.reverse_bgr)
     {
         if (This->decode_info.bps == 8)
@@ -1109,8 +1157,34 @@ static HRESULT WINAPI TiffFrameDecode_GetMetadataQueryReader(IWICBitmapFrameDeco
 static HRESULT WINAPI TiffFrameDecode_GetColorContexts(IWICBitmapFrameDecode *iface,
     UINT cCount, IWICColorContext **ppIColorContexts, UINT *pcActualCount)
 {
-    FIXME("(%p,%u,%p,%p): stub\n", iface, cCount, ppIColorContexts, pcActualCount);
-    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+    TiffFrameDecode *This = impl_from_IWICBitmapFrameDecode(iface);
+    const BYTE *profile;
+    UINT len;
+    HRESULT hr;
+
+    TRACE("(%p,%u,%p,%p)\n", iface, cCount, ppIColorContexts, pcActualCount);
+
+    EnterCriticalSection(&This->parent->lock);
+
+    if (pTIFFGetField(This->parent->tiff, TIFFTAG_ICCPROFILE, &len, &profile))
+    {
+        if (cCount && ppIColorContexts)
+        {
+            hr = IWICColorContext_InitializeFromMemory(*ppIColorContexts, profile, len);
+            if (FAILED(hr))
+            {
+                LeaveCriticalSection(&This->parent->lock);
+                return hr;
+            }
+        }
+        *pcActualCount = 1;
+    }
+    else
+        *pcActualCount = 0;
+
+    LeaveCriticalSection(&This->parent->lock);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI TiffFrameDecode_GetThumbnail(IWICBitmapFrameDecode *iface,
@@ -1188,8 +1262,7 @@ static HRESULT create_metadata_reader(TiffFrameDecode *This, IWICMetadataReader 
 
     /* FIXME: Use IWICComponentFactory_CreateMetadataReader once it's implemented */
 
-    hr = CoCreateInstance(&CLSID_WICIfdMetadataReader, NULL, CLSCTX_INPROC_SERVER,
-                          &IID_IWICMetadataReader, (void **)&metadata_reader);
+    hr = IfdMetadataReader_CreateInstance(&IID_IWICMetadataReader, (void **)&metadata_reader);
     if (FAILED(hr)) return hr;
 
     hr = IWICMetadataReader_QueryInterface(metadata_reader, &IID_IWICPersistStream, (void **)&persist);
@@ -1261,16 +1334,14 @@ static const IWICMetadataBlockReaderVtbl TiffFrameDecode_BlockVtbl =
     TiffFrameDecode_Block_GetEnumerator
 };
 
-HRESULT TiffDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     HRESULT ret;
     TiffDecoder *This;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     if (!load_libtiff())
     {
@@ -1308,6 +1379,7 @@ struct tiff_encode_format {
 
 static const struct tiff_encode_format formats[] = {
     {&GUID_WICPixelFormat24bppBGR, 2, 8, 3, 24, 0, 0, 1},
+    {&GUID_WICPixelFormat24bppRGB, 2, 8, 3, 24, 0, 0, 0},
     {&GUID_WICPixelFormatBlackWhite, 1, 1, 1, 1, 0, 0, 0},
     {&GUID_WICPixelFormat4bppGray, 1, 4, 1, 4, 0, 0, 0},
     {&GUID_WICPixelFormat8bppGray, 1, 8, 1, 8, 0, 0, 0},
@@ -1619,73 +1691,23 @@ static HRESULT WINAPI TiffFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
 {
     TiffFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    WICRect rc;
-    WICPixelFormatGUID guid;
-    UINT stride;
-    BYTE *pixeldata;
 
     TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
 
-    if (!This->initialized || !This->width || !This->height)
+    if (!This->initialized)
         return WINCODEC_ERR_WRONGSTATE;
 
-    if (!This->format)
-    {
-        hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-        if (FAILED(hr)) return hr;
-        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &guid);
-        if (FAILED(hr)) return hr;
-    }
-
-    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-    if (FAILED(hr)) return hr;
-    if (memcmp(&guid, This->format->guid, sizeof(GUID)) != 0)
-    {
-        /* FIXME: should use WICConvertBitmapSource to convert */
-        ERR("format %s unsupported\n", debugstr_guid(&guid));
-        return E_FAIL;
-    }
-
-    if (This->xres == 0.0 || This->yres == 0.0)
-    {
-        double xres, yres;
-        hr = IWICBitmapSource_GetResolution(pIBitmapSource, &xres, &yres);
-        if (FAILED(hr)) return hr;
-        hr = IWICBitmapFrameEncode_SetResolution(iface, xres, yres);
-        if (FAILED(hr)) return hr;
-    }
-
-    if (!prc)
-    {
-        UINT width, height;
-        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
-        if (FAILED(hr)) return hr;
-        rc.X = 0;
-        rc.Y = 0;
-        rc.Width = width;
-        rc.Height = height;
-        prc = &rc;
-    }
-
-    if (prc->Width != This->width) return E_INVALIDARG;
-
-    stride = (This->format->bpp * This->width + 7)/8;
-
-    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
-    if (!pixeldata) return E_OUTOFMEMORY;
-
-    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, stride,
-        stride*prc->Height, pixeldata);
+    hr = configure_write_source(iface, pIBitmapSource, prc,
+        This->format ? This->format->guid : NULL, This->width, This->height,
+        This->xres, This->yres);
 
     if (SUCCEEDED(hr))
     {
-        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
-            stride*prc->Height, pixeldata);
+        hr = write_source(iface, pIBitmapSource, prc,
+            This->format->guid, This->format->bpp, This->width, This->height);
     }
 
-    HeapFree(GetProcessHeap(), 0, pixeldata);
-
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI TiffFrameEncode_Commit(IWICBitmapFrameEncode *iface)
@@ -1886,7 +1908,31 @@ static HRESULT WINAPI TiffEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (SUCCEEDED(hr))
     {
-        hr = CreatePropertyBag2(ppIEncoderOptions);
+        PROPBAG2 opts[2]= {{0}};
+        opts[0].pstrName = (LPOLESTR)wszTiffCompressionMethod;
+        opts[0].vt = VT_UI1;
+        opts[0].dwType = PROPBAG2_TYPE_DATA;
+
+        opts[1].pstrName = (LPOLESTR)wszCompressionQuality;
+        opts[1].vt = VT_R4;
+        opts[1].dwType = PROPBAG2_TYPE_DATA;
+
+        hr = CreatePropertyBag2(opts, 2, ppIEncoderOptions);
+
+        if (SUCCEEDED(hr))
+        {
+            VARIANT v;
+            VariantInit(&v);
+            V_VT(&v) = VT_UI1;
+            V_UNION(&v, bVal) = WICTiffCompressionDontCare;
+            hr = IPropertyBag2_Write(*ppIEncoderOptions, 1, opts, &v);
+            VariantClear(&v);
+            if (FAILED(hr))
+            {
+                IPropertyBag2_Release(*ppIEncoderOptions);
+                *ppIEncoderOptions = NULL;
+            }
+        }
     }
 
     if (SUCCEEDED(hr))
@@ -1980,16 +2026,14 @@ static const IWICBitmapEncoderVtbl TiffEncoder_Vtbl = {
     TiffEncoder_GetMetadataQueryWriter
 };
 
-HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     TiffEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     if (!load_libtiff())
     {
@@ -2019,13 +2063,13 @@ HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 
 #else /* !SONAME_LIBTIFF */
 
-HRESULT TiffDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to load TIFF picture, but Wine was compiled without TIFF support.\n");
     return E_FAIL;
 }
 
-HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to save TIFF picture, but Wine was compiled without TIFF support.\n");
     return E_FAIL;

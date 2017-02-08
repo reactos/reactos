@@ -1,0 +1,123 @@
+/*
+ * Dutch resources for oleacc
+ *
+ * Copyright 2008 Frans Kool
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    0 "onbekend object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "titelbalk"
+    ROLE_SYSTEM_MENUBAR     "menubalk"
+    ROLE_SYSTEM_SCROLLBAR   "scrollbalk"
+    ROLE_SYSTEM_GRIP        "handvat"
+    ROLE_SYSTEM_SOUND       "geluid"
+    ROLE_SYSTEM_CURSOR      "cursor"
+    ROLE_SYSTEM_CARET       "tekstcursor"
+    ROLE_SYSTEM_ALERT       "waarschuwing"
+    ROLE_SYSTEM_WINDOW      "venster"
+    ROLE_SYSTEM_CLIENT      "client"
+    ROLE_SYSTEM_MENUPOPUP   "popupmenu"
+    ROLE_SYSTEM_MENUITEM    "menu-item"
+    ROLE_SYSTEM_TOOLTIP     "tooltip"
+    ROLE_SYSTEM_APPLICATION "programma"
+    ROLE_SYSTEM_DOCUMENT    "document"
+    ROLE_SYSTEM_PANE        "sectie"
+    ROLE_SYSTEM_CHART       "diagram"
+    ROLE_SYSTEM_DIALOG      "dialoog"
+    ROLE_SYSTEM_BORDER      "rand"
+    ROLE_SYSTEM_GROUPING    "groepering"
+    ROLE_SYSTEM_SEPARATOR   "scheidingsteken"
+    ROLE_SYSTEM_TOOLBAR     "gereedschapsbalk"
+    ROLE_SYSTEM_STATUSBAR   "statusbalk"
+    ROLE_SYSTEM_TABLE        "tabel"
+    ROLE_SYSTEM_COLUMNHEADER "kolomtitel"
+    ROLE_SYSTEM_ROWHEADER    "rij-titel"
+    ROLE_SYSTEM_COLUMN       "kolom"
+    ROLE_SYSTEM_ROW          "rij"
+    ROLE_SYSTEM_CELL         "cel"
+    ROLE_SYSTEM_LINK         "link"
+    ROLE_SYSTEM_HELPBALLOON  "help-ballon"
+    ROLE_SYSTEM_CHARACTER    "karakter"
+    ROLE_SYSTEM_LIST         "lijst"
+    ROLE_SYSTEM_LISTITEM     "lijstonderdeel"
+    ROLE_SYSTEM_OUTLINE      "omtrek"
+    ROLE_SYSTEM_OUTLINEITEM  "omtrekonderdeel"
+    ROLE_SYSTEM_PAGETAB      "paginatab"
+    ROLE_SYSTEM_PROPERTYPAGE "eigenschap-pagina"
+    ROLE_SYSTEM_INDICATOR    "indicator"
+    ROLE_SYSTEM_GRAPHIC      "grafisch"
+    ROLE_SYSTEM_STATICTEXT   "vaste tekst"
+    ROLE_SYSTEM_TEXT         "tekst"
+    ROLE_SYSTEM_PUSHBUTTON   "drukknop"
+    ROLE_SYSTEM_CHECKBUTTON  "aankruisvakje"
+    ROLE_SYSTEM_RADIOBUTTON  "radioknop"
+    ROLE_SYSTEM_COMBOBOX     "combinatievak"
+    ROLE_SYSTEM_DROPLIST     "selectievak"
+    ROLE_SYSTEM_PROGRESSBAR  "voortgangsbalk"
+    ROLE_SYSTEM_DIAL         "bellen"
+    ROLE_SYSTEM_HOTKEYFIELD  "sneltoetsveld"
+    ROLE_SYSTEM_SLIDER       "schuifknop"
+    ROLE_SYSTEM_SPINBUTTON   "draaischijf"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "animatie"
+    ROLE_SYSTEM_EQUATION     "formule"
+    ROLE_SYSTEM_BUTTONDROPDOWN "dropdownknop"
+    ROLE_SYSTEM_BUTTONMENU   "menuknop"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "grid dropdownknop"
+    ROLE_SYSTEM_WHITESPACE   "lege ruimte"
+    ROLE_SYSTEM_PAGETABLIST  "paginatablijst"
+    ROLE_SYSTEM_CLOCK        "klok"
+    ROLE_SYSTEM_SPLITBUTTON  "splitsknop"
+    ROLE_SYSTEM_IPADDRESS    "IP-adres"
+    ROLE_SYSTEM_OUTLINEBUTTON "omtrekknop"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

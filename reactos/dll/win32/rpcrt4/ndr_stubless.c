@@ -23,35 +23,16 @@
  *  - Some types of binding handles
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <objbase.h>
-//#include "rpc.h"
-#include <rpcproxy.h>
-
-#include <wine/exception.h>
-#include <wine/debug.h>
-#include <wine/rpcfc.h>
-
-#include "cpsf.h"
-#include "ndr_misc.h"
-#include "ndr_stubless.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 #define NDR_TABLE_MASK 127
+
+static inline BOOL is_oicf_stubdesc(const PMIDL_STUB_DESC pStubDesc)
+{
+    return pStubDesc->Version >= 0x20000;
+}
 
 static inline void call_buffer_sizer(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory,
                                      const NDR_PARAM_OIF *param)
@@ -152,6 +133,15 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
     DWORD size;
     switch(*pFormat)
     {
+    case RPC_FC_RP:
+        if (pFormat[1] & RPC_FC_P_SIMPLEPOINTER)
+        {
+            FIXME("Simple reference pointer (type %#x).\n", pFormat[2]);
+            size = sizeof(void *);
+            break;
+        }
+        size = calc_arg_size(pStubMsg, &pFormat[2] + *(const SHORT*)&pFormat[2]);
+        break;
     case RPC_FC_STRUCT:
     case RPC_FC_PSTRUCT:
         size = *(const WORD*)(pFormat + 2);
@@ -206,7 +196,7 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
     default:
         FIXME("Unhandled type %02x\n", *pFormat);
         /* fallthrough */
-    case RPC_FC_RP:
+    case RPC_FC_IP:
         size = sizeof(void *);
         break;
     }
@@ -338,7 +328,11 @@ static PFORMAT_STRING client_get_handle(
         *phBinding = *pStubMsg->StubDesc->IMPLICIT_HANDLE_INFO.pPrimitiveHandle;
         break;
     case RPC_FC_CALLBACK_HANDLE: /* implicit callback */
-        FIXME("RPC_FC_CALLBACK_HANDLE\n");
+        TRACE("RPC_FC_CALLBACK_HANDLE\n");
+        /* server calls callback procedures only in response to remote call, and most recent
+           binding handle is used. Calling back to a client can potentially result in another
+           callback with different current handle. */
+        *phBinding = I_RpcGetCurrentCallHandle();
         break;
     case RPC_FC_AUTO_HANDLE: /* implicit auto handle */
         /* strictly speaking, it isn't necessary to set hBinding here
@@ -620,9 +614,9 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        stack_size = pProcHeader->stack_size;
-        procedure_number = pProcHeader->proc_num;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        stack_size = header_rpc->stack_size;
+        procedure_number = header_rpc->proc_num;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
     }
     else
@@ -660,7 +654,7 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
         if (!pFormat) goto done;
     }
 
-    if (pStubDesc->Version >= 0x20000)  /* -Oicf format */
+    if (is_oicf_stubdesc(pStubDesc))  /* -Oicf format */
     {
         const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader =
             (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
@@ -721,6 +715,8 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
     {
         /* initialize extra correlation package */
         NdrCorrelationInitialize(&stubMsg, NdrCorrCache, sizeof(NdrCorrCache), 0);
+        if (ext_flags.Unused & 0x2) /* has range on conformance */
+            stubMsg.CorrDespIncrement = 12;
     }
 
     /* order of phases:
@@ -809,7 +805,7 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 }
             }
 
-            /* convert strings, floating point values and endianess into our
+            /* convert strings, floating point values and endianness into our
              * preferred format */
             if ((rpcMsg.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
                 NdrConvert(&stubMsg, pFormat);
@@ -847,7 +843,7 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 if (comm_fault_offsets->FaultOffset == -1)
                     fault_status = (ULONG *)&RetVal;
                 else if (comm_fault_offsets->FaultOffset >= 0)
-                    fault_status = *(ULONG **)ARG_FROM_OFFSET(stubMsg.StackTop, comm_fault_offsets->CommOffset);
+                    fault_status = *(ULONG **)ARG_FROM_OFFSET(stubMsg.StackTop, comm_fault_offsets->FaultOffset);
                 else
                     fault_status = NULL;
 
@@ -1062,10 +1058,10 @@ __ASM_GLOBAL_FUNC( call_server_func,
                    "movq 8(%rsp),%rdx\n\t"
                    "movq 16(%rsp),%r8\n\t"
                    "movq 24(%rsp),%r9\n\t"
-                   "movq %rcx,%xmm0\n\t"
-                   "movq %rdx,%xmm1\n\t"
-                   "movq %r8,%xmm2\n\t"
-                   "movq %r9,%xmm3\n\t"
+                   "movq 0(%rsp),%xmm0\n\t"
+                   "movq 8(%rsp),%xmm1\n\t"
+                   "movq 16(%rsp),%xmm2\n\t"
+                   "movq 24(%rsp),%xmm3\n\t"
                    "callq *%rax\n\t"
                    "leaq -16(%rbp),%rsp\n\t"  /* restore stack */
                    "popq %rdi\n\t"
@@ -1077,6 +1073,40 @@ __ASM_GLOBAL_FUNC( call_server_func,
                    __ASM_CFI(".cfi_adjust_cfa_offset -8\n\t")
                    __ASM_CFI(".cfi_same_value %rbp\n\t")
                    "ret")
+#elif defined __arm__
+LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char *args, unsigned int stack_size);
+__ASM_GLOBAL_FUNC( call_server_func,
+                   ".arm\n\t"
+                   "push {r4, r5, LR}\n\t"
+                   "mov r4, r0\n\t"
+                   "mov r5, SP\n\t"
+                   "lsr r3, r2, #2\n\t"
+                   "cmp r3, #0\n\t"
+                   "beq 5f\n\t"
+                   "sub SP, SP, r2\n\t"
+                   "tst r3, #1\n\t"
+                   "subeq SP, SP, #4\n\t"
+                   "1:\tsub r2, r2, #4\n\t"
+                   "ldr r0, [r1, r2]\n\t"
+                   "str r0, [SP, r2]\n\t"
+                   "cmp r2, #0\n\t"
+                   "bgt 1b\n\t"
+                   "cmp r3, #1\n\t"
+                   "bgt 2f\n\t"
+                   "pop {r0}\n\t"
+                   "b 5f\n\t"
+                   "2:\tcmp r3, #2\n\t"
+                   "bgt 3f\n\t"
+                   "pop {r0-r1}\n\t"
+                   "b 5f\n\t"
+                   "3:\tcmp r3, #3\n\t"
+                   "bgt 4f\n\t"
+                   "pop {r0-r2}\n\t"
+                   "b 5f\n\t"
+                   "4:\tpop {r0-r3}\n\t"
+                   "5:\tblx r4\n\t"
+                   "mov SP, r5\n\t"
+                   "pop {r4, r5, PC}" )
 #else
 #warning call_server_func not implemented for your architecture
 LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned short stack_size)
@@ -1110,12 +1140,14 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
             if (params[i].attr.IsOut || params[i].attr.IsReturn)
                 call_marshaller(pStubMsg, pArg, &params[i]);
             break;
-        case STUBLESS_FREE:
+        case STUBLESS_MUSTFREE:
             if (params[i].attr.MustFree)
             {
                 call_freer(pStubMsg, pArg, &params[i]);
             }
-            else if (params[i].attr.ServerAllocSize)
+            break;
+        case STUBLESS_FREE:
+            if (params[i].attr.ServerAllocSize)
             {
                 HeapFree(GetProcessHeap(), 0, *(void **)pArg);
             }
@@ -1226,8 +1258,8 @@ LONG WINAPI NdrStubCall2(
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        stack_size = pProcHeader->stack_size;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        stack_size = header_rpc->stack_size;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
 
     }
@@ -1301,7 +1333,7 @@ LONG WINAPI NdrStubCall2(
     if (pThis)
         *(void **)args = ((CStdStubBuffer *)pThis)->pvServerObject;
 
-    if (pStubDesc->Version >= 0x20000)  /* -Oicf format */
+    if (is_oicf_stubdesc(pStubDesc))
     {
         const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader = (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
 
@@ -1329,8 +1361,9 @@ LONG WINAPI NdrStubCall2(
         if (ext_flags.HasNewCorrDesc)
         {
             /* initialize extra correlation package */
-            FIXME("new correlation description not implemented\n");
-            stubMsg.fHasNewCorrDesc = TRUE;
+            NdrCorrelationInitialize(&stubMsg, NdrCorrCache, sizeof(NdrCorrCache), 0);
+            if (ext_flags.Unused & 0x2) /* has range on conformance */
+                stubMsg.CorrDespIncrement = 12;
         }
     }
     else
@@ -1341,7 +1374,7 @@ LONG WINAPI NdrStubCall2(
                                     NdrCorrCache, sizeof(NdrCorrCache), &number_of_params );
     }
 
-    /* convert strings, floating point values and endianess into our
+    /* convert strings, floating point values and endianness into our
      * preferred format */
     if ((pRpcMsg->DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
         NdrConvert(&stubMsg, pFormat);
@@ -1403,6 +1436,7 @@ LONG WINAPI NdrStubCall2(
         case STUBLESS_INITOUT:
         case STUBLESS_CALCSIZE:
         case STUBLESS_MARSHAL:
+        case STUBLESS_MUSTFREE:
         case STUBLESS_FREE:
             retval_ptr = stub_do_args(&stubMsg, pFormat, phase, number_of_params);
             break;
@@ -1417,7 +1451,7 @@ LONG WINAPI NdrStubCall2(
     if (ext_flags.HasNewCorrDesc)
     {
         /* free extra correlation package */
-        /* NdrCorrelationFree(&stubMsg); */
+        NdrCorrelationFree(&stubMsg);
     }
 
     if (Oif_flags.HasPipes)
@@ -1492,8 +1526,6 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     INTERPRETER_OPT_FLAGS2 ext_flags = { 0 };
     /* header for procedure string */
     const NDR_PROC_HEADER * pProcHeader = (const NDR_PROC_HEADER *)&pFormat[0];
-    /* -Oif or -Oicf generated format */
-    BOOL bV2Format = FALSE;
     RPC_STATUS status;
 
     TRACE("pStubDesc %p, pFormat %p, ...\n", pStubDesc, pFormat);
@@ -1506,7 +1538,7 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     }
 
     async_call_data = I_RpcAllocate(sizeof(*async_call_data) + sizeof(MIDL_STUB_MESSAGE) + sizeof(RPC_MESSAGE));
-    if (!async_call_data) RpcRaiseException(ERROR_OUTOFMEMORY);
+    if (!async_call_data) RpcRaiseException(RPC_X_NO_MEMORY);
     async_call_data->pProcHeader = pProcHeader;
 
     async_call_data->pStubMsg = pStubMsg = (PMIDL_STUB_MESSAGE)(async_call_data + 1);
@@ -1514,9 +1546,9 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        async_call_data->stack_size = pProcHeader->stack_size;
-        procedure_number = pProcHeader->proc_num;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        async_call_data->stack_size = header_rpc->stack_size;
+        procedure_number = header_rpc->proc_num;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
     }
     else
@@ -1555,9 +1587,7 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     pFormat = client_get_handle(pStubMsg, pProcHeader, async_call_data->pHandleFormat, &async_call_data->hBinding);
     if (!pFormat) goto done;
 
-    bV2Format = (pStubDesc->Version >= 0x20000);
-
-    if (bV2Format)
+    if (is_oicf_stubdesc(pStubDesc))
     {
         const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader =
             (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
@@ -1608,6 +1638,8 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
     {
         /* initialize extra correlation package */
         NdrCorrelationInitialize(pStubMsg, async_call_data->NdrCorrCache, sizeof(async_call_data->NdrCorrCache), 0);
+        if (ext_flags.Unused & 0x2) /* has range on conformance */
+            pStubMsg->CorrDespIncrement = 12;
     }
 
     /* order of phases:

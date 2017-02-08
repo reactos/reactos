@@ -1,31 +1,31 @@
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
-IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "כללי"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "You can get IP settings assigned automatically if your network supports this capability. Otherwise, you need to ask your network administrator for the appropriate IP settings.", -1, 9, 9, 228, 27
- CONTROL "השג כתובת IP באופן אוטומטי", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
- GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "השתמש בכתובת הIP הבאה:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "כתובת IP:", -1, 14, 75, 135, 8
- CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
- LTEXT "מסכת רשת משנה:", -1, 14, 90, 135, 8
- CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "שער ברירת מחדל:", -1, 14, 105, 135, 8
- CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
- CONTROL "השג כתובת שרת DNS באופן אוטומטי.", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
- GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "השתמש בכתובות שרתי הDNS הבאים:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "שרת DNS מועדף:", -1, 14, 171, 135, 8
- CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
- LTEXT "שרת DNS חלופי:", -1, 14, 186, 135, 8
- CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
- PUSHBUTTON "מתקדם", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    LTEXT "You can get IP settings assigned automatically if your network supports this capability. Otherwise, you need to ask your network administrator for the appropriate IP settings.", -1, 9, 9, 235, 27
+    CONTROL "השג כתובת IP באופן אוטומטי", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "השתמש בכתובת הIP הבאה:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "כתובת IP:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "מסכת רשת משנה:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "שער ברירת מחדל:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "השג כתובת שרת DNS באופן אוטומטי.", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "השתמש בכתובות שרתי הDNS הבאים:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    LTEXT "שרת DNS מועדף:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "שרת DNS חלופי:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "מתקדם", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "הגדרה חלופית"
 FONT 8, "MS Shell Dlg"
@@ -35,29 +35,29 @@ BEGIN
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "הגדרת משתמש", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "כתובת IP:", -1, 14, 75, 135, 8
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
     LTEXT "מסכת רשת משנה:", -1, 14, 95, 135, 8
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "שער ברירת מחדל:", -1, 14, 115, 135, 8
-    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "שרת DNS מועדף:", -1, 14, 150, 135, 8
-    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
     LTEXT "שרת DNS חלופי:", -1, 14, 165, 180, 8
-    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
-IDD_TCPIP_ADVIP_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
+IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "הגדרות IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "כתובות IP", -1, 5, 5, 240, 90
-    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "הוסף...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "ערוך...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "הסר", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
     GROUPBOX "שערי רשת ברירת מחדל:", -1, 5, 100, 240, 90
-    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "הוסף...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "ערוך...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "הסר", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
@@ -67,86 +67,85 @@ BEGIN
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
-IDD_TCPIP_ADVDNS_DLG DIALOGEX DISCARDABLE  0, 0, 247, 270
+IDD_TCPIP_ADVDNS_DLG DIALOGEX 0, 0, 247, 270
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
     LTEXT "D&NS server addresses, in order of use:", -1, 5, 5, 180, 12
-    PUSHBUTTON "הזז למעלה", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "הזז למטה", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "הוסף...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "ערוך...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "הסר", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הזז למעלה", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הזז למטה", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הוסף...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "ערוך...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הסר", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "The following three settings are applied to all connections with TCP/IP enabled. For resolution of unqualified names:", -1, 5, 90, 220, 24
-    CONTROL "Append &primary and connection specific DNS suffixes", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Append t&hese DNS suffixes(in order):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
-    LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
-    PUSHBUTTON "הזז למעלה", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "הזז למעטה", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "הוסף...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "ערוך...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "הסר", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "DNS &suffix for this connection:", -1, 5, 225, 110, 14
+    CONTROL "Append &primary and connection specific DNS suffixes", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Append t&hese DNS suffixes(in order):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
+    PUSHBUTTON "הזז למעלה", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הזז למעטה", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הוסף...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "ערוך...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "הסר", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "DNS &suffix for this connection:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Register this connection's addresses in DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Use this connection's DNS suffix in DNS registration", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
+    CHECKBOX "&Use this connection's DNS suffix in DNS registration", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
-IDD_TCPIP_ADVOPT_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
+IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "אפשרויות"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "הגדרות אפשרויות", -1, 5, 15, 130, 12
-    PUSHBUTTON "מאפיינים", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "מאפיינים", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
     GROUPBOX "תיאור:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
-IDD_TCPIPADDIP_DLG DIALOGEX DISCARDABLE  0, 0, 200, 70
+IDD_TCPIPADDIP_DLG DIALOGEX 0, 0, 200, 70
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "כתובת TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "כתובת IP:", -1, 5, 15, 70, 12
     LTEXT "מסכת רשת משנה:", -1, 5, 30, 70, 12
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
-    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "ביטול", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
+IDD_TCPIPGW_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "כתובת שער TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "שער:", -1, 5, 15, 70, 12
     CHECKBOX "Automatic metric", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metric:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
-    PUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
     PUSHBUTTON "ביטול", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIPDNS_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
+IDD_TCPIPDNS_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "שרת DNS של TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
     LTEXT "שרת DNS:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "ביטול", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIPSUFFIX_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
+IDD_TCPIPSUFFIX_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP Domain Suffix"
 FONT 8, "MS Shell Dlg"
@@ -157,7 +156,7 @@ BEGIN
     PUSHBUTTON "ביטול", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_FILTER_DLG DIALOGEX DISCARDABLE  0, 0, 305, 220
+IDD_TCPIP_FILTER_DLG DIALOGEX 0, 0, 305, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "סינון TCP/IP"
 FONT 8, "MS Shell Dlg"
@@ -185,7 +184,7 @@ BEGIN
     PUSHBUTTON "ביטול", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_PORT_DLG DIALOGEX DISCARDABLE  0, 0, 200, 60
+IDD_TCPIP_PORT_DLG DIALOGEX 0, 0, 200, 60
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "הוסף מסנן"
 FONT 8, "MS Shell Dlg"
@@ -198,33 +197,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "חיבור רשת"
-	IDS_NO_IPADDR_SET   "The adapter requires at least one IP address. Please enter one."
-	IDS_NO_SUBMASK_SET  "You have entered an address that is missing its subnet mask. Please add a subnet mask."
-	IDS_TCPFILTERDESC   "TCP/IP filtering allows you to control the type of TCP/IP network traffic that reaches your computer."
-	IDS_TCPFILTER       "סינון TCP/IP"
-	IDS_IPADDR          "כתובת IP"
-	IDS_SUBMASK         "מסכת רשת משנה"
-	IDS_GATEWAY         "שער"
-	IDS_METRIC          "Metric"
-	IDS_DHCPACTIVE      "DHCP מאופשר"
-	IDS_AUTOMATIC       "אוטומטי"
-	IDS_NOITEMSEL       "You have not selected an item. Select one first."
-	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "הוסף"
-	IDS_MOD             "אישור"
-	IDS_TCP_PORTS       "יציאות TCP"
-	IDS_UDP_PORTS       "יציאות UDP"
-	IDS_IP_PROTO        "פרוטוקולי IP"
-	IDS_PORT_RANGE      "Port numbers must be greater than 0 and less than 65536. Please enter a number within this range."
-	IDS_PROT_RANGE      "Protocol numbers must be greater than 0 and less than 256. Please enter a number within this range."
-	IDS_DUP_NUMBER      "The number you are trying to add is already in the list. Please enter a different number."
-	IDS_DISABLE_FILTER  "Disabling this global TCP/IP setting will affect all adapters."
-	IDS_NO_SUFFIX       "The current setting of search method requires at least one DNS suffix. Please enter one or change the setting."
-	IDS_DOMAIN_SUFFIX   "Domain suffix is not a valid suffix."
-	IDS_DNS_SUFFIX      "The DNS domain name ""%s"" is not a valid DNS name."
-	IDS_DUP_SUFFIX      "The DNS suffix is already on the list."
-	IDS_DUP_IPADDR      "The IP address is already on the list."
-	IDS_DUP_GW          "The default gateway is already on the list."
+    IDS_NET_CONNECT "חיבור רשת"
+    IDS_NO_IPADDR_SET "The adapter requires at least one IP address. Please enter one."
+    IDS_NO_SUBMASK_SET "You have entered an address that is missing its subnet mask. Please add a subnet mask."
+    IDS_TCPFILTERDESC "TCP/IP filtering allows you to control the type of TCP/IP network traffic that reaches your computer."
+    IDS_TCPFILTER "סינון TCP/IP"
+    IDS_IPADDR "כתובת IP"
+    IDS_SUBMASK "מסכת רשת משנה"
+    IDS_GATEWAY "שער"
+    IDS_METRIC "Metric"
+    IDS_DHCPACTIVE "DHCP מאופשר"
+    IDS_AUTOMATIC "אוטומטי"
+    IDS_NOITEMSEL "You have not selected an item. Select one first."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "הוסף"
+    IDS_MOD "אישור"
+    IDS_TCP_PORTS "יציאות TCP"
+    IDS_UDP_PORTS "יציאות UDP"
+    IDS_IP_PROTO "פרוטוקולי IP"
+    IDS_PORT_RANGE "Port numbers must be greater than 0 and less than 65536. Please enter a number within this range."
+    IDS_PROT_RANGE "Protocol numbers must be greater than 0 and less than 256. Please enter a number within this range."
+    IDS_DUP_NUMBER "The number you are trying to add is already in the list. Please enter a different number."
+    IDS_DISABLE_FILTER "Disabling this global TCP/IP setting will affect all adapters."
+    IDS_NO_SUFFIX "The current setting of search method requires at least one DNS suffix. Please enter one or change the setting."
+    IDS_DOMAIN_SUFFIX "Domain suffix is not a valid suffix."
+    IDS_DNS_SUFFIX "The DNS domain name ""%s"" is not a valid DNS name."
+    IDS_DUP_SUFFIX "The DNS suffix is already on the list."
+    IDS_DUP_IPADDR "The IP address is already on the list."
+    IDS_DUP_GW "The default gateway is already on the list."
 END
-

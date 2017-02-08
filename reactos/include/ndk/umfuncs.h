@@ -191,6 +191,11 @@ LdrQueryProcessModuleInformation(
     _Out_ PULONG ReturnedSize
 );
 
+VOID
+NTAPI
+LdrSetDllManifestProber(
+    _In_ PLDR_MANIFEST_PROBER_ROUTINE Routine);
+
 NTSTATUS
 NTAPI
 LdrShutdownProcess(

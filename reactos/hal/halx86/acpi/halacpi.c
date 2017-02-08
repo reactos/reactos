@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/acpi/halacpi.c
+ * FILE:            hal/halx86/acpi/halacpi.c
  * PURPOSE:         HAL ACPI Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -118,7 +118,7 @@ HalpAcpiCopyBiosTable(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     else
     {
         /* Use Mm pool */
-        CachedTable = ExAllocatePoolWithTag(NonPagedPool, Size, ' laH');
+        CachedTable = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_HAL);
     }
 
     /* Do we have the cached table? */
@@ -688,7 +688,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         (Rsdt->Header.Signature != XSDT_SIGNATURE))
     {
         /* Very bad: crash */
-        HalDisplayString("Bad RSDT pointer\n");
+        HalDisplayString("Bad RSDT pointer\r\n");
         KeBugCheckEx(MISMATCHED_HAL, 4, __LINE__, 0, 0);
     }
 
@@ -1022,7 +1022,7 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
     ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors) +
                (Count * sizeof(IO_RESOURCE_DESCRIPTOR));
     DPRINT("Resource list size: %d\n", ListSize);
-    RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, ' laH');
+    RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, TAG_HAL);
     if (RequirementsList)
     {
         /* Initialize it */
@@ -1042,7 +1042,7 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
         else
         {
             /* Fail */
-            ExFreePoolWithTag(RequirementsList, ' laH');
+            ExFreePoolWithTag(RequirementsList, TAG_HAL);
             Status = STATUS_NO_SUCH_DEVICE;
         }
     }

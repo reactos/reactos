@@ -36,121 +36,120 @@ static HANDLE ExtraHandles[10 - 3];
 
 static HANDLE GetHandle(UINT Number)
 {
-	if (Number < 3)
-		return GetStdHandle(STD_INPUT_HANDLE - Number);
-	else
-		return ExtraHandles[Number - 3];
+    if (Number < 3)
+        return GetStdHandle(STD_INPUT_HANDLE - Number);
+    else
+        return ExtraHandles[Number - 3];
 }
 
 static VOID SetHandle(UINT Number, HANDLE Handle)
 {
-	if (Number < 3)
-		SetStdHandle(STD_INPUT_HANDLE - Number, Handle);
-	else
-		ExtraHandles[Number - 3] = Handle;
+    if (Number < 3)
+        SetStdHandle(STD_INPUT_HANDLE - Number, Handle);
+    else
+        ExtraHandles[Number - 3] = Handle;
 }
 
 BOOL
 PerformRedirection(REDIRECTION *RedirList)
 {
-	REDIRECTION *Redir;
-	LPTSTR Filename;
-	HANDLE hNew;
-	UINT DupNumber;
+    REDIRECTION *Redir;
+    LPTSTR Filename;
+    HANDLE hNew;
+    UINT DupNumber;
 
-	static SECURITY_ATTRIBUTES SecAttr = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+    static SECURITY_ATTRIBUTES SecAttr = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
 
-	/* Some parameters used for read, write, and append, respectively */
-	static
-	struct REDIR_PARAMS
-	{
-		DWORD dwDesiredAccess;
-		DWORD dwShareMode;
-		DWORD dwCreationDisposition;
-	} RedirParams[] =
-	{
-		{GENERIC_READ , FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING}, // REDIR_READ
-		{GENERIC_WRITE, FILE_SHARE_READ                   , CREATE_ALWAYS}, // REDIR_WRITE
-		{GENERIC_WRITE, FILE_SHARE_READ                   , OPEN_ALWAYS  }  // REDIR_APPEND
-	};
+    /* Some parameters used for read, write, and append, respectively */
+    static struct REDIR_PARAMS
+    {
+        DWORD dwDesiredAccess;
+        DWORD dwShareMode;
+        DWORD dwCreationDisposition;
+    } RedirParams[] =
+    {
+        {GENERIC_READ , FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING}, // REDIR_READ
+        {GENERIC_WRITE, FILE_SHARE_READ                   , CREATE_ALWAYS}, // REDIR_WRITE
+        {GENERIC_WRITE, FILE_SHARE_READ                   , OPEN_ALWAYS  }  // REDIR_APPEND
+    };
 
-	for (Redir = RedirList; Redir; Redir = Redir->Next)
-	{
-		Filename = DoDelayedExpansion(Redir->Filename);
-		if (!Filename)
-			goto redir_error;
-		StripQuotes(Filename);
+    for (Redir = RedirList; Redir; Redir = Redir->Next)
+    {
+        Filename = DoDelayedExpansion(Redir->Filename);
+        if (!Filename)
+            goto redir_error;
+        StripQuotes(Filename);
 
-		if (*Filename == _T('&'))
-		{
-			DupNumber = Filename[1] - _T('0');
-			if (DupNumber >= 10 ||
-			    !DuplicateHandle(GetCurrentProcess(),
-			                     GetHandle(DupNumber),
-			                     GetCurrentProcess(),
-			                     &hNew,
-			                     0,
-			                     TRUE,
-			                     DUPLICATE_SAME_ACCESS))
-			{
-				hNew = INVALID_HANDLE_VALUE;
-			}
-		}
-		else
-		{
-			hNew = CreateFile(Filename,
-			                  RedirParams[Redir->Mode].dwDesiredAccess,
-			                  RedirParams[Redir->Mode].dwShareMode,
-			                  &SecAttr,
-			                  RedirParams[Redir->Mode].dwCreationDisposition,
-			                  0,
-			                  NULL);
-		}
+        if (*Filename == _T('&'))
+        {
+            DupNumber = Filename[1] - _T('0');
+            if (DupNumber >= 10 ||
+                !DuplicateHandle(GetCurrentProcess(),
+                                 GetHandle(DupNumber),
+                                 GetCurrentProcess(),
+                                 &hNew,
+                                 0,
+                                 TRUE,
+                                 DUPLICATE_SAME_ACCESS))
+            {
+                hNew = INVALID_HANDLE_VALUE;
+            }
+        }
+        else
+        {
+            hNew = CreateFile(Filename,
+                              RedirParams[Redir->Mode].dwDesiredAccess,
+                              RedirParams[Redir->Mode].dwShareMode,
+                              &SecAttr,
+                              RedirParams[Redir->Mode].dwCreationDisposition,
+                              0,
+                              NULL);
+        }
 
-		if (hNew == INVALID_HANDLE_VALUE)
-		{
-			/* TODO: Print a more detailed message */
-			ConErrResPrintf(Redir->Mode == REDIR_READ ? STRING_CMD_ERROR1 : STRING_CMD_ERROR3,
-			                Filename);
-			cmd_free(Filename);
+        if (hNew == INVALID_HANDLE_VALUE)
+        {
+            /* TODO: Print a more detailed message */
+            ConErrResPrintf(Redir->Mode == REDIR_READ ? STRING_CMD_ERROR1 : STRING_CMD_ERROR3,
+                            Filename);
+            cmd_free(Filename);
 redir_error:
-			/* Undo all the redirections before this one */
-			UndoRedirection(RedirList, Redir);
-			return FALSE;
-		}
+            /* Undo all the redirections before this one */
+            UndoRedirection(RedirList, Redir);
+            return FALSE;
+        }
 
-		if (Redir->Mode == REDIR_APPEND)
-			SetFilePointer(hNew, 0, NULL, FILE_END);
-		Redir->OldHandle = GetHandle(Redir->Number);
-		SetHandle(Redir->Number, hNew);
+        if (Redir->Mode == REDIR_APPEND)
+            SetFilePointer(hNew, 0, NULL, FILE_END);
+        Redir->OldHandle = GetHandle(Redir->Number);
+        SetHandle(Redir->Number, hNew);
 
-		TRACE("%d redirected to: %s\n", Redir->Number, debugstr_aw(Filename));
-		cmd_free(Filename);
-	}
-	return TRUE;
+        TRACE("%d redirected to: %s\n", Redir->Number, debugstr_aw(Filename));
+        cmd_free(Filename);
+    }
+    return TRUE;
 }
 
 VOID
 UndoRedirection(REDIRECTION *Redir, REDIRECTION *End)
 {
-	for (; Redir != End; Redir = Redir->Next)
-	{
-		CloseHandle(GetHandle(Redir->Number));
-		SetHandle(Redir->Number, Redir->OldHandle);
-		Redir->OldHandle = INVALID_HANDLE_VALUE;
-	}
+    for (; Redir != End; Redir = Redir->Next)
+    {
+        CloseHandle(GetHandle(Redir->Number));
+        SetHandle(Redir->Number, Redir->OldHandle);
+        Redir->OldHandle = INVALID_HANDLE_VALUE;
+    }
 }
 
 VOID
 FreeRedirection(REDIRECTION *Redir)
 {
-	REDIRECTION *Next;
-	for (; Redir; Redir = Next)
-	{
-		Next = Redir->Next;
-		ASSERT(Redir->OldHandle == INVALID_HANDLE_VALUE);
-		cmd_free(Redir);
-	}
+    REDIRECTION *Next;
+    for (; Redir; Redir = Next)
+    {
+        Next = Redir->Next;
+        ASSERT(Redir->OldHandle == INVALID_HANDLE_VALUE);
+        cmd_free(Redir);
+    }
 }
 
 #endif /* FEATURE_REDIRECTION */

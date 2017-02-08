@@ -18,12 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <string.h>
 #include "private_mciavi.h"
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 
 /**************************************************************************
  * 				MCIAVI_ConvertFrameToTimeFormat	[internal]
@@ -74,7 +69,7 @@ DWORD 	MCIAVI_ConvertTimeFormatToFrame(WINE_MCIAVI* wma, DWORD val)
 DWORD	MCIAVI_mciGetDevCaps(UINT wDevID, DWORD dwFlags,  LPMCI_GETDEVCAPS_PARMS lpParms)
 {
     WINE_MCIAVI*	wma = MCIAVI_mciGetOpenDev(wDevID);
-    DWORD		ret;
+    DWORD		ret = MCIERR_UNSUPPORTED_FUNCTION;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
@@ -175,7 +170,6 @@ DWORD	MCIAVI_mciGetDevCaps(UINT wDevID, DWORD dwFlags,  LPMCI_GETDEVCAPS_PARMS l
 	/* w2k does not know MAX_WINDOWS or MAX/MINIMUM_RATE */
 	default:
             FIXME("Unknown capability (%08x) !\n", lpParms->dwItem);
-            ret = MCIERR_UNSUPPORTED_FUNCTION;
             break;
 	}
     }

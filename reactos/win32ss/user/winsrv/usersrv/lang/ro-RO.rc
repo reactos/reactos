@@ -1,0 +1,26 @@
+/* Romanian translation by Fulea Ștefan */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Terminare execuție - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Terminare execuție… așteptați", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Dacă alegeți închiderea forțată, riscați pierderi de date. Pentru a forța închiderea, apăsați „Termină forțat”.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "Termină &forțat", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Terminare execuție - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "A&nulează", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "Termină &forțat", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Acest program nu răspunde.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Pentru a vă întoarce în ReactOS și a verifica starea programului, apăsați „Anulează”.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Dacă alegeți închiderea imediată a programului, riscați pierderi de date. Pentru a forța închiderea, apăsați „Termină forțat”.", IDC_STATIC, 7, 53, 178, 26
+END

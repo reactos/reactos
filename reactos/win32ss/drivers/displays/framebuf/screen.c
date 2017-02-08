@@ -190,7 +190,7 @@ IntInitScreenInfo(
    ppdev->ScreenWidth = SelectedMode->VisScreenWidth;
    ppdev->ScreenHeight = SelectedMode->VisScreenHeight;
    ppdev->ScreenDelta = SelectedMode->ScreenStride;
-   ppdev->BitsPerPixel = SelectedMode->BitsPerPlane * SelectedMode->NumberOfPlanes;
+   ppdev->BitsPerPixel = (UCHAR)(SelectedMode->BitsPerPlane * SelectedMode->NumberOfPlanes);
 
    ppdev->MemWidth = SelectedMode->VideoMemoryBitmapWidth;
    ppdev->MemHeight = SelectedMode->VideoMemoryBitmapHeight;
@@ -316,7 +316,7 @@ IntInitScreenInfo(
       pDevInfo->flGraphicsCaps |= GCAPS_PALMANAGED;
       pDevInfo->iDitherFormat = BMF_8BPP;
       /* Assuming palette is orthogonal - all colors are same size. */
-      ppdev->PaletteShift = 8 - pGdiInfo->ulDACRed;
+      ppdev->PaletteShift = (UCHAR)(8 - pGdiInfo->ulDACRed);
    }
    else
    {

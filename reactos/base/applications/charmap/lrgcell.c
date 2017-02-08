@@ -7,8 +7,7 @@
  *
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 static
 HFONT
@@ -36,7 +35,7 @@ SetLrgFont(PMAP infoPtr)
         {
             SendMessageW(hCombo,
                          WM_GETTEXT,
-                         31,
+                         Len + 1,
                          (LPARAM)lpFontName);
 
             ZeroMemory(&lf,
@@ -49,8 +48,9 @@ SetLrgFont(PMAP infoPtr)
                       hdc);
 
             lf.lfCharSet =  DEFAULT_CHARSET;
-            wcscpy(lf.lfFaceName,
-                   lpFontName);
+            wcsncpy(lf.lfFaceName,
+                    lpFontName,
+                    sizeof(lf.lfFaceName) / sizeof(lf.lfFaceName[0]));
 
             hFont = CreateFontIndirectW(&lf);
 
@@ -140,6 +140,7 @@ LrgCellWndProc(HWND hwnd,
             EndPaint(hwnd,
                      &ps);
 
+            UpdateStatusBar(infoPtr->pActiveCell->ch);
             break;
         }
 

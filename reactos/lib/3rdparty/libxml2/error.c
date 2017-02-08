@@ -177,7 +177,9 @@ xmlParserPrintFileContextInternal(xmlParserInputPtr input ,
     xmlChar  content[81]; /* space for 80 chars + line terminator */
     xmlChar *ctnt;
 
-    if (input == NULL) return;
+    if ((input == NULL) || (input->cur == NULL) ||
+        (*input->cur == 0)) return;
+
     cur = input->cur;
     base = input->base;
     /* skip backwards over any end-of-lines */

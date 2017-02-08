@@ -1,0 +1,30 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Rediger"
+    IDS_MARK "Merk"
+    IDS_COPY "Kopier\tEnter"
+    IDS_PASTE "Lim inn"
+    IDS_SELECTALL "Velg alt"
+    IDS_SCROLL "Rull"
+    IDS_FIND "Finn..."
+    IDS_DEFAULTS "Standard"
+    IDS_PROPERTIES "Egenskaper"
+/*
+    IDS_SCROLLHERE "Rull her"
+    IDS_SCROLLTOP "Rull til toppen"
+    IDS_SCROLLBOTTOM "Rull knapp"
+    IDS_SCROLLPAGE_UP "Side opp"
+    IDS_SCROLLPAGE_DOWN "Side ned"
+    IDS_SCROLLUP "Rull opp"
+    IDS_SCROLLDOWN "Rull ned"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
+END

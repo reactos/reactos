@@ -1,6 +1,4 @@
 
-if(ARCH STREQUAL "i386")
-   add_subdirectory(ntvdm)
-endif()
+add_subdirectory(mvdm)
 add_subdirectory(win)
 add_subdirectory(win32)

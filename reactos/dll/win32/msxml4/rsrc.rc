@@ -30,5 +30,5 @@
 /* @makedep: msxml4.manifest */
 WINE_MANIFEST 24 msxml4.manifest
 
-1 TYPELIB msxml4_tlb.tlb
-1 WINE_REGISTRY msxml4_tlb.rgs
+1 TYPELIB "msxml4_tlb.tlb"
+1 WINE_REGISTRY "msxml4_tlb.rgs"

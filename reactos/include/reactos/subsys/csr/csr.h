@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
  * FILE:            include/reactos/subsys/csr/csr.h
  * PURPOSE:         Public definitions for CSR Clients
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -36,26 +36,32 @@ ULONG
 NTAPI
 CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                           IN ULONG MessageLength,
-                          OUT PVOID *CapturedData);
+                          OUT PVOID* CapturedData);
 
 VOID
 NTAPI
 CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                         IN PVOID MessageBuffer OPTIONAL,
                         IN ULONG MessageLength,
-                        OUT PVOID *CapturedData);
-
-VOID
-NTAPI
-CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN LPSTR String OPTIONAL,
-                        IN ULONG StringLength,
-                        IN ULONG MaximumLength,
-                        OUT PANSI_STRING CapturedString);
+                        OUT PVOID* CapturedData);
 
 VOID
 NTAPI
 CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer);
+
+VOID
+NTAPI
+CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
+                        IN PCSTR String OPTIONAL,
+                        IN ULONG StringLength,
+                        IN ULONG MaximumLength,
+                        OUT PSTRING CapturedString);
+
+NTSTATUS
+NTAPI
+CsrCaptureMessageMultiUnicodeStringsInPlace(OUT PCSR_CAPTURE_BUFFER* CaptureBuffer,
+                                            IN ULONG StringsCount,
+                                            IN PUNICODE_STRING* MessageStrings);
 
 PLARGE_INTEGER
 NTAPI

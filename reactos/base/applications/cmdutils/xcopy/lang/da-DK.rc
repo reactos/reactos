@@ -1,0 +1,57 @@
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Ugyldigt antal parametere; brug «xcopy /?» for hjelp\n"
+    STRING_INVPARM,  "Ugyldigt parameter «%1»; brug «xcopy /?» for hjelp\n"
+    STRING_PAUSE,    "Tryk Enter for at begynde at kopiere\n"
+    STRING_SIMCOPY,  "%1!d! fil(er) vil blive kopieret\n"
+    STRING_COPY,     "%1!d! fil(er) kopieret\n"
+    STRING_QISDIR,   "Er «%1» et filnavn eller katalog\n\
+                     på destinationen?\n\
+                     (F - Fil, K - Katalog)\n"
+    STRING_SRCPROMPT, "%1? (Ja|Nei)\n"
+    STRING_OVERWRITE, "Overskrive «%1»? (Ja|Nei|Alle)\n"
+    STRING_COPYFAIL, "Kunne ikke kopiere «%1» til «%2»; fejlet med r/c %3!d!\n"
+    STRING_OPENFAIL, "Kunne ikke åbne «%1»\n"
+    STRING_READFAIL, "Kunne ikke læse «%1»\n"
+    STRING_YES_CHAR, "J"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "K"
+
+    STRING_HELP,
+"XCOPY - Kopierer filer eller katalogtre til en målplassering\n\
+\n\
+Syntaks:\n\
+XCOPY kilde [mål] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+hvor:\n\
+\n\
+[/I]  Antag at destinationen er et katalog hvis destinationen ikke\n\
+\tfindes og 2 eller flere filer bliver kopieret\n\
+[/S]  Kopier kataloger og underkataloger\n\
+[/E]  Kopier kataloger og underkataloger, også tomme kataloger\n\
+[/Q]  Vær stille : vis ikke filnavne under kopiering\n\
+[/F]  Fil hele kilde- og målnavn under kopiering\n\
+[/L]  Simulér operationen; vis kun, gør intet\n\
+[/W]  Spørg før koperingen starter\n\
+[/T]  Lav tom katalogstruktur; kopier ikke filer\n\
+[/Y]  Spørg ikke om filer skal overskrives\n\
+[/-Y] Spørg før om filer skal overskrives\n\
+[/P]  Spørg om hver enkelt fil der skal kopieres\n\
+[/N]  Kopier som korte filnavn (8.3 tegn)\n\
+[/U]  Kopier kun filer som allerede findes på destinationen\n\
+[/R]  Overskriv filer som er skrivebeskyttet\n\
+[/H]  Kopier skjulte filer og systemfiler\n\
+[/C]  Fortsæt selv om det opstår fejl under kopieringen\n\
+[/A]  Kopier ikke filer som er markeret som arkiv\n\
+[/M]  Kopier kun filer som er markeret som akriv; fjerner denne markering\n\
+[/D | /D:m-d-å] Kopier kun nye filer eller dem som er ændret efter\n\
+\t\tden opgivne dato.\n\
+\t\tHvis ingen dato opgives kopieres kun de filer hvor\n\
+\t\tdestinationen er ældre end kilden\n\n"
+
+}

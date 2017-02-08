@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winsvc.h>
-#include <stdio.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msiexec);
+#include "precomp.h"
 
 static SERVICE_STATUS_HANDLE hstatus;
 
@@ -47,7 +39,9 @@ static BOOL UpdateSCMStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode,
     status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     status.dwCurrentState = dwCurrentState;
 
-    if (dwCurrentState == SERVICE_START_PENDING)
+    if (dwCurrentState == SERVICE_START_PENDING
+            || dwCurrentState == SERVICE_STOP_PENDING
+            || dwCurrentState == SERVICE_STOPPED)
         status.dwControlsAccepted = 0;
     else
     {
@@ -81,7 +75,7 @@ static BOOL UpdateSCMStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode,
 
 static void WINAPI ServiceCtrlHandler(DWORD code)
 {
-    WINE_TRACE("%d\n", code);
+    WINE_TRACE("%u\n", code);
 
     switch (code)
     {
@@ -89,21 +83,17 @@ static void WINAPI ServiceCtrlHandler(DWORD code)
         case SERVICE_CONTROL_STOP:
             UpdateSCMStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
             KillService();
-            return;
+            break;
         default:
-            fprintf(stderr, "Unhandled service control code: %d\n", code);
+            fprintf(stderr, "Unhandled service control code: %u\n", code);
+            UpdateSCMStatus(SERVICE_RUNNING, NO_ERROR, 0);
             break;
     }
-
-    UpdateSCMStatus(SERVICE_RUNNING, NO_ERROR, 0);
 }
 
 static DWORD WINAPI ServiceExecutionThread(LPVOID param)
 {
-    while (TRUE)
-    {
-        /* do nothing */
-    }
+    WaitForSingleObject(kill_event, INFINITE);
 
     return 0;
 }
@@ -138,19 +128,20 @@ static void WINAPI ServiceMain(DWORD argc, LPSTR *argv)
     {
         fprintf(stderr, "Failed to create event\n");
         KillService();
+        UpdateSCMStatus(SERVICE_STOPPED, NO_ERROR, 0);
         return;
     }
 
     if (!StartServiceThread())
     {
         KillService();
+        UpdateSCMStatus(SERVICE_STOPPED, NO_ERROR, 0);
         return;
     }
 
     UpdateSCMStatus(SERVICE_RUNNING, NO_ERROR, 0);
-
-    WaitForSingleObject(kill_event, INFINITE);
-    KillService();
+    WaitForSingleObject(thread, INFINITE);
+    UpdateSCMStatus(SERVICE_STOPPED, NO_ERROR, 0);
 }
 
 DWORD DoService(void)

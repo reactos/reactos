@@ -1,30 +1,29 @@
-#define COBJMACROS
+#ifndef _DESK_H
+#define _DESK_H
+
+#include <stdarg.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
+#define COBJMACROS
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <wincon.h>
-#include <shellapi.h>
 #include <commdlg.h>
 #include <cpl.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <assert.h>
-#include <shlwapi.h>
 #include <shlobj.h>
 #include <regstr.h>
-#include <cplext.h>
 #include <dll/desk/deskcplx.h>
-#include <cfgmgr32.h>
-#include <uxtheme.h>
-#include <uxundoc.h>
-#include <vssym32.h>
+#include <strsafe.h>
+#include <gdiplus.h>
 
 #include "appearance.h"
 #include "preview.h"
@@ -43,11 +42,10 @@ typedef struct _APPLET
 
 typedef struct _DIBITMAP
 {
-    BITMAPFILEHEADER *header;
     BITMAPINFO       *info;
     BYTE             *bits;
-    int               width;
-    int               height;
+    UINT              width;
+    UINT              height;
 } DIBITMAP, *PDIBITMAP;
 
 extern HINSTANCE hApplet;
@@ -131,3 +129,4 @@ RegLoadMUIStringW(IN HKEY hKey,
                   IN DWORD Flags,
                   IN LPCWSTR pszDirectory  OPTIONAL);
 
+#endif /* _DESK_H */

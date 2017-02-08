@@ -16,21 +16,21 @@ HidUsb_GetInputInterruptInterfaceHandle(
 {
     ULONG Index;
 
-     //
-     // sanity check
-     //
-     ASSERT(InterfaceInformation->NumberOfPipes);
+    //
+    // sanity check
+    //
+    ASSERT(InterfaceInformation->NumberOfPipes);
 
-     for(Index = 0; Index < InterfaceInformation->NumberOfPipes; Index++)
-     {
-         //DPRINT1("[HIDUSB] EndpointAddress %x PipeType %x PipeHandle %x\n", InterfaceInformation->Pipes[Index].EndpointAddress, InterfaceInformation->Pipes[Index].PipeType, InterfaceInformation->Pipes[Index].PipeHandle);
-         if (InterfaceInformation->Pipes[Index].PipeType == UsbdPipeTypeInterrupt && (InterfaceInformation->Pipes[Index].EndpointAddress & USB_ENDPOINT_DIRECTION_MASK))
-         {
-             //
-             // found handle
-             //
-             return &InterfaceInformation->Pipes[Index];
-         }
+    for (Index = 0; Index < InterfaceInformation->NumberOfPipes; Index++)
+    {
+        //DPRINT1("[HIDUSB] EndpointAddress %x PipeType %x PipeHandle %x\n", InterfaceInformation->Pipes[Index].EndpointAddress, InterfaceInformation->Pipes[Index].PipeType, InterfaceInformation->Pipes[Index].PipeHandle);
+        if (InterfaceInformation->Pipes[Index].PipeType == UsbdPipeTypeInterrupt && (InterfaceInformation->Pipes[Index].EndpointAddress & USB_ENDPOINT_DIRECTION_MASK))
+        {
+            //
+            // found handle
+            //
+            return &InterfaceInformation->Pipes[Index];
+        }
     }
 
     //
@@ -54,7 +54,7 @@ HidUsb_GetPortStatus(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // init result
@@ -69,7 +69,15 @@ HidUsb_GetPortStatus(
     //
     // build irp
     //
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_GET_PORT_STATUS, DeviceExtension->NextDeviceObject, NULL, 0, NULL, 0, TRUE, &Event, &IoStatus);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_GET_PORT_STATUS,
+                                        DeviceExtension->NextDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatus);
     if (!Irp)
     {
         //
@@ -86,25 +94,25 @@ HidUsb_GetPortStatus(
     //
     // store result buffer
     //
-   IoStack->Parameters.Others.Argument1 = (PVOID)PortStatus;
+    IoStack->Parameters.Others.Argument1 = PortStatus;
 
-   //
-   // call driver
-   //
-   Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
-   if (Status == STATUS_PENDING)
-   {
-       //
-       // wait for completion
-       //
-       KeWaitForSingleObject(&Event, Executive, KernelMode, 0, NULL);
-       return IoStatus.Status;
-   }
+    //
+    // call driver
+    //
+    Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        //
+        // wait for completion
+        //
+        KeWaitForSingleObject(&Event, Executive, KernelMode, 0, NULL);
+        return IoStatus.Status;
+    }
 
-   //
-   // done
-   //
-   return Status;
+    //
+    // done
+    //
+    return Status;
 }
 
 NTSTATUS
@@ -120,8 +128,8 @@ HidUsb_ResetInterruptPipe(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get interrupt pipe handle
@@ -134,7 +142,7 @@ HidUsb_ResetInterruptPipe(
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -159,7 +167,7 @@ HidUsb_ResetInterruptPipe(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // done
@@ -180,13 +188,13 @@ HidUsb_AbortPipe(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -218,7 +226,7 @@ HidUsb_AbortPipe(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // done
@@ -239,7 +247,7 @@ HidUsb_ResetPort(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // init event
@@ -249,7 +257,15 @@ HidUsb_ResetPort(
     //
     // build irp
     //
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_RESET_PORT, DeviceExtension->NextDeviceObject, NULL, 0, NULL, 0, TRUE, &Event, &IoStatusBlock);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_RESET_PORT,
+                                        DeviceExtension->NextDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatusBlock);
     if (!Irp)
     {
         //
@@ -296,16 +312,16 @@ HidCreate(
     ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE || IoStack->MajorFunction == IRP_MJ_CLOSE);
 
     //
+    // informational debug print
+    //
+    DPRINT("HIDUSB Request: %x\n", IoStack->MajorFunction);
+
+    //
     // complete request
     //
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    //
-    // informal debug print
-    //
-    DPRINT("HIDUSB Request: %x\n", IoStack->MajorFunction);
 
     //
     // done
@@ -329,12 +345,12 @@ HidUsb_ResetWorkerRoutine(
     //
     // get context
     //
-    ResetContext = (PHID_USB_RESET_CONTEXT)Ctx;
+    ResetContext = Ctx;
 
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)ResetContext->DeviceObject->DeviceExtension;
+    DeviceExtension = ResetContext->DeviceObject->DeviceExtension;
 
     //
     // get port status
@@ -394,7 +410,7 @@ HidUsb_ResetWorkerRoutine(
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     IoFreeWorkItem(ResetContext->WorkItem);
     IoCompleteRequest(ResetContext->Irp, IO_NO_INCREMENT);
-    ExFreePool(ResetContext);
+    ExFreePoolWithTag(ResetContext, HIDUSB_TAG);
 }
 
 
@@ -405,15 +421,13 @@ HidUsb_ReadReportCompletion(
     IN PIRP Irp,
     IN PVOID Context)
 {
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
-    PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
     PHID_USB_RESET_CONTEXT ResetContext;
 
     //
     // get urb
     //
-    Urb = (PURB)Context;
+    Urb = Context;
     ASSERT(Urb);
 
     DPRINT("[HIDUSB] HidUsb_ReadReportCompletion %p Status %x Urb Status %x\n", Irp, Irp->IoStatus, Urb->UrbHeader.Status);
@@ -444,7 +458,7 @@ HidUsb_ReadReportCompletion(
         //
         // free the urb
         //
-        ExFreePool(Context);
+        ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
         //
         // finish completion
@@ -453,15 +467,9 @@ HidUsb_ReadReportCompletion(
     }
 
     //
-    // get device extension
-    //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
-
-    //
     // allocate reset context
     //
-    ResetContext = (PHID_USB_RESET_CONTEXT)ExAllocatePool(NonPagedPool, sizeof(HID_USB_RESET_CONTEXT));
+    ResetContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(HID_USB_RESET_CONTEXT), HIDUSB_TAG);
     if (ResetContext)
     {
         //
@@ -484,7 +492,7 @@ HidUsb_ReadReportCompletion(
             //
             // free urb
             //
-            ExFreePool(Urb);
+            ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
             //
             // defer completion
@@ -494,13 +502,13 @@ HidUsb_ReadReportCompletion(
         //
         // free context
         //
-        ExFreePool(ResetContext);
+        ExFreePoolWithTag(ResetContext, HIDUSB_TAG);
     }
 
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // complete request
@@ -524,8 +532,8 @@ HidUsb_ReadReport(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get current stack location
@@ -548,7 +556,7 @@ HidUsb_ReadReport(
     //
     // lets allocate urb
     //
-    Urb = (PURB)ExAllocatePool(NonPagedPool, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -599,13 +607,13 @@ HidUsb_ReadReport(
     IoStack->Parameters.DeviceIoControl.InputBufferLength = 0;
     IoStack->Parameters.DeviceIoControl.OutputBufferLength = 0;
     IoStack->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
-    IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
+    IoStack->Parameters.Others.Argument1 = Urb;
 
 
     //
     // set completion routine
     //
-    IoSetCompletionRoutine(Irp, HidUsb_ReadReportCompletion, (PVOID)Urb, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(Irp, HidUsb_ReadReportCompletion, Urb, TRUE, TRUE, TRUE);
 
     //
     // call driver
@@ -630,8 +638,8 @@ HidUsb_GetReportDescriptor(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // sanity checks
@@ -646,7 +654,14 @@ HidUsb_GetReportDescriptor(
     // FIXME: support old hid version
     //
     BufferLength = HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength;
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, HidDeviceExtension->InterfaceInfo->InterfaceNumber);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               &Report,
+                               &BufferLength,
+                               HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType,
+                               0,
+                               HidDeviceExtension->InterfaceInfo->InterfaceNumber);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -654,7 +669,14 @@ HidUsb_GetReportDescriptor(
         // try with old hid version
         //
         BufferLength = HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength;
-        Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, 0 /* FIXME*/);
+        Status = Hid_GetDescriptor(DeviceObject,
+                                   URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT,
+                                   sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                                   &Report,
+                                   &BufferLength,
+                                   HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType,
+                                   0,
+                                   0 /* FIXME*/);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("[HIDUSB] failed to get report descriptor with %x\n", Status);
@@ -685,6 +707,11 @@ HidUsb_GetReportDescriptor(
     Irp->IoStatus.Information = Length;
 
     //
+    // free the report buffer
+    //
+    ExFreePoolWithTag(Report, HIDUSB_TAG);
+
+    //
     // done
     //
     return Status;
@@ -707,15 +734,15 @@ HidInternalDeviceControl(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    switch(IoStack->Parameters.DeviceIoControl.IoControlCode)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_HID_GET_DEVICE_ATTRIBUTES:
         {
@@ -735,7 +762,7 @@ HidInternalDeviceControl(
             DPRINT("[HIDUSB] IOCTL_HID_GET_DEVICE_ATTRIBUTES\n");
             ASSERT(HidDeviceExtension->DeviceDescriptor);
             Irp->IoStatus.Information = sizeof(HID_DESCRIPTOR);
-            Attributes = (PHID_DEVICE_ATTRIBUTES)Irp->UserBuffer;
+            Attributes = Irp->UserBuffer;
             Attributes->Size = sizeof(HID_DEVICE_ATTRIBUTES);
             Attributes->VendorID = HidDeviceExtension->DeviceDescriptor->idVendor;
             Attributes->ProductID = HidDeviceExtension->DeviceDescriptor->idProduct;
@@ -879,9 +906,12 @@ HidPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PHID_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -895,12 +925,12 @@ HidSystemControl(
     //
     // get hid device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
-    // copy stack location
+    // skip stack location
     //
-    IoCopyCurrentIrpStackLocationToNext(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
 
     //
     // submit request
@@ -918,14 +948,13 @@ Hid_PnpCompletion(
     //
     // signal event
     //
-    KeSetEvent((PRKEVENT)Context, 0, FALSE);
+    KeSetEvent(Context, 0, FALSE);
 
     //
     // done
     //
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
 
 NTSTATUS
 Hid_DispatchUrb(
@@ -934,7 +963,6 @@ Hid_DispatchUrb(
 {
     PIRP Irp;
     KEVENT Event;
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION IoStack;
@@ -948,14 +976,20 @@ Hid_DispatchUrb(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
-
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // build irp
     //
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_SUBMIT_URB, DeviceExtension->NextDeviceObject, NULL, 0, NULL, 0, TRUE, &Event, &IoStatus);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                        DeviceExtension->NextDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatus);
     if (!Irp)
     {
         //
@@ -972,12 +1006,12 @@ Hid_DispatchUrb(
     //
     // store urb
     //
-    IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
+    IoStack->Parameters.Others.Argument1 = Urb;
 
     //
     // set completion routine
     //
-    IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
     //
     // call driver
@@ -1021,7 +1055,7 @@ Hid_GetDescriptor(
     IN USHORT UrbLength,
     IN OUT PVOID *UrbBuffer,
     IN OUT PULONG UrbBufferLength,
-    IN UCHAR DescriptorType, 
+    IN UCHAR DescriptorType,
     IN UCHAR Index,
     IN USHORT LanguageIndex)
 {
@@ -1032,7 +1066,7 @@ Hid_GetDescriptor(
     //
     // allocate urb
     //
-    Urb = (PURB)ExAllocatePool(NonPagedPool, UrbLength);
+    Urb = ExAllocatePoolWithTag(NonPagedPool, UrbLength, HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1049,13 +1083,13 @@ Hid_GetDescriptor(
         //
         // allocate buffer
         //
-        *UrbBuffer = ExAllocatePool(NonPagedPool, *UrbBufferLength);
+        *UrbBuffer = ExAllocatePoolWithTag(NonPagedPool, *UrbBufferLength, HIDUSB_TAG);
         if (!*UrbBuffer)
         {
             //
             // no memory
             //
-            ExFreePool(Urb);
+            ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -1079,7 +1113,7 @@ Hid_GetDescriptor(
     //
     // set urb function
     //
-   Urb->UrbHeader.Function = UrbFunction;
+    Urb->UrbHeader.Function = UrbFunction;
 
     //
     // dispatch urb
@@ -1096,14 +1130,14 @@ Hid_GetDescriptor(
             //
             // free allocated buffer
             //
-            ExFreePool(*UrbBuffer);
+            ExFreePoolWithTag(*UrbBuffer, HIDUSB_TAG);
             *UrbBuffer = NULL;
         }
 
         //
         // free urb
         //
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
         *UrbBufferLength = 0;
         return Status;
     }
@@ -1118,14 +1152,14 @@ Hid_GetDescriptor(
             //
             // free allocated buffer
             //
-            ExFreePool(*UrbBuffer);
+            ExFreePoolWithTag(*UrbBuffer, HIDUSB_TAG);
             *UrbBuffer = NULL;
         }
 
         //
         // free urb
         //
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
         *UrbBufferLength = 0;
         return STATUS_UNSUCCESSFUL;
     }
@@ -1138,7 +1172,7 @@ Hid_GetDescriptor(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // completed successfully
@@ -1160,8 +1194,8 @@ Hid_SelectConfiguration(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // now parse the descriptors
@@ -1221,7 +1255,7 @@ Hid_SelectConfiguration(
         //
         // copy interface info
         //
-        HidDeviceExtension->InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)ExAllocatePool(NonPagedPool, Urb->UrbSelectConfiguration.Interface.Length);
+        HidDeviceExtension->InterfaceInfo = ExAllocatePoolWithTag(NonPagedPool, Urb->UrbSelectConfiguration.Interface.Length, HIDUSB_TAG);
         if (HidDeviceExtension->InterfaceInfo)
         {
             //
@@ -1234,7 +1268,91 @@ Hid_SelectConfiguration(
     //
     // free urb request
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, 0);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
+Hid_DisableConfiguration(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PHID_DEVICE_EXTENSION DeviceExtension;
+    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
+    NTSTATUS Status;
+    PURB Urb;
+
+    //
+    // get device extension
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
+
+    //
+    // build urb
+    //
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_SELECT_CONFIGURATION),
+                                HIDUSB_URB_TAG);
+    if (!Urb)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // format urb
+    //
+    UsbBuildSelectConfigurationRequest(Urb,
+                                       sizeof(struct _URB_SELECT_CONFIGURATION),
+                                       NULL);
+
+    //
+    // dispatch request
+    //
+    Status = Hid_DispatchUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDUSB] Dispatching unconfigure URB failed with %lx\n", Status);
+    }
+    else if (!USBD_SUCCESS(Urb->UrbHeader.Status))
+    {
+        DPRINT("[HIDUSB] Unconfigure URB failed with %lx\n", Status);
+    }
+
+    //
+    // free urb
+    //
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
+
+    //
+    // free resources
+    //
+    HidDeviceExtension->ConfigurationHandle = NULL;
+
+    if (HidDeviceExtension->InterfaceInfo)
+    {
+        ExFreePoolWithTag(HidDeviceExtension->InterfaceInfo, HIDUSB_TAG);
+        HidDeviceExtension->InterfaceInfo = NULL;
+    }
+
+    if (HidDeviceExtension->ConfigurationDescriptor)
+    {
+        ExFreePoolWithTag(HidDeviceExtension->ConfigurationDescriptor, HIDUSB_TAG);
+        HidDeviceExtension->ConfigurationDescriptor = NULL;
+        HidDeviceExtension->HidDescriptor = NULL;
+    }
+
+    if (HidDeviceExtension->DeviceDescriptor)
+    {
+        ExFreePoolWithTag(HidDeviceExtension->DeviceDescriptor, HIDUSB_TAG);
+        HidDeviceExtension->DeviceDescriptor = NULL;
+    }
 
     //
     // done
@@ -1246,21 +1364,13 @@ NTSTATUS
 Hid_SetIdle(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
-    PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
     NTSTATUS Status;
 
     //
-    // get device extension
-    //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
-
-    //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1278,7 +1388,7 @@ Hid_SetIdle(
     // format urb
     //
     UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_INTERFACE, 
+                          URB_FUNCTION_CLASS_INTERFACE,
                           sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
                           0,
                           0,
@@ -1298,7 +1408,7 @@ Hid_SetIdle(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // print status
@@ -1315,14 +1425,13 @@ Hid_GetProtocol(
     PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
-    NTSTATUS Status;
     UCHAR Protocol[1];
 
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
     ASSERT(HidDeviceExtension->InterfaceInfo);
 
     if (HidDeviceExtension->InterfaceInfo->SubClass != 0x1)
@@ -1333,11 +1442,10 @@ Hid_GetProtocol(
         return;
     }
 
-
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1355,7 +1463,7 @@ Hid_GetProtocol(
     // format urb
     //
     UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_INTERFACE, 
+                          URB_FUNCTION_CLASS_INTERFACE,
                           sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
                           USBD_TRANSFER_DIRECTION_IN,
                           0,
@@ -1367,15 +1475,16 @@ Hid_GetProtocol(
                           1,
                           NULL);
     Protocol[0] = 0xFF;
+
     //
     // dispatch urb
     //
-    Status = Hid_DispatchUrb(DeviceObject, Urb);
+    Hid_DispatchUrb(DeviceObject, Urb);
 
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // boot protocol active 0x00 disabled 0x1
@@ -1407,14 +1516,21 @@ Hid_PnpStart(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get device descriptor
     //
     DescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), (PVOID*)&HidDeviceExtension->DeviceDescriptor, &DescriptorLength, USB_DEVICE_DESCRIPTOR_TYPE, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               (PVOID *)&HidDeviceExtension->DeviceDescriptor,
+                               &DescriptorLength,
+                               USB_DEVICE_DESCRIPTOR_TYPE,
+                               0,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1428,7 +1544,14 @@ Hid_PnpStart(
     // now get the configuration descriptor
     //
     DescriptorLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), (PVOID*)&HidDeviceExtension->ConfigurationDescriptor, &DescriptorLength, USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               (PVOID *)&HidDeviceExtension->ConfigurationDescriptor,
+                               &DescriptorLength,
+                               USB_CONFIGURATION_DESCRIPTOR_TYPE,
+                               0,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1453,13 +1576,20 @@ Hid_PnpStart(
     //
     // delete partial configuration descriptor
     //
-    ExFreePool(HidDeviceExtension->ConfigurationDescriptor);
+    ExFreePoolWithTag(HidDeviceExtension->ConfigurationDescriptor, HIDUSB_TAG);
     HidDeviceExtension->ConfigurationDescriptor = NULL;
 
     //
     // get full configuration descriptor
     //
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), (PVOID*)&HidDeviceExtension->ConfigurationDescriptor, &DescriptorLength, USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               (PVOID *)&HidDeviceExtension->ConfigurationDescriptor,
+                               &DescriptorLength,
+                               USB_CONFIGURATION_DESCRIPTOR_TYPE,
+                               0,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1519,7 +1649,7 @@ Hid_PnpStart(
         //
         // done
         //
-        DPRINT1("[HIDUSB] SelectConfiguration %x\n", Status);
+        DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
 
         if (NT_SUCCESS(Status))
         {
@@ -1558,15 +1688,13 @@ HidPnp(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     KEVENT Event;
 
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // get current stack location
@@ -1577,30 +1705,22 @@ HidPnp(
     //
     // handle requests based on request type
     //
-    switch(IoStack->MinorFunction)
+    switch (IoStack->MinorFunction)
     {
         case IRP_MN_REMOVE_DEVICE:
         {
+            //
+            // unconfigure device
+            // FIXME: Call this on IRP_MN_SURPRISE_REMOVAL, but don't send URBs
+            // FIXME: Don't call this after we've already seen a surprise removal or stop
+            //
+            Hid_DisableConfiguration(DeviceObject);
+
             //
             // pass request onto lower driver
             //
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
- 
-            //
-            // free resources
-            //
-            if (HidDeviceExtension->ConfigurationDescriptor)
-            {
-                ExFreePool(HidDeviceExtension->ConfigurationDescriptor);
-                HidDeviceExtension->ConfigurationDescriptor = NULL;
-            }
-
-            //
-            // delete and detach device
-            //
-            IoDetachDevice(DeviceExtension->NextDeviceObject);
-            IoDeleteDevice(DeviceObject);
 
             return Status;
         }
@@ -1644,15 +1764,16 @@ HidPnp(
         case IRP_MN_STOP_DEVICE:
         {
             //
-            // FIXME: unconfigure the device
+            // unconfigure device
             //
+            Hid_DisableConfiguration(DeviceObject);
 
             //
             // prepare irp
             //
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
             //
             // send irp and wait for completion
@@ -1662,15 +1783,6 @@ HidPnp(
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
                 Status = Irp->IoStatus.Status;
-            }
-
-            //
-            // free resources
-            //
-            if (HidDeviceExtension->HidDescriptor)
-            {
-                ExFreePool(HidDeviceExtension->HidDescriptor);
-                HidDeviceExtension->HidDescriptor = NULL;
             }
 
             //
@@ -1686,7 +1798,7 @@ HidPnp(
             //
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
             //
             // send irp and wait for completion
@@ -1719,7 +1831,7 @@ HidPnp(
             //
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
             //
             // send irp and wait for completion
@@ -1780,8 +1892,8 @@ HidAddDevice(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // init event

@@ -1,8 +1,4 @@
-/*
- *Spanish Language resource file
- *ReactOs (c) 2005 Samuel Serapión Vega
- * actualizado Javier Remacha 2008-01-19
- */
+/* Spanish translation by Samuel Serapión Vega, Javier Remacha e Ismael Ferreras Morezuelas (Swyter) */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -42,8 +38,8 @@ BEGIN
     PUSHBUTTON "&Detalles...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Compatibilidad con idiomas adicionales ", -1, 5, 62, 234, 82
     LTEXT "De forma predeterminada se instalan la mayoría de los idiomas. Para instalar idiomas adicionales, active las siguientes casillas de verificación.", -1, 12, 72, 220, 24
-    CHECKBOX "I&nstalar archivos de escritura compleja y de escritura de derecha a izquierda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 95, 215, 22, BS_MULTILINE
-    CHECKBOX "In&stalar archivos para los idiomas de Asia Oriental", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "I&nstalar archivos de escritura compleja y de escritura de derecha a izquierda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 95, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "In&stalar archivos para los idiomas de Asia Oriental", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -57,8 +53,8 @@ BEGIN
     LTEXT "Seleccione un idioma que coincida con la versión de idioma de los programas no Unicode que desea utilizar:", -1, 14, 55, 223, 18
     GROUPBOX "Tablas de conversión de páginas de código ", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Configuración de la cuenta de usuario predeterminada ", -1, 5, 193, 234, 30
-    CHECKBOX "Aplicar toda la configuración a la cuenta de usuario actual y al perfil de usuario predeterminado", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Configuración de la cuenta de usuario predeterminada ", -1, 5, 193, 234, 32
+    CHECKBOX "Aplicar toda la configuración a la cuenta de usuario actual y al perfil de usuario predeterminado", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -91,7 +87,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Moneda"
@@ -118,7 +113,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hora"
@@ -139,10 +133,8 @@ BEGIN
     LTEXT "Notación de formato de hora\n\n\
 h = hora    m = minuto    s = segundo    t = am o pm\n\n\
 h = 12 horas   H = 24 horas\n\
-hh, mm, ss = cero a la izquierda   h, m, s = sin cero a la izquierda",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = cero a la izquierda   h, m, s = sin cero a la izquierda", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -177,7 +169,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 97, 213, 133, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ordenar"
@@ -188,7 +179,6 @@ BEGIN
     LTEXT "Seleccione el método de ordenación que se usará para este idioma:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN
@@ -203,3 +193,27 @@ BEGIN
     IDS_CPLNAME "Opciones regionales"
     IDS_CPLDESCRIPTION "Personaliza la configuración para mostrar idiomas, números, horas y fechas."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Cambiar ajustes por defecto"
+    IDS_APPLY_DEFAULT_TEXT "Los ajustes se aplicarán a la cuenta de usuario predeterminada.\n\n\
+Estos cambios serán visibles en la pantalla de bienvenida y en las cuentas de usuario nuevas.\n\
+Para que los cambios surtan efecto es necesario reiniciar el equipo."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "El separador de componentes de fecha corta contiene símbolos incorrectos"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "El formato de fecha corta contiene símbolos incorrectos"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "El formato de fecha larga contiene símbolos incorrectos"
+    IDS_ERROR_OEM_CODE_PAGE "Hubo un problema al leer la página de caracteres regional OEM"
+    IDS_ERROR_ANSI_CODE_PAGE "Hubo un problema al leer la página de caracteres regional ANSI"
+    IDS_ERROR_INT_KEY_REG "Hubo un problema al abrir la clave del Registro: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Hubo un problema al abrir la clave del Registro: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Hubo un problema al abrir la clave del Registro: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Hubo un problema al abrir la clave del Registro: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "No se pudo iniciar input.dll"
+END
+

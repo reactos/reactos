@@ -5,7 +5,8 @@
 /*    TrueTypeGX/AAT mort table validation                                 */
 /*    body for type5 (Contextual Glyph Insertion) subtable.                */
 /*                                                                         */
-/*  Copyright 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,       */
+/*  Copyright 2005-2016 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -70,10 +71,10 @@
                                           FT_UShort*     classTable_length_p,
                                           FT_UShort*     stateArray_length_p,
                                           FT_UShort*     entryTable_length_p,
-                                          GXV_Validator  valid )
+                                          GXV_Validator  gxvalid )
   {
     GXV_mort_subtable_type5_StateOptRecData  optdata =
-      (GXV_mort_subtable_type5_StateOptRecData)valid->statetable.optdata;
+      (GXV_mort_subtable_type5_StateOptRecData)gxvalid->statetable.optdata;
 
 
     gxv_StateTable_subtable_setup( table_size,
@@ -83,7 +84,7 @@
                                    classTable_length_p,
                                    stateArray_length_p,
                                    entryTable_length_p,
-                                   valid );
+                                   gxvalid );
 
     optdata->classTable = classTable;
     optdata->stateArray = stateArray;
@@ -100,7 +101,7 @@
                                                FT_UShort      count,
                                                FT_Bytes       table,
                                                FT_Bytes       limit,
-                                               GXV_Validator  valid )
+                                               GXV_Validator  gxvalid )
   {
     /*
      * We don't know the range of insertion-glyph-list.
@@ -109,7 +110,7 @@
     FT_Bytes  p = table + offset;
 
     GXV_mort_subtable_type5_StateOptRecData  optdata =
-      (GXV_mort_subtable_type5_StateOptRecData)valid->statetable.optdata;
+      (GXV_mort_subtable_type5_StateOptRecData)gxvalid->statetable.optdata;
 
     if ( optdata->classTable < offset                                   &&
          offset < optdata->classTable + *(optdata->classTable_length_p) )
@@ -121,6 +122,9 @@
          offset < optdata->entryTable + *(optdata->entryTable_length_p) )
       GXV_TRACE(( " offset runs into EntryTable" ));
 
+#ifndef GXV_LOAD_TRACE_VARS
+    GXV_LIMIT_CHECK( count * 2 );
+#else
     while ( p < table + offset + ( count * 2 ) )
     {
       FT_UShort insert_glyphID;
@@ -130,8 +134,8 @@
       insert_glyphID = FT_NEXT_USHORT( p );
       GXV_TRACE(( " 0x%04x", insert_glyphID ));
     }
-
     GXV_TRACE(( "\n" ));
+#endif
   }
 
 
@@ -142,14 +146,16 @@
     GXV_StateTable_GlyphOffsetCPtr  glyphOffset,
     FT_Bytes                        table,
     FT_Bytes                        limit,
-    GXV_Validator                   valid )
+    GXV_Validator                   gxvalid )
   {
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_Bool    setMark;
     FT_Bool    dontAdvance;
     FT_Bool    currentIsKashidaLike;
     FT_Bool    markedIsKashidaLike;
     FT_Bool    currentInsertBefore;
     FT_Bool    markedInsertBefore;
+#endif
     FT_Byte    currentInsertCount;
     FT_Byte    markedInsertCount;
     FT_UShort  currentInsertList;
@@ -158,12 +164,14 @@
     FT_UNUSED( state );
 
 
+#ifdef GXV_LOAD_UNUSED_VARS
     setMark              = FT_BOOL( ( flags >> 15 ) & 1 );
     dontAdvance          = FT_BOOL( ( flags >> 14 ) & 1 );
     currentIsKashidaLike = FT_BOOL( ( flags >> 13 ) & 1 );
     markedIsKashidaLike  = FT_BOOL( ( flags >> 12 ) & 1 );
     currentInsertBefore  = FT_BOOL( ( flags >> 11 ) & 1 );
     markedInsertBefore   = FT_BOOL( ( flags >> 10 ) & 1 );
+#endif
 
     currentInsertCount   = (FT_Byte)( ( flags >> 5 ) & 0x1F   );
     markedInsertCount    = (FT_Byte)(   flags        & 0x001F );
@@ -177,7 +185,7 @@
                                                    currentInsertCount,
                                                    table,
                                                    limit,
-                                                   valid );
+                                                   gxvalid );
     }
 
     if ( 0 != markedInsertList && 0 != markedInsertCount )
@@ -186,7 +194,7 @@
                                                    markedInsertCount,
                                                    table,
                                                    limit,
-                                                   valid );
+                                                   gxvalid );
     }
   }
 
@@ -194,7 +202,7 @@
   FT_LOCAL_DEF( void )
   gxv_mort_subtable_type5_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid )
+                                    GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
 
@@ -206,18 +214,18 @@
 
     GXV_LIMIT_CHECK( GXV_MORT_SUBTABLE_TYPE5_HEADER_SIZE );
 
-    valid->statetable.optdata =
+    gxvalid->statetable.optdata =
       et;
-    valid->statetable.optdata_load_func =
+    gxvalid->statetable.optdata_load_func =
       NULL;
-    valid->statetable.subtable_setup_func =
+    gxvalid->statetable.subtable_setup_func =
       gxv_mort_subtable_type5_subtable_setup;
-    valid->statetable.entry_glyphoffset_fmt =
+    gxvalid->statetable.entry_glyphoffset_fmt =
       GXV_GLYPHOFFSET_ULONG;
-    valid->statetable.entry_validate_func =
+    gxvalid->statetable.entry_validate_func =
       gxv_mort_subtable_type5_entry_validate;
 
-    gxv_StateTable_validate( p, limit, valid );
+    gxv_StateTable_validate( p, limit, gxvalid );
 
     GXV_EXIT;
   }

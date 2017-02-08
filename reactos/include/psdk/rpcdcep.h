@@ -124,6 +124,14 @@ typedef struct _RPC_CLIENT_INTERFACE
     unsigned int Flags;
 } RPC_CLIENT_INTERFACE, *PRPC_CLIENT_INTERFACE;
 
+#define RPC_C_OPT_COOKIE_AUTH 7
+
+typedef struct _RPC_C_OPT_COOKIE_AUTH_DESCRIPTOR
+{
+    ULONG BufferSize;
+    char *Buffer;
+} RPC_C_OPT_COOKIE_AUTH_DESCRIPTOR;
+
 #define TRANSPORT_TYPE_CN   0x01
 #define TRANSPORT_TYPE_DG   0x02
 #define TRANSPORT_TYPE_LPC  0x04

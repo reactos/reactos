@@ -1,0 +1,102 @@
+/*
+ * Copyright 2004 Hajime Segawa
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_RESULTOBJDESC	"ドキュメントに新しい %s オブジェクトを挿入します"
+  IDS_RESULTFILEOBJDESC	"ファイルの内容をオブジェクトとしてドキュメントに挿入します。オブジェクトは作成したプログラムから有効にできます。"
+  IDS_BROWSE            "参照"
+  IDS_NOTOLEMOD         "ファイルは有効なOLEモジュールではないようです。OLEコントロールを登録できません。"
+  IDS_NOTOLEMODCAPTION  "コントロールを追加"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+}
+
+STRINGTABLE
+{
+    IDS_PS_PASTE_DATA                     "クリップボードの内容を %s として、文書に挿入します。"
+    IDS_PS_PASTE_OBJECT                   "クリップボードの内容を文書に挿入します。 %s を利用して、編集できます。"
+    IDS_PS_PASTE_OBJECT_AS_ICON           "クリップボードの内容を文書に挿入します。 %s を利用して、編集できます。アイコンとして表示されます。"
+    IDS_PS_PASTE_LINK_DATA                "クリップボードの内容を %s として、文書に挿入します。データは元のファイルとリンクしているため、元のファイルへの変更はこの文書に反映されます。"
+    IDS_PS_PASTE_LINK_OBJECT              "クリップボードの内容を示す絵を文書に挿入します。絵は元のファイルとリンクしているため、元のファイルへの変更はこの文書に反映されます。"
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "クリップボードの内容の場所を指すショートカットを挿入します。ショートカットは元のファイルとリンクしているため、元のファイルへの変更はこの文書に反映されます。"
+    IDS_PS_NON_OLE                        "クリップボードの内容を挿入します。"
+    IDS_PS_UNKNOWN_TYPE                   "不明な形式"
+    IDS_PS_UNKNOWN_SRC                    "不明"
+    IDS_PS_UNKNOWN_APP                    "作成プログラム"
+}
+
+UIINSERTOBJECT DIALOGEX  0, 0, 304, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "オブジェクトの挿入"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "オブジェクトの種類:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,231,7,66,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,231,24,66,14
+    GROUPBOX        "結果",IDC_RESULT,7,103,218,41
+    CONTROL         "新規作成",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,7,20,84,10
+    CONTROL         "コントロールを作成",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
+    CONTROL         "ファイルから作成",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,84,10
+    LTEXT           "",IDC_RESULTDESC,49,112,169,26
+    PUSHBUTTON      "コントロールを追加(&A)...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    CONTROL         "アイコンとして表示",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
+    PUSHBUTTON      "参照...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
+    LTEXT           "ファイル:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+IDD_PASTESPECIAL4 DIALOGEX 3, 15, 304, 160
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "形式を選択して貼り付け"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT         "コピー元:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "貼り付け(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 73, 10
+    CONTROL       "リンク貼り付け(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 73, 10
+    LTEXT         "形式(&A):", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
+    CONTROL       "キャンセル", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
+    CONTROL       "ヘルプ(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
+    CONTROL       "アイコンとして表示(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
+    CONTROL       "アイコンの変更(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 121, 42, 34
+    CONTROL       "", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 120, 159, 35
+    CONTROL       "結果", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 110, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END

@@ -20,29 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <config.h>
-
-#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-
-#include <wine/itss.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
-
-#include "itsstor.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(itss);
+#include <oleidl.h>
 
 /*****************************************************************************/
 
@@ -69,8 +49,8 @@ static HRESULT WINAPI ITS_IMonikerImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IParseDisplayName))
     {
-	IClassFactory_AddRef(iface);
-	*ppvObject = This;
+	IMoniker_AddRef(iface);
+	*ppvObject = iface;
 	return S_OK;
     }
 
@@ -358,7 +338,7 @@ static HRESULT ITS_IMoniker_create( IMoniker **ppObj, LPCWSTR name, DWORD n )
     DWORD sz;
 
     /* szFile[1] has space for one character already */
-    sz = sizeof(ITS_IMonikerImpl) + strlenW( name )*sizeof(WCHAR);
+    sz = FIELD_OFFSET( ITS_IMonikerImpl, szFile[strlenW( name ) + 1] );
 
     itsmon = HeapAlloc( GetProcessHeap(), 0, sz );
     itsmon->IMoniker_iface.lpVtbl = &ITS_IMonikerImpl_Vtbl;
@@ -399,8 +379,8 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IParseDisplayName))
     {
-	IClassFactory_AddRef(iface);
-	*ppvObject = This;
+	IParseDisplayName_AddRef(iface);
+	*ppvObject = iface;
 	return S_OK;
     }
 

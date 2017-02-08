@@ -84,7 +84,7 @@ basic_filebuf<_CharT, _Traits>::close() {
   if (_M_in_output_mode) {
     __ok = __ok && !_Traits::eq_int_type(this->overflow(traits_type::eof()),
                                          traits_type::eof());
-    __ok == __ok && this->_M_unshift();
+    __ok = __ok && this->_M_unshift();
   }
   else if (_M_in_input_mode)
       this->_M_exit_input_mode();

@@ -15,19 +15,17 @@
 #endif
 
 BOOLEAN
-HOST_InitConsole(
-	VOID);
+HOST_InitConsole(VOID);
 
 BOOLEAN
-HOST_InitMemory(
-	VOID);
+HOST_InitMemory(VOID);
 
 BOOLEAN
 HOST_CreateFileSystemList(
-	IN PFILE_SYSTEM_LIST List);
+    IN PFILE_SYSTEM_LIST List);
 
 BOOLEAN
 HOST_FormatPartition(
-	IN PFILE_SYSTEM_ITEM FileSystem,
-	IN PCUNICODE_STRING DriveRoot,
-	IN PFMIFSCALLBACK Callback);
+    IN PFILE_SYSTEM_ITEM FileSystem,
+    IN PCUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback);

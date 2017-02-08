@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/utils.c
+ * FILE:            dll/win32/kernel32/client/utils.c
  * PURPOSE:         Utility and Support Functions
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
@@ -292,7 +292,7 @@ BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
     if (dwMilliseconds == INFINITE) return NULL;
 
     /* Otherwise, convert the time to NT Format */
-    Timeout->QuadPart = UInt32x32To64(dwMilliseconds, -10000);
+    Timeout->QuadPart = dwMilliseconds * -10000LL;
     return Timeout;
 }
 
@@ -340,7 +340,7 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                                Attributes,
                                RootDirectory,
                                SecurityDescriptor);
-    DPRINT("Attributes: %lx, RootDirectory: %lx, SecurityDescriptor: %p\n",
+    DPRINT("Attributes: %lx, RootDirectory: %p, SecurityDescriptor: %p\n",
             Attributes, RootDirectory, SecurityDescriptor);
     return ObjectAttributes;
 }
@@ -351,8 +351,8 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 NTSTATUS
 WINAPI
 BaseCreateStack(HANDLE hProcess,
-                 SIZE_T StackReserve,
                  SIZE_T StackCommit,
+                 SIZE_T StackReserve,
                  PINITIAL_TEB InitialTeb)
 {
     NTSTATUS Status;
@@ -361,7 +361,7 @@ BaseCreateStack(HANDLE hProcess,
     BOOLEAN UseGuard;
     ULONG PageSize, Dummy, AllocationGranularity;
     SIZE_T StackReserveHeader, StackCommitHeader, GuardPageSize, GuaranteedStackCommit;
-    DPRINT("BaseCreateStack (hProcess: %lx, Max: %lx, Current: %lx)\n",
+    DPRINT("BaseCreateStack (hProcess: %p, Max: %lx, Current: %lx)\n",
             hProcess, StackReserve, StackCommit);
 
     /* Read page size */
@@ -402,9 +402,6 @@ BaseCreateStack(HANDLE hProcess,
 
     StackCommit = ROUND_UP(StackCommit, PageSize);
     StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
-
-    /* ROS Hack until we support guard page stack expansion */
-    StackCommit = StackReserve;
 
     /* Reserve memory for the stack */
     Stack = 0;
@@ -551,7 +548,7 @@ BaseInitializeContext(IN PCONTEXT Context,
 
         /* Is FPU state required? */
         Context->ContextFlags |= ContextFlags;
-        if (ContextFlags == CONTEXT_FLOATING_POINT)
+        if ((ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
         {
             /* Set an initial state */
             Context->FloatSave.ControlWord = 0x27F;
@@ -609,6 +606,33 @@ BaseInitializeContext(IN PCONTEXT Context,
 
     /* Give it some room for the Parameter */
     Context->Rsp -= sizeof(PVOID);
+#elif defined(_M_ARM)
+    DPRINT("BaseInitializeContext: %p\n", Context);
+
+    // FIXME: check if this is correct!
+    /* Setup the Initial Win32 Thread Context */
+    Context->R0 = (ULONG_PTR)StartAddress;
+    Context->R1 = (ULONG_PTR)Parameter;
+    Context->Sp = (ULONG_PTR)StackAddress;
+
+    if (ContextType == 1)      /* For Threads */
+    {
+        Context->Pc = (ULONG_PTR)BaseThreadStartupThunk;
+    }
+    else if (ContextType == 2) /* For Fibers */
+    {
+        Context->Pc = (ULONG_PTR)BaseFiberStartup;
+    }
+    else                       /* For first thread in a Process */
+    {
+        Context->Pc = (ULONG_PTR)BaseProcessStartThunk;
+    }
+
+    /* Set the Context Flags */
+    Context->ContextFlags = CONTEXT_FULL;
+
+    /* Give it some room for the Parameter */
+    Context->Sp -= sizeof(PVOID);
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;
@@ -618,6 +642,11 @@ BaseInitializeContext(IN PCONTEXT Context,
 
 /*
  * Checks if the privilege for Real-Time Priority is there
+ * Beware about this function behavior:
+ * - In case Keep is set to FALSE, then the function will only check
+ * whether real time is allowed and won't grant the privilege. In that case
+ * it will return TRUE if allowed, FALSE otherwise. Not a state!
+ * It means you don't have to release privilege when calling with FALSE.
  */
 PVOID
 WINAPI
@@ -630,7 +659,7 @@ BasepIsRealtimeAllowed(IN BOOLEAN Keep)
     Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
     if (!NT_SUCCESS(Status)) return NULL;
 
-    if (Keep)
+    if (!Keep)
     {
         RtlReleasePrivilege(State);
         State = (PVOID)TRUE;
@@ -709,7 +738,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     NtClose(hFile);
 
     /* Return status */
-    DPRINT("Section: %lx for file: %lx\n", *hSection, hFile);
+    DPRINT("Section: %p for file: %p\n", *hSection, hFile);
     return Status;
 }
 
@@ -905,7 +934,7 @@ BasepCheckWinSaferRestrictions(IN HANDLE UserToken,
                                OUT PHANDLE JobHandle)
 {
     NTSTATUS Status;
-    
+
     /* Validate that there's a name */
     if ((ApplicationName) && *(ApplicationName))
     {

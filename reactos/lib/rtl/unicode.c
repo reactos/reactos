@@ -28,6 +28,16 @@ extern USHORT NlsUnicodeDefaultChar;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+RtlMultiAppendUnicodeStringBuffer(IN PVOID Unknown,
+                                  IN ULONG Unknown2,
+                                  IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
 * @implemented
 */
@@ -163,7 +173,7 @@ RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
 NTSTATUS
 NTAPI
 RtlAppendStringToString(IN PSTRING Destination,
-                        IN PSTRING Source)
+                        IN const STRING *Source)
 {
     USHORT SourceLength = Source->Length;
 
@@ -336,8 +346,8 @@ RtlCharToInteger(
 LONG
 NTAPI
 RtlCompareString(
-    IN PSTRING s1,
-    IN PSTRING s2,
+    IN const STRING *s1,
+    IN const STRING *s2,
     IN BOOLEAN CaseInsensitive)
 {
     unsigned int len;
@@ -372,8 +382,8 @@ RtlCompareString(
 BOOLEAN
 NTAPI
 RtlEqualString(
-    IN PSTRING s1,
-    IN PSTRING s2,
+    IN const STRING *s1,
+    IN const STRING *s2,
     IN BOOLEAN CaseInsensitive)
 {
     if (s1->Length != s2->Length) return FALSE;
@@ -825,17 +835,18 @@ RtlInt64ToUnicodeString (
 BOOLEAN
 NTAPI
 RtlPrefixString(
-    PANSI_STRING String1,
-    PANSI_STRING String2,
-    BOOLEAN  CaseInsensitive)
+    const STRING *String1,
+    const STRING *String2,
+    BOOLEAN CaseInsensitive)
 {
     PCHAR pc1;
     PCHAR pc2;
-    ULONG Length;
+    ULONG NumChars;
 
-    if (String2->Length < String1->Length) return FALSE;
+    if (String2->Length < String1->Length)
+        return FALSE;
 
-    Length = String1->Length;
+    NumChars = String1->Length;
     pc1 = String1->Buffer;
     pc2 = String2->Buffer;
 
@@ -843,15 +854,15 @@ RtlPrefixString(
     {
         if (CaseInsensitive)
         {
-            while (Length--)
+            while (NumChars--)
             {
-                if (RtlUpperChar (*pc1++) != RtlUpperChar (*pc2++))
+                if (RtlUpperChar(*pc1++) != RtlUpperChar(*pc2++))
                     return FALSE;
             }
         }
         else
         {
-            while (Length--)
+            while (NumChars--)
             {
                 if (*pc1++ != *pc2++)
                     return FALSE;
@@ -875,24 +886,24 @@ NTAPI
 RtlPrefixUnicodeString(
     PCUNICODE_STRING String1,
     PCUNICODE_STRING String2,
-    BOOLEAN  CaseInsensitive)
+    BOOLEAN CaseInsensitive)
 {
     PWCHAR pc1;
     PWCHAR pc2;
-    ULONG Length;
+    ULONG  NumChars;
 
     if (String2->Length < String1->Length)
         return FALSE;
 
-    Length = String1->Length / 2;
+    NumChars = String1->Length / sizeof(WCHAR);
     pc1 = String1->Buffer;
-    pc2  = String2->Buffer;
+    pc2 = String2->Buffer;
 
     if (pc1 && pc2)
     {
         if (CaseInsensitive)
         {
-            while (Length--)
+            while (NumChars--)
             {
                 if (RtlUpcaseUnicodeChar(*pc1++) !=
                     RtlUpcaseUnicodeChar(*pc2++))
@@ -901,9 +912,9 @@ RtlPrefixUnicodeString(
         }
         else
         {
-            while (Length--)
+            while (NumChars--)
             {
-                if( *pc1++ != *pc2++ )
+                if (*pc1++ != *pc2++)
                     return FALSE;
             }
         }
@@ -913,6 +924,7 @@ RtlPrefixUnicodeString(
 
     return FALSE;
 }
+
 /*
  * @implemented
  */
@@ -1797,7 +1809,7 @@ RtlUpcaseUnicodeString(
 
     PAGED_CODE_RTL();
 
-    if (AllocateDestinationString == TRUE)
+    if (AllocateDestinationString)
     {
         UniDest->MaximumLength = UniSource->Length;
         UniDest->Buffer = RtlpAllocateStringMemory(UniDest->MaximumLength, TAG_USTR);
@@ -2103,7 +2115,7 @@ VOID
 NTAPI
 RtlCopyString(
     IN OUT PSTRING DestinationString,
-    IN PSTRING SourceString OPTIONAL)
+    IN const STRING *SourceString OPTIONAL)
 {
     ULONG SourceLength;
     PCHAR p1, p2;
@@ -2350,7 +2362,7 @@ RtlAppendAsciizToString(
 VOID
 NTAPI
 RtlUpperString(PSTRING DestinationString,
-               PSTRING SourceString)
+               const STRING *SourceString)
 {
     USHORT Length;
     PCHAR Src, Dest;
@@ -2608,7 +2620,7 @@ RtlDnsHostNameToComputerName(PUNICODE_STRING ComputerName, PUNICODE_STRING DnsHo
             ComputerNameOem.Length = (USHORT)ComputerNameOemNLength;
             ComputerNameOem.MaximumLength = (USHORT)(MAX_COMPUTERNAME_LENGTH + 1);
 
-            if (RtlpDidUnicodeToOemWork(DnsHostName, &ComputerNameOem) == TRUE)
+            if (RtlpDidUnicodeToOemWork(DnsHostName, &ComputerNameOem))
             {
                 /* no unmapped character so convert it back to an unicode string */
                 Status = RtlOemStringToUnicodeString(ComputerName,

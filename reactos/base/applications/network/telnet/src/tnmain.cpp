@@ -44,6 +44,8 @@
 
 #include "precomp.h"
 
+#include "tnmain.h"
+
 int telCommandLine (Telnet &MyConnection);
 
 void waitforkey() {

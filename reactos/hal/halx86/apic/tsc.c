@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halamd64/generic/tsc.c
+ * FILE:            hal/halx86/apic/tsc.c
  * PURPOSE:         HAL Routines for TSC handling
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -53,7 +53,7 @@ DoLinearRegression(
 
 VOID
 NTAPI
-HalpInitializeTsc()
+HalpInitializeTsc(VOID)
 {
     ULONG_PTR Flags;
     KIDTENTRY OldIdtEntry, *IdtPointer;
@@ -89,11 +89,11 @@ HalpInitializeTsc()
     /* Reset TSC value to 0 */
     __writemsr(MSR_RDTSC, 0);
 
-    /* Enable the timer interupt */
+    /* Enable the timer interrupt */
     HalEnableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL, Latched);
 
     /* Read register C, so that the next interrupt can happen */
-    HalpReadCmos(RTC_REGISTER_C);;
+    HalpReadCmos(RTC_REGISTER_C);
 
     /* Wait for completion */
     _enable();
@@ -103,7 +103,7 @@ HalpInitializeTsc()
     /* Disable the periodic interrupt in the CMOS */
     HalpWriteCmos(RTC_REGISTER_B, RegisterB & ~RTC_REG_B_PI);
 
-    /* Disable the timer interupt */
+    /* Disable the timer interrupt */
     HalDisableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL);
 
     /* Restore old IDT entry */

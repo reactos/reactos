@@ -30,26 +30,16 @@ There is still some work to be done:
 
 */
 
-#include <config.h>
+#include "cabinet.h"
 
 #include <assert.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
+#include <fci.h>
+
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
 
-//#include <windef.h>
-//#include <winbase.h>
-//#include "winerror.h"
-//#include "winternl.h"
-//#include <fci.h>
-#include "cabinet.h"
 #include <wine/list.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
 
 #ifdef WORDS_BIGENDIAN
 #define fci_endian_ulong(x) RtlUlongByteSwap(x)

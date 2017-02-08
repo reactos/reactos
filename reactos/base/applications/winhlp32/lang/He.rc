@@ -1,0 +1,111 @@
+/*
+ * Help Viewer (Hebrew resources)
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2010 Yaron Shahrabani <sh.yaron@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "&קובץ" {
+  MENUITEM "&פתיחה", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "ה&דפסה", MNID_FILE_PRINT
+  MENUITEM "ה&גדרת המדפסת...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "י&ציאה", MNID_FILE_EXIT
+ }
+ POPUP "ע&ריכה" {
+   MENUITEM "ה&עתקה...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "הוספת הע&רות...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&סימניה" {
+   MENUITEM "ה&גדרה...", MNID_BKMK_DEFINE
+ }
+ POPUP "&אפשרויות" {
+  MENUITEM "תמיד &עליון", MNID_HELP_HELPTOP
+  MENUITEM "היסטוריה",		MNID_OPTS_HISTORY
+  POPUP    "גופנים"
+  BEGIN
+    MENUITEM "קטנים",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "רגילים",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "גדולים",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "ע&זרה" {
+   MENUITEM "עזרה ע&ל העזרה", MNID_HELP_HELPON
+   MENUITEM "&מידע...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "הערות...",           MNID_CTXT_ANNOTATE
+		MENUITEM "העתקה",             MNID_CTXT_COPY
+		MENUITEM "הדפסה...",          MNID_CTXT_PRINT
+		POPUP    "גופנים"
+		BEGIN
+			MENUITEM "קטנים",      MNID_CTXT_FONTS_SMALL
+			MENUITEM "רגילים",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "גדולים",      MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"העזרה של ReactOS"
+STID_WHERROR, 		"שגיאה"
+STID_WARNING,  		"אזהרה"
+STID_INFO,  		"מידע"
+STID_NOT_IMPLEMENTED, 	"לא מוטמע"
+STID_HLPFILE_ERROR_s, 	"אירעה שגיאה בעת קריאת קובץ העזרה `%s'"
+STID_INDEX, 		"מ&פתח"
+STID_CONTENTS,		"תקציר"
+STID_BACK, 		"&חזרה"
+STID_ALL_FILES, 	"כל הקבצים (*.*)"
+STID_HELP_FILES_HLP, 	"קובצי עזרה (*.hlp)"
+STID_FILE_NOT_FOUND_s	"לא ניתן למצוא את '%s'. האם ברצונך למצוא קובץ זה בעצמך?"
+STID_NO_RICHEDIT	"לא ניתן למצוא יישום של richedit... התכנית תצא"
+STID_PSH_INDEX,		"נושאי העזרה: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+FONT 8, "MS Shell Dlg"
+CAPTION "מפתח"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+FONT 8, "MS Shell Dlg"
+CAPTION "חיפוש"
+{
+    LTEXT  "לא מוטמע עדיין", -1, 10, 10, 180, 150
+}

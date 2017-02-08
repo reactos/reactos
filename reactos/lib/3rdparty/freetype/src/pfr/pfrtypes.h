@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR data structures (specification only).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2005, 2007 by                                    */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PFRTYPES_H__
-#define __PFRTYPES_H__
+#ifndef PFRTYPES_H_
+#define PFRTYPES_H_
 
 #include <ft2build.h>
 #include FT_INTERNAL_OBJECTS_H
@@ -229,7 +229,7 @@ FT_BEGIN_HEADER
     FT_UInt            metrics_resolution;
     FT_BBox            bbox;
     FT_UInt            flags;
-    FT_UInt            standard_advance;
+    FT_Int             standard_advance;
 
     FT_Int             ascent;   /* optional, bbox.yMax if not present */
     FT_Int             descent;  /* optional, bbox.yMin if not present */
@@ -260,7 +260,7 @@ FT_BEGIN_HEADER
     PFR_KernItem*      kern_items_tail;
 
     /* not part of the spec, but used during load */
-    FT_Long            bct_offset;
+    FT_ULong           bct_offset;
     FT_Byte*           cursor;
 
   } PFR_PhyFontRec, *PFR_PhyFont;
@@ -356,7 +356,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PFRTYPES_H__ */
+#endif /* PFRTYPES_H_ */
 
 
 /* END */

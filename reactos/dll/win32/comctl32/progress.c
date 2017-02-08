@@ -34,18 +34,7 @@
  *
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(progress);
 
@@ -68,6 +57,7 @@ typedef struct
 #define LED_GAP           2
 #define MARQUEE_LEDS      5
 #define ID_MARQUEE_TIMER  1
+#define DEFAULT_MARQUEE_PERIOD 30
 
 /* Helper to obtain size of a progress bar chunk ("led"). */
 static inline int get_led_size ( const PROGRESS_INFO *infoPtr, LONG style,
@@ -279,23 +269,33 @@ static void draw_theme_bar_V (const ProgressDrawInfo* di, int start, int end)
 /* draw themed horizontal background from 'start' to 'end' */
 static void draw_theme_bkg_H (const ProgressDrawInfo* di, int start, int end)
 {
-    RECT r;
+    RECT bgrect, r;
+
     r.left = di->rect.left + start;
     r.top = di->rect.top;
     r.right = di->rect.left + end;
     r.bottom = di->rect.bottom;
-    DrawThemeBackground (di->theme, di->hdc, PP_BAR, 0, &di->bgRect, &r);
+
+    bgrect = di->bgRect;
+    OffsetRect(&bgrect, -bgrect.left, -bgrect.top);
+
+    DrawThemeBackground (di->theme, di->hdc, PP_BAR, 0, &bgrect, &r);
 }
 
 /* draw themed vertical background from 'start' to 'end' */
 static void draw_theme_bkg_V (const ProgressDrawInfo* di, int start, int end)
 {
-    RECT r;
+    RECT bgrect, r;
+
     r.left = di->rect.left;
     r.top = di->rect.bottom - end;
     r.right = di->rect.right;
     r.bottom = di->rect.bottom - start;
-    DrawThemeBackground (di->theme, di->hdc, PP_BARVERT, 0, &di->bgRect, &r);
+
+    bgrect = di->bgRect;
+    OffsetRect(&bgrect, -bgrect.left, -bgrect.top);
+
+    DrawThemeBackground (di->theme, di->hdc, PP_BARVERT, 0, &bgrect, &r);
 }
 
 /* drawing functions for themed style */
@@ -447,40 +447,32 @@ static LRESULT PROGRESS_Paint (PROGRESS_INFO *infoPtr, HDC hdc)
 
 
 /***********************************************************************
- * PROGRESS_Timer
- * Handle the marquee timer messages
+ * Advance marquee progress by one step.
  */
-static LRESULT PROGRESS_Timer (PROGRESS_INFO *infoPtr, INT idTimer)
+static void PROGRESS_UpdateMarquee (PROGRESS_INFO *infoPtr)
 {
-    if(idTimer == ID_MARQUEE_TIMER)
-    {
-        LONG style = GetWindowLongW (infoPtr->Self, GWL_STYLE);
-        RECT rect;
-        int ledWidth, leds;
-        HTHEME theme = GetWindowTheme (infoPtr->Self);
-        BOOL barSmooth = (style & PBS_SMOOTH) && !theme;
+    LONG style = GetWindowLongW (infoPtr->Self, GWL_STYLE);
+    RECT rect;
+    int ledWidth, leds;
+    HTHEME theme = GetWindowTheme (infoPtr->Self);
+    BOOL smooth = (style & PBS_SMOOTH) && !theme;
 
-        get_client_rect (infoPtr->Self, &rect);
+    get_client_rect (infoPtr->Self, &rect);
 
-        if(!barSmooth)
-            ledWidth = get_led_size( infoPtr, style, &rect ) + 
-                get_led_gap( infoPtr );
-        else
-            ledWidth = 1;
+    if (smooth)
+        ledWidth = 1;
+    else
+        ledWidth = get_led_size( infoPtr, style, &rect ) + get_led_gap( infoPtr );
 
-        leds = (get_bar_size( style, &rect ) + ledWidth - 1) / 
-            ledWidth;
+    leds = (get_bar_size( style, &rect ) + ledWidth - 1) /
+        ledWidth;
 
-        /* increment the marquee progress */
-        if(++infoPtr->MarqueePos >= leds)
-        {
-            infoPtr->MarqueePos = 0;
-        }
+    /* increment the marquee progress */
+    if (++infoPtr->MarqueePos >= leds)
+        infoPtr->MarqueePos = 0;
 
-        InvalidateRect(infoPtr->Self, &rect, FALSE);
-        UpdateWindow(infoPtr->Self);
-    }
-    return 0;
+    InvalidateRect(infoPtr->Self, &rect, TRUE);
+    UpdateWindow(infoPtr->Self);
 }
 
 
@@ -523,6 +515,30 @@ static DWORD PROGRESS_SetRange (PROGRESS_INFO *infoPtr, int low, int high)
     return res;
 }
 
+static UINT PROGRESS_SetPos (PROGRESS_INFO *infoPtr, INT pos)
+{
+    DWORD style = GetWindowLongW(infoPtr->Self, GWL_STYLE);
+
+    if (style & PBS_MARQUEE)
+    {
+        PROGRESS_UpdateMarquee(infoPtr);
+        return 1;
+    }
+    else
+    {
+        UINT oldVal;
+        oldVal = infoPtr->CurVal;
+        if (oldVal != pos) {
+	    infoPtr->CurVal = pos;
+	    PROGRESS_CoercePos(infoPtr);
+	    TRACE("PBM_SETPOS: current pos changed from %d to %d\n", oldVal, infoPtr->CurVal);
+            PROGRESS_Invalidate( infoPtr, oldVal, infoPtr->CurVal );
+            UpdateWindow( infoPtr->Self );
+        }
+        return oldVal;
+    }
+}
+
 /***********************************************************************
  *           ProgressWindowProc
  */
@@ -544,7 +560,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case WM_CREATE:
     {
 	DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
-        
+
         theme = OpenThemeData (hwnd, themeClass);
 
 	dwExStyle &= ~(WS_EX_CLIENTEDGE | WS_EX_WINDOWEDGE);
@@ -597,7 +613,9 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
         return PROGRESS_Paint (infoPtr, (HDC)wParam);
 
     case WM_TIMER:
-        return PROGRESS_Timer (infoPtr, (INT)wParam);
+        if (wParam == ID_MARQUEE_TIMER)
+            PROGRESS_UpdateMarquee (infoPtr);
+        return 0;
 
     case WM_THEMECHANGED:
     {
@@ -633,18 +651,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     }
 
     case PBM_SETPOS:
-    {
-        UINT oldVal;
-        oldVal = infoPtr->CurVal;
-        if(oldVal != wParam) {
-	    infoPtr->CurVal = (INT)wParam;
-	    PROGRESS_CoercePos(infoPtr);
-	    TRACE("PBM_SETPOS: current pos changed from %d to %d\n", oldVal, infoPtr->CurVal);
-            PROGRESS_Invalidate( infoPtr, oldVal, infoPtr->CurVal );
-            UpdateWindow( infoPtr->Self );
-        }
-        return oldVal;
-    }
+        return PROGRESS_SetPos(infoPtr, wParam);
 
     case PBM_SETRANGE:
         return PROGRESS_SetRange (infoPtr, (int)LOWORD(lParam), (int)HIWORD(lParam));
@@ -690,17 +697,25 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
         return infoPtr->CurVal;
 
     case PBM_SETBARCOLOR:
+    {
+        COLORREF clr = infoPtr->ColorBar;
+
         infoPtr->ColorBar = (COLORREF)lParam;
 	InvalidateRect(hwnd, NULL, TRUE);
-	return 0;
+        return clr;
+    }
 
     case PBM_GETBARCOLOR:
 	return infoPtr->ColorBar;
 
     case PBM_SETBKCOLOR:
+    {
+        COLORREF clr = infoPtr->ColorBk;
+
         infoPtr->ColorBk = (COLORREF)lParam;
 	InvalidateRect(hwnd, NULL, TRUE);
-	return 0;
+        return clr;
+    }
 
     case PBM_GETBKCOLOR:
 	return infoPtr->ColorBk;
@@ -716,8 +731,9 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case PBM_SETMARQUEE:
 	if(wParam != 0)
         {
+            UINT period = lParam ? (UINT)lParam : DEFAULT_MARQUEE_PERIOD;
             infoPtr->Marquee = TRUE;
-            SetTimer(infoPtr->Self, ID_MARQUEE_TIMER, (UINT)lParam, NULL);
+            SetTimer(infoPtr->Self, ID_MARQUEE_TIMER, period, NULL);
         }
         else
         {

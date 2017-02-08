@@ -20,7 +20,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Computer name functions
- * FILE:            lib/kernel32/misc/computername.c
+ * FILE:            dll/win32/kernel32/client/compname.c
  * PROGRAMER:       Eric Kohl
  */
 
@@ -301,10 +301,12 @@ WINAPI
 GetComputerNameA(LPSTR lpBuffer, LPDWORD lpnSize)
 {
     BOOL ret;
+
     ret = GetComputerNameExA(ComputerNameNetBIOS, lpBuffer, lpnSize);    
-    if(!ret && GetLastError() == ERROR_MORE_DATA)
-      SetLastError(ERROR_BUFFER_OVERFLOW);
-      return ret;
+    if (!ret && GetLastError() == ERROR_MORE_DATA)
+        SetLastError(ERROR_BUFFER_OVERFLOW);
+
+    return ret;
 }
 
 

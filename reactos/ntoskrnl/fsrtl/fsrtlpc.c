@@ -17,8 +17,9 @@
 PERESOURCE FsRtlPagingIoResources;
 ULONG FsRtlPagingIoResourceSelector;
 NTSTATUS NTAPI INIT_FUNCTION FsRtlInitializeWorkerThread(VOID);
+extern KSEMAPHORE FsRtlpUncSemaphore;
 
-static UCHAR LegalAnsiCharacterArray[] =
+static const UCHAR LegalAnsiCharacterArray[] =
 {
   0,                                                        /* CTRL+@, 0x00 */
   0,                                                        /* CTRL+A, 0x01 */
@@ -150,7 +151,7 @@ static UCHAR LegalAnsiCharacterArray[] =
   FSRTL_FAT_LEGAL | FSRTL_HPFS_LEGAL | FSRTL_NTFS_LEGAL     /*         0x7f */
 };
 
-PUCHAR FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
+const UCHAR * const FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -170,7 +171,9 @@ FsRtlInitSystem(VOID)
                                    IFS_POOL_TAG,
                                    0);
 
+    FsRtlInitializeTunnels();
     FsRtlInitializeLargeMcbs();
+    KeInitializeSemaphore(&FsRtlpUncSemaphore, 1, MAXLONG);
 
     /* Allocate the Resource Buffer */
     FsRtlPagingIoResources = FsRtlAllocatePoolWithTag(NonPagedPool,

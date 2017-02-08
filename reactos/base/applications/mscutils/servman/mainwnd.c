@@ -3,16 +3,15 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/mainwnd.c
  * PURPOSE:     Main window message handler
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-20015 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
 
-static const TCHAR szMainWndClass[] = TEXT("ServManWndClass");
+#include <windowsx.h>
 
-BOOL bSortAscending = TRUE;
-
+static const WCHAR szMainWndClass[] = L"ServManWndClass";
 
 /* Toolbar buttons */
 static const TBBUTTON Buttons [] =
@@ -21,7 +20,7 @@ static const TBBUTTON Buttons [] =
     {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* refresh */
     {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* export */
 
-    /* Note: First item for a seperator is its width in pixels */
+    /* Note: First item for a separator is its width in pixels */
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
     {TBICON_CREATE,  ID_CREATE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },         /* create */
@@ -124,17 +123,17 @@ UpdateMainStatusBar(PMAIN_WND_INFO Info)
 VOID
 UpdateServiceCount(PMAIN_WND_INFO Info)
 {
-    LPTSTR lpNumServices;
+    LPWSTR lpNumServices;
 
     if (AllocAndLoadString(&lpNumServices,
                            hInstance,
                            IDS_NUM_SERVICES))
     {
-        TCHAR szNumServices[32];
+        WCHAR szNumServices[32];
 
         INT NumListedServ = ListView_GetItemCount(Info->hListView);
 
-        _sntprintf(szNumServices,
+        _snwprintf(szNumServices,
                    31,
                    lpNumServices,
                    NumListedServ);
@@ -202,9 +201,10 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
                 SendMessage(Info->hTool, TB_SETSTATE, ID_RESTART,
                        (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
             }
-
-            HeapFree(GetProcessHeap(), 0, lpServiceConfig);
         }
+
+        if(lpServiceConfig)
+            HeapFree(GetProcessHeap(), 0, lpServiceConfig);
 
         if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
         {
@@ -241,20 +241,13 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 static INT CALLBACK
 CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-    ENUM_SERVICE_STATUS_PROCESS *Param1;
-    ENUM_SERVICE_STATUS_PROCESS *Param2;
-//    INT iSubItem = (LPARAM)lParamSort;
+    PMAIN_WND_INFO Info = (PMAIN_WND_INFO)lParamSort;
+    WCHAR Item1[256], Item2[256];
 
-    if (bSortAscending) {
-        Param1 = (ENUM_SERVICE_STATUS_PROCESS *)lParam1;
-        Param2 = (ENUM_SERVICE_STATUS_PROCESS *)lParam2;
-    }
-    else
-    {
-        Param1 = (ENUM_SERVICE_STATUS_PROCESS *)lParam2;
-        Param2 = (ENUM_SERVICE_STATUS_PROCESS *)lParam1;
-    }
-    return _tcsicmp(Param1->lpDisplayName, Param2->lpDisplayName);
+    ListView_GetItemText(Info->hListView, lParam1, Info->SortSelection, Item1, sizeof(Item1) / sizeof(WCHAR));
+    ListView_GetItemText(Info->hListView, lParam2, Info->SortSelection, Item2, sizeof(Item2) / sizeof(WCHAR));
+
+    return wcscmp(Item1, Item2) * Info->SortDirection;
 }
 
 
@@ -341,24 +334,24 @@ InitMainWnd(PMAIN_WND_INFO Info)
 {
     if (!pCreateToolbar(Info))
     {
-        DisplayString(_T("error creating toolbar"));
+        DisplayString(L"error creating toolbar");
         return FALSE;
     }
 
     if (!CreateListView(Info))
     {
-        DisplayString(_T("error creating list view"));
+        DisplayString(L"error creating list view");
         return FALSE;
     }
 
     if (!CreateStatusBar(Info))
-        DisplayString(_T("error creating status bar"));
+        DisplayString(L"error creating status bar");
 
     /* Create Popup Menu */
     Info->hShortcutMenu = LoadMenu(hInstance,
                                    MAKEINTRESOURCE(IDR_POPUP));
 
-    Info->bIsUserAnAdmin = IsUserAnAdmin();
+    Info->bIsUserAnAdmin = TRUE;// IsUserAnAdmin();
     if (Info->bIsUserAnAdmin)
     {
         HMENU hMainMenu = GetMenu(Info->hMainWnd);
@@ -415,7 +408,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             SendMessage(Info->hStatus,
                         SB_SETTEXT,
                         1,
-                        _T('\0'));
+                        L'\0');
         }
         break;
 
@@ -454,11 +447,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
             }
             else
             {
-                TCHAR Buf[60];
+                WCHAR Buf[60];
                 LoadString(hInstance,
                            IDS_DELETE_STOP,
                            Buf,
-                           sizeof(Buf) / sizeof(TCHAR));
+                           sizeof(Buf) / sizeof(WCHAR));
                 DisplayString(Buf);
             }
 
@@ -469,50 +462,78 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_START:
         {
-            if (DoStart(Info, NULL))
-            {
-                UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
-                SetMenuAndButtonStates(Info);
-                SetFocus(Info->hListView);
-            }
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_START,
+                                  NULL); //FIXME: Add start params
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
+
         }
         break;
 
         case ID_STOP:
-            if (DoStop(Info))
-            {
-                UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
-                SetMenuAndButtonStates(Info);
-                SetFocus(Info->hListView);
-            }
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_STOP,
+                                  NULL);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
+
         break;
 
         case ID_PAUSE:
-            DoPause(Info);
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_PAUSE,
+                                  NULL);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
         break;
 
         case ID_RESUME:
-            DoResume(Info);
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_RESUME,
+                                  NULL);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
         break;
 
         case ID_RESTART:
-            if (DoStop(Info))
-            {
-                DoStart(Info, NULL);
-                UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
-                SetMenuAndButtonStates(Info);
-                SetFocus(Info->hListView);
-            }
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_RESTART,
+                                  NULL);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
         break;
 
         case ID_HELP:
-            MessageBox(NULL,
-                       _T("Help is not yet implemented\n"),
-                       _T("Note!"),
-                       MB_OK | MB_ICONINFORMATION);
+            MessageBoxW(NULL,
+                        L"Help is not yet implemented\n",
+                        L"Note!",
+                        MB_OK | MB_ICONINFORMATION);
             SetFocus(Info->hListView);
         break;
 
@@ -524,8 +545,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_VIEW_LARGE:
-            SetListViewStyle(Info->hListView,
-                             LVS_ICON);
+            SetListViewStyle(Info->hListView, LVS_ICON);
+            ListView_Arrange(Info->hListView, LVA_DEFAULT);
+
             CheckMenuRadioItem(GetMenu(Info->hMainWnd),
                                ID_VIEW_LARGE,
                                ID_VIEW_DETAILS,
@@ -534,8 +556,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_VIEW_SMALL:
-            SetListViewStyle(Info->hListView,
-                             LVS_SMALLICON);
+            SetListViewStyle(Info->hListView, LVS_SMALLICON);
+            ListView_Arrange(Info->hListView, LVA_DEFAULT);
+
             CheckMenuRadioItem(GetMenu(Info->hMainWnd),
                                ID_VIEW_LARGE,
                                ID_VIEW_DETAILS,
@@ -702,14 +725,27 @@ MainWndProc(HWND hwnd,
                 case LVN_COLUMNCLICK:
                 {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
+                    HDITEM       hdi;
 
-                    (void)ListView_SortItems(Info->hListView,
-                                             CompareFunc,
-                                             pnmv->iSubItem);
-                    bSortAscending = !bSortAscending;
+                    /* get pending sort direction for clicked column */
+                    hdi.mask = HDI_LPARAM;
+                    (void)Header_GetItem(Info->hHeader, pnmv->iSubItem, &hdi);
+
+                    /* get new sort parameters */
+                    Info->SortSelection = pnmv->iSubItem;
+                    Info->SortDirection = hdi.lParam;
+
+                    /* set new sort direction and save */
+                    hdi.lParam = (hdi.lParam == ORD_ASCENDING) ?
+                                 ORD_DESCENDING : ORD_ASCENDING;
+
+                    (void)Header_SetItem(Info->hHeader, pnmv->iSubItem, &hdi);
+
+                    (void)ListView_SortItemsEx(Info->hListView,
+                                               CompareFunc,
+                                               (LPARAM)Info);
                 }
                 break;
-
                 case LVN_ITEMCHANGED:
                 {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;

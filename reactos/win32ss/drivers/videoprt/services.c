@@ -21,6 +21,9 @@
 
 #include "videoprt.h"
 
+#define NDEBUG
+#include <debug.h>
+
 VOID NTAPI
 IntInterfaceReference(PVOID Context)
 {

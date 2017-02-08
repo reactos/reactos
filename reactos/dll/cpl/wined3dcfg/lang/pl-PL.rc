@@ -1,7 +1,8 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Mar 2012)
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
+ *    Translated by Caemyr - Olaf Siejka (Mar 2012)
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *	  Updated by Saibamen and wojo664 (May 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -11,23 +12,33 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 21, 20
-    GROUPBOX "Cieniowanie", -1, 5, 35, 230, 65
-    AUTOCHECKBOX "Włącz &GLSL", IDC_GLSL, 15, 50, 150, 10
-    AUTOCHECKBOX "Włącz cieniowanie &pikseli", IDC_PIXELSHADERS, 15, 65, 150, 10
-    AUTOCHECKBOX "Włącz cieniowanie &werteksów", IDC_VERTEXSHADERS, 15, 80, 150, 10
-    GROUPBOX "Renderowanie", -1, 5, 110, 230, 85
-    AUTOCHECKBOX "Wymuś &multipróbkowanie", IDC_MULTISAMPLING, 15, 125, 150, 10
-    AUTOCHECKBOX "Wymuś &strict draw ordering", IDC_STRICTDRAWORDERING, 15, 140, 150, 10
-    LTEXT "Renderowanie pozaekranowe:", -1, 15, 157, 80, 10
-    COMBOBOX IDC_OFFSCREEN, 95, 155, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Blokowanie renderowanego obiektu:", -1, 15, 175, 72, 10, SS_LEFT
-    COMBOBOX IDC_LOCKING, 95, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Cieniowanie", -1, 5, 25, 230, 80
+    LTEXT "Włącz GLSL:", -1, 15, 42, 120, 10
+    COMBOBOX IDC_GLSL, 135, 40, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Maksymalny poziom GS:", -1, 15, 57, 120, 10
+    COMBOBOX IDC_GSLEVEL, 135, 55, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Maksymalny poziom PS:", -1, 15, 72, 120, 10
+    COMBOBOX IDC_PSLEVEL, 135, 70, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Maksymalny poziom VS:", -1, 15, 87, 120, 10
+    COMBOBOX IDC_VSLEVEL, 135, 85, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    GROUPBOX "Renderowanie", -1, 5, 110, 230, 110
+    LTEXT "Multipróbkowanie:", -1, 15, 127, 120, 10
+    COMBOBOX IDC_MULTISAMPLING, 135, 125, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Ścisła kolejność rysowania:", -1, 15, 142, 120, 10
+    COMBOBOX IDC_STRICTDRAWORDERING, 135, 140, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Renderowanie pozaekranowe:", -1, 15, 157, 120, 10
+    COMBOBOX IDC_OFFSCREEN, 135, 155, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Zawsze pozaekranowo:", -1, 15, 172, 120, 10, SS_LEFT
+    COMBOBOX IDC_ALWAYSOFFSCREEN, 135, 170, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Rozmiar pamięci video:", -1, 15, 187, 120, 10, SS_LEFT
+    COMBOBOX IDC_VIDMEMSIZE, 135, 185, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Urządzenie renderujące DirectDraw:", -1, 15, 202, 120, 10, SS_LEFT
+    COMBOBOX IDC_DDRENDERER, 135, 200, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D"
+    IDS_CPLNAME "Opcje WineD3D"
     IDS_CPLDESCRIPTION "Konfiguracja środowiska WineD3D."
 END

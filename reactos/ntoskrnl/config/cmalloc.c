@@ -64,7 +64,7 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     if (!Kcb->PrivateAlloc)
     {
         /* Free it from the pool */
-        CmpFree(Kcb, 0);
+        CmpFree(Kcb, TAG_KCB);
         return;
     }
     
@@ -99,7 +99,7 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
         }
         
         /* Free the page */
-        CmpFree(AllocPage, 0);
+        CmpFree(AllocPage, TAG_KCB);
     }
     
     /* Release the lock */
@@ -152,7 +152,7 @@ SearchKcbList:
         }
         
         /* Allocate an allocation page */
-        AllocPage = CmpAllocate(PAGE_SIZE, TRUE, TAG_CM);
+        AllocPage = CmpAllocate(PAGE_SIZE, TRUE, TAG_KCB);
         if (AllocPage)
         {
             /* Set default entries */
@@ -179,7 +179,7 @@ SearchKcbList:
     }
 
     /* Allocate a KCB only */
-    CurrentKcb = CmpAllocate(sizeof(CM_KEY_CONTROL_BLOCK), TRUE, TAG_CM);
+    CurrentKcb = CmpAllocate(sizeof(CM_KEY_CONTROL_BLOCK), TRUE, TAG_KCB);
     if (CurrentKcb)
     {
         /* Set it up */

@@ -1,0 +1,27 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "内建"
+    IDS_GROUP_NONE_NAME "无"
+    IDS_GROUP_NONE_COMMENT "普通用户"
+    IDS_ALIAS_ADMINISTRATORS_NAME "管理员"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "管理员可以无限制地访问计算机或域。"
+    IDS_ALIAS_GUESTS_NAME "来宾"
+    IDS_ALIAS_GUESTS_COMMENT "来宾在默认情况下享有同样的权利的用户组的成员。"
+    IDS_ALIAS_POWER_USERS_NAME "超级用户"
+    IDS_ALIAS_POWER_USERS_COMMENT "超级用户有大多数行政权利有一些限制条件。"
+    IDS_ALIAS_USERS_NAME "用户"
+    IDS_ALIAS_USERS_COMMENT "防止用户进行全系统更改。"
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administrator"
+    IDS_USER_ADMINISTRATOR_COMMENT "用于管理计算机或域的内置帐户。"
+    IDS_USER_GUEST_NAME "来宾"
+    IDS_USER_GUEST_COMMENT "来宾访问计算机或域的内置帐户。"
+END

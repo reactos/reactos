@@ -2,17 +2,27 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "Прегледът за снимки и факсове на РеактОС"
+    IDS_APPTITLE "Прегледът за снимки и факсове на РеактОС"
     IDS_SETASDESKBG "Слагане като подкраска"
-    IDS_PREVIEW     "Преглед"
-
+    IDS_PREVIEW "Преглед"
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Следващо изображение"
-    IDS_TOOLTIP_PREV_PIC   "Предходно изображение"
-    IDS_TOOLTIP_ZOOM_IN    "Увеличаване (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Намаляване (-)"
+    IDS_TOOLTIP_NEXT_PIC "Следващо изображение"
+    IDS_TOOLTIP_PREV_PIC "Предходно изображение"
+    IDS_TOOLTIP_ZOOM_IN "Увеличаване (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Намаляване (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Завъртане по часовника (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Завъртане срещу часовника (Ctrl+L)"
-    IDS_TOOLTIP_PRINT      "Разпечатване (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Записване като... (Ctrl+S)"
+    IDS_TOOLTIP_PRINT "Разпечатване (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Записване като... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF Image"
+    IDS_GIF_FILE    "GIF Image"
+    IDS_JPG_FILE    "JPEG Image"
+    IDS_BMP_FILE    "Bitmap Image"
+    IDS_PNG_FILE    "PNG Image"
+    IDS_TIF_FILE    "TIF Image"
+    IDS_WMF_FILE    "WMF Image"
 END

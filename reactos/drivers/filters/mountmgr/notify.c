@@ -24,9 +24,9 @@
  *                   Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "mntmgr.h"
+
+#include <ioevent.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -379,8 +379,9 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
             }
         }
 
+        /* No need to notify for a PnP device or if we didn't find the device */
         if (NextEntry == &(DeviceExtension->DeviceListHead) ||
-            !DeviceInformation->Volume)
+            !DeviceInformation->ManuallyRegistered)
         {
             return;
         }
@@ -414,6 +415,7 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
     {
         ObDereferenceObject(DeviceObject);
         ObDereferenceObject(FileObject);
+        return;
     }
 
     Stack = IoGetNextIrpStackLocation(Irp);
@@ -511,6 +513,8 @@ UniqueIdChangeNotifyWorker(IN PDEVICE_OBJECT DeviceObject,
     PMOUNTDEV_UNIQUE_ID OldUniqueId, NewUniqueId;
     PMOUNTDEV_UNIQUE_ID_CHANGE_NOTIFY_OUTPUT UniqueIdChange;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     /* Validate worker */
     if (!NT_SUCCESS(WorkItem->Irp->IoStatus.Status))
     {
@@ -566,6 +570,9 @@ UniqueIdChangeNotifyCompletion(IN PDEVICE_OBJECT DeviceObject,
                                IN PVOID Context)
 {
     PUNIQUE_ID_WORK_ITEM WorkItem = Context;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
 
     /* Simply queue the work item */
     IoQueueWorkItem(WorkItem->WorkItem,

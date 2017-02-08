@@ -18,33 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-//# include <libxml/encoding.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
-#include <wine/list.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include "precomp.h"
 
 struct ns
 {
@@ -464,7 +438,6 @@ static ULONG WINAPI vbnamespacemanager_Release(IVBMXNamespaceManager *iface)
             free_ns_context(ctxt);
         }
 
-        release_dispex(&This->dispex);
         heap_free( This );
     }
 
@@ -648,12 +621,12 @@ static dispex_static_data_t namespacemanager_dispex = {
     namespacemanager_iface_tids
 };
 
-HRESULT MXNamespaceManager_create(IUnknown *outer, void **obj)
+HRESULT MXNamespaceManager_create(void **obj)
 {
     namespacemanager *This;
     struct nscontext *ctxt;
 
-    TRACE("(%p, %p)\n", outer, obj);
+    TRACE("(%p)\n", obj);
 
     This = heap_alloc( sizeof (*This) );
     if( !This )

@@ -18,17 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
 
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <objbase.h>
-//#include "oaidl.h"
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -544,13 +535,13 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   case LANG_SWEDISH:    case LANG_SYRIAC:     case LANG_TAMIL:
   case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
   case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
-  case LANG_VIETNAMESE: case LANG_GAELIC:     case LANG_MALTESE:
+  case LANG_VIETNAMESE: case LANG_SCOTTISH_GAELIC: case LANG_MALTESE:
   case LANG_MAORI:      case LANG_ROMANSH:    case LANG_IRISH:
   case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_SUTU:
   case LANG_TSONGA:     case LANG_TSWANA:     case LANG_VENDA:
   case LANG_XHOSA:      case LANG_ZULU:       case LANG_ESPERANTO:
   case LANG_WALON:      case LANG_CORNISH:    case LANG_WELSH:
-  case LANG_BRETON:
+  case LANG_BRETON:     case LANG_MANX_GAELIC:
     nOffset = 16;
     pnLookup = Lookup_16;
     break;

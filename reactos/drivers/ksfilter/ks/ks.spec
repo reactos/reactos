@@ -7,7 +7,7 @@
 @ stdcall -i386 ?IndirectedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
 @ stdcall -i386 ?NonDelegatedAddRef@CBaseUnknown@@UAGKXZ(ptr) INonDelegatedUnknown_fnAddRef
 @ stdcall -i386 ?NonDelegatedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) INonDelegatedUnknown_fnQueryInterface
-@ stdcall ?NonDelegatedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
+@ stdcall -i386 ?NonDelegatedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
 
 @ stdcall -private DllInitialize(ptr)
 @ stdcall KoCreateInstance(ptr ptr long ptr ptr)

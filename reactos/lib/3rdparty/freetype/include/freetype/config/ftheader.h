@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Build macros of the FreeType 2 library.                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,8 +15,8 @@
 /*                                                                         */
 /***************************************************************************/
 
-#ifndef __FT_HEADER_H__
-#define __FT_HEADER_H__
+#ifndef FTHEADER_H_
+#define FTHEADER_H_
 
 
   /*@***********************************************************************/
@@ -318,6 +318,45 @@
   /*************************************************************************
    *
    * @macro:
+   *   FT_AUTOHINTER_H
+   *
+   * @description:
+   *   A macro used in #include statements to name the file containing
+   *   structures and macros related to the auto-hinting module.
+   *
+   */
+#define FT_AUTOHINTER_H  <freetype/ftautoh.h>
+
+
+  /*************************************************************************
+   *
+   * @macro:
+   *   FT_CFF_DRIVER_H
+   *
+   * @description:
+   *   A macro used in #include statements to name the file containing
+   *   structures and macros related to the CFF driver module.
+   *
+   */
+#define FT_CFF_DRIVER_H  <freetype/ftcffdrv.h>
+
+
+  /*************************************************************************
+   *
+   * @macro:
+   *   FT_TRUETYPE_DRIVER_H
+   *
+   * @description:
+   *   A macro used in #include statements to name the file containing
+   *   structures and macros related to the TrueType driver module.
+   *
+   */
+#define FT_TRUETYPE_DRIVER_H  <freetype/ftttdrv.h>
+
+
+  /*************************************************************************
+   *
+   * @macro:
    *   FT_TYPE1_TABLES_H
    *
    * @description:
@@ -422,6 +461,19 @@
    *
    */
 #define FT_LZW_H  <freetype/ftlzw.h>
+
+
+  /*************************************************************************
+   *
+   * @macro:
+   *   FT_BZIP2_H
+   *
+   * @description:
+   *   A macro used in #include statements to name the file containing the
+   *   definitions of an API which supports bzip2-compressed files.
+   *
+   */
+#define FT_BZIP2_H  <freetype/ftbzip2.h>
 
 
   /*************************************************************************
@@ -658,14 +710,16 @@
   /*************************************************************************
    *
    * @macro:
-   *   FT_XFREE86_H
+   *   FT_FONT_FORMATS_H
    *
    * @description:
    *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which provides functions specific to the XFree86 and
-   *   X.Org X11 servers.
+   *   FreeType~2 API which provides functions specific to font formats.
    */
-#define FT_XFREE86_H  <freetype/ftxf86.h>
+#define FT_FONT_FORMATS_H  <freetype/ftfntfmt.h>
+
+  /* deprecated */
+#define FT_XFREE86_H  FT_FONT_FORMATS_H
 
 
   /*************************************************************************
@@ -699,8 +753,7 @@
    *   FT_UNPATENTED_HINTING_H
    *
    * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which performs color filtering for subpixel rendering.
+   *   Deprecated.
    */
 #define FT_UNPATENTED_HINTING_H  <freetype/ttunpat.h>
 
@@ -712,7 +765,7 @@
    *
    * @description:
    *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which performs color filtering for subpixel rendering.
+   *   FreeType~2 API which performs incremental glyph loading.
    */
 #define FT_INCREMENTAL_H  <freetype/ftincrem.h>
 
@@ -765,7 +818,7 @@
 
 
   /*
-   * Include internal headers definitions from <freetype/internal/...>
+   * Include internal headers definitions from <internal/...>
    * only when building the library.
    */
 #ifdef FT2_BUILD_LIBRARY
@@ -774,7 +827,7 @@
 #endif /* FT2_BUILD_LIBRARY */
 
 
-#endif /* __FT2_BUILD_H__ */
+#endif /* FTHEADER_H_ */
 
 
 /* END */

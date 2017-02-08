@@ -4,123 +4,49 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
-
-
-#define __NSXFINIT_C__
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
 #include "acdispat.h"
 #include "acinterp.h"
+#include "acevents.h"
 
 #define _COMPONENT          ACPI_NAMESPACE
         ACPI_MODULE_NAME    ("nsinit")
@@ -173,27 +99,29 @@ AcpiNsInitializeObjects (
     ACPI_FUNCTION_TRACE (NsInitializeObjects);
 
 
+    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
+        "[Init] Completing Initialization of ACPI Objects\n"));
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
         "**** Starting initialization of namespace objects ****\n"));
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "Completing Region/Field/Buffer/Package initialization:"));
+        "Completing Region/Field/Buffer/Package initialization:\n"));
 
     /* Set all init info to zero */
 
-    ACPI_MEMSET (&Info, 0, sizeof (ACPI_INIT_WALK_INFO));
+    memset (&Info, 0, sizeof (ACPI_INIT_WALK_INFO));
 
     /* Walk entire namespace from the supplied root */
 
     Status = AcpiWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
-                &Info, NULL);
+        ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
+        &Info, NULL);
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status, "During WalkNamespace"));
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nInitialized %u/%u Regions %u/%u Fields %u/%u "
+        "    Initialized %u/%u Regions %u/%u Fields %u/%u "
         "Buffers %u/%u Packages (%u nodes)\n",
         Info.OpRegionInit,  Info.OpRegionCount,
         Info.FieldInit,     Info.FieldCount,
@@ -201,9 +129,8 @@ AcpiNsInitializeObjects (
         Info.PackageInit,   Info.PackageCount, Info.ObjectCount));
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Control Methods found\n", Info.MethodCount));
-    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Op Regions found\n", Info.OpRegionCount));
+        "%u Control Methods found\n%u Op Regions found\n",
+        Info.MethodCount, Info.OpRegionCount));
 
     return_ACPI_STATUS (AE_OK);
 }
@@ -227,84 +154,140 @@ AcpiNsInitializeObjects (
 
 ACPI_STATUS
 AcpiNsInitializeDevices (
-    void)
+    UINT32                  Flags)
 {
-    ACPI_STATUS             Status;
+    ACPI_STATUS             Status = AE_OK;
     ACPI_DEVICE_WALK_INFO   Info;
+    ACPI_HANDLE             Handle;
 
 
     ACPI_FUNCTION_TRACE (NsInitializeDevices);
 
 
-    /* Init counters */
-
-    Info.DeviceCount = 0;
-    Info.Num_STA = 0;
-    Info.Num_INI = 0;
-
-    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "Initializing Device/Processor/Thermal objects "
-        "by executing _INI methods:"));
-
-    /* Tree analysis: find all subtrees that contain _INI methods */
-
-    Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                ACPI_UINT32_MAX, FALSE, AcpiNsFindIniMethods, NULL, &Info, NULL);
-    if (ACPI_FAILURE (Status))
+    if (!(Flags & ACPI_NO_DEVICE_INIT))
     {
-        goto ErrorExit;
-    }
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
+            "[Init] Initializing ACPI Devices\n"));
 
-    /* Allocate the evaluation information block */
+        /* Init counters */
 
-    Info.EvaluateInfo = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_EVALUATE_INFO));
-    if (!Info.EvaluateInfo)
-    {
-        Status = AE_NO_MEMORY;
-        goto ErrorExit;
+        Info.DeviceCount = 0;
+        Info.Num_STA = 0;
+        Info.Num_INI = 0;
+
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
+            "Initializing Device/Processor/Thermal objects "
+            "and executing _INI/_STA methods:\n"));
+
+        /* Tree analysis: find all subtrees that contain _INI methods */
+
+        Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
+            ACPI_UINT32_MAX, FALSE, AcpiNsFindIniMethods, NULL, &Info, NULL);
+        if (ACPI_FAILURE (Status))
+        {
+            goto ErrorExit;
+        }
+
+        /* Allocate the evaluation information block */
+
+        Info.EvaluateInfo = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_EVALUATE_INFO));
+        if (!Info.EvaluateInfo)
+        {
+            Status = AE_NO_MEMORY;
+            goto ErrorExit;
+        }
+
+        /*
+         * Execute the "global" _INI method that may appear at the root.
+         * This support is provided for Windows compatibility (Vista+) and
+         * is not part of the ACPI specification.
+         */
+        Info.EvaluateInfo->PrefixNode = AcpiGbl_RootNode;
+        Info.EvaluateInfo->RelativePathname = METHOD_NAME__INI;
+        Info.EvaluateInfo->Parameters = NULL;
+        Info.EvaluateInfo->Flags = ACPI_IGNORE_RETURN_VALUE;
+
+        Status = AcpiNsEvaluate (Info.EvaluateInfo);
+        if (ACPI_SUCCESS (Status))
+        {
+            Info.Num_INI++;
+        }
+
+        /*
+         * Execute \_SB._INI.
+	 * There appears to be a strict order requirement for \_SB._INI,
+         * which should be evaluated before any _REG evaluations.
+         */
+        Status = AcpiGetHandle (NULL, "\\_SB", &Handle);
+        if (ACPI_SUCCESS (Status))
+        {
+            memset (Info.EvaluateInfo, 0, sizeof (ACPI_EVALUATE_INFO));
+            Info.EvaluateInfo->PrefixNode = Handle;
+            Info.EvaluateInfo->RelativePathname = METHOD_NAME__INI;
+            Info.EvaluateInfo->Parameters = NULL;
+            Info.EvaluateInfo->Flags = ACPI_IGNORE_RETURN_VALUE;
+
+            Status = AcpiNsEvaluate (Info.EvaluateInfo);
+            if (ACPI_SUCCESS (Status))
+            {
+                Info.Num_INI++;
+            }
+        }
     }
 
     /*
-     * Execute the "global" _INI method that may appear at the root. This
-     * support is provided for Windows compatibility (Vista+) and is not
-     * part of the ACPI specification.
+     * Run all _REG methods
+     *
+     * Note: Any objects accessed by the _REG methods will be automatically
+     * initialized, even if they contain executable AML (see the call to
+     * AcpiNsInitializeObjects below).
+     *
+     * Note: According to the ACPI specification, we actually needn't execute
+     * _REG for SystemMemory/SystemIo operation regions, but for PCI_Config
+     * operation regions, it is required to evaluate _REG for those on a PCI
+     * root bus that doesn't contain _BBN object. So this code is kept here
+     * in order not to break things.
      */
-    Info.EvaluateInfo->PrefixNode = AcpiGbl_RootNode;
-    Info.EvaluateInfo->Pathname = METHOD_NAME__INI;
-    Info.EvaluateInfo->Parameters = NULL;
-    Info.EvaluateInfo->Flags = ACPI_IGNORE_RETURN_VALUE;
-
-    Status = AcpiNsEvaluate (Info.EvaluateInfo);
-    if (ACPI_SUCCESS (Status))
+    if (!(Flags & ACPI_NO_ADDRESS_SPACE_INIT))
     {
-        Info.Num_INI++;
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
+            "[Init] Executing _REG OpRegion methods\n"));
+
+        Status = AcpiEvInitializeOpRegions ();
+        if (ACPI_FAILURE (Status))
+        {
+            goto ErrorExit;
+        }
     }
 
-    /* Walk namespace to execute all _INIs on present devices */
-
-    Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-                ACPI_UINT32_MAX, FALSE, AcpiNsInitOneDevice, NULL, &Info, NULL);
-
-    /*
-     * Any _OSI requests should be completed by now. If the BIOS has
-     * requested any Windows OSI strings, we will always truncate
-     * I/O addresses to 16 bits -- for Windows compatibility.
-     */
-    if (AcpiGbl_OsiData >= ACPI_OSI_WIN_2000)
+    if (!(Flags & ACPI_NO_DEVICE_INIT))
     {
-        AcpiGbl_TruncateIoAddresses = TRUE;
-    }
+        /* Walk namespace to execute all _INIs on present devices */
 
-    ACPI_FREE (Info.EvaluateInfo);
-    if (ACPI_FAILURE (Status))
-    {
-        goto ErrorExit;
-    }
+        Status = AcpiNsWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
+            ACPI_UINT32_MAX, FALSE, AcpiNsInitOneDevice, NULL, &Info, NULL);
 
-    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nExecuted %u _INI methods requiring %u _STA executions "
-        "(examined %u objects)\n",
-        Info.Num_INI, Info.Num_STA, Info.DeviceCount));
+        /*
+         * Any _OSI requests should be completed by now. If the BIOS has
+         * requested any Windows OSI strings, we will always truncate
+         * I/O addresses to 16 bits -- for Windows compatibility.
+         */
+        if (AcpiGbl_OsiData >= ACPI_OSI_WIN_2000)
+        {
+            AcpiGbl_TruncateIoAddresses = TRUE;
+        }
+
+        ACPI_FREE (Info.EvaluateInfo);
+        if (ACPI_FAILURE (Status))
+        {
+            goto ErrorExit;
+        }
+
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
+            "    Executed %u _INI methods requiring %u _STA executions "
+            "(examined %u objects)\n",
+            Info.Num_INI, Info.Num_STA, Info.DeviceCount));
+    }
 
     return_ACPI_STATUS (Status);
 
@@ -326,7 +309,7 @@ ErrorExit:
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Callback from AcpiWalkNamespace.  Invoked for every object
+ * DESCRIPTION: Callback from AcpiWalkNamespace. Invoked for every object
  *              within the  namespace.
  *
  *              Currently, the only objects that require initialization are:
@@ -368,28 +351,34 @@ AcpiNsInitOneObject (
     switch (Type)
     {
     case ACPI_TYPE_REGION:
+
         Info->OpRegionCount++;
         break;
 
     case ACPI_TYPE_BUFFER_FIELD:
+
         Info->FieldCount++;
         break;
 
     case ACPI_TYPE_LOCAL_BANK_FIELD:
+
         Info->FieldCount++;
         break;
 
     case ACPI_TYPE_BUFFER:
+
         Info->BufferCount++;
         break;
 
     case ACPI_TYPE_PACKAGE:
+
         Info->PackageCount++;
         break;
 
     default:
 
         /* No init required, just exit now */
+
         return (AE_OK);
     }
 
@@ -441,7 +430,9 @@ AcpiNsInitOneObject (
         break;
 
     default:
+
         /* No other types can get here */
+
         break;
     }
 
@@ -450,15 +441,6 @@ AcpiNsInitOneObject (
         ACPI_EXCEPTION ((AE_INFO, Status,
             "Could not execute arguments for [%4.4s] (%s)",
             AcpiUtGetNodeName (Node), AcpiUtGetTypeName (Type)));
-    }
-
-    /*
-     * Print a dot for each object unless we are going to print the entire
-     * pathname
-     */
-    if (!(AcpiDbgLevel & ACPI_LV_INIT_NAMES))
-    {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT, "."));
     }
 
     /*
@@ -537,6 +519,7 @@ AcpiNsFindIniMethods (
         break;
 
     default:
+
         break;
     }
 
@@ -687,38 +670,37 @@ AcpiNsInitOneDevice (
      * Note: We know there is an _INI within this subtree, but it may not be
      * under this particular device, it may be lower in the branch.
      */
-    ACPI_DEBUG_EXEC (AcpiUtDisplayInitPathname (
-        ACPI_TYPE_METHOD, DeviceNode, METHOD_NAME__INI));
-
-    Info->PrefixNode = DeviceNode;
-    Info->Pathname = METHOD_NAME__INI;
-    Info->Parameters = NULL;
-    Info->Flags = ACPI_IGNORE_RETURN_VALUE;
-
-    Status = AcpiNsEvaluate (Info);
-    if (ACPI_SUCCESS (Status))
+    if (!ACPI_COMPARE_NAME (DeviceNode->Name.Ascii, "_SB_") ||
+        DeviceNode->Parent != AcpiGbl_RootNode)
     {
-        WalkInfo->Num_INI++;
+        ACPI_DEBUG_EXEC (AcpiUtDisplayInitPathname (
+            ACPI_TYPE_METHOD, DeviceNode, METHOD_NAME__INI));
 
-        if ((AcpiDbgLevel <= ACPI_LV_ALL_EXCEPTIONS) &&
-            (!(AcpiDbgLevel & ACPI_LV_INFO)))
+        memset (Info, 0, sizeof (ACPI_EVALUATE_INFO));
+        Info->PrefixNode = DeviceNode;
+        Info->RelativePathname = METHOD_NAME__INI;
+        Info->Parameters = NULL;
+        Info->Flags = ACPI_IGNORE_RETURN_VALUE;
+
+        Status = AcpiNsEvaluate (Info);
+        if (ACPI_SUCCESS (Status))
         {
-            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT, "."));
+            WalkInfo->Num_INI++;
         }
-    }
 
 #ifdef ACPI_DEBUG_OUTPUT
-    else if (Status != AE_NOT_FOUND)
-    {
-        /* Ignore error and move on to next device */
+        else if (Status != AE_NOT_FOUND)
+        {
+            /* Ignore error and move on to next device */
 
-        char *ScopeName = AcpiNsGetExternalPathname (Info->ResolvedNode);
+            char *ScopeName = AcpiNsGetNormalizedPathname (DeviceNode, TRUE);
 
-        ACPI_EXCEPTION ((AE_INFO, Status, "during %s._INI execution",
-            ScopeName));
-        ACPI_FREE (ScopeName);
-    }
+            ACPI_EXCEPTION ((AE_INFO, Status, "during %s._INI execution",
+                ScopeName));
+            ACPI_FREE (ScopeName);
+        }
 #endif
+    }
 
     /* Ignore errors from above */
 

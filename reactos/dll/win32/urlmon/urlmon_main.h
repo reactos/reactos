@@ -20,11 +20,11 @@
 #ifndef __WINE_URLMON_MAIN_H
 #define __WINE_URLMON_MAIN_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -33,14 +33,19 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-//#include "winuser.h"
-#include <ole2.h>
+#include <objbase.h>
+#include <oleauto.h>
 #include <urlmon.h>
 #include <wininet.h>
-#include <shellapi.h>
+#include <advpub.h>
+#define NO_SHLWAPI_REG
+#include <shlwapi.h>
 
-#include <wine/unicode.h>
+#include <wine/debug.h>
 #include <wine/list.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
@@ -78,8 +83,11 @@ IInternetProtocol *get_mime_filter(LPCWSTR) DECLSPEC_HIDDEN;
 BOOL is_registered_protocol(LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT register_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
 HINTERNET get_internet_session(IInternetBindInfo*) DECLSPEC_HIDDEN;
-LPWSTR get_useragent(void) DECLSPEC_HIDDEN;
+WCHAR *get_useragent(void) DECLSPEC_HIDDEN;
+void update_user_agent(WCHAR*) DECLSPEC_HIDDEN;
 void free_session(void) DECLSPEC_HIDDEN;
+
+HRESULT find_mime_from_ext(const WCHAR*,WCHAR**) DECLSPEC_HIDDEN;
 
 HRESULT bind_to_storage(IUri*,IBindCtx*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv) DECLSPEC_HIDDEN;
@@ -231,6 +239,7 @@ typedef struct {
 
 tls_data_t *get_tls_data(void) DECLSPEC_HIDDEN;
 
+void unregister_notif_wnd_class(void) DECLSPEC_HIDDEN;
 HWND get_notif_hwnd(void) DECLSPEC_HIDDEN;
 void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
 

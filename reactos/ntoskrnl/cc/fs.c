@@ -22,7 +22,7 @@
 extern KGUARDED_MUTEX ViewLock;
 extern ULONG DirtyPageCount;
 
-NTSTATUS CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
+NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -38,6 +38,10 @@ CcGetDirtyPages (
     IN PVOID Context2)
 {
     LARGE_INTEGER i;
+
+    CCTRACE(CC_API_DEBUG, "LogHandle=%p DirtyPageRoutine=%p Context1=%p Context2=%p\n",
+        LogHandle, DirtyPageRoutine, Context1, Context2);
+
     UNIMPLEMENTED;
     i.QuadPart = 0;
     return i;
@@ -52,7 +56,10 @@ CcGetFileObjectFromBcb (
     IN PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = (PINTERNAL_BCB)Bcb;
-    return iBcb->CacheSegment->Bcb->FileObject;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
+
+    return iBcb->Vacb->SharedCacheMap->FileObject;
 }
 
 /*
@@ -65,6 +72,9 @@ CcGetLsnForFileObject (
     OUT PLARGE_INTEGER OldestLsn OPTIONAL)
 {
     LARGE_INTEGER i;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p\n", FileObject);
+
     UNIMPLEMENTED;
     i.QuadPart = 0;
     return i;
@@ -82,13 +92,21 @@ CcInitializeCacheMap (
     IN PCACHE_MANAGER_CALLBACKS CallBacks,
     IN PVOID LazyWriterContext)
 {
+    NTSTATUS Status;
+
     ASSERT(FileObject);
     ASSERT(FileSizes);
 
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileSizes=%p PinAccess=%d CallBacks=%p LazyWriterContext=%p\n",
+        FileObject, FileSizes, PinAccess, CallBacks, LazyWriterContext);
+
     /* Call old ROS cache init function */
-    CcRosInitializeFileCache(FileObject,
-                             /*PAGE_SIZE*/ VACB_MAPPING_GRANULARITY, CallBacks,
-                             LazyWriterContext);
+    Status = CcRosInitializeFileCache(FileObject,
+                                      FileSizes,
+                                      CallBacks,
+                                      LazyWriterContext);
+    if (!NT_SUCCESS(Status))
+        ExRaiseStatus(Status);
 }
 
 /*
@@ -99,6 +117,8 @@ NTAPI
 CcIsThereDirtyData (
     IN PVPB Vpb)
 {
+    CCTRACE(CC_API_DEBUG, "Vpb=%p\n", Vpb);
+
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -114,6 +134,9 @@ CcPurgeCacheSection (
     IN ULONG Length,
     IN BOOLEAN UninitializeCacheMaps)
 {
+    CCTRACE(CC_API_DEBUG, "SectionObjectPointer=%p\n FileOffset=%p Length=%lu UninitializeCacheMaps=%d",
+        SectionObjectPointer, FileOffset, Length, UninitializeCacheMaps);
+
     //UNIMPLEMENTED;
     return FALSE;
 }
@@ -128,11 +151,14 @@ CcSetFileSizes (
     IN PCC_FILE_SIZES FileSizes)
 {
     KIRQL oldirql;
-    PBCB Bcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     PLIST_ENTRY current_entry;
-    PCACHE_SEGMENT current;
+    PROS_VACB current;
     LIST_ENTRY FreeListHead;
     NTSTATUS Status;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileSizes=%p\n",
+        FileObject, FileSizes);
 
     DPRINT("CcSetFileSizes(FileObject 0x%p, FileSizes 0x%p)\n",
            FileObject, FileSizes);
@@ -141,73 +167,73 @@ CcSetFileSizes (
            FileSizes->FileSize.QuadPart,
            FileSizes->ValidDataLength.QuadPart);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 
     /*
      * It is valid to call this function on file objects that weren't
      * initialized for caching. In this case it's simple no-op.
      */
-    if (Bcb == NULL)
+    if (SharedCacheMap == NULL)
         return;
 
-    if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
+    if (FileSizes->AllocationSize.QuadPart < SharedCacheMap->SectionSize.QuadPart)
     {
         InitializeListHead(&FreeListHead);
         KeAcquireGuardedMutex(&ViewLock);
-        KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
 
-        current_entry = Bcb->BcbSegmentListHead.Flink;
-        while (current_entry != &Bcb->BcbSegmentListHead)
+        current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+        while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
         {
-            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            current = CONTAINING_RECORD(current_entry,
+                                        ROS_VACB,
+                                        CacheMapVacbListEntry);
             current_entry = current_entry->Flink;
-            if (current->FileOffset > FileSizes->AllocationSize.QuadPart ||
-                    (current->FileOffset == 0 && FileSizes->AllocationSize.QuadPart == 0))
+            if (current->FileOffset.QuadPart >= FileSizes->AllocationSize.QuadPart)
             {
                 if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
                 {
-                    RemoveEntryList(&current->BcbSegmentListEntry);
-                    RemoveEntryList(&current->CacheSegmentListEntry);
-                    RemoveEntryList(&current->CacheSegmentLRUListEntry);
+                    RemoveEntryList(&current->CacheMapVacbListEntry);
+                    RemoveEntryList(&current->VacbLruListEntry);
                     if (current->Dirty)
                     {
-                        RemoveEntryList(&current->DirtySegmentListEntry);
-                        DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+                        RemoveEntryList(&current->DirtyVacbListEntry);
+                        DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                     }
-                    InsertHeadList(&FreeListHead, &current->BcbSegmentListEntry);
+                    InsertHeadList(&FreeListHead, &current->CacheMapVacbListEntry);
                 }
                 else
                 {
-                    DPRINT1("Anyone has referenced a cache segment behind the new size.\n");
+                    DPRINT1("Someone has referenced a VACB behind the new size.\n");
                     KeBugCheck(CACHE_MANAGER);
                 }
             }
         }
 
-        Bcb->AllocationSize = FileSizes->AllocationSize;
-        Bcb->FileSize = FileSizes->FileSize;
-        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
+        SharedCacheMap->FileSize = FileSizes->FileSize;
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
         KeReleaseGuardedMutex(&ViewLock);
 
         current_entry = FreeListHead.Flink;
         while(current_entry != &FreeListHead)
         {
-            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
             current_entry = current_entry->Flink;
-            Status = CcRosInternalFreeCacheSegment(current);
+            Status = CcRosInternalFreeVacb(current);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n", Status);
+                DPRINT1("CcRosInternalFreeVacb failed, status = %x\n", Status);
                 KeBugCheck(CACHE_MANAGER);
             }
         }
     }
     else
     {
-        KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-        Bcb->AllocationSize = FileSizes->AllocationSize;
-        Bcb->FileSize = FileSizes->FileSize;
-        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
+        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
+        SharedCacheMap->FileSize = FileSizes->FileSize;
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
     }
 }
 
@@ -221,6 +247,9 @@ CcSetLogHandleForFile (
     IN PVOID LogHandle,
     IN PFLUSH_TO_LSN FlushToLsnRoutine)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p LogHandle=%p FlushToLsnRoutine=%p\n",
+        FileObject, LogHandle, FlushToLsnRoutine);
+
     UNIMPLEMENTED;
 }
 
@@ -234,12 +263,15 @@ CcUninitializeCacheMap (
     IN PLARGE_INTEGER TruncateSize OPTIONAL,
     IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
 {
-#if 0
-    UNIMPLEMENTED;
-    return FALSE;
-#else
-    return NT_SUCCESS(CcRosReleaseFileCache(FileObject));
-#endif
+    NTSTATUS Status;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p TruncateSize=%p UninitializeCompleteEvent=%p\n",
+        FileObject, TruncateSize, UninitializeCompleteEvent);
+
+    Status = CcRosReleaseFileCache(FileObject);
+    if (UninitializeCompleteEvent)
+        KeSetEvent(&UninitializeCompleteEvent->Event, IO_NO_INCREMENT, FALSE);
+    return NT_SUCCESS(Status);
 }
 
 BOOLEAN
@@ -248,14 +280,14 @@ CcGetFileSizes (
     IN PFILE_OBJECT FileObject,
     IN PCC_FILE_SIZES FileSizes)
 {
-    PBCB Bcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 
-    if (!Bcb)
+    if (!SharedCacheMap)
         return FALSE;
 
-    FileSizes->AllocationSize = Bcb->AllocationSize;
-    FileSizes->FileSize = FileSizes->ValidDataLength = Bcb->FileSize;
+    FileSizes->AllocationSize = SharedCacheMap->SectionSize;
+    FileSizes->FileSize = FileSizes->ValidDataLength = SharedCacheMap->FileSize;
     return TRUE;
 }

@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTOPTION_H__
-#define __FTOPTION_H__
+#ifndef FTOPTION_H_
+#define FTOPTION_H_
 
 
 #include <ft2build.h>
@@ -62,7 +61,7 @@ FT_BEGIN_HEADER
   /*    that are statically linked to the library at compile time.  By     */
   /*    default, this file is <freetype/config/ftmodule.h>.                */
   /*                                                                       */
-  /*  We highly recommend using the third method whenever possible.        */
+  /* We highly recommend using the third method whenever possible.         */
   /*                                                                       */
   /*************************************************************************/
 
@@ -186,6 +185,60 @@ FT_BEGIN_HEADER
   /*   it for certain configurations only.                                 */
   /*                                                                       */
 /* #define FT_CONFIG_OPTION_SYSTEM_ZLIB */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Bzip2-compressed file support.                                        */
+  /*                                                                       */
+  /*   FreeType now handles font files that have been compressed with the  */
+  /*   `bzip2' program.  This is mostly used to parse many of the PCF      */
+  /*   files that come with XFree86.  The implementation uses `libbz2' to  */
+  /*   partially uncompress the file on the fly (see src/bzip2/ftbzip2.c). */
+  /*   Contrary to gzip, bzip2 currently is not included and need to use   */
+  /*   the system available bzip2 implementation.                          */
+  /*                                                                       */
+  /*   Define this macro if you want to enable this `feature'.             */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_USE_BZIP2 */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Define to disable the use of file stream functions and types, FILE,   */
+  /* fopen() etc.  Enables the use of smaller system libraries on embedded */
+  /* systems that have multiple system libraries, some with or without     */
+  /* file stream support, in the cases where file stream support is not    */
+  /* necessary such as memory loading of font files.                       */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* PNG bitmap support.                                                   */
+  /*                                                                       */
+  /*   FreeType now handles loading color bitmap glyphs in the PNG format. */
+  /*   This requires help from the external libpng library.  Uncompressed  */
+  /*   color bitmaps do not need any external libraries and will be        */
+  /*   supported regardless of this configuration.                         */
+  /*                                                                       */
+  /*   Define this macro if you want to enable this `feature'.             */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_USE_PNG */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* HarfBuzz support.                                                     */
+  /*                                                                       */
+  /*   FreeType uses the HarfBuzz library to improve auto-hinting of       */
+  /*   OpenType fonts.  If available, many glyphs not directly addressable */
+  /*   by a font's character map will be hinted also.                      */
+  /*                                                                       */
+  /*   Define this macro if you want to enable this `feature'.             */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_USE_HARFBUZZ */
 
 
   /*************************************************************************/
@@ -325,10 +378,6 @@ FT_BEGIN_HEADER
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
-  /* This must be greater than 4KByte if you use FreeType to rasterize     */
-  /* glyphs; otherwise, you may set it to zero to avoid unnecessary        */
-  /* allocation of the render pool.                                        */
-  /*                                                                       */
 #define FT_RENDER_POOL_SIZE  16384L
 
 
@@ -361,6 +410,41 @@ FT_BEGIN_HEADER
   /*                                                                       */
 /* #define FT_DEBUG_LEVEL_ERROR */
 /* #define FT_DEBUG_LEVEL_TRACE */
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Autofitter debugging                                                  */
+  /*                                                                       */
+  /*   If FT_DEBUG_AUTOFIT is defined, FreeType provides some means to     */
+  /*   control the autofitter behaviour for debugging purposes with global */
+  /*   boolean variables (consequently, you should *never* enable this     */
+  /*   while compiling in `release' mode):                                 */
+  /*                                                                       */
+  /*     _af_debug_disable_horz_hints                                      */
+  /*     _af_debug_disable_vert_hints                                      */
+  /*     _af_debug_disable_blue_hints                                      */
+  /*                                                                       */
+  /*   Additionally, the following functions provide dumps of various      */
+  /*   internal autofit structures to stdout (using `printf'):             */
+  /*                                                                       */
+  /*     af_glyph_hints_dump_points                                        */
+  /*     af_glyph_hints_dump_segments                                      */
+  /*     af_glyph_hints_dump_edges                                         */
+  /*     af_glyph_hints_get_num_segments                                   */
+  /*     af_glyph_hints_get_segment_offset                                 */
+  /*                                                                       */
+  /*   As an argument, they use another global variable:                   */
+  /*                                                                       */
+  /*     _af_debug_hints                                                   */
+  /*                                                                       */
+  /*   Please have a look at the `ftgrid' demo program to see how those    */
+  /*   variables and macros should be used.                                */
+  /*                                                                       */
+  /*   Do not #undef these macros here since the build system might define */
+  /*   them for certain configurations only.                               */
+  /*                                                                       */
+/* #define FT_DEBUG_AUTOFIT */
 
 
   /*************************************************************************/
@@ -455,7 +539,7 @@ FT_BEGIN_HEADER
   /* does not contain any glyph name though.                               */
   /*                                                                       */
   /* Accessing SFNT names is done through the functions declared in        */
-  /* `freetype/ftsnames.h'.                                                */
+  /* `ftsnames.h'.                                                         */
   /*                                                                       */
 #define TT_CONFIG_OPTION_SFNT_NAMES
 
@@ -501,65 +585,24 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* If you define TT_CONFIG_OPTION_UNPATENTED_HINTING, a special version  */
-  /* of the TrueType bytecode interpreter is used that doesn't implement   */
-  /* any of the patented opcodes and algorithms.  The patents related to   */
-  /* TrueType hinting have expired worldwide since May 2010; this option   */
-  /* is now deprecated.                                                    */
+  /* Define TT_CONFIG_OPTION_SUBPIXEL_HINTING if you want to compile       */
+  /* EXPERIMENTAL subpixel hinting support into the TrueType driver.  This */
+  /* replaces the native TrueType hinting mechanism when anything but      */
+  /* FT_RENDER_MODE_MONO is requested.                                     */
   /*                                                                       */
-  /* Note that the TT_CONFIG_OPTION_UNPATENTED_HINTING macro is *ignored*  */
-  /* if you define TT_CONFIG_OPTION_BYTECODE_INTERPRETER; in other words,  */
-  /* either define TT_CONFIG_OPTION_BYTECODE_INTERPRETER or                */
-  /* TT_CONFIG_OPTION_UNPATENTED_HINTING but not both at the same time.    */
+  /* Enabling this causes the TrueType driver to ignore instructions under */
+  /* certain conditions.  This is done in accordance with the guide here,  */
+  /* with some minor differences:                                          */
   /*                                                                       */
-  /* This macro is only useful for a small number of font files (mostly    */
-  /* for Asian scripts) that require bytecode interpretation to properly   */
-  /* load glyphs.  For all other fonts, this produces unpleasant results,  */
-  /* thus the unpatented interpreter is never used to load glyphs from     */
-  /* TrueType fonts unless one of the following two options is used.       */
+  /*  http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx */
   /*                                                                       */
-  /*   - The unpatented interpreter is explicitly activated by the user    */
-  /*     through the FT_PARAM_TAG_UNPATENTED_HINTING parameter tag         */
-  /*     when opening the FT_Face.                                         */
+  /* By undefining this, you only compile the code necessary to hint       */
+  /* TrueType glyphs with native TT hinting.                               */
   /*                                                                       */
-  /*   - FreeType detects that the FT_Face corresponds to one of the       */
-  /*     `trick' fonts (e.g., `Mingliu') it knows about.  The font engine  */
-  /*     contains a hard-coded list of font names and other matching       */
-  /*     parameters (see function `tt_face_init' in file                   */
-  /*     `src/truetype/ttobjs.c').                                         */
+  /*   This option requires TT_CONFIG_OPTION_BYTECODE_INTERPRETER to be    */
+  /*   defined.                                                            */
   /*                                                                       */
-  /* Here a sample code snippet for using FT_PARAM_TAG_UNPATENTED_HINTING. */
-  /*                                                                       */
-  /*   {                                                                   */
-  /*     FT_Parameter  parameter;                                          */
-  /*     FT_Open_Args  open_args;                                          */
-  /*                                                                       */
-  /*                                                                       */
-  /*     parameter.tag = FT_PARAM_TAG_UNPATENTED_HINTING;                  */
-  /*                                                                       */
-  /*     open_args.flags      = FT_OPEN_PATHNAME | FT_OPEN_PARAMS;         */
-  /*     open_args.pathname   = my_font_pathname;                          */
-  /*     open_args.num_params = 1;                                         */
-  /*     open_args.params     = &parameter;                                */
-  /*                                                                       */
-  /*     error = FT_Open_Face( library, &open_args, index, &face );        */
-  /*     ...                                                               */
-  /*   }                                                                   */
-  /*                                                                       */
-/* #define TT_CONFIG_OPTION_UNPATENTED_HINTING */
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Define TT_CONFIG_OPTION_INTERPRETER_SWITCH to compile the TrueType    */
-  /* bytecode interpreter with a huge switch statement, rather than a call */
-  /* table.  This results in smaller and faster code for a number of       */
-  /* architectures.                                                        */
-  /*                                                                       */
-  /* Note however that on some compiler/processor combinations, undefining */
-  /* this macro will generate faster, though larger, code.                 */
-  /*                                                                       */
-#define TT_CONFIG_OPTION_INTERPRETER_SWITCH
+/* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING */
 
 
   /*************************************************************************/
@@ -575,8 +618,8 @@ FT_BEGIN_HEADER
   /* composite flags array which can be used to disambiguate, but old      */
   /* fonts will not have them.                                             */
   /*                                                                       */
-  /*   http://partners.adobe.com/asn/developer/opentype/glyf.html          */
-  /*   http://fonts.apple.com/TTRefMan/RM06/Chap6glyf.html                 */
+  /*   http://www.microsoft.com/typography/otspec/glyf.htm                 */
+  /*   https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html */
   /*                                                                       */
 #undef TT_CONFIG_OPTION_COMPONENT_OFFSET_SCALED
 
@@ -600,6 +643,24 @@ FT_BEGIN_HEADER
 
 
   /*************************************************************************/
+  /*                                                                       */
+  /* Option TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES controls the maximum     */
+  /* number of bytecode instructions executed for a single run of the      */
+  /* bytecode interpreter, needed to prevent infinite loops.  You don't    */
+  /* want to change this except for very special situations (e.g., making  */
+  /* a library fuzzer spend less time to handle broken fonts).             */
+  /*                                                                       */
+  /* It is not expected that this value is ever modified by a configuring  */
+  /* script; instead, it gets surrounded with #ifndef ... #endif so that   */
+  /* the value can be set as a preprocessor option on the compiler's       */
+  /* command line.                                                         */
+  /*                                                                       */
+#ifndef TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES
+#define TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES  1000000L
+#endif
+
+
+  /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
   /****      T Y P E 1   D R I V E R    C O N F I G U R A T I O N       ****/
@@ -610,7 +671,7 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* T1_MAX_DICT_DEPTH is the maximal depth of nest dictionaries and       */
+  /* T1_MAX_DICT_DEPTH is the maximum depth of nest dictionaries and       */
   /* arrays in the Type 1 stream (see t1load.c).  A minimum of 4 is        */
   /* required.                                                             */
   /*                                                                       */
@@ -657,6 +718,49 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
+  /****         C F F   D R I V E R    C O N F I G U R A T I O N        ****/
+  /****                                                                 ****/
+  /*************************************************************************/
+  /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Using CFF_CONFIG_OPTION_DARKENING_PARAMETER_{X,Y}{1,2,3,4} it is      */
+  /* possible to set up the default values of the four control points that */
+  /* define the stem darkening behaviour of the (new) CFF engine.  For     */
+  /* more details please read the documentation of the                     */
+  /* `darkening-parameters' property of the cff driver module (file        */
+  /* `ftcffdrv.h'), which allows the control at run-time.                  */
+  /*                                                                       */
+  /* Do *not* undefine these macros!                                       */
+  /*                                                                       */
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1   500
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1   400
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2  1000
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2   275
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3  1667
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3   275
+
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4  2333
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4     0
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* CFF_CONFIG_OPTION_OLD_ENGINE controls whether the pre-Adobe CFF       */
+  /* engine gets compiled into FreeType.  If defined, it is possible to    */
+  /* switch between the two engines using the `hinting-engine' property of */
+  /* the cff driver module.                                                */
+  /*                                                                       */
+/* #define CFF_CONFIG_OPTION_OLD_ENGINE */
+
+
+  /*************************************************************************/
+  /*************************************************************************/
+  /****                                                                 ****/
   /****    A U T O F I T   M O D U L E    C O N F I G U R A T I O N     ****/
   /****                                                                 ****/
   /*************************************************************************/
@@ -676,58 +780,72 @@ FT_BEGIN_HEADER
   /*                                                                       */
 #define AF_CONFIG_OPTION_INDIC
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* Compile autofit module with warp hinting.  The idea of the warping    */
+  /* code is to slightly scale and shift a glyph within a single dimension */
+  /* so that as much of its segments are aligned (more or less) on the     */
+  /* grid.  To find out the optimal scaling and shifting value, various    */
+  /* parameter combinations are tried and scored.                          */
+  /*                                                                       */
+  /* This experimental option is active only if the rendering mode is      */
+  /* FT_RENDER_MODE_LIGHT; you can switch warping on and off with the      */
+  /* `warping' property of the auto-hinter (see file `ftautoh.h' for more  */
+  /* information; by default it is switched off).                          */
+  /*                                                                       */
+#define AF_CONFIG_OPTION_USE_WARPER
+
   /* */
 
 
   /*
-   * Define this variable if you want to keep the layout of internal
-   * structures that was used prior to FreeType 2.2.  This also compiles in
-   * a few obsolete functions to avoid linking problems on typical Unix
-   * distributions.
-   *
-   * For embedded systems or building a new distribution from scratch, it
-   * is recommended to disable the macro since it reduces the library's code
-   * size and activates a few memory-saving optimizations as well.
+   * This macro is obsolete.  Support has been removed in FreeType
+   * version 2.5.
    */
-#define FT_CONFIG_OPTION_OLD_INTERNALS
+/* #define FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
   /*
-   *  To detect legacy cache-lookup call from a rogue client (<= 2.1.7),
-   *  we restrict the number of charmaps in a font.  The current API of
-   *  FTC_CMapCache_Lookup() takes cmap_index & charcode, but old API
-   *  takes charcode only.  To determine the passed value is for cmap_index
-   *  or charcode, the possible cmap_index is restricted not to exceed
-   *  the minimum possible charcode by a rogue client.  It is also very
-   *  unlikely that a rogue client is interested in Unicode values 0 to 15.
-   *
-   *  NOTE: The original threshold was 4 deduced from popular number of
-   *        cmap subtables in UCS-4 TrueType fonts, but now it is not
-   *        irregular for OpenType fonts to have more than 4 subtables,
-   *        because variation selector subtables are available for Apple
-   *        and Microsoft platforms.
+   * This macro is defined if native TrueType hinting is requested by the
+   * definitions above.
    */
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-#define FT_MAX_CHARMAP_CACHEABLE 15
+#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#define  TT_USE_BYTECODE_INTERPRETER
 #endif
 
 
   /*
-   * This macro is defined if either unpatented or native TrueType
-   * hinting is requested by the definitions above.
+   * Check CFF darkening parameters.  The checks are the same as in function
+   * `cff_property_set' in file `cffdrivr.c'.
    */
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-#define  TT_USE_BYTECODE_INTERPRETER
-#undef   TT_CONFIG_OPTION_UNPATENTED_HINTING
-#elif defined TT_CONFIG_OPTION_UNPATENTED_HINTING
-#define  TT_USE_BYTECODE_INTERPRETER
+#if CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 < 0   || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 < 0   || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 < 0   || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2     || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3     || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 >        \
+      CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4     || \
+                                                      \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 > 500 || \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 > 500
+#error "Invalid CFF darkening parameters!"
 #endif
 
 FT_END_HEADER
 
 
-#endif /* __FTOPTION_H__ */
+#endif /* FTOPTION_H_ */
 
 
 /* END */

@@ -1,8 +1,8 @@
+#ifndef _PCIIDEX_PCH_
+#define _PCIIDEX_PCH_
+
 #include <ntifs.h>
-#include <ntddk.h>
 #include <ide.h>
-#include <wdmguid.h>
-#include <stdio.h>
 
 typedef struct _PCIIDEX_DRIVER_EXTENSION
 {
@@ -82,3 +82,5 @@ NTSTATUS NTAPI
 PciIdeXPdoPnpDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+#endif /* _PCIIDEX_PCH_ */

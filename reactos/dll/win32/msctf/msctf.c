@@ -18,33 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-//#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <wine/debug.h>
-#include <wine/list.h>
-//#include "windef.h"
-#include <winbase.h>
-#include <winreg.h>
-#include <shlwapi.h>
-//#include "shlguid.h"
-//#include "comcat.h"
-#include <rpcproxy.h>
-#include <msctf.h>
-
 #include "msctf_internal.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msctf);
-
-static LONG MSCTF_refCount;
+#include <rpcproxy.h>
+#include <inputscope.h>
 
 static HINSTANCE MSCTF_hinstance;
 
@@ -58,7 +35,7 @@ typedef struct
 typedef struct {
     TF_LANGUAGEPROFILE      LanguageProfile;
     ITfTextInputProcessor   *pITfTextInputProcessor;
-    ITfThreadMgr            *pITfThreadMgr;
+    ITfThreadMgrEx          *pITfThreadMgrEx;
     ITfKeyEventSink         *pITfKeyEventSink;
     TfClientId              tid;
 } ActivatedTextService;
@@ -113,7 +90,6 @@ static void ClassFactory_Destructor(ClassFactory *This)
 {
     TRACE("Destroying class factory %p\n", This);
     HeapFree(GetProcessHeap(),0,This);
-    MSCTF_refCount--;
 }
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppvOut)
@@ -166,11 +142,6 @@ static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
 
     TRACE("(%p)->(%x)\n", This, fLock);
 
-    if(fLock)
-        InterlockedIncrement(&MSCTF_refCount);
-    else
-        InterlockedDecrement(&MSCTF_refCount);
-
     return S_OK;
 }
 
@@ -193,7 +164,6 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     This->ctor = ctor;
     *ppvOut = This;
     TRACE("Created class factory %p\n", This);
-    MSCTF_refCount++;
     return S_OK;
 }
 
@@ -202,7 +172,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
  */
 DWORD generate_Cookie(DWORD magic, LPVOID data)
 {
-    int i;
+    UINT i;
 
     /* try to reuse IDs if possible */
     for (i = 0; i < id_last; i++)
@@ -286,7 +256,7 @@ LPVOID remove_Cookie(DWORD id)
 
 DWORD enumerate_Cookie(DWORD magic, DWORD *index)
 {
-    int i;
+    unsigned int i;
     for (i = *index; i < id_last; i++)
         if (cookies[i].id != 0 && cookies[i].magic == magic)
         {
@@ -299,7 +269,7 @@ DWORD enumerate_Cookie(DWORD magic, DWORD *index)
 /*****************************************************************************
  * Active Text Service Management
  *****************************************************************************/
-static HRESULT activate_given_ts(ActivatedTextService *actsvr, ITfThreadMgr* tm)
+static HRESULT activate_given_ts(ActivatedTextService *actsvr, ITfThreadMgrEx *tm)
 {
     HRESULT hr;
 
@@ -311,7 +281,7 @@ static HRESULT activate_given_ts(ActivatedTextService *actsvr, ITfThreadMgr* tm)
         &IID_ITfTextInputProcessor, (void**)&actsvr->pITfTextInputProcessor);
     if (FAILED(hr)) return hr;
 
-    hr = ITfTextInputProcessor_Activate(actsvr->pITfTextInputProcessor, tm, actsvr->tid);
+    hr = ITfTextInputProcessor_Activate(actsvr->pITfTextInputProcessor, (ITfThreadMgr *)tm, actsvr->tid);
     if (FAILED(hr))
     {
         ITfTextInputProcessor_Release(actsvr->pITfTextInputProcessor);
@@ -319,8 +289,8 @@ static HRESULT activate_given_ts(ActivatedTextService *actsvr, ITfThreadMgr* tm)
         return hr;
     }
 
-    actsvr->pITfThreadMgr = tm;
-    ITfThreadMgr_AddRef(tm);
+    actsvr->pITfThreadMgrEx = tm;
+    ITfThreadMgrEx_AddRef(tm);
     return hr;
 }
 
@@ -332,9 +302,9 @@ static HRESULT deactivate_given_ts(ActivatedTextService *actsvr)
     {
         hr = ITfTextInputProcessor_Deactivate(actsvr->pITfTextInputProcessor);
         ITfTextInputProcessor_Release(actsvr->pITfTextInputProcessor);
-        ITfThreadMgr_Release(actsvr->pITfThreadMgr);
+        ITfThreadMgrEx_Release(actsvr->pITfThreadMgrEx);
         actsvr->pITfTextInputProcessor = NULL;
-        actsvr->pITfThreadMgr = NULL;
+        actsvr->pITfThreadMgrEx = NULL;
     }
 
     return hr;
@@ -363,7 +333,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     ActivatedTextService *actsvr;
     ITfCategoryMgr *catmgr;
     AtsEntry *entry;
-    ITfThreadMgr *tm = TlsGetValue(tlsIndex);
+    ITfThreadMgrEx *tm = TlsGetValue(tlsIndex);
     ITfClientId *clientid;
 
     if (!tm) return E_UNEXPECTED;
@@ -371,7 +341,7 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
     actsvr = HeapAlloc(GetProcessHeap(),0,sizeof(ActivatedTextService));
     if (!actsvr) return E_OUTOFMEMORY;
 
-    ITfThreadMgr_QueryInterface(tm,&IID_ITfClientId,(LPVOID)&clientid);
+    ITfThreadMgrEx_QueryInterface(tm, &IID_ITfClientId, (void **)&clientid);
     ITfClientId_GetClientId(clientid, &lp->clsid, &actsvr->tid);
     ITfClientId_Release(clientid);
 
@@ -383,7 +353,6 @@ HRESULT add_active_textservice(TF_LANGUAGEPROFILE *lp)
 
     actsvr->pITfTextInputProcessor = NULL;
     actsvr->LanguageProfile = *lp;
-    actsvr->LanguageProfile.fActive = TRUE;
     actsvr->pITfKeyEventSink = NULL;
 
     /* get TIP category */
@@ -439,7 +408,7 @@ BOOL get_active_textservice(REFCLSID rclsid, TF_LANGUAGEPROFILE *profile)
     return FALSE;
 }
 
-HRESULT activate_textservices(ITfThreadMgr *tm)
+HRESULT activate_textservices(ITfThreadMgrEx *tm)
 {
     HRESULT hr = S_OK;
     AtsEntry *ats;
@@ -530,6 +499,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
             tlsIndex = TlsAlloc();
             break;
         case DLL_PROCESS_DETACH:
+            if (fImpLoad) break;
             TlsFree(tlsIndex);
             break;
     }
@@ -541,7 +511,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    return MSCTF_refCount ? S_FALSE : S_OK;
+    return S_FALSE;
 }
 
 /***********************************************************************
@@ -605,7 +575,7 @@ HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
 /***********************************************************************
  *              SetInputScope(MSCTF.@)
  */
-HRESULT WINAPI SetInputScope(HWND hwnd, INT inputscope)
+HRESULT WINAPI SetInputScope(HWND hwnd, InputScope inputscope)
 {
     FIXME("STUB: %p %i\n",hwnd,inputscope);
     return S_OK;
@@ -614,16 +584,16 @@ HRESULT WINAPI SetInputScope(HWND hwnd, INT inputscope)
 /***********************************************************************
  *              SetInputScopes(MSCTF.@)
  */
-HRESULT WINAPI SetInputScopes(HWND hwnd, const INT *pInputScopes,
+HRESULT WINAPI SetInputScopes(HWND hwnd, const InputScope *pInputScopes,
                               UINT cInputScopes, WCHAR **ppszPhraseList,
                               UINT cPhrases, WCHAR *pszRegExp, WCHAR *pszSRGS)
 {
-    int i;
+    UINT i;
     FIXME("STUB: %p ... %s %s\n",hwnd, debugstr_w(pszRegExp), debugstr_w(pszSRGS));
     for (i = 0; i < cInputScopes; i++)
-        TRACE("\tScope[%i] = %i\n",i,pInputScopes[i]);
+        TRACE("\tScope[%u] = %i\n",i,pInputScopes[i]);
     for (i = 0; i < cPhrases; i++)
-        TRACE("\tPhrase[%i] = %s\n",i,debugstr_w(ppszPhraseList[i]));
+        TRACE("\tPhrase[%u] = %s\n",i,debugstr_w(ppszPhraseList[i]));
 
     return S_OK;
 }
@@ -653,4 +623,21 @@ HRESULT WINAPI TF_CreateLangBarMgr(ITfLangBarMgr **pppbm)
 {
     TRACE("\n");
     return LangBarMgr_Constructor(NULL,(IUnknown**)pppbm);
+}
+
+HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim)
+{
+    FIXME("stub %p\n", pplbim);
+    *pplbim = NULL;
+
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *              TF_InitMlngInfo (MSCTF.@)
+ */
+HRESULT WINAPI TF_InitMlngInfo(void)
+{
+    FIXME("stub\n");
+    return S_OK;
 }

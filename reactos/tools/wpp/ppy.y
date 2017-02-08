@@ -383,24 +383,24 @@ pp_expr	: tSINT				{ $$.type = cv_sint;  $$.val.si = $1; }
 	| tIDENT			{ $$.type = cv_sint;  $$.val.si = 0; }
 	| pp_expr tLOGOR pp_expr	{ $$.type = cv_sint; $$.val.si = boolean(&$1) || boolean(&$3); }
 	| pp_expr tLOGAND pp_expr	{ $$.type = cv_sint; $$.val.si = boolean(&$1) && boolean(&$3); }
-	| pp_expr tEQ pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, ==) }
-	| pp_expr tNE pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, !=) }
-	| pp_expr '<' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  <) }
-	| pp_expr '>' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  >) }
-	| pp_expr tLTE pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, <=) }
-	| pp_expr tGTE pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, >=) }
-	| pp_expr '+' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  +) }
-	| pp_expr '-' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  -) }
-	| pp_expr '^' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  ^) }
-	| pp_expr '&' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  &) }
-	| pp_expr '|' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  |) }
-	| pp_expr '*' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  *) }
-	| pp_expr '/' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  /) }
-	| pp_expr tLSHIFT pp_expr	{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, <<) }
-	| pp_expr tRSHIFT pp_expr	{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, >>) }
+	| pp_expr tEQ pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, ==); }
+	| pp_expr tNE pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, !=); }
+	| pp_expr '<' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  <); }
+	| pp_expr '>' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  >); }
+	| pp_expr tLTE pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, <=); }
+	| pp_expr tGTE pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, >=); }
+	| pp_expr '+' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  +); }
+	| pp_expr '-' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  -); }
+	| pp_expr '^' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  ^); }
+	| pp_expr '&' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  &); }
+	| pp_expr '|' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  |); }
+	| pp_expr '*' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  *); }
+	| pp_expr '/' pp_expr		{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3,  /); }
+	| pp_expr tLSHIFT pp_expr	{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, <<); }
+	| pp_expr tRSHIFT pp_expr	{ promote_equal_size(&$1, &$3); BIN_OP($$, $1, $3, >>); }
 	| '+' pp_expr			{ $$ =  $2; }
-	| '-' pp_expr			{ UNARY_OP($$, $2, -) }
-	| '~' pp_expr			{ UNARY_OP($$, $2, ~) }
+	| '-' pp_expr			{ UNARY_OP($$, $2, -); }
+	| '~' pp_expr			{ UNARY_OP($$, $2, ~); }
 	| '!' pp_expr			{ $$.type = cv_sint; $$.val.si = !boolean(&$2); }
 	| '(' pp_expr ')'		{ $$ =  $2; }
 	| pp_expr '?' pp_expr ':' pp_expr { $$ = boolean(&$1) ? $3 : $5; }

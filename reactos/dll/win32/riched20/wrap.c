@@ -23,6 +23,7 @@
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
+WINE_DECLARE_DEBUG_CHANNEL(richedit_check);
 
 /*
  * Unsolved problems:
@@ -31,6 +32,140 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
  * - objects/images are not handled yet
  * - no tabs
  */
+
+
+static BOOL get_run_glyph_buffers( ME_Run *run )
+{
+    heap_free( run->glyphs );
+    run->glyphs = heap_alloc( run->max_glyphs * (sizeof(WORD) + sizeof(SCRIPT_VISATTR) + sizeof(int) + sizeof(GOFFSET)) );
+    if (!run->glyphs) return FALSE;
+
+    run->vis_attrs = (SCRIPT_VISATTR*)((char*)run->glyphs + run->max_glyphs * sizeof(WORD));
+    run->advances = (int*)((char*)run->glyphs + run->max_glyphs * (sizeof(WORD) + sizeof(SCRIPT_VISATTR)));
+    run->offsets = (GOFFSET*)((char*)run->glyphs + run->max_glyphs * (sizeof(WORD) + sizeof(SCRIPT_VISATTR) + sizeof(int)));
+
+    return TRUE;
+}
+
+static HRESULT shape_run( ME_Context *c, ME_Run *run )
+{
+    HRESULT hr;
+    HFONT old_font;
+    int i;
+
+    if (!run->glyphs)
+    {
+        run->max_glyphs = 1.5 * run->len + 16; /* This is suggested in the uniscribe documentation */
+        run->max_glyphs = (run->max_glyphs + 7) & ~7; /* Keep alignment simple */
+        get_run_glyph_buffers( run );
+    }
+
+    if (run->max_clusters < run->len)
+    {
+        heap_free( run->clusters );
+        run->max_clusters = run->len * 2;
+        run->clusters = heap_alloc( run->max_clusters * sizeof(WORD) );
+    }
+
+    old_font = ME_SelectStyleFont( c, run->style );
+    while (1)
+    {
+        hr = ScriptShape( c->hDC, &run->style->script_cache, get_text( run, 0 ), run->len, run->max_glyphs,
+                          &run->script_analysis, run->glyphs, run->clusters, run->vis_attrs, &run->num_glyphs );
+        if (hr != E_OUTOFMEMORY) break;
+        if (run->max_glyphs > 10 * run->len) break; /* something has clearly gone wrong */
+        run->max_glyphs *= 2;
+        get_run_glyph_buffers( run );
+    }
+
+    if (SUCCEEDED(hr))
+        hr = ScriptPlace( c->hDC, &run->style->script_cache, run->glyphs, run->num_glyphs, run->vis_attrs,
+                          &run->script_analysis, run->advances, run->offsets, NULL );
+
+    if (SUCCEEDED(hr))
+    {
+        for (i = 0, run->nWidth = 0; i < run->num_glyphs; i++)
+            run->nWidth += run->advances[i];
+    }
+
+    ME_UnselectStyleFont( c, run->style, old_font );
+
+    return hr;
+}
+
+/******************************************************************************
+ * calc_run_extent
+ *
+ * Updates the size of the run (fills width, ascent and descent). The height
+ * is calculated based on whole row's ascent and descent anyway, so no need
+ * to use it here.
+ */
+static void calc_run_extent(ME_Context *c, const ME_Paragraph *para, int startx, ME_Run *run)
+{
+    if (run->nFlags & MERF_HIDDEN) run->nWidth = 0;
+    else
+    {
+        SIZE size = ME_GetRunSizeCommon( c, para, run, run->len, startx, &run->nAscent, &run->nDescent );
+        run->nWidth = size.cx;
+    }
+}
+
+/******************************************************************************
+ * split_run_extents
+ *
+ * Splits a run into two in a given place. It also updates the screen position
+ * and size (extent) of the newly generated runs.
+ */
+static ME_DisplayItem *split_run_extents(ME_WrapContext *wc, ME_DisplayItem *item, int nVChar)
+{
+  ME_TextEditor *editor = wc->context->editor;
+  ME_Run *run, *run2;
+  ME_Paragraph *para = &wc->pPara->member.para;
+  ME_Cursor cursor = {wc->pPara, item, nVChar};
+
+  assert(item->member.run.nCharOfs != -1);
+  if(TRACE_ON(richedit_check))
+    ME_CheckCharOffsets(editor);
+
+  run = &item->member.run;
+
+  TRACE("Before split: %s(%d, %d)\n", debugstr_run( run ),
+        run->pt.x, run->pt.y);
+
+  ME_SplitRunSimple(editor, &cursor);
+
+  run2 = &cursor.pRun->member.run;
+  run2->script_analysis = run->script_analysis;
+
+  shape_run( wc->context, run );
+  shape_run( wc->context, run2 );
+  calc_run_extent(wc->context, para, wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, run);
+
+  run2->pt.x = run->pt.x+run->nWidth;
+  run2->pt.y = run->pt.y;
+
+  if(TRACE_ON(richedit_check))
+    ME_CheckCharOffsets(editor);
+
+  TRACE("After split: %s(%d, %d), %s(%d, %d)\n",
+        debugstr_run( run ), run->pt.x, run->pt.y,
+        debugstr_run( run2 ), run2->pt.x, run2->pt.y);
+
+  return cursor.pRun;
+}
+
+/******************************************************************************
+ * find_split_point
+ *
+ * Returns a character position to split inside the run given a run-relative
+ * pixel horizontal position. This version rounds left (ie. if the second
+ * character is at pixel position 8, then for cx=0..7 it returns 0).
+ */
+static int find_split_point( ME_Context *c, int cx, ME_Run *run )
+{
+    if (!run->len || cx <= 0) return 0;
+    return ME_CharFromPointContext( c, cx, run, FALSE, FALSE );
+}
 
 static ME_DisplayItem *ME_MakeRow(int height, int baseline, int width)
 {
@@ -88,15 +223,73 @@ static void ME_BeginRow(ME_WrapContext *wc)
     wc->pt.y++;
 }
 
+static void layout_row( ME_DisplayItem *start, const ME_DisplayItem *end )
+{
+    ME_DisplayItem *p;
+    int i, num_runs = 0;
+    int buf[16 * 5]; /* 5 arrays - 4 of int & 1 of BYTE, alloc space for 5 of ints */
+    int *vis_to_log = buf, *log_to_vis, *widths, *pos;
+    BYTE *levels;
+    BOOL found_black = FALSE;
+
+    for (p = end->prev; p != start->prev; p = p->prev)
+    {
+        if (p->type == diRun)
+        {
+            if (!found_black) found_black = !(p->member.run.nFlags & (MERF_WHITESPACE | MERF_ENDPARA));
+            if (found_black) num_runs++;
+        }
+    }
+
+    TRACE("%d runs\n", num_runs);
+    if (!num_runs) return;
+
+    if (num_runs > sizeof(buf) / (sizeof(buf[0]) * 5))
+        vis_to_log = heap_alloc( num_runs * sizeof(int) * 5 );
+
+    log_to_vis = vis_to_log + num_runs;
+    widths = vis_to_log + 2 * num_runs;
+    pos = vis_to_log + 3 * num_runs;
+    levels = (BYTE*)(vis_to_log + 4 * num_runs);
+
+    for (i = 0, p = start; i < num_runs; p = p->next)
+    {
+        if (p->type == diRun)
+        {
+            levels[i] = p->member.run.script_analysis.s.uBidiLevel;
+            widths[i] = p->member.run.nWidth;
+            TRACE( "%d: level %d width %d\n", i, levels[i], widths[i] );
+            i++;
+        }
+    }
+
+    ScriptLayout( num_runs, levels, vis_to_log, log_to_vis );
+
+    pos[0] = start->member.run.para->pt.x;
+    for (i = 1; i < num_runs; i++)
+        pos[i] = pos[i - 1] + widths[ vis_to_log[ i - 1 ] ];
+
+    for (i = 0, p = start; i < num_runs; p = p->next)
+    {
+        if (p->type == diRun)
+        {
+            p->member.run.pt.x = pos[ log_to_vis[ i ] ];
+            TRACE( "%d: x = %d\n", i, p->member.run.pt.x );
+            i++;
+        }
+    }
+
+    if (vis_to_log != buf) heap_free( vis_to_log );
+}
+
 static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
 {
-  ME_DisplayItem *p, *row, *para;
+  ME_DisplayItem *p, *row;
+  ME_Paragraph *para = &wc->pPara->member.para;
   BOOL bSkippingSpaces = TRUE;
   int ascent = 0, descent = 0, width=0, shift = 0, align = 0;
-  PARAFORMAT2 *pFmt;
+
   /* wrap text */
-  para = wc->pPara;
-  pFmt = para->member.para.pFmt;
 
   for (p = pEnd->prev; p!=wc->pRowStart->prev; p = p->prev)
   {
@@ -110,9 +303,8 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
         {
           /* Exclude space characters from run width.
            * Other whitespace or delimiters are not treated this way. */
-          SIZE sz;
-          int len = p->member.run.strText->nLen;
-          WCHAR *text = p->member.run.strText->szData + len - 1;
+          int len = p->member.run.len;
+          WCHAR *text = get_text( &p->member.run, len - 1 );
 
           assert (len);
           if (~p->member.run.nFlags & MERF_GRAPHICS)
@@ -120,14 +312,10 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
               len--;
           if (len)
           {
-              if (len == p->member.run.strText->nLen)
-              {
+              if (len == p->member.run.len)
                   width += p->member.run.nWidth;
-              } else {
-                  sz = ME_GetRunSize(wc->context, &para->member.para,
-                                     &p->member.run, len, p->member.run.pt.x);
-                  width += sz.cx;
-              }
+              else
+                  width += ME_PointFromCharContext( wc->context, &p->member.run, len, FALSE );
           }
           bSkippingSpaces = !len;
         } else if (!(p->member.run.nFlags & MERF_ENDPARA))
@@ -135,10 +323,10 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
       }
   }
 
-  para->member.para.nWidth = max(para->member.para.nWidth, width);
+  para->nWidth = max(para->nWidth, width);
   row = ME_MakeRow(ascent+descent, ascent, width);
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
-      pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
+      (para->pFmt->dwMask & PFM_TABLE) && (para->pFmt->wEffects & PFE_TABLE))
   {
     /* The text was shifted down in ME_BeginRow so move the wrap context
      * back to where it should be. */
@@ -149,12 +337,16 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
   row->member.row.pt = wc->pt;
   row->member.row.nLMargin = (!wc->nRow ? wc->nFirstMargin : wc->nLeftMargin);
   row->member.row.nRMargin = wc->nRightMargin;
-  assert(para->member.para.pFmt->dwMask & PFM_ALIGNMENT);
-  align = para->member.para.pFmt->wAlignment;
+  assert(para->pFmt->dwMask & PFM_ALIGNMENT);
+  align = para->pFmt->wAlignment;
   if (align == PFA_CENTER)
     shift = max((wc->nAvailWidth-width)/2, 0);
   if (align == PFA_RIGHT)
     shift = max(wc->nAvailWidth-width, 0);
+
+  if (para->nFlags & MEPF_COMPLEX) layout_row( wc->pRowStart, pEnd );
+
+  row->member.row.pt.x = row->member.row.nLMargin + shift;
   for (p = wc->pRowStart; p!=pEnd; p = p->next)
   {
     if (p->type==diRun) { /* FIXME add more run types */
@@ -189,7 +381,7 @@ static void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
     if (p->type == diRun)
     {
       ME_Run *run = &p->member.run;
-      TRACE("%s - (%d, %d)\n", debugstr_w(run->strText->szData), run->pt.x, run->pt.y);
+      TRACE("%s - (%d, %d)\n", debugstr_run(run), run->pt.x, run->pt.y);
     }
     p = p->next;
   }
@@ -202,8 +394,41 @@ static void ME_WrapSizeRun(ME_WrapContext *wc, ME_DisplayItem *p)
 
   ME_UpdateRunFlags(wc->context->editor, &p->member.run);
 
-  ME_CalcRunExtent(wc->context, &wc->pPara->member.para,
-                   wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, &p->member.run);
+  calc_run_extent(wc->context, &wc->pPara->member.para,
+                  wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, &p->member.run);
+}
+
+
+static int find_non_whitespace(const WCHAR *s, int len, int start)
+{
+  int i;
+  for (i = start; i < len && ME_IsWSpace( s[i] ); i++)
+    ;
+
+  return i;
+}
+
+/* note: these two really return the first matching offset (starting from EOS)+1
+ * in other words, an offset of the first trailing white/black */
+
+/* note: returns offset of the first trailing whitespace */
+static int reverse_find_non_whitespace(const WCHAR *s, int start)
+{
+  int i;
+  for (i = start; i > 0 && ME_IsWSpace( s[i - 1] ); i--)
+    ;
+
+  return i;
+}
+
+/* note: returns offset of the first trailing nonwhitespace */
+static int reverse_find_whitespace(const WCHAR *s, int start)
+{
+  int i;
+  for (i = start; i > 0 && !ME_IsWSpace( s[i - 1] ); i--)
+    ;
+
+  return i;
 }
 
 static ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, int i)
@@ -212,9 +437,9 @@ static ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, i
   int j;
   if (!i)
     return NULL;
-  j = ME_ReverseFindNonWhitespaceV(p->member.run.strText, i);
+  j = reverse_find_non_whitespace( get_text( &p->member.run, 0 ), i);
   if (j>0) {
-    pp = ME_SplitRun(wc, piter, j);
+    pp = split_run_extents(wc, piter, j);
     wc->pt.x += piter->member.run.nWidth;
     return pp;
   }
@@ -232,16 +457,16 @@ static ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, i
       }
       if (piter->member.run.nFlags & MERF_ENDWHITE)
       {
-        i = ME_ReverseFindNonWhitespaceV(piter->member.run.strText,
-                                         piter->member.run.strText->nLen);
-        pp = ME_SplitRun(wc, piter, i);
+        i = reverse_find_non_whitespace( get_text( &piter->member.run, 0 ),
+                                         piter->member.run.len );
+        pp = split_run_extents(wc, piter, i);
         wc->pt = pp->member.run.pt;
         return pp;
       }
       /* this run is the end of spaces, so the run edge is a good point to split */
       wc->pt = pp->member.run.pt;
       wc->bOverflown = TRUE;
-      TRACE("Split point is: %s|%s\n", debugstr_w(piter->member.run.strText->szData), debugstr_w(pp->member.run.strText->szData));
+      TRACE("Split point is: %s|%s\n", debugstr_run( &piter->member.run ), debugstr_run( &pp->member.run ));
       return pp;
     }
     wc->pt = piter->member.run.pt;
@@ -255,18 +480,18 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
   int i, idesp, len;
   ME_Run *run = &p->member.run;
 
-  idesp = i = ME_CharFromPoint(wc->context, loc, run);
-  len = run->strText->nLen;
+  idesp = i = find_split_point( wc->context, loc, run );
+  len = run->len;
   assert(len>0);
   assert(i<len);
   if (i) {
     /* don't split words */
-    i = ME_ReverseFindWhitespaceV(run->strText, i);
+    i = reverse_find_whitespace( get_text( run, 0 ), i );
     pp = ME_MaximizeSplit(wc, p, i);
     if (pp)
       return pp;
   }
-  TRACE("Must backtrack to split at: %s\n", debugstr_w(p->member.run.strText->szData));
+  TRACE("Must backtrack to split at: %s\n", debugstr_run( &p->member.run ));
   if (wc->pLastSplittableRun)
   {
     if (wc->pLastSplittableRun->member.run.nFlags & (MERF_GRAPHICS|MERF_TAB))
@@ -283,13 +508,13 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
 
       piter = wc->pLastSplittableRun;
       run = &piter->member.run;
-      len = run->strText->nLen;
+      len = run->len;
       /* don't split words */
-      i = ME_ReverseFindWhitespaceV(run->strText, len);
+      i = reverse_find_whitespace( get_text( run, 0 ), len );
       if (i == len)
-        i = ME_ReverseFindNonWhitespaceV(run->strText, len);
+        i = reverse_find_non_whitespace( get_text( run, 0 ), len );
       if (i) {
-        ME_DisplayItem *piter2 = ME_SplitRun(wc, piter, i);
+        ME_DisplayItem *piter2 = split_run_extents(wc, piter, i);
         wc->pt = piter2->member.run.pt;
         return piter2;
       }
@@ -303,10 +528,10 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
       return wc->pLastSplittableRun;
     }
   }
-  TRACE("Backtracking failed, trying desperate: %s\n", debugstr_w(p->member.run.strText->szData));
+  TRACE("Backtracking failed, trying desperate: %s\n", debugstr_run( &p->member.run ));
   /* OK, no better idea, so assume we MAY split words if we can split at all*/
   if (idesp)
-    return ME_SplitRun(wc, piter, idesp);
+    return split_run_extents(wc, piter, idesp);
   else
   if (wc->pRowStart && piter != wc->pRowStart)
   {
@@ -320,7 +545,7 @@ static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem
     /* split point inside first character - no choice but split after that char */
     if (len != 1) {
       /* the run is more than 1 char, so we may split */
-      return ME_SplitRun(wc, piter, 1);
+      return split_run_extents(wc, piter, 1);
     }
     /* the run is one char, can't split it */
     return piter;
@@ -340,7 +565,7 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   run->pt.x = wc->pt.x;
   run->pt.y = wc->pt.y;
   ME_WrapSizeRun(wc, p);
-  len = run->strText->nLen;
+  len = run->len;
 
   if (wc->bOverflown) /* just skipping final whitespaces */
   {
@@ -357,13 +582,13 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
     if (run->nFlags & MERF_STARTWHITE) {
       /* try to split the run at the first non-white char */
       int black;
-      black = ME_FindNonWhitespaceV(run->strText, 0);
+      black = find_non_whitespace( get_text( run, 0 ), run->len, 0 );
       if (black) {
         wc->bOverflown = FALSE;
-        pp = ME_SplitRun(wc, p, black);
-        ME_CalcRunExtent(wc->context, &wc->pPara->member.para,
-                         wc->nRow ? wc->nLeftMargin : wc->nFirstMargin,
-                         &pp->member.run);
+        pp = split_run_extents(wc, p, black);
+        calc_run_extent(wc->context, &wc->pPara->member.para,
+                        wc->nRow ? wc->nLeftMargin : wc->nFirstMargin,
+                        &pp->member.run);
         ME_InsertRowStart(wc, pp);
         return pp;
       }
@@ -410,8 +635,8 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
     if (run->nFlags & MERF_ENDWHITE)
     {
       /* we aren't sure if it's *really* necessary, it's a good start however */
-      int black = ME_ReverseFindNonWhitespaceV(run->strText, len);
-      ME_SplitRun(wc, p, black);
+      int black = reverse_find_non_whitespace( get_text( run, 0 ), len );
+      split_run_extents(wc, p, black);
       /* handle both parts again */
       return p;
     }
@@ -507,6 +732,111 @@ static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   }
 }
 
+static HRESULT itemize_para( ME_Context *c, ME_DisplayItem *p )
+{
+    ME_Paragraph *para = &p->member.para;
+    ME_Run *run;
+    ME_DisplayItem *di;
+    SCRIPT_ITEM buf[16], *items = buf;
+    int items_passed = sizeof( buf ) / sizeof( buf[0] ), num_items, cur_item;
+    SCRIPT_CONTROL control = { LANG_USER_DEFAULT, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+                               FALSE, FALSE, 0 };
+    SCRIPT_STATE state = { 0, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, 0, 0 };
+    HRESULT hr;
+
+    assert( p->type == diParagraph );
+
+    while (1)
+    {
+        hr = ScriptItemize( para->text->szData, para->text->nLen, items_passed, &control,
+                            &state, items, &num_items );
+        if (hr != E_OUTOFMEMORY) break; /* may not be enough items if hr == E_OUTOFMEMORY */
+        if (items_passed > para->text->nLen + 1) break; /* something else has gone wrong */
+        items_passed *= 2;
+        if (items == buf)
+            items = heap_alloc( items_passed * sizeof( *items ) );
+        else
+            items = heap_realloc( items, items_passed * sizeof( *items ) );
+        if (!items) break;
+    }
+    if (FAILED( hr )) goto end;
+
+    if (TRACE_ON( richedit ))
+    {
+        TRACE( "got items:\n" );
+        for (cur_item = 0; cur_item < num_items; cur_item++)
+        {
+            TRACE( "\t%d - %d RTL %d bidi level %d\n", items[cur_item].iCharPos, items[cur_item+1].iCharPos - 1,
+                   items[cur_item].a.fRTL, items[cur_item].a.s.uBidiLevel );
+        }
+
+        TRACE( "before splitting runs into ranges\n" );
+        for (di = p->next; di != p->member.para.next_para; di = di->next)
+        {
+            if (di->type != diRun) continue;
+            TRACE( "\t%d: %s\n", di->member.run.nCharOfs, debugstr_run( &di->member.run ) );
+        }
+    }
+
+    /* split runs into ranges at item boundaries */
+    for (di = p->next, cur_item = 0; di != p->member.para.next_para; di = di->next)
+    {
+        if (di->type != diRun) continue;
+        run = &di->member.run;
+
+        if (run->nCharOfs == items[cur_item+1].iCharPos) cur_item++;
+
+        items[cur_item].a.fLogicalOrder = TRUE;
+        run->script_analysis = items[cur_item].a;
+
+        if (run->nFlags & MERF_ENDPARA) break; /* don't split eop runs */
+
+        if (run->nCharOfs + run->len > items[cur_item+1].iCharPos)
+        {
+            ME_Cursor cursor = {p, di, items[cur_item+1].iCharPos - run->nCharOfs};
+            ME_SplitRunSimple( c->editor, &cursor );
+        }
+    }
+
+    if (TRACE_ON( richedit ))
+    {
+        TRACE( "after splitting into ranges\n" );
+        for (di = p->next; di != p->member.para.next_para; di = di->next)
+        {
+            if (di->type != diRun) continue;
+            TRACE( "\t%d: %s\n", di->member.run.nCharOfs, debugstr_run( &di->member.run ) );
+        }
+    }
+
+    para->nFlags |= MEPF_COMPLEX;
+
+end:
+    if (items != buf) heap_free( items );
+    return hr;
+}
+
+
+static HRESULT shape_para( ME_Context *c, ME_DisplayItem *p )
+{
+    ME_DisplayItem *di;
+    ME_Run *run;
+    HRESULT hr;
+
+    for (di = p->next; di != p->member.para.next_para; di = di->next)
+    {
+        if (di->type != diRun) continue;
+        run = &di->member.run;
+
+        hr = shape_run( c, run );
+        if (FAILED( hr ))
+        {
+            run->para->nFlags &= ~MEPF_COMPLEX;
+            return hr;
+        }
+    }
+    return hr;
+}
+
 static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
   ME_WrapContext wc;
@@ -519,6 +849,15 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
     return;
   }
   ME_PrepareParagraphForWrapping(c, tp);
+
+  /* For now treating all non-password text as complex for better testing */
+  if (!c->editor->cPasswordMask /* &&
+      ScriptIsComplex( tp->member.para.text->szData, tp->member.para.text->nLen, SIC_COMPLEX ) == S_OK */)
+  {
+      if (SUCCEEDED( itemize_para( c, tp ) ))
+          shape_para( c, tp );
+  }
+
   pFmt = tp->member.para.pFmt;
 
   wc.context = c;

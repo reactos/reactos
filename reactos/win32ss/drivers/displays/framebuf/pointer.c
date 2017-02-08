@@ -110,7 +110,7 @@ IntHideMousePointer(PPDEV ppdev, SURFOBJ *DestSurface)
 VOID FASTCALL
 IntShowMousePointer(PPDEV ppdev, SURFOBJ *DestSurface)
 {
-   if (ppdev->PointerAttributes.Enable == TRUE)
+   if (ppdev->PointerAttributes.Enable)
    {
       return;
    }

@@ -164,20 +164,21 @@ static inline const char *dbgstr_type_info( const type_info *info )
 /* compute the this pointer for a base class of a given type */
 static inline void *get_this_pointer( const this_ptr_offsets *off, void *object )
 {
-    void *this_ptr;
-    int *offset_ptr;
-
     if (!object) return NULL;
-    this_ptr = (char *)object + off->this_offset;
+
     if (off->vbase_descr >= 0)
     {
+        int *offset_ptr;
+
         /* move this ptr to vbase descriptor */
-        this_ptr = (char *)this_ptr + off->vbase_descr;
+        object = (char *)object + off->vbase_descr;
         /* and fetch additional offset from vbase descriptor */
-        offset_ptr = (int *)(*(char **)this_ptr + off->vbase_offset);
-        this_ptr = (char *)this_ptr + *offset_ptr;
+        offset_ptr = (int *)(*(char **)object + off->vbase_offset);
+        object = (char *)object + *offset_ptr;
     }
-    return this_ptr;
+
+    object = (char *)object + off->this_offset;
+    return object;
 }
 
 #endif /* __MSVCRT_CPPEXCEPT_H */

@@ -9,6 +9,27 @@
 
 #include "precomp.h"
 
+typedef struct _COLUMN_LIST
+{
+    int  iSubItem;
+    int  cx;
+    UINT idsText;
+} COLUMN_LIST;
+
+static const COLUMN_LIST Columns[] =
+{
+    /* name */
+    { LVNAME,    150, IDS_FIRSTCOLUMN  },
+    /* description */
+    { LVDESC,    240, IDS_SECONDCOLUMN },
+    /* status */
+    { LVSTATUS,   55, IDS_THIRDCOLUMN  },
+    /* startup type */
+    { LVSTARTUP,  80, IDS_FOURTHCOLUMN },
+    /* logon as */
+    { LVLOGONAS, 100, IDS_FITHCOLUMN   },
+};
+
 VOID
 SetListViewStyle(HWND hListView,
                  DWORD View)
@@ -123,13 +144,13 @@ ChangeListViewText(PMAIN_WND_INFO Info,
 
             case LVDESC:
             {
-                LPTSTR lpDescription;
+                LPWSTR lpDescription;
 
                 lpDescription = GetServiceDescription(pService->lpServiceName);
 
                 lvItem.pszText = lpDescription;
                 SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
+                            LVM_SETITEMTEXTW,
                             lvItem.iItem,
                             (LPARAM) &lvItem);
 
@@ -141,14 +162,14 @@ ChangeListViewText(PMAIN_WND_INFO Info,
 
             case LVSTATUS:
             {
-                TCHAR szStatus[64];
+                WCHAR szStatus[64];
 
                 if (pService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
                 {
-                    LoadString(hInstance,
-                               IDS_SERVICES_STARTED,
-                               szStatus,
-                               sizeof(szStatus) / sizeof(TCHAR));
+                    LoadStringW(hInstance,
+                                IDS_SERVICES_STARTED,
+                                szStatus,
+                                sizeof(szStatus) / sizeof(WCHAR));
                 }
                 else
                 {
@@ -156,17 +177,17 @@ ChangeListViewText(PMAIN_WND_INFO Info,
                 }
 
                 lvItem.pszText = szStatus;
-                SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
-                            lvItem.iItem,
-                            (LPARAM) &lvItem);
+                SendMessageW(Info->hListView,
+                             LVM_SETITEMTEXT,
+                             lvItem.iItem,
+                             (LPARAM) &lvItem);
             }
             break;
 
             case LVSTARTUP:
             {
-                LPQUERY_SERVICE_CONFIG lpServiceConfig;
-                LPTSTR lpStartup = NULL;
+                LPQUERY_SERVICE_CONFIGW lpServiceConfig;
+                LPWSTR lpStartup = NULL;
                 DWORD StringId = 0;
 
                 lpServiceConfig = GetServiceConfig(pService->lpServiceName);
@@ -187,14 +208,12 @@ ChangeListViewText(PMAIN_WND_INFO Info,
                                        StringId);
 
                 lvItem.pszText = lpStartup;
-                SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
-                            lvItem.iItem,
-                            (LPARAM)&lvItem);
+                SendMessageW(Info->hListView,
+                             LVM_SETITEMTEXTW,
+                             lvItem.iItem,
+                             (LPARAM)&lvItem);
 
-                HeapFree(ProcessHeap,
-                         0,
-                         lpStartup);
+                LocalFree(lpStartup);
                 HeapFree(ProcessHeap,
                          0,
                          lpServiceConfig);
@@ -209,10 +228,10 @@ ChangeListViewText(PMAIN_WND_INFO Info,
                 if (lpServiceConfig)
                 {
                     lvItem.pszText = lpServiceConfig->lpServiceStartName;
-                    SendMessage(Info->hListView,
-                                LVM_SETITEMTEXT,
-                                lvItem.iItem,
-                                (LPARAM)&lvItem);
+                    SendMessageW(Info->hListView,
+                                 LVM_SETITEMTEXT,
+                                 lvItem.iItem,
+                                 (LPARAM)&lvItem);
 
                     HeapFree(ProcessHeap,
                              0,
@@ -228,7 +247,7 @@ BOOL
 RefreshServiceList(PMAIN_WND_INFO Info)
 {
     ENUM_SERVICE_STATUS_PROCESS *pService;
-    LVITEM lvItem;
+    LVITEMW lvItem;
     DWORD NumServices;
     DWORD Index;
 
@@ -248,7 +267,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             pService = &Info->pAllServices[Index];
 
             /* set the display name */
-            ZeroMemory(&lvItem, sizeof(LVITEM));
+            ZeroMemory(&lvItem, sizeof(LVITEMW));
             lvItem.mask = LVIF_TEXT | LVIF_PARAM;
             lvItem.pszText = pService->lpDisplayName;
 
@@ -269,7 +288,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
     }
 
     /* turn redraw flag on. */
-    SendMessage (Info->hListView,
+    SendMessageW(Info->hListView,
                  WM_SETREDRAW,
                  TRUE,
                  0);
@@ -290,12 +309,12 @@ InitListViewImage(PMAIN_WND_INFO Info)
                               1);
     if (hSmall)
     {
-        hSmIconItem = LoadImage(hInstance,
-                                MAKEINTRESOURCE(IDI_SM_ICON),
-                                IMAGE_ICON,
-                                16,
-                                16,
-                                0);
+        hSmIconItem = LoadImageW(hInstance,
+                                 MAKEINTRESOURCE(IDI_SM_ICON),
+                                 IMAGE_ICON,
+                                 16,
+                                 16,
+                                 0);
         if (hSmIconItem)
         {
             ImageList_AddIcon(hSmall,
@@ -315,12 +334,12 @@ InitListViewImage(PMAIN_WND_INFO Info)
                               1);
     if (hLarge)
     {
-        hLgIconItem = LoadImage(hInstance,
-                                MAKEINTRESOURCE(IDI_SM_ICON),
-                                IMAGE_ICON,
-                                32,
-                                32,
-                                0);
+        hLgIconItem = LoadImageW(hInstance,
+                                 MAKEINTRESOURCE(IDI_SM_ICON),
+                                 IMAGE_ICON,
+                                 32,
+                                 32,
+                                 0);
         if (hLgIconItem)
         {
             ImageList_AddIcon(hLarge,
@@ -336,94 +355,56 @@ InitListViewImage(PMAIN_WND_INFO Info)
 BOOL
 CreateListView(PMAIN_WND_INFO Info)
 {
-    LVCOLUMN lvc = { 0 };
-    TCHAR szTemp[256];
+    LVCOLUMNW lvc = { 0 };
+    WCHAR szTemp[256];
+    HDITEM hdi;
+    int i, n;
 
-    Info->hListView = CreateWindowEx(WS_EX_CLIENTEDGE,
-                                     WC_LISTVIEW,
-                                     NULL,
-                                     WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER |
-                                        LBS_NOTIFY | LVS_SORTASCENDING | LBS_NOREDRAW,
-                                     0, 0, 0, 0,
-                                     Info->hMainWnd,
-                                     (HMENU) IDC_SERVLIST,
-                                     hInstance,
-                                     NULL);
+    Info->hListView = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                      WC_LISTVIEWW,
+                                      NULL,
+                                      WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER |
+                                         LBS_NOTIFY | LVS_SORTASCENDING | LBS_NOREDRAW,
+                                      0, 0, 0, 0,
+                                      Info->hMainWnd,
+                                      (HMENU) IDC_SERVLIST,
+                                      hInstance,
+                                      NULL);
     if (Info->hListView == NULL)
     {
-        MessageBox(Info->hMainWnd,
-                   _T("Could not create List View."),
-                   _T("Error"),
-                   MB_OK | MB_ICONERROR);
+        MessageBoxW(Info->hMainWnd,
+                    L"Could not create List View.",
+                    L"Error",
+                    MB_OK | MB_ICONERROR);
         return FALSE;
     }
+
+    Info->hHeader = ListView_GetHeader(Info->hListView);
 
     (void)ListView_SetExtendedListViewStyle(Info->hListView,
                                             LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);/*LVS_EX_GRIDLINES |*/
 
     lvc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
     lvc.fmt  = LVCFMT_LEFT;
+    lvc.pszText = szTemp;
 
     /* Add columns to the list-view */
-    /* name */
-    lvc.iSubItem = LVNAME;
-    lvc.cx       = 150;
-    LoadString(hInstance,
-               IDS_FIRSTCOLUMN,
-               szTemp,
-               sizeof(szTemp) / sizeof(TCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                0,
-                                &lvc);
+    for (n = 0; n < sizeof(Columns) / sizeof(Columns[0]); n++)
+    {
+        lvc.iSubItem = Columns[n].iSubItem;
+        lvc.cx = Columns[n].cx;
 
-    /* description */
-    lvc.iSubItem = LVDESC;
-    lvc.cx       = 240;
-    LoadString(hInstance,
-               IDS_SECONDCOLUMN,
-               szTemp,
-               sizeof(szTemp) / sizeof(TCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                1,
-                                &lvc);
+        LoadStringW(hInstance,
+                    Columns[n].idsText,
+                    szTemp,
+                    sizeof(szTemp) / sizeof(szTemp[0]));
 
-    /* status */
-    lvc.iSubItem = LVSTATUS;
-    lvc.cx       = 55;
-    LoadString(hInstance,
-               IDS_THIRDCOLUMN,
-               szTemp,
-               sizeof(szTemp) / sizeof(TCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                2,
-                                &lvc);
+        i = ListView_InsertColumn(Info->hListView, Columns[n].iSubItem, &lvc);
 
-    /* startup type */
-    lvc.iSubItem = LVSTARTUP;
-    lvc.cx       = 80;
-    LoadString(hInstance,
-               IDS_FOURTHCOLUMN,
-               szTemp,
-               sizeof(szTemp) / sizeof(TCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                3,
-                                &lvc);
-
-    /* logon as */
-    lvc.iSubItem = LVLOGONAS;
-    lvc.cx       = 100;
-    LoadString(hInstance,
-               IDS_FITHCOLUMN,
-               szTemp,
-               sizeof(szTemp) / sizeof(TCHAR));
-    lvc.pszText  = szTemp;
-    (void)ListView_InsertColumn(Info->hListView,
-                                4,
-                                &lvc);
+        hdi.mask = HDI_LPARAM;
+        hdi.lParam = ORD_ASCENDING;
+        (void)Header_SetItem(Info->hHeader, i, &hdi);
+    }
 
     InitListViewImage(Info);
 

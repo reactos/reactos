@@ -260,7 +260,7 @@ RtlAcquirePrivilege(IN PULONG Privilege,
      * There's NO overflow risks (OldPrivileges is always used with its size)
      */
     State->OldPrivileges = (PTOKEN_PRIVILEGES)State->OldPrivBuffer;
-    State->NewPrivileges = (PTOKEN_PRIVILEGES)(State->OldPrivBuffer + 1024);
+    State->NewPrivileges = (PTOKEN_PRIVILEGES)(State->OldPrivBuffer + (sizeof(State->OldPrivBuffer) / sizeof(State->OldPrivBuffer[0])));
 
     /* Assign all the privileges to be acquired */
     State->NewPrivileges->PrivilegeCount = NumPriv;

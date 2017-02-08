@@ -9,6 +9,7 @@
  * @implemented
  */
 int
+__cdecl
 abs(int j)
 {
   return j<0 ? -j : j;

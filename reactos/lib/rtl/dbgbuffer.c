@@ -1,8 +1,9 @@
-/* COPYRIGHT:       See COPYING in the top level directory
-* PROJECT:         ReactOS system libraries
-* FILE:            lib/rtl/dbgbuffer.c
-* PROGRAMER:       James Tabor
-*/
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/rtl/dbgbuffer.c
+ * PROGRAMER:       James Tabor
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -14,8 +15,8 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 PRTL_DEBUG_INFORMATION
 NTAPI
 RtlCreateQueryDebugBuffer(IN ULONG Size,
@@ -42,8 +43,8 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
 }
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_INFORMATION Buf)
@@ -66,9 +67,8 @@ RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_INFORMATION Buf)
 }
 
 /*
-*	Based on lib/epsapi/enum/modules.c by KJK::Hyperion.
-*
-*/
+ *  Based on lib/epsapi/enum/modules.c by KJK::Hyperion.
+ */
 NTSTATUS
 NTAPI
 RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
@@ -159,6 +159,13 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
                                      sizeof(LDR_DATA_TABLE_ENTRY),
                                      NULL);
 
+        if (!NT_SUCCESS(Status))
+        {
+            /* failure */
+            DPRINT( "NtReadVirtualMemory 3 0x%lx \n", Status);
+            return Status;
+        }
+
         /* Import module name from remote Process user space. */
         Unicode.Length = lmModule.FullDllName.Length;
         Unicode.MaximumLength = lmModule.FullDllName.MaximumLength;
@@ -226,8 +233,8 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 }
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 RtlQueryProcessDebugInformation(IN ULONG ProcessId,

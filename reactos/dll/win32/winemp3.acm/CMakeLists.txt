@@ -17,12 +17,9 @@ set_module_type(winemp3.acm win32dll)
 set_target_properties(winemp3.acm PROPERTIES SUFFIX "")
 target_link_libraries(winemp3.acm wine libmpg123 oldnames)
 
-add_importlibs(winemp3.acm
-    winmm
-    user32
-    msvcrt
-    kernel32
-    ntdll)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(winemp3.acm mingwex)
+endif()
 
-add_dependencies(winemp3.acm psdk)
+add_importlibs(winemp3.acm winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET winemp3.acm DESTINATION reactos/system32 FOR all)

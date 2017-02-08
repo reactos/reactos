@@ -19,7 +19,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE _ExEventObjectType = NULL;
+POBJECT_TYPE ExEventObjectType = NULL;
 
 GENERIC_MAPPING ExpEventMapping =
 {
@@ -252,7 +252,7 @@ NtPulseEvent(IN HANDLE EventHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PAGED_CODE();
-    DPRINT("NtPulseEvent(EventHandle 0%x PreviousState 0%x)\n",
+    DPRINT("NtPulseEvent(EventHandle 0%p PreviousState 0%p)\n",
             EventHandle, PreviousState);
 
     /* Check if we were called from user-mode */
@@ -393,7 +393,7 @@ NtResetEvent(IN HANDLE EventHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PAGED_CODE();
-    DPRINT("NtResetEvent(EventHandle 0%x PreviousState 0%x)\n",
+    DPRINT("NtResetEvent(EventHandle 0%p PreviousState 0%p)\n",
             EventHandle, PreviousState);
 
     /* Check if we were called from user-mode */
@@ -462,7 +462,7 @@ NtSetEvent(IN HANDLE EventHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PAGED_CODE();
-    DPRINT("NtSetEvent(EventHandle 0%x PreviousState 0%x)\n",
+    DPRINT("NtSetEvent(EventHandle 0%p PreviousState 0%p)\n",
            EventHandle, PreviousState);
 
     /* Check if we were called from user-mode */

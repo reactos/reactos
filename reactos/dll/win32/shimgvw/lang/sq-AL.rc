@@ -1,0 +1,32 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  06-02-2014
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Vëzhguesi i Fotove dhe Faxit"
+    IDS_SETASDESKBG "Vendos si Sfond Desktopi"
+    IDS_PREVIEW "Shikim Paraprak"
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC "Fotoja Tjetër"
+    IDS_TOOLTIP_PREV_PIC "Fotoja Mëparshme"
+    IDS_TOOLTIP_ZOOM_IN "Zoom Brënda (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Zoom Jashtë (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Rrotullo KrahAkrepave (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Rrotullo kundërKrahAkrepave (Ctrl+L)"
+    IDS_TOOLTIP_PRINT "Printo (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Ruaj Si... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF Image"
+    IDS_GIF_FILE    "GIF Image"
+    IDS_JPG_FILE    "JPEG Image"
+    IDS_BMP_FILE    "Bitmap Image"
+    IDS_PNG_FILE    "PNG Image"
+    IDS_TIF_FILE    "TIF Image"
+    IDS_WMF_FILE    "WMF Image"
+END

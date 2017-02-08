@@ -1,19 +1,162 @@
-#include "explorer_intres.rc"
+#include <windef.h>
+#include <winuser.h>
 
-#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Explorer\0"
-#define REACTOS_STR_INTERNAL_NAME       "explorer\0"
-#define REACTOS_STR_ORIGINAL_FILENAME   "explorer.exe\0"
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Explorer"
+#define REACTOS_STR_INTERNAL_NAME     "explorer"
+#define REACTOS_STR_ORIGINAL_FILENAME "explorer.exe"
 #include <reactos/version.rc>
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-#define IDS_VERSION_STR             5000
-#define IDS_EXPLORER_VERSION_STR    5001
+/*******************************************************************************\
+|*                               Icon Resources                                *|
+\*******************************************************************************/
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_MAIN            ICON "res/ico/100.ico"
+IDI_CABINET         ICON "res/ico/101.ico"
+IDI_PRINTER         ICON "res/ico/102.ico"
+IDI_DESKTOP         ICON "res/ico/103.ico"
+IDI_PRINTER_PROBLEM ICON "res/ico/104.ico"
+IDI_STARTMENU       ICON "res/ico/107.ico"
+IDI_RECYCLEBIN      ICON "res/ico/108.ico"
+IDI_SHOWINFO        ICON "res/ico/109.ico"
+IDI_SHOWALERT       ICON "res/ico/110.ico"
+IDI_SHOWERROR       ICON "res/ico/111.ico"
+IDI_COMPUTER        ICON "res/ico/205.ico"
+IDI_ARROWLEFT       ICON "res/ico/250.ico"
+IDI_ARROWRIGHT      ICON "res/ico/251.ico"
+IDI_FOLDER          ICON "res/ico/252.ico"
+IDI_INTERNET        ICON "res/ico/253.ico"
+IDI_MAIL            ICON "res/ico/254.ico"
+IDI_MAILSMALL       ICON "res/ico/256.ico"
+IDI_STARTMENU2      ICON "res/ico/257.ico"
+IDI_START           ICON "res/ico/4711.ico"
 
-STRINGTABLE DISCARDABLE
+
+/*******************************************************************************\
+|*                               Bitmap Resources                              *|
+\*******************************************************************************/
+
+IDB_START                           BITMAP "res/bmp/143.bmp"
+IDB_TASKBARPROP_AUTOHIDE            BITMAP "res/bmp/145.bmp"
+IDB_TASKBARPROP_LOCK_GROUP_QL       BITMAP "res/bmp/146.bmp"
+IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP "res/bmp/147.bmp"
+IDB_TASKBARPROP_LOCK_NOGROUP_QL     BITMAP "res/bmp/148.bmp"
+IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   BITMAP "res/bmp/149.bmp"
+IDB_TASKBARPROP_LOCK_GROUP_NOQL     BITMAP "res/bmp/150.bmp"
+IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   BITMAP "res/bmp/151.bmp"
+IDB_TASKBARPROP_LOCK_NOGROUP_NOQL   BITMAP "res/bmp/152.bmp"
+IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP "res/bmp/153.bmp"
+IDB_SYSTRAYPROP_SHOW_SECONDS        BITMAP "res/bmp/154.bmp"
+IDB_SYSTRAYPROP_HIDE_SECONDS        BITMAP "res/bmp/155.bmp"
+IDB_STARTMENU                       BITMAP "res/bmp/158.bmp"
+IDB_STARTPREVIEW_CLASSIC            BITMAP "res/bmp/171.bmp"
+IDB_SYSTRAYPROP_HIDE_CLOCK          BITMAP "res/bmp/180.bmp"
+IDB_SYSTRAYPROP_HIDE_NOCLOCK        BITMAP "res/bmp/181.bmp"
+IDB_SYSTRAYPROP_SHOW_CLOCK          BITMAP "res/bmp/182.bmp"
+IDB_SYSTRAYPROP_SHOW_NOCLOCK        BITMAP "res/bmp/183.bmp"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
+
+STRINGTABLE
 BEGIN
-    IDS_VERSION_STR REACTOS_STR_PRODUCT_VERSION
-    IDS_EXPLORER_VERSION_STR "ReactOS %s Explorer"
+    //IDS_HELP_COMMAND "helpctr.exe>-FromStartHelp"
+    IDS_HELP_COMMAND "http://www.reactos.org/"
 END
+
+IDA_TASKBAR  ACCELERATORS
+BEGIN
+    "s", IDMA_START, ALT
+    VK_F6, IDMA_CYCLE_FOCUS, VIRTKEY
+    VK_TAB, IDMA_CYCLE_FOCUS, VIRTKEY
+    VK_TAB, IDMA_CYCLE_FOCUS, VIRTKEY, CONTROL
+    VK_TAB, IDMA_CYCLE_FOCUS, VIRTKEY, SHIFT
+    VK_TAB, IDMA_CYCLE_FOCUS, VIRTKEY, CONTROL, SHIFT
+    VK_F3, IDMA_SEARCH, VIRTKEY
+    //VK_F5, 41061, VIRTKEY
+    VK_RETURN, IDM_TASKBARANDSTARTMENU, VIRTKEY, ALT
+    "Z", IDMA_RESTORE_OPEN, VIRTKEY, CONTROL
+    "M", IDMA_MINIMIZE_ALL, VIRTKEY, ALT
+END
+
+/*******************************************************************************\
+|*                         Language dependent Resources                        *|
+\*******************************************************************************/
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ko-KR.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/lt-LT.rc"
+#endif
+#ifdef LANGUAGE_MS_MY
+    #include "lang/ms-MY.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/nl-NL.rc"
+#endif
+#ifdef LANGUAGE_NB_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

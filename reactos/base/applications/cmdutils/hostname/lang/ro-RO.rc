@@ -1,0 +1,9 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Tipărește numele gazdei curente.\n\nhostname"
+    IDS_NOSET "hostname -s nu este acceptat."
+    IDS_ERROR "Eroare Win32"
+END

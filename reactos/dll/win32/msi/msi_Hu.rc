@@ -22,15 +22,17 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
 	4 "The specified installation package could not be opened.  Please check the file path and try again."
-	5 "%s ˙tvonal nem tal·lhatÛ"
+	5 "%s √∫tvonal nem tal√°lhat√≥"
 	9 "helyezze be a lemezt: %s"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
 	11 "adja meg melyik mappa tartalmazza ezt: %s"
-	12 "hi·nyzÛ tulajdons·g a telepÌtÈsi forr·shoz"
-	13 "hi·nyzÛ tulajdons·g a h·lÛzati meghajtÛhoz"
-	14 "tulajdons·g innen:"
-	15 "v·lassza ki, melyik mappa tartalmazza ezt: %s"
+	12 "hi√°nyz√≥ tulajdons√°g a telep√≠t√©si forr√°shoz"
+	13 "hi√°nyz√≥ tulajdons√°g a h√°l√≥zati meghajt√≥hoz"
+	14 "tulajdons√°g innen:"
+	15 "v√°lassza ki, melyik mappa tartalmazza ezt: %s"
 }

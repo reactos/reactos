@@ -1,0 +1,25 @@
+/*
+ * COPYRIGHT:       See COPYING.ARM in the top level directory
+ * PROJECT:         ReactOS UEFI Boot Manager
+ * FILE:            boot/environ/app/bootmgr.rc
+ * PURPOSE:         Boot Manager Resource File
+ * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
+ */
+
+#include <winver.h>
+#include <ntverp.h>
+
+/* Version Data */
+#define VER_FILETYPE             VFT_DRV
+#define VER_FILESUBTYPE          VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR  "Boot Manager"
+#define VER_INTERNALNAME_STR     "bootmgr.exe"
+#define VER_ORIGINALFILENAME_STR "bootmgr.exe"
+#define VER_LANGNEUTRAL
+#include "common.ver"
+
+/* Message Table */
+#include <bootmsg.rc>
+
+/* XML GUI Stylesheet */
+BOOTMGR.XSL HTML "bootmgr.xsl"

@@ -1,0 +1,125 @@
+/*
+ * Hebrew resources for oleacc
+ *
+ * Copyright 2008 Nikolay Sivov
+ *
+ * Translated by Baruch Rutman
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "שורת הכותרת"
+    ROLE_SYSTEM_MENUBAR     "שורת התפריטים"
+    ROLE_SYSTEM_SCROLLBAR   "סרגל הגלילה"
+    ROLE_SYSTEM_GRIP        "אחיזה"
+    ROLE_SYSTEM_SOUND       "שמע"
+    ROLE_SYSTEM_CURSOR      "סמן"
+    ROLE_SYSTEM_CARET       "סמן"
+    ROLE_SYSTEM_ALERT       "התראה"
+    ROLE_SYSTEM_WINDOW      "חלון"
+    ROLE_SYSTEM_CLIENT      "לקוח"
+    ROLE_SYSTEM_MENUPOPUP   "תפריט קופץ"
+    ROLE_SYSTEM_MENUITEM    "פריט תפריט"
+    ROLE_SYSTEM_TOOLTIP     "tool tip"
+    ROLE_SYSTEM_APPLICATION "יישום"
+    ROLE_SYSTEM_DOCUMENT    "מסמך"
+    ROLE_SYSTEM_PANE        "pane"
+    ROLE_SYSTEM_CHART       "רשומה"
+    ROLE_SYSTEM_DIALOG      "דו שיח"
+    ROLE_SYSTEM_BORDER      "גבול"
+    ROLE_SYSTEM_GROUPING    "קיבוץ"
+    ROLE_SYSTEM_SEPARATOR   "מפריד"
+    ROLE_SYSTEM_TOOLBAR     "סרגל כלים"
+    ROLE_SYSTEM_STATUSBAR   "שורת מצב"
+    ROLE_SYSTEM_TABLE        "טבלה"
+    ROLE_SYSTEM_COLUMNHEADER "column header"
+    ROLE_SYSTEM_ROWHEADER    "row header"
+    ROLE_SYSTEM_COLUMN       "עמודה"
+    ROLE_SYSTEM_ROW          "שורה"
+    ROLE_SYSTEM_CELL         "תא"
+    ROLE_SYSTEM_LINK         "קישור"
+    ROLE_SYSTEM_HELPBALLOON  "בלון עזרה"
+    ROLE_SYSTEM_CHARACTER    "character"
+    ROLE_SYSTEM_LIST         "רשימה"
+    ROLE_SYSTEM_LISTITEM     "רשימת פריטים"
+    ROLE_SYSTEM_OUTLINE      "outline"
+    ROLE_SYSTEM_OUTLINEITEM  "outline item"
+    ROLE_SYSTEM_PAGETAB      "page tab"
+    ROLE_SYSTEM_PROPERTYPAGE "property page"
+    ROLE_SYSTEM_INDICATOR    "indicator"
+    ROLE_SYSTEM_GRAPHIC      "graphic"
+    ROLE_SYSTEM_STATICTEXT   "טקסט נייח"
+    ROLE_SYSTEM_TEXT         "טקסט"
+    ROLE_SYSTEM_PUSHBUTTON   "כפתור לחיצה"
+    ROLE_SYSTEM_CHECKBUTTON  "כפתור סימון"
+    ROLE_SYSTEM_RADIOBUTTON  "כפתור רדיו"
+    ROLE_SYSTEM_COMBOBOX     "combo box"
+    ROLE_SYSTEM_DROPLIST     "drop down"
+    ROLE_SYSTEM_PROGRESSBAR  "שורת התקדמות"
+    ROLE_SYSTEM_DIAL         "חייג"
+    ROLE_SYSTEM_HOTKEYFIELD  "hot key field"
+    ROLE_SYSTEM_SLIDER       "slider"
+    ROLE_SYSTEM_SPINBUTTON   "spin box"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "הנפשה"
+    ROLE_SYSTEM_EQUATION     "משוואה"
+    ROLE_SYSTEM_BUTTONDROPDOWN "drop down button"
+    ROLE_SYSTEM_BUTTONMENU   "menu button"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "grid drop down button"
+    ROLE_SYSTEM_WHITESPACE   "רווח לבן"
+    ROLE_SYSTEM_PAGETABLIST  "page tab list"
+    ROLE_SYSTEM_CLOCK        "שעון"
+    ROLE_SYSTEM_SPLITBUTTON  "split button"
+    ROLE_SYSTEM_IPADDRESS    "כתובת IP"
+    ROLE_SYSTEM_OUTLINEBUTTON "outline button"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

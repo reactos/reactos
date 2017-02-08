@@ -1,0 +1,9 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "LoadLibrary 無法載入 '%s'"
+    IDS_MissingEntry "缺少入口點：%s\n在 %s 中"
+END

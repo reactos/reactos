@@ -3,6 +3,12 @@
 INT     APIENTRY  BITMAP_GetObject(SURFACE * bmp, INT count, LPVOID buffer);
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 
+BOOL
+NTAPI
+GreSetBitmapOwner(
+    _In_ HBITMAP hbmp,
+    _In_ ULONG ulOwner);
+
 HBITMAP
 NTAPI
 GreCreateBitmap(
@@ -37,3 +43,10 @@ GreCreateDIBitmapInternal(
     IN FLONG fl,
     IN UINT cjMaxBits,
     IN HANDLE hcmXform);
+
+BOOL
+NTAPI
+UnsafeSetBitmapBits(
+    _Inout_ PSURFACE psurf,
+    _In_ ULONG cjBits,
+    _In_ const VOID *pvBits);

@@ -4,10 +4,8 @@
 /*                                                                         */
 /*    The FreeType TrueType/sfnt cmap extra information service.           */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
-/*  Masatake YAMATO, Redhat K.K.                                           */
-/*                                                                         */
-/*  Copyright 2003, 2008 by                                                */
+/*  Copyright 2003-2016 by                                                 */
+/*  Masatake YAMATO, Redhat K.K.,                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,8 +19,8 @@
 /* Development of this service is support of
    Information-technology Promotion Agency, Japan. */
 
-#ifndef __SVTTCMAP_H__
-#define __SVTTCMAP_H__
+#ifndef SVTTCMAP_H_
+#define SVTTCMAP_H_
 
 #include FT_INTERNAL_SERVICE_H
 #include FT_TRUETYPE_TABLES_H
@@ -31,7 +29,7 @@
 FT_BEGIN_HEADER
 
 
-#define FT_SERVICE_ID_TT_CMAP "tt-cmaps"
+#define FT_SERVICE_ID_TT_CMAP  "tt-cmaps"
 
 
   /*************************************************************************/
@@ -47,19 +45,20 @@ FT_BEGIN_HEADER
   /* <Fields>                                                              */
   /*    language ::                                                        */
   /*      The language ID used in Mac fonts.  Definitions of values are in */
-  /*      freetype/ttnameid.h.                                             */
+  /*      `ttnameid.h'.                                                    */
   /*                                                                       */
   /*    format ::                                                          */
-  /*      The cmap format.  OpenType 1.5 defines the formats 0 (byte       */
+  /*      The cmap format.  OpenType 1.6 defines the formats 0 (byte       */
   /*      encoding table), 2~(high-byte mapping through table), 4~(segment */
   /*      mapping to delta values), 6~(trimmed table mapping), 8~(mixed    */
   /*      16-bit and 32-bit coverage), 10~(trimmed array), 12~(segmented   */
-  /*      coverage), and 14 (Unicode Variation Sequences).                 */
+  /*      coverage), 13~(last resort font), and 14 (Unicode Variation      */
+  /*      Sequences).                                                      */
   /*                                                                       */
   typedef struct  TT_CMapInfo_
   {
-    FT_ULong language;
-    FT_Long  format;
+    FT_ULong  language;
+    FT_Long   format;
 
   } TT_CMapInfo;
 
@@ -76,31 +75,32 @@ FT_BEGIN_HEADER
 
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_TTCMAPSREC(class_, get_cmap_info_)  \
-  static const FT_Service_TTCMapsRec class_ =                 \
-  {                                                           \
-    get_cmap_info_                                            \
+#define FT_DEFINE_SERVICE_TTCMAPSREC( class_, get_cmap_info_ )  \
+  static const FT_Service_TTCMapsRec  class_ =                  \
+  {                                                             \
+    get_cmap_info_                                              \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_TTCMAPSREC(class_, get_cmap_info_) \
-  void                                                       \
-  FT_Init_Class_##class_( FT_Library library,                \
-                          FT_Service_TTCMapsRec*  clazz)     \
-  {                                                          \
-    FT_UNUSED(library);                                      \
-    clazz->get_cmap_info = get_cmap_info_;                   \
-  } 
+#define FT_DEFINE_SERVICE_TTCMAPSREC( class_, get_cmap_info_ )  \
+  void                                                          \
+  FT_Init_Class_ ## class_( FT_Library              library,    \
+                            FT_Service_TTCMapsRec*  clazz )     \
+  {                                                             \
+    FT_UNUSED( library );                                       \
+                                                                \
+    clazz->get_cmap_info = get_cmap_info_;                      \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 
 
 FT_END_HEADER
 
-#endif /* __SVTTCMAP_H__ */
+#endif /* SVTTCMAP_H_ */
 
 
 /* END */

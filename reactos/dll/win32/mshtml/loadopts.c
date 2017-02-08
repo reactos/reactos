@@ -16,28 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <optary.h>
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct load_opt {
     DWORD option;
@@ -48,47 +27,44 @@ typedef struct load_opt {
 } load_opt;
 
 typedef struct {
-    const IHtmlLoadOptionsVtbl *lpHtmlLoadOptionsVtbl;
+    IHtmlLoadOptions IHtmlLoadOptions_iface;
 
     LONG ref;
 
     load_opt *opts;
 } HTMLLoadOptions;
 
-#define LOADOPTS(x)  ((IHtmlLoadOptions*) &(x)->lpHtmlLoadOptionsVtbl)
-
-#define LOADOPTS_THIS(iface) DEFINE_THIS(HTMLLoadOptions, HtmlLoadOptions, iface)
+static inline HTMLLoadOptions *impl_from_IHtmlLoadOptions(IHtmlLoadOptions *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLLoadOptions, IHtmlLoadOptions_iface);
+}
 
 static HRESULT WINAPI HtmlLoadOptions_QueryInterface(IHtmlLoadOptions *iface,
         REFIID riid, void **ppv)
 {
-    HTMLLoadOptions *This = LOADOPTS_THIS(iface);
+    HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = LOADOPTS(This);
+        *ppv = &This->IHtmlLoadOptions_iface;
     }else if(IsEqualGUID(&IID_IOptionArray, riid)) {
-        TRACE("(%p)->(IID_IOptionArray %p)\n", This, ppv);
-        *ppv = LOADOPTS(This);
+        *ppv = &This->IHtmlLoadOptions_iface;
     }else if(IsEqualGUID(&IID_IHtmlLoadOptions, riid)) {
-        TRACE("(%p)->(IID_IHtmlLoadOptions %p)\n", This, ppv);
-        *ppv = LOADOPTS(This);
+        *ppv = &This->IHtmlLoadOptions_iface;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IHtmlLoadOptions_AddRef(LOADOPTS(This));
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HtmlLoadOptions_AddRef(IHtmlLoadOptions *iface)
 {
-    HTMLLoadOptions *This = LOADOPTS_THIS(iface);
+    HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -98,7 +74,7 @@ static ULONG WINAPI HtmlLoadOptions_AddRef(IHtmlLoadOptions *iface)
 
 static ULONG WINAPI HtmlLoadOptions_Release(IHtmlLoadOptions *iface)
 {
-    HTMLLoadOptions *This = LOADOPTS_THIS(iface);
+    HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -123,7 +99,7 @@ static ULONG WINAPI HtmlLoadOptions_Release(IHtmlLoadOptions *iface)
 static HRESULT WINAPI HtmlLoadOptions_QueryOption(IHtmlLoadOptions *iface, DWORD dwOption,
         LPVOID pBuffer, ULONG *pcbBuf)
 {
-    HTMLLoadOptions *This = LOADOPTS_THIS(iface);
+    HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     load_opt *iter;
 
     TRACE("(%p)->(%d %p %p)\n", This, dwOption, pBuffer, pcbBuf);
@@ -152,7 +128,7 @@ static HRESULT WINAPI HtmlLoadOptions_QueryOption(IHtmlLoadOptions *iface, DWORD
 static HRESULT WINAPI HtmlLoadOptions_SetOption(IHtmlLoadOptions *iface, DWORD dwOption,
         LPVOID pBuffer, ULONG cbBuf)
 {
-    HTMLLoadOptions *This = LOADOPTS_THIS(iface);
+    HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     load_opt *iter = NULL;
 
     TRACE("(%p)->(%d %p %d)\n", This, dwOption, pBuffer, cbBuf);
@@ -186,8 +162,6 @@ static HRESULT WINAPI HtmlLoadOptions_SetOption(IHtmlLoadOptions *iface, DWORD d
     return S_OK;
 }
 
-#undef LOADOPTS_THIS
-
 static const IHtmlLoadOptionsVtbl HtmlLoadOptionsVtbl = {
     HtmlLoadOptions_QueryInterface,
     HtmlLoadOptions_AddRef,
@@ -201,16 +175,17 @@ HRESULT HTMLLoadOptions_Create(IUnknown *pUnkOuter, REFIID riid, void** ppv)
     HTMLLoadOptions *ret;
     HRESULT hres;
 
-    TRACE("(%p %s %p)\n", pUnkOuter, debugstr_guid(riid), ppv);
+    TRACE("(%p %s %p)\n", pUnkOuter, debugstr_mshtml_guid(riid), ppv);
 
     ret = heap_alloc(sizeof(HTMLLoadOptions));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
-    ret->lpHtmlLoadOptionsVtbl = &HtmlLoadOptionsVtbl;
+    ret->IHtmlLoadOptions_iface.lpVtbl = &HtmlLoadOptionsVtbl;
     ret->ref = 1;
     ret->opts = NULL;
 
-    hres = IHtmlLoadOptions_QueryInterface(LOADOPTS(ret), riid, ppv);
-    IHtmlLoadOptions_Release(LOADOPTS(ret));
-
+    hres = IHtmlLoadOptions_QueryInterface(&ret->IHtmlLoadOptions_iface, riid, ppv);
+    IHtmlLoadOptions_Release(&ret->IHtmlLoadOptions_iface);
     return hres;
 }

@@ -19,7 +19,7 @@
 *
 */
 
-//#include <windef.h>
+#pragma once
 
 /* Strings */
 #define IDS_NO_MAPI_CLIENT   1

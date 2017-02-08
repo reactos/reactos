@@ -42,8 +42,8 @@ void ide_bsy( void *extension ) {
     idectl_desc *desc = (idectl_desc *)extension;
     while( GetPhysByte(desc->port+7) & 0x80 )
     {
-	printf("Waiting for not busy\n");
-	sync();
+    printf("Waiting for not busy\n");
+    sync();
     }
 }
 
@@ -61,7 +61,7 @@ int ide_read( void *extension, char *buffer, int bytes ) {
     SetPhysByte(desc->port+7, 0x20);
 
     for( inwords = 0; inwords < desc->bytespersec / sizeof(short); inwords++ ) {
-	databuf[inwords] = GetPhysHalf(desc->port);
+    databuf[inwords] = GetPhysHalf(desc->port);
     }
 
     desc->seekto += desc->bytespersec;
@@ -89,9 +89,9 @@ void ide_setup( void *extension ) {
     ide_drq( extension );
 
     for( inwords = 0; inwords < desc->bytespersec / sizeof(short); inwords++ ) {
-	in = GetPhysHalf(desc->port);
-	databuf[inwords] = SWAP_W(in);
-	sync();
+    in = GetPhysHalf(desc->port);
+    databuf[inwords] = SWAP_W(in);
+    sync();
     }
 
     desc->cylinders = identbuffer[1];
@@ -102,5 +102,5 @@ void ide_setup( void *extension ) {
 
     strncpy(namebuf, (char *)(identbuffer+0x1b), 41);
     printf("HARD DISC MODEL: %s c,h,s %d,%d,%d\n",
-	   namebuf, desc->cylinders, desc->heads, desc->sectors);
+       namebuf, desc->cylinders, desc->heads, desc->sectors);
 }

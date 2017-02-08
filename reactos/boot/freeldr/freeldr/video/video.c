@@ -19,27 +19,27 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 
-PVOID	VideoOffScreenBuffer = NULL;
+PVOID    VideoOffScreenBuffer = NULL;
 
 PVOID VideoAllocateOffScreenBuffer(VOID)
 {
-	ULONG		BufferSize;
+    ULONG        BufferSize;
 
-	if (VideoOffScreenBuffer != NULL)
-	{
-		MmFreeMemory(VideoOffScreenBuffer);
-		VideoOffScreenBuffer = NULL;
-	}
+    if (VideoOffScreenBuffer != NULL)
+    {
+        MmFreeMemory(VideoOffScreenBuffer);
+        VideoOffScreenBuffer = NULL;
+    }
 
-	BufferSize = MachVideoGetBufferSize();
+    BufferSize = MachVideoGetBufferSize();
 
-	VideoOffScreenBuffer = MmAllocateMemoryWithType(BufferSize, LoaderFirmwareTemporary);
+    VideoOffScreenBuffer = MmAllocateMemoryWithType(BufferSize, LoaderFirmwareTemporary);
 
-	return VideoOffScreenBuffer;
+    return VideoOffScreenBuffer;
 }
 
 VOID VideoCopyOffScreenBufferToVRAM(VOID)
 {
-	MachVideoCopyOffScreenBufferToVRAM(VideoOffScreenBuffer);
+    MachVideoCopyOffScreenBufferToVRAM(VideoOffScreenBuffer);
 }
 #endif

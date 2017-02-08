@@ -16,9 +16,8 @@ IsCallProcHandle(IN WNDPROC lpWndProc)
     return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
 }
 
-VOID
-DestroyCallProc(IN PDESKTOPINFO Desktop,
-                IN OUT PCALLPROCDATA CallProc);
+BOOLEAN
+DestroyCallProc(_Inout_ PVOID Object);
 
 PCALLPROCDATA
 CreateCallProc(IN PDESKTOP Desktop,
@@ -47,6 +46,7 @@ VOID
 UserAddCallProcToClass(IN OUT PCLS Class,
                        IN PCALLPROCDATA CallProc);
 
+_Success_(return)
 BOOL
 NTAPI
 IntGetAtomFromStringOrAtom(

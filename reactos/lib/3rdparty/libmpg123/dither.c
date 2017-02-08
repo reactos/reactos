@@ -10,7 +10,7 @@
 #include "compat.h"
 #include "dither.h"
 
-const uint32_t init_seed = 2463534242UL;
+static const uint32_t init_seed = 2463534242UL;
 
 #define LAP 100
 

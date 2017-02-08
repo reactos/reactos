@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -98,8 +98,8 @@ MiUnProtectFreeNonPagedPool(IN PVOID VirtualAddress,
     return UnprotectedPages ? TRUE : FALSE;
 }
 
-VOID
 FORCEINLINE
+VOID
 MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
                               OUT PVOID* PoolFlink,
                               OUT PVOID* PoolBlink)
@@ -118,7 +118,7 @@ MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
 
         /* So make it safe to access */
         Safe = MiUnProtectFreeNonPagedPool(PoolVa, 1);
-        if (Safe) PoolFlink = PoolVa;
+        if (Safe) *PoolFlink = PoolVa;
     }
 
     /* Are we going to need a backward link too? */
@@ -129,12 +129,12 @@ MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
 
         /* Make it safe to access */
         Safe = MiUnProtectFreeNonPagedPool(PoolVa, 1);
-        if (Safe) PoolBlink = PoolVa;
+        if (Safe) *PoolBlink = PoolVa;
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 MiProtectedPoolProtectLinks(IN PVOID PoolFlink,
                             IN PVOID PoolBlink)
 {
@@ -482,7 +482,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the page bit count
             //
             i = ((SizeInPages - 1) / PTE_COUNT) + 1;
-            DPRINT1("Paged pool expansion: %d %x\n", i, SizeInPages);
+            DPRINT("Paged pool expansion: %lu %x\n", i, SizeInPages);
 
             //
             // Check if there is enougn paged pool expansion space left
@@ -507,7 +507,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // We can only support this much then
                 //
-                PointerPde = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool);
+                PointerPde = MiPteToPde(MmPagedPoolInfo.LastPteForPagedPool);
                 PageTableCount = (PFN_COUNT)(PointerPde + 1 -
                                  MmPagedPoolInfo.NextPdeForPagedPoolExpansion);
                 ASSERT(PageTableCount < i);
@@ -724,8 +724,9 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                  (FreeEntry->Size  << PAGE_SHIFT));
 
                 /* Remove the item from the list, depending if pool is protected */
-                MmProtectFreedNonPagedPool ?
-                    MiProtectedPoolRemoveEntryList(&FreeEntry->List) :
+                if (MmProtectFreedNonPagedPool)
+                    MiProtectedPoolRemoveEntryList(&FreeEntry->List);
+                else
                     RemoveEntryList(&FreeEntry->List);
 
                 //
@@ -738,8 +739,9 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                     if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
 
                     /* Insert the entry into the free list head, check for prot. pool */
-                    MmProtectFreedNonPagedPool ?
-                        MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE) :
+                    if (MmProtectFreedNonPagedPool)
+                        MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE);
+                    else
                         InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
 
                     /* Is freed non paged pool protected? */
@@ -769,7 +771,10 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
 
                 /* Mark it as special pool if needed */
                 ASSERT(Pfn1->u4.VerifierAllocation == 0);
-                if (PoolType & 64) Pfn1->u4.VerifierAllocation = 1;
+                if (PoolType & VERIFIER_POOL_MASK)
+                {
+                    Pfn1->u4.VerifierAllocation = 1;
+                }
 
                 //
                 // Check if the allocation is larger than one page
@@ -879,7 +884,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
 
     /* Mark it as a verifier allocation if needed */
     ASSERT(Pfn1->u4.VerifierAllocation == 0);
-    if (PoolType & 64) Pfn1->u4.VerifierAllocation = 1;
+    if (PoolType & VERIFIER_POOL_MASK) Pfn1->u4.VerifierAllocation = 1;
 
     //
     // Release the PFN and nonpaged pool lock
@@ -1082,8 +1087,9 @@ MiFreePoolPages(IN PVOID StartingVa)
         FreePages += FreeEntry->Size;
 
         /* Remove the item from the list, depending if pool is protected */
-        MmProtectFreedNonPagedPool ?
-            MiProtectedPoolRemoveEntryList(&FreeEntry->List) :
+        if (MmProtectFreedNonPagedPool)
+            MiProtectedPoolRemoveEntryList(&FreeEntry->List);
+        else
             RemoveEntryList(&FreeEntry->List);
     }
 
@@ -1162,8 +1168,9 @@ MiFreePoolPages(IN PVOID StartingVa)
         if (FreeEntry->Size < (MI_MAX_FREE_PAGE_LISTS - 1))
         {
             /* Remove the item from the list, depending if pool is protected */
-            MmProtectFreedNonPagedPool ?
-                MiProtectedPoolRemoveEntryList(&FreeEntry->List) :
+            if (MmProtectFreedNonPagedPool)
+                MiProtectedPoolRemoveEntryList(&FreeEntry->List);
+            else
                 RemoveEntryList(&FreeEntry->List);
 
             //
@@ -1178,8 +1185,9 @@ MiFreePoolPages(IN PVOID StartingVa)
             if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
 
             /* Insert the entry into the free list head, check for prot. pool */
-            MmProtectFreedNonPagedPool ?
-                MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE) :
+            if (MmProtectFreedNonPagedPool)
+                MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE);
+            else
                 InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
         }
         else
@@ -1209,8 +1217,9 @@ MiFreePoolPages(IN PVOID StartingVa)
         if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
 
         /* Insert the entry into the free list head, check for prot. pool */
-        MmProtectFreedNonPagedPool ?
-            MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE) :
+        if (MmProtectFreedNonPagedPool)
+            MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE);
+        else
             InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
     }
 
@@ -1268,7 +1277,8 @@ NTSTATUS
 NTAPI
 MiInitializeSessionPool(VOID)
 {
-    PMMPTE PointerPde, PointerPte, LastPte, LastPde;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde, LastPde;
     PFN_NUMBER PageFrameIndex, PdeCount;
     PPOOL_DESCRIPTOR PoolDescriptor;
     PMM_SESSION_SPACE SessionGlobal;
@@ -1343,7 +1353,7 @@ MiInitializeSessionPool(VOID)
     /* Allocate and initialize the bitmap to track allocations */
     PagedPoolInfo->PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
                                                                   BitmapSize,
-                                                                  '  mM');
+                                                                  TAG_MM);
     ASSERT(PagedPoolInfo->PagedPoolAllocationMap != NULL);
     RtlInitializeBitMap(PagedPoolInfo->PagedPoolAllocationMap,
                         (PULONG)(PagedPoolInfo->PagedPoolAllocationMap + 1),
@@ -1356,7 +1366,7 @@ MiInitializeSessionPool(VOID)
     /* Allocate and initialize the bitmap to track free space */
     PagedPoolInfo->EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
                                                                 BitmapSize,
-                                                                '  mM');
+                                                                TAG_MM);
     ASSERT(PagedPoolInfo->EndOfPagedPoolBitmap != NULL);
     RtlInitializeBitMap(PagedPoolInfo->EndOfPagedPoolBitmap,
                         (PULONG)(PagedPoolInfo->EndOfPagedPoolBitmap + 1),

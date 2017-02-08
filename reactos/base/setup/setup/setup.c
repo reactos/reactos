@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS GUI/console setup
- * FILE:            subsys/system/setup/setup.c
+ * FILE:            base/setup/setup/setup.c
  * PURPOSE:         Second stage setup
  * PROGRAMMER:      Eric Kohl
  */
@@ -36,112 +36,122 @@ typedef DWORD (WINAPI *PINSTALL_REACTOS)(HINSTANCE hInstance);
 
 /* FUNCTIONS ****************************************************************/
 
-LPTSTR lstrchr(LPCTSTR s, TCHAR c)
+LPTSTR
+lstrchr(
+    LPCTSTR s,
+    TCHAR c)
 {
-  while (*s)
+    while (*s)
     {
-      if (*s == c)
+        if (*s == c)
+            return (LPTSTR)s;
+        s++;
+    }
+
+    if (c == (TCHAR)0)
         return (LPTSTR)s;
-      s++;
-    }
 
-  if (c == (TCHAR)0)
-    return (LPTSTR)s;
-
-  return (LPTSTR)NULL;
+    return (LPTSTR)NULL;
 }
 
-static VOID
-RunNewSetup (HINSTANCE hInstance)
+
+static
+VOID
+RunNewSetup(
+    HINSTANCE hInstance)
 {
-  HMODULE hDll;
-  PINSTALL_REACTOS InstallReactOS;
+    HMODULE hDll;
+    PINSTALL_REACTOS InstallReactOS;
 
-  hDll = LoadLibrary (TEXT("syssetup"));
-  if (hDll == NULL)
+    hDll = LoadLibrary(TEXT("syssetup"));
+    if (hDll == NULL)
     {
-      DPRINT("Failed to load 'syssetup'!\n");
-      return;
+        DPRINT("Failed to load 'syssetup'!\n");
+        return;
     }
 
-  DPRINT("Loaded 'syssetup'!\n");
-  InstallReactOS = (PINSTALL_REACTOS)GetProcAddress (hDll, "InstallReactOS");
-
-  if (InstallReactOS == NULL)
+    DPRINT("Loaded 'syssetup'!\n");
+    InstallReactOS = (PINSTALL_REACTOS)GetProcAddress(hDll, "InstallReactOS");
+    if (InstallReactOS == NULL)
     {
-      DPRINT("Failed to get address for 'InstallReactOS()'!\n");
-      FreeLibrary (hDll);
-      return;
+        DPRINT("Failed to get address for 'InstallReactOS()'!\n");
+        FreeLibrary(hDll);
+        return;
     }
 
-  InstallReactOS (hInstance);
+    InstallReactOS(hInstance);
 
-  FreeLibrary (hDll);
+    FreeLibrary(hDll);
 }
 
-static VOID
-RunLiveCD (HINSTANCE hInstance)
+
+static
+VOID
+RunLiveCD(
+    HINSTANCE hInstance)
 {
-  HMODULE hDll;
-  PINSTALL_REACTOS InstallLiveCD;
+    HMODULE hDll;
+    PINSTALL_REACTOS InstallLiveCD;
 
-  hDll = LoadLibrary (TEXT("syssetup"));
-  if (hDll == NULL)
+    hDll = LoadLibrary(TEXT("syssetup"));
+    if (hDll == NULL)
     {
-      DPRINT("Failed to load 'syssetup'!\n");
-      return;
+        DPRINT("Failed to load 'syssetup'!\n");
+        return;
     }
 
-  DPRINT("Loaded 'syssetup'!\n");
-  InstallLiveCD = (PINSTALL_REACTOS)GetProcAddress (hDll, "InstallLiveCD");
-
-  if (InstallLiveCD == NULL)
+    DPRINT("Loaded 'syssetup'!\n");
+    InstallLiveCD = (PINSTALL_REACTOS)GetProcAddress(hDll, "InstallLiveCD");
+    if (InstallLiveCD == NULL)
     {
-      DPRINT("Failed to get address for 'InstallReactOS()'!\n");
-      FreeLibrary (hDll);
-      return;
+        DPRINT("Failed to get address for 'InstallReactOS()'!\n");
+        FreeLibrary(hDll);
+        return;
     }
 
-  InstallLiveCD (hInstance);
+    InstallLiveCD(hInstance);
 
-  FreeLibrary (hDll);
+    FreeLibrary(hDll);
 }
 
-int WINAPI
-_tWinMain (HINSTANCE hInstance,
-	 HINSTANCE hPrevInstance,
-	 LPTSTR lpCmdLine,
-	 int nShowCmd)
+
+int
+WINAPI
+_tWinMain(
+    HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPTSTR lpCmdLine,
+    int nShowCmd)
 {
-  LPTSTR CmdLine;
-  LPTSTR p;
+    LPTSTR CmdLine;
+    LPTSTR p;
 
-  CmdLine = GetCommandLine ();
+    CmdLine = GetCommandLine();
 
-  DPRINT("CmdLine: <%s>\n",CmdLine);
+    DPRINT("CmdLine: <%s>\n",CmdLine);
 
-  p = lstrchr (CmdLine, TEXT('-'));
-  if (p == NULL)
-    return 0;
+    p = lstrchr(CmdLine, TEXT('-'));
+    if (p == NULL)
+        return 0;
 
-  if (!lstrcmpi (p, TEXT("-newsetup")))
+    if (!lstrcmpi(p, TEXT("-newsetup")))
     {
-      RunNewSetup (hInstance);
+        RunNewSetup(hInstance);
     }
-  else if (!lstrcmpi (p, TEXT("-mini")))
+    else if (!lstrcmpi(p, TEXT("-mini")))
     {
-      RunLiveCD (hInstance);
+        RunLiveCD(hInstance);
     }
 
 #if 0
   /* Add new setup types here */
-  else if (...)
+    else if (...)
     {
 
     }
 #endif
 
-  return 0;
+    return 0;
 }
 
 /* EOF */

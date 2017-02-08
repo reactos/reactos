@@ -23,12 +23,14 @@
 #ifndef __WINE_D3D9_PRIVATE_H
 #define __WINE_D3D9_PRIVATE_H
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include <config.h>
 
 #include <assert.h>
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
@@ -36,9 +38,9 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-//#include "winuser.h"
+
 #include <wine/debug.h>
-//#include "wine/unicode.h"
+WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 #include <d3d9.h>
 #include <wine/wined3d.h>
@@ -143,6 +145,13 @@ struct fvf_declaration
     DWORD fvf;
 };
 
+enum d3d9_device_state
+{
+    D3D9_DEVICE_STATE_OK,
+    D3D9_DEVICE_STATE_LOST,
+    D3D9_DEVICE_STATE_NOT_RESET,
+};
+
 struct d3d9_device
 {
     IDirect3DDevice9Ex IDirect3DDevice9Ex_iface;
@@ -161,30 +170,47 @@ struct d3d9_device
     UINT index_buffer_size;
     UINT index_buffer_pos;
 
+    LONG device_state;
     BOOL in_destruction;
-    BOOL not_reset;
     BOOL in_scene;
+
+    UINT implicit_swapchain_count;
+    struct d3d9_swapchain **implicit_swapchains;
 };
 
 HRESULT device_init(struct d3d9_device *device, struct d3d9 *parent, struct wined3d *wined3d,
         UINT adapter, D3DDEVTYPE device_type, HWND focus_window, DWORD flags,
         D3DPRESENT_PARAMETERS *parameters, D3DDISPLAYMODEEX *mode) DECLSPEC_HIDDEN;
 
+struct d3d9_resource
+{
+    LONG refcount;
+    struct wined3d_private_store private_store;
+};
+
+void d3d9_resource_cleanup(struct d3d9_resource *resource) DECLSPEC_HIDDEN;
+HRESULT d3d9_resource_free_private_data(struct d3d9_resource *resource, const GUID *guid) DECLSPEC_HIDDEN;
+HRESULT d3d9_resource_get_private_data(struct d3d9_resource *resource, const GUID *guid,
+        void *data, DWORD *data_size) DECLSPEC_HIDDEN;
+void d3d9_resource_init(struct d3d9_resource *resource) DECLSPEC_HIDDEN;
+HRESULT d3d9_resource_set_private_data(struct d3d9_resource *resource, const GUID *guid,
+        const void *data, DWORD data_size, DWORD flags) DECLSPEC_HIDDEN;
+
 struct d3d9_volume
 {
     IDirect3DVolume9 IDirect3DVolume9_iface;
-    LONG refcount;
-    struct wined3d_volume *wined3d_volume;
-    IUnknown *container;
-    IUnknown *forwardReference;
+    struct d3d9_resource resource;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
+    struct d3d9_texture *texture;
 };
 
-HRESULT volume_init(struct d3d9_volume *volume, struct d3d9_device *device, UINT width, UINT height,
-        UINT depth, DWORD usage, enum wined3d_format_id format, enum wined3d_pool pool) DECLSPEC_HIDDEN;
+void volume_init(struct d3d9_volume *volume, struct wined3d_texture *wined3d_texture,
+        unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d9_swapchain
 {
-    IDirect3DSwapChain9 IDirect3DSwapChain9_iface;
+    IDirect3DSwapChain9Ex IDirect3DSwapChain9Ex_iface;
     LONG refcount;
     struct wined3d_swapchain *wined3d_swapchain;
     IDirect3DDevice9Ex *parent_device;
@@ -196,23 +222,26 @@ HRESULT d3d9_swapchain_create(struct d3d9_device *device, struct wined3d_swapcha
 struct d3d9_surface
 {
     IDirect3DSurface9 IDirect3DSurface9_iface;
-    LONG refcount;
-    struct wined3d_surface *wined3d_surface;
+    struct d3d9_resource resource;
+    struct wined3d_texture *wined3d_texture;
+    unsigned int sub_resource_idx;
+    struct list rtv_entry;
+    struct wined3d_rendertarget_view *wined3d_rtv;
     IDirect3DDevice9Ex *parent_device;
     IUnknown *container;
-    IUnknown *forwardReference;
+    struct d3d9_texture *texture;
     BOOL getdc_supported;
 };
 
-HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, UINT width, UINT height,
-        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
-        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
+struct wined3d_rendertarget_view *d3d9_surface_get_rendertarget_view(struct d3d9_surface *surface) DECLSPEC_HIDDEN;
+void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_texture,
+        unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface) DECLSPEC_HIDDEN;
 
 struct d3d9_vertexbuffer
 {
     IDirect3DVertexBuffer9 IDirect3DVertexBuffer9_iface;
-    LONG refcount;
+    struct d3d9_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice9Ex *parent_device;
     DWORD fvf;
@@ -225,7 +254,7 @@ struct d3d9_vertexbuffer *unsafe_impl_from_IDirect3DVertexBuffer9(IDirect3DVerte
 struct d3d9_indexbuffer
 {
     IDirect3DIndexBuffer9 IDirect3DIndexBuffer9_iface;
-    LONG refcount;
+    struct d3d9_resource resource;
     struct wined3d_buffer *wined3d_buffer;
     IDirect3DDevice9Ex *parent_device;
     enum wined3d_format_id format;
@@ -238,9 +267,10 @@ struct d3d9_indexbuffer *unsafe_impl_from_IDirect3DIndexBuffer9(IDirect3DIndexBu
 struct d3d9_texture
 {
     IDirect3DBaseTexture9 IDirect3DBaseTexture9_iface;
-    LONG refcount;
+    struct d3d9_resource resource;
     struct wined3d_texture *wined3d_texture;
     IDirect3DDevice9Ex *parent_device;
+    struct list rtv_list;
 };
 
 HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *device,
@@ -314,5 +344,10 @@ struct d3d9_query
 };
 
 HRESULT query_init(struct d3d9_query *query, struct d3d9_device *device, D3DQUERYTYPE type) DECLSPEC_HIDDEN;
+
+static inline struct d3d9_device *impl_from_IDirect3DDevice9Ex(IDirect3DDevice9Ex *iface)
+{
+    return CONTAINING_RECORD(iface, struct d3d9_device, IDirect3DDevice9Ex_iface);
+}
 
 #endif /* __WINE_D3D9_PRIVATE_H */

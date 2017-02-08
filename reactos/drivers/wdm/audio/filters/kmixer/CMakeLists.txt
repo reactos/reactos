@@ -1,17 +1,15 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/libsamplerate)
 
-add_library(kmixer SHARED
+list(APPEND SOURCE
     kmixer.c
     filter.c
-    pin.c)
+    pin.c
+    kmixer.h)
 
+add_library(kmixer SHARED ${SOURCE})
 set_module_type(kmixer kernelmodedriver)
-
-target_link_libraries(kmixer
-    libcntpr
-    libsamplerate)
-
-add_pch(kmixer kmixer.h)
+target_link_libraries(kmixer libcntpr libsamplerate)
+add_pch(kmixer kmixer.h SOURCE)
 add_importlibs(kmixer ntoskrnl ks hal)
 add_cd_file(TARGET kmixer DESTINATION reactos/system32/drivers FOR all)

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/registry.c
+ * FILE:            base/setup/usetup/registry.c
  * PURPOSE:         Registry creation functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -63,47 +63,49 @@
 
 typedef struct _REG_DISK_MOUNT_INFO
 {
-  ULONG Signature;
-  LARGE_INTEGER StartingOffset;
+    ULONG Signature;
+    LARGE_INTEGER StartingOffset;
 } REG_DISK_MOUNT_INFO, *PREG_DISK_MOUNT_INFO;
 
 #include <poppack.h>
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOLEAN
-GetRootKey (PWCHAR Name)
+static
+BOOLEAN
+GetRootKey(
+    PWCHAR Name)
 {
-  if (!_wcsicmp (Name, L"HKCR"))
+    if (!_wcsicmp (Name, L"HKCR"))
     {
-      wcscpy (Name, L"\\Registry\\Machine\\SOFTWARE\\Classes\\");
-      return TRUE;
+        wcscpy (Name, L"\\Registry\\Machine\\SOFTWARE\\Classes\\");
+        return TRUE;
     }
 
-  if (!_wcsicmp (Name, L"HKCU"))
+    if (!_wcsicmp (Name, L"HKCU"))
     {
-      wcscpy (Name, L"\\Registry\\User\\.DEFAULT\\");
-      return TRUE;
+        wcscpy (Name, L"\\Registry\\User\\.DEFAULT\\");
+        return TRUE;
     }
 
-  if (!_wcsicmp (Name, L"HKLM"))
+    if (!_wcsicmp (Name, L"HKLM"))
     {
-      wcscpy (Name, L"\\Registry\\Machine\\");
-      return TRUE;
+        wcscpy (Name, L"\\Registry\\Machine\\");
+        return TRUE;
     }
 
-  if (!_wcsicmp (Name, L"HKU"))
+    if (!_wcsicmp (Name, L"HKU"))
     {
-      wcscpy (Name, L"\\Registry\\User\\");
-      return TRUE;
+        wcscpy (Name, L"\\Registry\\User\\");
+        return TRUE;
     }
 
 #if 0
-  if (!_wcsicmp (Name, L"HKR"))
-    return FALSE;
+    if (!_wcsicmp (Name, L"HKR"))
+        return FALSE;
 #endif
 
-  return FALSE;
+    return FALSE;
 }
 
 
@@ -500,7 +502,7 @@ CreateNestedKey (PHANDLE KeyHandle,
  * Called once for each AddReg and DelReg entry in a given section.
  */
 static BOOLEAN
-registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
+registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   WCHAR Buffer[MAX_INF_STRING_LENGTH];
@@ -558,7 +560,7 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
                                   &ObjectAttributes);
               if (!NT_SUCCESS(Status))
                 {
-                  DPRINT("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                  DPRINT1("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
                   continue;  /* ignore if it doesn't exist */
                 }
             }
@@ -569,7 +571,7 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
                                         &ObjectAttributes);
               if (!NT_SUCCESS(Status))
                 {
-                  DPRINT("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                  DPRINT1("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
                   continue;
                 }
             }
@@ -624,143 +626,183 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 
 
 BOOLEAN
-ImportRegistryFile(PWSTR Filename,
-                   PWSTR Section,
-                   LCID LocaleId,
-                   BOOLEAN Delete)
+ImportRegistryFile(
+    PWSTR Filename,
+    PWSTR Section,
+    LCID LocaleId,
+    BOOLEAN Delete)
 {
-  WCHAR FileNameBuffer[MAX_PATH];
-  HINF hInf;
-  UINT ErrorLine;
+    WCHAR FileNameBuffer[MAX_PATH];
+    HINF hInf;
+    UINT ErrorLine;
 
-  /* Load inf file from install media. */
-  wcscpy(FileNameBuffer, SourcePath.Buffer);
-  wcscat(FileNameBuffer, L"\\");
-  wcscat(FileNameBuffer, Filename);
+    /* Load inf file from install media. */
+    wcscpy(FileNameBuffer, SourcePath.Buffer);
+    wcscat(FileNameBuffer, L"\\");
+    wcscat(FileNameBuffer, Filename);
 
-  hInf = SetupOpenInfFileW(
-                       FileNameBuffer,
-                       NULL,
-                       INF_STYLE_WIN4,
-                       LocaleId,
-                       &ErrorLine);
-  if (hInf == INVALID_HANDLE_VALUE)
+    hInf = SetupOpenInfFileW(FileNameBuffer,
+                             NULL,
+                             INF_STYLE_WIN4,
+                             LocaleId,
+                             &ErrorLine);
+    if (hInf == INVALID_HANDLE_VALUE)
     {
-      DPRINT1("SetupOpenInfFile() failed\n");
-      return FALSE;
+        DPRINT1("SetupOpenInfFile() failed\n");
+        return FALSE;
     }
 
-  if (!registry_callback (hInf, L"AddReg", FALSE))
+    if (!registry_callback(hInf, L"AddReg", FALSE))
     {
-      DPRINT1("registry_callback() failed\n");
+        DPRINT1("registry_callback() failed\n");
     }
 
-  if (!registry_callback (hInf, L"AddReg.NT" Architecture, FALSE))
+    if (!registry_callback(hInf, L"AddReg.NT" Architecture, FALSE))
     {
-      DPRINT1("registry_callback() failed\n");
+        DPRINT1("registry_callback() failed\n");
     }
 
-  InfCloseFile (hInf);
+    InfCloseFile(hInf);
 
-  return TRUE;
+    return TRUE;
 }
 
 
 BOOLEAN
-SetInstallPathValue(PUNICODE_STRING InstallPath)
+SetInstallPathValue(
+    PUNICODE_STRING InstallPath)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
-  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
-  HANDLE KeyHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
+    HANDLE KeyHandle;
+    NTSTATUS Status;
 
-  /* Create the 'secret' InstallPath key */
-  InitializeObjectAttributes (&ObjectAttributes,
-                              &KeyName,
-                              OBJ_CASE_INSENSITIVE,
-                              NULL,
-                              NULL);
-  Status =  NtOpenKey (&KeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
+    /* Create the 'secret' InstallPath key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status =  NtOpenKey(&KeyHandle,
+                        KEY_ALL_ACCESS,
+                        &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-      return FALSE;
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
     }
 
-  Status = NtSetValueKey (KeyHandle,
-                          &ValueName,
-                          0,
-                          REG_SZ,
-                          (PVOID)InstallPath->Buffer,
-                          InstallPath->Length + sizeof(WCHAR));
-  NtClose(KeyHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
-BOOLEAN
-SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR ValueNameBuffer[16];
-  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
-  UNICODE_STRING ValueName;
-  REG_DISK_MOUNT_INFO MountInfo;
-  NTSTATUS Status;
-  HANDLE KeyHandle;
-
-  swprintf(ValueNameBuffer, L"\\DosDevices\\%C:", Letter);
-  RtlInitUnicodeString(&ValueName, ValueNameBuffer);
-
-  InitializeObjectAttributes (&ObjectAttributes,
-                              &KeyName,
-                              OBJ_CASE_INSENSITIVE,
-                              NULL,
-                              NULL);
-  Status =  NtOpenKey (&KeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-    {
-      Status = NtCreateKey(&KeyHandle,
-                           KEY_ALL_ACCESS,
-                           &ObjectAttributes,
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
                            0,
-                           NULL,
-                           REG_OPTION_NON_VOLATILE,
-                           NULL);
-    }
-
-  if (!NT_SUCCESS(Status))
+                           REG_SZ,
+                           (PVOID)InstallPath->Buffer,
+                           InstallPath->Length + sizeof(WCHAR));
+    NtClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-      return FALSE;
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        return FALSE;
     }
 
-  MountInfo.Signature = Signature;
-  MountInfo.StartingOffset = StartingOffset;
-  Status = NtSetValueKey (KeyHandle,
-                          &ValueName,
-                          0,
-                          REG_BINARY,
-                          (PVOID)&MountInfo,
-                          sizeof(MountInfo));
-  NtClose(KeyHandle);
-  if (!NT_SUCCESS(Status))
+    return TRUE;
+}
+
+
+BOOLEAN
+SetMountedDeviceValue(
+    CHAR Letter,
+    ULONG Signature,
+    LARGE_INTEGER StartingOffset)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR ValueNameBuffer[16];
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
+    UNICODE_STRING ValueName;
+    REG_DISK_MOUNT_INFO MountInfo;
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+
+    swprintf(ValueNameBuffer, L"\\DosDevices\\%C:", Letter);
+    RtlInitUnicodeString(&ValueName, ValueNameBuffer);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status =  NtOpenKey(&KeyHandle,
+                        KEY_ALL_ACCESS,
+                        &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-      return FALSE;
+        Status = NtCreateKey(&KeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
     }
 
-  return TRUE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    MountInfo.Signature = Signature;
+    MountInfo.StartingOffset = StartingOffset;
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_BINARY,
+                           (PVOID)&MountInfo,
+                           sizeof(MountInfo));
+    NtClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+VOID
+SetDefaultPagefile(
+    WCHAR Drive)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"PagingFiles");
+    WCHAR ValueBuffer[] = L"?:\\pagefile.sys 0 0\0";
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    ValueBuffer[0] = Drive;
+
+    NtSetValueKey(KeyHandle,
+                  &ValueName,
+                  0,
+                  REG_MULTI_SZ,
+                  (PVOID)&ValueBuffer,
+                  sizeof(ValueBuffer));
+
+    NtClose(KeyHandle);
 }
 
 /* EOF */

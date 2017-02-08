@@ -22,15 +22,8 @@
 
 #include "hhctrl.h"
 
-//#include "wingdi.h"
-//#include "commctrl.h"
+#include <wingdi.h>
 #include <wininet.h>
-
-#include "wine/debug.h"
-
-#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 static LRESULT Help_OnSize(HWND hWnd);
 static void ExpandContract(HHInfo *pHHInfo);
@@ -61,7 +54,7 @@ struct html_encoded_symbol {
  * Table mapping the conversion between HTML encoded symbols and their ANSI code page equivalent.
  * Note: Add additional entries in proper alphabetical order (a binary search is used on this table).
  */
-struct html_encoded_symbol html_encoded_symbols[] =
+static struct html_encoded_symbol html_encoded_symbols[] =
 {
     {"AElig",  0xC6},
     {"Aacute", 0xC1},
@@ -196,7 +189,7 @@ static HRESULT navigate_url(HHInfo *info, LPCWSTR surl)
     V_VT(&url) = VT_BSTR;
     V_BSTR(&url) = SysAllocString(surl);
 
-    hres = IWebBrowser2_Navigate2(info->web_browser, &url, 0, 0, 0, 0);
+    hres = IWebBrowser2_Navigate2(info->web_browser->web_browser, &url, 0, 0, 0, 0);
 
     VariantClear(&url);
 
@@ -268,7 +261,7 @@ static void DoSync(HHInfo *info)
     HRESULT hres;
     BSTR url;
 
-    hres = IWebBrowser2_get_LocationURL(info->web_browser, &url);
+    hres = IWebBrowser2_get_LocationURL(info->web_browser->web_browser, &url);
 
     if (FAILED(hres))
     {
@@ -874,22 +867,22 @@ static void TB_OnClick(HWND hWnd, DWORD dwID)
     switch (dwID)
     {
         case IDTB_STOP:
-            DoPageAction(info, WB_STOP);
+            DoPageAction(info->web_browser, WB_STOP);
             break;
         case IDTB_REFRESH:
-            DoPageAction(info, WB_REFRESH);
+            DoPageAction(info->web_browser, WB_REFRESH);
             break;
         case IDTB_BACK:
-            DoPageAction(info, WB_GOBACK);
+            DoPageAction(info->web_browser, WB_GOBACK);
             break;
         case IDTB_HOME:
             NavigateToChm(info, info->pCHMInfo->szFile, info->WinType.pszHome);
             break;
         case IDTB_FORWARD:
-            DoPageAction(info, WB_GOFORWARD);
+            DoPageAction(info->web_browser, WB_GOFORWARD);
             break;
         case IDTB_PRINT:
-            DoPageAction(info, WB_PRINT);
+            DoPageAction(info->web_browser, WB_PRINT);
             break;
         case IDTB_EXPAND:
         case IDTB_CONTRACT:

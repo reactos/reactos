@@ -17,9 +17,6 @@
  */
 
 #include "mstask_private.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
 struct ClassFactoryImpl
 {
@@ -56,14 +53,14 @@ static HRESULT WINAPI MSTASK_IClassFactory_QueryInterface(
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI MSTASK_IClassFactory_AddRef(LPCLASSFACTORY iface)
+static ULONG WINAPI MSTASK_IClassFactory_AddRef(IClassFactory *face)
 {
     TRACE("\n");
     InterlockedIncrement(&dll_ref);
     return 2;
 }
 
-static ULONG WINAPI MSTASK_IClassFactory_Release(LPCLASSFACTORY iface)
+static ULONG WINAPI MSTASK_IClassFactory_Release(IClassFactory *iface)
 {
     TRACE("\n");
     InterlockedDecrement(&dll_ref);
@@ -71,8 +68,8 @@ static ULONG WINAPI MSTASK_IClassFactory_Release(LPCLASSFACTORY iface)
 }
 
 static HRESULT WINAPI MSTASK_IClassFactory_CreateInstance(
-        LPCLASSFACTORY iface,
-        LPUNKNOWN pUnkOuter,
+        IClassFactory *iface,
+        IUnknown *pUnkOuter,
         REFIID riid,
         LPVOID *ppvObj)
 {
@@ -89,21 +86,21 @@ static HRESULT WINAPI MSTASK_IClassFactory_CreateInstance(
     if (FAILED(res))
         return res;
 
-    res = ITaskScheduler_QueryInterface(punk, riid, ppvObj);
-    ITaskScheduler_Release(punk);
+    res = IUnknown_QueryInterface(punk, riid, ppvObj);
+    IUnknown_Release(punk);
     return res;
 }
 
 static HRESULT WINAPI MSTASK_IClassFactory_LockServer(
-        LPCLASSFACTORY iface,
+        IClassFactory *iface,
         BOOL fLock)
 {
     TRACE("\n");
 
-    if (fLock != FALSE)
-        MSTASK_IClassFactory_AddRef(iface);
+    if (fLock)
+        IClassFactory_AddRef(iface);
     else
-        MSTASK_IClassFactory_Release(iface);
+        IClassFactory_Release(iface);
     return S_OK;
 }
 

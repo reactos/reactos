@@ -1,0 +1,32 @@
+/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH "%SystemDrive%\\Belgeler ve Ayarlar"
+    IDS_APPDATA "Uygulama Verisi"
+    IDS_DESKTOP "Masaüstü"
+    IDS_FAVORITES "Yer İmleri"
+    IDS_STARTMENU "Başlat Seçkesi"
+    IDS_PROGRAMS "Başlat Seçkesi\\İzlenceler"
+    IDS_ADMINTOOLS "Başlat Seçkesi\\İzlenceler\\Yönetim Araçları"
+    IDS_STARTUP "Başlat Seçkesi\\İzlenceler\\Başlangıç"
+    IDS_MYDOCUMENTS "Belgelerim"
+    IDS_MYPICTURES "Belgelerim\\Resimlerim"
+    IDS_MYMUSIC "Belgelerim\\Mûsikilerim"
+    IDS_MYVIDEOS "Belgelerim\\Vidyolarım"
+    IDS_TEMPLATES "Kalıplar"
+    IDS_RECENT "En Son"
+    IDS_SENDTO "Gönder"
+    IDS_PRINTHOOD "Yazıcılar"
+    IDS_NETHOOD "Sunucular"
+    IDS_LOCALSETTINGS "Yerli Ayarlar"
+    IDS_LOCALAPPDATA "Yerli Ayarlar\\Uygulama Verisi"
+    IDS_TEMP "Yerli Ayarlar\\Geçici"
+    IDS_CACHE "Yerli Ayarlar\\Geçici Umûmî Ağ Kütükleri"
+    IDS_HISTORY "Yerli Ayarlar\\Geçmiş"
+    IDS_COOKIES "Tanımlama Bilgileri"
+    IDS_PROGRAMFILES "%SystemDrive%\\İzlence Kütükleri"
+    IDS_COMMONFILES "Ortak Kütükler"
+END

@@ -1,3 +1,5 @@
+#ifndef _ISAPNP_PCH_
+#define _ISAPNP_PCH_
 
 #include <wdm.h>
 
@@ -95,3 +97,5 @@ IsaHwActivateDevice(
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _ISAPNP_PCH_ */

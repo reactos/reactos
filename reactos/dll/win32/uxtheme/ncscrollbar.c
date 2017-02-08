@@ -10,9 +10,8 @@
  */
  
 #include "uxthemep.h"
-#include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
+#include <assert.h>
 
 static BOOL SCROLL_trackVertical;
 static enum SCROLL_HITTEST SCROLL_trackHitTest;
@@ -23,7 +22,7 @@ static INT  SCROLL_TrackingBar = 0;
 static INT  SCROLL_TrackingPos = 0;
 static INT  SCROLL_TrackingVal = 0;
 
-void static ScreenToWindow( HWND hWnd, POINT* pt)
+static void ScreenToWindow( HWND hWnd, POINT* pt)
 {
     RECT rcWnd;
     GetWindowRect(hWnd, &rcWnd);
@@ -289,10 +288,8 @@ ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
         sbi.xyThumbTop = 0;
     }
 
-#ifndef ROS_SUCKS
     /* The scrollbar rect is in screen coordinates */
-//    OffsetRect(&sbi.rcScrollBar, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
-#endif
+    OffsetRect(&sbi.rcScrollBar, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
 
     if(pt)
     {
@@ -401,16 +398,15 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
     {
         return;
     }
-    ThemeInitDrawContext(&context, hwnd, 0);
-
-#ifndef ROS_SUCKS
-    /* The scrollbar rect is in screen coordinates */
-//    OffsetRect(&sbi.rcScrollBar, -context.wi.rcWindow.left, -context.wi.rcWindow.top);
-#endif
 
     if ((SCROLL_trackHitTest == SCROLL_NOWHERE) && (msg != WM_LBUTTONDOWN))
 		  return;
     
+    ThemeInitDrawContext(&context, hwnd, 0);
+
+    /* The scrollbar rect is in screen coordinates */
+    OffsetRect(&sbi.rcScrollBar, -context.wi.rcWindow.left, -context.wi.rcWindow.top);
+
     hwndOwner = (nBar == SB_CTL) ? GetParent(hwnd) : hwnd;
     hwndCtl   = (nBar == SB_CTL) ? hwnd : 0;
 

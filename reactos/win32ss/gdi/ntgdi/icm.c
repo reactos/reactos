@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32k Subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32k/objects/icm.c
+ * FILE:            win32ss/gdi/ntgdi/icm.c
  * PURPOSE:         Icm functions
  * PROGRAMMERS:     ...
  */
@@ -23,6 +23,8 @@ IntGdiCreateColorSpace(
     HCOLORSPACE hCS;
 
     pCS = COLORSPACEOBJ_AllocCSWithHandle();
+    if (pCS == NULL) return NULL;
+
     hCS = pCS->BaseObject.hHmgr;
 
     pCS->lcsColorSpace = pLogColorSpace->lcsColorSpace;
@@ -148,8 +150,12 @@ NtGdiGetDeviceGammaRamp(
     }
 
     Ret = IntGetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp);
-
-    if (!Ret) return Ret;
+    if (!Ret)
+    {
+        DC_UnlockDc(dc);
+        ExFreePoolWithTag(SafeRamp, GDITAG_ICM);
+        return Ret;
+    }
 
     _SEH2_TRY
     {

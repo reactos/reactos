@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Window classes
- * FILE:             subsystems/win32/win32k/ntuser/metric.c
+ * FILE:             win32ss/user/ntuser/metric.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -181,7 +181,7 @@ UserGetSystemMetrics(ULONG Index)
 {
     ASSERT(gpsi);
     ASSERT(Setup);
-    TRACE("UserGetSystemMetrics(%d)\n", Index);
+    TRACE("UserGetSystemMetrics(%lu)\n", Index);
 
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
@@ -202,7 +202,7 @@ UserGetSystemMetrics(ULONG Index)
             return 0; // FIXME
     }
 
-    ERR("UserGetSystemMetrics() called with invalid index %d\n", Index);
+    ERR("UserGetSystemMetrics() called with invalid index %lu\n", Index);
     return 0;
 }
 

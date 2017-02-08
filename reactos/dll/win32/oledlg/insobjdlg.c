@@ -18,25 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "oledlg_private.h"
 
-#include <stdarg.h>
-//#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
 #include <winreg.h>
-//#include "winternl.h"
-//#include "winerror.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-//#include "oledlg.h"
-#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(oledlg);
 
@@ -199,13 +183,12 @@ static LRESULT UIINSOBJDLG_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     case IDC_ADDCONTROL:
       UIINSERTOBJECTDLG_AddControl(pdlgInfo);
+      break;
 
     case IDC_OBJTYPELIST:
-    {
       if (wNotifyCode == LBN_SELCHANGE)
         UIINSERTOBJECTDLG_SelChange(pdlgInfo);
       break;
-    }
   }
   return 0;
 }
@@ -239,8 +222,8 @@ static void UIINSERTOBJECTDLG_InitDialog(InsertObjectDlgInfo* pdlgInfo)
     IOF_SHOWINSERTCONTROL) ? SW_SHOW : SW_HIDE);
   ShowWindow(pdlgInfo->hwndDisplayIconCB, (pdlgInfo->lpOleUIInsertObject->dwFlags &
     IOF_CHECKDISPLAYASICON) ? SW_SHOW : SW_HIDE);
-  EnableWindow(pdlgInfo->hwndDisplayIconCB, (pdlgInfo->lpOleUIInsertObject->dwFlags &
-    IOF_DISABLEDISPLAYASICON) ? FALSE : TRUE);
+  EnableWindow(pdlgInfo->hwndDisplayIconCB, !(pdlgInfo->lpOleUIInsertObject->dwFlags &
+    IOF_DISABLEDISPLAYASICON));
 
   if (pdlgInfo->lpOleUIInsertObject->dwFlags & IOF_SELECTCREATECONTROL)
     UIINSERTOBJECTDLG_SelectCreateCtrl(pdlgInfo);

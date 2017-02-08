@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_WINE_PORT_H
@@ -25,7 +25,9 @@
 # error You must include config.h to use this header
 #endif
 
-#define _GNU_SOURCE  /* for pread/pwrite */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE  /* for pread/pwrite, isfinite */
+#endif
 #include <fcntl.h>
 #include <math.h>
 #include <sys/types.h>
@@ -246,11 +248,15 @@ extern int getopt_long_only (int ___argc, char *const *___argv,
 size_t getpagesize(void);
 #endif  /* HAVE_GETPAGESIZE */
 
-#if !defined(HAVE_ISINF) && !defined(_ISINF) && !defined(isinf)
+#if !defined(HAVE_ISFINITE) && !defined(isfinite)
+int isfinite(double x);
+#endif
+
+#if !defined(HAVE_ISINF) && !defined(isinf)
 int isinf(double x);
 #endif
 
-#if !defined(HAVE_ISNAN) && !defined(_ISNAN) && !defined(isnan)
+#if !defined(HAVE_ISNAN) && !defined(isnan)
 int isnan(double x);
 #endif
 
@@ -272,7 +278,7 @@ ssize_t pwrite( int fd, const void *buf, size_t count, off_t offset );
 #endif /* HAVE_PWRITE */
 #endif /* __REACTOS__ */
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef HAVE_SIGSETJMP
 # include <setjmp.h>
 typedef jmp_buf sigjmp_buf;
@@ -337,9 +343,9 @@ extern int spawnvp(int mode, const char *cmdname, const char * const argv[]);
 #if defined(_MSC_VER) || (defined(__i386__) && defined(__GNUC__) && !defined(WINE_PORT_NO_INTERLOCKED))
 
 #define interlocked_cmpxchg InterlockedCompareExchange
-#define interlocked_cmpxchg_ptr InterlockedCompareExchangePtr
+#define interlocked_cmpxchg_ptr InterlockedCompareExchangePointer
 #define interlocked_xchg InterlockedExchange
-#define interlocked_xchg_ptr InterlockedExchangePtr
+#define interlocked_xchg_ptr InterlockedExchangePointer
 #define interlocked_xchg_add InterlockedExchangeAdd
 
 
@@ -354,6 +360,8 @@ ffs(int mask)
     if (_BitScanForward(&index, mask) == 0) return 0;
     return index;
 }
+#else
+#define ffs __builtin_ffs
 #endif
 
 #else /* NO_LIBWINE_PORT */

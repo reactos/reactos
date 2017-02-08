@@ -1,275 +1,277 @@
-/*
- * Copyright 2009 Andrew Hill
- *
- * Copyright 2010 Igor Paliychuk
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
+/* Translated by Igor Paliychuk */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menus
-//
+/* Menus */
 
 IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
-    POPUP "",										264,MFT_STRING,MFS_ENABLED
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Стандартні Кнопки",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Рядок Адреси",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Посилання",						IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "", -1,                            MFT_SEPARATOR
-        MENUITEM "Блокування панелей інструментів",	IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Налаштувати...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Текстові мітки",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Кнопка Йти",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Стандартні Кнопки", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Рядок Адреси", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Посилання", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Блокування панелей інструментів", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Налаштувати...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Текстові мітки", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Кнопка Йти", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-    POPUP "&Файл",									FCIDM_MENU_FILE
+    POPUP "&Файл", FCIDM_MENU_FILE
     BEGIN
-        MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "&Закрити",						IDM_FILE_CLOSE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Закрити", IDM_FILE_CLOSE
     END
-    POPUP "&Редагувати",							FCIDM_MENU_EDIT
+    POPUP "&Редагувати", FCIDM_MENU_EDIT
     BEGIN
-        MENUITEM "",								-1, MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
     END
-    POPUP "&Вигляд",								FCIDM_MENU_VIEW
+    POPUP "&Вигляд", FCIDM_MENU_VIEW
     BEGIN
-        POPUP "&Панелі інструментів",				IDM_VIEW_TOOLBARS
+        POPUP "&Панелі інструментів", IDM_VIEW_TOOLBARS
         BEGIN
-            MENUITEM "",							-1, MFT_SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Рядок &Стану",					IDM_VIEW_STATUSBAR
-        POPUP "&Панель Провідника",					IDM_VIEW_EXPLORERBAR
+        MENUITEM "Рядок &Стану", IDM_VIEW_STATUSBAR
+        POPUP "&Панель Провідника", IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Пошук\tCtrl+E",           	IDM_EXPLORERBAR_SEARCH
-            MENUITEM "&Обране\tCtrl+I",         	IDM_EXPLORERBAR_FAVORITES
-            MENUITEM "&Медіа",                      IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Історія\tCtrl+H",            IDM_EXPLORERBAR_HISTORY
-            MENUITEM "П&апки",                  	IDM_EXPLORERBAR_FOLDERS
-            MENUITEM "",                            IDM_EXPLORERBAR_SEPARATOR
+            MENUITEM "&Пошук\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Обране\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Медіа", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Історія\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "П&апки", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
-        MENUITEM "",								FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-        POPUP "Й&ти До",							FCIDM_MENU_EXPLORE
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "Й&ти До", FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Назад\tAlt+Ліва Стрілка",    IDM_GOTO_BACK
-            MENUITEM "&Вперед\tAlt+Права Стрілка",  IDM_GOTO_FORWARD
-            MENUITEM "Вве&рх на один рівень",       IDM_GOTO_UPONELEVEL
-            MENUITEM "",							-1, MFT_SEPARATOR
+            MENUITEM "&Назад\tAlt+Ліва Стрілка", IDM_GOTO_BACK
+            MENUITEM "&Вперед\tAlt+Права Стрілка", IDM_GOTO_FORWARD
+            MENUITEM "Вве&рх на один рівень", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Домашня Сторінка\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
-        MENUITEM "&Оновити",						IDM_VIEW_REFRESH
+        MENUITEM "&Оновити", IDM_VIEW_REFRESH
     END
-    POPUP "О&бране",								FCIDM_MENU_FAVORITES
+    POPUP "О&бране", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Додати до Обраного...",			IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Організувати Обране...",			IDM_FAVORITES_ORGANIZEFAVORITES
-        MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "(Empty)",							IDM_FAVORITES_EMPTY
+        MENUITEM "&Додати до Обраного...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Організувати Обране...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(Empty)", IDM_FAVORITES_EMPTY
     END
-    POPUP "&Інструменти",							FCIDM_MENU_TOOLS
+    POPUP "&Інструменти", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Під'єднати &Мережевий Диск...",	IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "&Від'єднати Мержевий Диск...",	IDM_TOOLS_DISCONNECTNETWORKDRIVE
-        MENUITEM "&Синхронізувати...",				IDM_TOOLS_SYNCHRONIZE
-        MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "&Опції Папки...",					IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "Під'єднати &Мережевий Диск...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Від'єднати Мержевий Диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Синхронізувати...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Опції Папки...", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Допомога",								FCIDM_MENU_HELP
+    POPUP "&Допомога", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Ця копія ReactOS &законна?",		IDM_HELP_ISTHISCOPYLEGAL
-        MENUITEM "&Про ReactOS",					IDM_HELP_ABOUT
+        MENUITEM "Ця копія ReactOS &законна?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&Про ReactOS", IDM_HELP_ABOUT
     END
 END
 
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+	END
+END
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialogs
-//
+/* Dialogs */
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
-STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Опції &тексту:",-1,4,2,48,15
-    COMBOBOX        IDC_TEXTOPTIONS,52,0,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Опції &значків:",-1,4,20,48,15
-    COMBOBOX        IDC_ICONOPTIONS,52,18,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Опції &тексту:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Опції &значків:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
+/* Accelerators */
 
 IDR_ACCELERATORS ACCELERATORS
 BEGIN
-    VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
-    VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
-    "R",            IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
-    VK_HOME,        IDM_GOTO_HOMEPAGE,                  VIRTKEY, ALT, NOINVERT
-    "D",            IDM_FAVORITES_ADDTOFAVORITES,       VIRTKEY, CONTROL, NOINVERT
-    "B",            IDM_FAVORITES_ORGANIZEFAVORITES,    VIRTKEY, CONTROL, NOINVERT
-    VK_LEFT,        IDM_GOTO_BACK,                      VIRTKEY, ALT
-    VK_RIGHT,       IDM_GOTO_FORWARD,                   VIRTKEY, ALT
-    "W",            IDM_FILE_CLOSE,                     VIRTKEY, CONTROL, NOINVERT
-    "E",            IDM_EXPLORERBAR_SEARCH,             VIRTKEY, CONTROL, NOINVERT
-    "I",            IDM_EXPLORERBAR_FAVORITES,          VIRTKEY, CONTROL, NOINVERT
-    "H",            IDM_EXPLORERBAR_HISTORY,            VIRTKEY, CONTROL, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Strings
-//
+/* Strings */
 
 STRINGTABLE
 BEGIN
-    800                       "Містить команди маніпулювання вибраними об'єктами."
-END
-
-STRINGTABLE
-BEGIN
-    864                       "Містить команди правки."
+    IDS_CANCELLING "Canceling..."
+    IDS_REMAINING  "Remaining"
 END
 
 STRINGTABLE
 BEGIN
-    928                       "Містить команди маніпулювання виглядом."
+    800 "Містить команди маніпулювання вибраними об'єктами."
 END
 
 STRINGTABLE
 BEGIN
-    992                       "Містить команди інструментів."
+    864 "Містить команди правки."
 END
 
 STRINGTABLE
 BEGIN
-    1056                      "Містить команди для відображення Допомоги."
+    928 "Містить команди маніпулювання виглядом."
 END
 
 STRINGTABLE
 BEGIN
-    9025                      "Закриває вікно."
-    9026                      "Йде вверх на один рівень."
+    992 "Містить команди інструментів."
 END
 
 STRINGTABLE
 BEGIN
-    9121                      "Під'єднує до мережевого диску."
-    9122                      "Від'єднує від мережевого диску."
+    1056 "Містить команди для відображення Допомоги."
 END
 
 STRINGTABLE
 BEGIN
-    9250                      "Відображає дані про програму, номер версії, та copyright."
-    9252                      "Відображає дані для налагодження."
+    9025 "Закриває вікно."
+    9026 "Йде вверх на один рівень."
 END
 
 STRINGTABLE
 BEGIN
-    9281                      "Йде до попередньої сторінки."
-    9282                      "Йде до наступної сторінки."
-    9283                      "Дозволяє вам змінити налаштування."
-    9285                      "Йде до вашої домашньої сторінки."
+    9121 "Під'єднує до мережевого диску."
+    9122 "Від'єднує від мережевого диску."
 END
 
 STRINGTABLE
 BEGIN
-    9362                      "Відкриває папку Обране."
-    9363                      "Додає поточну сторінку до списку Обраного."
+    9250 "Відображає дані про програму, номер версії, та copyright."
+    9252 "Відображає дані для налагодження."
 END
 
 STRINGTABLE
 BEGIN
-    9505                      "Показує чи приховує панелі інструментів."
-    9506                      "Показує чи приховує рядок стану."
-    9508                      "Показує панель стандартних кнопок."
-    9509                      "Показує рядок адреси."
-    9510                      "Показує панель швидких посилань."
-    9516                      "Блокує розміри та розташування панелей інструментів."
+    9281 "Йде до попередньої сторінки."
+    9282 "Йде до наступної сторінки."
+    9283 "Дозволяє вам змінити налаштування."
+    9285 "Йде до вашої домашньої сторінки."
 END
 
 STRINGTABLE
 BEGIN
-    9533                      "Персоналізує панель інструментів."
+    9362 "Відкриває папку Обране."
+    9363 "Додає поточну сторінку до списку Обраного."
 END
 
 STRINGTABLE
 BEGIN
-    9552                      "Показує чи приховує панель Провідника."
-    9553                      "Показує панель Пошуку."
-    9554                      "Показує панель Обраного."
-    9555                      "Показує панель Історії."
-    9557                      "Показує панель Тек."
-    9559                      "Показує панель Медіа."
+    9505 "Показує чи приховує панелі інструментів."
+    9506 "Показує чи приховує рядок стану."
+    9508 "Показує панель стандартних кнопок."
+    9509 "Показує рядок адреси."
+    9510 "Показує панель швидких посилань."
+    9516 "Блокує розміри та розташування панелей інструментів."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SMALLICONS            "Малі значки"
-    IDS_LARGEICONS            "Великі значки"
-    IDS_SHOWTEXTLABELS        "Показати текстові мітки"
+    9533 "Персоналізує панель інструментів."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS          "Без текстових міток"
-    IDS_SELECTIVETEXTONRIGHT  "Частина тексту праворуч"
+    9552 "Показує чи приховує панель Провідника."
+    9553 "Показує панель Пошуку."
+    9554 "Показує панель Обраного."
+    9555 "Показує панель Історії."
+    9557 "Показує панель Тек."
+    9559 "Показує панель Медіа."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GOBUTTONLABEL         "|Йти||"
-    IDS_GOBUTTONTIPTEMPLATE   "Йти до ""%s"""
+    IDS_SMALLICONS "Малі значки"
+    IDS_LARGEICONS "Великі значки"
+    IDS_SHOWTEXTLABELS "Показати текстові мітки"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCHLABEL           "Пошук"
-    IDS_ADDRESSBANDLABEL      "А&дреса"
+    IDS_NOTEXTLABELS "Без текстових міток"
+    IDS_SELECTIVETEXTONRIGHT "Частина тексту праворуч"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL          "Папки"
+    IDS_GOBUTTONLABEL "|Йти||"
+    IDS_GOBUTTONTIPTEMPLATE "Йти до ""%s"""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT           "&Історія\tCtrl+H"
+    IDS_SEARCHLABEL "Пошук"
+    IDS_ADDRESSBANDLABEL "А&дреса"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_UP                    "Вверх"
+    IDS_FOLDERSLABEL "Папки"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK                  "Назад"
-    IDS_FORWARD               "Вперед"
+    IDS_HISTORYTEXT "&Історія\tCtrl+H"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_UP "Вверх"
+END
 
+STRINGTABLE
+BEGIN
+    IDS_BACK "Back to %s"
+    IDS_FORWARD "Forward to %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+END

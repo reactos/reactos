@@ -6,9 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#include "precomp.h"
 
-
-#include "priv.h"
+#define YDEBUG
+#include <debug.h>
 
 ULONG
 MMixerGetFilterPinCount(

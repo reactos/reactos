@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 typedef enum dwarf_tag_e
 {
   DW_TAG_padding                        = 0x00,
@@ -554,3 +556,15 @@ enum dwarf_call_frame_info
 #define DW_INL_inlined                  0x01
 #define DW_INL_declared_not_inlined     0x02
 #define DW_INL_declared_inlined         0x03
+
+#ifdef DBGHELP_STATIC_LIB
+/* from stack.c */
+static BOOL sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz)
+{
+    DWORD bytes_read = 0;
+    if (csw->is32)
+        return csw->u.s32.f_read_mem(csw->hProcess, addr, ptr, sz, &bytes_read);
+    else
+        return csw->u.s64.f_read_mem(csw->hProcess, addr, ptr, sz, &bytes_read);
+}
+#endif

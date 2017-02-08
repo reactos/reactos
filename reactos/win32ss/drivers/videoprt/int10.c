@@ -21,7 +21,130 @@
 
 #include "videoprt.h"
 
+#include <ndk/kefuncs.h>
+
+#define NDEBUG
+#include <debug.h>
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+NTSTATUS
+NTAPI
+IntInitializeVideoAddressSpace(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
+    NTSTATUS Status;
+    HANDLE PhysMemHandle;
+    PVOID BaseAddress;
+    LARGE_INTEGER Offset;
+    SIZE_T ViewSize;
+    CHAR IVTAndBda[1024+256];
+
+    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
+    BaseAddress = 0;
+    ViewSize = 1024 * 1024;
+    Status = ZwFreeVirtualMemory(NtCurrentProcess(),
+                                 &BaseAddress,
+                                 &ViewSize,
+                                 MEM_RELEASE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't unmap reserved memory (%x)\n", Status);
+        return 0;
+    }
+
+    /* Open the physical memory section */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PhysMemName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSection(&PhysMemHandle,
+                           SECTION_ALL_ACCESS,
+                           &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't open \\Device\\PhysicalMemory\n");
+        return Status;
+    }
+
+    /* Map the BIOS and device registers into the address space */
+    Offset.QuadPart = 0xa0000;
+    ViewSize = 0x100000 - 0xa0000;
+    BaseAddress = (PVOID)0xa0000;
+    Status = ZwMapViewOfSection(PhysMemHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't map physical memory (%x)\n", Status);
+        ZwClose(PhysMemHandle);
+        return Status;
+    }
+
+    /* Close physical memory section handle */
+    ZwClose(PhysMemHandle);
+
+    if (BaseAddress != (PVOID)0xa0000)
+    {
+        DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
+                BaseAddress);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Allocate some low memory to use for the non-BIOS
+     * parts of the v86 mode address space
+     */
+    BaseAddress = (PVOID)0x1;
+    ViewSize = 0xa0000 - 0x1000;
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &ViewSize,
+                                     MEM_RESERVE | MEM_COMMIT,
+                                     PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
+        return Status;
+    }
+    if (BaseAddress != (PVOID)0x0)
+    {
+        DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
+                BaseAddress);
+        return 0;
+    }
+
+    /* Get the real mode IVT and BDA from the kernel */
+    Status = NtVdmControl(VdmInitialize, IVTAndBda);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtVdmControl failed (status %x)\n", Status);
+        return Status;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+#else
+NTSTATUS
+NTAPI
+IntInitializeVideoAddressSpace(VOID)
+{
+    UNIMPLEMENTED;
+    NT_ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+#endif
 
 #if defined(_M_IX86)
 VP_STATUS NTAPI

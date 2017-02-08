@@ -4,7 +4,7 @@
  * FILE:            dll/directx/msvidctl/tuningspace_container.cpp
  * PURPOSE:         ITuningSpaceContainer interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #define _FORCENAMELESSUNION
 #include "precomp.h"

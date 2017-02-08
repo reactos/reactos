@@ -1,19 +1,16 @@
+#ifndef _CALC_H
+#define _CALC_H
+
 #include <stdarg.h>
 #include <windef.h>
-#include <winbase.h>
 #include <winuser.h>
-#include <wingdi.h>
-#include <winreg.h>
 #include <tchar.h>
-//#include <stdio.h>
-//#include <string.h>
 #include <math.h>
 #include <float.h>
 #include <malloc.h>
 #ifndef DISABLE_HTMLHELP_SUPPORT
 #include <htmlhelp.h>
 #endif
-#include <limits.h>
 
 /* Messages reserved for the main dialog */
 #define WM_CLOSE_STATS      (WM_APP+1)
@@ -160,7 +157,6 @@ typedef struct {
 
 extern calc_t calc;
 
-//
 #define CALC_E      2.7182818284590452354
 
 #define CALC_PI_2   1.57079632679489661923
@@ -223,18 +219,14 @@ int  rpn_is_zero(calc_number_t *c);
 void rpn_alloc(calc_number_t *c);
 void rpn_free(calc_number_t *c);
 
-//
-
 void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base);
 void convert_text2number_2(calc_number_t *a);
 void convert_real_integer(unsigned int base);
 
-//
-
 INT_PTR CALLBACK AboutDlgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-
-//
 
 void ConvExecute(HWND hWnd);
 void ConvAdjust(HWND hWnd, int n_cat);
 void ConvInit(HWND hWnd);
+
+#endif /* _CALC_H */

@@ -1,0 +1,125 @@
+/*
+ * Slovenian resources for oleacc
+ *
+ * Copyright 2010 Matej Spindler
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "nepoznan objekt" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "naslovna vrstica"
+    ROLE_SYSTEM_MENUBAR     "menijska vrstica"
+    ROLE_SYSTEM_SCROLLBAR   "drsni trak"
+    ROLE_SYSTEM_GRIP        "prijemalo"
+    ROLE_SYSTEM_SOUND       "zvok"
+    ROLE_SYSTEM_CURSOR      "kazalec"
+    ROLE_SYSTEM_CARET       "mesto vnosa"
+    ROLE_SYSTEM_ALERT       "opozorilo"
+    ROLE_SYSTEM_WINDOW      "okno"
+    ROLE_SYSTEM_CLIENT      "klient"
+    ROLE_SYSTEM_MENUPOPUP   "pojavni meni"
+    ROLE_SYSTEM_MENUITEM    "element menija"
+    ROLE_SYSTEM_TOOLTIP     "zaslonski namig"
+    ROLE_SYSTEM_APPLICATION "aplikacija"
+    ROLE_SYSTEM_DOCUMENT    "dokument"
+    ROLE_SYSTEM_PANE        "podokno"
+    ROLE_SYSTEM_CHART       "graf"
+    ROLE_SYSTEM_DIALOG      "dialog"
+    ROLE_SYSTEM_BORDER      "okvir"
+    ROLE_SYSTEM_GROUPING    "skupina"
+    ROLE_SYSTEM_SEPARATOR   "razdelek"
+    ROLE_SYSTEM_TOOLBAR     "orodna vrstica"
+    ROLE_SYSTEM_STATUSBAR   "vrstica stanja"
+    ROLE_SYSTEM_TABLE        "tabela"
+    ROLE_SYSTEM_COLUMNHEADER "glava stolpca"
+    ROLE_SYSTEM_ROWHEADER    "glava vrstice"
+    ROLE_SYSTEM_COLUMN       "stolpec"
+    ROLE_SYSTEM_ROW          "vrstica"
+    ROLE_SYSTEM_CELL         "celica"
+    ROLE_SYSTEM_LINK         "povezava"
+    ROLE_SYSTEM_HELPBALLOON  "balon pomoči"
+    ROLE_SYSTEM_CHARACTER    "znak"
+    ROLE_SYSTEM_LIST         "seznam"
+    ROLE_SYSTEM_LISTITEM     "element seznama"
+    ROLE_SYSTEM_OUTLINE      "oris"
+    ROLE_SYSTEM_OUTLINEITEM  "element orisa"
+    ROLE_SYSTEM_PAGETAB      "zavihek strani"
+    ROLE_SYSTEM_PROPERTYPAGE "stran lasnosti"
+    ROLE_SYSTEM_INDICATOR    "indicator"
+    ROLE_SYSTEM_GRAPHIC      "grafika"
+    ROLE_SYSTEM_STATICTEXT   "statični tekst"
+    ROLE_SYSTEM_TEXT         "tekst"
+    ROLE_SYSTEM_PUSHBUTTON   "potisni gumb"
+    ROLE_SYSTEM_CHECKBUTTON  "izbirni gumb"
+    ROLE_SYSTEM_RADIOBUTTON  "radijski gumb"
+    ROLE_SYSTEM_COMBOBOX     "kombinirano polje"
+    ROLE_SYSTEM_DROPLIST     "spustni"
+    ROLE_SYSTEM_PROGRESSBAR  "vrstica napredka"
+    ROLE_SYSTEM_DIAL         "številčnica"
+    ROLE_SYSTEM_HOTKEYFIELD  "polje bližnic"
+    ROLE_SYSTEM_SLIDER       "drsnik"
+    ROLE_SYSTEM_SPINBUTTON   "vrtilno polje"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "animacija"
+    ROLE_SYSTEM_EQUATION     "enačba"
+    ROLE_SYSTEM_BUTTONDROPDOWN "spustni gumb"
+    ROLE_SYSTEM_BUTTONMENU   "gumb menija"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "mreža spustnih gumbov"
+    ROLE_SYSTEM_WHITESPACE   "prazen prostor"
+    ROLE_SYSTEM_PAGETABLIST  "seznam zavihkov strani"
+    ROLE_SYSTEM_CLOCK        "ura"
+    ROLE_SYSTEM_SPLITBUTTON  "deljeni gumb"
+    ROLE_SYSTEM_IPADDRESS    "IP naslov"
+    ROLE_SYSTEM_OUTLINEBUTTON "gumb orisa"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

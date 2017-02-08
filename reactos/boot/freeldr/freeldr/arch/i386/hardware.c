@@ -38,15 +38,15 @@
 #define MAX_LPT_PORTS   3
 
 /* No Mouse */
-#define MOUSE_TYPE_NONE			0
+#define MOUSE_TYPE_NONE            0
 /* Microsoft Mouse with 2 buttons */
-#define MOUSE_TYPE_MICROSOFT	1
+#define MOUSE_TYPE_MICROSOFT       1
 /* Logitech Mouse with 3 buttons */
-#define MOUSE_TYPE_LOGITECH		2
+#define MOUSE_TYPE_LOGITECH        2
 /* Microsoft Wheel Mouse (aka Z Mouse) */
-#define MOUSE_TYPE_WHEELZ		3
+#define MOUSE_TYPE_WHEELZ          3
 /* Mouse Systems Mouse */
-#define MOUSE_TYPE_MOUSESYSTEMS	4
+#define MOUSE_TYPE_MOUSESYSTEMS    4
 
 
 /* PS2 stuff */
@@ -276,7 +276,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST)
            + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK) + (NodeSize * NodeCount);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -307,10 +307,10 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         NodeNumber = (UCHAR)i;
 
-        x = PnpBiosGetDeviceNode(&NodeNumber, (PVOID)DISKREADBUFFER);
+        x = PnpBiosGetDeviceNode(&NodeNumber, DiskReadBuffer);
         if (x == 0)
         {
-            DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DISKREADBUFFER;
+            DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DiskReadBuffer;
 
             TRACE("Node: %u  Size %u (0x%x)\n",
                   DeviceNode->Node,
@@ -376,7 +376,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate a full resource descriptor\n");
@@ -416,7 +416,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     else
     {
         TRACE("Reading disk geometry failed\n");
-        MmHeapFree(PartialResourceList);
+        FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
         return NULL;
     }
     TRACE("Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
@@ -507,7 +507,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                sizeof(CM_FLOPPY_DEVICE_DATA);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -563,7 +563,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -635,7 +635,7 @@ DetectSystem(VOID)
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -808,8 +808,8 @@ DetectSerialMouse(PUCHAR Port)
         if (Buffer[i] == 'B')
         {
             /* Sign for Microsoft Ballpoint */
-//	  DbgPrint("Microsoft Ballpoint device detected\n");
-//	  DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET\n");
+//      DbgPrint("Microsoft Ballpoint device detected\n");
+//      DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET\n");
             return MOUSE_TYPE_NONE;
         }
         else if (Buffer[i] == 'M')
@@ -1036,7 +1036,7 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
         /* Set 'Configuration Data' value */
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         memset(PartialResourceList, 0, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
@@ -1099,7 +1099,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
                sizeof(CM_SERIAL_DEVICE_DATA);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1203,7 +1203,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         if (Irq[i] != (ULONG) - 1)
             Size += sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1342,7 +1342,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         /* Set 'Configuration Data' value */
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                sizeof(CM_KEYBOARD_DEVICE_DATA);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1395,7 +1395,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -1576,7 +1576,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
     {
         TRACE("Detected PS2 port\n");
 
-        PartialResourceList = MmHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST));
+        PartialResourceList = FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST), TAG_HW_RESOURCE_LIST);
         memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
         /* Initialize resource descriptor */
@@ -1612,7 +1612,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             /* Initialize resource descriptor */
             Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
                    sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-            PartialResourceList = MmHeapAlloc(Size);
+            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
             memset(PartialResourceList, 0, Size);
             PartialResourceList->Version = 1;
             PartialResourceList->Revision = 1;
@@ -1695,7 +1695,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
            sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -1788,7 +1788,51 @@ PcHwIdle(VOID)
     /*
      * No futher processing here.
      * Optionally implement HLT instruction handling.
-     */
+   */
 }
+
+VOID
+FrLdrCheckCpuCompatiblity(VOID)
+{
+    INT CpuInformation[4] = {-1};
+    ULONG NumberOfIds;
+
+    /* Check if the processor first supports ID 1 */
+    __cpuid(CpuInformation, 0);
+
+    NumberOfIds = CpuInformation[0];
+
+    if (NumberOfIds == 0)
+    {
+        FrLdrBugCheckWithMessage(MISSING_HARDWARE_REQUIREMENTS,
+                                 __FILE__,
+                                 __LINE__,
+                                 "ReactOS requires the CPUID instruction to return "
+                                 "more than one supported ID.\n\n");
+    }
+
+    /* NumberOfIds will be greater than 1 if the processor is new enough. */
+    if (NumberOfIds == 1)
+    {
+        INT ProcessorFamily;
+
+        /* Get information. */
+        __cpuid(CpuInformation, 1);
+
+        ProcessorFamily = (CpuInformation[0] >> 8) & 0xF;
+
+        /* If it's Family 4 or lower, bugcheck. */
+        if(ProcessorFamily < 5)
+        {
+            FrLdrBugCheckWithMessage(MISSING_HARDWARE_REQUIREMENTS,
+                                     __FILE__,
+                                     __LINE__,
+                                     "Processor is too old (family %u < 5)\n"
+                                     "ReactOS requires a Pentium-level processor or newer.",
+                                     ProcessorFamily);
+        }
+    }
+}
+
 
 /* EOF */

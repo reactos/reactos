@@ -1,9 +1,9 @@
 /*
- * FILE:             dll/shellext/deskadp/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:       2011-09-02  initial translation
- *                   2011-11-27  minor changes
+ * FILE:       dll/shellext/deskadp/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG: 2011-09-02  initial translation
+ *             2011-11-27  minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -13,21 +13,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Adaptor"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  GROUPBOX    "Tip de adaptor",   -1, 7, 3, 237, 50
-  LTEXT       "",                 IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
-  PUSHBUTTON  "&Proprietăți…",    IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
-  GROUPBOX    "Despre adaptor",   -1, 7, 56, 237, 75
-  LTEXT       "Tipul de cip:",    -1, 13, 68, 58, 8
-  LTEXT       "",                 IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-  LTEXT       "Tipul de DAC:",    -1, 13, 80, 58, 8
-  LTEXT       "",                 IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-  LTEXT       "Memorie:",         -1, 13, 92, 58, 8
-  LTEXT       "",                 IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-  LTEXT       "Șir adaptor:",     -1, 13, 104, 58, 8
-  LTEXT       "",                 IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-  LTEXT       "Informație BIOS:", -1, 13, 116, 58, 8
-  LTEXT       "",                 IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-  PUSHBUTTON  "&Enumerare moduri valide…", IDC_LISTALLMODES, 7, 139, 130, 14
+    GROUPBOX "Tip de adaptor", -1, 7, 3, 237, 50
+    ICON IDC_DESK_ADAPTER, IDC_DESK_ADAPTER, 13, 11, 21, 20, SS_ICON
+    LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
+    PUSHBUTTON "&Proprietăți…", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+    GROUPBOX "Despre adaptor", -1, 7, 56, 237, 75
+    LTEXT "Tipul de cip:", -1, 13, 68, 58, 8
+    LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
+    LTEXT "Tipul de DAC:", -1, 13, 80, 58, 8
+    LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
+    LTEXT "Memorie:", -1, 13, 92, 58, 8
+    LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
+    LTEXT "Șir adaptor:", -1, 13, 104, 58, 8
+    LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
+    LTEXT "Informație BIOS:", -1, 13, 116, 58, 8
+    LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+    PUSHBUTTON "&Enumerare moduri valide…", IDC_LISTALLMODES, 7, 139, 130, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
@@ -35,22 +36,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Alegeți un mod"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  DEFPUSHBUTTON  "Con&firmă",     IDOK, 112, 115, 50, 15
-  PUSHBUTTON     "A&nulează",     IDCANCEL, 167, 115, 50, 15
-  GROUPBOX       "Moduri valide", -1, 6, 7, 212, 98
-  LISTBOX                         IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
+    DEFPUSHBUTTON "Con&firmă", IDOK, 112, 115, 50, 15
+    PUSHBUTTON "A&nulează", IDCANCEL, 167, 115, 50, 15
+    GROUPBOX "Moduri valide", -1, 6, 7, 212, 98
+    LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MODEFMT          "%d by %d, %s, %s"
-  IDS_DEFREFRESHRATE   "Rata implicită de reîmprospătare"
-  IDES_REFRESHRATEFMT  "%d Hertz"
-  IDS_4BPP             "16 Culori"
-  IDS_8BPP             "256 Culori"
-  IDS_15BPP            "Culoare de înaltă calitate (15 biți)"
-  IDS_16BPP            "Culoare de înaltă calitate (16 biți)"
-  IDS_24BPP            "Calitate fotografică (24 biți)"
-  IDS_32BPP            "Calitate fotografică (32 biți)"
+    IDS_MODEFMT "%d by %d, %s, %s"
+    IDS_DEFREFRESHRATE "Rata implicită de reîmprospătare"
+    IDES_REFRESHRATEFMT "%d Hertz"
+    IDS_4BPP "16 Culori"
+    IDS_8BPP "256 Culori"
+    IDS_15BPP "Culoare de înaltă calitate (15 biți)"
+    IDS_16BPP "Culoare de înaltă calitate (16 biți)"
+    IDS_24BPP "Calitate fotografică (24 biți)"
+    IDS_32BPP "Calitate fotografică (32 biți)"
 END
-

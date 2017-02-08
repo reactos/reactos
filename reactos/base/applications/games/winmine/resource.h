@@ -51,3 +51,14 @@
 #define IDS_ABOUT      1103
 
 #define IDA_WINEMINE   1201
+
+#define IDM_WINEMINE   1
+
+#define IDI_WINEMINE   1
+#define IDI_FACES      2
+#define IDI_LEDS       3
+#define IDI_MINES      4
+
+#define DLG_TIMES      1
+#define DLG_CONGRATS   2
+#define DLG_CUSTOM     3

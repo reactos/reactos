@@ -317,19 +317,30 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             return Status;
         }
 
-        /* Set the Start Addresses */
-        Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
-        Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
+        /* Set the Start Addresses from the untrusted ThreadContext */
+        _SEH2_TRY
+        {
+            Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
+            Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
         /* Let the kernel intialize the Thread */
-        Status = KeInitThread(&Thread->Tcb,
-                              NULL,
-                              PspUserThreadStartup,
-                              NULL,
-                              Thread->StartAddress,
-                              ThreadContext,
-                              TebBase,
-                              &Process->Pcb);
+        if (NT_SUCCESS(Status))
+        {
+            Status = KeInitThread(&Thread->Tcb,
+                                  NULL,
+                                  PspUserThreadStartup,
+                                  NULL,
+                                  Thread->StartAddress,
+                                  ThreadContext,
+                                  TebBase,
+                                  &Process->Pcb);
+        }
     }
     else
     {
@@ -470,7 +481,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             ObDereferenceObject(Thread);
 
             /* Close its handle, killing it */
-            ObCloseHandle(ThreadHandle, PreviousMode);
+            ObCloseHandle(hThread, PreviousMode);
 
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -512,7 +523,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             ObDereferenceObject(Thread);
 
             /* Close its handle, killing it */
-            ObCloseHandle(ThreadHandle, PreviousMode);
+            ObCloseHandle(hThread, PreviousMode);
             return Status;
         }
 
@@ -643,10 +654,10 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     CidEntry = ExMapHandleToPointer(PspCidTable, ThreadId);
     if (CidEntry)
     {
-        /* Get the Process */
+        /* Get the Thread */
         FoundThread = CidEntry->Object;
 
-        /* Make sure it's really a process */
+        /* Make sure it's really a thread */
         if (FoundThread->Tcb.Header.Type == ThreadObject)
         {
             /* Safe Reference and return it */
@@ -664,16 +675,6 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     /* Return to caller */
     KeLeaveCriticalRegion();
     return Status;
-}
-
-/*
- * @implemented
- */
-HANDLE
-NTAPI
-PsGetCurrentThreadId(VOID)
-{
-    return PsGetCurrentThread()->Cid.UniqueThread;
 }
 
 /*
@@ -709,11 +710,31 @@ PsGetThreadId(IN PETHREAD Thread)
 /*
  * @implemented
  */
+HANDLE
+NTAPI
+PsGetCurrentThreadId(VOID)
+{
+    return PsGetCurrentThread()->Cid.UniqueThread;
+}
+
+/*
+ * @implemented
+ */
 PEPROCESS
 NTAPI
 PsGetThreadProcess(IN PETHREAD Thread)
 {
     return Thread->ThreadsProcess;
+}
+
+/*
+ * @implemented
+ */
+PEPROCESS
+NTAPI
+PsGetCurrentThreadProcess(VOID)
+{
+    return PsGetCurrentThread()->ThreadsProcess;
 }
 
 /*
@@ -731,9 +752,19 @@ PsGetThreadProcessId(IN PETHREAD Thread)
  */
 HANDLE
 NTAPI
+PsGetCurrentThreadProcessId(VOID)
+{
+    return PsGetCurrentThread()->Cid.UniqueProcess;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
 PsGetThreadSessionId(IN PETHREAD Thread)
 {
-    return (HANDLE)Thread->ThreadsProcess->Session;
+    return MmGetSessionId(Thread->ThreadsProcess);
 }
 
 /*
@@ -749,11 +780,54 @@ PsGetThreadTeb(IN PETHREAD Thread)
 /*
  * @implemented
  */
+PTEB
+NTAPI
+PsGetCurrentThreadTeb(VOID)
+{
+    return PsGetCurrentThread()->Tcb.Teb;
+}
+
+/*
+ * @implemented
+ */
 PVOID
 NTAPI
 PsGetThreadWin32Thread(IN PETHREAD Thread)
 {
     return Thread->Tcb.Win32Thread;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+PsGetCurrentThreadWin32Thread(VOID)
+{
+    return PsGetCurrentThread()->Tcb.Win32Thread;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(
+    _Out_ HANDLE* OutProcessId)
+{
+    PETHREAD CurrentThread;
+
+    /* Get the current thread */
+    CurrentThread = PsGetCurrentThread();
+
+    /* Return the process id */
+    *OutProcessId = CurrentThread->Cid.UniqueProcess;
+
+    /* Enter critical region */
+    KeEnterCriticalRegion();
+
+    /* Return the win32 thread */
+    return CurrentThread->Tcb.Win32Thread;
 }
 
 /*
@@ -832,21 +906,35 @@ PsSetThreadHardErrorsAreDisabled(IN PETHREAD Thread,
  */
 PVOID
 NTAPI
-PsGetCurrentThreadWin32Thread(VOID)
+PsSetThreadWin32Thread(
+    _Inout_ PETHREAD Thread,
+    _In_ PVOID Win32Thread,
+    _In_ PVOID OldWin32Thread)
 {
-    return PsGetCurrentThread()->Tcb.Win32Thread;
+    /* Are we setting the win32 process? */
+    if (Win32Thread != NULL)
+    {
+        /* Just exchange it */
+        return InterlockedExchangePointer(&Thread->Tcb.Win32Thread,
+                                          Win32Thread);
+    }
+    else
+    {
+        /* We are resetting, only exchange when the old win32 thread matches */
+        return InterlockedCompareExchangePointer(&Thread->Tcb.Win32Thread,
+                                                 Win32Thread,
+                                                 OldWin32Thread);
+    }
 }
 
-/*
- * @implemented
- */
-VOID
+NTSTATUS
 NTAPI
-PsSetThreadWin32Thread(IN PETHREAD Thread,
-                       IN PVOID Win32Thread)
+PsWrapApcWow64Thread(IN OUT PVOID *ApcContext,
+                     IN OUT PVOID *ApcRoutine)
 {
-    Thread->Tcb.Win32Thread = Win32Thread;
-}
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}    
 
 NTSTATUS
 NTAPI
@@ -966,7 +1054,9 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
-            Attributes = ObjectAttributes->Attributes;
+
+            /* Validate user attributes */
+            Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -979,7 +1069,9 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     {
         /* Otherwise just get the data directly */
         HasObjectName = (ObjectAttributes->ObjectName != NULL);
-        Attributes = ObjectAttributes->Attributes;
+
+        /* Still have to sanitize attributes */
+        Attributes = ObpValidateAttributes(ObjectAttributes->Attributes, PreviousMode);
     }
 
     /* Can't pass both, fail */
@@ -989,7 +1081,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     Status = SeCreateAccessState(&AccessState,
                                  &AuxData,
                                  DesiredAccess,
-                                 &PsProcessType->TypeInfo.GenericMapping);
+                                 &PsThreadType->TypeInfo.GenericMapping);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if this is a debugger */

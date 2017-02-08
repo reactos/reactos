@@ -1,0 +1,115 @@
+/*
+ * Copyright (C) 2009 Piotr Caban
+ * Copyright (C) 2016 Henry Tang Ih
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "将对象转换为原始类型的错误"
+    IDS_INVALID_CALL_ARG    "无效的过程调用或参数"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "下标超出范围"
+    IDS_OBJECT_REQUIRED     "所需的对象"
+    IDS_CREATE_OBJ_ERROR    "自动化服务器不能创建对象"
+    IDS_NO_PROPERTY         "对象不支持此属性或方法"
+    IDS_UNSUPPORTED_ACTION  "对象不支持此操作"
+    IDS_ARG_NOT_OPT         "参数不可选"
+    IDS_SYNTAX_ERROR        "语法错误"
+    IDS_SEMICOLON           "预期 ';'"
+    IDS_LBRACKET            "预期 '('"
+    IDS_RBRACKET            "预期 ')'"
+    IDS_EXPECTED_IDENTIFIER "预期的标识符"
+    IDS_EXPECTED_ASSIGN     "预期 '='"
+    IDS_INVALID_CHAR        "无效的字符"
+    IDS_UNTERMINATED_STR    "未终止的字符串常量"
+    IDS_MISPLACED_RETURN    "'return' 函数外部语句"
+    IDS_INVALID_BREAK       "不能有  'break' 外环路"
+    IDS_INVALID_CONTINUE    "不能有  'continue' 外环路"
+    IDS_LABEL_REDEFINED     "重新定义了标签"
+    IDS_LABEL_NOT_FOUND     "未找到标签"
+    IDS_EXPECTED_CCEND      "预期 '@end'"
+    IDS_DISABLED_CC         "条件编译已关闭"
+    IDS_EXPECTED_AT         "预期 '@'"
+    IDS_NOT_FUNC            "应为函数"
+    IDS_NOT_DATE            "'[object]' 不是一个日期对象"
+    IDS_NOT_NUM             "预期的号码"
+    IDS_OBJECT_EXPECTED     "缺少对象"
+    IDS_ILLEGAL_ASSIGN      "非法转让"
+    IDS_UNDEFINED           "'|' 未定义"
+    IDS_NOT_BOOL            "布尔对象预期"
+    IDS_INVALID_DELETE      "不能删除 '|'"
+    IDS_NOT_VBARRAY         "VBArray 对象预期"
+    IDS_JSCRIPT_EXPECTED    "JScript 对象预期"
+    IDS_REGEXP_SYNTAX_ERROR "正则表达式中的语法错误"
+    IDS_URI_INVALID_CODING  "被解码的 URI 不正确"
+    IDS_URI_INVALID_CHAR    "要编码的 URI 包含无效的字符"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "数字的小数部分的位数是超出范围"
+    IDS_PRECISION_OUT_OF_RANGE "精度是超出范围"
+    IDS_INVALID_LENGTH      "数组长度必须为一个有限的正整数"
+    IDS_ARRAY_EXPECTED      "预期的数组对象"
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "將物件轉換為原始類型的錯誤"
+    IDS_INVALID_CALL_ARG    "不正確程序呼叫或參數"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "下標超出範圍"
+    IDS_OBJECT_REQUIRED     "所需的物件"
+    IDS_CREATE_OBJ_ERROR    "自動化伺服器不能創建物件"
+    IDS_NO_PROPERTY         "物件不支援此屬性或方法"
+    IDS_UNSUPPORTED_ACTION  "物件不支援此操作"
+    IDS_ARG_NOT_OPT         "參數不可選"
+    IDS_SYNTAX_ERROR        "語法錯誤"
+    IDS_SEMICOLON           "預期 ';'"
+    IDS_LBRACKET            "預期 '('"
+    IDS_RBRACKET            "預期 ')'"
+    IDS_EXPECTED_IDENTIFIER "預期的識別碼"
+    IDS_EXPECTED_ASSIGN     "預期 '='"
+    IDS_INVALID_CHAR        "不正確字元"
+    IDS_UNTERMINATED_STR    "未終止的字串常量"
+    IDS_MISPLACED_RETURN    "'return' 函數外部語句"
+    IDS_INVALID_BREAK       "不能有  'break' 外環路"
+    IDS_INVALID_CONTINUE    "不能有  'continue' 外環路"
+    IDS_LABEL_REDEFINED     "重新定義了標籤"
+    IDS_LABEL_NOT_FOUND     "未找到標籤"
+    IDS_EXPECTED_CCEND      "預期  '@end'"
+    IDS_DISABLED_CC         "條件編譯已關閉"
+    IDS_EXPECTED_AT         "預期 '@'"
+    IDS_NOT_FUNC            "應為函數"
+    IDS_NOT_DATE            "'[object]' 不是一個日期物件"
+    IDS_NOT_NUM             "預期的號碼"
+    IDS_OBJECT_EXPECTED     "缺少物件"
+    IDS_ILLEGAL_ASSIGN      "非法轉讓"
+    IDS_UNDEFINED           "'|' 未定義"
+    IDS_NOT_BOOL            "布林物件預期"
+    IDS_INVALID_DELETE      "不能刪除 '|'"
+    IDS_NOT_VBARRAY         "VBArray 物件預期"
+    IDS_JSCRIPT_EXPECTED    "JScript 物件預期"
+    IDS_REGEXP_SYNTAX_ERROR "正則運算式中的語法錯誤"
+    IDS_URI_INVALID_CODING  "被解碼的 URI 不正確"
+    IDS_URI_INVALID_CHAR    "要編碼的 URI 包含不正確字元"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "數位的小數部分的位數是超出範圍"
+    IDS_PRECISION_OUT_OF_RANGE "精度是超出範圍"
+    IDS_INVALID_LENGTH      "陣列長度必須為一個有限的正整數"
+    IDS_ARRAY_EXPECTED      "預期的陣列物件"
+}

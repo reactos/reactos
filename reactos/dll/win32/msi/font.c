@@ -18,18 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-#include <windef.h>
-//#include "winbase.h"
-//#include "winerror.h"
-#include <winreg.h>
-#include <wine/debug.h>
 #include "msipriv.h"
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -176,7 +165,6 @@ static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
 
 end:
     CloseHandle(handle);
-    TRACE("Returning %s\n", debugstr_w(ret));
     return ret;
 }
 

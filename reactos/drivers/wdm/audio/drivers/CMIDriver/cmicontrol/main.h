@@ -29,6 +29,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <math.h>
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <devioctl.h>
 #include <commctrl.h>
@@ -37,9 +38,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cpl.h>
 
 #include <ks.h>
+#include <mmreg.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
-#include <mmreg.h>
+
 
 #define INITGUID
 #define DIRECTSOUND_VERSION 0x800

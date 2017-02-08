@@ -7,7 +7,11 @@
  *                  Michael Martin (michael.martin@reactos.org)
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
+
 #include "usbhub.h"
+
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS
 USBHUB_ParentFDOStartDevice(

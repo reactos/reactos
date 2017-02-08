@@ -3,6 +3,44 @@
 HEADER("Pointer size"),
 SIZE(SizeofPointer, PVOID),
 
+HEADER("Bug Check Codes"),
+CONSTANT(APC_INDEX_MISMATCH),
+CONSTANT(INVALID_AFFINITY_SET),
+CONSTANT(INVALID_DATA_ACCESS_TRAP),
+CONSTANT(IRQL_NOT_GREATER_OR_EQUAL),
+CONSTANT(IRQL_NOT_LESS_OR_EQUAL), // 0x0a
+CONSTANT(NO_USER_MODE_CONTEXT), // 0x0e
+CONSTANT(SPIN_LOCK_ALREADY_OWNED), // 0x0f
+CONSTANT(SPIN_LOCK_NOT_OWNED), // 0x10
+CONSTANT(THREAD_NOT_MUTEX_OWNER), // 0x11
+CONSTANT(TRAP_CAUSE_UNKNOWN), // 0x12
+CONSTANT(KMODE_EXCEPTION_NOT_HANDLED), // 0x1e
+CONSTANT(KERNEL_APC_PENDING_DURING_EXIT), // 0x20
+CONSTANT(PANIC_STACK_SWITCH), // 0x2b
+CONSTANT(DATA_BUS_ERROR), // 0x2e
+CONSTANT(INSTRUCTION_BUS_ERROR), // 0x2f
+CONSTANT(SYSTEM_EXIT_OWNED_MUTEX), // 0x39
+//CONSTANT(SYSTEM_UNWIND_PREVIOUS_USER), // 0x3a
+//CONSTANT(SYSTEM_SERVICE_EXCEPTION), // 0x3b
+//CONSTANT(INTERRUPT_UNWIND_ATTEMPTED), // 0x3c
+//CONSTANT(INTERRUPT_EXCEPTION_NOT_HANDLED), // 0x3d
+CONSTANT(PAGE_FAULT_WITH_INTERRUPTS_OFF), // 0x49
+CONSTANT(IRQL_GT_ZERO_AT_SYSTEM_SERVICE), // 0x4a
+CONSTANT(DATA_COHERENCY_EXCEPTION), // 0x55
+CONSTANT(INSTRUCTION_COHERENCY_EXCEPTION), // 0x56
+CONSTANT(HAL1_INITIALIZATION_FAILED), // 0x61
+CONSTANT(UNEXPECTED_KERNEL_MODE_TRAP), // 0x7f
+CONSTANT(NMI_HARDWARE_FAILURE), // 0x80
+CONSTANT(SPIN_LOCK_INIT_FAILURE), // 0x81
+CONSTANT(ATTEMPTED_SWITCH_FROM_DPC), // 0xb8
+//CONSTANT(MUTEX_ALREADY_OWNED), // 0xbf
+//CONSTANT(HARDWARE_INTERRUPT_STORM), // 0xf2
+//CONSTANT(RECURSIVE_MACHINE_CHECK), // 0xfb
+//CONSTANT(RECURSIVE_NMI), // 0x111
+CONSTANT(KERNEL_SECURITY_CHECK_FAILURE), // 0x139
+//CONSTANT(UNSUPPORTED_INSTRUCTION_MODE), // 0x151
+//CONSTANT(BUGCHECK_CONTEXT_MODIFIER), // 0x80000000
+
 HEADER("Breakpoints"),
 CONSTANT(BREAKPOINT_BREAK),
 CONSTANT(BREAKPOINT_PRINT),
@@ -15,10 +53,10 @@ HEADER("Context Frame Flags"),
 CONSTANT(CONTEXT_FULL),
 CONSTANT(CONTEXT_CONTROL),
 CONSTANT(CONTEXT_INTEGER),
-#ifndef _M_ARM
-CONSTANT(CONTEXT_SEGMENTS),
 CONSTANT(CONTEXT_FLOATING_POINT),
 CONSTANT(CONTEXT_DEBUG_REGISTERS),
+#if defined(_M_IX86) || defined(_M_AMD64)
+CONSTANT(CONTEXT_SEGMENTS),
 #endif
 
 HEADER("Exception flags"),
@@ -35,7 +73,7 @@ CONSTANT(EXCEPTION_CONTINUE_SEARCH),
 CONSTANT(EXCEPTION_CONTINUE_EXECUTION),
 #ifdef _X86_
 CONSTANT(EXCEPTION_CHAIN_END),
-//CONSTANT(FIXED_NTVDMSTATE_LINEAR),
+//CONSTANT(FIXED_NTVDMSTATE_LINEAR), /// FIXME ???
 #endif
 
 HEADER("Exception types"),
@@ -44,22 +82,80 @@ CONSTANT(ExceptionContinueSearch),
 CONSTANT(ExceptionNestedException),
 CONSTANT(ExceptionCollidedUnwind),
 
+HEADER("Fast Fail Constants"),
+CONSTANT(FAST_FAIL_GUARD_ICALL_CHECK_FAILURE),
+//CONSTANT(FAST_FAIL_INVALID_BUFFER_ACCESS),
+#ifdef _M_ASM64
+CONSTANT(FAST_FAIL_INVALID_JUMP_BUFFER),
+CONSTANT(FAST_FAIL_INVALID_SET_OF_CONTEXT),
+#endif // _M_ASM64
+
+HEADER("Interrupt object types"),
+CONSTANTX(InLevelSensitive, LevelSensitive),
+CONSTANTX(InLatched, Latched),
+
+HEADER("IPI"),
+#ifndef _M_AMD64
+CONSTANT(IPI_APC),
+CONSTANT(IPI_DPC),
+CONSTANT(IPI_FREEZE),
+CONSTANT(IPI_PACKET_READY),
+#endif // _M_AMD64
+#ifdef _M_IX86
+CONSTANT(IPI_SYNCH_REQUEST),
+#endif // _M_IX86
+
+HEADER("IRQL"),
+CONSTANT(PASSIVE_LEVEL),
+CONSTANT(APC_LEVEL),
+CONSTANT(DISPATCH_LEVEL),
+#ifdef _M_AMD64
+CONSTANT(CLOCK_LEVEL),
+#elif defined(_M_IX86)
+CONSTANT(CLOCK1_LEVEL),
+CONSTANT(CLOCK2_LEVEL),
+#endif
+CONSTANT(IPI_LEVEL),
+CONSTANT(POWER_LEVEL),
+CONSTANT(PROFILE_LEVEL),
+CONSTANT(HIGH_LEVEL),
+RAW("#ifdef NT_UP"),
+{TYPE_CONSTANT, "SYNCH_LEVEL", DISPATCH_LEVEL},
+RAW("#else"),
+{TYPE_CONSTANT, "SYNCH_LEVEL", (IPI_LEVEL - 2)},
+RAW("#endif"),
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+HEADER("Entropy Timing Constants"),
+CONSTANT(KENTROPY_TIMING_INTERRUPTS_PER_BUFFER),
+CONSTANT(KENTROPY_TIMING_BUFFER_MASK),
+CONSTANT(KENTROPY_TIMING_ANALYSIS),
+#endif
+
 HEADER("Lock Queue"),
 CONSTANT(LOCK_QUEUE_WAIT),
 CONSTANT(LOCK_QUEUE_OWNER),
-CONSTANT(LockQueueDispatcherLock),
+CONSTANT(LockQueueDispatcherLock), /// FIXE: obsolete
 
 //HEADER("Performance Definitions"),
 //CONSTANT(PERF_CONTEXTSWAP_OFFSET),
 //CONSTANT(PERF_CONTEXTSWAP_FLAG),
 //CONSTANT(PERF_INTERRUPT_OFFSET),
 //CONSTANT(PERF_INTERRUPT_FLAG),
-//CONSTANT(PERF_PROFILE_OFFSET),
-//CONSTANT(PERF_PROFILE_FLAG),
 //CONSTANT(PERF_SYSCALL_OFFSET),
 //CONSTANT(PERF_SYSCALL_FLAG),
-//CONSTANT(PERF_SPINLOCK_OFFSET),
-//CONSTANT(PERF_SPINLOCK_FLAG),
+#ifndef _M_ARM
+//CONSTANT(PERF_PROFILE_OFFSET), /// FIXE: obsolete
+//CONSTANT(PERF_PROFILE_FLAG), /// FIXE: obsolete
+//CONSTANT(PERF_SPINLOCK_OFFSET), /// FIXE: obsolete
+//CONSTANT(PERF_SPINLOCK_FLAG), /// FIXE: obsolete
+#endif
+#ifdef _M_IX86
+//CONSTANT(PERF_IPI_OFFSET), // 00008H
+//CONSTANT(PERF_IPI_FLAG), // 0400000H
+//CONSTANT(PERF_IPI), // 040400000H
+//CONSTANT(PERF_INTERRUPT), // 020004000H
+#endif
 //CONSTANT(NTOS_YIELD_MACRO),
 
 HEADER("Process states"),
@@ -70,6 +166,13 @@ CONSTANT(ProcessInTransition),
 HEADER("Processor mode"),
 CONSTANT(KernelMode),
 CONSTANT(UserMode),
+
+HEADER("Service Table Constants"),
+CONSTANT(NUMBER_SERVICE_TABLES),
+CONSTANT(SERVICE_NUMBER_MASK),
+CONSTANT(SERVICE_TABLE_SHIFT),
+CONSTANT(SERVICE_TABLE_MASK),
+CONSTANT(SERVICE_TABLE_TEST),
 
 HEADER("Status codes"),
 CONSTANT(STATUS_ACCESS_VIOLATION),
@@ -105,7 +208,9 @@ CONSTANT(STATUS_IN_PAGE_ERROR),
 CONSTANT(STATUS_KERNEL_APC),
 CONSTANT(STATUS_LONGJUMP),
 CONSTANT(STATUS_NO_CALLBACK_ACTIVE),
-CONSTANT(STATUS_NO_EVENT_PAIR),
+#ifndef _M_ARM
+CONSTANT(STATUS_NO_EVENT_PAIR), /// FIXME: obsolete
+#endif
 CONSTANT(STATUS_PRIVILEGED_INSTRUCTION),
 CONSTANT(STATUS_SINGLE_STEP),
 CONSTANT(STATUS_STACK_BUFFER_OVERRUN),
@@ -116,7 +221,27 @@ CONSTANT(STATUS_TIMEOUT),
 CONSTANT(STATUS_UNWIND),
 CONSTANT(STATUS_UNWIND_CONSOLIDATE),
 CONSTANT(STATUS_USER_APC),
+CONSTANT(STATUS_WAKE_SYSTEM),
 CONSTANT(STATUS_WAKE_SYSTEM_DEBUGGER),
+
+//HEADER("Thread flags"),
+//CONSTANT(THREAD_FLAGS_CYCLE_PROFILING),
+//CONSTANT(THREAD_FLAGS_CYCLE_PROFILING_LOCK_BIT),
+//CONSTANT(THREAD_FLAGS_CYCLE_PROFILING_LOCK),
+//CONSTANT(THREAD_FLAGS_COUNTER_PROFILING),
+//CONSTANT(THREAD_FLAGS_COUNTER_PROFILING_LOCK_BIT),
+//CONSTANT(THREAD_FLAGS_COUNTER_PROFILING_LOCK),
+//CONSTANT(THREAD_FLAGS_CPU_THROTTLED), /// FIXME: obsolete
+//CONSTANT(THREAD_FLAGS_CPU_THROTTLED_BIT), /// FIXME: obsolete
+//CONSTANT(THREAD_FLAGS_ACCOUNTING_CSWITCH),
+//CONSTANT(THREAD_FLAGS_ACCOUNTING_INTERRUPT),
+//CONSTANT(THREAD_FLAGS_ACCOUNTING_ANY),
+//CONSTANT(THREAD_FLAGS_GROUP_SCHEDULING),
+//CONSTANT(THREAD_FLAGS_AFFINITY_SET),
+#ifdef _M_IX86
+//CONSTANT(THREAD_FLAGS_INSTRUMENTED), // 0x0040
+//CONSTANT(THREAD_FLAGS_INSTRUMENTED_PROFILING), // 0x0041
+#endif // _M_IX86
 
 HEADER("TLS defines"),
 CONSTANT(TLS_MINIMUM_AVAILABLE),
@@ -129,99 +254,44 @@ CONSTANT(Running),
 CONSTANT(Standby),
 CONSTANT(Terminated),
 CONSTANT(Waiting),
+#ifdef _M_ARM
+CONSTANT(Transition),
+CONSTANT(DeferredReady),
+//CONSTANT(GateWaitObsolete),
+#endif // _M_ARM
 
 HEADER("Wait type / reason"),
 CONSTANT(WrExecutive),
-CONSTANT(WrMutex),
+CONSTANT(WrMutex), /// FIXME: Obsolete
 CONSTANT(WrDispatchInt),
-CONSTANT(WrQuantumEnd),
-CONSTANT(WrEventPair),
+CONSTANT(WrQuantumEnd), /// FIXME: Obsolete
+CONSTANT(WrEventPair), /// FIXME: Obsolete
 CONSTANT(WaitAny),
 CONSTANT(WaitAll),
 
-HEADER("Interrupt object types"),
-CONSTANTX(InLevelSensitive, LevelSensitive),
-CONSTANTX(InLatched, Latched),
-
-HEADER("Bug Check Codes"),
-CONSTANT(APC_INDEX_MISMATCH),
-CONSTANT(INVALID_AFFINITY_SET),
-CONSTANT(INVALID_DATA_ACCESS_TRAP),
-CONSTANT(IRQL_NOT_GREATER_OR_EQUAL),
-CONSTANT(IRQL_NOT_LESS_OR_EQUAL),
-CONSTANT(NO_USER_MODE_CONTEXT),
-CONSTANT(SPIN_LOCK_ALREADY_OWNED),
-CONSTANT(SPIN_LOCK_NOT_OWNED),
-CONSTANT(THREAD_NOT_MUTEX_OWNER),
-CONSTANT(TRAP_CAUSE_UNKNOWN),
-CONSTANT(KMODE_EXCEPTION_NOT_HANDLED),
-CONSTANT(KERNEL_APC_PENDING_DURING_EXIT),
-CONSTANT(PANIC_STACK_SWITCH),
-CONSTANT(DATA_BUS_ERROR),
-CONSTANT(INSTRUCTION_BUS_ERROR),
-CONSTANT(SYSTEM_EXIT_OWNED_MUTEX),
-//CONSTANT(SYSTEM_UNWIND_PREVIOUS_USER),
-//CONSTANT(SYSTEM_SERVICE_EXCEPTION),
-//CONSTANT(INTERRUPT_UNWIND_ATTEMPTED),
-//CONSTANT(INTERRUPT_EXCEPTION_NOT_HANDLED),
-CONSTANT(PAGE_FAULT_WITH_INTERRUPTS_OFF),
-CONSTANT(IRQL_GT_ZERO_AT_SYSTEM_SERVICE),
-CONSTANT(DATA_COHERENCY_EXCEPTION),
-CONSTANT(INSTRUCTION_COHERENCY_EXCEPTION),
-CONSTANT(HAL1_INITIALIZATION_FAILED),
-CONSTANT(UNEXPECTED_KERNEL_MODE_TRAP),
-CONSTANT(NMI_HARDWARE_FAILURE),
-CONSTANT(SPIN_LOCK_INIT_FAILURE),
-CONSTANT(ATTEMPTED_SWITCH_FROM_DPC),
-//CONSTANT(MUTEX_ALREADY_OWNED),
-//CONSTANT(HARDWARE_INTERRUPT_STORM),
-//CONSTANT(RECURSIVE_MACHINE_CHECK),
-//CONSTANT(RECURSIVE_NMI),
-
-HEADER("IRQL"),
-CONSTANT(PASSIVE_LEVEL),
-CONSTANT(APC_LEVEL),
-CONSTANT(DISPATCH_LEVEL),
-#ifdef _M_AMD64
-CONSTANT(CLOCK_LEVEL),
-#else
-CONSTANT(CLOCK1_LEVEL),
-CONSTANT(CLOCK2_LEVEL),
-#endif
-CONSTANT(IPI_LEVEL),
-CONSTANT(POWER_LEVEL),
-CONSTANT(PROFILE_LEVEL),
-CONSTANT(HIGH_LEVEL),
-RAW("#ifdef NT_UP"),
-{TYPE_CONSTANT, "SYNCH_LEVEL", DISPATCH_LEVEL},
-RAW("#else"),
-{TYPE_CONSTANT, "SYNCH_LEVEL", (IPI_LEVEL - 2)},
-RAW("#endif"),
-
 HEADER("Stack sizes"),
-CONSTANT(KERNEL_STACK_SIZE),
+CONSTANT(KERNEL_STACK_SIZE), /// FIXME: Obsolete
 CONSTANT(KERNEL_LARGE_STACK_SIZE),
-CONSTANT(KERNEL_LARGE_STACK_COMMIT),
+CONSTANT(KERNEL_LARGE_STACK_COMMIT), /// FIXME: Obsolete
 //CONSTANT(DOUBLE_FAULT_STACK_SIZE),
 #ifdef _M_AMD64
 CONSTANT(KERNEL_MCA_EXCEPTION_STACK_SIZE),
 CONSTANT(NMI_STACK_SIZE),
+CONSTANT(ISR_STACK_SIZE),
 #endif
 
-//HEADER("Thread flags"),
-//CONSTANT(THREAD_FLAGS_CYCLE_PROFILING),
-//CONSTANT(THREAD_FLAGS_CYCLE_PROFILING_LOCK_BIT),
-//CONSTANT(THREAD_FLAGS_CYCLE_PROFILING_LOCK),
-//CONSTANT(THREAD_FLAGS_COUNTER_PROFILING),
-//CONSTANT(THREAD_FLAGS_COUNTER_PROFILING_LOCK_BIT),
-//CONSTANT(THREAD_FLAGS_COUNTER_PROFILING_LOCK),
-//CONSTANT(THREAD_FLAGS_CPU_THROTTLED),
-//CONSTANT(THREAD_FLAGS_CPU_THROTTLED_BIT),
-//CONSTANT(THREAD_FLAGS_ACCOUNTING_ANY),
+//CONSTANT(KTHREAD_AUTO_ALIGNMENT_BIT),
+//CONSTANT(KTHREAD_GUI_THREAD_MASK),
+//CONSTANT(KTHREAD_SYSTEM_THREAD_BIT),
+//CONSTANT(KTHREAD_QUEUE_DEFER_PREEMPTION_BIT),
 
 HEADER("Miscellaneous Definitions"),
+CONSTANT(TRUE),
+CONSTANT(FALSE),
+CONSTANT(PAGE_SIZE),
+CONSTANT(Executive),
 //CONSTANT(BASE_PRIORITY_THRESHOLD),
-//CONSTANT(EVENT_PAIR_INCREMENT),
+//CONSTANT(EVENT_PAIR_INCREMENT), /// FIXME: obsolete
 CONSTANT(LOW_REALTIME_PRIORITY),
 CONSTANT(CLOCK_QUANTUM_DECREMENT),
 //CONSTANT(READY_SKIP_QUANTUM),
@@ -230,49 +300,47 @@ CONSTANT(WAIT_QUANTUM_DECREMENT),
 //CONSTANT(ROUND_TRIP_DECREMENT_COUNT),
 CONSTANT(MAXIMUM_PROCESSORS),
 CONSTANT(INITIAL_STALL_COUNT),
-//CONSTANT(EXCEPTION_EXECUTE_FAULT),
-//CONSTANT(KCACHE_ERRATA_MONITOR_FLAGS),
-//CONSTANT(KI_EXCEPTION_GP_FAULT),
-//CONSTANT(KI_EXCEPTION_INVALID_OP),
-//CONSTANT(KI_EXCEPTION_INTEGER_DIVIDE_BY_ZERO),
+//CONSTANT(EXCEPTION_EXECUTE_FAULT), // amd64
+//CONSTANT(KCACHE_ERRATA_MONITOR_FLAGS), // not arm
+//CONSTANT(KI_DPC_ALL_FLAGS),
+//CONSTANT(KI_DPC_ANY_DPC_ACTIVE),
+//CONSTANT(KI_DPC_INTERRUPT_FLAGS), // 0x2f arm and x64
+//CONSTANT(KI_EXCEPTION_GP_FAULT), // not i386
+//CONSTANT(KI_EXCEPTION_INVALID_OP), // not i386
+//CONSTANT(KI_EXCEPTION_INTEGER_DIVIDE_BY_ZERO), // amd64
 CONSTANT(KI_EXCEPTION_ACCESS_VIOLATION),
-//CONSTANT(TARGET_FREEZE),
-//CONSTANT(BlackHole),
-CONSTANT(Executive),
-CONSTANT(FALSE),
-CONSTANT(TRUE),
+//CONSTANT(KINTERRUPT_STATE_DISABLED_BIT),
+//CONSTANT(KINTERRUPT_STATE_DISABLED),
+//CONSTANT(TARGET_FREEZE), // amd64
+//CONSTANT(BlackHole), // FIXME: obsolete
 CONSTANT(DBG_STATUS_CONTROL_C),
 //CONSTANTPTR(USER_SHARED_DATA), // FIXME: we need the kernel mode address here!
 //CONSTANT(MM_SHARED_USER_DATA_VA),
-CONSTANT(PAGE_SIZE),
-//CONSTANT(KERNEL_STACK_CONTROL_LARGE_STACK),
-//CONSTANT(KI_DPC_ALL_FLAGS),
-//CONSTANT(DISPATCH_LENGTH),
-//CONSTANT(MAXIMUM_PRIMARY_VECTOR),
-//CONSTANT(KTHREAD_AUTO_ALIGNMENT_BIT),
-//CONSTANT(KTHREAD_GUI_THREAD_MASK),
-//CONSTANT(KI_SLIST_FAULT_COUNT_MAXIMUM),
+//CONSTANT(KERNEL_STACK_CONTROL_LARGE_STACK), // FIXME: obsolete
+//CONSTANT(DISPATCH_LENGTH), // FIXME: obsolete
+//CONSTANT(MAXIMUM_PRIMARY_VECTOR), // not arm
+//CONSTANT(KI_SLIST_FAULT_COUNT_MAXIMUM), // i386
+//CONSTANTUSER_CALLBACK_FILTER),
+
 #ifndef _M_ARM
 CONSTANT(MAXIMUM_IDTVECTOR),
+//CONSTANT(MAXIMUM_PRIMARY_VECTOR),
 CONSTANT(PRIMARY_VECTOR_BASE),
 CONSTANT(RPL_MASK),
 CONSTANT(MODE_MASK),
-CONSTANT(NUMBER_SERVICE_TABLES),
-CONSTANT(SERVICE_NUMBER_MASK),
-CONSTANT(SERVICE_TABLE_SHIFT),
-CONSTANT(SERVICE_TABLE_MASK),
-CONSTANT(SERVICE_TABLE_TEST),
+//MODE_BIT equ 00000H amd64
+//LDT_MASK equ 00004H amd64
 #endif
-
 
 
 /* STRUCTURE OFFSETS *********************************************************/
 
 //HEADER("KAFFINITY_EX"),
+//OFFSET(AfCount, KAFFINITY_EX, Count),
 //OFFSET(AfBitmap, KAFFINITY_EX, Bitmap),
 
 //HEADER("Aligned Affinity"),
-//OFFSET(AfsCpuSet, ???, CpuSet),
+//OFFSET(AfsCpuSet, ???, CpuSet), // FIXME: obsolete
 
 HEADER("KAPC"),
 OFFSET(ApType, KAPC, Type),
@@ -290,10 +358,17 @@ OFFSET(ApApcMode, KAPC, ApcMode),
 OFFSET(ApInserted, KAPC, Inserted),
 SIZE(ApcObjectLength, KAPC),
 
+HEADER("KAPC offsets (relative to NormalRoutine)"),
+RELOFFSET(ArNormalRoutine, KAPC, NormalRoutine, NormalRoutine),
+RELOFFSET(ArNormalContext, KAPC, NormalContext, NormalRoutine),
+RELOFFSET(ArSystemArgument1, KAPC, SystemArgument1, NormalRoutine),
+RELOFFSET(ArSystemArgument2, KAPC, SystemArgument2, NormalRoutine),
+CONSTANTX(ApcRecordLength, 4 * sizeof(PVOID)),
+
 HEADER("KAPC_STATE"),
 OFFSET(AsApcListHead, KAPC_STATE, ApcListHead),
 OFFSET(AsProcess, KAPC_STATE, Process),
-OFFSET(AsKernelApcInProgress, KAPC_STATE, KernelApcInProgress),
+OFFSET(AsKernelApcInProgress, KAPC_STATE, KernelApcInProgress), // FIXME: obsolete
 OFFSET(AsKernelApcPending, KAPC_STATE, KernelApcPending),
 OFFSET(AsUserApcPending, KAPC_STATE, UserApcPending),
 
@@ -351,12 +426,20 @@ OFFSET(ErExceptionAddress, EXCEPTION_RECORD, ExceptionAddress),
 OFFSET(ErNumberParameters, EXCEPTION_RECORD, NumberParameters),
 OFFSET(ErExceptionInformation, EXCEPTION_RECORD, ExceptionInformation),
 SIZE(ExceptionRecordLength, EXCEPTION_RECORD),
-SIZE(EXCEPTION_RECORD_LENGTH, EXCEPTION_RECORD),
+SIZE(EXCEPTION_RECORD_LENGTH, EXCEPTION_RECORD), // not 1386
 
 HEADER("EPROCESS"),
 OFFSET(EpDebugPort, EPROCESS, DebugPort),
+#if defined(_M_IX86)
 OFFSET(EpVdmObjects, EPROCESS, VdmObjects),
+#elif defined(_M_AMD64)
+OFFSET(EpWow64Process, EPROCESS, Wow64Process),
+#endif
 SIZE(ExecutiveProcessObjectLength, EPROCESS),
+
+HEADER("ETHREAD offsets"),
+OFFSET(EtCid, ETHREAD, Cid), // 0x364
+SIZE(ExecutiveThreadObjectLength, ETHREAD), // 0x418
 
 HEADER("KEVENT"),
 OFFSET(EvType, KEVENT, Header.Type),
@@ -365,12 +448,30 @@ OFFSET(EvSignalState, KEVENT, Header.SignalState),
 OFFSET(EvWaitListHead, KEVENT, Header.WaitListHead),
 SIZE(EventObjectLength, KEVENT),
 
+HEADER("FIBER"),
+OFFSET(FbFiberData, FIBER, FiberData),
+OFFSET(FbExceptionList, FIBER, ExceptionList),
+OFFSET(FbStackBase, FIBER, StackBase),
+OFFSET(FbStackLimit, FIBER, StackLimit),
+OFFSET(FbDeallocationStack, FIBER, DeallocationStack),
+OFFSET(FbFiberContext, FIBER, FiberContext),
+//OFFSET(FbWx86Tib, FIBER, Wx86Tib),
+//OFFSET(FbActivationContextStackPointer, FIBER, ActivationContextStackPointer),
+OFFSET(FbFlsData, FIBER, FlsData),
+OFFSET(FbGuaranteedStackBytes, FIBER, GuaranteedStackBytes),
+//OFFSET(FbTebFlags, FIBER, TebFlags),
+
 HEADER("FAST_MUTEX"),
 OFFSET(FmCount, FAST_MUTEX, Count),
 OFFSET(FmOwner, FAST_MUTEX, Owner),
 OFFSET(FmContention, FAST_MUTEX, Contention),
-//OFFSET(FmGate, FAST_MUTEX, Gate),
+//OFFSET(FmGate, FAST_MUTEX, Gate), // obsolete
 OFFSET(FmOldIrql, FAST_MUTEX, OldIrql),
+
+#ifndef _M_ARM
+HEADER("GETSETCONTEXT offsets"), // GET_SET_CTX_CONTEXT
+OFFSET(GetSetCtxContextPtr, GETSETCONTEXT, Context),
+#endif // _M_ARM
 
 HEADER("KINTERRUPT"),
 OFFSET(InType, KINTERRUPT, Type),
@@ -389,33 +490,40 @@ OFFSET(InFloatingSave, KINTERRUPT, FloatingSave),
 OFFSET(InConnected, KINTERRUPT, Connected),
 OFFSET(InNumber, KINTERRUPT, Number),
 OFFSET(InShareVector, KINTERRUPT, ShareVector),
+//OFFSET(InInternalState, KINTERRUPT, InternalState),
 OFFSET(InMode, KINTERRUPT, Mode),
 OFFSET(InServiceCount, KINTERRUPT, ServiceCount),
 OFFSET(InDispatchCount, KINTERRUPT, DispatchCount),
-//OFFSET(InTrapFrame, KINTERRUPT, TrapFrame),
-OFFSET(InDispatchCode, KINTERRUPT, DispatchCode),
+//OFFSET(InTrapFrame, KINTERRUPT, TrapFrame), // amd64
+OFFSET(InDispatchCode, KINTERRUPT, DispatchCode), // obsolete
 SIZE(InterruptObjectLength, KINTERRUPT),
 
+#ifdef _M_AMD64
 HEADER("IO_STATUS_BLOCK"),
 OFFSET(IoStatus, IO_STATUS_BLOCK, Status),
 OFFSET(IoPointer, IO_STATUS_BLOCK, Pointer),
 OFFSET(IoInformation, IO_STATUS_BLOCK, Information),
+#endif /* _M_AMD64 */
 
-//HEADER("KERNEL_STACK_CONTROL"),
-#ifdef _M_IX86
-//  Kernel Stack Control Structure Offset (relative to initial stack pointer) Definitions
-//RELOFFSET(KcPreviousBase, KERNEL_STACK_CONTROL, PreviousBase, ???), -40
-//RELOFFSET(KcPreviousLimit, KERNEL_STACK_CONTROL, PreviousBase, ???), -36
-//RELOFFSET(KcPreviousKernel, KERNEL_STACK_CONTROL, PreviousBase, ???), -32
-//RELOFFSET(KcPreviousInitial, KERNEL_STACK_CONTROL, PreviousBase, ???), -28
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+HEADER("KSTACK_CONTROL"),
+OFFSET(KcCurrentBase, KSTACK_CONTROL, StackBase),
+OFFSET(KcActualLimit, KSTACK_CONTROL, ActualLimit),
+OFFSET(KcPreviousBase, KSTACK_CONTROL, Previous.StackBase),
+OFFSET(KcPreviousLimit, KSTACK_CONTROL, Previous.StackLimit),
+OFFSET(KcPreviousKernel, KSTACK_CONTROL, Previous.KernelStack),
+OFFSET(KcPreviousInitial, KSTACK_CONTROL, Previous.InitialStack),
+#ifdef _IX86
+OFFSET(KcTrapFrame, KSTACK_CONTROL, PreviousTrapFrame),
+OFFSET(KcExceptionList, KSTACK_CONTROL, PreviousExceptionList),
+#endif // _IX86
+SIZE(KSTACK_CONTROL_LENGTH, KSTACK_CONTROL),
+CONSTANT(KSTACK_ACTUAL_LIMIT_EXPANDED), // move somewhere else?
 #else
-//OFFSET(KcPreviousBase, KERNEL_STACK_CONTROL, PreviousBase),
-//OFFSET(KcPreviousLimit, KERNEL_STACK_CONTROL, PreviousLimit),
-//OFFSET(KcPreviousKernel, KERNEL_STACK_CONTROL, PreviousKernel),
-//OFFSET(KcPreviousInitial, KERNEL_STACK_CONTROL, PreviousInitial),
-//SIZE(KERNEL_STACK_CONTROL_LENGTH, KERNEL_STACK_CONTROL),
+//HEADER("KERNEL_STACK_CONTROL"),
 #endif
 
+#if 0 // no longer in win 10, different struct
 HEADER("KNODE"),
 //OFFSET(KnRight, KNODE, Right),
 //OFFSET(KnLeft, KNODE, Left),
@@ -425,47 +533,40 @@ OFFSET(KnColor, KNODE, Color),
 OFFSET(KnSeed, KNODE, Seed),
 OFFSET(KnNodeNumber, KNODE, NodeNumber),
 OFFSET(KnFlags, KNODE, Flags),
-OFFSET(knMmShiftedColor, KNODE, MmShiftedColor),
+OFFSET(KnMmShiftedColor, KNODE, MmShiftedColor),
 OFFSET(KnFreeCount, KNODE, FreeCount),
 OFFSET(KnPfnDeferredList, KNODE, PfnDeferredList),
 SIZE(KNODE_SIZE, KNODE),
+#endif
 
 HEADER("KSPIN_LOCK_QUEUE"),
 OFFSET(LqNext, KSPIN_LOCK_QUEUE, Next),
 OFFSET(LqLock, KSPIN_LOCK_QUEUE, Lock),
+SIZE(LOCK_QUEUE_HEADER_SIZE, KSPIN_LOCK_QUEUE),
 
 HEADER("KLOCK_QUEUE_HANDLE"),
+OFFSET(LqhLockQueue, KLOCK_QUEUE_HANDLE, LockQueue),
 OFFSET(LqhNext, KLOCK_QUEUE_HANDLE, LockQueue.Next),
 OFFSET(LqhLock, KLOCK_QUEUE_HANDLE, LockQueue.Lock),
 OFFSET(LqhOldIrql, KLOCK_QUEUE_HANDLE, OldIrql),
-SIZE(LOCK_QUEUE_HEADER_SIZE, KLOCK_QUEUE_HANDLE),
 
 HEADER("LARGE_INTEGER"),
 OFFSET(LiLowPart, LARGE_INTEGER, LowPart),
 OFFSET(LiHighPart, LARGE_INTEGER, HighPart),
-#if 0
+
 HEADER("LOADER_PARAMETER_BLOCK (rel. to LoadOrderListHead)"),
-RELOFFSET(LpbLoadOrderListHead, LOADER_PARAMETER_BLOCK, LoadOrderListHead, LoadOrderListHead),
-RELOFFSET(LpbMemoryDescriptorListHead, LOADER_PARAMETER_BLOCK, MemoryDescriptorListHead, LoadOrderListHead),
 RELOFFSET(LpbKernelStack, LOADER_PARAMETER_BLOCK, KernelStack, LoadOrderListHead),
 RELOFFSET(LpbPrcb, LOADER_PARAMETER_BLOCK, Prcb, LoadOrderListHead),
 RELOFFSET(LpbProcess, LOADER_PARAMETER_BLOCK, Process, LoadOrderListHead),
 RELOFFSET(LpbThread, LOADER_PARAMETER_BLOCK, Thread, LoadOrderListHead),
-RELOFFSET(LpbI386, LOADER_PARAMETER_BLOCK, u.I386, LoadOrderListHead),
-RELOFFSET(LpbRegistryLength, LOADER_PARAMETER_BLOCK, RegistryLength, LoadOrderListHead),
-RELOFFSET(LpbRegistryBase, LOADER_PARAMETER_BLOCK, RegistryBase, LoadOrderListHead),
-RELOFFSET(LpbConfigurationRoot, LOADER_PARAMETER_BLOCK, ConfigurationRoot, LoadOrderListHead),
-RELOFFSET(LpbArcBootDeviceName, LOADER_PARAMETER_BLOCK, ArcBootDeviceName, LoadOrderListHead),
-RELOFFSET(LpbArcHalDeviceName, LOADER_PARAMETER_BLOCK, ArcHalDeviceName, LoadOrderListHead),
-RELOFFSET(LpbLoadOptions, LOADER_PARAMETER_BLOCK, LoadOptions, LoadOrderListHead),
-RELOFFSET(LpbExtension, LOADER_PARAMETER_BLOCK, Extension, LoadOrderListHead),
-#endif
 
 HEADER("LIST_ENTRY"),
 OFFSET(LsFlink, LIST_ENTRY, Flink),
 OFFSET(LsBlink, LIST_ENTRY, Blink),
 
 HEADER("PEB"),
+OFFSET(PeBeingDebugged, PEB, BeingDebugged),
+OFFSET(PeProcessParameters, PEB, ProcessParameters),
 OFFSET(PeKernelCallbackTable, PEB, KernelCallbackTable),
 SIZE(ProcessEnvironmentBlockLength, PEB),
 
@@ -484,7 +585,7 @@ OFFSET(PfSource, KPROFILE, Source),
 OFFSET(PfStarted, KPROFILE, Started),
 SIZE(ProfileObjectLength, KPROFILE),
 
-HEADER("PORT_MESSAGE"),
+HEADER("PORT_MESSAGE"), // whole thing obsolete in win10
 OFFSET(PmLength, PORT_MESSAGE, u1.Length),
 OFFSET(PmZeroInit, PORT_MESSAGE, u2.ZeroInit),
 OFFSET(PmClientId, PORT_MESSAGE, ClientId),
@@ -500,36 +601,41 @@ OFFSET(PrSize, KPROCESS, Header.Size),
 OFFSET(PrSignalState, KPROCESS, Header.SignalState),
 OFFSET(PrProfileListHead, KPROCESS, ProfileListHead),
 OFFSET(PrDirectoryTableBase, KPROCESS, DirectoryTableBase),
-#ifdef _M_IX86
+#ifdef _M_ARM
+//OFFSET(PrPageDirectory, KPROCESS, PageDirectory),
+#elif defined(_M_IX86)
 OFFSET(PrLdtDescriptor, KPROCESS, LdtDescriptor),
-OFFSET(PrIopmOffset, KPROCESS, IopmOffset),
 OFFSET(PrInt21Descriptor, KPROCESS, Int21Descriptor),
-OFFSET(PrVdmTrapcHandler, KPROCESS, VdmTrapcHandler),
-//OFFSET(PrVdmObjects, KPROCESS, VdmObjects),
-OFFSET(PrFlags, KPROCESS, Flags),
 #endif
-//OFFSET(PrInstrumentationCallback, KPROCESS, InstrumentationCallback),
-OFFSET(PrActiveProcessors, KPROCESS, ActiveProcessors),
-OFFSET(PrKernelTime, KPROCESS, KernelTime),
-OFFSET(PrUserTime, KPROCESS, UserTime),
+OFFSET(PrThreadListHead, KPROCESS, ThreadListHead),
+OFFSET(PrAffinity, KPROCESS, Affinity),
 OFFSET(PrReadyListHead, KPROCESS, ReadyListHead),
 OFFSET(PrSwapListEntry, KPROCESS, SwapListEntry),
-OFFSET(PrThreadListHead, KPROCESS, ThreadListHead),
-OFFSET(PrProcessLock, KPROCESS, ProcessLock),
-OFFSET(PrAffinity, KPROCESS, Affinity),
+OFFSET(PrActiveProcessors, KPROCESS, ActiveProcessors),
 OFFSET(PrProcessFlags, KPROCESS, ProcessFlags),
 OFFSET(PrBasePriority, KPROCESS, BasePriority),
 OFFSET(PrQuantumReset, KPROCESS, QuantumReset),
-OFFSET(PrState, KPROCESS, State),
-OFFSET(PrStackCount, KPROCESS, StackCount),
+#if defined(_M_IX86)
+OFFSET(PrIopmOffset, KPROCESS, IopmOffset),
+#endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 OFFSET(PrCycleTime, KPROCESS, CycleTime),
+#endif
+OFFSET(PrKernelTime, KPROCESS, KernelTime),
+OFFSET(PrUserTime, KPROCESS, UserTime),
+#if defined(_M_AMD64) || defined(_M_ARM)
+//OFFSET(PrInstrumentationCallback, KPROCESS, InstrumentationCallback),
+#elif defined(_M_IX86)
+OFFSET(PrVdmTrapcHandler, KPROCESS, VdmTrapcHandler),
+//OFFSET(PrVdmObjects, KPROCESS, VdmObjects),
+OFFSET(PrFlags, KPROCESS, Flags),
+//PrInstrumentationCallback equ 0031CH // ???
 #endif
 SIZE(KernelProcessObjectLength, KPROCESS),
 
 HEADER("KQUEUE"),
-OFFSET(QuType, KQUEUE, Header.Type),
-OFFSET(QuSize, KQUEUE, Header.Size),
+OFFSET(QuType, KQUEUE, Header.Type), // not in win10
+OFFSET(QuSize, KQUEUE, Header.Size), // not in win10
 OFFSET(QuSignalState, KQUEUE, Header.SignalState),
 OFFSET(QuEntryListHead, KQUEUE, EntryListHead),
 OFFSET(QuCurrentCount, KQUEUE, CurrentCount),
@@ -537,15 +643,23 @@ OFFSET(QuMaximumCount, KQUEUE, MaximumCount),
 OFFSET(QuThreadListHead, KQUEUE, ThreadListHead),
 SIZE(QueueObjectLength, KQUEUE),
 
+HEADER("KSERVICE_TABLE_DESCRIPTOR offsets"),
+OFFSET(SdBase, KSERVICE_TABLE_DESCRIPTOR, Base),
+OFFSET(SdCount, KSERVICE_TABLE_DESCRIPTOR, Count), // not in win10
+OFFSET(SdLimit, KSERVICE_TABLE_DESCRIPTOR, Limit),
+OFFSET(SdNumber, KSERVICE_TABLE_DESCRIPTOR, Number),
+SIZE(SdLength, KSERVICE_TABLE_DESCRIPTOR),
+
 HEADER("STRING"),
 OFFSET(StrLength, STRING, Length),
 OFFSET(StrMaximumLength, STRING, MaximumLength),
 OFFSET(StrBuffer, STRING, Buffer),
 
 HEADER("TEB"),
-OFFSET(TeCmTeb, TEB, NtTib),
-#ifdef _M_IX86
+#if defined(_M_IX86)
 OFFSET(TeExceptionList, TEB, NtTib.ExceptionList),
+#elif defined(_M_AMD64)
+OFFSET(TeCmTeb, TEB, NtTib),
 #endif
 OFFSET(TeStackBase, TEB, NtTib.StackBase),
 OFFSET(TeStackLimit, TEB, NtTib.StackLimit),
@@ -555,13 +669,19 @@ OFFSET(TeEnvironmentPointer, TEB, EnvironmentPointer),
 OFFSET(TeClientId, TEB, ClientId),
 OFFSET(TeActiveRpcHandle, TEB, ActiveRpcHandle),
 OFFSET(TeThreadLocalStoragePointer, TEB, ThreadLocalStoragePointer),
-OFFSET(TeCountOfOwnedCriticalSections, TEB, CountOfOwnedCriticalSections),
 OFFSET(TePeb, TEB, ProcessEnvironmentBlock),
+OFFSET(TeLastErrorValue, TEB, LastErrorValue),
+OFFSET(TeCountOfOwnedCriticalSections, TEB, CountOfOwnedCriticalSections),
 OFFSET(TeCsrClientThread, TEB, CsrClientThread),
 OFFSET(TeWOW32Reserved, TEB, WOW32Reserved),
 //OFFSET(TeSoftFpcr, TEB, SoftFpcr),
 OFFSET(TeExceptionCode, TEB, ExceptionCode),
 OFFSET(TeActivationContextStackPointer, TEB, ActivationContextStackPointer),
+//#if (NTDDI_VERSION >= NTDDI_WIN10)
+//OFFSET(TeInstrumentationCallbackSp, TEB, InstrumentationCallbackSp),
+//OFFSET(TeInstrumentationCallbackPreviousPc, TEB, InstrumentationCallbackPreviousPc),
+//OFFSET(TeInstrumentationCallbackPreviousSp, TEB, InstrumentationCallbackPreviousSp),
+//#endif
 OFFSET(TeGdiClientPID, TEB, GdiClientPID),
 OFFSET(TeGdiClientTID, TEB, GdiClientTID),
 OFFSET(TeGdiThreadLocalInfo, TEB, GdiThreadLocalInfo),
@@ -575,120 +695,109 @@ OFFSET(TeglCurrentRC, TEB, glCurrentRC),
 OFFSET(TeglContext, TEB, glContext),
 OFFSET(TeDeallocationStack, TEB, DeallocationStack),
 OFFSET(TeTlsSlots, TEB, TlsSlots),
-OFFSET(TeTlsExpansionSlots, TEB, TlsExpansionSlots),
-OFFSET(TeLastErrorValue, TEB, LastErrorValue),
 OFFSET(TeVdm, TEB, Vdm),
 OFFSET(TeInstrumentation, TEB, Instrumentation),
 OFFSET(TeGdiBatchCount, TEB, GdiBatchCount),
 OFFSET(TeGuaranteedStackBytes, TEB, GuaranteedStackBytes),
+OFFSET(TeTlsExpansionSlots, TEB, TlsExpansionSlots),
 OFFSET(TeFlsData, TEB, FlsData),
-//OFFSET(TeProcessRundown, TEB, ProcessRundown),
 SIZE(ThreadEnvironmentBlockLength, TEB),
 
 HEADER("TIME_FIELDS"),
-OFFSET(TfSecond, TIME_FIELDS, Second),
-OFFSET(TfMinute, TIME_FIELDS, Minute),
-OFFSET(TfHour, TIME_FIELDS, Hour),
-OFFSET(TfWeekday, TIME_FIELDS, Weekday),
-OFFSET(TfDay, TIME_FIELDS, Day),
-OFFSET(TfMonth, TIME_FIELDS, Month),
 OFFSET(TfYear, TIME_FIELDS, Year),
+OFFSET(TfMonth, TIME_FIELDS, Month),
+OFFSET(TfDay, TIME_FIELDS, Day),
+OFFSET(TfHour, TIME_FIELDS, Hour),
+OFFSET(TfMinute, TIME_FIELDS, Minute),
+OFFSET(TfSecond, TIME_FIELDS, Second),
 OFFSET(TfMilliseconds, TIME_FIELDS, Milliseconds),
+OFFSET(TfWeekday, TIME_FIELDS, Weekday),
 
 HEADER("KTHREAD"),
 OFFSET(ThType, KTHREAD, Header.Type),
-//OFFSET(ThNpxIrql, KTHREAD, NpxIrql),
-OFFSET(ThSize, KTHREAD, Header.Size),
 OFFSET(ThLock, KTHREAD, Header.Lock),
+OFFSET(ThSize, KTHREAD, Header.Size),
+OFFSET(ThThreadControlFlags, KTHREAD, Header.ThreadControlFlags),
 OFFSET(ThDebugActive, KTHREAD, Header.DebugActive),
-//OFFSET(ThThreadControlFlags, KTHREAD, DispatcherHeader.ThreadControlFlags),
 OFFSET(ThSignalState, KTHREAD, Header.SignalState),
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-OFFSET(ThCycleTime, KTHREAD, CycleTime),
-OFFSET(ThHighCycleTime, KTHREAD, HighCycleTime),
-#endif
 OFFSET(ThInitialStack, KTHREAD, InitialStack),
 OFFSET(ThStackLimit, KTHREAD, StackLimit),
-OFFSET(ThKernelStack, KTHREAD, KernelStack),
+OFFSET(ThStackBase, KTHREAD, StackBase),
 OFFSET(ThThreadLock, KTHREAD, ThreadLock),
-//OFFSET(ThRunning, KTHREAD, Running),
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+OFFSET(ThCycleTime, KTHREAD, CycleTime),
+#if defined(_M_IX86)
+OFFSET(ThHighCycleTime, KTHREAD, HighCycleTime),
+#endif
+#endif /* (NTDDI_VERSION >= NTDDI_LONGHORN) */
+#if defined(_M_IX86)
+OFFSET(ThServiceTable, KTHREAD, ServiceTable),
+#endif
+//OFFSET(ThCurrentRunTime, KTHREAD, CurrentRunTime),
+//OFFSET(ThStateSaveArea, KTHREAD, StateSaveArea), // 0x3C not arm
+OFFSET(ThKernelStack, KTHREAD, KernelStack),
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+OFFSET(ThRunning, KTHREAD, Running),
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 OFFSET(ThAlerted, KTHREAD, Alerted),
-//OFFSET(ThMiscFlags, KTHREAD, MiscFlags),
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+OFFSET(ThMiscFlags, KTHREAD, MiscFlags),
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+OFFSET(ThThreadFlags, KTHREAD, ThreadFlags),
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+OFFSET(ThSystemCallNumber, KTHREAD, SystemCallNumber),
+#endif /* (NTDDI_VERSION >= NTDDI_LONGHORN) */
+//OFFSET(ThFirstArgument, KTHREAD, FirstArgument),
+OFFSET(ThTrapFrame, KTHREAD, TrapFrame),
 OFFSET(ThApcState, KTHREAD, ApcState),
 OFFSET(ThPriority, KTHREAD, Priority),
-OFFSET(ThSwapBusy, KTHREAD, SwapBusy),
-OFFSET(ThNextProcessor, KTHREAD, NextProcessor),
-OFFSET(ThDeferredProcessor, KTHREAD, DeferredProcessor),
-OFFSET(ThApcQueueLock, KTHREAD, ApcQueueLock),
 OFFSET(ThContextSwitches, KTHREAD, ContextSwitches),
 OFFSET(ThState, KTHREAD, State),
 OFFSET(ThNpxState, KTHREAD, NpxState),
 OFFSET(ThWaitIrql, KTHREAD, WaitIrql),
 OFFSET(ThWaitMode, KTHREAD, WaitMode),
-OFFSET(ThWaitStatus, KTHREAD, WaitStatus),
-OFFSET(ThWaitBlockList, KTHREAD, WaitBlockList),
-OFFSET(ThGateObject, KTHREAD, GateObject),
-OFFSET(ThWaitListEntry, KTHREAD, WaitListEntry),
-OFFSET(ThSwapListEntry, KTHREAD, SwapListEntry),
-OFFSET(ThQueue, KTHREAD, Queue),
+OFFSET(ThTeb, KTHREAD, Teb),
+OFFSET(ThTimer, KTHREAD, Timer),
+OFFSET(ThWin32Thread, KTHREAD, Win32Thread),
 OFFSET(ThWaitTime, KTHREAD, WaitTime),
 OFFSET(ThCombinedApcDisable, KTHREAD, CombinedApcDisable),
 OFFSET(ThKernelApcDisable, KTHREAD, KernelApcDisable),
 OFFSET(ThSpecialApcDisable, KTHREAD, SpecialApcDisable),
-OFFSET(ThTeb, KTHREAD, Teb),
-OFFSET(ThTimer, KTHREAD, Timer),
-OFFSET(ThThreadFlags, KTHREAD, ThreadFlags),
-OFFSET(ThServiceTable, KTHREAD, ServiceTable),
-OFFSET(ThWaitBlock, KTHREAD, WaitBlock),
-OFFSET(ThResourceIndex, KTHREAD, ResourceIndex),
-OFFSET(ThQueueListEntry, KTHREAD, QueueListEntry),
-OFFSET(ThTrapFrame, KTHREAD, TrapFrame),
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-OFFSET(ThFirstArgument, KTHREAD, FirstArgument),
+#if defined(_M_ARM)
+//OFFSET(ThVfpState, KTHREAD, VfpState),
 #endif
-OFFSET(ThCallbackStack, KTHREAD, CallbackStack),
-//OFFSET(ThCallbackDepth, KTHREAD, CallbackDepth),
-OFFSET(ThApcStateIndex, KTHREAD, ApcStateIndex),
-OFFSET(ThIdealProcessor, KTHREAD, IdealProcessor),
-OFFSET(ThBasePriority, KTHREAD, BasePriority),
+OFFSET(ThNextProcessor, KTHREAD, NextProcessor),
+OFFSET(ThProcess, KTHREAD, Process),
+OFFSET(ThPreviousMode, KTHREAD, PreviousMode),
 OFFSET(ThPriorityDecrement, KTHREAD, PriorityDecrement),
 OFFSET(ThAdjustReason, KTHREAD, AdjustReason),
 OFFSET(ThAdjustIncrement, KTHREAD, AdjustIncrement),
-OFFSET(ThPreviousMode, KTHREAD, PreviousMode),
-OFFSET(ThSaturation, KTHREAD, Saturation),
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-OFFSET(ThSystemCallNumber, KTHREAD, SystemCallNumber),
-#endif
-OFFSET(ThFreezeCount, KTHREAD, FreezeCount),
-OFFSET(ThUserAffinity, KTHREAD, UserAffinity),
-OFFSET(ThProcess, KTHREAD, Process),
 OFFSET(ThAffinity, KTHREAD, Affinity),
-OFFSET(ThUserIdealProcessor, KTHREAD, UserIdealProcessor),
+OFFSET(ThApcStateIndex, KTHREAD, ApcStateIndex),
+OFFSET(ThIdealProcessor, KTHREAD, IdealProcessor),
 OFFSET(ThApcStatePointer, KTHREAD, ApcStatePointer),
 OFFSET(ThSavedApcState, KTHREAD, SavedApcState),
 OFFSET(ThWaitReason, KTHREAD, WaitReason),
-OFFSET(ThSuspendCount, KTHREAD, SuspendCount),
-//OFFSET(ThCodePatchInProgress, KTHREAD, CodePatchInProgress),
-OFFSET(ThWin32Thread, KTHREAD, Win32Thread),
-OFFSET(ThStackBase, KTHREAD, StackBase),
-OFFSET(ThSuspendApc, KTHREAD, SuspendApc),
-OFFSET(ThPowerState, KTHREAD, PowerState),
-OFFSET(ThKernelTime, KTHREAD, KernelTime),
+OFFSET(ThSaturation, KTHREAD, Saturation),
 OFFSET(ThLegoData, KTHREAD, LegoData),
-OFFSET(ThLargeStack, KTHREAD, LargeStack),
-OFFSET(ThUserTime, KTHREAD, UserTime),
-OFFSET(ThSuspendSemaphore, KTHREAD, SuspendSemaphore),
-OFFSET(ThSListFaultCount, KTHREAD, SListFaultCount),
-OFFSET(ThThreadListEntry, KTHREAD, ThreadListEntry),
-OFFSET(ThMutantListHead, KTHREAD, MutantListHead),
-OFFSET(ThSListFaultAddress, KTHREAD, SListFaultAddress),
+//#if defined(_M_ARM) && (NTDDI_VERSION >= NTDDI_WIN10)
+//#define ThUserRoBase 0x434
+//#define ThUserRwBase 0x438
+//#endif
+#ifdef _M_IX86
+OFFSET(ThSListFaultCount, KTHREAD, WaitReason), // 0x18E
+OFFSET(ThSListFaultAddress, KTHREAD, WaitReason), // 0x10
+#endif // _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
+OFFSET(ThUserFsBase, KTHREAD, WaitReason), // 0x434
+OFFSET(ThUserGsBase, KTHREAD, WaitReason), // 0x438
+#endif // defined
 SIZE(KernelThreadObjectLength, KTHREAD),
-SIZE(ExecutiveThreadObjectLength, ETHREAD),
 
 HEADER("KTIMER"),
 OFFSET(TiType, KTIMER, Header.Type),
 OFFSET(TiSize, KTIMER, Header.Size),
-OFFSET(TiInserted, KTIMER, Header.Inserted),
+OFFSET(TiInserted, KTIMER, Header.Inserted), // not in win 10
 OFFSET(TiSignalState, KTIMER, Header.SignalState),
 OFFSET(TiDueTime, KTIMER, DueTime),
 OFFSET(TiTimerListEntry, KTIMER, TimerListEntry),
@@ -697,10 +806,9 @@ OFFSET(TiPeriod, KTIMER, Period),
 SIZE(TimerObjectLength, KTIMER),
 
 HEADER("TIME"),
-//OFFSET(TmLowTime, TIME, LowTime),
-//OFFSET(TmHighTime, TIME, HighTime),
+OFFSET(TmLowTime, TIME, LowTime),
+OFFSET(TmHighTime, TIME, HighTime),
 
-#if 0
 HEADER("SYSTEM_CONTEXT_SWITCH_INFORMATION (relative to FindAny)"),
 RELOFFSET(TwFindAny, SYSTEM_CONTEXT_SWITCH_INFORMATION, FindAny, FindAny),
 RELOFFSET(TwFindIdeal, SYSTEM_CONTEXT_SWITCH_INFORMATION, FindIdeal, FindAny),
@@ -713,13 +821,12 @@ RELOFFSET(TwPreemptAny, SYSTEM_CONTEXT_SWITCH_INFORMATION, PreemptAny, FindAny),
 RELOFFSET(TwPreemptCurrent, SYSTEM_CONTEXT_SWITCH_INFORMATION, PreemptCurrent, FindAny),
 RELOFFSET(TwPreemptLast, SYSTEM_CONTEXT_SWITCH_INFORMATION, PreemptLast, FindAny),
 RELOFFSET(TwSwitchToIdle, SYSTEM_CONTEXT_SWITCH_INFORMATION, SwitchToIdle, FindAny),
-#endif
 
 HEADER("KUSER_SHARED_DATA"),
-OFFSET(UsTickCountMultiplier, KUSER_SHARED_DATA, TickCountMultiplier),
-OFFSET(UsInterruptTime, KUSER_SHARED_DATA, InterruptTime),
-OFFSET(UsSystemTime, KUSER_SHARED_DATA, SystemTime),
-OFFSET(UsTimeZoneBias, KUSER_SHARED_DATA, TimeZoneBias),
+OFFSET(UsTickCountMultiplier, KUSER_SHARED_DATA, TickCountMultiplier), // 0x4
+OFFSET(UsInterruptTime, KUSER_SHARED_DATA, InterruptTime), // 0x8
+OFFSET(UsSystemTime, KUSER_SHARED_DATA, SystemTime), // 0x14
+OFFSET(UsTimeZoneBias, KUSER_SHARED_DATA, TimeZoneBias), // 0x20
 OFFSET(UsImageNumberLow, KUSER_SHARED_DATA, ImageNumberLow),
 OFFSET(UsImageNumberHigh, KUSER_SHARED_DATA, ImageNumberHigh),
 OFFSET(UsNtSystemRoot, KUSER_SHARED_DATA, NtSystemRoot),
@@ -727,7 +834,11 @@ OFFSET(UsMaxStackTraceDepth, KUSER_SHARED_DATA, MaxStackTraceDepth),
 OFFSET(UsCryptoExponent, KUSER_SHARED_DATA, CryptoExponent),
 OFFSET(UsTimeZoneId, KUSER_SHARED_DATA, TimeZoneId),
 OFFSET(UsLargePageMinimum, KUSER_SHARED_DATA, LargePageMinimum),
+//#if (NTDDI_VERSION >= NTDDI_WIN10)
+//OFFSET(UsNtBuildNumber, KUSER_SHARED_DATA, NtBuildNumber),
+//#else
 OFFSET(UsReserved2, KUSER_SHARED_DATA, Reserved2),
+//#endif
 OFFSET(UsNtProductType, KUSER_SHARED_DATA, NtProductType),
 OFFSET(UsProductTypeIsValid, KUSER_SHARED_DATA, ProductTypeIsValid),
 OFFSET(UsNtMajorVersion, KUSER_SHARED_DATA, NtMajorVersion),
@@ -737,7 +848,7 @@ OFFSET(UsReserved1, KUSER_SHARED_DATA, Reserved1),
 OFFSET(UsReserved3, KUSER_SHARED_DATA, Reserved3),
 OFFSET(UsTimeSlip, KUSER_SHARED_DATA, TimeSlip),
 OFFSET(UsAlternativeArchitecture, KUSER_SHARED_DATA, AlternativeArchitecture),
-OFFSET(UsSystemExpirationDate, KUSER_SHARED_DATA, SystemExpirationDate),
+OFFSET(UsSystemExpirationDate, KUSER_SHARED_DATA, SystemExpirationDate), // not arm
 OFFSET(UsSuiteMask, KUSER_SHARED_DATA, SuiteMask),
 OFFSET(UsKdDebuggerEnabled, KUSER_SHARED_DATA, KdDebuggerEnabled),
 OFFSET(UsActiveConsoleId, KUSER_SHARED_DATA, ActiveConsoleId),
@@ -746,20 +857,59 @@ OFFSET(UsComPlusPackage, KUSER_SHARED_DATA, ComPlusPackage),
 OFFSET(UsLastSystemRITEventTickCount, KUSER_SHARED_DATA, LastSystemRITEventTickCount),
 OFFSET(UsNumberOfPhysicalPages, KUSER_SHARED_DATA, NumberOfPhysicalPages),
 OFFSET(UsSafeBootMode, KUSER_SHARED_DATA, SafeBootMode),
-//OFFSET(UsTscQpcData, KUSER_SHARED_DATA, TscQpcData),
 OFFSET(UsTestRetInstruction, KUSER_SHARED_DATA, TestRetInstruction),
-OFFSET(UsSystemCall, KUSER_SHARED_DATA, SystemCall),
-OFFSET(UsSystemCallReturn, KUSER_SHARED_DATA, SystemCallReturn),
+OFFSET(UsSystemCall, KUSER_SHARED_DATA, SystemCall), // not in win10
+OFFSET(UsSystemCallReturn, KUSER_SHARED_DATA, SystemCallReturn), // not in win10
 OFFSET(UsSystemCallPad, KUSER_SHARED_DATA, SystemCallPad),
 OFFSET(UsTickCount, KUSER_SHARED_DATA, TickCount),
 OFFSET(UsTickCountQuad, KUSER_SHARED_DATA, TickCountQuad),
-OFFSET(UsWow64SharedInformation, KUSER_SHARED_DATA, Wow64SharedInformation),
+OFFSET(UsWow64SharedInformation, KUSER_SHARED_DATA, Wow64SharedInformation), // not in win10
+//OFFSET(UsXState, KUSER_SHARED_DATA, XState), // win 10
 
-HEADER("KWAIT_BLOCK"),
+HEADER("KWAIT_BLOCK offsets"),
 OFFSET(WbWaitListEntry, KWAIT_BLOCK, WaitListEntry),
 OFFSET(WbThread, KWAIT_BLOCK, Thread),
 OFFSET(WbObject, KWAIT_BLOCK, Object),
-OFFSET(WbNextWaitBlock, KWAIT_BLOCK, NextWaitBlock),
+OFFSET(WbNextWaitBlock, KWAIT_BLOCK, NextWaitBlock), // not in win10
 OFFSET(WbWaitKey, KWAIT_BLOCK, WaitKey),
 OFFSET(WbWaitType, KWAIT_BLOCK, WaitType),
 
+
+#if 0
+//OFFSET(IbCfgBitMap, ????, CfgBitMap),
+CONSTANT(Win32BatchFlushCallout 0x7
+
+
+#define CmThreadEnvironmentBlockOffset 0x1000
+
+;  Process Parameters Block Structure Offset Definitions
+#define PpFlags 0x8
+
+
+// Extended context structure offset definitions
+#define CxxLegacyOffset 0x8
+#define CxxLegacyLength 0xc
+#define CxxXStateOffset 0x10
+#define CxxXStateLength 0x14
+
+#ifndef _M_ARM
+;  Bounds Callback Status Code Definitions
+BoundExceptionContinueSearch equ 00000H
+BoundExceptionHandled equ 00001H
+BoundExceptionError equ 00002H
+#endif
+
+#ifndef _M_ARM
+;  Enlightenment structure definitions
+HeEnlightenments equ 00000H
+HeHypervisorConnected equ 00004H
+HeEndOfInterrupt equ 00008H
+HeApicWriteIcr equ 0000CH
+HeSpinCountMask equ 00014H
+HeLongSpinWait equ 00018H
+#endif
+
+// KAFFINITY_EX
+#define AffinityExLength 0xc // not i386
+
+#endif

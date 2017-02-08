@@ -63,10 +63,12 @@ static HWND ScrollTrackingWin = 0;
 static INT  ScrollTrackingBar = 0;
 static INT  ScrollTrackingPos = 0;
 static INT  ScrollTrackingVal = 0;
-static BOOL ScrollMovingThumb = FALSE;
-
+ /* Hit test code of the last button-down event */
 static DWORD ScrollTrackHitTest = SCROLL_NOWHERE;
 static BOOL ScrollTrackVertical;
+
+ /* Is the moving thumb being displayed? */
+static BOOL ScrollMovingThumb = FALSE;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
@@ -766,6 +768,12 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   }
   if ((ScrollTrackHitTest == SCROLL_NOWHERE) && (Msg != WM_LBUTTONDOWN))
   {
+     //// ReactOS : Justin Case something goes wrong.
+     if (Wnd == GetCapture())
+     {
+        ReleaseCapture();
+     }
+     ////
      return;
   }
 
@@ -773,7 +781,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   NewInfo.reserved = ScrollBarInfo.reserved;
   memcpy(NewInfo.rgstate, ScrollBarInfo.rgstate, (CCHILDREN_SCROLLBAR + 1) * sizeof(DWORD));
 
-  if (SB_CTL == SBType  && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
+  if (SBType == SB_CTL && (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
   {
       switch(Msg)
       {
@@ -826,7 +834,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         LastMousePos  = LastClickPos;
         TrackThumbPos = ScrollBarInfo.xyThumbTop;
         PrevPt = Pt;
-        if (SB_CTL == SBType && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
+        if (SBType == SB_CTL && (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
         SetCapture(Wnd);
         ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
         NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
@@ -1035,7 +1043,7 @@ static void IntScrollCreateScrollBar(
   Info.cbSize = sizeof(SCROLLINFO);
   Info.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
   Info.nMin = 0;
-  Info.nMax = 100;
+  Info.nMax = 0;
   Info.nPage = 0;
   Info.nPos = 0;
   Info.nTrackPos = 0;
@@ -1181,7 +1189,7 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
   {
      if (!pWnd->fnid)
      {
-        ERR("ScrollBar CTL size %d\n",(sizeof(SBWND)-sizeof(WND)));
+        TRACE("ScrollBar CTL size %d\n", (sizeof(SBWND)-sizeof(WND)));
         if ( pWnd->cbwndExtra != (sizeof(SBWND)-sizeof(WND)) )
         {
            ERR("Wrong Extra bytes for Scrollbar!\n");
@@ -1226,9 +1234,15 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
 
       case WM_LBUTTONDBLCLK:
       case WM_LBUTTONDOWN:
+        if (GetWindowLongW( Wnd, GWL_STYLE ) & SBS_SIZEGRIP)
+        {
+           SendMessageW( GetParent(Wnd), WM_SYSCOMMAND,
+                         SC_SIZE + ((GetWindowLongW( Wnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) ?
+                                   WMSZ_BOTTOMLEFT : WMSZ_BOTTOMRIGHT), lParam );
+        }
+        else
         {
           POINT Pt;
-
           Pt.x = (short)LOWORD(lParam);
           Pt.y = (short)HIWORD(lParam);
           ScrollTrackScrollBar(Wnd, SB_CTL, Pt);
@@ -1240,7 +1254,6 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
       case WM_SYSTIMER:
         {
           POINT Pt;
-
           Pt.x = (short)LOWORD(lParam);
           Pt.y = (short)HIWORD(lParam);
           IntScrollHandleScrollEvent(Wnd, SB_CTL, Msg, Pt);
@@ -1425,7 +1438,10 @@ ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 /*
  * @implemented
  */
-BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
+EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
 {
    BOOL Hook, Ret = FALSE;
 
@@ -1486,7 +1502,24 @@ RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL WINAPI GetScrollBarInfo( _In_ HWND hwnd, _In_ LONG idObject, _Inout_ LPSCROLLBARINFO info)
+{
+    BOOL Ret;
+    PWND pWnd = ValidateHwnd(hwnd);
+    TRACE("hwnd=%p idObject=%d info=%p\n", hwnd, idObject, info);
+    if (!pWnd) return FALSE;
+    Ret = NtUserGetScrollBarInfo(hwnd, idObject, info); // This will be fixed once SB is server side.
+    /* rcScrollBar needs to be in screen coordinates */
+    OffsetRect( &(info->rcScrollBar), pWnd->rcWindow.left, pWnd->rcWindow.top );
+    return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
    BOOL Hook, Ret = FALSE;
@@ -1515,7 +1548,9 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
-INT WINAPI
+INT
+WINAPI
+DECLSPEC_HOTPATCH
 GetScrollPos(HWND Wnd, INT Bar)
 {
   PWND pwnd;
@@ -1540,7 +1575,7 @@ GetScrollPos(HWND Wnd, INT Bar)
      }
 
      SetLastError(ERROR_NO_SCROLLBARS);
-     ERR("GetScrollPos No Scroll Info\n");
+     TRACE("GetScrollPos No Scroll Info\n");
      return 0;
   }
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -1550,7 +1585,9 @@ GetScrollPos(HWND Wnd, INT Bar)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 {
   PWND pwnd;
@@ -1602,7 +1639,9 @@ RealSetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 /*
  * @implemented
  */
-INT WINAPI
+INT
+WINAPI
+DECLSPEC_HOTPATCH
 SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 {
    BOOL Hook;
@@ -1633,7 +1672,9 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 /*
  * @implemented
  */
-INT WINAPI
+INT
+WINAPI
+DECLSPEC_HOTPATCH
 SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 {
   SCROLLINFO ScrollInfo;
@@ -1648,7 +1689,9 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 SetScrollRange(HWND hWnd, INT nBar, INT nMinPos, INT nMaxPos, BOOL bRedraw)
 {
   PWND pWnd;

@@ -34,8 +34,8 @@ CcMapData (
 {
     ULONG ReadOffset;
     BOOLEAN Valid;
-    PBCB Bcb;
-    PCACHE_SEGMENT CacheSeg;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PROS_VACB Vacb;
     NTSTATUS Status;
     PINTERNAL_BCB iBcb;
     ULONG ROffset;
@@ -50,26 +50,30 @@ CcMapData (
     ASSERT(FileObject->SectionObjectPointer);
     ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-    ASSERT(Bcb);
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(SharedCacheMap);
 
-    DPRINT("AllocationSize %I64x, FileSize %I64x\n",
-           Bcb->AllocationSize.QuadPart,
-           Bcb->FileSize.QuadPart);
+    DPRINT("SectionSize %I64x, FileSize %I64x\n",
+           SharedCacheMap->SectionSize.QuadPart,
+           SharedCacheMap->FileSize.QuadPart);
 
-    if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
+    if (ReadOffset % VACB_MAPPING_GRANULARITY + Length > VACB_MAPPING_GRANULARITY)
     {
+        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+            FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
-    ROffset = ROUND_DOWN(ReadOffset, Bcb->CacheSegmentSize);
-    Status = CcRosRequestCacheSegment(Bcb,
-                                      ROffset,
-                                      pBuffer,
-                                      &Valid,
-                                      &CacheSeg);
+    ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
+    Status = CcRosRequestVacb(SharedCacheMap,
+                              ROffset,
+                              pBuffer,
+                              &Valid,
+                              &Vacb);
     if (!NT_SUCCESS(Status))
     {
+        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+            FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
@@ -77,35 +81,43 @@ CcMapData (
     {
         if (!(Flags & MAP_WAIT))
         {
-            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+            CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+                FileObject, FileOffset, Length, Flags);
             return FALSE;
         }
 
-        if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
+        if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
         {
-            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+            CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+                FileObject, FileOffset, Length, Flags);
             return FALSE;
         }
     }
 
-    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % Bcb->CacheSegmentSize));
+    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + ReadOffset % VACB_MAPPING_GRANULARITY);
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
-        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+            FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
-    memset(iBcb, 0, sizeof(INTERNAL_BCB));
+    RtlZeroMemory(iBcb, sizeof(*iBcb));
     iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
     iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
     iBcb->PFCB.MappedLength = Length;
     iBcb->PFCB.MappedFileOffset = *FileOffset;
-    iBcb->CacheSegment = CacheSeg;
+    iBcb->Vacb = Vacb;
     iBcb->Dirty = FALSE;
     iBcb->RefCount = 1;
     *pBcb = (PVOID)iBcb;
 
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> TRUE Bcb=%p\n",
+        FileObject, FileOffset, Length, Flags, iBcb);
     return TRUE;
 }
 
@@ -121,6 +133,9 @@ CcPinMappedData (
     IN	ULONG Flags,
     OUT	PVOID * Bcb)
 {
+    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
+        FileObject, FileOffset, Length, Flags);
+
     /* no-op for current implementation. */
     return TRUE;
 }
@@ -138,12 +153,15 @@ CcPinRead (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
+    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
+        FileObject, FileOffset, Length, Flags);
+
     if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
     {
         if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
             return TRUE;
         else
-            CcUnpinData(Bcb);
+            CcUnpinData(*Bcb);
     }
     return FALSE;
 }
@@ -162,10 +180,13 @@ CcPreparePinWrite (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
+    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Zero=%d Flags=0x%lx\n",
+        FileObject, FileOffset, Length, Zero, Flags);
+
     /*
      * FIXME: This is function is similar to CcPinRead, but doesn't
      * read the data if they're not present. Instead it should just
-     * prepare the cache segments and zero them out if Zero == TRUE.
+     * prepare the VACBs and zero them out if Zero != FALSE.
      *
      * For now calling CcPinRead is better than returning error or
      * just having UNIMPLEMENTED here.
@@ -182,6 +203,10 @@ CcSetDirtyPinnedData (
     IN PLARGE_INTEGER Lsn)
 {
     PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n",
+        Bcb, Lsn);
+
     iBcb->Dirty = TRUE;
 }
 
@@ -195,11 +220,13 @@ CcUnpinData (
 {
     PINTERNAL_BCB iBcb = Bcb;
 
-    CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb,
-                             iBcb->CacheSegment,
-                             TRUE,
-                             iBcb->Dirty,
-                             FALSE);
+    CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
+
+    CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+                     iBcb->Vacb,
+                     TRUE,
+                     iBcb->Dirty,
+                     FALSE);
     if (--iBcb->RefCount == 0)
     {
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
@@ -215,7 +242,17 @@ CcUnpinDataForThread (
     IN	PVOID Bcb,
     IN	ERESOURCE_THREAD ResourceThreadId)
 {
-    UNIMPLEMENTED;
+    PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
+
+    if (iBcb->OwnerPointer != (PVOID)ResourceThreadId)
+    {
+        DPRINT1("Invalid owner! Caller: %p, Owner: %p\n", (PVOID)ResourceThreadId, iBcb->OwnerPointer);
+        return;
+    }
+
+    CcUnpinData(Bcb);
 }
 
 /*
@@ -227,6 +264,9 @@ CcRepinBcb (
     IN	PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
+
     iBcb->RefCount++;
 }
 
@@ -242,26 +282,28 @@ CcUnpinRepinnedBcb (
 {
     PINTERNAL_BCB iBcb = Bcb;
 
+    CCTRACE(CC_API_DEBUG, "Bcb=%p WriteThrough=%d\n", Bcb, WriteThrough);
+
     IoStatus->Status = STATUS_SUCCESS;
     if (--iBcb->RefCount == 0)
     {
         IoStatus->Information = 0;
         if (WriteThrough)
         {
-            KeWaitForSingleObject(&iBcb->CacheSegment->Mutex,
+            KeWaitForSingleObject(&iBcb->Vacb->Mutex,
                                   Executive,
                                   KernelMode,
                                   FALSE,
                                   NULL);
-            if (iBcb->CacheSegment->Dirty)
+            if (iBcb->Vacb->Dirty)
             {
-                IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
+                IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
             }
             else
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->CacheSegment->Mutex, 0);
+            KeReleaseMutex(&iBcb->Vacb->Mutex, FALSE);
         }
         else
         {

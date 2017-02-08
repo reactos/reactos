@@ -150,7 +150,7 @@
 254 stub    SQLTablesA
 255 stub    SQLBrowseConnectA
 256 stub    SQLColumnPrivilegesA
-257 stub    SQLDataSourcesA
+257 stdcall SQLDataSourcesA(long long str long ptr str long ptr)
 260 stub    SQLForeignKeysA
 262 stub    SQLNativeSqlA
 265 stub    SQLPrimaryKeysA

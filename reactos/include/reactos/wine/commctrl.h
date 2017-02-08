@@ -63,7 +63,6 @@ typedef LVFINDINFOA *LPLVFINDINFOA;
 typedef LVFINDINFOW *LPLVFINDINFOW;
 
 #define SB_SETBORDERS (WM_USER+5)
-#define TBSTYLE_EX_UNDOC1 0x00000004 /* similar to TBSTYLE_WRAPABLE */
 
 /* these are undocumented and the names are guesses */
 typedef struct
@@ -85,6 +84,16 @@ typedef struct
 /* undocumented messages in Toolbar */
 #define TB_UNKWN45D              (WM_USER+93)
 #define TB_UNKWN464              (WM_USER+100)
+
+#define TreeView_GetItemA(hwnd, pitem) \
+ (BOOL)SNDMSGA((hwnd), TVM_GETITEMA, 0, (LPARAM) (TVITEMA *)(pitem))
+
+#define TreeView_InsertItemA(hwnd, phdi) \
+  (HTREEITEM)SNDMSGA((hwnd), TVM_INSERTITEMA, 0, \
+                            (LPARAM)(LPTVINSERTSTRUCTA)(phdi))
+
+#define TreeView_SetItemA(hwnd, pitem) \
+ (BOOL)SNDMSGA((hwnd), TVM_SETITEMA, 0, (LPARAM)(const TVITEMA *)(pitem))
 
 #ifdef __cplusplus
 }

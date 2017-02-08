@@ -10,6 +10,9 @@
 
 #include "hidparse.h"
 
+#define NDEBUG
+#include <debug.h>
+
 PVOID
 NTAPI
 AllocFunction(
@@ -67,20 +70,20 @@ CopyFunction(
 }
 
 VOID
-NTAPI
+__cdecl
 DebugFunction(
     IN LPCSTR FormatStr, ...)
 {
-
+#if HID_DBG
     va_list args;
-    unsigned int i;
     char printbuffer[1024];
 
     va_start(args, FormatStr);
-    i = vsprintf(printbuffer, FormatStr, args);
+    vsprintf(printbuffer, FormatStr, args);
     va_end(args);
 
     DbgPrint(printbuffer);
+#endif
 }
 
 VOID
@@ -179,7 +182,7 @@ HidP_GetSpecificValueCaps(
     IN USHORT  LinkCollection,
     IN USAGE  Usage,
     OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PULONG  ValueCapsLength,
+    IN OUT PUSHORT  ValueCapsLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
     HID_PARSER Parser;
@@ -204,14 +207,14 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidP_GetUsages(
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection  OPTIONAL,
-    OUT USAGE  *UsageList,
-    IN OUT ULONG  *UsageLength,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection  OPTIONAL,
+    OUT PUSAGE UsageList,
+    IN OUT PULONG UsageLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData,
-    IN PCHAR  Report,
-    IN ULONG  ReportLength)
+    IN PCHAR Report,
+    IN ULONG ReportLength)
 {
     HID_PARSER Parser;
 
@@ -371,19 +374,19 @@ HidP_GetButtonCaps(
     PUSHORT ButtonCapsLength,
     PHIDP_PREPARSED_DATA PreparsedData)
 {
-    return HidP_GetSpecificButtonCaps(ReportType, HID_USAGE_PAGE_UNDEFINED, 0, 0, ButtonCaps, (PULONG)ButtonCapsLength, PreparsedData);
+    return HidP_GetSpecificButtonCaps(ReportType, HID_USAGE_PAGE_UNDEFINED, 0, 0, ButtonCaps, ButtonCapsLength, PreparsedData);
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidP_GetSpecificButtonCaps(
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    OUT PHIDP_BUTTON_CAPS  ButtonCaps,
-    IN OUT PULONG  ButtonCapsLength,
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    OUT PHIDP_BUTTON_CAPS ButtonCaps,
+    IN OUT PUSHORT ButtonCapsLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
     UNIMPLEMENTED
@@ -412,7 +415,7 @@ NTSTATUS
 NTAPI
 HidP_GetExtendedAttributes(
     IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
+    IN USHORT DataIndex,
     IN PHIDP_PREPARSED_DATA  PreparsedData,
     OUT PHIDP_EXTENDED_ATTRIBUTES  Attributes,
     IN OUT PULONG  LengthAttributes)
@@ -637,7 +640,7 @@ NTAPI
 HidP_GetValueCaps(
     HIDP_REPORT_TYPE ReportType,
     PHIDP_VALUE_CAPS ValueCaps,
-    PULONG ValueCapsLength,
+    PUSHORT ValueCapsLength,
     PHIDP_PREPARSED_DATA PreparsedData)
 {
     UNIMPLEMENTED

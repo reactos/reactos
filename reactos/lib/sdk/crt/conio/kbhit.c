@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/conio/kbhit.c
+ * FILE:        lib/sdk/crt/conio/kbhit.c
  * PURPOSE:     Checks for keyboard hits
  * PROGRAMERS:  Ariadne, Russell
  * UPDATE HISTORY:
@@ -15,8 +15,6 @@ static CRITICAL_SECTION CriticalSection;
 volatile BOOL CriticalSectionInitialized=FALSE;
 
 /*
- * FIXME Initial keyboard char not detected on first punch
- *
  * @implemented
  */
 
@@ -71,7 +69,7 @@ int _kbhit(void)
         return 0;
     }
 
-    if (!ReadConsoleInput(StdInputHandle, InputRecord, EventsRead, &NumberRead))
+    if (!PeekConsoleInput(StdInputHandle, InputRecord, EventsRead, &NumberRead))
     {
         free(InputRecord);
         LeaveCriticalSection(&CriticalSection);

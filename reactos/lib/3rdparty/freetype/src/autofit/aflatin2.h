@@ -2,9 +2,10 @@
 /*                                                                         */
 /*  aflatin2.h                                                             */
 /*                                                                         */
-/*    Auto-fitter hinting routines for latin script (specification).       */
+/*    Auto-fitter hinting routines for latin writing system                */
+/*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __AFLATIN2_H__
-#define __AFLATIN2_H__
+#ifndef AFLATIN2_H_
+#define AFLATIN2_H_
 
 #include "afhints.h"
 
@@ -25,15 +26,16 @@
 FT_BEGIN_HEADER
 
 
-  /* the latin-specific script class */
+  /* the `latin' writing system */
 
-  AF_DECLARE_SCRIPT_CLASS(af_latin2_script_class)
+  AF_DECLARE_WRITING_SYSTEM_CLASS( af_latin2_writing_system_class )
+
 
 /* */
 
 FT_END_HEADER
 
-#endif /* __AFLATIN_H__ */
+#endif /* AFLATIN_H_ */
 
 
 /* END */

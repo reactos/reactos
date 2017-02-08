@@ -18,29 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <wingdi.h>
-#include <winuser.h>
-//#include "winnls.h"
-//#include "oledlg.h"
-
 #include "oledlg_private.h"
-#include "resource.h"
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -89,7 +67,9 @@ static void dump_ps_flags(DWORD flags)
 
 static void dump_pastespecial(const OLEUIPASTESPECIALW *ps)
 {
-    UINT i;
+    INT i;
+    UINT j;
+
     dump_ps_flags(ps->dwFlags);
     TRACE("hwnd %p caption %s hook %p custdata %lx\n",
           ps->hWndOwner, debugstr_w(ps->lpszCaption), ps->lpfnHook, ps->lCustData);
@@ -114,8 +94,8 @@ static void dump_pastespecial(const OLEUIPASTESPECIALW *ps)
     }
     for(i = 0; i < ps->cLinkTypes; i++)
         TRACE("arrLinkTypes[%d] %08x\n", i, ps->arrLinkTypes[i]);
-    for(i = 0; i < ps->cClsidExclude; i++)
-        TRACE("lpClsidExclude[%d] %s\n", i, debugstr_guid(&ps->lpClsidExclude[i]));
+    for(j = 0; j < ps->cClsidExclude; j++)
+        TRACE("lpClsidExclude[%u] %s\n", j, debugstr_guid(&ps->lpClsidExclude[j]));
 
 }
 
@@ -256,7 +236,7 @@ static DWORD init_pastelist(HWND hdlg, OLEUIPASTESPECIALW *ps)
     }
 
     IEnumFORMATETC_Release(penum);
-    EnableWindow(GetDlgItem(hdlg, IDC_PS_PASTE), items_added ? TRUE : FALSE);
+    EnableWindow(GetDlgItem(hdlg, IDC_PS_PASTE), items_added != 0);
     return items_added;
 }
 
@@ -291,7 +271,7 @@ static DWORD init_linklist(HWND hdlg, OLEUIPASTESPECIALW *ps)
         }
     }
 
-    EnableWindow(GetDlgItem(hdlg, IDC_PS_PASTELINK), items_added ? TRUE : FALSE);
+    EnableWindow(GetDlgItem(hdlg, IDC_PS_PASTELINK), items_added != 0);
     return items_added;
 }
 
@@ -317,7 +297,6 @@ static void update_display_list(HWND hdlg, UINT src_list_id)
         SendMessageW(display_list, LB_INSERTSTRING, i, (LPARAM)txt);
         SendMessageW(display_list, LB_SETITEMDATA, i, item_data);
     }
-    old_pos = max(old_pos, count);
     SendMessageW(display_list, LB_SETCURSEL, 0, 0);
     SendMessageW(display_list, WM_SETREDRAW, 1, 0);
     if(GetForegroundWindow() == hdlg)
@@ -500,7 +479,7 @@ static void update_structure(HWND hdlg, ps_struct_t *ps_struct)
         ps_struct->ps->nSelectedIndex = pent->dwScratchSpace;
     }
     ps_struct->ps->dwFlags = ps_struct->flags;
-    ps_struct->ps->fLink = (ps_struct->flags & PSF_SELECTPASTELINK) ? TRUE : FALSE;
+    ps_struct->ps->fLink = (ps_struct->flags & PSF_SELECTPASTELINK) != 0;
 }
 
 static void free_structure(ps_struct_t *ps_struct)
@@ -714,7 +693,7 @@ UINT WINAPI OleUIPasteSpecialW(LPOLEUIPASTESPECIALW ps)
         HRSRC hrsrc;
 
         if(name == NULL) return OLEUI_ERR_LPSZTEMPLATEINVALID;
-        hrsrc = FindResourceW(hInst, name, MAKEINTRESOURCEW(RT_DIALOG));
+        hrsrc = FindResourceW(hInst, name, (LPWSTR)RT_DIALOG);
         if(!hrsrc) return OLEUI_ERR_FINDTEMPLATEFAILURE;
         dlg_templ = LoadResource(hInst, hrsrc);
         if(!dlg_templ) return OLEUI_ERR_LOADTEMPLATEFAILURE;

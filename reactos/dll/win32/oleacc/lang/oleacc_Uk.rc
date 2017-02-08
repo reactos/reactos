@@ -1,0 +1,128 @@
+/*
+ * Ukrainian resources for oleacc
+ *
+ * Copyright 2008 Nikolay Sivov
+ *
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "смуга назви"
+    ROLE_SYSTEM_MENUBAR     "смуга меню"
+    ROLE_SYSTEM_SCROLLBAR   "смуга прокручування"
+    ROLE_SYSTEM_GRIP        "ручка"
+    ROLE_SYSTEM_SOUND       "звук"
+    ROLE_SYSTEM_CURSOR      "курсор"
+    ROLE_SYSTEM_CARET       "знак вставки"
+    ROLE_SYSTEM_ALERT       "тривога"
+    ROLE_SYSTEM_WINDOW      "вікно"
+    ROLE_SYSTEM_CLIENT      "клієнт"
+    ROLE_SYSTEM_MENUPOPUP   "контекстне меню"
+    ROLE_SYSTEM_MENUITEM    "елемент меню"
+    ROLE_SYSTEM_TOOLTIP     "підказка"
+    ROLE_SYSTEM_APPLICATION "додаток"
+    ROLE_SYSTEM_DOCUMENT    "документ"
+    ROLE_SYSTEM_PANE        "сектор"
+    ROLE_SYSTEM_CHART       "графік"
+    ROLE_SYSTEM_DIALOG      "діалог"
+    ROLE_SYSTEM_BORDER      "межа"
+    ROLE_SYSTEM_GROUPING    "групування"
+    ROLE_SYSTEM_SEPARATOR   "розділювач"
+    ROLE_SYSTEM_TOOLBAR     "панель інструментів"
+    ROLE_SYSTEM_STATUSBAR   "рядок стану"
+    ROLE_SYSTEM_TABLE        "таблиця"
+    ROLE_SYSTEM_COLUMNHEADER "заголовок стовпчика"
+    ROLE_SYSTEM_ROWHEADER    "заголовок рядка"
+    ROLE_SYSTEM_COLUMN       "стовпчик"
+    ROLE_SYSTEM_ROW          "рядок"
+    ROLE_SYSTEM_CELL         "комірка"
+    ROLE_SYSTEM_LINK         "посилання"
+    ROLE_SYSTEM_HELPBALLOON  "помічна повітряна куля"
+    ROLE_SYSTEM_CHARACTER    "знак"
+    ROLE_SYSTEM_LIST         "список"
+    ROLE_SYSTEM_LISTITEM     "елемент списку"
+    ROLE_SYSTEM_OUTLINE      "план"
+    ROLE_SYSTEM_OUTLINEITEM  "елемент плану"
+    ROLE_SYSTEM_PAGETAB      "закладка сторінки"
+    ROLE_SYSTEM_PROPERTYPAGE "сторінка властивостей"
+    ROLE_SYSTEM_INDICATOR    "показник"
+    ROLE_SYSTEM_GRAPHIC      "графіка"
+    ROLE_SYSTEM_STATICTEXT   "статичний текст"
+    ROLE_SYSTEM_TEXT         "текст"
+    ROLE_SYSTEM_PUSHBUTTON   "кнопка"
+    ROLE_SYSTEM_CHECKBUTTON  "кнопка-позначка"
+    ROLE_SYSTEM_RADIOBUTTON  "перемикач"
+    ROLE_SYSTEM_COMBOBOX     "комбіноване поле"
+    ROLE_SYSTEM_DROPLIST     "випадаючий"
+    ROLE_SYSTEM_PROGRESSBAR  "смужка прогресу"
+    ROLE_SYSTEM_DIAL         "вибір"
+    ROLE_SYSTEM_HOTKEYFIELD  "поле гарячих клавіш"
+    ROLE_SYSTEM_SLIDER       "повзунок"
+    ROLE_SYSTEM_SPINBUTTON   "поле скролінгу"
+    ROLE_SYSTEM_DIAGRAM      "діаграма"
+    ROLE_SYSTEM_ANIMATION    "анімація"
+    ROLE_SYSTEM_EQUATION     "рівняння"
+    ROLE_SYSTEM_BUTTONDROPDOWN "випадаюча кнопка"
+    ROLE_SYSTEM_BUTTONMENU   "кнопка меню"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "випадаюча кнопка сітки"
+    ROLE_SYSTEM_WHITESPACE   "білий простір"
+    ROLE_SYSTEM_PAGETABLIST  "список закладок сторінки"
+    ROLE_SYSTEM_CLOCK        "годинник"
+    ROLE_SYSTEM_SPLITBUTTON  "кнопка поділу"
+    ROLE_SYSTEM_IPADDRESS    "IP адреса"
+    ROLE_SYSTEM_OUTLINEBUTTON "кпопка плану"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

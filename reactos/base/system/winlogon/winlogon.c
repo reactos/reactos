@@ -12,7 +12,7 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
+#include <ndk/cmfuncs.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -213,9 +213,10 @@ InitKeyboardLayouts(VOID)
 
 
 BOOL
-DisplayStatusMessage(IN PWLSESSION Session,
-                     IN HDESK hDesktop,
-                     IN UINT ResourceId)
+DisplayStatusMessage(
+     IN PWLSESSION Session,
+     IN HDESK hDesktop,
+     IN UINT ResourceId)
 {
     WCHAR StatusMsg[MAX_PATH];
 
@@ -233,7 +234,8 @@ DisplayStatusMessage(IN PWLSESSION Session,
 
 
 BOOL
-RemoveStatusMessage(IN PWLSESSION Session)
+RemoveStatusMessage(
+    IN PWLSESSION Session)
 {
     if (Session->Gina.Version < WLX_VERSION_1_3)
         return TRUE;
@@ -245,10 +247,11 @@ RemoveStatusMessage(IN PWLSESSION Session)
 static
 INT_PTR
 CALLBACK
-GinaLoadFailedWindowProc(IN HWND hwndDlg,
-                         IN UINT uMsg,
-                         IN WPARAM wParam,
-                         IN LPARAM lParam)
+GinaLoadFailedWindowProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -292,10 +295,11 @@ GinaLoadFailedWindowProc(IN HWND hwndDlg,
 
 int
 WINAPI
-WinMain(IN HINSTANCE hInstance,
-        IN HINSTANCE hPrevInstance,
-        IN LPSTR lpCmdLine,
-        IN int nShowCmd)
+WinMain(
+    IN HINSTANCE hInstance,
+    IN HINSTANCE hPrevInstance,
+    IN LPSTR lpCmdLine,
+    IN int nShowCmd)
 {
 #if 0
     LSA_STRING ProcessName, PackageName;
@@ -314,11 +318,15 @@ WinMain(IN HINSTANCE hInstance,
 
     hAppInstance = hInstance;
 
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+
     if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
     {
         ERR("WL: Could not register logon process\n");
-        NtShutdownSystem(ShutdownNoReboot);
-        ExitProcess(0);
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+        ExitProcess(1);
     }
 
     WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), 0, sizeof(WLSESSION));
@@ -331,6 +339,9 @@ WinMain(IN HINSTANCE hInstance,
 
     ZeroMemory(WLSession, sizeof(WLSESSION));
     WLSession->DialogTimeout = 120; /* 2 minutes */
+
+    /* Initialize the dialog tracking list */
+    InitDialogListHead();
 
     if (!CreateWindowStationAndDesktops(WLSession))
     {
@@ -349,6 +360,13 @@ WinMain(IN HINSTANCE hInstance,
         ExitProcess(1);
     }
 
+    if (!StartRpcServer())
+    {
+        ERR("WL: Could not start the RPC server\n");
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+        ExitProcess(1);
+    }
+
     if (!StartServicesManager())
     {
         ERR("WL: Could not start services.exe\n");
@@ -359,23 +377,28 @@ WinMain(IN HINSTANCE hInstance,
     if (!StartLsass())
     {
         ERR("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
-        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, OptionOk, &HardErrorResponse);
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
         ExitProcess(1);
     }
+
+    /* Wait for the LSA server */
+    WaitForLsass();
+
+    /* Init Notifications */
+    InitNotifications();
 
     /* Load and initialize gina */
     if (!GinaInit(WLSession))
     {
         ERR("WL: Failed to initialize Gina\n");
-        DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"");
+        // FIXME: Retrieve the real name of the GINA DLL we were trying to load.
+        // It is known only inside the GinaInit function...
+        DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"msgina.dll");
         HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
         ExitProcess(1);
     }
 
     DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
-
-    /* Wait for the LSA server */
-    WaitForLsass();
 
 #if 0
     /* Connect to NetLogon service (lsass.exe) */
@@ -411,6 +434,8 @@ WinMain(IN HINSTANCE hInstance,
     }
 #endif
 
+    CallNotificationDlls(WLSession, StartupHandler);
+
     /* Create a hidden window to get SAS notifications */
     if (!InitializeSAS(WLSession))
     {
@@ -418,11 +443,11 @@ WinMain(IN HINSTANCE hInstance,
         ExitProcess(2);
     }
 
-    //DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
-    //DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
 
     /* Display logged out screen */
-    WLSession->LogonState = STATE_LOGGED_OFF;
+    WLSession->LogonState = STATE_INIT;
     RemoveStatusMessage(WLSession);
 
     /* Check for pending setup */
@@ -435,7 +460,9 @@ WinMain(IN HINSTANCE hInstance,
         RunSetup();
     }
     else
-        PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
+        PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
+
+    (void)LoadLibraryW(L"sfc_os.dll");
 
     /* Tell kernel that CurrentControlSet is good (needed
      * to support Last good known configuration boot) */
@@ -447,6 +474,8 @@ WinMain(IN HINSTANCE hInstance,
         TranslateMessage(&Msg);
         DispatchMessageW(&Msg);
     }
+
+    CleanupNotifications();
 
     /* We never go there */
 

@@ -17,6 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep ident
+#pragma makedep register
+#pragma makedep regtypelib
+
 #include "msiserver_dispids.h"
 import "unknwn.idl";
 import "wtypes.idl";
@@ -149,6 +153,14 @@ coclass MsiServerMessage { interface IMsiMessage; }
 coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
 
 [
+    helpstring("Microsoft Windows Installer"),
+    threading(apartment),
+    progid("WindowsInstaller.Installer"),
+    uuid(000c1090-0000-0000-c000-000000000046)
+]
+coclass MsiInstaller { interface Installer; }
+
+[
     uuid(000c1082-0000-0000-c000-000000000046)
 ]
 coclass MsiTransform { }
@@ -179,7 +191,6 @@ coclass WineMsiRemoteCustomAction { interface WineMsiRemoteCustomAction; }
     uuid(902b3592-9d08-4dfd-a593-d07c52546421)
 ]
 coclass WineMsiRemotePackage { interface WineMsiRemotePackage; }
-
 
 [ uuid(000C1092-0000-0000-C000-000000000046), version(1.0) ]
 library WindowsInstaller
@@ -247,14 +258,14 @@ library WindowsInstaller
         [id(DISPID_INSTALLER_OPENPACKAGE)]
             Session* OpenPackage(
                 [in] VARIANT PackagePath,
-                [in, optional, defaultvalue(0)] long Options);
+                [in, defaultvalue(0)] long Options);
         [id(DISPID_INSTALLER_OPENPRODUCT)]
             Session* OpenProduct(
                 [in] BSTR ProductCode);
         [id(DISPID_INSTALLER_SUMMARYINFORMATION)]
             SummaryInfo* SummaryInformation(
                 [in] BSTR PackagePath,
-                [in, optional, defaultvalue(0)] long UpdateCount);
+                [in, defaultvalue(0)] long UpdateCount);
         [id(DISPID_INSTALLER_OPENDATABASE)]
             Database *OpenDatabase(
                     [in] BSTR DatabasePath,
@@ -266,7 +277,7 @@ library WindowsInstaller
         [id(DISPID_INSTALLER_INSTALLPRODUCT)]
             void InstallProduct(
                 [in] BSTR PackagePath,
-                [in, optional, defaultvalue("0")] BSTR PropertyValues);
+                [in, defaultvalue("0")] BSTR PropertyValues);
         [id(DISPID_INSTALLER_VERSION)]
             BSTR Version();
         [id(DISPID_INSTALLER_LASTERRORRECORD)]
@@ -389,7 +400,7 @@ library WindowsInstaller
         properties:
         methods:
         [id(DISPID_VIEW_EXECUTE)]
-            void Execute([in, optional, defaultvalue(0)] Record *Params);
+            void Execute([in, defaultvalue(0)] Record *Params);
         [id(DISPID_VIEW_FETCH)]
             Record* Fetch();
         [id(DISPID_VIEW_MODIFY)]
@@ -408,7 +419,7 @@ library WindowsInstaller
         [id(DISPID_DATABASE_OPENVIEW)]
             View* OpenView([in] BSTR Sql);
         [id(DISPID_DATABASE_SUMMARYINFORMATION), propget]
-            SummaryInfo *SummaryInformation([in, optional, defaultvalue(0)] long UpdateCount);
+            SummaryInfo *SummaryInformation([in, defaultvalue(0)] long UpdateCount);
     }
 
     typedef enum {
@@ -547,12 +558,4 @@ library WindowsInstaller
         properties:
         methods:
     }
-
-    [
-       helpstring("Microsoft Windows Installer"),
-       threading(apartment),
-       progid("WindowsInstaller.Installer"),
-       uuid(000c1090-0000-0000-c000-000000000046)
-    ]
-    coclass MsiInstaller { interface Installer; }
 }

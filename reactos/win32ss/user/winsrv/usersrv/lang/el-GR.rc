@@ -1,0 +1,24 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Κλείσιμο προγράμματος - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Κλείσιμο προγράμματος... Παρακαλώ περιμένετε", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Πρόοδος", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Αν κλείσετε την εφαρμογή τώρα , θα χάσετε όλα τα μη αποθηκευμένα δεδομένα. Για να κλείσετε το πρόγραμμα τώρα, πατήστε 'Κλείσιμο Τώρα'.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Κλείσιμο Τώρα", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Κλείσημο προγράμματος - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "ʼκυρο", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&Κλείσιμο Τώρα", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Το πρόγραμμα δεν αποκρίνεται.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Για να επιστρέψετε στο ReactOS και να ελέγξετε την κατάσταση του προγράμματος, πατήστε 'ʼκυρο'.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Αν κλείσετε την εφαρμογή τώρα , θα χάσετε όλα τα μη αποθηκευμένα δεδομένα. Για να κλείσετε το πρόγραμμα τώρα, πατήστε 'Κλείσιμο Τώρα'.", IDC_STATIC, 7, 53, 178, 26
+END

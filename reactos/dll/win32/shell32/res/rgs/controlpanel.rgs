@@ -5,6 +5,7 @@ HKCR
 		ForceRemove {21EC2020-3AEA-1069-A2DD-08002B30309D} = s 'Control Panel'
 		{
 			val InfoTip = e '@%%SystemRoot%%\system32\SHELL32.dll,-31361'
+			val LocalizedString = e '@%%SystemRoot%%\system32\SHELL32.dll,-148'
 			DefaultIcon = e '%%SystemRoot%%\System32\shell32.dll,-137'
 			InprocServer32 = s '%MODULE%'
 			{

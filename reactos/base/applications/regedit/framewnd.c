@@ -20,6 +20,10 @@
 
 #include "regedit.h"
 
+#include <commdlg.h>
+#include <cderr.h>
+#include <objsel.h>
+
 /********************************************************************************
  * Global and Local Variables:
  */
@@ -249,9 +253,9 @@ BuildFilterStrings(WCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
     c = 0;
     for(i = 0; i < PairCount; i++)
     {
-        c += LoadStringW(hInst, Pairs[i].DisplayID, &Filter[c], 255 * sizeof(WCHAR));
+        c += LoadStringW(hInst, Pairs[i].DisplayID, &Filter[c], 255);
         Filter[++c] = L'\0';
-        c += LoadStringW(hInst, Pairs[i].FilterID, &Filter[c], 255 * sizeof(WCHAR));
+        c += LoadStringW(hInst, Pairs[i].FilterID, &Filter[c], 255);
         Filter[++c] = L'\0';
     }
     Filter[++c] = L'\0';
@@ -360,7 +364,7 @@ static BOOL LoadHive(HWND hWnd)
     /* build the "All Files" filter up */
     filter.DisplayID = IDS_FLT_ALLFILES;
     filter.FilterID = IDS_FLT_ALLFILES_FLT;
-    BuildFilterStrings(Filter, &filter, sizeof(filter));
+    BuildFilterStrings(Filter, &filter, 1);
     ofn.lpstrFilter = Filter;
     /* load and set the caption and flags for dialog */
     LoadStringW(hInst, IDS_LOAD_HIVE, Caption, COUNT_OF(Caption));
@@ -583,7 +587,7 @@ BOOL ExportRegistryFile(HWND hWnd)
 {
     BOOL bRet = FALSE;
     OPENFILENAME ofn;
-    WCHAR ExportKeyPath[_MAX_PATH];
+    WCHAR ExportKeyPath[_MAX_PATH] = {0};
     WCHAR Caption[128], szTitle[512], szText[512];
     HKEY hKeyRoot;
     LPCWSTR pszKeyPath;
@@ -853,10 +857,19 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
             cbData = sizeof(WCHAR);
             break;
         case REG_MULTI_SZ:
-            cbData = sizeof(WCHAR) * 2;
+            /*
+             * WARNING: An empty multi-string has only one null char.
+             * Indeed, multi-strings are built in the following form:
+             * str1\0str2\0...strN\0\0
+             * where each strI\0 is a null-terminated string, and it
+             * ends with a terminating empty string.
+             * Therefore an empty multi-string contains only the terminating
+             * empty string, that is, one null char.
+             */
+            cbData = sizeof(WCHAR);
             break;
-        case REG_QWORD:
-            cbData = sizeof(DWORD) * 2;
+        case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
+            cbData = sizeof(DWORDLONG); // == sizeof(DWORD) * 2;
             break;
         default:
             cbData = 0;

@@ -5,7 +5,7 @@
 /*    PostScript hinter global hinting management (body).                  */
 /*    Inspired by the new auto-hinter module.                              */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2006, 2010 by                        */
+/*  Copyright 2001-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -23,7 +23,7 @@
 #include "pshglob.h"
 
 #ifdef DEBUG_HINTER
-  PSH_Globals  ps_debug_globals = 0;
+  PSH_Globals  ps_debug_globals = NULL;
 #endif
 
 
@@ -240,7 +240,7 @@
                        FT_Int     family )
   {
     PSH_Blue_Table  top_table, bot_table;
-    FT_Int          count_top, count_bot;
+    FT_UInt         count_top, count_bot;
 
 
     if ( family )
@@ -339,7 +339,7 @@
             bot   = zone[1].org_bottom;
             delta = bot - top;
 
-            if ( delta < 2 * fuzz )
+            if ( delta / 2 < fuzz )
               zone[0].org_top = zone[1].org_bottom = top + delta / 2;
             else
             {
@@ -369,7 +369,7 @@
   {
     FT_UInt         count;
     FT_UInt         num;
-    PSH_Blue_Table  table = 0;
+    PSH_Blue_Table  table = NULL;
 
     /*                                                        */
     /* Determine whether we need to suppress overshoots or    */
@@ -522,6 +522,28 @@
   }
 
 
+  /* calculate the maximum height of given blue zones */
+  static FT_Short
+  psh_calc_max_height( FT_UInt          num,
+                       const FT_Short*  values,
+                       FT_Short         cur_max )
+  {
+    FT_UInt  count;
+
+
+    for ( count = 0; count < num; count += 2 )
+    {
+      FT_Short  cur_height = values[count + 1] - values[count];
+
+
+      if ( cur_height > cur_max )
+        cur_max = cur_height;
+    }
+
+    return cur_max;
+  }
+
+
   FT_LOCAL_DEF( void )
   psh_blues_snap_stem( PSH_Blues      blues,
                        FT_Int         stem_top,
@@ -613,7 +635,7 @@
       FT_FREE( globals );
 
 #ifdef DEBUG_HINTER
-      ps_debug_globals = 0;
+      ps_debug_globals = NULL;
 #endif
     }
   }
@@ -684,7 +706,32 @@
                            priv->family_blues, priv->num_family_other_blues,
                            priv->family_other_blues, priv->blue_fuzz, 1 );
 
-      globals->blues.blue_scale = priv->blue_scale;
+      /* limit the BlueScale value to `1 / max_of_blue_zone_heights' */
+      {
+        FT_Fixed  max_scale;
+        FT_Short  max_height = 1;
+
+
+        max_height = psh_calc_max_height( priv->num_blue_values,
+                                          priv->blue_values,
+                                          max_height );
+        max_height = psh_calc_max_height( priv->num_other_blues,
+                                          priv->other_blues,
+                                          max_height );
+        max_height = psh_calc_max_height( priv->num_family_blues,
+                                          priv->family_blues,
+                                          max_height );
+        max_height = psh_calc_max_height( priv->num_family_other_blues,
+                                          priv->family_other_blues,
+                                          max_height );
+
+        /* BlueScale is scaled 1000 times */
+        max_scale = FT_DivFix( 1000, max_height );
+        globals->blues.blue_scale = priv->blue_scale < max_scale
+                                      ? priv->blue_scale
+                                      : max_scale;
+      }
+
       globals->blues.blue_shift = priv->blue_shift;
       globals->blues.blue_fuzz  = priv->blue_fuzz;
 
@@ -703,14 +750,14 @@
   }
 
 
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL_DEF( void )
   psh_globals_set_scale( PSH_Globals  globals,
                          FT_Fixed     x_scale,
                          FT_Fixed     y_scale,
                          FT_Fixed     x_delta,
                          FT_Fixed     y_delta )
   {
-    PSH_Dimension  dim = &globals->dimension[0];
+    PSH_Dimension  dim;
 
 
     dim = &globals->dimension[0];
@@ -733,8 +780,6 @@
       psh_globals_scale_widths( globals, 1 );
       psh_blues_scale_zones( &globals->blues, y_scale, y_delta );
     }
-
-    return 0;
   }
 
 

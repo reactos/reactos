@@ -1,0 +1,107 @@
+/*
+ * Help Viewer (Slovenian Resources)
+ *
+ * Copyright 2002, 2003, 2008 Rok Mandeljc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "&Datoteka" {
+  MENUITEM "&Odpri", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Natisni", MNID_FILE_PRINT
+  MENUITEM "Priprava &tiskalnika ...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "Iz&hod", MNID_FILE_EXIT
+ }
+ POPUP "&Urejanje" {
+   MENUITEM "&Kopiraj ...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Opombe ...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Zaznamki" {
+   MENUITEM "Do&loči ...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Možnosti" {
+   MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
+   MENUITEM "Zgodovina",		MNID_OPTS_HISTORY
+   POPUP    "Pisava"
+  BEGIN
+    MENUITEM "Majhna",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Običajna",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Velika",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+  POPUP "&Pomoč" {
+   MENUITEM "&O pomoči", MNID_HELP_HELPON
+   MENUITEM "&Informacije ...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Opomba ...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiraj",                MNID_CTXT_COPY
+		MENUITEM "Natisni ...",            MNID_CTXT_PRINT
+		POPUP    "Pisava"
+		BEGIN
+			MENUITEM "Majnha",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Običajna",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Velika",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"ReactOS Pomoč"
+STID_WHERROR, 		"NAPAKA"
+STID_WARNING,  		"OPOZORILO"
+STID_INFO,  		"Informacija"
+STID_NOT_IMPLEMENTED, 	"Ni (še) na voljo"
+STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomočjo '%s'"
+STID_INDEX, 		"&Indeks"
+STID_CONTENTS,		"Vsebina"
+STID_BACK, 		"&Nazaj"
+STID_ALL_FILES, 	"Vse datoteke (*.*)"
+STID_HELP_FILES_HLP, 	"Datoteke s pomočjo (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Ne najdem datoteke '%s'. Ali jo želite poiskati sami?"
+STID_NO_RICHEDIT	"Ne morem najti knjižnice richedit ... Prekinjam"
+STID_PSH_INDEX,		"Teme pomoči: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Indeks"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Iskanje"
+{
+    LTEXT  "Ni (še) na voljo", -1, 10, 10, 180, 150
+}

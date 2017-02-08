@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+/* Uncomment for logging of connections and address files every 10 seconds */
+//#define LOG_OBJECTS
 
 /* List of all address file objects managed by this driver */
 LIST_ENTRY AddressFileListHead;
@@ -99,6 +101,88 @@ BOOLEAN AddrReceiveMatch(
    return FALSE;
 }
 
+VOID
+LogActiveObjects(VOID)
+{
+#ifdef LOG_OBJECTS
+    PLIST_ENTRY CurrentEntry;
+    KIRQL OldIrql;
+    PADDRESS_FILE AddrFile;
+    PCONNECTION_ENDPOINT Conn;
+
+    DbgPrint("----------- TCP/IP Active Object Dump -------------\n");
+    
+    TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+
+    CurrentEntry = AddressFileListHead.Flink;
+    while (CurrentEntry != &AddressFileListHead)
+    {
+        AddrFile = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
+
+        DbgPrint("Address File (%s, %d, %d) @ 0x%p | Ref count: %d | Sharers: %d\n",
+                 A2S(&AddrFile->Address), WN2H(AddrFile->Port), AddrFile->Protocol,
+                 AddrFile, AddrFile->RefCount, AddrFile->Sharers);
+        DbgPrint("\tListener: ");
+        if (AddrFile->Listener == NULL)
+            DbgPrint("<None>\n");
+        else
+            DbgPrint("0x%p\n", AddrFile->Listener);
+        DbgPrint("\tAssociated endpoints: ");
+        if (AddrFile->Connection == NULL)
+            DbgPrint("<None>\n");
+        else
+        {
+            Conn = AddrFile->Connection;
+            while (Conn)
+            {
+                DbgPrint("0x%p ", Conn);
+                Conn = Conn->Next;
+            }
+            DbgPrint("\n");
+        }
+        
+        CurrentEntry = CurrentEntry->Flink;
+    }
+    
+    TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+    
+    TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
+    
+    CurrentEntry = ConnectionEndpointListHead.Flink;
+    while (CurrentEntry != &ConnectionEndpointListHead)
+    {
+        Conn = CONTAINING_RECORD(CurrentEntry, CONNECTION_ENDPOINT, ListEntry);
+        
+        DbgPrint("Connection @ 0x%p | Ref count: %d\n", Conn, Conn->RefCount);
+        DbgPrint("\tPCB: ");
+        if (Conn->SocketContext == NULL)
+            DbgPrint("<None>\n");
+        else
+        {
+            DbgPrint("0x%p\n", Conn->SocketContext);
+            LibTCPDumpPcb(Conn->SocketContext);
+        }
+        DbgPrint("\tPacket queue status: %s\n", IsListEmpty(&Conn->PacketQueue) ? "Empty" : "Not Empty");
+        DbgPrint("\tRequest lists: Connect: %s | Recv: %s | Send: %s | Shutdown: %s | Listen: %s\n",
+                 IsListEmpty(&Conn->ConnectRequest) ? "Empty" : "Not Empty",
+                 IsListEmpty(&Conn->ReceiveRequest) ? "Empty" : "Not Empty",
+                 IsListEmpty(&Conn->SendRequest) ? "Empty" : "Not Empty",
+                 IsListEmpty(&Conn->ShutdownRequest) ? "Empty" : "Not Empty",
+                 IsListEmpty(&Conn->ListenRequest) ? "Empty" : "Not Empty");
+        DbgPrint("\tSend shutdown: %s\n", Conn->SendShutdown ? "Yes" : "No");
+        DbgPrint("\tReceive shutdown: %s\n", Conn->ReceiveShutdown ? "Yes" : "No");
+        if (Conn->ReceiveShutdown) DbgPrint("\tReceive shutdown status: 0x%x\n", Conn->ReceiveShutdownStatus);
+        DbgPrint("\tClosing: %s\n", Conn->Closing ? "Yes" : "No");
+        
+        CurrentEntry = CurrentEntry->Flink;
+    }
+    
+    TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
+
+    DbgPrint("---------------------------------------------------\n");
+#endif
+}
+
 PADDRESS_FILE AddrFindShared(
     PIP_ADDRESS BindAddress,
     USHORT Port,
@@ -138,7 +222,7 @@ PADDRESS_FILE AddrFindShared(
  * ARGUMENTS:
  *     SearchContext = Pointer to search context
  * RETURNS:
- *     Pointer to address file, NULL if none was found
+ *     Pointer to referenced address file, NULL if none was found
  */
 PADDRESS_FILE AddrSearchNext(
     PAF_SEARCH SearchContext)
@@ -148,6 +232,7 @@ PADDRESS_FILE AddrSearchNext(
     KIRQL OldIrql;
     PADDRESS_FILE Current = NULL;
     BOOLEAN Found = FALSE;
+    PADDRESS_FILE StartingAddrFile;
     
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
@@ -157,8 +242,8 @@ PADDRESS_FILE AddrSearchNext(
         return NULL;
     }
 
-    /* Remove the extra reference we added to keep this address file in memory */
-    DereferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
+    /* Save this pointer so we can dereference it later */
+    StartingAddrFile = CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry);
 
     CurrentEntry = SearchContext->Next;
 
@@ -195,9 +280,15 @@ PADDRESS_FILE AddrSearchNext(
             /* Reference the next address file to prevent the link from disappearing behind our back */
             ReferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
         }
+
+        /* Reference the returned address file before dereferencing the starting
+         * address file because it may be that Current == StartingAddrFile */
+        ReferenceObject(Current);
     }
     else
         Current = NULL;
+
+    DereferenceObject(StartingAddrFile);
 
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 

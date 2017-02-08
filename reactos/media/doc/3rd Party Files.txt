@@ -1,58 +1,91 @@
-Files synched with Wine can be found in /media/doc/README.WINE
+Files synced with Wine can be found in /media/doc/README.WINE
 
-Other Things synched with other projects:
+Other things synced with other projects:
 
-Title: RedHat Liberation Fonts
-Used Version: 1.06
-Latest Version: 1.06
-Website: https://www.redhat.com/promo/fonts/
+Title: Liberation Fonts
+Used Version: 2.00.1
+Website: https://fedorahosted.org/liberation-fonts/
 
 Title: DejaVu Fonts
-Used Version: 2.33
-Latest Version: 2.33
+Used Version: 2.35
 Website: http://dejavu.sourceforge.net
+
+Title: Ubuntu Fonts
+Used Version: 0.83
+Website: http://font.ubuntu.com
+
+Title: Open Sans Fonts
+Used Version: 1.10
+Website: http://www.google.com/fonts/specimen/Open+Sans
 
 Title: DXTN OpenGL Compression Libs
 Used Version: 1.1
-Latest Version: 1.1
 Website: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: FreeType
-Used Version: 2.4.4
-Latest Version: 2.4.4
+Used Version: 2.6.3
 Website: http://www.freetype.org
 
 Title: Mesa3D
-Used Version: 7.4
-Latest Version: 7.8.2
+Used Version: 8.0.4
 Website: http://www.mesa3d.org
+
+Title: Mesa3D glu libary
+Used Version: 9.0
+Website: ftp://ftp.freedesktop.org/pub/mesa/glu/
 
 Title: GNU adns
 Used Version: 1.0 REV 5
-Latest Version: 1.0 REV 5
-Website: http://www.chiark.greenend.org.uk/~ian/adns | http://adns.jgaa.com
+Website: http://www.gnu.org/software/adns/ | http://adns.jgaa.com
 
 Title: BZip2
-Used Version: 1.0.5
-Latest Version: 1.0.5
+Used Version: 1.0.6
 Website: http://www.bzip.org
 
-Title: Expat
-Used Version: 2.0
-Latest Version: 2.0.1
-Website: http://expat.sourceforge.net
-
 Title: LibXML
-Used Version: 2.7.6
-Latest Version: 2.7.7
+Used Version: 2.9.3
+Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
+
+Title: Libxslt
+Used Version: 1.1.28
 Website: http://xmlsoft.org
 
 Title: ZLib
-Used Version: 1.2.3
-Latest Version: 1.2.5
+Used Version: 1.2.8
 Website: http://www.zlib.net
 
 Title: GNU FreeFont
-Used Version: 2010-09-19
-Latest Version: 2010-09-19
+Used Version: 2012-05-03
 Website: http://savannah.gnu.org/projects/freefont/
+
+Title: CardLib
+Used Version: 2005-07-14
+Website: http://www.catch22.net/tuts/cardlib
+
+Title:  libsamplerate
+Used Version: 0.1.8
+Website: http://www.mega-nerd.com/SRC/download.html
+
+Title:  libmpg123 (used by winemp3.acm)
+Used Version: 1.22.4
+Website: http://www.mpg123.de/
+
+Title:  STLport
+Used Version: 5.2.1
+Website: http://stlport.sourceforge.net/
+
+Title: win-iconv
+Used Version: git commit 8765259
+Website: https://github.com/win-iconv/win-iconv
+
+Title: libjpeg
+Used Version: 9a
+Website: http://www.ijg.org/
+
+Title: mbed TLS
+Used Version: 2.2.1
+Website: https://tls.mbed.org/
+
+Title: libpng
+Used Version: 1.6.21
+Website: http://libpng.sourceforge.net/

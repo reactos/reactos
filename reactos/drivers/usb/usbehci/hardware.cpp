@@ -8,9 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
 #include "usbehci.h"
-#include "hardware.h"
+
+#define NDEBUG
+#include <debug.h>
 
 typedef VOID __stdcall HD_INIT_CALLBACK(IN PVOID CallBackContext);
 
@@ -96,7 +97,7 @@ protected:
     PVOID m_SCEContext;                                                                // status change callback routine context
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
-    ULONG m_WorkItemActive;                                                            // work item status
+    volatile LONG m_StatusChangeWorkItemStatus;                                        // work item status
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
     BOOLEAN m_PortResetInProgress[0xF];                                                // stores reset in progress (vbox hack)
@@ -170,7 +171,7 @@ CUSBHardwareDevice::Initialize(
 
     //
     // store device objects
-    // 
+    //
     m_DriverObject = DriverObject;
     m_FunctionalDeviceObject = FunctionalDeviceObject;
     m_PhysicalDeviceObject = PhysicalDeviceObject;
@@ -182,7 +183,7 @@ CUSBHardwareDevice::Initialize(
     KeInitializeSpinLock(&m_Lock);
 
     //
-    // intialize status change work item
+    // initialize status change work item
     //
     ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
 
@@ -249,7 +250,7 @@ CUSBHardwareDevice::PrintCapabilities()
 {
     if (m_Capabilities.HCSParams.PortPowerControl)
     {
-        DPRINT1("Controler EHCI has Port Power Control\n");
+        DPRINT1("Controller EHCI has Port Power Control\n");
     }
 
     DPRINT1("Controller Port Routing Rules %lu\n", m_Capabilities.HCSParams.PortRouteRules);
@@ -356,17 +357,17 @@ CUSBHardwareDevice::PnpStart(
                 }
 
                 //
-                // Get controllers capabilities 
+                // Get controllers capabilities
                 //
                 m_Capabilities.Length = READ_REGISTER_UCHAR((PUCHAR)ResourceBase + EHCI_CAPLENGTH);
-                m_Capabilities.HCIVersion = READ_REGISTER_USHORT((PUSHORT)((ULONG)ResourceBase + EHCI_HCIVERSION));
-                m_Capabilities.HCSParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + EHCI_HCSPARAMS));
-                m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + EHCI_HCCPARAMS));
+                m_Capabilities.HCIVersion = READ_REGISTER_USHORT((PUSHORT)((ULONG_PTR)ResourceBase + EHCI_HCIVERSION));
+                m_Capabilities.HCSParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)ResourceBase + EHCI_HCSPARAMS));
+                m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)ResourceBase + EHCI_HCCPARAMS));
 
-                DPRINT1("Controller has %c Length\n", m_Capabilities.Length);
-                DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
-                DPRINT1("Controller EHCI Caps HCSParamsLong %x\n", m_Capabilities.HCSParamsLong);
-                DPRINT1("Controller EHCI Caps HCCParamsLong %x\n", m_Capabilities.HCCParamsLong);
+                DPRINT1("Controller Capabilities Length 0x%x\n", m_Capabilities.Length);
+                DPRINT1("Controller EHCI Version 0x%x\n", m_Capabilities.HCIVersion);
+                DPRINT1("Controller EHCI Caps HCSParamsLong 0x%lx\n", m_Capabilities.HCSParamsLong);
+                DPRINT1("Controller EHCI Caps HCCParamsLong 0x%lx\n", m_Capabilities.HCCParamsLong);
                 DPRINT1("Controller has %lu Ports\n", m_Capabilities.HCSParams.PortCount);
 
                 //
@@ -390,7 +391,7 @@ CUSBHardwareDevice::PnpStart(
                             m_Capabilities.PortRoute[(Count*2)+1] = (Value & 0x0F);
 
                         Count++;
-                    }while(Count < PortCount);
+                    } while(Count < PortCount);
                 }
 
                 //
@@ -455,7 +456,7 @@ CUSBHardwareDevice::PnpStart(
         return Status;
     }
 
-    // 
+    //
     // Create a queuehead for the Async Register
     //
     m_MemoryManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&AsyncQueueHead, &AsyncPhysicalAddress);
@@ -577,7 +578,7 @@ CUSBHardwareDevice::StartController(void)
             //
             if ((Caps & EHCI_LEGSUP_BIOSOWNED))
             {
-                DPRINT1("[EHCI] Controller is BIOS owned, acquring control\n");
+                DPRINT1("[EHCI] Controller is BIOS owned, acquiring control\n");
 
                 //
                 // acquire ownership
@@ -613,7 +614,7 @@ CUSBHardwareDevice::StartController(void)
                 if ((Caps & EHCI_LEGSUP_BIOSOWNED))
                 {
                     //
-                    // failed to aquire ownership
+                    // failed to acquire ownership
                     //
                     DPRINT1("[EHCI] failed to acquire ownership\n");
                 }
@@ -626,7 +627,7 @@ CUSBHardwareDevice::StartController(void)
                 }
 #if 0
                 //
-                // explictly clear the bios owned flag 2.1.7
+                // explicitly clear the bios owned flag 2.1.7
                 //
                 Value = 0;
                 m_BusInterface.SetBusData(m_BusInterface.Context, PCI_WHICHSPACE_CONFIG, &Value, ExtendedCapsSupport+2, sizeof(UCHAR));
@@ -1124,14 +1125,10 @@ CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
 {
-    ULONG Value;
-
     DPRINT("CUSBHardwareDevice::SetPortFeature\n");
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
-
-    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
 
     if (Feature == PORT_ENABLE)
     {
@@ -1174,7 +1171,7 @@ CUSBHardwareDevice::SetPortFeature(
             // enable port power
             //
             Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId)) | EHCI_PRT_POWER;
-            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC, Value);
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
 
             //
             // delay is 20 ms
@@ -1253,7 +1250,7 @@ InterruptServiceRoutine(
     CStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
 
     CStatus &= (EHCI_ERROR_INT | EHCI_STS_INT | EHCI_STS_IAA | EHCI_STS_PCD | EHCI_STS_FLR);
-    DPRINT("CStatus %x\n", CStatus);
+    DPRINT("InterruptServiceRoutine CStatus %lx\n", CStatus);
 
     //
     // Check that it belongs to EHCI
@@ -1304,7 +1301,7 @@ EhciDefferedRoutine(
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
-    DPRINT("CStatus %x\n", CStatus);
+    DPRINT("EhciDefferedRoutine CStatus %lx\n", CStatus);
 
     //
     // check for completion of async schedule
@@ -1321,7 +1318,7 @@ EhciDefferedRoutine(
                 //
                 // controller reported error
                 //
-                DPRINT1("CStatus %x\n", CStatus);
+                DPRINT1("CStatus %lx\n", CStatus);
                 //ASSERT(FALSE);
             }
 
@@ -1333,33 +1330,33 @@ EhciDefferedRoutine(
             //
             // was a queue head completed?
             //
-             if (ShouldRingDoorBell)
-             {
-                 //
-                 // set door ring bell in progress status flag
-                 //
-                 This->m_DoorBellRingInProgress = TRUE;
+            if (ShouldRingDoorBell)
+            {
+                //
+                // set door ring bell in progress status flag
+                //
+                This->m_DoorBellRingInProgress = TRUE;
 
-                 //
-                 // get command register
-                 //
-                 This->GetCommandRegister(&UsbCmd);
+                //
+                // get command register
+                //
+                This->GetCommandRegister(&UsbCmd);
 
-                 //
-                 // set door rang bell bit
-                 //
-                 UsbCmd.DoorBell = TRUE;
+                //
+                // set door rang bell bit
+                //
+                UsbCmd.DoorBell = TRUE;
 
-                 //
-                 // update command status
-                 //
-                 This->SetCommandRegister(&UsbCmd);
-             }
+                //
+                // update command status
+                //
+                This->SetCommandRegister(&UsbCmd);
+            }
         }
     }
 
     //
-    // check if the controller has acknowledged the door bell 
+    // check if the controller has acknowledged the door bell
     //
     if (CStatus & EHCI_STS_IAA)
     {
@@ -1400,7 +1397,7 @@ EhciDefferedRoutine(
                     {
                         if (PortStatus & EHCI_PRT_ENABLED)
                         {
-                            DPRINT1("Misbeaving controller. Port should be disabled at this point\n");
+                            DPRINT1("Misbehaving controller. Port should be disabled at this point\n");
                         }
 
                         if (EHCI_IS_LOW_SPEED(PortStatus))
@@ -1433,13 +1430,13 @@ EhciDefferedRoutine(
         //
         if (QueueSCEWorkItem && This->m_SCECallBack != NULL)
         {
-            // work item is now active
-            This->m_WorkItemActive = TRUE;
-
-            //
-            // queue work item for processing
-            //
-            ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+            if (InterlockedCompareExchange(&This->m_StatusChangeWorkItemStatus, 1, 0) == 0)
+            {
+                //
+                // queue work item for processing
+                //
+                ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+            }
         }
     }
     return;
@@ -1466,8 +1463,10 @@ StatusChangeWorkItemRoutine(
         This->m_SCECallBack(This->m_SCEContext);
     }
 
-    // work item is completed
-    This->m_WorkItemActive = FALSE;
+    //
+    // reset active status
+    //
+    InterlockedDecrement(&This->m_StatusChangeWorkItemStatus);
 }
 
 NTSTATUS

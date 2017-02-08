@@ -1,6 +1,7 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary mislykket å laste '%s'"
-    IDS_MissingEntry,   "Mistet oppføring moment:%s\nIn %s"
+    IDS_DllNotLoaded "LoadLibrary mislykket å laste '%s'"
+    IDS_MissingEntry "Mistet oppføring moment:%s\nIn %s"
 END

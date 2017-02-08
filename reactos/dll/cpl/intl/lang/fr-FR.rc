@@ -1,5 +1,4 @@
-/* French translation by Benoit Plante 2005 (cmoibenlepro AT hotmail DOT com) */
-/* Updated by Pierre Schweitzer 2007 (heis_spiter AT hotmail DOT com) */
+/* French translation by Benoit Plante (cmoibenlepro AT hotmail DOT com), Pierre Schweitzer (pierre AT reactos DOT org) */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -39,8 +38,8 @@ BEGIN
     PUSHBUTTON "Dé&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Support de langues additionnelles", -1, 5, 62, 234, 82
     LTEXT "La plupart des langues sont installées par défaut. Pour installer des langues supplémentaires, sélectionnez la case à cocher appropriée ci-dessous.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstaller les fichiers pour les scripts complexes et les langues de droite à gauche", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "In&staller les fichiers pour les langues de l'Asie de l'Est", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "I&nstaller les fichiers pour les scripts complexes et les langues de droite à gauche", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "In&staller les fichiers pour les langues de l'Asie de l'Est", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -54,8 +53,8 @@ BEGIN
     LTEXT "Sélectionnez une langue qui corresponde à la version de la langue des programmes que vous voulez utiliser :", -1, 14, 55, 223, 18
     GROUPBOX "Tables de conversion des pages de code", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Paramètres du compte de l'utilisateur par défaut ", -1, 5, 193, 234, 30
-    CHECKBOX "Appliquer tous ces paramètres au compte utilisateur actuel et à celui par défaut", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Paramètres du compte de l'utilisateur par défaut ", -1, 5, 193, 234, 32
+    CHECKBOX "Appliquer tous ces paramètres au compte utilisateur actuel et à celui par défaut", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -88,7 +87,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Symbole monétaire"
@@ -115,7 +113,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 124, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Heure"
@@ -136,10 +133,8 @@ BEGIN
     LTEXT "Notation de l'heure\n\n\
 h = heure    m = minute    s = seconde    t = AM ou PM\n\n\
 h = 12 heures   H =24 heures \n\
-hh, mm, ss = Zéro de départ   h, m, s = Pas de zéro de départ",
-        -1, 13, 133, 214, 47, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = Zéro de départ   h, m, s = Pas de zéro de départ", -1, 13, 133, 214, 47, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -174,7 +169,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Classement"
@@ -185,7 +179,6 @@ BEGIN
     LTEXT "Sélectionnez une méthode de classement pour votre langue :", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN
@@ -200,3 +193,27 @@ BEGIN
   IDS_CPLNAME "Options régionales"
   IDS_CPLDESCRIPTION "Sélectionner les langues, les formats de nombres, les monnaies, l'heure et la date."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
+    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
+    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
+    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+END
+

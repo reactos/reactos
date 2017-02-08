@@ -6,6 +6,7 @@
  * PROGRAMMERS: Art Yerkes
  * REVISIONS:
  */
+
 #include "precomp.h"
 
 KIRQL KernelIrql = PASSIVE_LEVEL;
@@ -44,4 +45,3 @@ VOID TcpipAcquireFastMutex( PFAST_MUTEX Mutex ) {
 
 VOID TcpipReleaseFastMutex( PFAST_MUTEX Mutex ) {
 }
-

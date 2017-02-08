@@ -17,13 +17,47 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "samsrv.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
+#include <samsrv/samsrv.h>
 
-/* FUNCTIONS ****************************************************************/
+/* GLOBALS *******************************************************************/
+
+ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
+ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
+RTL_RESOURCE SampResource;
+
+
+/* FUNCTIONS *****************************************************************/
+
+static
+NTSTATUS
+SampInitHashes(VOID)
+{
+    UNICODE_STRING EmptyNtPassword = {0, 0, NULL};
+    CHAR EmptyLmPassword[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,};
+    NTSTATUS Status;
+
+    /* Calculate the NT hash value of the empty password */
+    Status = SystemFunction007(&EmptyNtPassword,
+                               (LPBYTE)&EmptyNtHash);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Calculation of the empty NT hash failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Calculate the LM hash value of the empty password */
+    Status = SystemFunction006(EmptyLmPassword,
+                               (LPSTR)&EmptyLmHash);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Calculation of the empty LM hash failed (Status 0x%08lx)\n", Status);
+    }
+
+    return Status;
+}
+
 
 NTSTATUS
 NTAPI
@@ -70,12 +104,18 @@ SamIInitialize(VOID)
 
     TRACE("SamIInitialize() called\n");
 
+    Status = SampInitHashes();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     if (SampIsSetupRunning())
     {
         Status = SampInitializeRegistry();
         if (!NT_SUCCESS(Status))
             return Status;
     }
+
+    RtlInitializeResource(&SampResource);
 
     /* Initialize the SAM database */
     Status = SampInitDatabase();
@@ -103,6 +143,14 @@ SampInitializeRegistry(VOID)
 
 VOID
 NTAPI
+SamIFreeVoid(PVOID Ptr)
+{
+    MIDL_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
 {
     ULONG i;
@@ -119,6 +167,37 @@ SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
 
             MIDL_user_free(Ptr->Buffer);
         }
+
+        MIDL_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_GET_GROUPS_BUFFER(PSAMPR_GET_GROUPS_BUFFER Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Groups != NULL)
+            MIDL_user_free(Ptr->Groups);
+
+        MIDL_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_GET_MEMBERS_BUFFER(PSAMPR_GET_MEMBERS_BUFFER Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Members != NULL)
+            MIDL_user_free(Ptr->Members);
+
+        if (Ptr->Attributes != NULL)
+            MIDL_user_free(Ptr->Attributes);
 
         MIDL_user_free(Ptr);
     }
@@ -159,6 +238,20 @@ SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr)
             Ptr->Element = NULL;
             Ptr->Count = 0;
         }
+    }
+}
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR(PSAMPR_SR_SECURITY_DESCRIPTOR Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->SecurityDescriptor != NULL)
+            MIDL_user_free(Ptr->SecurityDescriptor);
+
+        MIDL_user_free(Ptr);
     }
 }
 

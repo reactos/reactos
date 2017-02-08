@@ -24,8 +24,6 @@
 #include <stdarg.h>
 //#include <stdio.h> 
 
-//#include <windows.h>
-
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -33,18 +31,6 @@
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dciman);
-
-/***********************************************************************
- *           DllEntryPoint (DCIMAN32.@)
- *
- * DCIMAN32 initialisation routine.
- */
-BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
-{
-    if (reason == DLL_PROCESS_ATTACH) DisableThreadLibraryCalls( inst );
-    return TRUE;
-}
-
 
 /***********************************************************************
  *		DCIOpenProvider (DCIMAN32.@)

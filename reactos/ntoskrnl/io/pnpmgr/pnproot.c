@@ -198,7 +198,7 @@ PnpRootCreateDevice(
     UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
     ULONG NextInstance;
     UNICODE_STRING EnumKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM);
-    HANDLE EnumHandle, DeviceKeyHandle = INVALID_HANDLE_VALUE, InstanceKeyHandle;
+    HANDLE EnumHandle, DeviceKeyHandle = NULL, InstanceKeyHandle;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     OBJECT_ATTRIBUTES ObjectAttributes;
 
@@ -227,9 +227,13 @@ PnpRootCreateDevice(
     Status = IopOpenRegistryKeyEx(&EnumHandle, NULL, &EnumKeyName, KEY_READ);
     if (NT_SUCCESS(Status))
     {
-        InitializeObjectAttributes(&ObjectAttributes, &Device->DeviceID, OBJ_CASE_INSENSITIVE, EnumHandle, NULL);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &Device->DeviceID,
+                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                   EnumHandle,
+                                   NULL);
         Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-        ZwClose(EnumHandle);
+        ObCloseHandle(EnumHandle, KernelMode);
     }
 
     if (!NT_SUCCESS(Status))
@@ -271,7 +275,7 @@ tryagain:
     Status = LocateChildDevice(DeviceExtension, DevicePath, InstancePath, &Device);
     if (Status != STATUS_NO_SUCH_DEVICE || NextInstance > 9999)
     {
-        DPRINT1("NextInstance value is corrupt! (%d)\n", NextInstance);
+        DPRINT1("NextInstance value is corrupt! (%lu)\n", NextInstance);
         RtlDeleteRegistryValue(RTL_REGISTRY_HANDLE,
                                (PWSTR)DeviceKeyHandle,
                                L"NextInstance");
@@ -298,16 +302,20 @@ tryagain:
     }
 
     /* Finish creating the instance path in the registry */
-    InitializeObjectAttributes(&ObjectAttributes, &Device->InstanceID, OBJ_CASE_INSENSITIVE, DeviceKeyHandle, NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Device->InstanceID,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               DeviceKeyHandle,
+                               NULL);
     Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create instance path (0x%x)\n", Status);
         goto cleanup;
     }
 
     /* Just close the handle */
-    ZwClose(InstanceKeyHandle);
+    ObCloseHandle(InstanceKeyHandle, KernelMode);
 
     if (FullInstancePath)
     {
@@ -369,8 +377,8 @@ cleanup:
         RtlFreeUnicodeString(&Device->InstanceID);
         ExFreePoolWithTag(Device, TAG_PNP_ROOT);
     }
-    if (DeviceKeyHandle != INVALID_HANDLE_VALUE)
-        ZwClose(DeviceKeyHandle);
+    if (DeviceKeyHandle != NULL)
+        ObCloseHandle(DeviceKeyHandle, KernelMode);
     return Status;
 }
 
@@ -439,9 +447,9 @@ EnumerateDevices(
     WCHAR DevicePath[MAX_PATH + 1];
     RTL_QUERY_REGISTRY_TABLE QueryTable[4];
     PPNPROOT_DEVICE Device = NULL;
-    HANDLE KeyHandle = INVALID_HANDLE_VALUE;
-    HANDLE SubKeyHandle = INVALID_HANDLE_VALUE;
-    HANDLE DeviceKeyHandle = INVALID_HANDLE_VALUE;
+    HANDLE KeyHandle = NULL;
+    HANDLE SubKeyHandle = NULL;
+    HANDLE DeviceKeyHandle = NULL;
     ULONG BufferSize;
     ULONG ResultSize;
     ULONG Index1, Index2;
@@ -619,7 +627,7 @@ EnumerateDevices(
                 }
 
                 ZwClose(DeviceKeyHandle);
-                DeviceKeyHandle = INVALID_HANDLE_VALUE;
+                DeviceKeyHandle = NULL;
 
                 /* Insert the newly created device into the list */
                 InsertTailList(
@@ -633,7 +641,7 @@ EnumerateDevices(
         }
 
         ZwClose(SubKeyHandle);
-        SubKeyHandle = INVALID_HANDLE_VALUE;
+        SubKeyHandle = NULL;
         Index1++;
     }
 
@@ -644,11 +652,11 @@ cleanup:
         /* FIXME */
         ExFreePoolWithTag(Device, TAG_PNP_ROOT);
     }
-    if (DeviceKeyHandle != INVALID_HANDLE_VALUE)
+    if (DeviceKeyHandle != NULL)
         ZwClose(DeviceKeyHandle);
-    if (SubKeyHandle != INVALID_HANDLE_VALUE)
+    if (SubKeyHandle != NULL)
         ZwClose(SubKeyHandle);
-    if (KeyHandle != INVALID_HANDLE_VALUE)
+    if (KeyHandle != NULL)
         ZwClose(KeyHandle);
     if (KeyInfo)
         ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
@@ -1102,84 +1110,84 @@ PnpRootPdoPnpControl(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
 {
-  PPNPROOT_PDO_DEVICE_EXTENSION DeviceExtension;
-  PPNPROOT_FDO_DEVICE_EXTENSION FdoDeviceExtension;
-  PIO_STACK_LOCATION IrpSp;
-  NTSTATUS Status;
+    PPNPROOT_PDO_DEVICE_EXTENSION DeviceExtension;
+    PPNPROOT_FDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status;
 
-  DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  FdoDeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)PnpRootDeviceObject->DeviceExtension;
-  Status = Irp->IoStatus.Status;
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FdoDeviceExtension = PnpRootDeviceObject->DeviceExtension;
+    Status = Irp->IoStatus.Status;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-  switch (IrpSp->MinorFunction)
-  {
-    case IRP_MN_START_DEVICE: /* 0x00 */
-      DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-      Status = STATUS_SUCCESS;
-      break;
+    switch (IrpSp->MinorFunction)
+    {
+        case IRP_MN_START_DEVICE: /* 0x00 */
+            DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+            Status = STATUS_SUCCESS;
+            break;
 
-    case IRP_MN_QUERY_DEVICE_RELATIONS: /* 0x07 */
-      Status = PdoQueryDeviceRelations(DeviceObject, Irp, IrpSp);
-      break;
+        case IRP_MN_QUERY_DEVICE_RELATIONS: /* 0x07 */
+            Status = PdoQueryDeviceRelations(DeviceObject, Irp, IrpSp);
+            break;
 
-    case IRP_MN_QUERY_CAPABILITIES: /* 0x09 */
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
-      Status = PdoQueryCapabilities(DeviceObject, Irp, IrpSp);
-      break;
+        case IRP_MN_QUERY_CAPABILITIES: /* 0x09 */
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+            Status = PdoQueryCapabilities(DeviceObject, Irp, IrpSp);
+            break;
 
-    case IRP_MN_QUERY_RESOURCES: /* 0x0a */
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
-      Status = PdoQueryResources(DeviceObject, Irp, IrpSp);
-      break;
+        case IRP_MN_QUERY_RESOURCES: /* 0x0a */
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
+            Status = PdoQueryResources(DeviceObject, Irp, IrpSp);
+            break;
 
-   case IRP_MN_QUERY_RESOURCE_REQUIREMENTS: /* 0x0b */
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
-      Status = PdoQueryResourceRequirements(DeviceObject, Irp, IrpSp);
-      break;
+        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS: /* 0x0b */
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+            Status = PdoQueryResourceRequirements(DeviceObject, Irp, IrpSp);
+            break;
 
-    case IRP_MN_QUERY_DEVICE_TEXT: /* 0x0c */
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
-      Status = PdoQueryDeviceText(DeviceObject, Irp, IrpSp);
-      break;
+        case IRP_MN_QUERY_DEVICE_TEXT: /* 0x0c */
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+            Status = PdoQueryDeviceText(DeviceObject, Irp, IrpSp);
+            break;
 
-    case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0x0d */
-        DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
-        break;
+        case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0x0d */
+            DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+            break;
 
-    case IRP_MN_REMOVE_DEVICE:
-        /* Remove the device from the device list and decrement the device count*/
-        KeAcquireGuardedMutex(&FdoDeviceExtension->DeviceListLock);
-        RemoveEntryList(&DeviceExtension->DeviceInfo->ListEntry);
-        FdoDeviceExtension->DeviceListCount--;
-        KeReleaseGuardedMutex(&FdoDeviceExtension->DeviceListLock);
+        case IRP_MN_REMOVE_DEVICE:
+            /* Remove the device from the device list and decrement the device count*/
+            KeAcquireGuardedMutex(&FdoDeviceExtension->DeviceListLock);
+            RemoveEntryList(&DeviceExtension->DeviceInfo->ListEntry);
+            FdoDeviceExtension->DeviceListCount--;
+            KeReleaseGuardedMutex(&FdoDeviceExtension->DeviceListLock);
 
-        /* Free some strings we created */
-        RtlFreeUnicodeString(&DeviceExtension->DeviceInfo->DeviceDescription);
-        RtlFreeUnicodeString(&DeviceExtension->DeviceInfo->DeviceID);
-        RtlFreeUnicodeString(&DeviceExtension->DeviceInfo->InstanceID);
+            /* Free some strings we created */
+            RtlFreeUnicodeString(&DeviceExtension->DeviceInfo->DeviceDescription);
+            RtlFreeUnicodeString(&DeviceExtension->DeviceInfo->DeviceID);
+            RtlFreeUnicodeString(&DeviceExtension->DeviceInfo->InstanceID);
 
-        /* Free the resource requirements list */
-        if (DeviceExtension->DeviceInfo->ResourceRequirementsList != NULL)
+            /* Free the resource requirements list */
+            if (DeviceExtension->DeviceInfo->ResourceRequirementsList != NULL)
             ExFreePool(DeviceExtension->DeviceInfo->ResourceRequirementsList);
 
-        /* Free the boot resources list */
-        if (DeviceExtension->DeviceInfo->ResourceList != NULL)
+            /* Free the boot resources list */
+            if (DeviceExtension->DeviceInfo->ResourceList != NULL)
             ExFreePool(DeviceExtension->DeviceInfo->ResourceList);
 
-        /* Free the device info */
-        ExFreePool(DeviceExtension->DeviceInfo);
+            /* Free the device info */
+            ExFreePool(DeviceExtension->DeviceInfo);
 
-        /* Finally, delete the device object */
-        IoDeleteDevice(DeviceObject);
+            /* Finally, delete the device object */
+            IoDeleteDevice(DeviceObject);
 
-        /* Return success */
-        Status = STATUS_SUCCESS;
-        break;
+            /* Return success */
+            Status = STATUS_SUCCESS;
+            break;
 
-    case IRP_MN_QUERY_ID: /* 0x13 */
-      Status = PdoQueryId(DeviceObject, Irp, IrpSp);
-      break;
+        case IRP_MN_QUERY_ID: /* 0x13 */
+            Status = PdoQueryId(DeviceObject, Irp, IrpSp);
+            break;
 
         case IRP_MN_QUERY_BUS_INFORMATION: /* 0x15 */
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_BUS_INFORMATION\n");
@@ -1222,6 +1230,51 @@ PnpRootPnpControl(
         Status = PnpRootFdoPnpControl(DeviceObject, Irp);
     else
         Status = PnpRootPdoPnpControl(DeviceObject, Irp);
+
+    return Status;
+}
+
+/*
+ * FUNCTION: Handle Power IRPs
+ * ARGUMENTS:
+ *     DeviceObject = Pointer to PDO or FDO
+ *     Irp          = Pointer to IRP that should be handled
+ * RETURNS:
+ *     Status
+ */
+static NTSTATUS NTAPI
+PnpRootPowerControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Status = Irp->IoStatus.Status;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (DeviceExtension->Common.IsFDO)
+    {
+        ASSERT(!DeviceExtension->Common.IsFDO);
+        PoStartNextPowerIrp(Irp);
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+        Status = PoCallDriver(DeviceExtension->Ldo, Irp);
+    }
+    else
+    {
+        switch (IrpSp->MinorFunction)
+        {
+            case IRP_MN_QUERY_POWER:
+            case IRP_MN_SET_POWER:
+                Status = STATUS_SUCCESS;
+                break;
+        }
+        Irp->IoStatus.Status = Status;
+        PoStartNextPowerIrp(Irp);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
     return Status;
 }
@@ -1297,7 +1350,7 @@ PnpRootDriverEntry(
     DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
     DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;
-    //DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
 
     return STATUS_SUCCESS;
 }

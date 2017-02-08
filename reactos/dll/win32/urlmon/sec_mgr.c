@@ -21,18 +21,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-
 #include "urlmon_main.h"
-//#include "winreg.h"
-//#include "wininet.h"
-
-#define NO_SHLWAPI_REG
-#include <shlwapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static const WCHAR currentlevelW[] = {'C','u','r','r','e','n','t','L','e','v','e','l',0};
 static const WCHAR descriptionW[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
@@ -49,6 +38,12 @@ static const WCHAR wszZonesKey[] = {'S','o','f','t','w','a','r','e','\\',
                                     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
                                     'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
                                     'Z','o','n','e','s','\\',0};
+static const WCHAR zone_map_keyW[] = {'S','o','f','t','w','a','r','e','\\',
+                                      'M','i','c','r','o','s','o','f','t','\\',
+                                      'W','i','n','d','o','w','s','\\',
+                                      'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+                                      'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
+                                      'Z','o','n','e','M','a','p',0};
 static const WCHAR wszZoneMapDomainsKey[] = {'S','o','f','t','w','a','r','e','\\',
                                              'M','i','c','r','o','s','o','f','t','\\',
                                              'W','i','n','d','o','w','s','\\',
@@ -235,11 +230,9 @@ static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_w
              *
              * Doesn't match the pattern.
              */
-            if(str_len > pattern_len) {
-                if(str[str_len-pattern_len-1] == '.' && !strcmpiW(str+(str_len-pattern_len), pattern)) {
-                    matches = TRUE;
-                    *matched = str+(str_len-pattern_len);
-                }
+            if(str[str_len-pattern_len-1] == '.' && !strcmpiW(str+(str_len-pattern_len), pattern)) {
+                matches = TRUE;
+                *matched = str+(str_len-pattern_len);
             }
         } else {
             /* The pattern doesn't have an implicit wildcard, or an explicit wildcard,
@@ -294,7 +287,7 @@ static BOOL get_zone_for_scheme(HKEY key, LPCWSTR schema, DWORD *zone)
  * search_domain_for_zone [internal]
  *
  * Searches the specified 'domain' registry key to see if 'host' maps into it, or any
- * of it's subdomain registry keys.
+ * of its subdomain registry keys.
  *
  * Returns S_OK if a match is found, S_FALSE if no matches were found, or an error code.
  */
@@ -386,7 +379,7 @@ static HRESULT search_domain_for_zone(HKEY domains, LPCWSTR domain, DWORD domain
             /* There's a chance that 'host' implicitly mapped into 'domain', in
              * which case we check to see if 'domain' contains zone information.
              *
-             * This can only happen if 'domain' is it's own domain name.
+             * This can only happen if 'domain' is its own domain name.
              *  Example:
              *      "google.com" (domain name = "google.com")
              *
@@ -395,7 +388,7 @@ static HRESULT search_domain_for_zone(HKEY domains, LPCWSTR domain, DWORD domain
              *
              *  Then host would map directly into the "google.com" domain key.
              *
-             * If 'domain' has more than just it's domain name, or it does not
+             * If 'domain' has more than just its domain name, or it does not
              * have a domain name, then we don't perform the check. The reason
              * for this is that these domains don't allow implicit mappings.
              *  Example:
@@ -736,7 +729,7 @@ static HRESULT generate_security_id(IUri *uri, BYTE *secid, DWORD *secid_len, DW
 
         if(len+sizeof(DWORD) > *secid_len) {
             SysFreeString(display_uri);
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            return E_NOT_SUFFICIENT_BUFFER;
         }
 
         WideCharToMultiByte(CP_ACP, 0, display_uri, -1, (LPSTR)secid, len, NULL, NULL);
@@ -772,7 +765,7 @@ static HRESULT generate_security_id(IUri *uri, BYTE *secid, DWORD *secid_len, DW
         if(len+sizeof(DWORD) > *secid_len) {
             SysFreeString(host);
             SysFreeString(scheme);
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            return E_NOT_SUFFICIENT_BUFFER;
         }
 
         WideCharToMultiByte(CP_ACP, 0, scheme, -1, (LPSTR)secid, len, NULL, NULL);
@@ -891,7 +884,7 @@ static ULONG WINAPI SecManagerImpl_Release(IInternetSecurityManagerEx2* iface)
 
     TRACE("(%p) ref=%u\n", This, refCount);
 
-    /* destroy the object if there's no more reference on it */
+    /* destroy the object if there are no more references on it */
     if (!refCount){
         if(This->mgrsite)
             IInternetSecurityMgrSite_Release(This->mgrsite);
@@ -2066,4 +2059,33 @@ HRESULT WINAPI CompareSecurityIds(BYTE *secid1, DWORD size1, BYTE *secid2, DWORD
 {
     FIXME("(%p %d %p %d %x)\n", secid1, size1, secid2, size2, reserved);
     return E_NOTIMPL;
+}
+
+/********************************************************************
+ *      IsInternetESCEnabledLocal (URLMON.108)
+ *
+ * Undocumented, returns TRUE if IE is running in Enhanced Security Configuration.
+ */
+BOOL WINAPI IsInternetESCEnabledLocal(void)
+{
+    static BOOL esc_initialized, esc_enabled;
+
+    TRACE("()\n");
+
+    if(!esc_initialized) {
+        DWORD type, size, val;
+        HKEY zone_map;
+
+        static const WCHAR iehardenW[] = {'I','E','H','a','r','d','e','n',0};
+
+        if(RegOpenKeyExW(HKEY_CURRENT_USER, zone_map_keyW, 0, KEY_QUERY_VALUE, &zone_map) == ERROR_SUCCESS) {
+            size = sizeof(DWORD);
+            if(RegQueryValueExW(zone_map, iehardenW, NULL, &type, (BYTE*)&val, &size) == ERROR_SUCCESS)
+                esc_enabled = type == REG_DWORD && val != 0;
+            RegCloseKey(zone_map);
+        }
+        esc_initialized = TRUE;
+    }
+
+    return esc_enabled;
 }

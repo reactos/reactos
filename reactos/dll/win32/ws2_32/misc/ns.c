@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/ns.c
+ * FILE:        dll/win32/ws2_32/misc/ns.c
  * PURPOSE:     Namespace APIs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -9,6 +9,10 @@
  */
 
 #include "ws2_32.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <winnls.h>
 
 #ifndef BUFSIZ
 #define BUFSIZ 1024
@@ -857,7 +861,7 @@ gethostbyname(IN  CONST CHAR FAR* name)
 
     p = NtCurrentTeb()->WinSockData;
 
-    if( !p )
+    if (!p || !WSAINITIALIZED)
     {
         WSASetLastError( WSANOTINITIALISED );
         return NULL;
@@ -1126,7 +1130,7 @@ getservbyname(IN  CONST CHAR FAR* name,
     DWORD ReadSize = 0;
     PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
-    if( !p )
+    if (!p || !WSAINITIALIZED)
     {
         WSASetLastError( WSANOTINITIALISED );
         return NULL;
@@ -1310,7 +1314,7 @@ getservbyport(IN  INT port,
     DWORD ReadSize = 0, ValidData = 0;
     PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
-    if( !p )
+    if( !p || !WSAINITIALIZED)
     {
         WSASetLastError( WSANOTINITIALISED );
         return NULL;
@@ -1592,6 +1596,7 @@ getaddrinfo(const char FAR * nodename,
     struct addrinfo *ret = NULL, *ai;
     ULONG addr;
     USHORT port;
+    PCHAR pc;
     struct servent *se;
     char *proto;
     LPPROTOENT pent;
@@ -1620,9 +1625,9 @@ getaddrinfo(const char FAR * nodename,
     if (servname)
     {
         /* converting port number */
-        port = strtoul(servname, NULL, 10);
+        port = strtoul(servname, &pc, 10);
         /* service name was specified? */
-        if (port == 0)
+        if (*pc != ANSI_NULL)
         {
             /* protocol was specified? */
             if (hints && hints->ai_protocol)

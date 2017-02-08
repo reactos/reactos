@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (specification).                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2006 by                                     */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __T1OBJS_H__
-#define __T1OBJS_H__
+#ifndef T1OBJS_H_
+#define T1OBJS_H_
 
 
 #include <ft2build.h>
@@ -32,17 +32,6 @@ FT_BEGIN_HEADER
   /* The following structures must be defined by the hinter */
   typedef struct T1_Size_Hints_   T1_Size_Hints;
   typedef struct T1_Glyph_Hints_  T1_Glyph_Hints;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Type>                                                                */
-  /*    T1_Driver                                                          */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A handle to a Type 1 driver object.                                */
-  /*                                                                       */
-  typedef struct T1_DriverRec_   *T1_Driver;
 
 
   /*************************************************************************/
@@ -106,14 +95,14 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( void )
-  T1_Size_Done( T1_Size  size );
+  T1_Size_Done( FT_Size  size );
 
   FT_LOCAL( FT_Error )
-  T1_Size_Request( T1_Size          size,
+  T1_Size_Request( FT_Size          size,
                    FT_Size_Request  req );
 
   FT_LOCAL( FT_Error )
-  T1_Size_Init( T1_Size  size );
+  T1_Size_Init( FT_Size  size );
 
 
   /*************************************************************************/
@@ -142,30 +131,30 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   T1_Face_Init( FT_Stream      stream,
-                T1_Face        face,
+                FT_Face        face,
                 FT_Int         face_index,
                 FT_Int         num_params,
                 FT_Parameter*  params );
 
   FT_LOCAL( void )
-  T1_Face_Done( T1_Face  face );
+  T1_Face_Done( FT_Face  face );
 
   FT_LOCAL( FT_Error )
-  T1_GlyphSlot_Init( T1_GlyphSlot  slot );
+  T1_GlyphSlot_Init( FT_GlyphSlot  slot );
 
   FT_LOCAL( void )
-  T1_GlyphSlot_Done( T1_GlyphSlot  slot );
+  T1_GlyphSlot_Done( FT_GlyphSlot  slot );
 
   FT_LOCAL( FT_Error )
-  T1_Driver_Init( T1_Driver  driver );
+  T1_Driver_Init( FT_Module  driver );
 
   FT_LOCAL( void )
-  T1_Driver_Done( T1_Driver  driver );
+  T1_Driver_Done( FT_Module  driver );
 
 
 FT_END_HEADER
 
-#endif /* __T1OBJS_H__ */
+#endif /* T1OBJS_H_ */
 
 
 /* END */

@@ -44,6 +44,11 @@ AutoPartition = 1
 ; no  - enabled
 DisableVmwInst = yes
 
+; enable this setting to disable Gecko install
+; yes - disabled
+; no  - enabled
+DisableGeckoInst = no
+
 ; set this option to automatically
 ; specify language in 2nd mode setup
 ; see hivesys.inf for available languages

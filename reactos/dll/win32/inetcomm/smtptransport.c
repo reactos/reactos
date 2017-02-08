@@ -20,26 +20,7 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winnt.h"
-//#include "winuser.h"
-#include <objbase.h>
-#include <mimeole.h>
-#include <wine/debug.h>
-
 #include "inetcomm_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 typedef struct
 {
@@ -536,7 +517,7 @@ static HRESULT WINAPI SMTPTransport_QueryInterface(ISMTPTransport2 *iface, REFII
         IsEqualIID(riid, &IID_ISMTPTransport2))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        ISMTPTransport2_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;
@@ -993,7 +974,7 @@ static HRESULT WINAPI SMTPTransportCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

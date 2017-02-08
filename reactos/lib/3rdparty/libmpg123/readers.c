@@ -28,37 +28,35 @@
 
 static int default_init(mpg123_handle *fr);
 static off_t get_fileinfo(mpg123_handle *);
-static long posix_read(int fd, void *buf, size_t count){ return read(fd, buf, count); }
+static ssize_t posix_read(int fd, void *buf, size_t count){ return read(fd, buf, count); }
 static off_t   posix_lseek(int fd, off_t offset, int whence){ return lseek(fd, offset, whence); }
+static off_t     nix_lseek(int fd, off_t offset, int whence){ return -1; }
 
-static long plain_fullread(mpg123_handle *fr,unsigned char *buf, long count);
+static ssize_t plain_fullread(mpg123_handle *fr,unsigned char *buf, ssize_t count);
 
 /* Wrapper to decide between descriptor-based and external handle-based I/O. */
 static off_t io_seek(struct reader_data *rdat, off_t offset, int whence);
-static long io_read(struct reader_data *rdat, void *buf, size_t count);
+static ssize_t io_read(struct reader_data *rdat, void *buf, size_t count);
 
 #ifndef NO_FEEDER
 /* Bufferchain methods. */
 static void bc_init(struct bufferchain *bc);
 static void bc_reset(struct bufferchain *bc);
-static int bc_append(struct bufferchain *bc, long size);
+static int bc_append(struct bufferchain *bc, ssize_t size);
 #if 0
 static void bc_drop(struct bufferchain *bc);
 #endif
-static int bc_add(struct bufferchain *bc, const unsigned char *data, long size);
-static long bc_give(struct bufferchain *bc, unsigned char *out, long size);
-static long bc_skip(struct bufferchain *bc, long count);
-static long bc_seekback(struct bufferchain *bc, long count);
+static int bc_add(struct bufferchain *bc, const unsigned char *data, ssize_t size);
+static ssize_t bc_give(struct bufferchain *bc, unsigned char *out, ssize_t size);
+static ssize_t bc_skip(struct bufferchain *bc, ssize_t count);
+static ssize_t bc_seekback(struct bufferchain *bc, ssize_t count);
 static void bc_forget(struct bufferchain *bc);
-#else
-#define bc_init(a)
-#define bc_reset(a)
 #endif
 
 /* A normal read and a read with timeout. */
-static long plain_read(mpg123_handle *fr, void *buf, size_t count)
+static ssize_t plain_read(mpg123_handle *fr, void *buf, size_t count)
 {
-	long ret = io_read(&fr->rdat, buf, count);
+	ssize_t ret = io_read(&fr->rdat, buf, count);
 	if(VERBOSE3) debug2("read %li bytes of %li", (long)ret, (long)count);
 	return ret;
 }
@@ -67,10 +65,10 @@ static long plain_read(mpg123_handle *fr, void *buf, size_t count)
 
 /* Wait for data becoming available, allowing soft-broken network connection to die
    This is needed for Shoutcast servers that have forgotten about us while connection was temporarily down. */
-static long timeout_read(mpg123_handle *fr, void *buf, size_t count)
+static ssize_t timeout_read(mpg123_handle *fr, void *buf, size_t count)
 {
 	struct timeval tv;
-	long ret = 0;
+	ssize_t ret = 0;
 	fd_set fds;
 	tv.tv_sec = fr->rdat.timeout_sec;
 	tv.tv_usec = 0;
@@ -90,9 +88,9 @@ static long timeout_read(mpg123_handle *fr, void *buf, size_t count)
 
 #ifndef NO_ICY
 /* stream based operation  with icy meta data*/
-static long icy_fullread(mpg123_handle *fr, unsigned char *buf, long count)
+static ssize_t icy_fullread(mpg123_handle *fr, unsigned char *buf, ssize_t count)
 {
-	long ret,cnt;
+	ssize_t ret,cnt;
 	cnt = 0;
 	if(fr->rdat.flags & READER_SEEKABLE)
 	{
@@ -115,7 +113,7 @@ static long icy_fullread(mpg123_handle *fr, unsigned char *buf, long count)
 		{
 			unsigned char temp_buff;
 			size_t meta_size;
-			long cut_pos;
+			ssize_t cut_pos;
 
 			/* we are near icy-metaint boundary, read up to the boundary */
 			if(fr->icy.next > 0)
@@ -154,10 +152,11 @@ static long icy_fullread(mpg123_handle *fr, unsigned char *buf, long count)
 			{
 				/* we have got some metadata */
 				char *meta_buff;
+				/* TODO: Get rid of this malloc ... perhaps hooking into the reader buffer pool? */
 				meta_buff = malloc(meta_size+1);
 				if(meta_buff != NULL)
 				{
-					long left = meta_size;
+					ssize_t left = meta_size;
 					while(left > 0)
 					{
 						ret = fr->rdat.fdread(fr,meta_buff+meta_size-left,left);
@@ -199,10 +198,13 @@ static long icy_fullread(mpg123_handle *fr, unsigned char *buf, long count)
 #endif /* NO_ICY */
 
 /* stream based operation */
-static long plain_fullread(mpg123_handle *fr,unsigned char *buf, long count)
+static ssize_t plain_fullread(mpg123_handle *fr,unsigned char *buf, ssize_t count)
 {
-	long ret,cnt=0;
+	ssize_t ret,cnt=0;
 
+#ifdef EXTRA_DEBUG
+	debug1("plain fullread of %"SSIZE_P, (size_p)count);
+#endif
 	/*
 		There used to be a check for expected file end here (length value or ID3 flag).
 		This is not needed:
@@ -240,7 +242,9 @@ static void stream_close(mpg123_handle *fr)
 
 	fr->rdat.filept = 0;
 
+#ifndef NO_FEEDER
 	if(fr->rdat.flags & READER_BUFFERED)  bc_reset(&fr->rdat.buffer);
+#endif
 	if(fr->rdat.flags & READER_HANDLEIO)
 	{
 		if(fr->rdat.cleanup_handle != NULL) fr->rdat.cleanup_handle(fr->rdat.iohandle);
@@ -335,10 +339,10 @@ static off_t stream_skip_bytes(mpg123_handle *fr,off_t len)
 	else if(len >= 0)
 	{
 		unsigned char buf[1024]; /* ThOr: Compaq cxx complained and it makes sense to me... or should one do a cast? What for? */
-		long ret;
+		ssize_t ret;
 		while (len > 0)
 		{
-			long num = len < (off_t)sizeof(buf) ? (long)len : (long)sizeof(buf);
+			ssize_t num = len < (off_t)sizeof(buf) ? (ssize_t)len : (ssize_t)sizeof(buf);
 			ret = fr->rd->fullread(fr, buf, num);
 			if (ret < 0) return ret;
 			else if(ret == 0) break; /* EOF... an error? interface defined to tell the actual position... */
@@ -346,6 +350,7 @@ static off_t stream_skip_bytes(mpg123_handle *fr,off_t len)
 		}
 		return fr->rd->tell(fr);
 	}
+#ifndef NO_FEEDER
 	else if(fr->rdat.flags & READER_BUFFERED)
 	{ /* Perhaps we _can_ go a bit back. */
 		if(fr->rdat.buffer.pos >= -len)
@@ -359,6 +364,7 @@ static off_t stream_skip_bytes(mpg123_handle *fr,off_t len)
 			return READER_ERROR;
 		}
 	}
+#endif
 	else
 	{
 		fr->err = MPG123_NO_SEEK;
@@ -393,8 +399,10 @@ static int generic_read_frame_body(mpg123_handle *fr,unsigned char *buf, int siz
 
 static off_t generic_tell(mpg123_handle *fr)
 {
+#ifndef NO_FEEDER
 	if(fr->rdat.flags & READER_BUFFERED)
 	fr->rdat.filepos = fr->rdat.buffer.fileoff+fr->rdat.buffer.pos;
+#endif
 
 	return fr->rdat.filepos;
 }
@@ -403,13 +411,20 @@ static off_t generic_tell(mpg123_handle *fr)
 static void stream_rewind(mpg123_handle *fr)
 {
 	if(fr->rdat.flags & READER_SEEKABLE)
-	fr->rdat.buffer.fileoff = fr->rdat.filepos = stream_lseek(fr,0,SEEK_SET);
+	{
+		fr->rdat.filepos = stream_lseek(fr,0,SEEK_SET);
+#ifndef NO_FEEDER
+		fr->rdat.buffer.fileoff = fr->rdat.filepos;
+#endif
+	}
+#ifndef NO_FEEDER
 	if(fr->rdat.flags & READER_BUFFERED)
 	{
 		fr->rdat.buffer.pos      = 0;
 		fr->rdat.buffer.firstpos = 0;
 		fr->rdat.filepos = fr->rdat.buffer.fileoff;
 	}
+#endif
 }
 
 /*
@@ -436,11 +451,135 @@ static off_t get_fileinfo(mpg123_handle *fr)
 	return len;
 }
 
-/* Let's work in nice 4K blocks, that may be nicely reusable (by malloc(), even). */
-#define BUFFBLOCK 4096
-
 #ifndef NO_FEEDER
 /* Methods for the buffer chain, mainly used for feed reader, but not just that. */
+
+
+static struct buffy* buffy_new(size_t size, size_t minsize)
+{
+	struct buffy *newbuf;
+	newbuf = malloc(sizeof(struct buffy));
+	if(newbuf == NULL) return NULL;
+
+	newbuf->realsize = size > minsize ? size : minsize;
+	newbuf->data = malloc(newbuf->realsize);
+	if(newbuf->data == NULL)
+	{
+		free(newbuf);
+		return NULL;
+	}
+	newbuf->size = 0;
+	newbuf->next = NULL;
+	return newbuf;
+}
+
+static void buffy_del(struct buffy* buf)
+{
+	if(buf)
+	{
+		free(buf->data);
+		free(buf);
+	}
+}
+
+/* Delete this buffy and all following buffies. */
+static void buffy_del_chain(struct buffy* buf)
+{
+	while(buf)
+	{
+		struct buffy* next = buf->next;
+		buffy_del(buf);
+		buf = next;
+	}
+}
+
+void bc_prepare(struct bufferchain *bc, size_t pool_size, size_t bufblock)
+{
+	bc_poolsize(bc, pool_size, bufblock);
+	bc->pool = NULL;
+	bc->pool_fill = 0;
+	bc_init(bc); /* Ensure that members are zeroed for read-only use. */
+}
+
+size_t bc_fill(struct bufferchain *bc)
+{
+	return (size_t)(bc->size - bc->pos);
+}
+
+void bc_poolsize(struct bufferchain *bc, size_t pool_size, size_t bufblock)
+{
+	bc->pool_size = pool_size;
+	bc->bufblock = bufblock;
+}
+
+void bc_cleanup(struct bufferchain *bc)
+{
+	buffy_del_chain(bc->pool);
+	bc->pool = NULL;
+	bc->pool_fill = 0;
+}
+
+/* Fetch a buffer from the pool (if possible) or create one. */
+static struct buffy* bc_alloc(struct bufferchain *bc, size_t size)
+{
+	/* Easy route: Just try the first available buffer.
+	   Size does not matter, it's only a hint for creation of new buffers. */
+	if(bc->pool)
+	{
+		struct buffy *buf = bc->pool;
+		bc->pool = buf->next;
+		buf->next = NULL; /* That shall be set to a sensible value later. */
+		buf->size = 0;
+		--bc->pool_fill;
+		debug2("bc_alloc: picked %p from pool (fill now %"SIZE_P")", (void*)buf, (size_p)bc->pool_fill);
+		return buf;
+	}
+	else return buffy_new(size, bc->bufblock);
+}
+
+/* Either stuff the buffer back into the pool or free it for good. */
+static void bc_free(struct bufferchain *bc, struct buffy* buf)
+{
+	if(!buf) return;
+
+	if(bc->pool_fill < bc->pool_size)
+	{
+		buf->next = bc->pool;
+		bc->pool = buf;
+		++bc->pool_fill;
+	}
+	else buffy_del(buf);
+}
+
+/* Make the buffer count in the pool match the pool size. */
+static int bc_fill_pool(struct bufferchain *bc)
+{
+	/* Remove superfluous ones. */
+	while(bc->pool_fill > bc->pool_size)
+	{
+		/* Lazyness: Just work on the front. */
+		struct buffy* buf = bc->pool;
+		bc->pool = buf->next;
+		buffy_del(buf);
+		--bc->pool_fill;
+	}
+
+	/* Add missing ones. */
+	while(bc->pool_fill < bc->pool_size)
+	{
+		/* Again, just work on the front. */
+		struct buffy* buf;
+		buf = buffy_new(0, bc->bufblock); /* Use default block size. */
+		if(!buf) return -1;
+
+		buf->next = bc->pool;
+		bc->pool = buf;
+		++bc->pool_fill;
+	}
+
+	return 0;
+}
+
 
 static void bc_init(struct bufferchain *bc)
 {
@@ -454,101 +593,68 @@ static void bc_init(struct bufferchain *bc)
 
 static void bc_reset(struct bufferchain *bc)
 {
-	/* free the buffer chain */
-	struct buffy *b = bc->first;
-	while(b != NULL)
+	/* Free current chain, possibly stuffing back into the pool. */
+	while(bc->first)
 	{
-		struct buffy *n = b->next;
-		free(b->data);
-		free(b);
-		b = n;
+		struct buffy* buf = bc->first;
+		bc->first = buf->next;
+		bc_free(bc, buf);
 	}
+	bc_fill_pool(bc); /* Ignoring an error here... */
 	bc_init(bc);
 }
 
 /* Create a new buffy at the end to be filled. */
-static int bc_append(struct bufferchain *bc, long size)
+static int bc_append(struct bufferchain *bc, ssize_t size)
 {
 	struct buffy *newbuf;
 	if(size < 1) return -1;
 
-	newbuf = malloc(sizeof(struct buffy));
+	newbuf = bc_alloc(bc, size);
 	if(newbuf == NULL) return -2;
 
-	newbuf->realsize = size > BUFFBLOCK ? size : BUFFBLOCK;
-	newbuf->data = malloc(newbuf->realsize);
-	if(newbuf->data == NULL)
-	{
-		free(newbuf);
-		return -3;
-	}
-	newbuf->size = size;
-	newbuf->next = NULL;
 	if(bc->last != NULL)  bc->last->next = newbuf;
 	else if(bc->first == NULL) bc->first = newbuf;
 
 	bc->last  = newbuf;
-	bc->size += size;
+	debug3("bc_append: new last buffer %p with %"SSIZE_P" B (really %"SSIZE_P")", (void*)bc->last, (ssize_p)bc->last->size, (ssize_p)bc->last->realsize);
 	return 0;
 }
 
-#if 0
-/* Drop the last one (again).
-   This is not optimal but should happen on error situations only, anyway. */
-static void bc_drop(struct bufferchain *bc)
-{
-	struct buffy *cur = bc->first;
-	if(bc->first == NULL || bc->last == NULL) return;
-	/* Special case: only one buffer there. */
-	if(cur->next == NULL)
-	{
-		free(cur->data);
-		free(cur);
-		bc->first = bc->last = NULL;
-		bc->size  = 0;
-		return;
-	}
-	/* Find the pre-last buffy. If chain is consistent, this _will_ succeed. */
-	while(cur->next != bc->last){ cur = cur->next; }
-
-	bc->size -= bc->last->size;
-	free(bc->last->data);
-	free(bc->last);
-	cur->next = NULL;
-	bc->last  = cur;
-}
-#endif
-
 /* Append a new buffer and copy content to it. */
-static int bc_add(struct bufferchain *bc, const unsigned char *data, long size)
+static int bc_add(struct bufferchain *bc, const unsigned char *data, ssize_t size)
 {
 	int ret = 0;
-	long part = 0;
+	ssize_t part = 0;
 	debug2("bc_add: adding %"SSIZE_P" bytes at %"OFF_P, (ssize_p)size, (off_p)(bc->fileoff+bc->size));
 	if(size >=4) debug4("first bytes: %02x %02x %02x %02x", data[0], data[1], data[2], data[3]);
 
-	/* Try to fill up the last buffer block. */
-	if(bc->last != NULL && bc->last->size < bc->last->realsize)
+	while(size > 0)
 	{
-		part = bc->last->realsize - bc->last->size;
-		if(part > size) part = size;
+		/* Try to fill up the last buffer block. */
+		if(bc->last != NULL && bc->last->size < bc->last->realsize)
+		{
+			part = bc->last->realsize - bc->last->size;
+			if(part > size) part = size;
 
-		memcpy(bc->last->data+bc->last->size, data, part);
-		bc->last->size += part;
-		size -= part;
-		bc->size += part;
+			debug2("bc_add: adding %"SSIZE_P" B to existing block %p", (ssize_p)part, (void*)bc->last);
+			memcpy(bc->last->data+bc->last->size, data, part);
+			bc->last->size += part;
+			size -= part;
+			bc->size += part;
+			data += part;
+		}
+
+		/* If there is still data left, put it into a new buffer block. */
+		if(size > 0 && (ret = bc_append(bc, size)) != 0)
+		break;
 	}
-
-
-	/* If there is still data left, put it into a new buffer block. */
-	if(size > 0 && (ret = bc_append(bc, size)) == 0)
-	memcpy(bc->last->data, data+part, size);
 
 	return ret;
 }
 
 /* Common handler for "You want more than I can give." situation. */
-static long bc_need_more(struct bufferchain *bc)
+static ssize_t bc_need_more(struct bufferchain *bc)
 {
 	debug3("hit end, back to beginning (%li - %li < %li)", (long)bc->size, (long)bc->pos, (long)bc->size);
 	/* go back to firstpos, undo the previous reads */
@@ -557,11 +663,11 @@ static long bc_need_more(struct bufferchain *bc)
 }
 
 /* Give some data, advancing position but not forgetting yet. */
-static long bc_give(struct bufferchain *bc, unsigned char *out, long size)
+static ssize_t bc_give(struct bufferchain *bc, unsigned char *out, ssize_t size)
 {
 	struct buffy *b = bc->first;
-	long gotcount = 0;
-	long offset = 0;
+	ssize_t gotcount = 0;
+	ssize_t offset = 0;
 	if(bc->size - bc->pos < size) return bc_need_more(bc);
 
 	/* find the current buffer */
@@ -573,8 +679,8 @@ static long bc_give(struct bufferchain *bc, unsigned char *out, long size)
 	/* now start copying from there */
 	while(gotcount < size && (b != NULL))
 	{
-		long loff = bc->pos - offset;
-		long chunk = size - gotcount; /* amount of bytes to get from here... */
+		ssize_t loff = bc->pos - offset;
+		ssize_t chunk = size - gotcount; /* amount of bytes to get from here... */
 		if(chunk > b->size - loff) chunk = b->size - loff;
 
 #ifdef EXTRA_DEBUG
@@ -596,7 +702,7 @@ static long bc_give(struct bufferchain *bc, unsigned char *out, long size)
 
 /* Skip some bytes and return the new position.
    The buffers are still there, just the read pointer is moved! */
-static long bc_skip(struct bufferchain *bc, long count)
+static ssize_t bc_skip(struct bufferchain *bc, ssize_t count)
 {
 	if(count >= 0)
 	{
@@ -606,7 +712,7 @@ static long bc_skip(struct bufferchain *bc, long count)
 	else return READER_ERROR;
 }
 
-static long bc_seekback(struct bufferchain *bc, long count)
+static ssize_t bc_seekback(struct bufferchain *bc, ssize_t count)
 {
 	if(count >= 0 && count <= bc->pos) return bc->pos -= count;
 	else return READER_ERROR;
@@ -631,8 +737,7 @@ static void bc_forget(struct bufferchain *bc)
 
 		debug5("bc_forget: forgot %p with %lu, pos=%li, size=%li, fileoff=%li", (void*)b->data, (long)b->size, (long)bc->pos,  (long)bc->size, (long)bc->fileoff);
 
-		free(b->data);
-		free(b);
+		bc_free(bc, b);
 		b = n;
 	}
 	bc->first = b;
@@ -644,6 +749,7 @@ static void bc_forget(struct bufferchain *bc)
 static int feed_init(mpg123_handle *fr)
 {
 	bc_init(&fr->rdat.buffer);
+	bc_fill_pool(&fr->rdat.buffer);
 	fr->rdat.filelen = 0;
 	fr->rdat.filepos = 0;
 	fr->rdat.flags |= READER_BUFFERED;
@@ -667,9 +773,9 @@ int feed_more(mpg123_handle *fr, const unsigned char *in, long count)
 	return ret;
 }
 
-static long feed_read(mpg123_handle *fr, unsigned char *out, long count)
+static ssize_t feed_read(mpg123_handle *fr, unsigned char *out, ssize_t count)
 {
-	long gotcount = bc_give(&fr->rdat.buffer, out, count);
+	ssize_t gotcount = bc_give(&fr->rdat.buffer, out, count);
 	if(gotcount >= 0 && gotcount != count) return READER_ERROR;
 	else return gotcount;
 }
@@ -678,7 +784,7 @@ static long feed_read(mpg123_handle *fr, unsigned char *out, long count)
 static off_t feed_skip_bytes(mpg123_handle *fr,off_t len)
 {
 	/* This is either the new buffer offset or some negative error value. */
-	off_t res = bc_skip(&fr->rdat.buffer, (long)len);
+	off_t res = bc_skip(&fr->rdat.buffer, (ssize_t)len);
 	if(res < 0) return res;
 
 	return fr->rdat.buffer.fileoff+res;
@@ -687,7 +793,7 @@ static off_t feed_skip_bytes(mpg123_handle *fr,off_t len)
 static int feed_back_bytes(mpg123_handle *fr, off_t bytes)
 {
 	if(bytes >=0)
-	return bc_seekback(&fr->rdat.buffer, (long)bytes) >= 0 ? 0 : READER_ERROR;
+	return bc_seekback(&fr->rdat.buffer, (ssize_t)bytes) >= 0 ? 0 : READER_ERROR;
 	else
 	return feed_skip_bytes(fr, -bytes) >= 0 ? 0 : READER_ERROR;
 }
@@ -706,7 +812,7 @@ off_t feed_set_pos(mpg123_handle *fr, off_t pos)
 	struct bufferchain *bc = &fr->rdat.buffer;
 	if(pos >= bc->fileoff && pos-bc->fileoff < bc->size)
 	{ /* We have the position! */
-		bc->pos = (long)(pos - bc->fileoff);
+		bc->pos = (ssize_t)(pos - bc->fileoff);
 		debug1("feed_set_pos inside, next feed from %"OFF_P, (off_p)(bc->fileoff+bc->size));
 		return bc->fileoff+bc->size; /* Next input after end of buffer... */
 	}
@@ -721,18 +827,18 @@ off_t feed_set_pos(mpg123_handle *fr, off_t pos)
 
 /* The specific stuff for buffered stream reader. */
 
-static long buffered_fullread(mpg123_handle *fr, unsigned char *out, long count)
+static ssize_t buffered_fullread(mpg123_handle *fr, unsigned char *out, ssize_t count)
 {
 	struct bufferchain *bc = &fr->rdat.buffer;
-	long gotcount;
+	ssize_t gotcount;
 	if(bc->size - bc->pos < count)
 	{ /* Add more stuff to buffer. If hitting end of file, adjust count. */
-		unsigned char readbuf[BUFFBLOCK];
-		long need = count - (bc->size-bc->pos);
+		unsigned char readbuf[4096];
+		ssize_t need = count - (bc->size-bc->pos);
 		while(need>0)
 		{
 			int ret;
-			long got = fr->rdat.fullread(fr, readbuf, BUFFBLOCK);
+			ssize_t got = fr->rdat.fullread(fr, readbuf, sizeof(readbuf));
 			if(got < 0)
 			{
 				if(NOQUIET) error("buffer reading");
@@ -747,7 +853,7 @@ static long buffered_fullread(mpg123_handle *fr, unsigned char *out, long count)
 			}
 
 			need -= got; /* May underflow here... */
-			if(got < BUFFBLOCK) /* That naturally catches got == 0, too. */
+			if(got < sizeof(readbuf)) /* That naturally catches got == 0, too. */
 			{
 				if(VERBOSE3) fprintf(stderr, "Note: Input data end.\n");
 				break; /* End. */
@@ -781,17 +887,17 @@ off_t feed_set_pos(mpg123_handle *fr, off_t pos)
  */
 
 #define bugger_off { mh->err = MPG123_NO_READER; return MPG123_ERR; }
-int bad_init(mpg123_handle *mh) bugger_off
-void bad_close(mpg123_handle *mh){}
-long bad_fullread(mpg123_handle *mh, unsigned char *data, long count) bugger_off
-int bad_head_read(mpg123_handle *mh, unsigned long *newhead) bugger_off
-int bad_head_shift(mpg123_handle *mh, unsigned long *head) bugger_off
-off_t bad_skip_bytes(mpg123_handle *mh, off_t len) bugger_off
-int bad_read_frame_body(mpg123_handle *mh, unsigned char *data, int size) bugger_off
-int bad_back_bytes(mpg123_handle *mh, off_t bytes) bugger_off
-int bad_seek_frame(mpg123_handle *mh, off_t num) bugger_off
-off_t bad_tell(mpg123_handle *mh) bugger_off
-void bad_rewind(mpg123_handle *mh){}
+static int bad_init(mpg123_handle *mh) bugger_off
+static void bad_close(mpg123_handle *mh){}
+static ssize_t bad_fullread(mpg123_handle *mh, unsigned char *data, ssize_t count) bugger_off
+static int bad_head_read(mpg123_handle *mh, unsigned long *newhead) bugger_off
+static int bad_head_shift(mpg123_handle *mh, unsigned long *head) bugger_off
+static off_t bad_skip_bytes(mpg123_handle *mh, off_t len) bugger_off
+static int bad_read_frame_body(mpg123_handle *mh, unsigned char *data, int size) bugger_off
+static int bad_back_bytes(mpg123_handle *mh, off_t bytes) bugger_off
+static int bad_seek_frame(mpg123_handle *mh, off_t num) bugger_off
+static off_t bad_tell(mpg123_handle *mh) bugger_off
+static void bad_rewind(mpg123_handle *mh){}
 #undef bugger_off
 
 #define READER_STREAM 0
@@ -799,7 +905,7 @@ void bad_rewind(mpg123_handle *mh){}
 #define READER_FEED       2
 #define READER_BUF_STREAM 3
 #define READER_BUF_ICY_STREAM 4
-struct reader readers[] =
+static struct reader readers[] =
 {
 	{ /* READER_STREAM */
 		default_init,
@@ -898,7 +1004,7 @@ struct reader readers[] =
 #endif
 };
 
-struct reader bad_reader =
+static struct reader bad_reader =
 {
 	bad_init,
 	bad_close,
@@ -938,8 +1044,18 @@ static int default_init(mpg123_handle *fr)
 
 	fr->rdat.read  = fr->rdat.r_read  != NULL ? fr->rdat.r_read  : posix_read;
 	fr->rdat.lseek = fr->rdat.r_lseek != NULL ? fr->rdat.r_lseek : posix_lseek;
+#ifndef NO_ICY
+	/* ICY streams of any sort shall not be seekable. */
+	if(fr->p.icy_interval > 0) fr->rdat.lseek = nix_lseek;
+#endif
+
 	fr->rdat.filelen = get_fileinfo(fr);
 	fr->rdat.filepos = 0;
+	/*
+		Don't enable seeking on ICY streams, just plain normal files.
+		This check is necessary since the client can enforce ICY parsing on files that would otherwise be seekable.
+		It is a task for the future to make the ICY parsing safe with seeks ... or not.
+	*/
 	if(fr->rdat.filelen >= 0)
 	{
 		fr->rdat.flags |= READER_SEEKABLE;
@@ -985,12 +1101,16 @@ static int default_init(mpg123_handle *fr)
 
 void open_bad(mpg123_handle *mh)
 {
+	debug("open_bad");
 #ifndef NO_ICY
 	clear_icy(&mh->icy);
 #endif
 	mh->rd = &bad_reader;
 	mh->rdat.flags = 0;
+#ifndef NO_FEEDER
 	bc_init(&mh->rdat.buffer);
+#endif
+	mh->rdat.filelen = -1;
 }
 
 int open_feed(mpg123_handle *fr)
@@ -1013,6 +1133,8 @@ int open_feed(mpg123_handle *fr)
 	fr->rd = &readers[READER_FEED];
 	fr->rdat.flags = 0;
 	if(fr->rd->init(fr) < 0) return -1;
+
+	debug("feed reader init successful");
 	return 0;
 #endif /* NO_FEEDER */
 }
@@ -1098,7 +1220,7 @@ static off_t io_seek(struct reader_data *rdat, off_t offset, int whence)
 	return rdat->lseek(rdat->filept, offset, whence);
 }
 
-static long io_read(struct reader_data *rdat, void *buf, size_t count)
+static ssize_t io_read(struct reader_data *rdat, void *buf, size_t count)
 {
 	if(rdat->flags & READER_HANDLEIO)
 	{

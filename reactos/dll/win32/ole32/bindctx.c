@@ -18,21 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-//#include <string.h>
-
-#define COBJMACROS
-
-//#include "winerror.h"
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <objbase.h>
-
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -95,7 +81,7 @@ BindCtxImpl_QueryInterface(IBindCtx* iface,REFIID riid,void** ppvObject)
     if (IsEqualIID(&IID_IUnknown, riid) ||
         IsEqualIID(&IID_IBindCtx, riid))
     {
-        *ppvObject = This;
+        *ppvObject = &This->IBindCtx_iface;
         IBindCtx_AddRef(iface);
         return S_OK;
     }
@@ -435,9 +421,8 @@ static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl* This,
                                           LPOLESTR pszkey,
                                           DWORD *index)
 {
-
     DWORD i;
-    BYTE found=0;
+    BOOL found = FALSE;
 
     TRACE("(%p,%p,%p,%p)\n",This,punk,pszkey,index);
 
@@ -454,14 +439,14 @@ static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl* This,
                      )
                    )
 
-                    found=1;
+                    found = TRUE;
             }
         }
     else
         /* search object identified by a moniker*/
         for(i=0; ( (i<This->bindCtxTableLastIndex) && (!found));i++)
             if(This->bindCtxTable[i].pObj==punk)
-                found=1;
+                found = TRUE;
 
     if (index != NULL)
         *index=i-1;

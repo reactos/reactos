@@ -15,16 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <config.h>
-#include <wine/port.h>
-
-//#include <math.h>
 
 #include "jscript.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
@@ -82,12 +74,16 @@ static HRESULT Error_toString(script_ctx_t *ctx, vdisp_t *vthis, WORD flags,
         unsigned msg_len = msg ? jsstr_length(msg) : 0;
 
         if(name_len && msg_len) {
-            ret = jsstr_alloc_buf(name_len + msg_len + 2);
-            if(ret) {
-                jsstr_flush(name, ret->str);
-                ret->str[name_len] = ':';
-                ret->str[name_len+1] = ' ';
-                jsstr_flush(msg, ret->str+name_len+2);
+            WCHAR *ptr;
+
+            ptr = jsstr_alloc_buf(name_len + msg_len + 2, &ret);
+            if(ptr) {
+                jsstr_flush(name, ptr);
+                ptr[name_len] = ':';
+                ptr[name_len+1] = ' ';
+                jsstr_flush(msg, ptr+name_len+2);
+            }else {
+                hres = E_OUTOFMEMORY;
             }
         }else if(name_len) {
             ret = name;

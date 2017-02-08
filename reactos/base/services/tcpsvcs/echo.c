@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/echo.c
+ * FILE:        base/services/tcpsvcs/echo.c
  * PURPOSE:     Returns whatever input the client sends
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
@@ -25,7 +25,7 @@ EchoIncomingPackets(SOCKET sock)
         readBytes = recv(sock, readBuffer, RECV_BUF, 0);
         if (readBytes > 0)
         {
-            _swprintf(logBuf, L"Received %d bytes from client", readBytes);
+            swprintf(logBuf, L"Received %d bytes from client", readBytes);
             LogEvent(logBuf, 0, 0, LOG_FILE);
 
             totalSentBytes = 0;
@@ -34,7 +34,7 @@ EchoIncomingPackets(SOCKET sock)
                 retVal = send(sock, readBuffer + totalSentBytes, readBytes - totalSentBytes, 0);
                 if (retVal > 0)
                 {
-                    _swprintf(logBuf, L"Sent %d bytes back to client", retVal);
+                    swprintf(logBuf, L"Sent %d bytes back to client", retVal);
                     LogEvent(logBuf, 0, 0, LOG_FILE);
                     totalSentBytes += retVal;
                 }

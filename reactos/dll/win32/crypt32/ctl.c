@@ -17,26 +17,47 @@
  *
  */
 
-#include <assert.h>
-#include <stdarg.h>
-
-#define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "wine/debug.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
-#define CtlContext_CopyProperties(to, from) \
- Context_CopyProperties((to), (from), sizeof(CTL_CONTEXT))
+static void CTL_free(context_t *context)
+{
+    ctl_t *ctl = (ctl_t*)context;
+
+    CryptMsgClose(ctl->ctx.hCryptMsg);
+    CryptMemFree(ctl->ctx.pbCtlEncoded);
+    CryptMemFree(ctl->ctx.pbCtlContext);
+    LocalFree(ctl->ctx.pCtlInfo);
+}
+
+static context_t *CTL_clone(context_t *context, WINECRYPT_CERTSTORE *store, BOOL use_link)
+{
+    ctl_t *ctl;
+
+    if(!use_link) {
+        FIXME("Only links supported\n");
+        return NULL;
+    }
+
+    ctl = (ctl_t*)Context_CreateLinkContext(sizeof(CTL_CONTEXT), context, store);
+    if(!ctl)
+        return NULL;
+
+    ctl->ctx.hCertStore = store;
+    return &ctl->base;
+}
+
+static const context_vtbl_t ctl_vtbl = {
+    CTL_free,
+    CTL_clone
+};
 
 BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
  PCCTL_CONTEXT pCtlContext, DWORD dwAddDisposition,
  PCCTL_CONTEXT* ppStoreContext)
 {
-    PWINECRYPT_CERTSTORE store = hCertStore;
+    WINECRYPT_CERTSTORE *store = hCertStore;
     BOOL ret = TRUE;
     PCCTL_CONTEXT toAdd = NULL, existing = NULL;
 
@@ -91,7 +112,7 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
             if (newer < 0)
             {
                 toAdd = CertDuplicateCTLContext(pCtlContext);
-                CtlContext_CopyProperties(existing, pCtlContext);
+                Context_CopyProperties(existing, pCtlContext);
             }
             else
             {
@@ -109,12 +130,12 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
     case CERT_STORE_ADD_REPLACE_EXISTING_INHERIT_PROPERTIES:
         toAdd = CertDuplicateCTLContext(pCtlContext);
         if (existing)
-            CtlContext_CopyProperties(toAdd, existing);
+            Context_CopyProperties(toAdd, existing);
         break;
     case CERT_STORE_ADD_USE_EXISTING:
         if (existing)
         {
-            CtlContext_CopyProperties(existing, pCtlContext);
+            Context_CopyProperties(existing, pCtlContext);
             if (ppStoreContext)
                 *ppStoreContext = CertDuplicateCTLContext(existing);
         }
@@ -128,11 +149,16 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
 
     if (toAdd)
     {
-        if (store)
-            ret = store->ctls.addContext(store, (void *)toAdd,
-             (void *)existing, (const void **)ppStoreContext);
-        else if (ppStoreContext)
+        if (store) {
+            context_t *ret_ctx;
+
+            ret = store->vtbl->ctls.addContext(store, context_from_ptr(toAdd),
+             existing ? context_from_ptr(existing) : NULL, ppStoreContext ? &ret_ctx : NULL, TRUE);
+            if(ret && ppStoreContext)
+                *ppStoreContext = context_ptr(ret_ctx);
+        }else if (ppStoreContext) {
             *ppStoreContext = CertDuplicateCTLContext(toAdd);
+        }
         CertFreeCTLContext(toAdd);
     }
     CertFreeCTLContext(existing);
@@ -164,11 +190,10 @@ BOOL WINAPI CertAddEncodedCTLToStore(HCERTSTORE hCertStore,
     return ret;
 }
 
-PCCTL_CONTEXT WINAPI CertEnumCTLsInStore(HCERTSTORE hCertStore,
- PCCTL_CONTEXT pPrev)
+PCCTL_CONTEXT WINAPI CertEnumCTLsInStore(HCERTSTORE hCertStore, PCCTL_CONTEXT pPrev)
 {
+    ctl_t *prev = pPrev ? ctl_from_ptr(pPrev) : NULL, *ret;
     WINECRYPT_CERTSTORE *hcs = hCertStore;
-    PCCTL_CONTEXT ret;
 
     TRACE("(%p, %p)\n", hCertStore, pPrev);
     if (!hCertStore)
@@ -176,8 +201,8 @@ PCCTL_CONTEXT WINAPI CertEnumCTLsInStore(HCERTSTORE hCertStore,
     else if (hcs->dwMagic != WINE_CRYPTCERTSTORE_MAGIC)
         ret = NULL;
     else
-        ret = (PCCTL_CONTEXT)hcs->ctls.enumContext(hcs, (void *)pPrev);
-    return ret;
+        ret = (ctl_t*)hcs->vtbl->ctls.enumContext(hcs, prev ? &prev->base : NULL);
+    return ret ? &ret->ctx : NULL;
 }
 
 typedef BOOL (*CtlCompareFunc)(PCCTL_CONTEXT pCtlContext, DWORD dwType,
@@ -308,32 +333,30 @@ PCCTL_CONTEXT WINAPI CertFindCTLInStore(HCERTSTORE hCertStore,
 
 BOOL WINAPI CertDeleteCTLFromStore(PCCTL_CONTEXT pCtlContext)
 {
+    WINECRYPT_CERTSTORE *hcs;
+    ctl_t *ctl = ctl_from_ptr(pCtlContext);
     BOOL ret;
 
     TRACE("(%p)\n", pCtlContext);
 
     if (!pCtlContext)
-        ret = TRUE;
-    else if (!pCtlContext->hCertStore)
-        ret = CertFreeCTLContext(pCtlContext);
-    else
-    {
-        PWINECRYPT_CERTSTORE hcs = pCtlContext->hCertStore;
+        return TRUE;
 
-        if (hcs->dwMagic != WINE_CRYPTCERTSTORE_MAGIC)
-            ret = FALSE;
-        else
-            ret = hcs->ctls.deleteContext(hcs, (void *)pCtlContext);
-        if (ret)
-            ret = CertFreeCTLContext(pCtlContext);
-    }
+    hcs = pCtlContext->hCertStore;
+
+    if (hcs->dwMagic != WINE_CRYPTCERTSTORE_MAGIC)
+            return FALSE;
+
+    ret = hcs->vtbl->ctls.delete(hcs, &ctl->base);
+    if (ret)
+        ret = CertFreeCTLContext(pCtlContext);
     return ret;
 }
 
 PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
  const BYTE *pbCtlEncoded, DWORD cbCtlEncoded)
 {
-    PCTL_CONTEXT ctl = NULL;
+    ctl_t *ctl = NULL;
     HCRYPTMSG msg;
     BOOL ret;
     BYTE *content = NULL;
@@ -406,7 +429,7 @@ PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
              &ctlInfo, &size);
             if (ret)
             {
-                ctl = Context_CreateDataContext(sizeof(CTL_CONTEXT));
+                ctl = (ctl_t*)Context_CreateDataContext(sizeof(CTL_CONTEXT), &ctl_vtbl, &empty_store);
                 if (ctl)
                 {
                     BYTE *data = CryptMemAlloc(cbCtlEncoded);
@@ -414,15 +437,15 @@ PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
                     if (data)
                     {
                         memcpy(data, pbCtlEncoded, cbCtlEncoded);
-                        ctl->dwMsgAndCertEncodingType =
+                        ctl->ctx.dwMsgAndCertEncodingType =
                          X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
-                        ctl->pbCtlEncoded             = data;
-                        ctl->cbCtlEncoded             = cbCtlEncoded;
-                        ctl->pCtlInfo                 = ctlInfo;
-                        ctl->hCertStore               = NULL;
-                        ctl->hCryptMsg                = msg;
-                        ctl->pbCtlContext             = content;
-                        ctl->cbCtlContext             = contentSize;
+                        ctl->ctx.pbCtlEncoded             = data;
+                        ctl->ctx.cbCtlEncoded             = cbCtlEncoded;
+                        ctl->ctx.pCtlInfo                 = ctlInfo;
+                        ctl->ctx.hCertStore               = &empty_store;
+                        ctl->ctx.hCryptMsg                = msg;
+                        ctl->ctx.pbCtlContext             = content;
+                        ctl->ctx.cbCtlContext             = contentSize;
                     }
                     else
                     {
@@ -447,65 +470,53 @@ PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
 end:
     if (!ret)
     {
-        CertFreeCTLContext(ctl);
+        if(ctl)
+            Context_Release(&ctl->base);
         ctl = NULL;
         LocalFree(ctlInfo);
         CryptMemFree(content);
         CryptMsgClose(msg);
+        return NULL;
     }
-    return ctl;
+    return &ctl->ctx;
 }
 
 PCCTL_CONTEXT WINAPI CertDuplicateCTLContext(PCCTL_CONTEXT pCtlContext)
 {
     TRACE("(%p)\n", pCtlContext);
     if (pCtlContext)
-        Context_AddRef((void *)pCtlContext, sizeof(CTL_CONTEXT));
+        Context_AddRef(&ctl_from_ptr(pCtlContext)->base);
     return pCtlContext;
-}
-
-static void CTLDataContext_Free(void *context)
-{
-    PCTL_CONTEXT ctlContext = context;
-
-    CryptMsgClose(ctlContext->hCryptMsg);
-    CryptMemFree(ctlContext->pbCtlEncoded);
-    CryptMemFree(ctlContext->pbCtlContext);
-    LocalFree(ctlContext->pCtlInfo);
 }
 
 BOOL WINAPI CertFreeCTLContext(PCCTL_CONTEXT pCTLContext)
 {
-    BOOL ret = TRUE;
-
     TRACE("(%p)\n", pCTLContext);
 
     if (pCTLContext)
-        ret = Context_Release((void *)pCTLContext, sizeof(CTL_CONTEXT),
-         CTLDataContext_Free);
-    return ret;
+        Context_Release(&ctl_from_ptr(pCTLContext)->base);
+    return TRUE;
 }
 
 DWORD WINAPI CertEnumCTLContextProperties(PCCTL_CONTEXT pCTLContext,
  DWORD dwPropId)
 {
-    PCONTEXT_PROPERTY_LIST properties = Context_GetProperties(
-     pCTLContext, sizeof(CTL_CONTEXT));
+    ctl_t *ctl = ctl_from_ptr(pCTLContext);
     DWORD ret;
 
     TRACE("(%p, %d)\n", pCTLContext, dwPropId);
 
-    if (properties)
-        ret = ContextPropertyList_EnumPropIDs(properties, dwPropId);
+    if (ctl->base.properties)
+        ret = ContextPropertyList_EnumPropIDs(ctl->base.properties, dwPropId);
     else
         ret = 0;
     return ret;
 }
 
-static BOOL CTLContext_SetProperty(PCCTL_CONTEXT context, DWORD dwPropId,
+static BOOL CTLContext_SetProperty(ctl_t *ctl, DWORD dwPropId,
                                    DWORD dwFlags, const void *pvData);
 
-static BOOL CTLContext_GetHashProp(PCCTL_CONTEXT context, DWORD dwPropId,
+static BOOL CTLContext_GetHashProp(ctl_t *ctl, DWORD dwPropId,
  ALG_ID algID, const BYTE *toHash, DWORD toHashLen, void *pvData,
  DWORD *pcbData)
 {
@@ -515,23 +526,21 @@ static BOOL CTLContext_GetHashProp(PCCTL_CONTEXT context, DWORD dwPropId,
     {
         CRYPT_DATA_BLOB blob = { *pcbData, pvData };
 
-        ret = CTLContext_SetProperty(context, dwPropId, 0, &blob);
+        ret = CTLContext_SetProperty(ctl, dwPropId, 0, &blob);
     }
     return ret;
 }
 
-static BOOL CTLContext_GetProperty(PCCTL_CONTEXT context, DWORD dwPropId,
+static BOOL CTLContext_GetProperty(ctl_t *ctl, DWORD dwPropId,
                                    void *pvData, DWORD *pcbData)
 {
-    PCONTEXT_PROPERTY_LIST properties =
-     Context_GetProperties(context, sizeof(CTL_CONTEXT));
     BOOL ret;
     CRYPT_DATA_BLOB blob;
 
-    TRACE("(%p, %d, %p, %p)\n", context, dwPropId, pvData, pcbData);
+    TRACE("(%p, %d, %p, %p)\n", ctl, dwPropId, pvData, pcbData);
 
-    if (properties)
-        ret = ContextPropertyList_FindProperty(properties, dwPropId, &blob);
+    if (ctl->base.properties)
+        ret = ContextPropertyList_FindProperty(ctl->base.properties, dwPropId, &blob);
     else
         ret = FALSE;
     if (ret)
@@ -556,12 +565,12 @@ static BOOL CTLContext_GetProperty(PCCTL_CONTEXT context, DWORD dwPropId,
         switch (dwPropId)
         {
         case CERT_SHA1_HASH_PROP_ID:
-            ret = CTLContext_GetHashProp(context, dwPropId, CALG_SHA1,
-             context->pbCtlEncoded, context->cbCtlEncoded, pvData, pcbData);
+            ret = CTLContext_GetHashProp(ctl, dwPropId, CALG_SHA1,
+             ctl->ctx.pbCtlEncoded, ctl->ctx.cbCtlEncoded, pvData, pcbData);
             break;
         case CERT_MD5_HASH_PROP_ID:
-            ret = CTLContext_GetHashProp(context, dwPropId, CALG_MD5,
-             context->pbCtlEncoded, context->cbCtlEncoded, pvData, pcbData);
+            ret = CTLContext_GetHashProp(ctl, dwPropId, CALG_MD5,
+             ctl->ctx.pbCtlEncoded, ctl->ctx.cbCtlEncoded, pvData, pcbData);
             break;
         default:
             SetLastError(CRYPT_E_NOT_FOUND);
@@ -601,37 +610,28 @@ BOOL WINAPI CertGetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
         }
         else
         {
-            if (pCTLContext->hCertStore)
-                ret = CertGetStoreProperty(pCTLContext->hCertStore, dwPropId,
-                 pvData, pcbData);
-            else
-            {
-                *(DWORD *)pvData = 0;
-                ret = TRUE;
-            }
+            ret = CertGetStoreProperty(pCTLContext->hCertStore, dwPropId, pvData, pcbData);
         }
         break;
     default:
-        ret = CTLContext_GetProperty(pCTLContext, dwPropId, pvData,
+        ret = CTLContext_GetProperty(ctl_from_ptr(pCTLContext), dwPropId, pvData,
          pcbData);
     }
     return ret;
 }
 
-static BOOL CTLContext_SetProperty(PCCTL_CONTEXT context, DWORD dwPropId,
+static BOOL CTLContext_SetProperty(ctl_t *ctl, DWORD dwPropId,
  DWORD dwFlags, const void *pvData)
 {
-    PCONTEXT_PROPERTY_LIST properties =
-     Context_GetProperties(context, sizeof(CTL_CONTEXT));
     BOOL ret;
 
-    TRACE("(%p, %d, %08x, %p)\n", context, dwPropId, dwFlags, pvData);
+    TRACE("(%p, %d, %08x, %p)\n", ctl, dwPropId, dwFlags, pvData);
 
-    if (!properties)
+    if (!ctl->base.properties)
         ret = FALSE;
     else if (!pvData)
     {
-        ContextPropertyList_RemoveProperty(properties, dwPropId);
+        ContextPropertyList_RemoveProperty(ctl->base.properties, dwPropId);
         ret = TRUE;
     }
     else
@@ -658,12 +658,12 @@ static BOOL CTLContext_SetProperty(PCCTL_CONTEXT context, DWORD dwPropId,
         {
             PCRYPT_DATA_BLOB blob = (PCRYPT_DATA_BLOB)pvData;
 
-            ret = ContextPropertyList_SetProperty(properties, dwPropId,
+            ret = ContextPropertyList_SetProperty(ctl->base.properties, dwPropId,
              blob->pbData, blob->cbData);
             break;
         }
         case CERT_DATE_STAMP_PROP_ID:
-            ret = ContextPropertyList_SetProperty(properties, dwPropId,
+            ret = ContextPropertyList_SetProperty(ctl->base.properties, dwPropId,
              pvData, sizeof(FILETIME));
             break;
         default:
@@ -695,7 +695,7 @@ BOOL WINAPI CertSetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
         SetLastError(E_INVALIDARG);
         return FALSE;
     }
-    ret = CTLContext_SetProperty(pCTLContext, dwPropId, dwFlags, pvData);
+    ret = CTLContext_SetProperty(ctl_from_ptr(pCTLContext), dwPropId, dwFlags, pvData);
     TRACE("returning %d\n", ret);
     return ret;
 }

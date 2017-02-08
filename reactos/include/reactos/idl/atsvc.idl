@@ -1,0 +1,81 @@
+/*
+ * Scheduler Service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [handle] const wchar_t *ATSVC_HANDLE;
+
+typedef struct _AT_ENUM
+{
+    DWORD JobId;
+    DWORD_PTR JobTime;
+    DWORD DaysOfMonth;
+    unsigned char DaysOfWeek;
+    unsigned char Flags;
+    wchar_t *Command;
+} AT_ENUM, *PAT_ENUM, *LPAT_ENUM;
+
+typedef struct _AT_INFO
+{
+    DWORD_PTR JobTime;
+    DWORD DaysOfMonth;
+    unsigned char DaysOfWeek;
+    unsigned char Flags;
+    [string] wchar_t *Command;
+} AT_INFO, *PAT_INFO, *LPAT_INFO;
+
+typedef struct _AT_ENUM_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is( EntriesRead)] LPAT_ENUM Buffer;
+} AT_ENUM_CONTAINER, *PAT_ENUM_CONTAINER, *LPAT_ENUM_CONTAINER;
+
+[
+    uuid(1FF70682-0A51-30E8-076D-740BE8CEE98B),
+    version(1.0),
+#ifdef __midl
+    ms_union,
+#endif
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\atsvc]")
+#ifndef __midl
+    ,explicit_handle
+#endif
+]
+interface atsvc
+{
+    /* Function 0 */
+    NET_API_STATUS
+    __stdcall
+    NetrJobAdd(
+        [in, string, unique] ATSVC_HANDLE ServerName,
+        [in] LPAT_INFO pAtInfo,
+        [out] LPDWORD pJobId);
+
+    /* Function 1 */
+    NET_API_STATUS
+    __stdcall
+    NetrJobDel(
+        [in, string, unique] ATSVC_HANDLE ServerName,
+        [in] DWORD MinJobId,
+        [in] DWORD MaxJobId);
+
+    /* Function 2 */
+    NET_API_STATUS
+    __stdcall
+    NetrJobEnum(
+        [in, string, unique] ATSVC_HANDLE ServerName,
+        [in,out] LPAT_ENUM_CONTAINER pEnumContainer,
+        [in] DWORD PreferedMaximumLength,
+        [out] LPDWORD pTotalEntries,
+        [in, out, unique] LPDWORD pResumeHandle);
+
+    /* Function 3 */
+    NET_API_STATUS
+    __stdcall
+    NetrJobGetInfo(
+        [in, string, unique] ATSVC_HANDLE ServerName,
+        [in] DWORD JobId,
+        [out] LPAT_INFO *ppAtInfo);
+}

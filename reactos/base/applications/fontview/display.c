@@ -20,7 +20,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "display.h"
+#include "precomp.h"
+
+#include <stdio.h>
+#include <malloc.h>
 
 #define SPACING1 8
 #define SPACING2 5
@@ -110,7 +113,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
-	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%^&*')");
+	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%%^&*')");
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
@@ -417,13 +420,6 @@ Display_OnPrint(HWND hwnd)
 	PRINTDLG pfont;
 	TEXTMETRIC tm;
 	int copies, yPos;
-	DISPLAYDATA* pData;
-
-	pData = malloc(sizeof(DISPLAYDATA));
-	ZeroMemory(pData, sizeof(DISPLAYDATA));
-
-	/* Sets up the font layout */
-	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
 	/* Clears the memory before using it */
 	ZeroMemory(&pfont, sizeof(pfont));
@@ -443,7 +439,15 @@ Display_OnPrint(HWND hwnd)
 	if (PrintDlg(&pfont))
 	{
 		DOCINFO docinfo;
+#if 0
+		DISPLAYDATA* pData;
 
+		pData = malloc(sizeof(DISPLAYDATA));
+		ZeroMemory(pData, sizeof(DISPLAYDATA));
+
+		/* Sets up the font layout */
+		pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+#endif
 		docinfo.cbSize = sizeof(DOCINFO);
 		docinfo.lpszDocName = "Printing Font";
 		docinfo.lpszOutput = NULL;
@@ -470,7 +474,9 @@ Display_OnPrint(HWND hwnd)
 
 			/* TODO: Determine if using Display_DrawText() will work for both rendering out to the
 			window and to the printer output */
-			//Display_DrawText(pfont.hDC, pData, yPos);
+#if 0
+			Display_DrawText(pfont.hDC, pData, yPos);
+#endif
 
 			/* Ends the current page */
 			EndPage(pfont.hDC);
@@ -487,12 +493,11 @@ Display_OnPrint(HWND hwnd)
 		EndDoc(pfont.hDC);
 
 		DeleteDC(pfont.hDC);
-	} else {
-		return 0;
+#if 0
+		/* Frees the memory since we no longer need it for now */
+		free(pData);
+#endif
 	}
-
-	/* Frees the memory since we no longer need it for now */
-	free(pData);
 
 	return 0;
 }

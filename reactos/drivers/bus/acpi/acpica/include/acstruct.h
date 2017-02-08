@@ -4,114 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef __ACSTRUCT_H__
 #define __ACSTRUCT_H__
@@ -126,7 +54,7 @@
 
 
 /*
- * Walk state - current state of a parse tree walk.  Used for both a leisurely
+ * Walk state - current state of a parse tree walk. Used for both a leisurely
  * stroll through the tree (for whatever reason), and for control method
  * execution.
  */
@@ -140,11 +68,6 @@
 #define ACPI_WALK_NON_METHOD        0
 #define ACPI_WALK_METHOD            0x01
 #define ACPI_WALK_METHOD_RESTART    0x02
-
-/* Flags for iASL compiler only */
-
-#define ACPI_WALK_CONST_REQUIRED    0x10
-#define ACPI_WALK_CONST_OPTIONAL    0x20
 
 
 typedef struct acpi_walk_state
@@ -162,9 +85,10 @@ typedef struct acpi_walk_state
     UINT8                           ReturnUsed;
     UINT8                           ScopeDepth;
     UINT8                           PassNumber;         /* Parse pass during table load */
+    BOOLEAN                         NamespaceOverride;  /* Override existing objects */
     UINT8                           ResultSize;         /* Total elements for the result stack */
     UINT8                           ResultCount;        /* Current number of occupied elements of result stack */
-    UINT32                          AmlOffset;
+    UINT8                           *Aml;
     UINT32                          ArgTypes;
     UINT32                          MethodBreakpoint;   /* For single stepping */
     UINT32                          UserBreakpoint;     /* User AML breakpoint */
@@ -211,6 +135,9 @@ typedef struct acpi_init_walk_info
     UINT32                          TableIndex;
     UINT32                          ObjectCount;
     UINT32                          MethodCount;
+    UINT32                          SerialMethodCount;
+    UINT32                          NonSerialMethodCount;
+    UINT32                          SerializedMethodCount;
     UINT32                          DeviceCount;
     UINT32                          OpRegionCount;
     UINT32                          FieldCount;
@@ -267,27 +194,43 @@ typedef union acpi_aml_operands
 
 
 /*
- * Structure used to pass object evaluation parameters.
+ * Structure used to pass object evaluation information and parameters.
  * Purpose is to reduce CPU stack use.
  */
 typedef struct acpi_evaluate_info
 {
-    ACPI_NAMESPACE_NODE             *PrefixNode;
-    char                            *Pathname;
-    ACPI_OPERAND_OBJECT             *ObjDesc;
-    ACPI_OPERAND_OBJECT             **Parameters;
-    ACPI_NAMESPACE_NODE             *ResolvedNode;
-    ACPI_OPERAND_OBJECT             *ReturnObject;
-    UINT8                           ParamCount;
-    UINT8                           PassNumber;
-    UINT8                           ReturnObjectType;
-    UINT8                           Flags;
+    /* The first 3 elements are passed by the caller to AcpiNsEvaluate */
+
+    ACPI_NAMESPACE_NODE             *PrefixNode;        /* Input: starting node */
+    const char                      *RelativePathname;  /* Input: path relative to PrefixNode */
+    ACPI_OPERAND_OBJECT             **Parameters;       /* Input: argument list */
+
+    ACPI_NAMESPACE_NODE             *Node;              /* Resolved node (PrefixNode:RelativePathname) */
+    ACPI_OPERAND_OBJECT             *ObjDesc;           /* Object attached to the resolved node */
+    char                            *FullPathname;      /* Full pathname of the resolved node */
+
+    const ACPI_PREDEFINED_INFO      *Predefined;        /* Used if Node is a predefined name */
+    ACPI_OPERAND_OBJECT             *ReturnObject;      /* Object returned from the evaluation */
+    union acpi_operand_object       *ParentPackage;     /* Used if return object is a Package */
+
+    UINT32                          ReturnFlags;        /* Used for return value analysis */
+    UINT32                          ReturnBtype;        /* Bitmapped type of the returned object */
+    UINT16                          ParamCount;         /* Count of the input argument list */
+    UINT8                           PassNumber;         /* Parser pass number */
+    UINT8                           ReturnObjectType;   /* Object type of the returned object */
+    UINT8                           NodeFlags;          /* Same as Node->Flags */
+    UINT8                           Flags;              /* General flags */
 
 } ACPI_EVALUATE_INFO;
 
 /* Values for Flags above */
 
-#define ACPI_IGNORE_RETURN_VALUE        1
+#define ACPI_IGNORE_RETURN_VALUE    1
+
+/* Defines for ReturnFlags field above */
+
+#define ACPI_OBJECT_REPAIRED        1
+#define ACPI_OBJECT_WRAPPED         2
 
 
 /* Info used by AcpiNsInitializeDevices */

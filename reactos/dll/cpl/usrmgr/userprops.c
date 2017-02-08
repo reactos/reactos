@@ -92,9 +92,7 @@ SetUserProfileData(HWND hwndDlg,
     LPTSTR pszHomeDir = NULL;
     LPTSTR pszHomeDrive = NULL;
     NET_API_STATUS status;
-#if 0
     DWORD dwIndex;
-#endif
     INT nLength;
     INT nIndex;
 
@@ -166,15 +164,11 @@ SetUserProfileData(HWND hwndDlg,
         }
     }
 
-#if 0
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
     {
         DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
     }
-#else
-    status = NERR_Success;
-#endif
 
     if (pszProfilePath)
         HeapFree(GetProcessHeap(), 0, pszProfilePath);
@@ -752,9 +746,7 @@ SetUserGeneralData(HWND hwndDlg,
     LPTSTR pszFullName = NULL;
     LPTSTR pszComment = NULL;
     NET_API_STATUS status;
-#if 0
     DWORD dwIndex;
-#endif
     INT nLength;
 
     NetUserGetInfo(NULL, pUserData->szUserName, 3, (LPBYTE*)&pUserInfo);
@@ -789,15 +781,11 @@ SetUserGeneralData(HWND hwndDlg,
         pUserInfo->usri3_comment = pszComment;
     }
 
-#if 0
     status = NetUserSetInfo(NULL, pUserData->szUserName, 3, (LPBYTE)pUserInfo, &dwIndex);
     if (status != NERR_Success)
     {
         DebugPrintf(_T("Status: %lu  Index: %lu"), status, dwIndex);
     }
-#else
-    status = NERR_Success;
-#endif
 
     if (pszFullName)
         HeapFree(GetProcessHeap(), 0, pszFullName);

@@ -19,9 +19,7 @@
  */
 
 #include <windef.h>
-//#include "winbase.h"
 #include <winuser.h>
-//#include "winnls.h"
 
 #include "resource.h"
 
@@ -33,6 +31,8 @@
  */
 /* #include "wininet_xx.rc" */
 
+#include <reactos/manifest_dll.rc>
+
 /*
  * Everything specific to any language goes
  * in one of the specific files.
@@ -40,86 +40,93 @@
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
-#ifdef LANGUAGE_BG_BG
-    #include "wininet_Bg.rc"
-#endif
-#ifdef LANGUAGE_CS_CZ
-    #include "wininet_Cs.rc"
-#endif
-#ifdef LANGUAGE_DA_DK
-    #include "wininet_Da.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "wininet_En.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "wininet_Es.rc"
-#endif
-#ifdef LANGUAGE_EO_AA
-    #include "wininet_Eo.rc"
-#endif
-#ifdef LANGUAGE_FI_FI
-    #include "wininet_Fi.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "wininet_He.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "wininet_Hu.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "wininet_It.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "wininet_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "wininet_Nl.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "wininet_Pl.rc"
-#endif
-#ifdef LANGUAGE_SR_SP
-    #include "wininet_Sr.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "wininet_Sv.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "wininet_Tr.rc"
-#endif
 
 /* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_BG_BG
+    #include "lang/wininet_Bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/wininet_Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/wininet_Da.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
-    #include "wininet_De.rc"
+    #include "lang/wininet_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/wininet_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/wininet_Es.rc"
+#endif
+#ifdef LANGUAGE_EO_AA
+    #include "lang/wininet_Eo.rc"
+#endif
+#ifdef LANGUAGE_FI_FI
+    #include "lang/wininet_Fi.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "wininet_Fr.rc"
+    #include "lang/wininet_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/wininet_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/wininet_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/wininet_It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "wininet_Ja.rc"
+    #include "lang/wininet_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/wininet_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "wininet_Lt.rc"
+    #include "lang/wininet_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/wininet_Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "wininet_No.rc"
+    #include "lang/wininet_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/wininet_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "wininet_Pt.rc"
+    #include "lang/wininet_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "wininet_Ro.rc"
+    #include "lang/wininet_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "wininet_Ru.rc"
+    #include "lang/wininet_Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "wininet_Si.rc"
+    #include "lang/wininet_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/wininet_Sq.rc"
+#endif
+#ifdef LANGUAGE_SR_SP
+    #include "lang/wininet_Sr.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/wininet_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/wininet_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "wininet_Uk.rc"
+    #include "lang/wininet_Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "wininet_Zh.rc"
+    #include "lang/wininet_Zh.rc"
 #endif
+
+#include "version.rc"

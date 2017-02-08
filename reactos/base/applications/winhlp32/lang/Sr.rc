@@ -1,0 +1,108 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 2010 Nenad Vujic
+ *                Paul Vriens
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_LATIN
+
+MAIN_MENU MENU
+{
+ POPUP "&Fajl" {
+  MENUITEM "&Otvori", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Štampaj", MNID_FILE_PRINT
+  MENUITEM "Štampač &podešavanje...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "I&zlaz", MNID_FILE_EXIT
+ }
+ POPUP "&Izmeni" {
+   MENUITEM "&Kopiraj...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Pribeleži...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Označi" {
+   MENUITEM "&Odredi...", MNID_BKMK_DEFINE
+ }
+  POPUP "&Opcije" {
+  MENUITEM "Uvek na &vrhu", MNID_HELP_HELPTOP
+  MENUITEM "Istorija",		MNID_OPTS_HISTORY
+  POPUP "Fontovi"
+  BEGIN
+    MENUITEM "Mali",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normalan",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Veliki",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "&Pomoć" {
+   MENUITEM "Pomoć &na pomoći", MNID_HELP_HELPON
+   MENUITEM "&Info...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Beleške...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiraj",                MNID_CTXT_COPY
+		MENUITEM "Štampaj...",            MNID_CTXT_PRINT
+		POPUP    "Fontovi"
+		BEGIN
+			MENUITEM "Mali",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalno",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Veliki",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"ReactOS Pomoć"
+STID_WHERROR, 		"GREŠKA"
+STID_WARNING,  		"UPOZORENJE"
+STID_INFO,  		"Informacija"
+STID_NOT_IMPLEMENTED, 	"Nije jos u programu"
+STID_HLPFILE_ERROR_s, 	"Greška tokom čitanja pomoćnog fajla `%s'"
+STID_INDEX, 		"&Index"
+STID_CONTENTS,		"Pregled"
+STID_BACK, 		"&Nazad"
+STID_ALL_FILES, 	"Svi fajlovi (*.*)"
+STID_HELP_FILES_HLP, 	"Pomočni fajlovi (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Ne mogu naći '%s'. Da li želite da sami nađete fajl?"
+STID_NO_RICHEDIT	"Ne mogu naći richedit ubacen... Prekidam"
+STID_PSH_INDEX,		"Teme pomoći: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Traži"
+{
+    LTEXT  "Not implemented yet", -1, 10, 10, 180, 150
+}

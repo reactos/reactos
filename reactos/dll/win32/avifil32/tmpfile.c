@@ -16,25 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-//#include "winerror.h"
-#include <vfw.h>
-
-//#include "avifile_private.h"
-//#include "extrachunk.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(avifile);
+#include "avifile_private.h"
 
 /***********************************************************************/
 
@@ -262,7 +244,7 @@ PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams)
       tmpFile->fInfo.dwSuggestedBufferSize = sInfo.dwSuggestedBufferSize;
 
     {
-      register DWORD tmp;
+      DWORD tmp;
 
       tmp = MulDiv(AVIStreamSampleToTime(ppStreams[i], sInfo.dwLength),
                    tmpFile->fInfo.dwScale, tmpFile->fInfo.dwRate * 1000);

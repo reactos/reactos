@@ -1,5 +1,9 @@
-#define WIN32_NO_STATUS
+#ifndef _USRMGR_H
+#define _USRMGR_H
+
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -43,3 +47,5 @@ CheckAccountName(HWND hwndDlg,
 /* userprops.c */
 BOOL
 UserProperties(HWND hwndDlg);
+
+#endif /* _USRMGR_H */

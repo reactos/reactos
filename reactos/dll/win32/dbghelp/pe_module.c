@@ -21,18 +21,7 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
 #include "dbghelp_private.h"
-#include "image_private.h"
-#include "winternl.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -224,6 +213,12 @@ static BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_ty
 
             if (!(nthdr = RtlImageNtHeader(mapping))) goto error;
             memcpy(&fmap->u.pe.ntheader, nthdr, sizeof(fmap->u.pe.ntheader));
+            switch (nthdr->OptionalHeader.Magic)
+            {
+            case 0x10b: fmap->addr_size = 32; break;
+            case 0x20b: fmap->addr_size = 64; break;
+            default: return FALSE;
+            }
             section = (IMAGE_SECTION_HEADER*)
                 ((char*)&nthdr->OptionalHeader + nthdr->FileHeader.SizeOfOptionalHeader);
             fmap->u.pe.sect = HeapAlloc(GetProcessHeap(), 0,
@@ -314,16 +309,6 @@ const char* pe_map_directory(struct module* module, int dirno, DWORD* size)
     if (size) *size = nth->OptionalHeader.DataDirectory[dirno].Size;
     return RtlImageRvaToVa(nth, mapping,
                            nth->OptionalHeader.DataDirectory[dirno].VirtualAddress, NULL);
-}
-
-/******************************************************************
- *		pe_unmap_directory
- *
- * Unmaps a directory content
- */
-void pe_unmap_directory(struct image_file_map* fmap, int dirno)
-{
-    pe_unmap_full(fmap);
 }
 
 static void pe_module_remove(struct process* pcs, struct module_format* modfmt)
@@ -509,7 +494,7 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module)
 static BOOL pe_load_dwarf(struct module* module)
 {
     struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
-    BOOL                        ret = FALSE;
+    BOOL                        ret;
 
     ret = dwarf2_parse(module,
                        module->module.BaseOfImage - fmap->u.pe.ntheader.OptionalHeader.ImageBase,
@@ -520,6 +505,7 @@ static BOOL pe_load_dwarf(struct module* module)
     return ret;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 /******************************************************************
  *		pe_load_dbg_file
  *
@@ -619,6 +605,7 @@ done:
     pe_unmap_full(fmap);
     return ret;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
 /***********************************************************************
  *			pe_load_export_debug_info
@@ -715,7 +702,9 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
     {
         ret = pe_load_stabs(pcs, module);
         ret = pe_load_dwarf(module) || ret;
+        #ifndef DBGHELP_STATIC_LIB
         ret = pe_load_msc_debug_info(pcs, module) || ret;
+        #endif
         ret = ret || pe_load_coff_symbol_table(module); /* FIXME */
         /* if we still have no debug info (we could only get SymExport at this
          * point), then do the SymExport except if we have an ELF container,

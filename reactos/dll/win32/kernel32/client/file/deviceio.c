@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            kernel32/file/deviceio.c
+ * FILE:            dll/win32/kernel32/client/file/deviceio.c
  * PURPOSE:         Device I/O Base Client Functionality
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -9,6 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+
+#include <ntddbeep.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -33,7 +36,7 @@ NotifySoundSentry(VOID)
         CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSoundSentryNotification),
-                            sizeof(BASE_SOUND_SENTRY));
+                            sizeof(*SoundSentryRequest));
     }
 }
 

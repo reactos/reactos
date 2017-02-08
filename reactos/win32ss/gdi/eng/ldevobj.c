@@ -2,13 +2,14 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Support for logical devices
- * FILE:             subsystems/win32/win32k/eng/ldevobj.c
+ * FILE:             win32ss/gdi/eng/ldevobj.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #include <win32k.h>
 #define NDEBUG
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(EngLDev);
 
 #ifndef RVA_TO_ADDR
 #define RVA_TO_ADDR(Base,Rva) ((PVOID)(((ULONG_PTR)(Base)) + (Rva)))
@@ -16,9 +17,9 @@
 
 /** Globals *******************************************************************/
 
-HSEMAPHORE ghsemLDEVList;
-LDEVOBJ *gpldevHead = NULL;
-LDEVOBJ *gpldevWin32k = NULL;
+static HSEMAPHORE ghsemLDEVList;
+static LIST_ENTRY gleLdevListHead;
+static LDEVOBJ *gpldevWin32k = NULL;
 
 
 /** Private functions *********************************************************/
@@ -26,14 +27,18 @@ LDEVOBJ *gpldevWin32k = NULL;
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitLDEVImpl()
+InitLDEVImpl(VOID)
 {
     ULONG cbSize;
+
+    /* Initialize the LDEV list head */
+    InitializeListHead(&gleLdevListHead);
 
     /* Initialize the loader lock */
     ghsemLDEVList = EngCreateSemaphore();
     if (!ghsemLDEVList)
     {
+        ERR("Failed to create ghsemLDEVList\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -48,8 +53,8 @@ InitLDEVImpl()
     }
 
     /* Initialize the LDEVOBJ for win32k */
-    gpldevWin32k->pldevNext = NULL;
-    gpldevWin32k->pldevPrev = NULL;
+    gpldevWin32k->leLink.Flink = NULL;
+    gpldevWin32k->leLink.Blink = NULL;
     gpldevWin32k->ldevtype = LDEV_DEVICE_DISPLAY;
     gpldevWin32k->cRefs = 1;
     gpldevWin32k->ulDriverVersion = GDI_ENGINE_VERSION;
@@ -69,9 +74,10 @@ InitLDEVImpl()
     return STATUS_SUCCESS;
 }
 
+static
 PLDEVOBJ
-NTAPI
-LDEVOBJ_AllocLDEV(LDEVTYPE ldevtype)
+LDEVOBJ_AllocLDEV(
+    _In_ LDEVTYPE ldevtype)
 {
     PLDEVOBJ pldev;
 
@@ -79,7 +85,7 @@ LDEVOBJ_AllocLDEV(LDEVTYPE ldevtype)
     pldev = ExAllocatePoolWithTag(PagedPool, sizeof(LDEVOBJ), GDITAG_LDEV);
     if (!pldev)
     {
-        DPRINT1("Failed to allocate LDEVOBJ.\n");
+        ERR("Failed to allocate LDEVOBJ.\n");
         return NULL;
     }
 
@@ -92,9 +98,10 @@ LDEVOBJ_AllocLDEV(LDEVTYPE ldevtype)
     return pldev;
 }
 
+static
 VOID
-NTAPI
-LDEVOBJ_vFreeLDEV(PLDEVOBJ pldev)
+LDEVOBJ_vFreeLDEV(
+    _In_ _Post_ptr_invalid_ PLDEVOBJ pldev)
 {
     /* Make sure we don't have a driver loaded */
     ASSERT(pldev && pldev->pGdiDriverInfo == NULL);
@@ -107,19 +114,19 @@ LDEVOBJ_vFreeLDEV(PLDEVOBJ pldev)
 PDEVMODEINFO
 NTAPI
 LDEVOBJ_pdmiGetModes(
-    PLDEVOBJ pldev,
-    HANDLE hDriver)
+    _In_ PLDEVOBJ pldev,
+    _In_ HANDLE hDriver)
 {
     ULONG cbSize, cbFull;
     PDEVMODEINFO pdminfo;
 
-    DPRINT("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
+    TRACE("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
 
     /* Call the driver to get the required size */
     cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
     if (!cbSize)
     {
-        DPRINT1("DrvGetModes returned 0\n");
+        ERR("DrvGetModes returned 0\n");
         return NULL;
     }
 
@@ -130,7 +137,7 @@ LDEVOBJ_pdmiGetModes(
     pdminfo = ExAllocatePoolWithTag(PagedPool, cbFull, GDITAG_DEVMODE);
     if (!pdminfo)
     {
-        DPRINT1("Could not allocate devmodeinfo\n");
+        ERR("Could not allocate devmodeinfo\n");
         return NULL;
     }
 
@@ -142,7 +149,7 @@ LDEVOBJ_pdmiGetModes(
     if (!cbSize)
     {
         /* Could not get modes */
-        DPRINT1("returned size %lu(%lu)\n", cbSize, pdminfo->cbdevmode);
+        ERR("returned size %lu(%lu)\n", cbSize, pdminfo->cbdevmode);
         ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
         pdminfo = NULL;
     }
@@ -150,12 +157,11 @@ LDEVOBJ_pdmiGetModes(
     return pdminfo;
 }
 
-
+static
 BOOL
-NTAPI
 LDEVOBJ_bLoadImage(
-    IN PLDEVOBJ pldev,
-    PUNICODE_STRING pstrPathName)
+    _Inout_ PLDEVOBJ pldev,
+    _In_ PUNICODE_STRING pustrPathName)
 {
     PSYSTEM_GDI_DRIVER_INFORMATION pDriverInfo;
     NTSTATUS Status;
@@ -165,29 +171,28 @@ LDEVOBJ_bLoadImage(
     ASSERT(pldev && pldev->pGdiDriverInfo == NULL);
 
     /* Allocate a SYSTEM_GDI_DRIVER_INFORMATION structure */
-    cbSize = sizeof(SYSTEM_GDI_DRIVER_INFORMATION) + pstrPathName->Length;
+    cbSize = sizeof(SYSTEM_GDI_DRIVER_INFORMATION) + pustrPathName->Length;
     pDriverInfo = ExAllocatePoolWithTag(PagedPool, cbSize, GDITAG_LDEV);
     if (!pDriverInfo)
     {
-        DPRINT1("Failed to allocate SYSTEM_GDI_DRIVER_INFORMATION\n");
+        ERR("Failed to allocate SYSTEM_GDI_DRIVER_INFORMATION\n");
         return FALSE;
     }
 
     /* Initialize the UNICODE_STRING and copy the driver name */
     RtlInitEmptyUnicodeString(&pDriverInfo->DriverName,
                               (PWSTR)(pDriverInfo + 1),
-                              pstrPathName->Length);
-    RtlCopyUnicodeString(&pDriverInfo->DriverName, pstrPathName);
+                              pustrPathName->Length);
+    RtlCopyUnicodeString(&pDriverInfo->DriverName, pustrPathName);
 
     /* Try to load the driver */
     Status = ZwSetSystemInformation(SystemLoadGdiDriverInformation,
                                     pDriverInfo,
                                     sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
-
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to load a GDI driver: '%S', Status = 0x%lx\n",
-                pstrPathName->Buffer, Status);
+        ERR("Failed to load a GDI driver: '%wZ', Status = 0x%lx\n",
+            pustrPathName, Status);
 
         /* Free the allocated memory */
         ExFreePoolWithTag(pDriverInfo, GDITAG_LDEV);
@@ -201,10 +206,10 @@ LDEVOBJ_bLoadImage(
     return TRUE;
 }
 
+static
 VOID
-NTAPI
 LDEVOBJ_vUnloadImage(
-    IN PLDEVOBJ pldev)
+    _Inout_ PLDEVOBJ pldev)
 {
     NTSTATUS Status;
 
@@ -220,11 +225,11 @@ LDEVOBJ_vUnloadImage(
 
     /* Unload the driver */
     Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
-                                    &pldev->pGdiDriverInfo->ImageAddress,
+                                    &pldev->pGdiDriverInfo->SectionPointer,
                                     sizeof(HANDLE));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to unload the driver, this is bad.\n");
+        ERR("Failed to unload the driver, this is bad.\n");
     }
 
     /* Free the driver info structure */
@@ -232,10 +237,10 @@ LDEVOBJ_vUnloadImage(
     pldev->pGdiDriverInfo = NULL;
 }
 
+static
 BOOL
-NTAPI
-LDEVOBJ_bLoadDriver(
-    IN PLDEVOBJ pldev)
+LDEVOBJ_bEnableDriver(
+    _Inout_ PLDEVOBJ pldev)
 {
     PFN_DrvEnableDriver pfnEnableDriver;
     DRVENABLEDATA ded;
@@ -249,10 +254,7 @@ LDEVOBJ_bLoadDriver(
     pfnEnableDriver = pldev->pGdiDriverInfo->EntryPoint;
     if (!pfnEnableDriver(GDI_ENGINE_VERSION, sizeof(ded), &ded))
     {
-        DPRINT1("DrvEnableDriver failed\n");
-
-        /* Unload the image. */
-        LDEVOBJ_vUnloadImage(pldev);
+        ERR("DrvEnableDriver failed\n");
         return FALSE;
     }
 
@@ -269,12 +271,11 @@ LDEVOBJ_bLoadDriver(
     return TRUE;
 }
 
-
+static
 PVOID
-NTAPI
 LDEVOBJ_pvFindImageProcAddress(
-    IN PLDEVOBJ pldev,
-    IN LPSTR    pszProcName)
+    _In_ PLDEVOBJ pldev,
+    _In_z_ LPSTR pszProcName)
 {
     PVOID pvImageBase;
     PIMAGE_EXPORT_DIRECTORY pExportDir;
@@ -291,6 +292,7 @@ LDEVOBJ_pvFindImageProcAddress(
     pExportDir = pldev->pGdiDriverInfo->ExportSectionPointer;
     if (!pExportDir)
     {
+        ERR("LDEVOBJ_pvFindImageProcAddress: no export section found\n");
         return NULL;
     }
 
@@ -318,16 +320,17 @@ LDEVOBJ_pvFindImageProcAddress(
 PLDEVOBJ
 NTAPI
 EngLoadImageEx(
-    LPWSTR pwszDriverName,
-    ULONG ldevtype)
+    _In_z_ LPWSTR pwszDriverName,
+    _In_ ULONG ldevtype)
 {
     WCHAR acwBuffer[MAX_PATH];
+    PLIST_ENTRY pleLink;
     PLDEVOBJ pldev;
     UNICODE_STRING strDriverName;
     SIZE_T cwcLength;
     LPWSTR pwsz;
 
-    DPRINT("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
+    TRACE("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
     ASSERT(pwszDriverName);
 
     /* Initialize buffer for the the driver name */
@@ -343,7 +346,7 @@ EngLoadImageEx(
     pwsz = pwszDriverName + cwcLength;
     while (pwsz > pwszDriverName)
     {
-        if (_wcsnicmp(pwsz, L"\\system32\\", 10) == 0)
+        if ((*pwsz == L'\\') && (_wcsnicmp(pwsz, L"\\system32\\", 10) == 0))
         {
             /* Driver name starts after system32 */
             pwsz += 10;
@@ -356,12 +359,11 @@ EngLoadImageEx(
     RtlAppendUnicodeToString(&strDriverName, pwsz);
 
     /* MSDN says "The driver must include this suffix in the pwszDriver string."
-       But in fact it's optional.
-
-       ms win32k EngLoadImageEx loading .sys file without append .dll
-    */
-    if ( (_wcsnicmp(pwszDriverName + cwcLength - 4, L".dll", 4) != 0) &&
-         (_wcsnicmp(pwszDriverName + cwcLength - 4, L".sys", 4) != 0) )
+       But in fact it's optional. The function can also load .sys files without
+       appending the .dll extension. */
+    if ((cwcLength < 4) ||
+        ((_wcsnicmp(pwszDriverName + cwcLength - 4, L".dll", 4) != 0) &&
+         (_wcsnicmp(pwszDriverName + cwcLength - 4, L".sys", 4) != 0)) )
     {
         /* Append the .dll suffix */
         RtlAppendUnicodeToString(&strDriverName, L".dll");
@@ -371,13 +373,17 @@ EngLoadImageEx(
     EngAcquireSemaphore(ghsemLDEVList);
 
     /* Search the List of LDEVS for the driver name */
-    for (pldev = gpldevHead; pldev != NULL; pldev = pldev->pldevNext)
+    for (pleLink = gleLdevListHead.Flink;
+         pleLink != &gleLdevListHead;
+         pleLink = pleLink->Flink)
     {
+        pldev = CONTAINING_RECORD(pleLink, LDEVOBJ, leLink);
+
         /* Check if the ldev is associated with a file */
         if (pldev->pGdiDriverInfo)
         {
             /* Check for match (case insensative) */
-            if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, 1))
+            if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, TRUE))
             {
                 /* Image found in LDEV list */
                 break;
@@ -386,13 +392,13 @@ EngLoadImageEx(
     }
 
     /* Did we find one? */
-    if (!pldev)
+    if (pleLink == &gleLdevListHead)
     {
         /* No, allocate a new LDEVOBJ */
         pldev = LDEVOBJ_AllocLDEV(ldevtype);
         if (!pldev)
         {
-            DPRINT1("Could not allocate LDEV\n");
+            ERR("Could not allocate LDEV\n");
             goto leave;
         }
 
@@ -401,7 +407,7 @@ EngLoadImageEx(
         {
             LDEVOBJ_vFreeLDEV(pldev);
             pldev = NULL;
-            DPRINT1("LDEVOBJ_bLoadImage failed\n");
+            ERR("LDEVOBJ_bLoadImage failed\n");
             goto leave;
         }
 
@@ -409,9 +415,12 @@ EngLoadImageEx(
         if (ldevtype != LDEV_IMAGE)
         {
             /* Load the driver */
-            if (!LDEVOBJ_bLoadDriver(pldev))
+            if (!LDEVOBJ_bEnableDriver(pldev))
             {
-                DPRINT1("LDEVOBJ_bLoadDriver failed\n");
+                ERR("LDEVOBJ_bEnableDriver failed\n");
+
+                /* Unload the image. */
+                LDEVOBJ_vUnloadImage(pldev);
                 LDEVOBJ_vFreeLDEV(pldev);
                 pldev = NULL;
                 goto leave;
@@ -419,9 +428,7 @@ EngLoadImageEx(
         }
 
         /* Insert the LDEV into the global list */
-        pldev->pldevPrev = NULL;
-        pldev->pldevNext = gpldevHead;
-        gpldevHead = pldev;
+        InsertHeadList(&gleLdevListHead, &pldev->leLink);
     }
 
     /* Increase ref count */
@@ -431,8 +438,7 @@ leave:
     /* Unlock loader */
     EngReleaseSemaphore(ghsemLDEVList);
 
-    DPRINT("EngLoadImageEx returning %p\n", pldev);
-
+    TRACE("EngLoadImageEx returning %p\n", pldev);
     return pldev;
 }
 
@@ -456,7 +462,7 @@ EngUnloadImage(
     PLDEVOBJ pldev = (PLDEVOBJ)hModule;
 
     /* Make sure the LDEV is in the list */
-    ASSERT(pldev->pldevPrev || pldev->pldevNext);
+    ASSERT((pldev->leLink.Flink != NULL) &&  (pldev->leLink.Blink != NULL));
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemLDEVList);
@@ -468,10 +474,7 @@ EngUnloadImage(
     if (pldev->cRefs == 0)
     {
         /* Remove ldev from the list */
-        if (pldev->pldevPrev)
-            pldev->pldevPrev->pldevNext = pldev->pldevNext;
-        if (pldev->pldevNext)
-            pldev->pldevNext->pldevPrev = pldev->pldevPrev;
+        RemoveEntryList(&pldev->leLink);
 
         /* Unload the image and free the LDEV */
         LDEVOBJ_vUnloadImage(pldev);

@@ -23,24 +23,7 @@
  * B) Want to use a substandard API to tune its performance.
  */
 
-#define WIN32_NO_STATUS
-
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <windef.h>
-#include <winbase.h>
-//#include "winreg.h"
-#include <winternl.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+#include "precomp.h"
 
 /*************************************************************************
  *      @	[SHLWAPI.241]
@@ -192,16 +175,16 @@ void WINAPI StopWatch_MarkJavaStop(LPCWSTR lpszEvent, HWND hWnd, DWORD dwReserve
  */
 DWORD WINAPI GetPerfTime(void)
 {
-  static LONG64 iCounterFreq = 0;
+  static LARGE_INTEGER iCounterFreq = { {0} };
   LARGE_INTEGER iCounter;
 
   TRACE("()\n");
 
-  if (!iCounterFreq)
-   QueryPerformanceFrequency((LARGE_INTEGER*)&iCounterFreq);
+  if (!iCounterFreq.QuadPart)
+   QueryPerformanceFrequency(&iCounterFreq);
 
   QueryPerformanceCounter(&iCounter);
-  iCounter.QuadPart = iCounter.QuadPart * 1000 / iCounterFreq;
+  iCounter.QuadPart = iCounter.QuadPart * 1000 / iCounterFreq.QuadPart;
   return iCounter.u.LowPart;
 }
 

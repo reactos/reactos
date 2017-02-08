@@ -1,0 +1,14 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "開始"
+    IDS_SERVICE_STOP    "停止"
+    IDS_SERVICE_PAUSE   "暫停"
+    IDS_SERVICE_RESUME  "繼續"
+    IDS_SERVICE_RUNNING "運行中"
+    IDS_SERVICE_STOPPED "已停止"
+    IDS_SERVICE_PAUSED  "已暫停"
+END

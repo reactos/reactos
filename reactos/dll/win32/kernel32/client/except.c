@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/except.c
+ * FILE:            dll/win32/kernel32/client/except.c
  * PURPOSE:         Exception functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
@@ -62,8 +62,14 @@ _dump_context(PCONTEXT pc)
    DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
    DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
    DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
+#elif defined(_M_ARM)
+   DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc);
+   DbgPrint("R0:  %08lx   R1:  %08lx   R2:  %08lx   R3:  %08lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
+   DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
+   DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
+   DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->R1, pc->Fpscr, pc->R3);
 #else
-#warning Unknown architecture
+#error "Unknown architecture"
 #endif
 }
 
@@ -286,8 +292,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
          return ret;
    }
 
-   if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
-      PrintStackTrace(ExceptionInfo);
+   PrintStackTrace(ExceptionInfo);
 
    /* Save exception code and address */
    ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
@@ -370,7 +375,7 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
-        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);
+        DPRINT1("Exception text: %lx\n", ExceptionRecord.ExceptionInformation[2]);
     }
 
     /* Trace the wine special error and show the modulename and functionname */
@@ -396,7 +401,6 @@ WINAPI
 SetErrorMode(IN UINT uMode)
 {
     UINT PrevErrMode, NewMode;
-    NTSTATUS Status;
 
     /* Get the previous mode */
     PrevErrMode = GetErrorMode();
@@ -418,10 +422,10 @@ SetErrorMode(IN UINT uMode)
     NewMode |= (PrevErrMode & SEM_NOALIGNMENTFAULTEXCEPT);
 
     /* Set the new mode */
-    Status = NtSetInformationProcess(NtCurrentProcess(),
-                                     ProcessDefaultHardErrorMode,
-                                     (PVOID)&NewMode,
-                                     sizeof(NewMode));
+    NtSetInformationProcess(NtCurrentProcess(),
+                            ProcessDefaultHardErrorMode,
+                            (PVOID)&NewMode,
+                            sizeof(NewMode));
 
     /* Return the previous mode */
     return PrevErrMode;
@@ -432,12 +436,13 @@ SetErrorMode(IN UINT uMode)
  */
 LPTOP_LEVEL_EXCEPTION_FILTER
 WINAPI
+DECLSPEC_HOTPATCH
 SetUnhandledExceptionFilter(IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
     PVOID EncodedPointer, EncodedOldPointer;
 
     EncodedPointer = RtlEncodePointer(lpTopLevelExceptionFilter);
-    EncodedOldPointer = InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
+    EncodedOldPointer = InterlockedExchangePointer((PVOID*)&GlobalTopLevelExceptionFilter,
                                             EncodedPointer);
     return RtlDecodePointer(EncodedOldPointer);
 }
@@ -682,12 +687,16 @@ SetLastError(IN DWORD dwErrCode)
 /*
  * @implemented
  */
-VOID
+DWORD
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status)
 {
+    DWORD dwErrCode;
+
     /* Convert from NT to Win32, then set */
-    SetLastError(RtlNtStatusToDosError(Status));
+    dwErrCode = RtlNtStatusToDosError(Status);
+    SetLastError(dwErrCode);
+    return dwErrCode;
 }
 
 /*

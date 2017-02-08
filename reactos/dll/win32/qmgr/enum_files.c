@@ -19,71 +19,77 @@
  */
 
 #include "qmgr.h"
-#include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
-
-static void EnumBackgroundCopyFilesDestructor(EnumBackgroundCopyFilesImpl *This)
+typedef struct
 {
-    ULONG i;
+    IEnumBackgroundCopyFiles IEnumBackgroundCopyFiles_iface;
+    LONG ref;
+    IBackgroundCopyFile2 **files;
+    ULONG numFiles;
+    ULONG indexFiles;
+} EnumBackgroundCopyFilesImpl;
 
-    for(i = 0; i < This->numFiles; i++)
-        IBackgroundCopyFile_Release(This->files[i]);
-
-    HeapFree(GetProcessHeap(), 0, This->files);
-    HeapFree(GetProcessHeap(), 0, This);
+static inline EnumBackgroundCopyFilesImpl *impl_from_IEnumBackgroundCopyFiles(IEnumBackgroundCopyFiles *iface)
+{
+    return CONTAINING_RECORD(iface, EnumBackgroundCopyFilesImpl, IEnumBackgroundCopyFiles_iface);
 }
 
-static ULONG WINAPI BITS_IEnumBackgroundCopyFiles_AddRef(
-    IEnumBackgroundCopyFiles* iface)
+static HRESULT WINAPI EnumBackgroundCopyFiles_QueryInterface(IEnumBackgroundCopyFiles *iface,
+        REFIID riid, void **ppv)
 {
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
-    return InterlockedIncrement(&This->ref);
-}
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
 
-static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_QueryInterface(
-    IEnumBackgroundCopyFiles* iface,
-    REFIID riid,
-    void **ppvObject)
-{
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
-    TRACE("IID: %s\n", debugstr_guid(riid));
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppv);
 
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IEnumBackgroundCopyFiles))
+    if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IEnumBackgroundCopyFiles))
     {
-        *ppvObject = &This->lpVtbl;
-        BITS_IEnumBackgroundCopyFiles_AddRef(iface);
+        *ppv = iface;
+        IEnumBackgroundCopyFiles_AddRef(iface);
         return S_OK;
     }
 
-    *ppvObject = NULL;
+    *ppv = NULL;
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI BITS_IEnumBackgroundCopyFiles_Release(
-    IEnumBackgroundCopyFiles* iface)
+static ULONG WINAPI EnumBackgroundCopyFiles_AddRef(IEnumBackgroundCopyFiles *iface)
 {
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p)->(%d)\n", This, ref);
+    return ref;
+}
+
+static ULONG WINAPI EnumBackgroundCopyFiles_Release(IEnumBackgroundCopyFiles *iface)
+{
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG i;
+
+    TRACE("(%p)->(%d)\n", This, ref);
 
     if (ref == 0)
-        EnumBackgroundCopyFilesDestructor(This);
+    {
+        for(i = 0; i < This->numFiles; i++)
+            IBackgroundCopyFile2_Release(This->files[i]);
+        HeapFree(GetProcessHeap(), 0, This->files);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
 
     return ref;
 }
 
 /* Return reference to one or more files in the file enumerator */
-static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_Next(
-    IEnumBackgroundCopyFiles* iface,
-    ULONG celt,
-    IBackgroundCopyFile **rgelt,
-    ULONG *pceltFetched)
+static HRESULT WINAPI EnumBackgroundCopyFiles_Next(IEnumBackgroundCopyFiles *iface,
+        ULONG celt, IBackgroundCopyFile **rgelt, ULONG *pceltFetched)
 {
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
     ULONG fetched;
     ULONG i;
-    IBackgroundCopyFile *file;
+    IBackgroundCopyFile2 *file;
+
+    TRACE("(%p)->(%d %p %p)\n", This, celt, rgelt, pceltFetched);
 
     /* Despite documented behavior, Windows (tested on XP) is not verifying
        that the caller set pceltFetched to zero.  No check here. */
@@ -107,19 +113,20 @@ static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_Next(
     for (i = 0; i < fetched; i++)
     {
         file = This->files[This->indexFiles++];
-        IBackgroundCopyFile_AddRef(file);
-        rgelt[i] = file;
+        IBackgroundCopyFile2_AddRef(file);
+        rgelt[i] = (IBackgroundCopyFile *)file;
     }
 
     return fetched == celt ? S_OK : S_FALSE;
 }
 
 /* Skip over one or more files in the file enumerator */
-static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_Skip(
-    IEnumBackgroundCopyFiles* iface,
-    ULONG celt)
+static HRESULT WINAPI EnumBackgroundCopyFiles_Skip(IEnumBackgroundCopyFiles *iface,
+        ULONG celt)
 {
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
+
+    TRACE("(%p)->(%d)\n", This, celt);
 
     if (celt > This->numFiles - This->indexFiles)
     {
@@ -131,57 +138,58 @@ static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_Skip(
     return S_OK;
 }
 
-static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_Reset(
-    IEnumBackgroundCopyFiles* iface)
+static HRESULT WINAPI EnumBackgroundCopyFiles_Reset(IEnumBackgroundCopyFiles *iface)
 {
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
+
+    TRACE("(%p)\n", This);
+
     This->indexFiles = 0;
     return S_OK;
 }
 
-static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_Clone(
-    IEnumBackgroundCopyFiles* iface,
-    IEnumBackgroundCopyFiles **ppenum)
+static HRESULT WINAPI EnumBackgroundCopyFiles_Clone(IEnumBackgroundCopyFiles *iface,
+        IEnumBackgroundCopyFiles **ppenum)
 {
-    FIXME("Not implemented\n");
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
+    FIXME("(%p)->(%p): stub\n", This, ppenum);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BITS_IEnumBackgroundCopyFiles_GetCount(
-    IEnumBackgroundCopyFiles* iface,
-    ULONG *puCount)
+static HRESULT WINAPI EnumBackgroundCopyFiles_GetCount(IEnumBackgroundCopyFiles *iface,
+        ULONG *puCount)
 {
-    EnumBackgroundCopyFilesImpl *This = (EnumBackgroundCopyFilesImpl *) iface;
+    EnumBackgroundCopyFilesImpl *This = impl_from_IEnumBackgroundCopyFiles(iface);
+    TRACE("(%p)->(%p)\n", This, puCount);
     *puCount = This->numFiles;
     return S_OK;
 }
 
-static const IEnumBackgroundCopyFilesVtbl BITS_IEnumBackgroundCopyFiles_Vtbl =
+static const IEnumBackgroundCopyFilesVtbl EnumBackgroundCopyFilesVtbl =
 {
-    BITS_IEnumBackgroundCopyFiles_QueryInterface,
-    BITS_IEnumBackgroundCopyFiles_AddRef,
-    BITS_IEnumBackgroundCopyFiles_Release,
-    BITS_IEnumBackgroundCopyFiles_Next,
-    BITS_IEnumBackgroundCopyFiles_Skip,
-    BITS_IEnumBackgroundCopyFiles_Reset,
-    BITS_IEnumBackgroundCopyFiles_Clone,
-    BITS_IEnumBackgroundCopyFiles_GetCount
+    EnumBackgroundCopyFiles_QueryInterface,
+    EnumBackgroundCopyFiles_AddRef,
+    EnumBackgroundCopyFiles_Release,
+    EnumBackgroundCopyFiles_Next,
+    EnumBackgroundCopyFiles_Skip,
+    EnumBackgroundCopyFiles_Reset,
+    EnumBackgroundCopyFiles_Clone,
+    EnumBackgroundCopyFiles_GetCount
 };
 
-HRESULT EnumBackgroundCopyFilesConstructor(LPVOID *ppObj, IBackgroundCopyJob2 *iCopyJob)
+HRESULT EnumBackgroundCopyFilesConstructor(BackgroundCopyJobImpl *job, IEnumBackgroundCopyFiles **enum_files)
 {
     EnumBackgroundCopyFilesImpl *This;
     BackgroundCopyFileImpl *file;
-    BackgroundCopyJobImpl *job = (BackgroundCopyJobImpl *) iCopyJob;
     ULONG i;
 
-    TRACE("%p, %p)\n", ppObj, job);
+    TRACE("%p, %p)\n", job, enum_files);
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof *This);
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->lpVtbl = &BITS_IEnumBackgroundCopyFiles_Vtbl;
+    This->IEnumBackgroundCopyFiles_iface.lpVtbl = &EnumBackgroundCopyFilesVtbl;
     This->ref = 1;
 
     /* Create array of files */
@@ -204,12 +212,12 @@ HRESULT EnumBackgroundCopyFilesConstructor(LPVOID *ppObj, IBackgroundCopyJob2 *i
     i = 0;
     LIST_FOR_EACH_ENTRY(file, &job->files, BackgroundCopyFileImpl, entryFromJob)
     {
-        file->lpVtbl->AddRef((IBackgroundCopyFile *) file);
-        This->files[i] = (IBackgroundCopyFile *) file;
+        IBackgroundCopyFile2_AddRef(&file->IBackgroundCopyFile2_iface);
+        This->files[i] = &file->IBackgroundCopyFile2_iface;
         ++i;
     }
     LeaveCriticalSection(&job->cs);
 
-    *ppObj = &This->lpVtbl;
+    *enum_files = &This->IEnumBackgroundCopyFiles_iface;
     return S_OK;
 }

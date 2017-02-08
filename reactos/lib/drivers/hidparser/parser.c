@@ -8,8 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-
 #include "parser.h"
+
+#define NDEBUG
+#include <debug.h>
 
 static UCHAR ItemSize[4] = { 0, 1, 2, 4 };
 
@@ -568,7 +570,7 @@ HidParser_InitReportItem(
     ReportItem->BitCount = GlobalItemState->ReportSize;
     ReportItem->HasData = (ItemData->DataConstant == FALSE);
     ReportItem->Array = (ItemData->ArrayVariable == 0);
-    ReportItem->Relative = (ItemData->Relative == TRUE);
+    ReportItem->Relative = (ItemData->Relative != FALSE);
     ReportItem->Minimum = LogicalMinimum;
     ReportItem->Maximum = LogicalMaximum;
     ReportItem->UsageMinimum = UsageMinimum;

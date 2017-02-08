@@ -23,28 +23,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <assert.h>
-#include <stdarg.h>
-//#include <limits.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <objbase.h>
-//#include "rpc.h"
-
-#include <wine/debug.h>
-#include "compobj_private.h"
+#include <wine/exception.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
 
 /* generates an ipid in the following format (similar to native version):
  * Data1 = apartment-local ipid counter
@@ -70,21 +53,28 @@ static inline HRESULT generate_ipid(struct stub_manager *m, IPID *ipid)
 }
 
 /* registers a new interface stub COM object with the stub manager and returns registration record */
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, DWORD dest_context,
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, REFIID iid, DWORD dest_context,
     void *dest_context_data, MSHLFLAGS flags)
 {
     struct ifstub *stub;
     HRESULT hr;
 
-    TRACE("oid=%s, stubbuffer=%p, iptr=%p, iid=%s\n",
-          wine_dbgstr_longlong(m->oid), sb, iptr, debugstr_guid(iid));
+    TRACE("oid=%s, stubbuffer=%p, iid=%s\n", wine_dbgstr_longlong(m->oid), sb, debugstr_guid(iid));
 
     stub = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ifstub));
     if (!stub) return NULL;
 
+    hr = IUnknown_QueryInterface(m->object, iid, (void **)&stub->iface);
+    if (hr != S_OK)
+    {
+        HeapFree(GetProcessHeap(), 0, stub);
+        return NULL;
+    }
+
     hr = RPC_CreateServerChannel(dest_context, dest_context_data, &stub->chan);
     if (hr != S_OK)
     {
+        IUnknown_Release(stub->iface);
         HeapFree(GetProcessHeap(), 0, stub);
         return NULL;
     }
@@ -92,8 +82,6 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
     stub->stubbuffer = sb;
     if (sb) IRpcStubBuffer_AddRef(sb);
 
-    IUnknown_AddRef(iptr);
-    stub->iface = iptr;
     stub->flags = flags;
     stub->iid = *iid;
 
@@ -121,7 +109,8 @@ static void stub_manager_delete_ifstub(struct stub_manager *m, struct ifstub *if
 
     list_remove(&ifstub->entry);
 
-    RPC_UnregisterInterface(&ifstub->iid);
+    if (!m->disconnected)
+        RPC_UnregisterInterface(&ifstub->iid, TRUE);
 
     if (ifstub->stubbuffer) IRpcStubBuffer_Release(ifstub->stubbuffer);
     IUnknown_Release(ifstub->iface);
@@ -173,9 +162,10 @@ struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHL
 /* creates a new stub manager and adds it into the apartment. caller must
  * release stub manager when it is no longer required. the apartment and
  * external refs together take one implicit ref */
-struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
+static struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
 {
     struct stub_manager *sm;
+    HRESULT hres;
 
     assert( apt );
     
@@ -220,6 +210,11 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
      * the marshalled ifptr.
      */
     sm->extrefs = 0;
+    sm->disconnected = FALSE;
+
+    hres = IUnknown_QueryInterface(object, &IID_IExternalConnection, (void**)&sm->extern_conn);
+    if(FAILED(hres))
+        sm->extern_conn = NULL;
 
     EnterCriticalSection(&apt->cs);
     sm->oid = apt->oidc++;
@@ -229,6 +224,21 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
     TRACE("Created new stub manager (oid=%s) at %p for object with IUnknown %p\n", wine_dbgstr_longlong(sm->oid), sm, object);
     
     return sm;
+}
+
+void stub_manager_disconnect(struct stub_manager *m)
+{
+    struct ifstub *ifstub;
+
+    EnterCriticalSection(&m->lock);
+    if (!m->disconnected)
+    {
+        LIST_FOR_EACH_ENTRY(ifstub, &m->ifstubs, struct ifstub, entry)
+            RPC_UnregisterInterface(&ifstub->iid, FALSE);
+
+        m->disconnected = TRUE;
+    }
+    LeaveCriticalSection(&m->lock);
 }
 
 /* caller must remove stub manager from apartment prior to calling this function */
@@ -245,8 +255,22 @@ static void stub_manager_delete(struct stub_manager *m)
         stub_manager_delete_ifstub(m, ifstub);
     }
 
+    if(m->extern_conn)
+        IExternalConnection_Release(m->extern_conn);
+
     CoTaskMemFree(m->oxid_info.psa);
-    IUnknown_Release(m->object);
+
+    /* Some broken apps crash in object destructors. We have a test showing
+     * that on winxp+ those crashes are caught and ignored. */
+    __TRY
+    {
+        IUnknown_Release(m->object);
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        ERR("Got page fault when releasing stub!\n");
+    }
+    __ENDTRY
 
     DEBUG_CLEAR_CRITSEC_NAME(&m->lock);
     DeleteCriticalSection(&m->lock);
@@ -295,10 +319,18 @@ ULONG stub_manager_int_release(struct stub_manager *This)
 /* gets the stub manager associated with an object - caller must have
  * a reference to the apartment while a reference to the stub manager is held.
  * it must also call release on the stub manager when it is no longer needed */
-struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object)
+struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, IUnknown *obj, BOOL alloc)
 {
     struct stub_manager *result = NULL;
     struct list         *cursor;
+    IUnknown *object;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(obj, &IID_IUnknown, (void**)&object);
+    if (FAILED(hres)) {
+        ERR("QueryInterface(IID_IUnknown failed): %08x\n", hres);
+        return NULL;
+    }
 
     EnterCriticalSection(&apt->cs);
     LIST_FOR_EACH( cursor, &apt->stubmgrs )
@@ -314,37 +346,17 @@ struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object)
     }
     LeaveCriticalSection(&apt->cs);
 
-    if (result)
+    if (result) {
         TRACE("found %p for object %p\n", result, object);
-    else
+    }else if (alloc) {
+        TRACE("not found, creating new stub manager...\n");
+        result = new_stub_manager(apt, object);
+    }else {
         TRACE("not found for object %p\n", object);
-
-    return result;    
-}
-
-/* removes the apartment reference to an object, destroying it when no other
- * threads have a reference to it */
-void apartment_disconnectobject(struct apartment *apt, void *object)
-{
-    int found = FALSE;
-    struct stub_manager *stubmgr;
-
-    EnterCriticalSection(&apt->cs);
-    LIST_FOR_EACH_ENTRY( stubmgr, &apt->stubmgrs, struct stub_manager, entry )
-    {
-        if (stubmgr->object == object)
-        {
-            found = TRUE;
-            stub_manager_int_release(stubmgr);
-            break;
-        }
     }
-    LeaveCriticalSection(&apt->cs);
 
-    if (found)
-        TRACE("disconnect object %p\n", object);
-    else
-        WARN("couldn't find object %p\n", object);
+    IUnknown_Release(object);
+    return result;    
 }
 
 /* gets the stub manager associated with an object id - caller must have
@@ -380,9 +392,12 @@ struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid)
 /* add some external references (ie from a client that unmarshaled an ifptr) */
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak)
 {
+    BOOL first_extern_ref;
     ULONG rc;
 
     EnterCriticalSection(&m->lock);
+
+    first_extern_ref = refs && !m->extrefs;
 
     /* make sure we don't overflow extrefs */
     refs = min(refs, (ULONG_MAX-1 - m->extrefs));
@@ -395,12 +410,20 @@ ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak
     
     TRACE("added %u refs to %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
+    /*
+     * NOTE: According to tests, creating a stub causes two AddConnection calls followed by
+     * one ReleaseConnection call (with fLastReleaseCloses=FALSE).
+     */
+    if(first_extern_ref && m->extern_conn)
+        IExternalConnection_AddConnection(m->extern_conn, EXTCONN_STRONG, 0);
+
     return rc;
 }
 
 /* remove some external references */
 ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tableweak, BOOL last_unlock_releases)
 {
+    BOOL last_extern_ref;
     ULONG rc;
 
     EnterCriticalSection(&m->lock);
@@ -414,12 +437,18 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tablewea
     if (!last_unlock_releases)
         rc += m->weakrefs;
 
+    last_extern_ref = refs && !m->extrefs;
+
     LeaveCriticalSection(&m->lock);
     
     TRACE("removed %u refs from %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
+    if (last_extern_ref && m->extern_conn)
+        IExternalConnection_ReleaseConnection(m->extern_conn, EXTCONN_STRONG, 0, last_unlock_releases);
+
     if (rc == 0)
-        stub_manager_int_release(m);
+        if (!(m->extern_conn && last_unlock_releases && m->weakrefs))
+            stub_manager_int_release(m);
 
     return rc;
 }
@@ -480,6 +509,7 @@ static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, stru
  * release the references to all objects (except iface) if the function
  * returned success, otherwise no references are returned. */
 HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt,
+                                 struct stub_manager **manager,
                                  IRpcStubBuffer **stub, IRpcChannelBuffer **chan,
                                  IID *iid, IUnknown **iface)
 {
@@ -502,7 +532,10 @@ HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt,
         *iid = ifstub->iid;
         *iface = ifstub->iface;
 
-        stub_manager_int_release(stubmgr);
+        if (manager)
+            *manager = stubmgr;
+        else
+            stub_manager_int_release(stubmgr);
         return S_OK;
     }
     else
@@ -557,7 +590,7 @@ void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const
     else if (ifstub->flags & MSHLFLAGS_TABLESTRONG)
         refs = 1;
 
-    stub_manager_ext_release(m, refs, tableweak, FALSE);
+    stub_manager_ext_release(m, refs, tableweak, !tableweak);
 }
 
 /* is an ifstub table marshaled? */
@@ -620,7 +653,8 @@ static HRESULT WINAPI RemUnknown_QueryInterface(IRemUnknown *iface, REFIID riid,
         return S_OK;
     }
 
-    FIXME("No interface for iid %s\n", debugstr_guid(riid));
+    if (!IsEqualIID(riid, &IID_IExternalConnection))
+        FIXME("No interface for iid %s\n", debugstr_guid(riid));
 
     *ppv = NULL;
     return E_NOINTERFACE;

@@ -926,7 +926,8 @@ VOID NTAPI CancelWaitWake(IN PDEVICE_EXTENSION DeviceExtension)
 
     FreeBT_DbgPrint(3, ("FBTUSB: CancelWaitWake: Entered\n"));
 
-    Irp = (PIRP) InterlockedExchangePointer(&DeviceExtension->WaitWakeIrp, NULL);
+    Irp = (PIRP) InterlockedExchangePointer((PVOID*)&DeviceExtension->WaitWakeIrp,
+                                            NULL);
     if(Irp)
     {
         IoCancelIrp(Irp);
@@ -957,7 +958,7 @@ NTSTATUS NTAPI WaitWakeCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP
     // Nullify the WaitWakeIrp pointer-the Irp is released
     // as part of the completion process. If it's already NULL,
     // avoid race with the CancelWaitWake routine.
-    if(InterlockedExchangePointer(&DeviceExtension->WaitWakeIrp, NULL))
+    if(InterlockedExchangePointer((PVOID*)&DeviceExtension->WaitWakeIrp, NULL))
     {
         PoStartNextPowerIrp(Irp);
 

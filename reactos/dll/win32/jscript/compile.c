@@ -16,15 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <math.h>
-#include <assert.h>
-
 #include "jscript.h"
-#include "engine.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 WINE_DECLARE_DEBUG_CHANNEL(jscript_disas);
 
 typedef struct _statement_ctx_t {
@@ -771,6 +764,7 @@ static HRESULT compile_literal(compiler_ctx_t *ctx, literal_t *literal)
     }
     DEFAULT_UNREACHABLE;
     }
+    return E_FAIL;
 }
 
 static HRESULT literal_as_bstr(compiler_ctx_t *ctx, literal_t *literal, BSTR *str)
@@ -860,7 +854,7 @@ static HRESULT compile_function_expression(compiler_ctx_t *ctx, function_express
     ctx->func_tail = ctx->func_tail ? (ctx->func_tail->next = expr) : (ctx->func_head = expr);
 
     /* FIXME: not exactly right */
-    if(expr->identifier) {
+    if(expr->identifier && !expr->event_target) {
         ctx->func->func_cnt++;
         return push_instr_bstr(ctx, OP_ident, expr->identifier);
     }
@@ -1863,10 +1857,18 @@ static HRESULT compile_function(compiler_ctx_t *ctx, source_elements_t *source, 
 
     func->instr_off = off;
 
-    if(func_expr && func_expr->identifier) {
-        func->name = compiler_alloc_bstr(ctx, func_expr->identifier);
-        if(!func->name)
-            return E_OUTOFMEMORY;
+    if(func_expr) {
+        if(func_expr->identifier) {
+            func->name = compiler_alloc_bstr(ctx, func_expr->identifier);
+            if(!func->name)
+                return E_OUTOFMEMORY;
+        }
+
+        if(func_expr->event_target) {
+            func->event_target = compiler_alloc_bstr(ctx, func_expr->event_target);
+            if(!func->event_target)
+                return E_OUTOFMEMORY;
+        }
     }
 
     if(func_expr) {

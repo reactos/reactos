@@ -1,0 +1,26 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Finalizar Programa - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Finalizando Programa... Por favor aguarde", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Se você finalizar o programa imediatamente, você irá perder qualquer alteração não salva. Para finalizar o programa agora, pressione Finalizar Agora.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Finalizar Agora", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Finalizar Programa - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Cancelar", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&Finalizar Agora", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "O programa não está respondendo.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Parar retornar ao ReactOS e verificar o estado do programa, pressione Cancelar.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Se você finalizar o programa imediatamente, você irá perder qualquer alteração não salva. Para finalizar o programa agora, pressione Finalizar Agora.", IDC_STATIC, 7, 53, 178, 26
+END

@@ -1,0 +1,51 @@
+/*
+ * Copyright 2007 Daniel Nylander
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_FULLFRAMES "Hela bildrutor (okomprimerat)"
+}
+
+ICM_CHOOSE_COMPRESSOR DIALOGEX  36, 24, 210, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Videokomprimering"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON "OK",IDOK,154,2,52,14
+    PUSHBUTTON "Avbryt",IDCANCEL,154,18,52,14
+
+    LTEXT "&Komprimering:",-1,9,6,135,8
+    COMBOBOX IDC_COMP_LIST,9,16,135,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
+
+    PUSHBUTTON "Kon&figurera...",IDC_CONFIGURE,154,36,52,14
+    PUSHBUTTON "&Om...",IDC_ABOUT,154,52,52,14
+
+    SCROLLBAR IDC_QUALITY_SCROLL,9,44,135,10,WS_TABSTOP
+
+    LTEXT "Komprimeringsk&valitet:",IDC_QUALITY_TXT,9,34,135,8
+
+    CONTROL "&Nyckelbildrutor varje",IDC_KEYFRAME_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,86,12
+    EDITTEXT IDC_KEYFRAME,98,60,22,12
+    LTEXT "frames",IDC_KEYFRAME_FRAMES,123,62,26,10
+
+    CONTROL "&Datafrekvens",IDC_DATARATE_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,86,12
+    EDITTEXT IDC_DATARATE,98,76,22,12
+    LTEXT "KB/s",IDC_DATARATE_KB,123,78,26,10
+}

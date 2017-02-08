@@ -1,7 +1,3 @@
-@ stdcall -arch=i386 FLOATOBJ_AddFloatObj(ptr ptr) FLOATOBJ_Add
-@ stdcall -arch=i386 FLOATOBJ_DivFloatObj(ptr ptr) FLOATOBJ_Div
-@ stdcall -arch=i386 FLOATOBJ_MulFloatObj(ptr ptr) FLOATOBJ_Mul
-@ stdcall -arch=i386 FLOATOBJ_SubFloatObj(ptr ptr) FLOATOBJ_Sub
 @ stdcall BRUSHOBJ_hGetColorTransform(ptr)
 @ stdcall BRUSHOBJ_pvAllocRbrush(ptr long)
 @ stdcall BRUSHOBJ_pvGetRbrush(ptr)
@@ -147,9 +143,11 @@
 @ stdcall EngWritePrinter(ptr ptr long ptr)
 @ stdcall -arch=i386 FLOATOBJ_Add(ptr ptr)
 @ stdcall -arch=i386 FLOATOBJ_AddFloat(ptr long)
+@ stdcall -arch=i386 FLOATOBJ_AddFloatObj(ptr ptr) FLOATOBJ_Add
 @ stdcall -arch=i386 FLOATOBJ_AddLong(ptr long)
 @ stdcall -arch=i386 FLOATOBJ_Div(ptr ptr)
 @ stdcall -arch=i386 FLOATOBJ_DivFloat(ptr long)
+@ stdcall -arch=i386 FLOATOBJ_DivFloatObj(ptr ptr) FLOATOBJ_Div
 @ stdcall -arch=i386 FLOATOBJ_DivLong(ptr long)
 @ stdcall -arch=i386 FLOATOBJ_Equal(ptr ptr)
 @ stdcall -arch=i386 FLOATOBJ_EqualLong(ptr long)
@@ -161,12 +159,14 @@
 @ stdcall -arch=i386 FLOATOBJ_LessThanLong(ptr long)
 @ stdcall -arch=i386 FLOATOBJ_Mul(ptr ptr)
 @ stdcall -arch=i386 FLOATOBJ_MulFloat(ptr long)
+@ stdcall -arch=i386 FLOATOBJ_MulFloatObj(ptr ptr) FLOATOBJ_Mul
 @ stdcall -arch=i386 FLOATOBJ_MulLong(ptr long)
 @ stdcall -arch=i386 FLOATOBJ_Neg(ptr)
 @ stdcall -arch=i386 FLOATOBJ_SetFloat(ptr long)
 @ stdcall -arch=i386 FLOATOBJ_SetLong(ptr long)
 @ stdcall -arch=i386 FLOATOBJ_Sub(ptr ptr)
 @ stdcall -arch=i386 FLOATOBJ_SubFloat(ptr long)
+@ stdcall -arch=i386 FLOATOBJ_SubFloatObj(ptr ptr) FLOATOBJ_Sub
 @ stdcall -arch=i386 FLOATOBJ_SubLong(ptr long)
 @ stdcall FONTOBJ_cGetAllGlyphHandles(ptr ptr)
 @ stdcall FONTOBJ_cGetGlyphs(ptr long long ptr ptr)

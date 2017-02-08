@@ -1,0 +1,30 @@
+[Section]
+Name = Ghostscript
+Version = 9.18
+License = AGPL
+Description = An open interpreter for the PostScript language and for PDF.
+Size = 13.8 MiB
+Category = 6
+URLSite = http://www.ghostscript.com/
+URLDownload = http://downloads.ghostscript.com/public/gs918w32.exe
+SHA1 = dc5d07f3abb5d0de57226a902a492ed86f912018
+CDPath = none
+
+[Section.0407]
+Description = Offener Interpreter für die PostScript Sprache und PDF.
+Size = 13,8 MiB
+
+[Section.0a]
+Description = Un intérprete libre para el lenguaje PostScript y PDF.
+
+[Section.0418]
+Description = Interpretor pentru limbajul PostScript și pentru PDF.
+Size = 13,8 Mio
+
+[Section.041f]
+Description = PostScript dili ve PDF için bir açık kaynak yorumlayıcı.
+Size = 13,8 MiB
+
+[Section.0804]
+Description = 开放的翻译为 PostScript 语言和 PDF。
+

@@ -144,7 +144,7 @@ OpenSubkey(
 
     if ( ! NT_SUCCESS(status) )
     {
-        DPRINT("Couldn't open subkey %wZ\n", Subkey);
+        DPRINT("Couldn't open key %wZ\n", RegistryPath);
         return status;
     }
 
@@ -396,8 +396,8 @@ InitializeSoundBlaster(
         return status;
     }
 
-    DPRINT("Device: %wZ\n", device_name);
-    DPRINT("Symlink: %wZ\n", dos_device_name);
+    DPRINT("Device: %wZ\n", &device_name);
+    DPRINT("Symlink: %wZ\n", &dos_device_name);
 
     /*
         Create the device and DOS symlink

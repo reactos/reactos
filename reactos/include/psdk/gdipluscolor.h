@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2808 Google (Lei Zhang)
+ * Copyright (C) 2008 Google (Lei Zhang)
+ *               2015 Benedikt Freisen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,9 +31,94 @@ enum ColorChannelFlags
 
 #ifdef __cplusplus
 
-/* FIXME: missing the methods. */
 class Color
 {
+public:
+    Color(VOID)
+    {
+        Argb = 0xff000000;
+    }
+
+    Color(ARGB argb)
+    {
+        Argb = argb;
+    }
+
+    Color(BYTE r, BYTE g, BYTE b)
+    {
+        Argb = 0xff << 24 | r << 16 | g << 8 | b;
+    }
+
+    Color(BYTE a, BYTE r, BYTE g, BYTE b)
+    {
+        Argb = a << 24 | r << 16 | g << 8 | b;
+    }
+
+    BYTE GetA(VOID)
+    {
+        return (Argb >> 24) & 0xff;
+    }
+
+    BYTE GetAlpha(VOID)
+    {
+        return (Argb >> 24) & 0xff;
+    }
+
+    BYTE GetB(VOID)
+    {
+        return Argb & 0xff;
+    }
+
+    BYTE GetBlue(VOID)
+    {
+        return Argb & 0xff;
+    }
+
+    BYTE GetG(VOID)
+    {
+        return (Argb >> 8) & 0xff;
+    }
+
+    BYTE GetGreen(VOID)
+    {
+        return (Argb >> 8) & 0xff;
+    }
+
+    BYTE GetR(VOID)
+    {
+        return (Argb >> 16) & 0xff;
+    }
+
+    BYTE GetRed(VOID)
+    {
+        return (Argb >> 16) & 0xff;
+    }
+
+    ARGB GetValue(VOID)
+    {
+        return Argb;
+    }
+
+    static ARGB MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
+    {
+        return a << 24 | r << 16 | g << 8 | b;
+    }
+
+    VOID SetFromCOLORREF(COLORREF rgb)
+    {
+        Argb = 0xff000000 | rgb & 0x000000ff << 16 | rgb & 0x0000ff00 | rgb & 0x00ff0000 >> 16;
+    }
+
+    VOID SetValue(ARGB argb)
+    {
+        Argb = argb;
+    }
+
+    COLORREF ToCOLORREF(VOID)
+    {
+        return Argb & 0x000000ff << 16 | Argb & 0x0000ff00 | Argb & 0x00ff0000 >> 16;
+    }
+
 protected:
     ARGB Argb;
 };

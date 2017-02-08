@@ -1,4 +1,5 @@
-// Translated by Baruch Rutman
+/* Translated by Baruch Rutman */
+
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
@@ -6,21 +7,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "עוצמה"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",IDC_DEVICE_NAME,40,10,194,20
-    GROUPBOX "עוצמת התקן", -1, 7,30,230,100
-    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE,17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "נמוך",-1,62,66,30,9
-    LTEXT "גבוה",-1,195,66,30,9
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
+    LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 20
+    GROUPBOX "עוצמת התקן", -1, 7, 30, 230, 100
+    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
+    CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
+    LTEXT "נמוך", -1, 62, 66, 30, 9
+    LTEXT "גבוה", -1, 195, 66, 30, 9
     CHECKBOX "השתק", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     CHECKBOX "שים סמל עוצמה בשורת המשימות", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "מתקדם...", IDC_ADVANCED_BTN, 150,105,75,15
-    GROUPBOX "הגדרות רמקולים", IDC_SPEAKER_SET_BTN, 7,140,230,80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Use the settings below to change individual speaker volume and other settings.",-1,70,155,150,36
-    PUSHBUTTON "עוצמת רמקולים...", IDC_SPEAKER_VOL_BTN, 70,195,75,15
-    PUSHBUTTON "מתקדם...", IDC_ADVANCED2_BTN, 150,195,75,15
+    PUSHBUTTON "מתקדם...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    GROUPBOX "הגדרות רמקולים", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    LTEXT "Use the settings below to change individual speaker volume and other settings.", -1, 70, 155, 150, 36
+    PUSHBUTTON "עוצמת רמקולים...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
+    PUSHBUTTON "מתקדם...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
@@ -28,18 +29,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "צלילים"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A sound scheme is a set of sounds applied to events to in ReactOS and programs. You can select an existing scheme or save one you have modified.",-1,8,7,230,30
-    LTEXT "ערכת צלילים:",-1,8,42,150,9
+    LTEXT "A sound scheme is a set of sounds applied to events to in ReactOS and programs. You can select an existing scheme or save one you have modified.", -1, 8, 7, 230, 30
+    LTEXT "ערכת צלילים:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "שמור בשם...", IDC_SAVEAS_BTN, 134,70,50,15
-    PUSHBUTTON "מחק", IDC_DELETE_BTN, 188,70,50,15
-    LTEXT "To change sounds, click a program event in the following list and then select a sound to apply. You can save the changes as a new sound scheme.",-1,8,90,230,27
-    LTEXT "אירועי תכניות:",-1,8,118,150,9
+    PUSHBUTTON "שמור בשם...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "מחק", IDC_DELETE_BTN, 188, 70, 50, 15
+    LTEXT "To change sounds, click a program event in the following list and then select a sound to apply. You can save the changes as a new sound scheme.", -1, 8, 90, 230, 27
+    LTEXT "אירועי תכניות:", -1, 8, 118, 150, 9
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "צלילים:",IDC_TEXT_SOUND,8,194,80,9, WS_DISABLED
+    LTEXT "צלילים:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED | BS_ICON
-    PUSHBUTTON "בחר...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
+    PUSHBUTTON "בחר...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -47,24 +48,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "שמע"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "נגינת שמע", -1, 7,7,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "התקן ברירת מחדל:",-1,50,20,80,9
+    GROUPBOX "נגינת שמע", -1, 7, 7, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
+    LTEXT "התקן ברירת מחדל:", -1, 50, 20, 80, 9
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "עוצמה...", IDC_VOLUME1_BTN, 85,47,70,15
-    PUSHBUTTON "מתקדם...", IDC_ADV2_BTN, 160,47,70,15
-    GROUPBOX "הקלטת שמע", -1, 7,75,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "התקן ברירת מחדל:",-1,50,88,80,9
+    PUSHBUTTON "עוצמה...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "מתקדם...", IDC_ADV2_BTN, 160, 47, 70, 15
+    GROUPBOX "הקלטת שמע", -1, 7, 75, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
+    LTEXT "התקן ברירת מחדל:", -1, 50, 88, 80, 9
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "עוצמה...", IDC_VOLUME2_BTN, 85,115,70,15
-    PUSHBUTTON "מתקדם...", IDC_ADV1_BTN, 160,115,70,15
-    GROUPBOX "נגינת מוזיקת MIDI", -1, 7,145,230,60
-    ICON IDI_MIDICON, IDI_MIDICON, 15,158,32,32
-    LTEXT "התקן ברירת מחדל:",-1,50,158,80,9
+    PUSHBUTTON "עוצמה...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "מתקדם...", IDC_ADV1_BTN, 160, 115, 70, 15
+    GROUPBOX "נגינת מוזיקת MIDI", -1, 7, 145, 230, 60
+    ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
+    LTEXT "התקן ברירת מחדל:", -1, 50, 158, 80, 9
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "עוצמה...", IDC_VOLUME3_BTN, 85,185,70,15
-    PUSHBUTTON "אודות...", IDC_ADV3_BTN, 160,185,70,15
+    PUSHBUTTON "עוצמה...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "אודות...", IDC_ADV3_BTN, 160, 185, 70, 15
     CHECKBOX "השתמש רק בהתקני ברירת מחדל.", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
@@ -73,20 +74,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "קול"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These settings control volume and advanced options for the voice playback or recording device you selected.",-1,8,7,230,40
-    GROUPBOX "נגינת קול", -1, 7,37,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "התקן ברירת מחדל:",-1,50,50,80,9
+    LTEXT "These settings control volume and advanced options for the voice playback or recording device you selected.", -1, 8, 7, 230, 40
+    GROUPBOX "נגינת קול", -1, 7, 37, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
+    LTEXT "התקן ברירת מחדל:", -1, 50, 50, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "עוצמה...", IDC_VOLUME4_BTN, 85,77,70,15
-    PUSHBUTTON "מתקדם...", IDC_ADV4_BTN, 160,77,70,15
-    GROUPBOX "הקלטת קול", -1, 7,105,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "התקן ברירת מחדל:",-1,50,118,80,9
+    PUSHBUTTON "עוצמה...", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "מתקדם...", IDC_ADV4_BTN, 160, 77, 70, 15
+    GROUPBOX "הקלטת קול", -1, 7, 105, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
+    LTEXT "התקן ברירת מחדל:", -1, 50, 118, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "עוצמה...", IDC_VOLUME5_BTN, 85,145,70,15
-    PUSHBUTTON "מתקדם...", IDC_ADV5_BTN, 160,145,70,15
-    PUSHBUTTON "בדוק חומרה...", IDC_TEST_HARDWARE, 160,175,70,15
+    PUSHBUTTON "עוצמה...", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "מתקדם...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "בדוק חומרה...", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -94,10 +95,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "חומרה"
 FONT 8, "MS Shell Dlg"
 BEGIN
-
 END
 
-IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
+IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Save Scheme As"
 FONT 8, "MS Shell Dlg"
@@ -108,7 +108,7 @@ BEGIN
     PUSHBUTTON "ביטול", IDCANCEL, 157, 36, 60, 14
 END
 
-IDD_SPEAKERS DIALOG 0, 0, 257, 204
+IDD_SPEAKERS DIALOGEX 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "רמקולים"
 FONT 8, "MS Shell Dlg"
@@ -120,7 +120,7 @@ BEGIN
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
-IDD_PERFORMANCE1 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE1 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "ביצועים"
 FONT 8, "MS Shell Dlg"
@@ -141,7 +141,7 @@ BEGIN
     LTEXT "This string describes the hardware setting for the render device", 5398, 13, 78, 227, 22
 END
 
-IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "ביצועים"
 FONT 8, "MS Shell Dlg"
@@ -162,7 +162,7 @@ BEGIN
     LTEXT "This string describes the hardware setting for the render device", 5398, 13, 68, 218, 24
 END
 
-IDD_SETUP1 DIALOG 0, 0, 227, 206
+IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "הגדרה"
 FONT 8, "MS Shell Dlg"
@@ -176,7 +176,7 @@ BEGIN
     LTEXT "2. After you enable ReactOS Audio you will have to restart the computer.", 10248, 60, 140, 150, 40
 END
 
-IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
+IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "רב ערוצי"
 FONT 8, "MS Shell Dlg"
@@ -218,7 +218,7 @@ BEGIN
     PUSHBUTTON "שחזר ברירות מחדל", 9505, 110, 199, 110, 14
 END
 
-IDD_SETUP2 DIALOG 0, 0, 227, 206
+IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "הגדרה"
 FONT 8, "MS Shell Dlg"
@@ -235,8 +235,7 @@ BEGIN
     IDS_CPLNAME "התקני קול ושמע"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
     IDS_NO_SOUND "(ללא)"
-	IDS_NO_DEVICES "אין התקנים"
-
+    IDS_NO_DEVICES "אין התקנים"
     5825 "שגיאת תכנית"
     5826 "סגירת תכנית"
     5827 "רמת סוללה קריטית"
@@ -266,5 +265,5 @@ BEGIN
     5851 "תפריט התחל"
     5852 "ReactOS ניתוק"
     5853 "ReactOS התחברות"
-	5854 "ReactOS סייר"
+    5854 "ReactOS סייר"
 END

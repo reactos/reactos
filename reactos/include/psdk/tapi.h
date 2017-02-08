@@ -749,6 +749,15 @@ typedef struct linetranslateoutput_tag {
     DWORD dwTranslateResults;
 } LINETRANSLATEOUTPUT, *LPLINETRANSLATEOUTPUT;
 
+typedef struct linemessage_tag {
+  DWORD     hDevice;
+  DWORD     dwMessageID;
+  DWORD_PTR dwCallbackInstance;
+  DWORD_PTR dwParam1;
+  DWORD_PTR dwParam2;
+  DWORD_PTR dwParam3;
+} LINEMESSAGE, *LPLINEMESSAGE;
+
 typedef void (CALLBACK *LINECALLBACK)(DWORD, DWORD, DWORD, DWORD, DWORD, DWORD);
 
 typedef struct _PHONEAPP {
@@ -818,6 +827,27 @@ typedef struct phoneextensionid_tag {
     DWORD dwExtensionID2;
     DWORD dwExtensionID3;
 } PHONEEXTENSIONID, *LPPHONEEXTENSIONID;
+
+typedef struct phoneinitializeexparams_tag {
+    DWORD dwTotalSize;
+    DWORD dwNeededSize;
+    DWORD dwUsedSize;
+    DWORD dwOptions;
+    union {
+    HANDLE hEvent;
+    HANDLE hCompletionPort;
+    } Handles;
+    DWORD dwCompletionKey;
+} PHONEINITIALIZEEXPARAMS, *LPPHONEINITIALIZEEXPARAMS;
+
+typedef struct phonemessage_tag {
+  DWORD     hDevice;
+  DWORD     dwMessageID;
+  DWORD_PTR dwCallbackInstance;
+  DWORD_PTR dwParam1;
+  DWORD_PTR dwParam2;
+  DWORD_PTR dwParam3;
+} PHONEMESSAGE, *LPPHONEMESSAGE;
 
 typedef struct phonestatus_tag {
     DWORD dwTotalSize;
@@ -926,7 +956,7 @@ DWORD WINAPI lineSetCallParams(HCALL,DWORD,DWORD,DWORD,LPLINEDIALPARAMS);
 DWORD WINAPI lineSetCallPrivilege(HCALL,DWORD);
 DWORD WINAPI lineSetCurrentLocation(HLINEAPP,DWORD);
 DWORD WINAPI lineSetDevConfig(DWORD,LPVOID,DWORD,LPCSTR);
-DWORD WINAPI lineSetMediaControl(HLINE,DWORD,HCALL,DWORD,LPLINEMEDIACONTROLDIGIT,DWORD,LPLINEMEDIACONTROLMEDIA,DWORD,LPLINEMEDIACONTROLTONE,DWORD,LPLINEMEDIACONTROLCALLSTATE,DWORD);
+DWORD WINAPI lineSetMediaControl(HLINE,DWORD,HCALL,DWORD,LPLINEMEDIACONTROLDIGIT const,DWORD,LPLINEMEDIACONTROLMEDIA const,DWORD,LPLINEMEDIACONTROLTONE const,DWORD,LPLINEMEDIACONTROLCALLSTATE const,DWORD);
 DWORD WINAPI lineSetMediaMode(HCALL,DWORD);
 DWORD WINAPI lineSetNumRings(HLINE,DWORD,DWORD);
 DWORD WINAPI lineSetStatusMessages(HLINE,DWORD,DWORD);

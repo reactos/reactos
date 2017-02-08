@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           XLATEOBJ structures and functions
- * FILE:              subsystem/win32/win32k/eng/objects.h
+ * FILE:              win32ss/gdi/eng/xlateobj.h
  * PROGRAMER:         Timo Kreuzer
  *
  */
@@ -46,8 +46,8 @@ typedef struct _EXLATEOBJ
 extern EXLATEOBJ gexloTrivial;
 
 _Notnull_
-PFN_XLATE
 FORCEINLINE
+PFN_XLATE
 XLATEOBJ_pfnXlate(
     _In_ XLATEOBJ *pxlo)
 {

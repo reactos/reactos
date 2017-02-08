@@ -1,0 +1,30 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Bearbeiten"
+    IDS_MARK "Markieren"
+    IDS_COPY "Kopieren\tEnter"
+    IDS_PASTE "Einfügen"
+    IDS_SELECTALL "Alles auswählen"
+    IDS_SCROLL "Scrollen"
+    IDS_FIND "Suchen..."
+    IDS_DEFAULTS "Standardwerte"
+    IDS_PROPERTIES "Eigenschaften"
+/*
+    IDS_SCROLLHERE "Hier scrollen"
+    IDS_SCROLLTOP "Ganz nach oben scrollen"
+    IDS_SCROLLBOTTOM "Ganz nach unten scrollen"
+    IDS_SCROLLPAGE_UP "Seite nach oben"
+    IDS_SCROLLPAGE_DOWN "Seite nach unten"
+    IDS_SCROLLUP "Nach oben scrollen"
+    IDS_SCROLLDOWN "Nach unten scrollen"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Eingabeaufforderung"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
+END

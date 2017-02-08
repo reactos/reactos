@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS ipconfig utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        apps/utils/net/ipconfig/ipconfig.c
+ * FILE:        base/applications/network/ipconfig/ipconfig.c
  * PURPOSE:     Display IP info for net adapters
  * PROGRAMMERS: Copyright 2005 - 2006 Ged Murphy (gedmurphy@gmail.com)
  */
@@ -208,31 +208,35 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                                         0,
                                         dwDataSize);
 
+            if (ConTypeTmp == NULL)
+                return NULL;
+                                        
             ConType = (LPTSTR)HeapAlloc(ProcessHeap,
                                         0,
                                         dwDataSize);
-            if (ConType && ConTypeTmp)
+
+            if (ConType == NULL)
             {
-                if(RegQueryValueEx(hKey,
-                                   _T("Name"),
-                                   NULL,
-                                   &dwType,
-                                   (PBYTE)ConTypeTmp,
-                                   &dwDataSize) != ERROR_SUCCESS)
-                {
-                    HeapFree(ProcessHeap,
-                             0,
-                             ConType);
-
-                    HeapFree(ProcessHeap,
-                             0,
-                             ConTypeTmp);
-
-                    ConType = NULL;
-                }
-
-                if (ConType) CharToOem(ConTypeTmp, ConType);
+                HeapFree(ProcessHeap, 0, ConTypeTmp);
+                return NULL;
             }
+                                        
+            if(RegQueryValueEx(hKey,
+                               _T("Name"),
+                               NULL,
+                               &dwType,
+                               (PBYTE)ConTypeTmp,
+                               &dwDataSize) != ERROR_SUCCESS)
+            {
+                HeapFree(ProcessHeap,
+                         0,
+                         ConType);
+
+                ConType = NULL;
+            }
+
+            if (ConType) CharToOem(ConTypeTmp, ConType);
+            HeapFree(ProcessHeap, 0, ConTypeTmp);
         }
     }
 
@@ -333,8 +337,8 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                                (PBYTE)lpKeyClass,
                                &dwDataSize) != ERROR_SUCCESS)
             {
-                lpKeyClass = NULL;
                 HeapFree(ProcessHeap, 0, lpKeyClass);
+                lpKeyClass = NULL;
                 continue;
             }
         }
@@ -366,6 +370,7 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                                    (PBYTE)lpConDesc,
                                    &dwDataSize) != ERROR_SUCCESS)
                 {
+                    HeapFree(ProcessHeap, 0, lpConDesc);
                     lpConDesc = NULL;
                     goto CLEANUP;
                 }
@@ -382,9 +387,9 @@ CLEANUP:
         RegCloseKey(hBaseKey);
     if (hClassKey != NULL)
         RegCloseKey(hClassKey);
-    if (lpConDesc != NULL)
+    if (lpPath != NULL)
         HeapFree(ProcessHeap, 0, lpPath);
-    if (lpConDesc != NULL)
+    if (lpKeyClass != NULL)
         HeapFree(ProcessHeap, 0, lpKeyClass);
 
     return lpConDesc;
@@ -578,12 +583,12 @@ VOID Release(LPTSTR Index)
                 for (i = 0; i < pInfo->NumAdapters; i++)
                 {
                      CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                     _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+                     _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
 
                      /* Call IpReleaseAddress to release the IP address on the specified adapter. */
                      if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
                      {
-                         _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
+                         _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), AdapterInfo.Name);
                          DoFormatMessage(ret);
                      }
                 }
@@ -654,7 +659,7 @@ VOID Renew(LPTSTR Index)
             for (i = 0; i < pInfo->NumAdapters; i++)
             {
                 CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+                _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
 
 
                 /* Call IpRenewAddress to renew the IP address on the specified adapter. */
@@ -714,7 +719,9 @@ VOID Usage(VOID)
                            Size))
             {
                 _tprintf(_T("%s"), lpUsage);
-            }            
+            }
+
+            HeapFree(ProcessHeap, 0, lpUsage);
         }
     }
 

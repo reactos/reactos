@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kdbg/i386/i386-dis.c
+ * FILE:            ntoskrnl/kdbg/amd64/i386-dis.c
  * PURPOSE:         No purpose listed.
  *
  * PROGRAMMERS:     No programmer listed.

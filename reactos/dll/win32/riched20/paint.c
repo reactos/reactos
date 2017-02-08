@@ -166,210 +166,242 @@ int ME_twips2pointsY(const ME_Context *c, int y)
     return y * c->dpi.cy * c->editor->nZoomNumerator / 1440 / c->editor->nZoomDenominator;
 }
 
-static void ME_HighlightSpace(ME_Context *c, int x, int y, LPCWSTR szText,
-                              int nChars, ME_Style *s, int width,
-                              int nSelFrom, int nSelTo, int ymin, int cy)
-{
-  HDC hDC = c->hDC;
-  HGDIOBJ hOldFont = NULL;
-  SIZE sz;
-  int selWidth;
-  /* Only highlight if there is a selection in the run and when
-   * EM_HIDESELECTION is not being used to hide the selection. */
-  if (nSelFrom >= nChars || nSelTo < 0 || nSelFrom >= nSelTo
-      || c->editor->bHideSelection)
-    return;
-  hOldFont = ME_SelectStyleFont(c, s);
-  if (width <= 0)
-  {
-    GetTextExtentPoint32W(hDC, szText, nChars, &sz);
-    width = sz.cx;
-  }
-  if (nSelFrom < 0) nSelFrom = 0;
-  if (nSelTo > nChars) nSelTo = nChars;
-  GetTextExtentPoint32W(hDC, szText, nSelFrom, &sz);
-  x += sz.cx;
-  if (nSelTo != nChars)
-  {
-    GetTextExtentPoint32W(hDC, szText+nSelFrom, nSelTo-nSelFrom, &sz);
-    selWidth = sz.cx;
-  } else {
-    selWidth = width - sz.cx;
-  }
-  ME_UnselectStyleFont(c, s, hOldFont);
 
-  if (c->editor->bEmulateVersion10)
-    PatBlt(hDC, x, ymin, selWidth, cy, DSTINVERT);
-  else
-  {
-    RECT rect;
-    HBRUSH hBrush;
-    rect.left = x;
-    rect.top = ymin;
-    rect.right = x + selWidth;
-    rect.bottom = ymin + cy;
-    hBrush = CreateSolidBrush(ITextHost_TxGetSysColor(c->editor->texthost,
-                                                      COLOR_HIGHLIGHT));
-    FillRect(hDC, &rect, hBrush);
-    DeleteObject(hBrush);
-  }
+static int calc_y_offset( const ME_Context *c, ME_Style *style )
+{
+    int offs = 0, twips = 0;
+
+    if ((style->fmt.dwMask & style->fmt.dwEffects) & CFM_OFFSET)
+        twips = style->fmt.yOffset;
+
+    if ((style->fmt.dwMask & style->fmt.dwEffects) & (CFM_SUPERSCRIPT | CFM_SUBSCRIPT))
+    {
+        if (style->fmt.dwEffects & CFE_SUPERSCRIPT) twips = style->fmt.yHeight/3;
+        if (style->fmt.dwEffects & CFE_SUBSCRIPT) twips = -style->fmt.yHeight/12;
+    }
+
+    if (twips) offs = ME_twips2pointsY( c, twips );
+
+    return offs;
 }
 
-static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText,
-                                 int nChars, ME_Style *s, int width,
+static COLORREF get_text_color( ME_Context *c, ME_Style *style, BOOL highlight )
+{
+    COLORREF color;
+
+    if (highlight)
+        color = ITextHost_TxGetSysColor( c->editor->texthost, COLOR_HIGHLIGHTTEXT );
+    else if ((style->fmt.dwMask & CFM_LINK) && (style->fmt.dwEffects & CFE_LINK))
+        color = RGB(0,0,255);
+    else if ((style->fmt.dwMask & CFM_COLOR) && (style->fmt.dwEffects & CFE_AUTOCOLOR))
+        color = ITextHost_TxGetSysColor( c->editor->texthost, COLOR_WINDOWTEXT );
+    else
+        color = style->fmt.crTextColor;
+
+    return color;
+}
+
+static void get_underline_pen( ME_Style *style, COLORREF color, HPEN *pen )
+{
+    *pen = NULL;
+    /* Choose the pen type for underlining the text. */
+    if (style->fmt.dwMask & CFM_UNDERLINETYPE)
+    {
+        switch (style->fmt.bUnderlineType)
+        {
+        case CFU_UNDERLINE:
+        case CFU_UNDERLINEWORD: /* native seems to map it to simple underline (MSDN) */
+        case CFU_UNDERLINEDOUBLE: /* native seems to map it to simple underline (MSDN) */
+            *pen = CreatePen( PS_SOLID, 1, color );
+            break;
+        case CFU_UNDERLINEDOTTED:
+            *pen = CreatePen( PS_DOT, 1, color );
+            break;
+        default:
+            FIXME( "Unknown underline type (%u)\n", style->fmt.bUnderlineType );
+            /* fall through */
+        case CFU_CF1UNDERLINE: /* this type is supported in the font, do nothing */
+        case CFU_UNDERLINENONE:
+            break;
+        }
+    }
+    return;
+}
+
+static void draw_underline( ME_Context *c, ME_Run *run, int x, int y, COLORREF color )
+{
+    HPEN pen;
+
+    get_underline_pen( run->style, color, &pen );
+    if (pen)
+    {
+        HPEN old_pen = SelectObject( c->hDC, pen );
+        MoveToEx( c->hDC, x, y + 1, NULL );
+        LineTo( c->hDC, x + run->nWidth, y + 1 );
+        SelectObject( c->hDC, old_pen );
+        DeleteObject( pen );
+    }
+    return;
+}
+
+/*********************************************************************
+ *  draw_space
+ *
+ * Draw the end-of-paragraph or tab space.
+ *
+ * If actually_draw is TRUE then ensure any underline is drawn.
+ */
+static void draw_space( ME_Context *c, ME_Run *run, int x, int y,
+                        BOOL selected, BOOL actually_draw, int ymin, int cy )
+{
+    HDC hdc = c->hDC;
+    BOOL old_style_selected = FALSE;
+    RECT rect;
+    COLORREF back_color = 0;
+
+    SetRect( &rect, x, ymin, x + run->nWidth, ymin + cy );
+
+    if (c->editor->bHideSelection) selected = FALSE;
+    if (c->editor->bEmulateVersion10)
+    {
+        old_style_selected = selected;
+        selected = FALSE;
+    }
+
+    if (selected)
+        back_color = ITextHost_TxGetSysColor( c->editor->texthost, COLOR_HIGHLIGHT );
+
+    if (actually_draw)
+    {
+        COLORREF text_color = get_text_color( c, run->style, selected );
+        COLORREF old_text, old_back;
+        HFONT old_font = NULL;
+        int y_offset = calc_y_offset( c, run->style );
+        static const WCHAR space[1] = {' '};
+
+        old_font = ME_SelectStyleFont( c, run->style );
+        old_text = SetTextColor( hdc, text_color );
+        if (selected) old_back = SetBkColor( hdc, back_color );
+
+        ExtTextOutW( hdc, x, y - y_offset, selected ? ETO_OPAQUE : 0, &rect, space, 1, &run->nWidth );
+
+        if (selected) SetBkColor( hdc, old_back );
+        SetTextColor( hdc, old_text );
+        ME_UnselectStyleFont( c, run->style, old_font );
+
+        draw_underline( c, run, x, y - y_offset, text_color );
+    }
+    else if (selected)
+    {
+        HBRUSH brush = CreateSolidBrush( back_color );
+        FillRect( hdc, &rect, brush );
+        DeleteObject( brush );
+    }
+
+    if (old_style_selected)
+        PatBlt( hdc, x, ymin, run->nWidth, cy, DSTINVERT );
+}
+
+static void get_selection_rect( ME_Context *c, ME_Run *run, int from, int to, int cy, RECT *r )
+{
+    from = max( 0, from );
+    to = min( run->len, to );
+    r->left = ME_PointFromCharContext( c, run, from, TRUE );
+    r->top = 0;
+    r->right = ME_PointFromCharContext( c, run, to, TRUE );
+    r->bottom = cy;
+    return;
+}
+
+
+static void draw_text( ME_Context *c, ME_Run *run, int x, int y, BOOL selected, RECT *sel_rect )
+{
+    COLORREF text_color = get_text_color( c, run->style, selected );
+    COLORREF back_color = selected ? ITextHost_TxGetSysColor( c->editor->texthost, COLOR_HIGHLIGHT ) : 0;
+    COLORREF old_text, old_back = 0;
+    const WCHAR *text = get_text( run, 0 );
+    ME_String *masked = NULL;
+
+    if (c->editor->cPasswordMask)
+    {
+        masked = ME_MakeStringR( c->editor->cPasswordMask, run->len );
+        text = masked->szData;
+    }
+
+    old_text = SetTextColor( c->hDC, text_color );
+    if (selected) old_back = SetBkColor( c->hDC, back_color );
+
+    if (run->para->nFlags & MEPF_COMPLEX)
+        ScriptTextOut( c->hDC, &run->style->script_cache, x, y, selected ? ETO_OPAQUE : 0, sel_rect,
+                       &run->script_analysis, NULL, 0, run->glyphs, run->num_glyphs, run->advances,
+                       NULL, run->offsets );
+    else
+        ExtTextOutW( c->hDC, x, y, selected ? ETO_OPAQUE : 0, sel_rect, text, run->len, NULL );
+
+    if (selected) SetBkColor( c->hDC, old_back );
+    SetTextColor( c->hDC, old_text );
+
+    draw_underline( c, run, x, y, text_color );
+
+    ME_DestroyString( masked );
+    return;
+}
+
+
+static void ME_DrawTextWithStyle(ME_Context *c, ME_Run *run, int x, int y,
                                  int nSelFrom, int nSelTo, int ymin, int cy)
 {
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
-  COLORREF rgbOld;
-  int yOffset = 0, yTwipsOffset = 0;
-  SIZE          sz;
-  COLORREF      rgb;
-  HPEN hPen = NULL, hOldPen = NULL;
-  BOOL bHighlightedText = (nSelFrom < nChars && nSelTo >= 0
-                           && nSelFrom < nSelTo && !c->editor->bHideSelection);
-  int xSelStart = x, xSelEnd = x;
-  int *lpDx = NULL;
-  /* lpDx is only needed for tabs to make sure the underline done automatically
-   * by the font extends to the end of the tab. Tabs are always stored as
-   * a single character run, so we can handle this case separately, since
-   * otherwise lpDx would need to specify the lengths of each character. */
-  if (width && nChars == 1)
-      lpDx = &width; /* Make sure underline for tab extends across tab space */
+  int yOffset = 0;
+  BOOL selected = (nSelFrom < run->len && nSelTo >= 0
+                   && nSelFrom < nSelTo && !c->editor->bHideSelection);
+  BOOL old_style_selected = FALSE;
+  RECT sel_rect;
+  HRGN clip = NULL, sel_rgn = NULL;
 
-  hOldFont = ME_SelectStyleFont(c, s);
-  if ((s->fmt.dwMask & s->fmt.dwEffects) & CFM_OFFSET) {
-    yTwipsOffset = s->fmt.yOffset;
-  }
-  if ((s->fmt.dwMask & s->fmt.dwEffects) & (CFM_SUPERSCRIPT | CFM_SUBSCRIPT)) {
-    if (s->fmt.dwEffects & CFE_SUPERSCRIPT) yTwipsOffset = s->fmt.yHeight/3;
-    if (s->fmt.dwEffects & CFE_SUBSCRIPT) yTwipsOffset = -s->fmt.yHeight/12;
-  }
-  if (yTwipsOffset)
-    yOffset = ME_twips2pointsY(c, yTwipsOffset);
+  yOffset = calc_y_offset( c, run->style );
 
-  if ((s->fmt.dwMask & CFM_LINK) && (s->fmt.dwEffects & CFE_LINK))
-    rgb = RGB(0,0,255);
-  else if ((s->fmt.dwMask & CFM_COLOR) && (s->fmt.dwEffects & CFE_AUTOCOLOR))
-    rgb = ITextHost_TxGetSysColor(c->editor->texthost, COLOR_WINDOWTEXT);
-  else
-    rgb = s->fmt.crTextColor;
-
-  /* Determine the area that is selected in the run. */
-  GetTextExtentPoint32W(hDC, szText, nChars, &sz);
-  /* Treat width as an optional parameter.  We can get the width from the
-   * text extent of the string if it isn't specified. */
-  if (!width) width = sz.cx;
-  if (bHighlightedText)
+  if (selected)
   {
-    if (nSelFrom <= 0)
+    get_selection_rect( c, run, nSelFrom, nSelTo, cy, &sel_rect );
+    OffsetRect( &sel_rect, x, ymin );
+
+    if (c->editor->bEmulateVersion10)
     {
-      nSelFrom = 0;
+      old_style_selected = TRUE;
+      selected = FALSE;
     }
     else
     {
-      GetTextExtentPoint32W(hDC, szText, nSelFrom, &sz);
-      xSelStart = x + sz.cx;
-    }
-    if (nSelTo >= nChars)
-    {
-      nSelTo = nChars;
-      xSelEnd = x + width;
-    }
-    else
-    {
-      GetTextExtentPoint32W(hDC, szText+nSelFrom, nSelTo-nSelFrom, &sz);
-      xSelEnd = xSelStart + sz.cx;
+      sel_rgn = CreateRectRgnIndirect( &sel_rect );
+      clip = CreateRectRgn( 0, 0, 0, 0 );
+      if (GetClipRgn( hDC, clip ) != 1)
+      {
+        DeleteObject( clip );
+        clip = NULL;
+      }
     }
   }
 
-  /* Choose the pen type for underlining the text. */
-  if (s->fmt.dwMask & CFM_UNDERLINETYPE)
+  hOldFont = ME_SelectStyleFont( c, run->style );
+
+  if (sel_rgn) ExtSelectClipRgn( hDC, sel_rgn, RGN_DIFF );
+  draw_text( c, run, x, y - yOffset, FALSE, NULL );
+  if (sel_rgn)
   {
-    switch (s->fmt.bUnderlineType)
-    {
-    case CFU_UNDERLINE:
-    case CFU_UNDERLINEWORD: /* native seems to map it to simple underline (MSDN) */
-    case CFU_UNDERLINEDOUBLE: /* native seems to map it to simple underline (MSDN) */
-      hPen = CreatePen(PS_SOLID, 1, rgb);
-      break;
-    case CFU_UNDERLINEDOTTED:
-      hPen = CreatePen(PS_DOT, 1, rgb);
-      break;
-    default:
-      FIXME("Unknown underline type (%u)\n", s->fmt.bUnderlineType);
-      /* fall through */
-    case CFU_CF1UNDERLINE: /* this type is supported in the font, do nothing */
-    case CFU_UNDERLINENONE:
-      hPen = NULL;
-      break;
-    }
-    if (hPen)
-    {
-      hOldPen = SelectObject(hDC, hPen);
-    }
+    ExtSelectClipRgn( hDC, clip, RGN_COPY );
+    ExtSelectClipRgn( hDC, sel_rgn, RGN_AND );
+    draw_text( c, run, x, y - yOffset, TRUE, &sel_rect );
+    ExtSelectClipRgn( hDC, clip, RGN_COPY );
+    if (clip) DeleteObject( clip );
+    DeleteObject( sel_rgn );
   }
 
-  rgbOld = SetTextColor(hDC, rgb);
-  if (bHighlightedText && !c->editor->bEmulateVersion10)
-  {
-    COLORREF rgbBackOld;
-    RECT dim;
-    /* FIXME: should use textmetrics info for Descent info */
-    if (hPen)
-      MoveToEx(hDC, x, y - yOffset + 1, NULL);
-    if (xSelStart > x)
-    {
-      ExtTextOutW(hDC, x, y-yOffset, 0, NULL, szText, nSelFrom, NULL);
-      if (hPen)
-        LineTo(hDC, xSelStart, y - yOffset + 1);
-    }
-    dim.top = ymin;
-    dim.bottom = ymin + cy;
-    dim.left = xSelStart;
-    dim.right = xSelEnd;
-    SetTextColor(hDC, ITextHost_TxGetSysColor(c->editor->texthost,
-                                              COLOR_HIGHLIGHTTEXT));
-    rgbBackOld = SetBkColor(hDC, ITextHost_TxGetSysColor(c->editor->texthost,
-                                                         COLOR_HIGHLIGHT));
-    ExtTextOutW(hDC, xSelStart, y-yOffset, ETO_OPAQUE, &dim,
-                szText+nSelFrom, nSelTo-nSelFrom, lpDx);
-    if (hPen)
-      LineTo(hDC, xSelEnd, y - yOffset + 1);
-    SetBkColor(hDC, rgbBackOld);
-    if (xSelEnd < x + width)
-    {
-      SetTextColor(hDC, rgb);
-      ExtTextOutW(hDC, xSelEnd, y-yOffset, 0, NULL, szText+nSelTo,
-                  nChars-nSelTo, NULL);
-      if (hPen)
-        LineTo(hDC, x + width, y - yOffset + 1);
-    }
-  }
-  else
-  {
-    ExtTextOutW(hDC, x, y-yOffset, 0, NULL, szText, nChars, lpDx);
+  if (old_style_selected)
+    PatBlt( hDC, sel_rect.left, ymin, sel_rect.right - sel_rect.left, cy, DSTINVERT );
 
-    /* FIXME: should use textmetrics info for Descent info */
-    if (hPen)
-    {
-      MoveToEx(hDC, x, y - yOffset + 1, NULL);
-      LineTo(hDC, x + width, y - yOffset + 1);
-    }
-
-    if (bHighlightedText) /* v1.0 inverts the selection */
-    {
-      PatBlt(hDC, xSelStart, ymin, xSelEnd-xSelStart, cy, DSTINVERT);
-    }
-  }
-
-  if (hPen)
-  {
-    SelectObject(hDC, hOldPen);
-    DeleteObject(hPen);
-  }
-  SetTextColor(hDC, rgbOld);
-  ME_UnselectStyleFont(c, s, hOldFont);
+  ME_UnselectStyleFont(c, run->style, hOldFont);
 }
 
 static void ME_DebugWrite(HDC hDC, const POINT *pt, LPCWSTR szText) {
@@ -388,7 +420,6 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   ME_DisplayItem *start;
   int runofs = run->nCharOfs+para->nCharOfs;
   int nSelFrom, nSelTo;
-  const WCHAR wszSpace[] = {' ', 0};
   
   if (run->nFlags & MERF_HIDDEN)
     return;
@@ -401,21 +432,20 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   {
     if (runofs >= nSelFrom && runofs < nSelTo)
     {
-      ME_HighlightSpace(c, x, y, wszSpace, 1, run->style, 0, 0, 1,
-                        c->pt.y + para->pt.y + start->member.row.pt.y,
-                        start->member.row.nHeight);
+      draw_space( c, run, x, y, TRUE, FALSE,
+                  c->pt.y + para->pt.y + start->member.row.pt.y,
+                  start->member.row.nHeight );
     }
     return;
   }
 
   if (run->nFlags & (MERF_TAB | MERF_ENDCELL))
   {
-    /* wszSpace is used instead of the tab character because otherwise
-     * an unwanted symbol can be inserted instead. */
-    ME_DrawTextWithStyle(c, x, y, wszSpace, 1, run->style, run->nWidth,
-                         nSelFrom-runofs, nSelTo-runofs,
-                         c->pt.y + para->pt.y + start->member.row.pt.y,
-                         start->member.row.nHeight);
+    BOOL selected = runofs >= nSelFrom && runofs < nSelTo;
+
+    draw_space( c, run, x, y, selected, TRUE,
+                c->pt.y + para->pt.y + start->member.row.pt.y,
+                start->member.row.nHeight );
     return;
   }
 
@@ -423,22 +453,9 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     ME_DrawOLE(c, x, y, run, para, (runofs >= nSelFrom) && (runofs < nSelTo));
   else
   {
-    if (c->editor->cPasswordMask)
-    {
-      ME_String *szMasked = ME_MakeStringR(c->editor->cPasswordMask, run->strText->nLen);
-      ME_DrawTextWithStyle(c, x, y,
-        szMasked->szData, szMasked->nLen, run->style, run->nWidth,
-        nSelFrom-runofs,nSelTo-runofs,
-        c->pt.y + para->pt.y + start->member.row.pt.y,
-        start->member.row.nHeight);
-      ME_DestroyString(szMasked);
-    }
-    else
-      ME_DrawTextWithStyle(c, x, y,
-        run->strText->szData, run->strText->nLen, run->style, run->nWidth,
-        nSelFrom-runofs,nSelTo-runofs,
-        c->pt.y + para->pt.y + start->member.row.pt.y,
-        start->member.row.nHeight);
+    ME_DrawTextWithStyle(c, run, x, y, nSelFrom - runofs, nSelTo - runofs,
+                         c->pt.y + para->pt.y + start->member.row.pt.y,
+                         start->member.row.nHeight);
   }
 }
 
@@ -947,13 +964,12 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
                      c->pt.y + para->pt.y + run->pt.y + baseline, p, para);
         if (me_debug)
         {
-          /* I'm using %ls, hope wsprintfW is not going to use wrong (4-byte) WCHAR version */
           const WCHAR wszRunDebug[] = {'[','%','d',':','%','x',']',' ','%','l','s',0};
           WCHAR buf[2560];
           POINT pt;
           pt.x = c->pt.x + run->pt.x;
           pt.y = c->pt.y + para->pt.y + run->pt.y;
-          wsprintfW(buf, wszRunDebug, no, p->member.run.nFlags, p->member.run.strText->szData);
+          wsprintfW(buf, wszRunDebug, no, p->member.run.nFlags, get_text( &p->member.run, 0 ));
           ME_DebugWrite(c->hDC, &pt, buf);
         }
         break;
@@ -1224,7 +1240,7 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
 
   if (editor->styleFlags & ES_AUTOHSCROLL)
   {
-    x = pRun->pt.x + ME_PointFromChar(editor, pRun, pCursor->nOffset);
+    x = pRun->pt.x + ME_PointFromChar(editor, pRun, pCursor->nOffset, TRUE);
     if (x > editor->horz_si.nPos + editor->sizeWindow.cx)
       x = x + 1 - editor->sizeWindow.cx;
     else if (x > editor->horz_si.nPos)

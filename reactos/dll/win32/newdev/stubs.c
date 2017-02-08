@@ -20,20 +20,18 @@
 
 #include "newdev_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(newdev);
-
 /*
 * @unimplemented
 */
 BOOL WINAPI
 InstallNewDevice(
-	IN HWND hwndParent,
-	IN LPGUID ClassGuid OPTIONAL,
-	OUT PDWORD Reboot)
+    IN HWND hwndParent,
+    IN LPGUID ClassGuid OPTIONAL,
+    OUT PDWORD Reboot)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_GEN_FAILURE);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_GEN_FAILURE);
+    return FALSE;
 }
 
 /*
@@ -41,13 +39,35 @@ InstallNewDevice(
 */
 BOOL WINAPI
 InstallSelectedDriverW(
-	IN HWND hwndParent,
-	IN HDEVINFO DeviceInfoSet,
-	IN LPCWSTR Reserved,
-	IN BOOL Backup,
-	OUT PDWORD pReboot)
+    IN HWND hwndParent,
+    IN HDEVINFO DeviceInfoSet,
+    IN LPCWSTR Reserved,
+    IN BOOL Backup,
+    OUT PDWORD pReboot)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_GEN_FAILURE);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_GEN_FAILURE);
+    return FALSE;
+}
+
+/*
+* @unimplemented
+*/
+BOOL WINAPI
+DiShowUpdateDevice(
+    IN HWND hwndParent OPTIONAL,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData,
+    IN DWORD Flags,
+    OUT PBOOL NeedReboot OPTIONAL)
+{
+    if (Flags != 0)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+ 
+    UNIMPLEMENTED;
+    SetLastError(ERROR_GEN_FAILURE);
+    return FALSE;
 }

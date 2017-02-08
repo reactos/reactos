@@ -5,6 +5,9 @@
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
+#ifndef _BMFD_PCH_
+#define _BMFD_PCH_
+
 #include <stdarg.h>
 #include <windef.h>
 #include <wingdi.h>
@@ -16,8 +19,8 @@
 #else
 // FIXME: BE
 #define GETVAL(x) \
-    sizeof(x) == 1 ? (x) : \
-    sizeof(x) == 2 ? (((PCHAR)&(x))[0] + (((PCHAR)&(x))[1] << 8)) : \
+    (sizeof(x) == 1) ? (x) : \
+    (sizeof(x) == 2) ? (((PCHAR)&(x))[0] + (((PCHAR)&(x))[1] << 8)) : \
     (((PCHAR)&(x))[0] + (((PCHAR)&(x))[1] << 8) + (((PCHAR)&(x))[2] << 16) + \
      (((PCHAR)&(x))[3] << 24))
 
@@ -118,13 +121,13 @@ typedef struct _FONTDIRENTRY
 } FONTDIRENTRY, *PFONTDIRENTRY;
 
 typedef struct _DIRENTRY
-{ 
+{
     WORD fontOrdinal;
     FONTDIRENTRY fde;
 } DIRENTRY, *PDIRENTRY;
 
 typedef struct _FONTGROUPHDR
-{ 
+{
   WORD NumberOfFonts;
   DIRENTRY ade[1];
 } FONTGROUPHDR, *PFONTGROUPHDR;
@@ -364,3 +367,4 @@ APIENTRY
 BmfdDestroyFont(
     IN FONTOBJ *pfo);
 
+#endif /* _BMFD_PCH_ */

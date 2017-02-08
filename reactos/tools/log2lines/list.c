@@ -43,7 +43,7 @@ entry_lookup(PLIST list, char *name)
     return NULL;
 }
 
-PLIST_MEMBER 
+PLIST_MEMBER
 entry_delete(PLIST_MEMBER pentry)
 {
     if (!pentry)
@@ -54,7 +54,7 @@ entry_delete(PLIST_MEMBER pentry)
     return NULL;
 }
 
-PLIST_MEMBER 
+PLIST_MEMBER
 entry_insert(PLIST list, PLIST_MEMBER pentry)
 {
     if (!pentry)
@@ -115,7 +115,7 @@ entry_remove(LIST *list, LIST_MEMBER *pentry)
 }
 #endif
 
-PLIST_MEMBER 
+PLIST_MEMBER
 cache_entry_create(char *Line)
 {
     PLIST_MEMBER pentry;
@@ -169,7 +169,7 @@ cache_entry_create(char *Line)
 }
 
 
-PLIST_MEMBER 
+PLIST_MEMBER
 sources_entry_create(PLIST list, char *path, char *prefix)
 {
     PLIST_MEMBER pentry;

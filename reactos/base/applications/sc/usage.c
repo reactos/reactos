@@ -1,12 +1,15 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/sc/usage.c
+ * FILE:        base/applications/sc/usage.c
  * PURPOSE:     display usage info
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
+
 #include "sc.h"
+
+#include <conio.h>
 
 VOID MainUsage(VOID)
 {

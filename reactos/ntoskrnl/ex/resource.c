@@ -361,7 +361,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
     else
     {
         /* Copy the table */
-        RtlCopyMemory(Table, Owner, OldSize * sizeof(OWNER_ENTRY));
+        if (Owner) RtlCopyMemory(Table, Owner, OldSize * sizeof(OWNER_ENTRY));
 
         /* Acquire dispatcher lock to prevent thread boosting */
         OldIrql = KiAcquireDispatcherLock();
@@ -656,7 +656,7 @@ ExpWaitForResource(IN PERESOURCE Resource,
             ExAcquireResourceLock(Resource, &LockHandle);
 
             /* Dump debug information */
-            DPRINT1("Resource @ %lx\n", Resource);
+            DPRINT1("Resource @ %p\n", Resource);
             DPRINT1(" ActiveEntries = %04lx  Flags = %s%s%s\n",
                     Resource->ActiveEntries,
                     IsOwnedExclusive(Resource) ? "IsOwnedExclusive " : "",

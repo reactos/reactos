@@ -1,22 +1,22 @@
+#ifndef _MMSYS_H
+#define _MMSYS_H
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
-#include <winsvc.h>
 #include <winuser.h>
-#include <shellapi.h>
 #include <mmsystem.h>
 #include <cpl.h>
 #include <tchar.h>
-#include <initguid.h>
 #include <setupapi.h>
-#include <devguid.h>
-#include <debug.h>
-#include <shlwapi.h>
+#include <stdlib.h> 
 
 #include "resource.h"
 
@@ -83,4 +83,4 @@ AudioDlgProc(HWND hwndDlg,
              WPARAM wParam,
              LPARAM lParam);
 
-/* EOF */
+#endif /* _MMSYS_H */

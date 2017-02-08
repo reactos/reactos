@@ -18,12 +18,14 @@
 
 /* Classes */
 
-class CCABManager : public CDFParser {
+class CCABManager : public CDFParser
+{
 public:
     CCABManager();
     virtual ~CCABManager();
     bool ParseCmdline(int argc, char* argv[]);
     bool Run();
+    bool IsVerbose() { return Verbose; }
 private:
     void Usage();
     bool CreateCabinet();
@@ -39,6 +41,9 @@ private:
     ULONG Mode;
     bool PromptOnOverwrite;
     char FileName[PATH_MAX];
+    bool Verbose;
 };
+
+extern CCABManager CABMgr;
 
 /* EOF */

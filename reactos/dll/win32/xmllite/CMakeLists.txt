@@ -1,25 +1,22 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(xmllite.dll xmllite.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     reader.c
     writer.c
     xmllite_main.c
-    #${REACTOS_BINARY_DIR}/include/psdk/xmllite_i.c
-    ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c
+    xmllite_private.h
+    ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c)
+
+add_library(xmllite SHARED
+    ${SOURCE}
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(xmllite)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
-add_library(xmllite SHARED ${SOURCE})
 set_module_type(xmllite win32dll)
-target_link_libraries(xmllite wine uuid)
+target_link_libraries(xmllite uuid wine)
 add_importlibs(xmllite msvcrt kernel32 ntdll)
+add_pch(xmllite xmllite_private.h SOURCE)
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)

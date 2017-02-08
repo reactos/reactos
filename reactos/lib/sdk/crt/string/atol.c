@@ -4,7 +4,7 @@
 /*
  * @implemented
  */
-long atol(const char *str)
+long CDECL atol(const char *str)
 {
     return (long)_atoi64(str);
 }
@@ -12,7 +12,7 @@ long atol(const char *str)
 /*
  * @unimplemented
  */
-int _atoldbl(_LDOUBLE *value, char *str)
+int CDECL _atoldbl(_LDOUBLE *value, char *str)
 {
   /* FIXME needs error checking for huge/small values */
 #if 0

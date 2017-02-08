@@ -1,20 +1,21 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        include/msafd.h
+ * FILE:        dll/win32/msafd/msafd.h
  * PURPOSE:     Ancillary Function Driver DLL header
  */
+
 #ifndef __MSAFD_H
 #define __MSAFD_H
+
+#include <stdarg.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
-#include <winreg.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
@@ -26,9 +27,7 @@
 #include <wsahelp.h>
 #include <tdi.h>
 #include <afd/shared.h>
-#include <helpers.h>
-
-#include <debug.h>
+#include "include/helpers.h"
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;
@@ -73,7 +72,6 @@ typedef struct _SOCK_SHARED_INFO {
 		BOOLEAN					UseSAN:1;
     }; // Flags
     DWORD						CreateFlags;
-    DWORD						CatalogEntryId;
     DWORD						ServiceFlags1;
     DWORD						ProviderFlags;
     GROUP						GroupID;
@@ -107,6 +105,7 @@ typedef struct _SOCKET_INFORMATION {
 	BOOL TrySAN;
 	SOCKADDR WSLocalAddress;
 	SOCKADDR WSRemoteAddress;
+	WSAPROTOCOL_INFOW ProtocolInfo;
 	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
 
@@ -479,8 +478,8 @@ SockReenableAsyncSelectEvent (
 
 typedef VOID (*PASYNC_COMPLETION_ROUTINE)(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock);
 
-DWORD
 FORCEINLINE
+DWORD
 MsafdReturnWithErrno(NTSTATUS Status,
                      LPINT Errno,
                      DWORD Received,
@@ -507,5 +506,3 @@ MsafdReturnWithErrno(NTSTATUS Status,
 }
 
 #endif /* __MSAFD_H */
-
-/* EOF */

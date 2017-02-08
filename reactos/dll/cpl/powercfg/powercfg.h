@@ -1,15 +1,18 @@
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
+#ifndef _POWERCFG_H
+#define _POWERCFG_H
+
+#include <stdarg.h>
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
 #include <cpl.h>
 #include <tchar.h>
 #include <shlobj.h>
-#include <regstr.h>
 #include <powrprof.h>
 
 #include "resource.h"
@@ -34,4 +37,4 @@ INT_PTR CALLBACK AlarmsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 INT_PTR CALLBACK AdvancedDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HibernateDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-/* EOF */
+#endif /* _POWERCFG_H */

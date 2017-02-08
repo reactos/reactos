@@ -6,11 +6,7 @@
  * PROGRAMMERS: Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define COBJMACROS
 #include "recyclebin_private.h"
-#include <stdio.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
 struct RecycleBinGenericEnum
 {

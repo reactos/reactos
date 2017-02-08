@@ -209,13 +209,13 @@ LdrPEGetExportByName(PVOID BaseAddress,
                 }
                 return Function;
             }
-	    if (Function != NULL)
-	    {
-		return Function;
-	    }
-	    DbgPrint("Failed to get function %s\n", SymbolName);
-	}
-	minn++;
+        if (Function != NULL)
+        {
+        return Function;
+        }
+        DbgPrint("Failed to get function %s\n", SymbolName);
+    }
+    minn++;
     }
 
     DbgPrint("2: failed to find %s\n",SymbolName);
@@ -298,15 +298,15 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
          * Later, FrLdrLoadDriver should be made to share the same
          * code, and we'll just call it instead.
          */
-	FrLdrLoadDriver(ImportedName, 0);
+    FrLdrLoadDriver(ImportedName, 0);
 
-	/* Return the new module */
-	*ImportedModule = LdrGetModuleObject(ImportedName);
-	if (*ImportedModule == NULL)
-	{
-	    DbgPrint("Error loading import: %s\n", ImportedName);
-	    return STATUS_UNSUCCESSFUL;
-	}
+    /* Return the new module */
+    *ImportedModule = LdrGetModuleObject(ImportedName);
+    if (*ImportedModule == NULL)
+    {
+        DbgPrint("Error loading import: %s\n", ImportedName);
+        return STATUS_UNSUCCESSFUL;
+    }
     }
 
     return Status;

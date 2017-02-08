@@ -37,50 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msisys);
 
 
 /***********************************************************************
- *		MSISYS_InitProcess (internal)
- */
-static BOOL MSISYS_InitProcess( void )
-{
-	TRACE("()\n");
-
-	return TRUE;
-}
-
-/***********************************************************************
- *		MSISYS_UninitProcess (internal)
- */
-static void MSISYS_UninitProcess( void )
-{
-	TRACE("()\n");
-}
-
-/***********************************************************************
- *		DllMain for MSISYS
- */
-BOOL WINAPI DllMain(
-	HINSTANCE hInstDLL,
-	DWORD fdwReason,
-	LPVOID lpvReserved )
-{
-	TRACE("(%p,%d,%p)\n",hInstDLL,fdwReason,lpvReserved);
-
-	switch ( fdwReason )
-	{
-	case DLL_PROCESS_ATTACH:
-                DisableThreadLibraryCalls(hInstDLL);
-		if ( !MSISYS_InitProcess() )
-			return FALSE;
-		break;
-	case DLL_PROCESS_DETACH:
-		MSISYS_UninitProcess();
-		break;
-	}
-
-	return TRUE;
-}
-
-
-/***********************************************************************
  *		DllCanUnloadNow (MSISYS.@)
  *
  * RETURNS
@@ -89,7 +45,7 @@ BOOL WINAPI DllMain(
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-	return S_OK;
+	return S_FALSE;
 }
 
 /***********************************************************************

@@ -5,7 +5,7 @@
 /*    Basic Type1/Type2 type definitions and interface (specification      */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,14 +17,15 @@
 /***************************************************************************/
 
 
-#ifndef __T1TYPES_H__
-#define __T1TYPES_H__
+#ifndef T1TYPES_H_
+#define T1TYPES_H_
 
 
 #include <ft2build.h>
 #include FT_TYPE1_TABLES_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
 #include FT_INTERNAL_SERVICE_H
+#include FT_INTERNAL_HASH_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 
@@ -78,17 +79,6 @@ FT_BEGIN_HEADER
   } T1_EncodingRec, *T1_Encoding;
 
 
-  typedef enum  T1_EncodingType_
-  {
-    T1_ENCODING_TYPE_NONE = 0,
-    T1_ENCODING_TYPE_ARRAY,
-    T1_ENCODING_TYPE_STANDARD,
-    T1_ENCODING_TYPE_ISOLATIN1,
-    T1_ENCODING_TYPE_EXPERT
-
-  } T1_EncodingType;
-
-
   /* used to hold extra data of PS_FontInfoRec that
    * cannot be stored in the publicly defined structure.
    *
@@ -117,12 +107,13 @@ FT_BEGIN_HEADER
 
     FT_Int           num_subrs;
     FT_Byte**        subrs;
-    FT_PtrDist*      subrs_len;
+    FT_UInt*         subrs_len;
+    FT_Hash          subrs_hash;
 
     FT_Int           num_glyphs;
     FT_String**      glyph_names;       /* array of glyph names       */
     FT_Byte**        charstrings;       /* array of glyph charstrings */
-    FT_PtrDist*      charstrings_len;
+    FT_UInt*         charstrings_len;
 
     FT_Byte          paint_type;
     FT_Byte          font_type;
@@ -138,7 +129,7 @@ FT_BEGIN_HEADER
 
   typedef struct  CID_SubrsRec_
   {
-    FT_UInt    num_subrs;
+    FT_Int     num_subrs;
     FT_Byte**  code;
 
   } CID_SubrsRec, *CID_Subrs;
@@ -168,10 +159,10 @@ FT_BEGIN_HEADER
 
   typedef struct  AFM_KernPairRec_
   {
-    FT_Int  index1;
-    FT_Int  index2;
-    FT_Int  x;
-    FT_Int  y;
+    FT_UInt  index1;
+    FT_UInt  index2;
+    FT_Int   x;
+    FT_Int   y;
 
   } AFM_KernPairRec, *AFM_KernPair;
 
@@ -182,9 +173,9 @@ FT_BEGIN_HEADER
     FT_Fixed       Ascender;
     FT_Fixed       Descender;
     AFM_TrackKern  TrackKerns;   /* free if non-NULL */
-    FT_Int         NumTrackKern;
+    FT_UInt        NumTrackKern;
     AFM_KernPair   KernPairs;    /* free if non-NULL */
-    FT_Int         NumKernPair;
+    FT_UInt        NumKernPair;
 
   } AFM_FontInfoRec, *AFM_FontInfo;
 
@@ -215,10 +206,6 @@ FT_BEGIN_HEADER
     const void*     afm_data;
     FT_CharMapRec   charmaprecs[2];
     FT_CharMap      charmaps[2];
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    PS_Unicodes     unicode_map;
-#endif
 
     /* support for Multiple Masters fonts */
     PS_Blend        blend;
@@ -264,7 +251,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __T1TYPES_H__ */
+#endif /* T1TYPES_H_ */
 
 
 /* END */

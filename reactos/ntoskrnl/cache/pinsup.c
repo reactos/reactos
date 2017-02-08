@@ -486,10 +486,9 @@ CcpMapData(IN PFILE_OBJECT FileObject,
         return FALSE;
     }
 
-    DPRINT("CcMapData(F->%x,%08x%08x:%d)\n",
+    DPRINT("CcMapData(F->%x, %I64x:%d)\n",
            FileObject,
-           FileOffset->HighPart,
-           FileOffset->LowPart,
+           FileOffset->QuadPart,
            Length);
 
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
@@ -510,10 +509,9 @@ CcpMapData(IN PFILE_OBJECT FileObject,
         *BcbResult = Bcb;
         *Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
 
-        DPRINT("Bcb #%x Buffer maps (%08x%08x) At %x Length %x (Getting %x:%x) %wZ\n",
+        DPRINT("Bcb #%x Buffer maps (%I64x) At %x Length %x (Getting %p:%x) %wZ\n",
                Bcb - CcCacheSections,
-               Bcb->FileOffset.HighPart,
-               Bcb->FileOffset.LowPart,
+               Bcb->FileOffset.QuadPart,
                Bcb->BaseAddress,
                Bcb->Length,
                *Buffer,
@@ -524,9 +522,8 @@ CcpMapData(IN PFILE_OBJECT FileObject,
         goto cleanup;
     }
 
-    DPRINT("File size %08x%08x\n",
-           Map->FileSizes.ValidDataLength.HighPart,
-           Map->FileSizes.ValidDataLength.LowPart);
+    DPRINT("File size %I64x\n",
+           Map->FileSizes.ValidDataLength.QuadPart);
 
     /* Not all files have length, in fact filesystems often use stream file
        objects for various internal purposes and are loose about the file
@@ -635,7 +632,6 @@ retry:
      * in the NOCC_CACHE_MAP.
      */
     Success = TRUE;
-    //DPRINT("w1n\n");
 
     Bcb->Length = MIN(Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart,
                       CACHE_STRIPE);
@@ -649,10 +645,9 @@ retry:
     *Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
     FaultIn = TRUE;
 
-    DPRINT("Bcb #%x Buffer maps (%08x%08x) At %x Length %x (Getting %x:%x) %wZ\n",
+    DPRINT("Bcb #%x Buffer maps (%I64x) At %x Length %x (Getting %p:%lx) %wZ\n",
            Bcb - CcCacheSections,
-           Bcb->FileOffset.HighPart,
-           Bcb->FileOffset.LowPart,
+           Bcb->FileOffset.QuadPart,
            Bcb->BaseAddress,
            Bcb->Length,
            *Buffer,
@@ -662,8 +657,6 @@ retry:
     EndInterval.QuadPart = Bcb->FileOffset.QuadPart + Bcb->Length - 1;
     ASSERT((EndInterval.QuadPart & ~(CACHE_STRIPE - 1)) ==
            (Bcb->FileOffset.QuadPart & ~(CACHE_STRIPE - 1)));
-
-    //DPRINT("TERM!\n");
 
 cleanup:
     CcpUnlock();
@@ -675,10 +668,9 @@ cleanup:
             ULONG i;
             PCHAR FaultIn = Bcb->BaseAddress;
 
-            DPRINT("Faulting in pages at this point: file %wZ %08x%08x:%x\n",
+            DPRINT("Faulting in pages at this point: file %wZ %I64x:%x\n",
                    &FileObject->FileName,
-                   Bcb->FileOffset.HighPart,
-                   Bcb->FileOffset.LowPart,
+                   Bcb->FileOffset.QuadPart,
                    Bcb->Length);
 
             for (i = 0; i < Bcb->Length; i += PAGE_SIZE)
@@ -873,15 +865,14 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
 
         if (Zero)
         {
-            DPRINT("Zero fill #%x %08x%08x:%x Buffer %x %wZ\n",
+            DPRINT("Zero fill #%x %I64x:%x Buffer %x %wZ\n",
                    RealBcb - CcCacheSections,
-                   FileOffset->u.HighPart,
-                   FileOffset->u.LowPart,
+                   FileOffset->QuadPart,
                    Length,
                    *Buffer,
                    &FileObject->FileName);
 
-            DPRINT1("RtlZeroMemory(%x,%x)\n", *Buffer, Length);
+            DPRINT1("RtlZeroMemory(%p, %lx)\n", *Buffer, Length);
             RtlZeroMemory(*Buffer, Length);
         }
     }

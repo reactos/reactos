@@ -40,6 +40,67 @@ NduCloseAdapterComplete(NDIS_HANDLE ProtocolBindingContext,
     KeSetEvent(&AdapterContext->AsyncEvent, IO_NO_INCREMENT, FALSE);
 }
 
+NDIS_STATUS
+NTAPI
+NduNetPnPEvent(NDIS_HANDLE ProtocolBindingContext,
+               PNET_PNP_EVENT NetPnPEvent)
+{
+    PNDIS_DEVICE_POWER_STATE PowerState;
+
+    DPRINT("NetPnPEvent\n");
+
+    switch (NetPnPEvent->NetEvent)
+    {
+        case NetEventQueryRemoveDevice:
+            /* Nothing to do */
+            DPRINT1("NetPnPEvent: QueryRemoveDevice\n");
+            return NDIS_STATUS_SUCCESS;
+
+        case NetEventSetPower:
+            ASSERT(NetPnPEvent->BufferLength >= sizeof(*PowerState));
+
+            PowerState = NetPnPEvent->Buffer;
+            switch (*PowerState)
+            {
+                case NdisDeviceStateD0:
+                    DPRINT1("NetPnPEvent: SetPower D0\n");
+                    return NDIS_STATUS_SUCCESS;
+
+                default:
+                    DPRINT1("NetPnPEvent: SetPower state %d not supported\n", *PowerState);
+                    return NDIS_STATUS_FAILURE;
+            }
+
+        case NetEventQueryPower:
+            DPRINT1("NetPnPEvent: QueryPower\n");
+            return NDIS_STATUS_SUCCESS;
+
+        case NetEventCancelRemoveDevice:
+            DPRINT1("NetPnPEvent: CancelRemoveDevice\n");
+            return NDIS_STATUS_SUCCESS;
+
+        case NetEventReconfigure:
+            DPRINT1("NetPnPEvent: Reconfigure\n");
+            return NDIS_STATUS_SUCCESS;
+
+        case NetEventBindList:
+            DPRINT1("NetPnPEvent: BindList\n");
+            return NDIS_STATUS_SUCCESS;
+
+        case NetEventBindsComplete:
+            DPRINT1("NetPnPEvent: BindsComplete\n");
+            return NDIS_STATUS_SUCCESS;
+
+        case NetEventPnPCapabilities:
+            DPRINT1("NetPnPEvent: PnPCapabilities\n");
+            return NDIS_STATUS_SUCCESS;
+
+        default:
+            DPRINT1("NetPnPEvent unimplemented for net event 0x%x\n", NetPnPEvent->NetEvent);
+            return NDIS_STATUS_FAILURE;
+    }
+}
+
 VOID
 NTAPI
 NduSendComplete(NDIS_HANDLE ProtocolBindingContext,
@@ -168,7 +229,8 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
         if (Status != NDIS_STATUS_SUCCESS)
         {
             DPRINT1("Failed to transfer data with status 0x%x\n", Status);
-            CleanupAndFreePacket(Packet, TRUE);
+            CleanupAndFreePacket(Packet, FALSE);
+            ExFreePool(PacketBuffer);
             return NDIS_STATUS_NOT_ACCEPTED;
         }
     }
@@ -493,4 +555,3 @@ NduUnbindAdapter(PNDIS_STATUS Status,
      * invalidating file handles pointer to this adapter for us */
     *Status = UnbindAdapterByContext(ProtocolBindingContext);
 }
-

@@ -29,42 +29,17 @@
  *     available (hopefully) from http://sources.redhat.com/gdb/onlinedocs
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <sys/types.h>
-//#include <fcntl.h>
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_MMAN_H
-#include <sys/mman.h>
-#endif
-//#include <limits.h>
-//#include <stdlib.h>
-//#include <string.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-//#include <stdio.h>
-#include <assert.h>
-//#include <stdarg.h>
+#include "dbghelp_private.h"
 
 #ifdef HAVE_MACH_O_NLIST_H
 # include <mach-o/nlist.h>
 #endif
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-
-#include "dbghelp_private.h"
-
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
 
+#ifndef DBGHELP_STATIC_LIB
 #define strtoull _strtoui64
+#endif
 
 /* Masks for n_type field */
 #ifndef N_STAB
@@ -113,7 +88,11 @@ struct stab_nlist
     unsigned char       n_type;
     char                n_other;
     short               n_desc;
+#if defined(__APPLE__) && defined(_WIN64)
+    unsigned long       n_value;
+#else
     unsigned            n_value;
+#endif
 };
 
 static void stab_strcpy(char* dest, int sz, const char* source)
@@ -606,7 +585,6 @@ static inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
         if (mthd == '*')
         {
             long int            ofs;
-            struct symt*        dt;
 
             PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &ofs) == -1);
             PTS_ABORTIF(ptd, *ptd->ptr++ != ';');
@@ -631,7 +609,7 @@ static inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
     PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &sz) == -1);
 
     doadd = symt_set_udt_size(ptd->module, sdt, sz);
-    if (*ptd->ptr == '!') /* C++ inheritence */
+    if (*ptd->ptr == '!') /* C++ inheritance */
     {
         long     num_classes;
 
@@ -640,7 +618,7 @@ static inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
         PTS_ABORTIF(ptd, *ptd->ptr++ != ',');
         while (--num_classes >= 0)
         {
-            ptd->ptr += 2; /* skip visibility and inheritence */
+            ptd->ptr += 2; /* skip visibility and inheritance */
             PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &ofs) == -1);
             PTS_ABORTIF(ptd, *ptd->ptr++ != ',');
 
@@ -1468,7 +1446,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 case 35:
                 case 36: loc.reg = CV_REG_MM0 + stab_ptr->n_value - 29; break;
                 default:
-                    FIXME("Unknown register value (%u)\n", stab_ptr->n_value);
+                    FIXME("Unknown register value (%lu)\n", (unsigned long)stab_ptr->n_value);
                     loc.reg = CV_REG_NONE;
                     break;
                 }
@@ -1618,7 +1596,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
 	case N_EXCL:
             if (stabs_add_include(stabs_find_include(ptr, stab_ptr->n_value)) < 0)
             {
-                ERR("Excluded header not found (%s,%d)\n", ptr, stab_ptr->n_value);
+                ERR("Excluded header not found (%s,%ld)\n", ptr, (unsigned long)stab_ptr->n_value);
                 module_reset_debug_info(module);
                 ret = FALSE;
                 goto done;
@@ -1664,8 +1642,8 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             break;
         }
         stabbuff[0] = '\0';
-        TRACE("0x%02x %x %s\n",
-              stab_ptr->n_type, stab_ptr->n_value, debugstr_a(strs + stab_ptr->n_strx));
+        TRACE("0x%02x %lx %s\n",
+              stab_ptr->n_type, (unsigned long)stab_ptr->n_value, debugstr_a(strs + stab_ptr->n_strx));
     }
     module->module.SymType = SymDia;
     module->module.CVSig = 'S' | ('T' << 8) | ('A' << 16) | ('B' << 24);
@@ -1680,6 +1658,7 @@ done:
     stabs_free_includes();
     HeapFree(GetProcessHeap(), 0, pending_block.objs);
     HeapFree(GetProcessHeap(), 0, pending_func.objs);
+    HeapFree(GetProcessHeap(), 0, srcpath);
 
     return ret;
 }

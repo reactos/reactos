@@ -34,16 +34,19 @@ void TaskManager_OnFileNew(void)
     LoadStringW(hInst, IDS_CREATENEWTASK, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
     LoadStringW(hInst, IDS_CREATENEWTASK_DESC, szText, sizeof(szText) / sizeof(szText[0]));
 
-
     hShell32 = LoadLibraryW(L"SHELL32.DLL");
-    RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (LPCSTR)0x3D);
+    RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (LPCSTR)61);
 
     /* Show "Run..." dialog */
     if (RunFileDlg)
     {
+        HICON hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_TASKMANAGER));
+
         /* NOTE - don't check whether running on win 9x or NT, let's just
                   assume that a unicode build only runs on NT */
-        RunFileDlg(hMainWnd, 0, NULL, NULL, szText, RFF_CALCDIRECTORY);
+        RunFileDlg(hMainWnd, hIcon, NULL, NULL, szText, RFF_CALCDIRECTORY);
+
+        DeleteObject(hIcon);
     }
 
     FreeLibrary(hShell32);

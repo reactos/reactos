@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/dde.c
+ * FILE:            win32ss/user/user32/misc/object.c
  * PURPOSE:         DDE
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -73,7 +73,8 @@ GetUserObjectInformationA(
 
     if (LengthNeeded != 0)
     {
-        *lpnLengthNeeded = LengthNeeded;
+        if (lpnLengthNeeded)
+            *lpnLengthNeeded = LengthNeeded;
         ret = TRUE;
     }
   }

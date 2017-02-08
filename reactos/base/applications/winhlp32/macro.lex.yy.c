@@ -502,20 +502,10 @@ char *yytext;
 #define YY_NO_INPUT 1
 
 #line 26 "macro.lex.l"
-#include "config.h"
-#include <assert.h>
-#include <stdarg.h>
+#include <config.h>
 
 #define YY_NO_UNISTD_H
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
 #include "winhelp.h"
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
 struct lex_data {
     LPCSTR   macroptr;

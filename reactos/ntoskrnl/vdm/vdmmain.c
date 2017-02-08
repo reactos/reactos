@@ -54,7 +54,7 @@ KeI386VdmInitialize(VOID)
                          L"Control\\Wow");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&RegHandle, KEY_READ, &ObjectAttributes);
@@ -85,7 +85,6 @@ KeI386VdmInitialize(VOID)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 VdmpInitialize(PVOID ControlData)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -93,14 +92,14 @@ VdmpInitialize(PVOID ControlData)
     NTSTATUS Status;
     HANDLE PhysMemHandle;
     PVOID BaseAddress;
-    PVOID NullAddress = NULL;
+    volatile PVOID NullAddress = NULL;
     LARGE_INTEGER Offset;
     ULONG ViewSize;
 
     /* Open the physical memory section */
     InitializeObjectAttributes(&ObjectAttributes,
                                &PhysMemName,
-                               0,
+                               OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenSection(&PhysMemHandle,

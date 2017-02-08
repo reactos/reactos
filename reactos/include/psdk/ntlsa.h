@@ -57,6 +57,20 @@ extern "C" {
 #define SECURITY_ACCESS_REMOTE_INTERACTIVE_LOGON      0x00000400
 #define SECURITY_ACCESS_DENY_REMOTE_INTERACTIVE_LOGON 0x00000800
 
+#ifdef _NTIFS_INCLUDED_ // HACK to avoid redefinition from ntsecapi.h
+typedef enum _POLICY_AUDIT_EVENT_TYPE
+{
+    AuditCategorySystem,
+    AuditCategoryLogon,
+    AuditCategoryObjectAccess,
+    AuditCategoryPrivilegeUse,
+    AuditCategoryDetailedTracking,
+    AuditCategoryPolicyChange,
+    AuditCategoryAccountManagement,
+    AuditCategoryDirectoryServiceAccess,
+    AuditCategoryAccountLogon
+} POLICY_AUDIT_EVENT_TYPE, *PPOLICY_AUDIT_EVENT_TYPE;
+#endif
 
 #ifdef __cplusplus
 }

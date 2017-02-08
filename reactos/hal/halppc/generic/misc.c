@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/misc.c
+ * FILE:            hal/halppc/generic/misc.c
  * PURPOSE:         Miscellanous Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
@@ -58,25 +58,25 @@ HalHandleNMI(IN PVOID NmiInfo)
     ucStatus = READ_PORT_UCHAR((PUCHAR)0x61);
 
     /* Display NMI failure string */
-    HalDisplayString ("\n*** Hardware Malfunction\n\n");
-    HalDisplayString ("Call your hardware vendor for support\n\n");
+    HalDisplayString ("\r\n*** Hardware Malfunction\r\n\r\n");
+    HalDisplayString ("Call your hardware vendor for support\r\n\r\n");
 
     /* Check for parity error */
     if (ucStatus & 0x80)
     {
         /* Display message */
-        HalDisplayString ("NMI: Parity Check / Memory Parity Error\n");
+        HalDisplayString ("NMI: Parity Check / Memory Parity Error\r\n");
     }
 
     /* Check for I/O failure */
     if (ucStatus & 0x40)
     {
         /* Display message */
-        HalDisplayString ("NMI: Channel Check / IOCHK\n");
+        HalDisplayString ("NMI: Channel Check / IOCHK\r\n");
     }
 
     /* Halt the system */
-    HalDisplayString("\n*** The system has halted ***\n");
+    HalDisplayString("\r\n*** The system has halted ***\r\n");
     //KeEnterKernelDebugger();
 }
 

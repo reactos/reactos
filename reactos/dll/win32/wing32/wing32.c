@@ -26,21 +26,21 @@
 /***********************************************************************
  *           WinGCreateDC   (WING32.@)
  */
-HDC CALLBACK WinGCreateDC( void )
+HDC WINAPI WinGCreateDC( void )
 {
-    return CreateCompatibleDC( NULL );
+    return CreateCompatibleDC( 0 );
 }
 
 /***********************************************************************
  *           WinGRecommendDIBFormat   (WING32.@)
  */
-BOOL CALLBACK WinGRecommendDIBFormat( BITMAPINFO *bmi )
+BOOL WINAPI WinGRecommendDIBFormat( BITMAPINFO *bmi )
 {
     if (!bmi) return FALSE;
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = 320;
-    bmi->bmiHeader.biHeight = -1;
+    bmi->bmiHeader.biHeight = 1;
     bmi->bmiHeader.biPlanes = 1;
     bmi->bmiHeader.biBitCount = 8;
     bmi->bmiHeader.biCompression = BI_RGB;
@@ -56,23 +56,21 @@ BOOL CALLBACK WinGRecommendDIBFormat( BITMAPINFO *bmi )
 /***********************************************************************
  *           WinGCreateBitmap   (WING32.@)
  */
-HBITMAP CALLBACK WinGCreateBitmap( HDC hdc, BITMAPINFO *bmi, void **bits )
+HBITMAP WINAPI WinGCreateBitmap( HDC hdc, BITMAPINFO *bmi, void **bits )
 {
-    return CreateDIBSection( hdc, bmi, 0, bits, 0, 0 );
+    return CreateDIBSection( hdc, bmi, DIB_RGB_COLORS, bits, 0, 0 );
 }
 
 /***********************************************************************
  *           WinGGetDIBPointer   (WING32.@)
  */
-void * CALLBACK WinGGetDIBPointer( HBITMAP hbmp, BITMAPINFO *bmi )
+void * WINAPI WinGGetDIBPointer( HBITMAP hbmp, BITMAPINFO *bmi )
 {
     DIBSECTION ds;
 
-    if (GetObject( hbmp, sizeof(ds), &ds ) == sizeof(ds))
+    if (GetObjectW( hbmp, sizeof(ds), &ds ) == sizeof(ds))
     {
-        if (bmi != NULL)
-            memcpy( &bmi->bmiHeader, &ds.dsBmih, sizeof(*bmi) );
-
+        bmi->bmiHeader = ds.dsBmih;
         return ds.dsBm.bmBits;
     }
     return NULL;
@@ -81,7 +79,7 @@ void * CALLBACK WinGGetDIBPointer( HBITMAP hbmp, BITMAPINFO *bmi )
 /***********************************************************************
  *           WinGSetDIBColorTable   (WING32.@)
  */
-UINT CALLBACK WinGSetDIBColorTable( HDC hdc, UINT start, UINT end, RGBQUAD *colors )
+UINT WINAPI WinGSetDIBColorTable( HDC hdc, UINT start, UINT end, RGBQUAD *colors )
 {
     return SetDIBColorTable( hdc, start, end, colors );
 }
@@ -89,30 +87,30 @@ UINT CALLBACK WinGSetDIBColorTable( HDC hdc, UINT start, UINT end, RGBQUAD *colo
 /***********************************************************************
  *           WinGGetDIBColorTable   (WING32.@)
  */
-UINT CALLBACK WinGGetDIBColorTable( HDC hdc, UINT start, UINT end, RGBQUAD *colors )
+UINT WINAPI WinGGetDIBColorTable( HDC hdc, UINT start, UINT end, RGBQUAD *colors )
 {
     return GetDIBColorTable( hdc, start, end, colors );
 }
 
 /***********************************************************************
- *           WinGCreateHalfTonePalette   (WING32.@)
+ *           WinGCreateHalftonePalette   (WING32.@)
  */
-HPALETTE CALLBACK WinGCreateHalfTonePalette( void )
+HPALETTE WINAPI WinGCreateHalftonePalette( void )
 {
     HDC hdc;
     HPALETTE hpal;
 
-    hdc = GetDC( NULL );
+    hdc = GetDC( 0 );
     hpal = CreateHalftonePalette( hdc );
-    ReleaseDC( NULL, hdc );
+    ReleaseDC( 0, hdc );
 
     return hpal;
 }
 
 /***********************************************************************
- *           WinGCreateHalfToneBrush   (WING32.@)
+ *           WinGCreateHalftoneBrush   (WING32.@)
  */
-HBRUSH CALLBACK WinGCreateHalfToneBrush( HDC hdc, COLORREF color, INT type )
+HBRUSH WINAPI WinGCreateHalftoneBrush( HDC hdc, COLORREF color, INT type )
 {
     return CreateSolidBrush( color );
 }
@@ -120,10 +118,10 @@ HBRUSH CALLBACK WinGCreateHalfToneBrush( HDC hdc, COLORREF color, INT type )
 /***********************************************************************
  *           WinGStretchBlt   (WING32.@)
  */
-BOOL CALLBACK WinGStretchBlt( HDC hdcDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
+BOOL WINAPI WinGStretchBlt( HDC hdcDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
                             HDC hdcSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc )
 {
-    int old_blt_mode;
+    INT old_blt_mode;
     BOOL ret;
 
     old_blt_mode = SetStretchBltMode( hdcDst, COLORONCOLOR );
@@ -136,7 +134,7 @@ BOOL CALLBACK WinGStretchBlt( HDC hdcDst, INT xDst, INT yDst, INT widthDst, INT 
 /***********************************************************************
  *           WinGBitBlt   (WING32.@)
  */
-BOOL CALLBACK WinGBitBlt( HDC hdcDst, INT xDst, INT yDst, INT width,
+BOOL WINAPI WinGBitBlt( HDC hdcDst, INT xDst, INT yDst, INT width,
                         INT height, HDC hdcSrc, INT xSrc, INT ySrc )
 {
     return BitBlt( hdcDst, xDst, yDst, width, height, hdcSrc, xSrc, ySrc, SRCCOPY );

@@ -28,11 +28,8 @@ extern int is_aliaschain_attr(const type_t *var, enum attr_type t);
 extern int is_attr(const attr_list_t *list, enum attr_type t);
 extern void *get_attrp(const attr_list_t *list, enum attr_type t);
 extern unsigned int get_attrv(const attr_list_t *list, enum attr_type t);
-extern int is_void(const type_t *t);
-extern int is_conformant_array(const type_t *t);
-extern int is_declptr(const type_t *t);
 extern const char* get_name(const var_t *v);
-extern void write_type_left(FILE *h, type_t *t, int declonly);
+extern void write_type_left(FILE *h, type_t *t, enum name_type name_type, int declonly);
 extern void write_type_right(FILE *h, type_t *t, int is_field);
 extern void write_type_decl(FILE *f, type_t *t, const char *name);
 extern void write_type_decl_left(FILE *f, type_t *t);
@@ -47,6 +44,7 @@ extern int need_proxy(const type_t *iface);
 extern int need_inline_stubs(const type_t *iface);
 extern int need_stub_files(const statement_list_t *stmts);
 extern int need_proxy_file(const statement_list_t *stmts);
+extern int need_proxy_delegation(const statement_list_t *stmts);
 extern int need_inline_stubs_file(const statement_list_t *stmts);
 extern const var_t *is_callas(const attr_list_t *list);
 extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
@@ -55,9 +53,32 @@ extern const type_t* get_explicit_generic_handle_type(const var_t* var);
 extern const var_t *get_func_handle_var( const type_t *iface, const var_t *func,
                                          unsigned char *explicit_fc, unsigned char *implicit_fc );
 extern int has_out_arg_or_return(const var_t *func);
-extern void write_guid(FILE *f, const char *guid_prefix, const char *name,
-                       const UUID *uuid);
 extern int is_const_decl(const var_t *var);
+
+static inline int is_ptr(const type_t *t)
+{
+    return type_get_type(t) == TYPE_POINTER;
+}
+
+static inline int is_array(const type_t *t)
+{
+    return type_get_type(t) == TYPE_ARRAY;
+}
+
+static inline int is_void(const type_t *t)
+{
+    return type_get_type(t) == TYPE_VOID;
+}
+
+static inline int is_declptr(const type_t *t)
+{
+    return is_ptr(t) || (type_get_type(t) == TYPE_ARRAY && type_array_is_decl_as_ptr(t));
+}
+
+static inline int is_conformant_array(const type_t *t)
+{
+    return is_array(t) && type_array_has_conformance(t);
+}
 
 static inline int last_ptr(const type_t *type)
 {

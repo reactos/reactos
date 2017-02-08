@@ -321,7 +321,7 @@ sys_init(void)
                                     NULL,
                                     0,
                                     sizeof(struct lwip_callback_msg),
-                                    LWIP_TAG,
+                                    LWIP_MESSAGE_TAG,
                                     0);
     
     ExInitializeNPagedLookasideList(&QueueEntryLookasideList,
@@ -329,7 +329,7 @@ sys_init(void)
                                     NULL,
                                     0,
                                     sizeof(QUEUE_ENTRY),
-                                    LWIP_TAG,
+                                    LWIP_QUEUE_TAG,
                                     0);
 }
 

@@ -1,0 +1,77 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "WineMine"
+    IDS_NOBODY "Asnje"
+    IDS_ABOUT "Te Drejtat 2000 Joshua Thielen"
+END
+
+IDM_WINEMINE MENU
+BEGIN
+    POPUP "&Opsione"
+    BEGIN
+        MENUITEM "&E re\tF2", IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Marko pyetjen", IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "&Fillestar", IDM_BEGINNER
+        MENUITEM "&I Avancuar", IDM_ADVANCED
+        MENUITEM "&Ekspert", IDM_EXPERT
+        MENUITEM "&Modifikuar...", IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "D&il\tAlt+X", IDM_EXIT
+    END
+    POPUP "&Informacione"
+    BEGIN
+        MENUITEM "&Koha me e shpejt...", IDM_TIMES
+        MENUITEM "&Rreth", IDM_ABOUT
+    END
+END
+
+DLG_TIMES DIALOGEX 0, 0, 160, 80
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Koha me e shpejt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Koha me e shpejt", -1, 10, 10, 140, 45
+    LTEXT "Fillestar", -1, 20, 20, 40, 8
+    LTEXT "I Avancuar", -1, 20, 30, 40, 8
+    LTEXT "Ekspert", -1, 20, 40, 40, 8
+    LTEXT "999", IDC_TIME1, 70, 20, 15, 8
+    LTEXT "999", IDC_TIME2, 70, 30, 15, 8
+    LTEXT "999", IDC_TIME3, 70, 40, 15, 8
+    LTEXT "", IDC_NAME1, 90, 20, 55, 8
+    LTEXT "", IDC_NAME2, 90, 30, 55, 8
+    LTEXT "", IDC_NAME3, 90, 40, 55, 8
+    DEFPUSHBUTTON "OK", IDOK, 55, 60, 50, 15
+END
+
+DLG_CONGRATS DIALOGEX 0, 0, 160, 60
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Urime!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju lutem vendosni emrin", -1, 10, 10, 150, 10
+    EDITTEXT IDC_EDITNAME, 25, 20, 110, 12
+    DEFPUSHBUTTON "Mire", IDOK, 60, 40, 40, 15
+END
+
+DLG_CUSTOM DIALOGEX 0, 0, 100, 100
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Loje e modifikuar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Rreshta", -1, 5, 5, 30, 10
+    LTEXT "Kolona", -1, 5, 35, 30, 10
+    LTEXT "Minet", -1, 5, 65, 30, 10
+    EDITTEXT IDC_EDITROWS, 5, 15, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
+    DEFPUSHBUTTON "Mire", IDOK, 40, 30, 50, 15
+    PUSHBUTTON "Anulo", IDCANCEL, 40, 50, 50, 15
+END

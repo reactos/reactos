@@ -27,8 +27,8 @@
 /*
  * TIFF Library.
  */
-#include "tiffiop.h"
-#include <string.h>
+
+#include <precomp.h>
 
 /************************************************************************/
 /*                            TIFFCleanup()                             */

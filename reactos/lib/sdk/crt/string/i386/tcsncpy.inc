@@ -5,7 +5,8 @@
 PUBLIC _tcsncpy
 .code
 
-_tcsncpy:
+FUNC _tcsncpy
+    FPO 0, 3, 2, 2, 0, FRAME_FPO
     push esi
     push edi
     mov edi, [esp + 12] /* s1 */
@@ -30,6 +31,7 @@ _tcsncpy:
     pop edi
     pop esi
     ret
+ENDFUNC
 
 END
 /* EOF */

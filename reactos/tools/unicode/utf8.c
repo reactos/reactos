@@ -22,7 +22,7 @@
 
 #include "wine/unicode.h"
 
-extern WCHAR compose( const WCHAR *str );
+extern WCHAR wine_compose( const WCHAR *str );
 
 /* number of following bytes in sequence based on first byte value (for bytes above 0x7f) */
 static const char utf8_length[128] =
@@ -208,7 +208,7 @@ static inline int get_length_mbs_utf8_compose( int flags, const char *src, int s
             if (composed[0])
             {
                 composed[1] = res;
-                if ((composed[0] = compose( composed ))) continue;
+                if ((composed[0] = wine_compose( composed ))) continue;
             }
             composed[0] = res;
             ret++;
@@ -250,7 +250,7 @@ static int utf8_mbstowcs_compose( int flags, const char *src, int srclen, WCHAR 
             if (composed[0])
             {
                 composed[1] = res;
-                if ((composed[0] = compose( composed )))
+                if ((composed[0] = wine_compose( composed )))
                 {
                     dst[-1] = composed[0];
                     continue;

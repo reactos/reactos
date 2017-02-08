@@ -4,6 +4,7 @@
  * @implemented
  */
 int
+CDECL
 _stricmp(const char *s1, const char *s2)
 {
   while (toupper(*s1) == toupper(*s2))
@@ -20,6 +21,7 @@ _stricmp(const char *s1, const char *s2)
  * @implemented
  */
 int
+CDECL
 _strcmpi(const char *s1, const char *s2)
 {
 	return _stricmp(s1,s2);

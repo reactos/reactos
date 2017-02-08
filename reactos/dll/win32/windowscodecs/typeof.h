@@ -16,6 +16,12 @@
 #define __typeof_wchar unsigned short
 #endif
 
+struct jpeg_decompress_struct;
+struct jpeg_compress_struct;
+struct png_struct_def;
+struct png_color_struct;
+struct png_color_16_struct;
+
 typedef struct jpeg_error_mgr * (__cdecl typeof(jpeg_std_error))(struct jpeg_error_mgr *);
 typedef void (__cdecl typeof(jpeg_CreateDecompress))(struct jpeg_decompress_struct *, int, __typeof_size);
 typedef int (__cdecl typeof(jpeg_read_header))(struct jpeg_decompress_struct *, int);
@@ -54,6 +60,7 @@ typedef void (__cdecl typeof(png_set_bgr))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_error_fn))(struct png_struct_def *, void *, png_error_ptr_1, png_error_ptr_1);
 typedef void (__cdecl typeof(png_set_expand_gray_1_2_4_to_8))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_filler))(struct png_struct_def *, unsigned int, int);
+typedef int (__cdecl typeof(png_set_interlace_handling))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_gray_to_rgb))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_IHDR))(struct png_struct_def *, struct png_info_def *, unsigned int, unsigned int, int, int, int, int, int);
 typedef void (__cdecl typeof(png_set_pHYs))(struct png_struct_def *, struct png_info_def *, unsigned int, unsigned int, int);
@@ -68,9 +75,10 @@ typedef void (__cdecl typeof(png_write_end))(struct png_struct_def *, struct png
 typedef void (__cdecl typeof(png_write_info))(struct png_struct_def *, struct png_info_def *);
 typedef void (__cdecl typeof(png_write_rows))(struct png_struct_def *, unsigned char **row, unsigned int);
 typedef unsigned int (__cdecl typeof(png_get_iCCP))(struct png_struct_def *, struct png_info_def *, char **, int *, char **, unsigned int *);
+typedef void (__cdecl typeof(png_set_crc_action))(struct png_struct_def *, int, int);
 
 typedef void *thandle_t_1;
-typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, int);
+typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, long);
 typedef unsigned int (*TIFFSeekProc_1)(void *, unsigned int, int);
 typedef int (*TIFFCloseProc_1)(thandle_t_1);
 typedef unsigned int (*TIFFSizeProc_1)(thandle_t_1);

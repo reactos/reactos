@@ -18,33 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-//# include <libxml/HTMLtree.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include "precomp.h"
 
 #ifdef HAVE_LIBXML2
+
+static const xmlChar xmlns[] = "xmlns";
 
 typedef struct _domattr
 {
@@ -56,7 +34,7 @@ typedef struct _domattr
 static const tid_t domattr_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMAttribute_tid,
-    0
+    NULL_tid
 };
 
 static inline domattr *impl_from_IXMLDOMAttribute( IXMLDOMAttribute *iface )
@@ -545,8 +523,29 @@ static HRESULT WINAPI domattr_get_namespaceURI(
     BSTR* p)
 {
     domattr *This = impl_from_IXMLDOMAttribute( iface );
+    xmlNsPtr ns = This->node.node->ns;
+
     TRACE("(%p)->(%p)\n", This, p);
-    return node_get_namespaceURI(&This->node, p);
+
+    if (!p)
+        return E_INVALIDARG;
+
+    *p = NULL;
+
+    if (ns)
+    {
+        /* special case for default namespace definition */
+        if (xmlStrEqual(This->node.node->name, xmlns))
+            *p = bstr_from_xmlChar(xmlns);
+        else if (xmlStrEqual(ns->prefix, xmlns))
+            *p = SysAllocStringLen(NULL, 0);
+        else if (ns->href)
+            *p = bstr_from_xmlChar(ns->href);
+    }
+
+    TRACE("uri: %s\n", debugstr_w(*p));
+
+    return *p ? S_OK : S_FALSE;
 }
 
 static HRESULT WINAPI domattr_get_prefix(
@@ -554,8 +553,26 @@ static HRESULT WINAPI domattr_get_prefix(
     BSTR* prefix)
 {
     domattr *This = impl_from_IXMLDOMAttribute( iface );
+    xmlNsPtr ns = This->node.node->ns;
+
     TRACE("(%p)->(%p)\n", This, prefix);
-    return node_get_prefix( &This->node, prefix );
+
+    if (!prefix) return E_INVALIDARG;
+
+    *prefix = NULL;
+
+    if (ns)
+    {
+        /* special case for default namespace definition */
+        if (xmlStrEqual(This->node.node->name, xmlns))
+            *prefix = bstr_from_xmlChar(xmlns);
+        else if (ns->prefix)
+            *prefix = bstr_from_xmlChar(ns->prefix);
+    }
+
+    TRACE("prefix: %s\n", debugstr_w(*prefix));
+
+    return *prefix ? S_OK : S_FALSE;
 }
 
 static HRESULT WINAPI domattr_get_baseName(

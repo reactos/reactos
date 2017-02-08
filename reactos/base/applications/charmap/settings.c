@@ -7,8 +7,11 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
+#include <winreg.h>
+#include <windowsx.h>
+#include <tchar.h>
 
 const TCHAR g_szGeneralRegKey[] = _T("Software\\Microsoft\\CharMap");
 HWND hWnd;
@@ -87,8 +90,9 @@ extern void LoadSettings(void)
         }
 
         RegQueryValueEx(hKey, _T("Advanced"), NULL, &type, (LPBYTE)&dwAdvanChecked, &size);
+
         if(dwAdvanChecked == TRUE)
-            SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, (dwAdvanChecked ? MF_CHECKED : MF_UNCHECKED), 0);
+            SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, MF_CHECKED, 0);
 
     RegCloseKey(hKey);
     }
@@ -110,27 +114,24 @@ extern void SaveSettings(void)
 {
     HKEY hKey = NULL;
 
-    if (RegCreateKey(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        if (RegOpenKeyEx(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
-        {
-            TCHAR szBuffer[MAX_PATH];
+        TCHAR szBuffer[MAX_PATH];
 
-            hWnd = GetDlgItem(hCharmapDlg, IDC_FONTCOMBO);
-            ComboBox_GetText(hWnd, szBuffer, MAX_PATH);
+        hWnd = GetDlgItem(hCharmapDlg, IDC_FONTCOMBO);
+        ComboBox_GetText(hWnd, szBuffer, MAX_PATH);
 
-            if(szBuffer != NULL && *szBuffer != '\0')
-                RegSetValueEx(hKey, _T("Font"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) MAX_PATH);
+        if(*szBuffer != '\0')
+            RegSetValueEx(hKey, _T("Font"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) MAX_PATH);
 
-            hWnd = GetDlgItem(hCharmapDlg, IDC_COMBO_CHARSET);
-            ComboBox_GetText(hWnd, szBuffer, MAX_PATH);
+        hWnd = GetDlgItem(hCharmapDlg, IDC_COMBO_CHARSET);
+        ComboBox_GetText(hWnd, szBuffer, MAX_PATH);
 
-            if(szBuffer != NULL && *szBuffer != '\0')
-                RegSetValueEx(hKey, _T("CodePage"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) MAX_PATH);
+        if(*szBuffer != '\0')
+            RegSetValueEx(hKey, _T("CodePage"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) MAX_PATH);
 
-            RegSetValueEx(hKey, _T("Advanced"), 0, REG_DWORD, (LPBYTE)&Settings.IsAdvancedView, (DWORD) sizeof(DWORD));
+        RegSetValueEx(hKey, _T("Advanced"), 0, REG_DWORD, (LPBYTE)&Settings.IsAdvancedView, (DWORD) sizeof(DWORD));
 
-            RegCloseKey(hKey);
-        }
+        RegCloseKey(hKey);
     }
 }

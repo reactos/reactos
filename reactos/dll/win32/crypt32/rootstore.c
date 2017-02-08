@@ -15,9 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
-#include <stdarg.h>
-#include <stdio.h>
+
+#include "crypt32_private.h"
+
 #include <sys/types.h>
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -34,15 +34,6 @@
 #ifdef HAVE_SECURITY_SECURITY_H
 #include <Security/Security.h>
 #endif
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wincrypt.h"
-#include "winternl.h"
-#include "wine/debug.h"
-#include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -245,7 +236,7 @@ static void check_and_store_certs(HCERTSTORE from, HCERTSTORE to)
     TRACE("\n");
 
     CertDuplicateStore(to);
-    engine = CRYPT_CreateChainEngine(to, &chainEngineConfig);
+    engine = CRYPT_CreateChainEngine(to, CERT_SYSTEM_STORE_CURRENT_USER, &chainEngineConfig);
     if (engine)
     {
         PCCERT_CONTEXT cert = NULL;
@@ -256,9 +247,10 @@ static void check_and_store_certs(HCERTSTORE from, HCERTSTORE to)
             {
                 CERT_CHAIN_PARA chainPara = { sizeof(chainPara), { 0 } };
                 PCCERT_CHAIN_CONTEXT chain;
-                BOOL ret = CertGetCertificateChain(engine, cert, NULL, from,
-                 &chainPara, 0, NULL, &chain);
+                BOOL ret;
 
+                ret = CertGetCertificateChain(engine, cert, NULL, from,
+                 &chainPara, CERT_CHAIN_CACHE_ONLY_URL_RETRIEVAL, NULL, &chain);
                 if (!ret)
                     TRACE("rejecting %s: %s\n", get_cert_common_name(cert),
                      "chain creation failed");
@@ -326,6 +318,7 @@ static BOOL import_certs_from_file(int fd, HCERTSTORE store)
 static BOOL import_certs_from_path(LPCSTR path, HCERTSTORE store,
  BOOL allow_dir);
 
+#ifdef HAVE_READDIR
 static BOOL check_buffer_resize(char **ptr_buf, size_t *buf_size, size_t check_size)
 {
     if (check_size > *buf_size)
@@ -351,6 +344,7 @@ static BOOL check_buffer_resize(char **ptr_buf, size_t *buf_size, size_t check_s
 
     return TRUE;
 }
+#endif
 
 /* Opens path, which must be a directory, and imports certificates from every
  * file in the directory into store.
@@ -485,8 +479,10 @@ static const char * const CRYPT_knownLocations[] = {
  "/etc/ssl/certs/ca-certificates.crt",
  "/etc/ssl/certs",
  "/etc/pki/tls/certs/ca-bundle.crt",
+ "/usr/share/ca-certificates/ca-bundle.crt",
  "/usr/local/share/certs/",
  "/etc/sfw/openssl/certs",
+ "/etc/security/cacerts",  /* Android */
 };
 
 static const BYTE authenticode[] = {
@@ -805,14 +801,27 @@ static HCERTSTORE create_root_store(void)
         read_trusted_roots_from_known_locations(memStore);
         add_ms_root_certs(memStore);
         root = CRYPT_ProvCreateStore(0, memStore, &provInfo);
+#ifdef __REACTOS__
+        {
+            HCERTSTORE regStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"AuthRoot");
+            if (regStore)
+            {
+                HCERTSTORE collStore = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
+                    CERT_STORE_CREATE_NEW_FLAG, NULL);
+                CertAddStoreToCollection(collStore, regStore, 0, 0);
+                CertAddStoreToCollection(collStore, root, 0, 0);
+                root = collStore;
+            }
+        }
+#endif
     }
     TRACE("returning %p\n", root);
     return root;
 }
 
-static PWINECRYPT_CERTSTORE CRYPT_rootStore;
+static WINECRYPT_CERTSTORE *CRYPT_rootStore;
 
-PWINECRYPT_CERTSTORE CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
+WINECRYPT_CERTSTORE *CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
 {
     TRACE("(%ld, %08x)\n", hCryptProv, dwFlags);
 
@@ -831,7 +840,7 @@ PWINECRYPT_CERTSTORE CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
         if (CRYPT_rootStore != root)
             CertCloseStore(root, 0);
     }
-    CertDuplicateStore(CRYPT_rootStore);
+    CRYPT_rootStore->vtbl->addref(CRYPT_rootStore);
     return CRYPT_rootStore;
 }
 

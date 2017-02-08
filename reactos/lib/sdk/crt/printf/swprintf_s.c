@@ -9,6 +9,7 @@
 #define _sxprintf swprintf_s
 #define USE_COUNT 0
 #define USE_VARARGS 0
+#define _UNICODE
 #define IS_SECAPI 1
 
 #include "_sxprintf.c"

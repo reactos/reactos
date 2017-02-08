@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
 static inline WCHAR to_unicode_digit( WCHAR ch )
 {

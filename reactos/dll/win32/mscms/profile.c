@@ -37,17 +37,15 @@
 
 //#include "mscms_priv.h"
 
-#define IS_SEPARATOR(ch)  ((ch) == '\\' || (ch) == '/')
-
-static void MSCMS_basename( LPCWSTR path, LPWSTR name )
+static void basename( LPCWSTR path, LPWSTR name )
 {
     INT i = lstrlenW( path );
 
-    while (i > 0 && !IS_SEPARATOR(path[i - 1])) i--;
+    while (i > 0 && path[i - 1] != '\\' && path[i - 1] != '/') i--;
     lstrcpyW( name, &path[i] );
 }
 
-static inline LPWSTR MSCMS_strdupW( LPCSTR str )
+static inline LPWSTR strdupW( LPCSTR str )
 {
     LPWSTR ret = NULL;
     if (str)
@@ -59,7 +57,7 @@ static inline LPWSTR MSCMS_strdupW( LPCSTR str )
     return ret;
 }
 
-const char *MSCMS_dbgstr_tag( DWORD tag )
+const char *dbgstr_tag( DWORD tag )
 {
     return wine_dbg_sprintf( "'%c%c%c%c'",
         (char)(tag >> 24), (char)(tag >> 16), (char)(tag >> 8), (char)(tag) );
@@ -138,7 +136,7 @@ static BOOL set_profile_device_key( PCWSTR file, const BYTE *value, DWORD size )
     }
     RegCreateKeyExW( HKEY_LOCAL_MACHINE, icmW, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &icm_key, NULL );
 
-    MSCMS_basename( file, basenameW );
+    basename( file, basenameW );
     sprintfW( classW, fmtW, (header.phClass >> 24) & 0xff, (header.phClass >> 16) & 0xff,
                             (header.phClass >> 8) & 0xff,  header.phClass & 0xff );
 
@@ -339,10 +337,8 @@ BOOL WINAPI GetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
                                     PVOID buffer, PBOOL ref )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
-    DWORD i, count;
-    icTag tag;
 
     TRACE( "( %p, 0x%08x, %d, %p, %p, %p )\n", handle, type, offset, size, buffer, ref );
 
@@ -353,30 +349,15 @@ BOOL WINAPI GetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
         release_profile( profile );
         return FALSE;
     }
-    count = MSCMS_get_tag_count( profile->iccprofile );
-
-    for (i = 0; i < count; i++)
+    if (!get_tag_data( profile, type, offset, buffer, size ))
     {
-        MSCMS_get_tag_by_index( profile->iccprofile, i, &tag );
-
-        if (tag.sig == type)
-        {
-            if ((tag.size - offset) > *size || !buffer)
-            {
-                *size = (tag.size - offset);
-                release_profile( profile );
-                return FALSE;
-            }
-            MSCMS_get_tag_data( profile->iccprofile, &tag, offset, buffer );
-
-            *ref = FALSE; /* FIXME: calculate properly */
-            release_profile( profile );
-            return TRUE;
-        }
+        release_profile( profile );
+        return FALSE;
     }
+    ret = get_tag_data( profile, type, offset, buffer, size );
+    *ref = cmsTagLinkedTo( profile->cmsprofile, type ) != 0;
     release_profile( profile );
-
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -401,10 +382,10 @@ BOOL WINAPI GetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
 BOOL WINAPI GetColorProfileElementTag( HPROFILE handle, DWORD index, PTAGTYPE type )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
-    DWORD count;
-    icTag tag;
+    cmsInt32Number num_tags;
+    cmsTagSignature sig;
 
     TRACE( "( %p, %d, %p )\n", handle, index, type );
 
@@ -415,19 +396,20 @@ BOOL WINAPI GetColorProfileElementTag( HPROFILE handle, DWORD index, PTAGTYPE ty
         release_profile( profile );
         return FALSE;
     }
-    count = MSCMS_get_tag_count( profile->iccprofile );
-    if (index > count || index < 1)
+    num_tags = cmsGetTagCount( profile->cmsprofile );
+    if (num_tags < 0 || index > num_tags || index < 1)
     {
         release_profile( profile );
         return FALSE;
     }
-    MSCMS_get_tag_by_index( profile->iccprofile, index - 1, &tag );
-    *type = tag.sig;
-
+    if ((sig = cmsGetTagSignature( profile->cmsprofile, index - 1 )))
+    {
+        *type = sig;
+        ret = TRUE;
+    }
     release_profile( profile );
-    ret = TRUE;
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -452,7 +434,7 @@ BOOL WINAPI GetColorProfileElementTag( HPROFILE handle, DWORD index, PTAGTYPE ty
 BOOL WINAPI GetColorProfileFromHandle( HPROFILE handle, PBYTE buffer, PDWORD size )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
     PROFILEHEADER header;
 
@@ -465,7 +447,7 @@ BOOL WINAPI GetColorProfileFromHandle( HPROFILE handle, PBYTE buffer, PDWORD siz
         release_profile( profile );
         return FALSE;
     }
-    MSCMS_get_profile_header( profile->iccprofile, &header );
+    get_profile_header( profile, &header );
 
     if (!buffer || header.phSize > *size)
     {
@@ -475,13 +457,13 @@ BOOL WINAPI GetColorProfileFromHandle( HPROFILE handle, PBYTE buffer, PDWORD siz
     }
 
     /* No endian conversion needed */
-    memcpy( buffer, profile->iccprofile, header.phSize );
-    *size = header.phSize;
+    memcpy( buffer, profile->data, profile->size );
+    *size = profile->size;
 
     release_profile( profile );
     ret = TRUE;
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -503,7 +485,7 @@ BOOL WINAPI GetColorProfileFromHandle( HPROFILE handle, PBYTE buffer, PDWORD siz
  */
 BOOL WINAPI GetColorProfileHeader( HPROFILE handle, PPROFILEHEADER header )
 {
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
 
     TRACE( "( %p, %p )\n", handle, header );
@@ -515,14 +497,13 @@ BOOL WINAPI GetColorProfileHeader( HPROFILE handle, PPROFILEHEADER header )
         release_profile( profile );
         return FALSE;
     }
-    MSCMS_get_profile_header( profile->iccprofile, header );
-
+    get_profile_header( profile, header );
     release_profile( profile );
     return TRUE;
 
 #else
     return FALSE;
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
 }
 
 /******************************************************************************
@@ -542,8 +523,9 @@ BOOL WINAPI GetColorProfileHeader( HPROFILE handle, PPROFILEHEADER header )
 BOOL WINAPI GetCountColorProfileElements( HPROFILE handle, PDWORD count )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
+    cmsInt32Number num_tags;
 
     TRACE( "( %p, %p )\n", handle, count );
 
@@ -554,12 +536,14 @@ BOOL WINAPI GetCountColorProfileElements( HPROFILE handle, PDWORD count )
         release_profile( profile );
         return FALSE;
     }
-    *count = MSCMS_get_tag_count( profile->iccprofile );
-
+    if ((num_tags = cmsGetTagCount( profile->cmsprofile )) >= 0)
+    {
+        *count = num_tags;
+        ret = TRUE;
+    }
     release_profile( profile );
-    ret = TRUE;
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -667,7 +651,7 @@ BOOL WINAPI GetStandardColorSpaceProfileW( PCWSTR machine, DWORD id, PWSTR profi
             lstrcatW( rgbprofile, rgbprofilefile );
             len = lstrlenW( rgbprofile ) * sizeof(WCHAR);
 
-            if (*size < len || !profile)
+            if (*size < len)
             {
                 *size = len;
                 SetLastError( ERROR_MORE_DATA );
@@ -684,7 +668,7 @@ BOOL WINAPI GetStandardColorSpaceProfileW( PCWSTR machine, DWORD id, PWSTR profi
     return TRUE;
 }
 
-static BOOL MSCMS_header_from_file( LPCWSTR file, PPROFILEHEADER header )
+static BOOL header_from_file( LPCWSTR file, PPROFILEHEADER header )
 {
     BOOL ret;
     PROFILE profile;
@@ -726,7 +710,7 @@ static BOOL MSCMS_header_from_file( LPCWSTR file, PPROFILEHEADER header )
     return ret;
 }
 
-static BOOL MSCMS_match_profile( PENUMTYPEW rec, PPROFILEHEADER hdr )
+static BOOL match_profile( PENUMTYPEW rec, PPROFILEHEADER hdr )
 {
     if (rec->dwFields & ET_DEVICENAME)
     {
@@ -747,36 +731,36 @@ static BOOL MSCMS_match_profile( PENUMTYPEW rec, PPROFILEHEADER hdr )
     }
     if (rec->dwFields & ET_DEVICECLASS)
     {
-        FIXME( "ET_DEVICECLASS: %s\n", MSCMS_dbgstr_tag(rec->dwMediaType) );
+        FIXME( "ET_DEVICECLASS: %s\n", dbgstr_tag(rec->dwMediaType) );
     }
     if (rec->dwFields & ET_CMMTYPE)
     {
-        TRACE( "ET_CMMTYPE: %s\n", MSCMS_dbgstr_tag(rec->dwCMMType) );
+        TRACE( "ET_CMMTYPE: %s\n", dbgstr_tag(rec->dwCMMType) );
         if (rec->dwCMMType != hdr->phCMMType) return FALSE;
     }
     if (rec->dwFields & ET_CLASS)
     {
-        TRACE( "ET_CLASS: %s\n", MSCMS_dbgstr_tag(rec->dwClass) );
+        TRACE( "ET_CLASS: %s\n", dbgstr_tag(rec->dwClass) );
         if (rec->dwClass != hdr->phClass) return FALSE;
     }
     if (rec->dwFields & ET_DATACOLORSPACE)
     {
-        TRACE( "ET_DATACOLORSPACE: %s\n", MSCMS_dbgstr_tag(rec->dwDataColorSpace) );
+        TRACE( "ET_DATACOLORSPACE: %s\n", dbgstr_tag(rec->dwDataColorSpace) );
         if (rec->dwDataColorSpace != hdr->phDataColorSpace) return FALSE;
     }
     if (rec->dwFields & ET_CONNECTIONSPACE)
     {
-        TRACE( "ET_CONNECTIONSPACE: %s\n", MSCMS_dbgstr_tag(rec->dwConnectionSpace) );
+        TRACE( "ET_CONNECTIONSPACE: %s\n", dbgstr_tag(rec->dwConnectionSpace) );
         if (rec->dwConnectionSpace != hdr->phConnectionSpace) return FALSE;
     }
     if (rec->dwFields & ET_SIGNATURE)
     {
-        TRACE( "ET_SIGNATURE: %s\n", MSCMS_dbgstr_tag(rec->dwSignature) );
+        TRACE( "ET_SIGNATURE: %s\n", dbgstr_tag(rec->dwSignature) );
         if (rec->dwSignature != hdr->phSignature) return FALSE;
     }
     if (rec->dwFields & ET_PLATFORM)
     {
-        TRACE( "ET_PLATFORM: %s\n", MSCMS_dbgstr_tag(rec->dwPlatform) );
+        TRACE( "ET_PLATFORM: %s\n", dbgstr_tag(rec->dwPlatform) );
         if (rec->dwPlatform != hdr->phPlatform) return FALSE;
     }
     if (rec->dwFields & ET_PROFILEFLAGS)
@@ -786,12 +770,12 @@ static BOOL MSCMS_match_profile( PENUMTYPEW rec, PPROFILEHEADER hdr )
     }
     if (rec->dwFields & ET_MANUFACTURER)
     {
-        TRACE( "ET_MANUFACTURER: %s\n", MSCMS_dbgstr_tag(rec->dwManufacturer) );
+        TRACE( "ET_MANUFACTURER: %s\n", dbgstr_tag(rec->dwManufacturer) );
         if (rec->dwManufacturer != hdr->phManufacturer) return FALSE;
     }
     if (rec->dwFields & ET_MODEL)
     {
-        TRACE( "ET_MODEL: %s\n", MSCMS_dbgstr_tag(rec->dwModel) );
+        TRACE( "ET_MODEL: %s\n", dbgstr_tag(rec->dwModel) );
         if (rec->dwModel != hdr->phModel) return FALSE;
     }
     if (rec->dwFields & ET_ATTRIBUTES)
@@ -808,7 +792,7 @@ static BOOL MSCMS_match_profile( PENUMTYPEW rec, PPROFILEHEADER hdr )
     }
     if (rec->dwFields & ET_CREATOR)
     {
-        TRACE( "ET_CREATOR: %s\n", MSCMS_dbgstr_tag(rec->dwCreator) );
+        TRACE( "ET_CREATOR: %s\n", dbgstr_tag(rec->dwCreator) );
         if (rec->dwCreator != hdr->phCreator) return FALSE;
     }
     return TRUE;
@@ -857,17 +841,17 @@ BOOL WINAPI EnumColorProfilesA( PCSTR machine, PENUMTYPEA record, PBYTE buffer,
     memcpy( &recordW, record, sizeof(ENUMTYPEA) );
     if (record->pDeviceName)
     {
-        deviceW = MSCMS_strdupW( record->pDeviceName );
+        deviceW = strdupW( record->pDeviceName );
         if (!(recordW.pDeviceName = deviceW)) goto exit;
     }
 
-    fileW = MSCMS_strdupW( data.cFileName );
+    fileW = strdupW( data.cFileName );
     if (!fileW) goto exit;
 
-    ret = MSCMS_header_from_file( fileW, &header );
+    ret = header_from_file( fileW, &header );
     if (ret)
     {
-        match = MSCMS_match_profile( &recordW, &header );
+        match = match_profile( &recordW, &header );
         if (match)
         {
             len = sizeof(char) * (lstrlenA( data.cFileName ) + 1);
@@ -888,17 +872,17 @@ BOOL WINAPI EnumColorProfilesA( PCSTR machine, PENUMTYPEA record, PBYTE buffer,
 
     while (FindNextFileA( find, &data ))
     {
-        fileW = MSCMS_strdupW( data.cFileName );
+        fileW = strdupW( data.cFileName );
         if (!fileW) goto exit;
 
-        ret = MSCMS_header_from_file( fileW, &header );
+        ret = header_from_file( fileW, &header );
         if (!ret)
         {
             HeapFree( GetProcessHeap(), 0, fileW );
             continue;
         }
 
-        match = MSCMS_match_profile( &recordW, &header );
+        match = match_profile( &recordW, &header );
         if (match)
         {
             char **tmp = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -1001,10 +985,10 @@ BOOL WINAPI EnumColorProfilesW( PCWSTR machine, PENUMTYPEW record, PBYTE buffer,
     profiles = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WCHAR *) + 1 );
     if (!profiles) goto exit;
 
-    ret = MSCMS_header_from_file( data.cFileName, &header );
+    ret = header_from_file( data.cFileName, &header );
     if (ret)
     {
-        match = MSCMS_match_profile( record, &header );
+        match = match_profile( record, &header );
         if (match)
         {
             len = sizeof(WCHAR) * (lstrlenW( data.cFileName ) + 1);
@@ -1023,10 +1007,10 @@ BOOL WINAPI EnumColorProfilesW( PCWSTR machine, PENUMTYPEW record, PBYTE buffer,
 
     while (FindNextFileW( find, &data ))
     {
-        ret = MSCMS_header_from_file( data.cFileName, &header );
+        ret = header_from_file( data.cFileName, &header );
         if (!ret) continue;
 
-        match = MSCMS_match_profile( record, &header );
+        match = match_profile( record, &header );
         if (match)
         {
             WCHAR **tmp = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -1129,7 +1113,7 @@ BOOL WINAPI InstallColorProfileW( PCWSTR machine, PCWSTR profile )
 
     if (!GetColorDirectoryW( machine, dest, &size )) return FALSE;
 
-    MSCMS_basename( profile, base );
+    basename( profile, base );
 
     lstrcatW( dest, slash );
     lstrcatW( dest, base );
@@ -1158,10 +1142,8 @@ BOOL WINAPI InstallColorProfileW( PCWSTR machine, PCWSTR profile )
 BOOL WINAPI IsColorProfileTagPresent( HPROFILE handle, TAGTYPE type, PBOOL present )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
-    DWORD i, count;
-    icTag tag;
 
     TRACE( "( %p, 0x%08x, %p )\n", handle, type, present );
 
@@ -1172,21 +1154,11 @@ BOOL WINAPI IsColorProfileTagPresent( HPROFILE handle, TAGTYPE type, PBOOL prese
         release_profile( profile );
         return FALSE;
     }
-    count = MSCMS_get_tag_count( profile->iccprofile );
-
-    for (i = 0; i < count; i++)
-    {
-        MSCMS_get_tag_by_index( profile->iccprofile, i, &tag );
-
-        if (tag.sig == type)
-        {
-            *present = ret = TRUE;
-            break;
-        }
-    }
+    *present = (cmsIsTag( profile->cmsprofile, type ) != 0);
     release_profile( profile );
+    ret = TRUE;
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -1207,7 +1179,7 @@ BOOL WINAPI IsColorProfileTagPresent( HPROFILE handle, TAGTYPE type, PBOOL prese
 BOOL WINAPI IsColorProfileValid( HPROFILE handle, PBOOL valid )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
 
     TRACE( "( %p, %p )\n", handle, valid );
@@ -1219,10 +1191,10 @@ BOOL WINAPI IsColorProfileValid( HPROFILE handle, PBOOL valid )
         release_profile( profile );
         return FALSE;
     }
-    if (profile->iccprofile) ret = *valid = TRUE;
+    if (profile->data) ret = *valid = TRUE;
     release_profile( profile );
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -1247,10 +1219,8 @@ BOOL WINAPI SetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
                                     PVOID buffer )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
-    DWORD i, count;
-    icTag tag;
 
     TRACE( "( %p, 0x%08x, %d, %p, %p )\n", handle, type, offset, size, buffer );
 
@@ -1261,28 +1231,9 @@ BOOL WINAPI SetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
         release_profile( profile );
         return FALSE;
     }
-    count = MSCMS_get_tag_count( profile->iccprofile );
-
-    for (i = 0; i < count; i++)
-    {
-        MSCMS_get_tag_by_index( profile->iccprofile, i, &tag );
-
-        if (tag.sig == type)
-        {
-            if (offset > tag.size)
-            {
-                release_profile( profile );
-                return FALSE;
-            }
-            MSCMS_set_tag_data( profile->iccprofile, &tag, offset, buffer );
-
-            release_profile( profile );
-            return TRUE;
-        }
-    }
+    ret = set_tag_data( profile, type, offset, buffer, size );
     release_profile( profile );
-
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }
 
@@ -1301,7 +1252,7 @@ BOOL WINAPI SetColorProfileElement( HPROFILE handle, TAGTYPE type, DWORD offset,
  */
 BOOL WINAPI SetColorProfileHeader( HPROFILE handle, PPROFILEHEADER header )
 {
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     struct profile *profile = grab_profile( handle );
 
     TRACE( "( %p, %p )\n", handle, header );
@@ -1313,14 +1264,13 @@ BOOL WINAPI SetColorProfileHeader( HPROFILE handle, PPROFILEHEADER header )
         release_profile( profile );
         return FALSE;
     }
-    MSCMS_set_profile_header( profile->iccprofile, header );
-
+    set_profile_header( profile, header );
     release_profile( profile );
     return TRUE;
 
 #else
     return FALSE;
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
 }
 
 /******************************************************************************
@@ -1441,10 +1391,11 @@ HPROFILE WINAPI OpenColorProfileA( PPROFILE profile, DWORD access, DWORD sharing
  */
 HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing, DWORD creation )
 {
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
     cmsHPROFILE cmsprofile = NULL;
-    icProfile *iccprofile = NULL;
+    char *data = NULL;
     HANDLE handle = INVALID_HANDLE_VALUE;
+    DWORD size;
 
     TRACE( "( %p, 0x%08x, 0x%08x, 0x%08x )\n", profile, access, sharing, creation );
 
@@ -1454,14 +1405,19 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
     {
         /* FIXME: access flags not implemented for memory based profiles */
 
-        if (!(iccprofile = HeapAlloc( GetProcessHeap(), 0, profile->cbDataSize ))) return NULL;
-        memcpy( iccprofile, profile->pProfileData, profile->cbDataSize );
+        if (!(data = HeapAlloc( GetProcessHeap(), 0, profile->cbDataSize ))) return NULL;
+        memcpy( data, profile->pProfileData, profile->cbDataSize );
 
-        cmsprofile = cmsOpenProfileFromMem( iccprofile, profile->cbDataSize );
+        if (!(cmsprofile = cmsOpenProfileFromMem( data, profile->cbDataSize )))
+        {
+            HeapFree( GetProcessHeap(), 0, data );
+            return FALSE;
+        }
+        size = profile->cbDataSize;
     }
     else if (profile->dwType == PROFILE_FILENAME)
     {
-        DWORD size, read, flags = 0;
+        DWORD read, flags = 0;
 
         TRACE( "profile file: %s\n", debugstr_w( profile->pProfileData ) );
 
@@ -1494,32 +1450,32 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
             WARN( "Unable to open color profile %u\n", GetLastError() );
             return NULL;
         }
-
         if ((size = GetFileSize( handle, NULL )) == INVALID_FILE_SIZE)
         {
             ERR( "Unable to retrieve size of color profile\n" );
             CloseHandle( handle );
             return NULL;
         }
-
-        iccprofile = HeapAlloc( GetProcessHeap(), 0, size );
-        if (!iccprofile)
+        if (!(data = HeapAlloc( GetProcessHeap(), 0, size )))
         {
             ERR( "Unable to allocate memory for color profile\n" );
             CloseHandle( handle );
             return NULL;
         }
-
-        if (!ReadFile( handle, iccprofile, size, &read, NULL ) || read != size)
+        if (!ReadFile( handle, data, size, &read, NULL ) || read != size)
         {
             ERR( "Unable to read color profile\n" );
 
             CloseHandle( handle );
-            HeapFree( GetProcessHeap(), 0, iccprofile );
+            HeapFree( GetProcessHeap(), 0, data );
             return NULL;
         }
-
-        cmsprofile = cmsOpenProfileFromMem( iccprofile, size );
+        if (!(cmsprofile = cmsOpenProfileFromMem( data, size )))
+        {
+            CloseHandle( handle );
+            HeapFree( GetProcessHeap(), 0, data );
+            return NULL;
+        }
     }
     else
     {
@@ -1530,16 +1486,21 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
     if (cmsprofile)
     {
         struct profile profile;
+        HPROFILE hprof;
 
-        profile.file = handle;
-        profile.access = access;
-        profile.iccprofile = iccprofile;
+        profile.file       = handle;
+        profile.access     = access;
+        profile.data       = data;
+        profile.size       = size;
         profile.cmsprofile = cmsprofile;
 
-        return create_profile( &profile );
+        if ((hprof = create_profile( &profile ))) return hprof;
+        HeapFree( GetProcessHeap(), 0, data );
+        cmsCloseProfile( cmsprofile );
     }
+    CloseHandle( handle );
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return NULL;
 }
 
@@ -1558,11 +1519,11 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
 BOOL WINAPI CloseColorProfile( HPROFILE profile )
 {
     BOOL ret = FALSE;
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
 
     TRACE( "( %p )\n", profile );
     ret = close_profile( profile );
 
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */
     return ret;
 }

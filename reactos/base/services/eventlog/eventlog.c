@@ -1,7 +1,7 @@
 /*
  * PROJECT:          ReactOS kernel
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             services/eventlog/eventlog.c
+ * FILE:             base/services/eventlog/eventlog.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2002 Eric Kohl
  *                   Copyright 2005 Saveliy Tretiakov
@@ -10,6 +10,12 @@
 /* INCLUDES *****************************************************************/
 
 #include "eventlog.h"
+
+#include <stdio.h>
+#include <netevent.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -100,7 +106,7 @@ ServiceControlHandler(DWORD dwControl,
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
-        default :
+        default:
             DPRINT1("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
@@ -269,12 +275,18 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
     LONG Result;
     PLOGFILE pLogf = NULL;
     UNICODE_STRING FileName;
+    ULONG ulMaxSize, ulRetention;
     NTSTATUS Status;
 
     DPRINT("LoadLogFile: %S\n", LogName);
 
-    RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL,
-                    NULL, NULL, &MaxValueLen, NULL, NULL);
+    Result = RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL,
+                             NULL, NULL, &MaxValueLen, NULL, NULL);
+    if (Result != ERROR_SUCCESS)
+    {
+        DPRINT1("RegQueryInfoKey failed: %lu\n", Result);
+        return NULL;
+    }
 
     Buf = HeapAlloc(MyHeap, 0, MaxValueLen);
     if (!Buf)
@@ -293,7 +305,7 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
                              &ValueLen);
     if (Result != ERROR_SUCCESS)
     {
-        DPRINT1("RegQueryValueEx failed: %lu\n", GetLastError());
+        DPRINT1("RegQueryValueEx failed: %lu\n", Result);
         HeapFree(MyHeap, 0, Buf);
         return NULL;
     }
@@ -327,7 +339,27 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 
     DPRINT("%S -> %S\n", Buf, Expanded);
 
-    Status = LogfCreate(&pLogf, LogName, &FileName, TRUE, FALSE);
+    ValueLen = sizeof(ULONG);
+    Result = RegQueryValueEx(hKey,
+                             L"MaxSize",
+                             NULL,
+                             &Type,
+                             (LPBYTE)&ulMaxSize,
+                             &ValueLen);
+    if (Result != ERROR_SUCCESS)
+        ulMaxSize = 512 * 1024; /* 512 kBytes */
+
+    ValueLen = sizeof(ULONG);
+    Result = RegQueryValueEx(hKey,
+                             L"Retention",
+                             NULL,
+                             &Type,
+                             (LPBYTE)&ulRetention,
+                             &ValueLen);
+    if (Result != ERROR_SUCCESS)
+        ulRetention = 0;
+
+    Status = LogfCreate(&pLogf, LogName, &FileName, ulMaxSize, ulRetention, TRUE, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create %S! (Status %08lx)\n", Expanded, Status);
@@ -340,16 +372,21 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 
 BOOL LoadLogFiles(HKEY eventlogKey)
 {
-    LONG result;
+    LONG Result;
     DWORD MaxLognameLen, LognameLen;
     WCHAR *Buf = NULL;
     INT i;
     PLOGFILE pLogFile;
 
-    RegQueryInfoKey(eventlogKey,
-                    NULL, NULL, NULL, NULL,
-                    &MaxLognameLen,
-                    NULL, NULL, NULL, NULL, NULL, NULL);
+    Result = RegQueryInfoKey(eventlogKey,
+                             NULL, NULL, NULL, NULL,
+                             &MaxLognameLen,
+                             NULL, NULL, NULL, NULL, NULL, NULL);
+    if (Result != ERROR_SUCCESS)
+    {
+        DPRINT1("RegQueryInfoKey failed: %lu\n", Result);
+        return FALSE;
+    }
 
     MaxLognameLen++;
 
@@ -374,8 +411,8 @@ BOOL LoadLogFiles(HKEY eventlogKey)
 
         DPRINT("%S\n", Buf);
 
-        result = RegOpenKeyEx(eventlogKey, Buf, 0, KEY_ALL_ACCESS, &SubKey);
-        if (result != ERROR_SUCCESS)
+        Result = RegOpenKeyEx(eventlogKey, Buf, 0, KEY_ALL_ACCESS, &SubKey);
+        if (Result != ERROR_SUCCESS)
         {
             DPRINT1("Failed to open %S key.\n", Buf);
             HeapFree(MyHeap, 0, Buf);
@@ -406,7 +443,7 @@ INT wmain()
 {
     WCHAR LogPath[MAX_PATH];
     INT RetCode = 0;
-    LONG result;
+    LONG Result;
     HKEY elogKey;
 
     LogfListInitialize();
@@ -430,13 +467,13 @@ INT wmain()
     }
     else
     {
-        result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+        Result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                               L"SYSTEM\\CurrentControlSet\\Services\\EventLog",
                               0,
                               KEY_ALL_ACCESS,
                               &elogKey);
 
-        if (result != ERROR_SUCCESS)
+        if (Result != ERROR_SUCCESS)
         {
             DPRINT1("Fatal error: can't open eventlog registry key.\n");
             RetCode = 1;

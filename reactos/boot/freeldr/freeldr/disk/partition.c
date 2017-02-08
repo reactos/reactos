@@ -27,215 +27,215 @@ BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
                                  PPARTITION_TABLE_ENTRY PartitionTableEntry,
                                  ULONG *ActivePartition)
 {
-	ULONG			BootablePartitionCount = 0;
-	MASTER_BOOT_RECORD	MasterBootRecord;
+    ULONG              BootablePartitionCount = 0;
+    MASTER_BOOT_RECORD MasterBootRecord;
 
-	*ActivePartition = 0;
-	// Read master boot record
-	if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
-	{
-		return FALSE;
-	}
+    *ActivePartition = 0;
 
-	// Count the bootable partitions
-	if (MasterBootRecord.PartitionTable[0].BootIndicator == 0x80)
-	{
-		BootablePartitionCount++;
-		*ActivePartition = 1;
-	}
-	if (MasterBootRecord.PartitionTable[1].BootIndicator == 0x80)
-	{
-		BootablePartitionCount++;
-		*ActivePartition = 2;
-	}
-	if (MasterBootRecord.PartitionTable[2].BootIndicator == 0x80)
-	{
-		BootablePartitionCount++;
-		*ActivePartition = 3;
-	}
-	if (MasterBootRecord.PartitionTable[3].BootIndicator == 0x80)
-	{
-		BootablePartitionCount++;
-		*ActivePartition = 4;
-	}
+    // Read master boot record
+    if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
+    {
+        return FALSE;
+    }
 
-	// Make sure there was only one bootable partition
-	if (BootablePartitionCount == 0)
-	{
-		ERR("No bootable (active) partitions found.\n");
-		return FALSE;
-	}
-	else if (BootablePartitionCount != 1)
-	{
-		ERR("Too many bootable (active) partitions found.\n");
-		return FALSE;
-	}
+    // Count the bootable partitions
+    if (MasterBootRecord.PartitionTable[0].BootIndicator == 0x80)
+    {
+        BootablePartitionCount++;
+        *ActivePartition = 1;
+    }
+    if (MasterBootRecord.PartitionTable[1].BootIndicator == 0x80)
+    {
+        BootablePartitionCount++;
+        *ActivePartition = 2;
+    }
+    if (MasterBootRecord.PartitionTable[2].BootIndicator == 0x80)
+    {
+        BootablePartitionCount++;
+        *ActivePartition = 3;
+    }
+    if (MasterBootRecord.PartitionTable[3].BootIndicator == 0x80)
+    {
+        BootablePartitionCount++;
+        *ActivePartition = 4;
+    }
 
-	// Copy the partition table entry
-	RtlCopyMemory(PartitionTableEntry,
-	              &MasterBootRecord.PartitionTable[*ActivePartition - 1],
-	              sizeof(PARTITION_TABLE_ENTRY));
+    // Make sure there was only one bootable partition
+    if (BootablePartitionCount == 0)
+    {
+        ERR("No bootable (active) partitions found.\n");
+        return FALSE;
+    }
+    else if (BootablePartitionCount != 1)
+    {
+        ERR("Too many bootable (active) partitions found.\n");
+        return FALSE;
+    }
 
-	return TRUE;
+    // Copy the partition table entry
+    RtlCopyMemory(PartitionTableEntry,
+                  &MasterBootRecord.PartitionTable[*ActivePartition - 1],
+                  sizeof(PARTITION_TABLE_ENTRY));
+
+    return TRUE;
 }
 
 BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	MASTER_BOOT_RECORD		MasterBootRecord;
-	PARTITION_TABLE_ENTRY	ExtendedPartitionTableEntry;
-	ULONG						ExtendedPartitionNumber;
-	ULONG						ExtendedPartitionOffset;
-	ULONG						Index;
+    MASTER_BOOT_RECORD        MasterBootRecord;
+    PARTITION_TABLE_ENTRY    ExtendedPartitionTableEntry;
+    ULONG                        ExtendedPartitionNumber;
+    ULONG                        ExtendedPartitionOffset;
+    ULONG                        Index;
 
-	// Read master boot record
-	if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
-	{
-		return FALSE;
-	}
+    // Read master boot record
+    if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
+    {
+        return FALSE;
+    }
 
-	// If they are asking for a primary
-	// partition then things are easy
-	if (PartitionNumber < 5)
-	{
-		// PartitionNumber is one-based and we need it zero-based
-		PartitionNumber--;
+    // If they are asking for a primary
+    // partition then things are easy
+    if (PartitionNumber < 5)
+    {
+        // PartitionNumber is one-based and we need it zero-based
+        PartitionNumber--;
 
-		// Copy the partition table entry
-		RtlCopyMemory(PartitionTableEntry, &MasterBootRecord.PartitionTable[PartitionNumber], sizeof(PARTITION_TABLE_ENTRY));
+        // Copy the partition table entry
+        RtlCopyMemory(PartitionTableEntry, &MasterBootRecord.PartitionTable[PartitionNumber], sizeof(PARTITION_TABLE_ENTRY));
 
-		return TRUE;
-	}
-	else
-	{
-		// They want an extended partition entry so we will need
-		// to loop through all the extended partitions on the disk
-		// and return the one they want.
+        return TRUE;
+    }
+    else
+    {
+        // They want an extended partition entry so we will need
+        // to loop through all the extended partitions on the disk
+        // and return the one they want.
 
-		ExtendedPartitionNumber = PartitionNumber - 5;
+        ExtendedPartitionNumber = PartitionNumber - 5;
 
-		// Set the initial relative starting sector to 0
-		// This is because extended partition starting
-		// sectors a numbered relative to their parent
-		ExtendedPartitionOffset = 0;
+        // Set the initial relative starting sector to 0
+        // This is because extended partition starting
+        // sectors a numbered relative to their parent
+        ExtendedPartitionOffset = 0;
 
-		for (Index=0; Index<=ExtendedPartitionNumber; Index++)
-		{
-			// Get the extended partition table entry
-			if (!DiskGetFirstExtendedPartitionEntry(&MasterBootRecord, &ExtendedPartitionTableEntry))
-			{
-				return FALSE;
-			}
+        for (Index=0; Index<=ExtendedPartitionNumber; Index++)
+        {
+            // Get the extended partition table entry
+            if (!DiskGetFirstExtendedPartitionEntry(&MasterBootRecord, &ExtendedPartitionTableEntry))
+            {
+                return FALSE;
+            }
 
-			// Adjust the relative starting sector of the partition
-			ExtendedPartitionTableEntry.SectorCountBeforePartition += ExtendedPartitionOffset;
-			if (ExtendedPartitionOffset == 0)
-			{
-				// Set the start of the parrent extended partition
-				ExtendedPartitionOffset = ExtendedPartitionTableEntry.SectorCountBeforePartition;
-			}
-			// Read the partition boot record
-    			if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
-			{
-				return FALSE;
-			}
+            // Adjust the relative starting sector of the partition
+            ExtendedPartitionTableEntry.SectorCountBeforePartition += ExtendedPartitionOffset;
+            if (ExtendedPartitionOffset == 0)
+            {
+                // Set the start of the parrent extended partition
+                ExtendedPartitionOffset = ExtendedPartitionTableEntry.SectorCountBeforePartition;
+            }
+            // Read the partition boot record
+            if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
+            {
+                return FALSE;
+            }
 
-			// Get the first real partition table entry
-			if (!DiskGetFirstPartitionEntry(&MasterBootRecord, PartitionTableEntry))
-			{
-				return FALSE;
-			}
+            // Get the first real partition table entry
+            if (!DiskGetFirstPartitionEntry(&MasterBootRecord, PartitionTableEntry))
+            {
+                return FALSE;
+            }
 
-			// Now correct the start sector of the partition
-			PartitionTableEntry->SectorCountBeforePartition += ExtendedPartitionTableEntry.SectorCountBeforePartition;
-		}
+            // Now correct the start sector of the partition
+            PartitionTableEntry->SectorCountBeforePartition += ExtendedPartitionTableEntry.SectorCountBeforePartition;
+        }
 
-		// When we get here we should have the correct entry
-		// already stored in PartitionTableEntry
-		// so just return TRUE
-		return TRUE;
-	}
+        // When we get here we should have the correct entry
+        // already stored in PartitionTableEntry
+        // so just return TRUE
+        return TRUE;
+    }
 
 }
 
 BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	ULONG		Index;
+    ULONG        Index;
 
-	for (Index=0; Index<4; Index++)
-	{
-		// Check the system indicator
-		// If it's not an extended or unused partition
-		// then we're done
-		if ((MasterBootRecord->PartitionTable[Index].SystemIndicator != PARTITION_ENTRY_UNUSED) &&
-			(MasterBootRecord->PartitionTable[Index].SystemIndicator != PARTITION_EXTENDED) &&
-			(MasterBootRecord->PartitionTable[Index].SystemIndicator != PARTITION_XINT13_EXTENDED))
-		{
-			RtlCopyMemory(PartitionTableEntry, &MasterBootRecord->PartitionTable[Index], sizeof(PARTITION_TABLE_ENTRY));
-			return TRUE;
-		}
-	}
+    for (Index=0; Index<4; Index++)
+    {
+        // Check the system indicator
+        // If it's not an extended or unused partition
+        // then we're done
+        if ((MasterBootRecord->PartitionTable[Index].SystemIndicator != PARTITION_ENTRY_UNUSED) &&
+            (MasterBootRecord->PartitionTable[Index].SystemIndicator != PARTITION_EXTENDED) &&
+            (MasterBootRecord->PartitionTable[Index].SystemIndicator != PARTITION_XINT13_EXTENDED))
+        {
+            RtlCopyMemory(PartitionTableEntry, &MasterBootRecord->PartitionTable[Index], sizeof(PARTITION_TABLE_ENTRY));
+            return TRUE;
+        }
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	ULONG		Index;
+    ULONG        Index;
 
-	for (Index=0; Index<4; Index++)
-	{
-		// Check the system indicator
-		// If it an extended partition then we're done
-		if ((MasterBootRecord->PartitionTable[Index].SystemIndicator == PARTITION_EXTENDED) ||
-			(MasterBootRecord->PartitionTable[Index].SystemIndicator == PARTITION_XINT13_EXTENDED))
-		{
-			RtlCopyMemory(PartitionTableEntry, &MasterBootRecord->PartitionTable[Index], sizeof(PARTITION_TABLE_ENTRY));
-			return TRUE;
-		}
-	}
+    for (Index=0; Index<4; Index++)
+    {
+        // Check the system indicator
+        // If it an extended partition then we're done
+        if ((MasterBootRecord->PartitionTable[Index].SystemIndicator == PARTITION_EXTENDED) ||
+            (MasterBootRecord->PartitionTable[Index].SystemIndicator == PARTITION_XINT13_EXTENDED))
+        {
+            RtlCopyMemory(PartitionTableEntry, &MasterBootRecord->PartitionTable[Index], sizeof(PARTITION_TABLE_ENTRY));
+            return TRUE;
+        }
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
-	ULONG		Index;
+    ULONG Index;
 
-	// Read master boot record
-	if (!MachDiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, (PVOID)DISKREADBUFFER))
-	{
-		return FALSE;
-	}
-	RtlCopyMemory(BootRecord, (PVOID)DISKREADBUFFER, sizeof(MASTER_BOOT_RECORD));
+    // Read master boot record
+    if (!MachDiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, DiskReadBuffer))
+    {
+        return FALSE;
+    }
+    RtlCopyMemory(BootRecord, DiskReadBuffer, sizeof(MASTER_BOOT_RECORD));
 
+    TRACE("Dumping partition table for drive 0x%x:\n", DriveNumber);
+    TRACE("Boot record logical start sector = %d\n", LogicalSectorNumber);
+    TRACE("sizeof(MASTER_BOOT_RECORD) = 0x%x.\n", sizeof(MASTER_BOOT_RECORD));
 
-	TRACE("Dumping partition table for drive 0x%x:\n", DriveNumber);
-	TRACE("Boot record logical start sector = %d\n", LogicalSectorNumber);
-	TRACE("sizeof(MASTER_BOOT_RECORD) = 0x%x.\n", sizeof(MASTER_BOOT_RECORD));
+    for (Index=0; Index<4; Index++)
+    {
+        TRACE("-------------------------------------------\n");
+        TRACE("Partition %d\n", (Index + 1));
+        TRACE("BootIndicator: 0x%x\n", BootRecord->PartitionTable[Index].BootIndicator);
+        TRACE("StartHead: 0x%x\n", BootRecord->PartitionTable[Index].StartHead);
+        TRACE("StartSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].StartSector);
+        TRACE("StartCylinder: 0x%x\n", BootRecord->PartitionTable[Index].StartCylinder);
+        TRACE("SystemIndicator: 0x%x\n", BootRecord->PartitionTable[Index].SystemIndicator);
+        TRACE("EndHead: 0x%x\n", BootRecord->PartitionTable[Index].EndHead);
+        TRACE("EndSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].EndSector);
+        TRACE("EndCylinder: 0x%x\n", BootRecord->PartitionTable[Index].EndCylinder);
+        TRACE("SectorCountBeforePartition: 0x%x\n", BootRecord->PartitionTable[Index].SectorCountBeforePartition);
+        TRACE("PartitionSectorCount: 0x%x\n", BootRecord->PartitionTable[Index].PartitionSectorCount);
+    }
 
-	for (Index=0; Index<4; Index++)
-	{
-		TRACE("-------------------------------------------\n");
-		TRACE("Partition %d\n", (Index + 1));
-		TRACE("BootIndicator: 0x%x\n", BootRecord->PartitionTable[Index].BootIndicator);
-		TRACE("StartHead: 0x%x\n", BootRecord->PartitionTable[Index].StartHead);
-		TRACE("StartSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].StartSector);
-		TRACE("StartCylinder: 0x%x\n", BootRecord->PartitionTable[Index].StartCylinder);
-		TRACE("SystemIndicator: 0x%x\n", BootRecord->PartitionTable[Index].SystemIndicator);
-		TRACE("EndHead: 0x%x\n", BootRecord->PartitionTable[Index].EndHead);
-		TRACE("EndSector (Plus 2 cylinder bits): 0x%x\n", BootRecord->PartitionTable[Index].EndSector);
-		TRACE("EndCylinder: 0x%x\n", BootRecord->PartitionTable[Index].EndCylinder);
-		TRACE("SectorCountBeforePartition: 0x%x\n", BootRecord->PartitionTable[Index].SectorCountBeforePartition);
-		TRACE("PartitionSectorCount: 0x%x\n", BootRecord->PartitionTable[Index].PartitionSectorCount);
-	}
+    // Check the partition table magic value
+    if (BootRecord->MasterBootRecordMagic != 0xaa55)
+    {
+        return FALSE;
+    }
 
-	// Check the partition table magic value
-	if (BootRecord->MasterBootRecordMagic != 0xaa55)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+    return TRUE;
 }
 
 NTSTATUS
@@ -249,7 +249,7 @@ IopReadBootRecord(
     ULONG FileId = (ULONG)DeviceObject;
     LARGE_INTEGER Position;
     ULONG BytesRead;
-    ULONG Status;
+    ARC_STATUS Status;
 
     Position.QuadPart = LogicalSectorNumber * SectorSize;
     Status = ArcSeek(FileId, &Position, SeekAbsolute);

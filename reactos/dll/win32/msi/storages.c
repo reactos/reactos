@@ -18,26 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winerror.h"
-#include <ole2.h>
-//#include "msi.h"
-//#include "msiquery.h"
-//#include "objbase.h"
 #include "msipriv.h"
-//#include "query.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
@@ -81,7 +62,7 @@ static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPCWSTR name, IStorage *stg)
     if (!storage)
         return NULL;
 
-    storage->str_index = msi_addstringW(sv->db->strings, name, -1, 1, StringNonPersistent);
+    storage->str_index = msi_add_string(sv->db->strings, name, -1, StringNonPersistent);
     storage->storage = stg;
 
     if (storage->storage)

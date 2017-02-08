@@ -11,7 +11,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 printf(const char *format, ...)
 {
     va_list argptr;

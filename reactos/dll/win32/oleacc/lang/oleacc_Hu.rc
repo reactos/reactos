@@ -1,0 +1,126 @@
+/*
+ * Hungarian resources for oleacc
+ *
+ * Copyright 2010 Andras Kovacs
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "ismeretlen objektum" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "címsor"
+    ROLE_SYSTEM_MENUBAR     "menüsor"
+    ROLE_SYSTEM_SCROLLBAR   "görgetősáv"
+    ROLE_SYSTEM_GRIP        "markolat"
+    ROLE_SYSTEM_SOUND       "hang"
+    ROLE_SYSTEM_CURSOR      "kurzor"
+    ROLE_SYSTEM_CARET       "kurzor (caret)"
+    ROLE_SYSTEM_ALERT       "figyelmeztetés"
+    ROLE_SYSTEM_WINDOW      "ablak"
+    ROLE_SYSTEM_CLIENT      "kliens"
+    ROLE_SYSTEM_MENUPOPUP   "felugró menü"
+    ROLE_SYSTEM_MENUITEM    "menüelem"
+    ROLE_SYSTEM_TOOLTIP     "eszköztipp"
+    ROLE_SYSTEM_APPLICATION "alkalmazás"
+    ROLE_SYSTEM_DOCUMENT    "dokumentum"
+    ROLE_SYSTEM_PANE        "tábla"
+    ROLE_SYSTEM_CHART       "diagram"
+    ROLE_SYSTEM_DIALOG      "dialógus"
+    ROLE_SYSTEM_BORDER      "keret"
+    ROLE_SYSTEM_GROUPING    "csoportosító"
+    ROLE_SYSTEM_SEPARATOR   "elválasztó"
+    ROLE_SYSTEM_TOOLBAR     "eszköztár"
+    ROLE_SYSTEM_STATUSBAR   "állapotsor"
+    ROLE_SYSTEM_TABLE        "táblázat"
+    ROLE_SYSTEM_COLUMNHEADER "oszlop fejléc"
+    ROLE_SYSTEM_ROWHEADER    "sor fejléc"
+    ROLE_SYSTEM_COLUMN       "oszlop"
+    ROLE_SYSTEM_ROW          "sor"
+    ROLE_SYSTEM_CELL         "cella"
+    ROLE_SYSTEM_LINK         "link"
+    ROLE_SYSTEM_HELPBALLOON  "súgó buborék"
+    ROLE_SYSTEM_CHARACTER    "karakter"
+    ROLE_SYSTEM_LIST         "lista"
+    ROLE_SYSTEM_LISTITEM     "listaelem"
+    ROLE_SYSTEM_OUTLINE      "körvonal"
+    ROLE_SYSTEM_OUTLINEITEM  "körvonalas elem"
+    ROLE_SYSTEM_PAGETAB      "táblafül"
+    ROLE_SYSTEM_PROPERTYPAGE "tulajdonságlap"
+    ROLE_SYSTEM_INDICATOR    "jelző"
+    ROLE_SYSTEM_GRAPHIC      "grafika"
+    ROLE_SYSTEM_STATICTEXT   "statikus szöveg"
+    ROLE_SYSTEM_TEXT         "szöveg"
+    ROLE_SYSTEM_PUSHBUTTON   "nyomógomb"
+    ROLE_SYSTEM_CHECKBUTTON  "jelölőnégyzet"
+    ROLE_SYSTEM_RADIOBUTTON  "rádiógomb"
+    ROLE_SYSTEM_COMBOBOX     "kombinált lista"
+    ROLE_SYSTEM_DROPLIST     "legördülő lista"
+    ROLE_SYSTEM_PROGRESSBAR  "folyamatjelző"
+    ROLE_SYSTEM_DIAL         "hívás"
+    ROLE_SYSTEM_HOTKEYFIELD  "gyorsbillentyű mező"
+    ROLE_SYSTEM_SLIDER       "csúszka"
+    ROLE_SYSTEM_SPINBUTTON   "görgethető mező"
+    ROLE_SYSTEM_DIAGRAM      "diagramm"
+    ROLE_SYSTEM_ANIMATION    "animáció"
+    ROLE_SYSTEM_EQUATION     "egyenlet"
+    ROLE_SYSTEM_BUTTONDROPDOWN "legördülő gomb"
+    ROLE_SYSTEM_BUTTONMENU   "menügomb"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "rácsos legördülő gomb"
+    ROLE_SYSTEM_WHITESPACE   "üres terület"
+    ROLE_SYSTEM_PAGETABLIST  "oldal fül lista"
+    ROLE_SYSTEM_CLOCK        "óra"
+    ROLE_SYSTEM_SPLITBUTTON  "felosztott gomb"
+    ROLE_SYSTEM_IPADDRESS    "IP cím"
+    ROLE_SYSTEM_OUTLINEBUTTON "körvonalazott gomb"
+
+    IDS_STATE_NORMAL            "normal"
+    IDS_STATE_UNAVAILABLE       "unavailable"
+    IDS_STATE_SELECTED          "selected"
+    IDS_STATE_FOCUSED           "focused"
+    IDS_STATE_PRESSED           "pressed"
+    IDS_STATE_CHECKED           "checked"
+    IDS_STATE_MIXED             "mixed"
+    IDS_STATE_READONLY          "read only"
+    IDS_STATE_HOTTRACKED        "hot tracked"
+    IDS_STATE_DEFAULT           "default"
+    IDS_STATE_EXPANDED          "expanded"
+    IDS_STATE_COLLAPSED         "collapsed"
+    IDS_STATE_BUSY              "busy"
+    IDS_STATE_FLOATING          "floating"
+    IDS_STATE_MARQUEED          "marqueed"
+    IDS_STATE_ANIMATED          "animated"
+    IDS_STATE_INVISIBLE         "invisible"
+    IDS_STATE_OFFSCREEN         "offscreen"
+    IDS_STATE_SIZEABLE          "sizeable"
+    IDS_STATE_MOVEABLE          "moveable"
+    IDS_STATE_SELFVOICING       "self voicing"
+    IDS_STATE_FOCUSABLE         "focusable"
+    IDS_STATE_SELECTABLE        "selectable"
+    IDS_STATE_LINKED            "linked"
+    IDS_STATE_TRAVERSED         "traversed"
+    IDS_STATE_MULTISELECTABLE   "multi selectable"
+    IDS_STATE_EXTSELECTABLE     "extended selectable"
+    IDS_STATE_ALERT_LOW         "alert low"
+    IDS_STATE_ALERT_MEDIUM      "alert medium"
+    IDS_STATE_ALERT_HIGH        "alert high"
+    IDS_STATE_PROTECTED         "protected"
+    IDS_STATE_HASPOPUP          "has popup"
+}

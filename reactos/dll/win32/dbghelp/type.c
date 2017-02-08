@@ -22,17 +22,6 @@
  * upon which full support for datatype handling will eventually be built.
  */
 
-#define NONAMELESSUNION
-
-#include "config.h"
-#include <stdlib.h>
-#include <stdarg.h>
-#include <assert.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wine/debug.h"
 #include "dbghelp_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
@@ -100,6 +89,19 @@ const char* symt_get_name(const struct symt* sym)
     case SymTagFunctionType:
         return NULL;
     }
+}
+
+WCHAR* symt_get_nameW(const struct symt* sym)
+{
+    const char* name = symt_get_name(sym);
+    WCHAR* nameW;
+    DWORD sz;
+
+    if (!name) return NULL;
+    sz = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
+    if ((nameW = HeapAlloc(GetProcessHeap(), 0, sz * sizeof(WCHAR))))
+        MultiByteToWideChar(CP_ACP, 0, name, -1, nameW, sz);
+    return nameW;
 }
 
 BOOL symt_get_address(const struct symt* type, ULONG64* addr)
@@ -458,7 +460,7 @@ BOOL WINAPI SymEnumTypes(HANDLE hProcess, ULONG64 BaseOfDll,
     {
         type = *(struct symt**)vector_at(&pair.effective->vtypes, i);
         sym_info->TypeIndex = symt_ptr2index(pair.effective, type);
-        sym_info->info = 0; /* FIXME */
+        sym_info->Index = 0; /* FIXME */
         symt_get_info(pair.effective, type, TI_GET_LENGTH, &size);
         sym_info->Size = size;
         sym_info->ModBase = pair.requested->module.BaseOfImage;
@@ -680,7 +682,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
                   symt_get_tag_str(type->tag));
             /* fall through */
         case SymTagFunctionType:
-            return 0;
+            return FALSE;
         }
         break;
 

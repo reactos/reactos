@@ -1151,7 +1151,7 @@ void
 endElement(void *ctx, const xmlChar * name ATTRIBUTE_UNUSED)
 {
     DEPRECATED("endElement")
-        xmlSAX2EndElement(ctx, name);
+    xmlSAX2EndElement(ctx, name);
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS win32k.sys
- * FILE:            subsystems/win32/win32k/misc/rtlstr.c
+ * FILE:            win32ss/user/ntuser/misc/rtlstr.c
  * PURPOSE:         Large Strings
  * PROGRAMMER:
  *
@@ -19,11 +19,11 @@ RtlInitLargeAnsiString(
     IN PCSZ SourceString,
     IN INT Unknown)
 {
-    ULONG DestSize;
+    USHORT DestSize;
 
     if (SourceString)
     {
-        DestSize = strlen(SourceString);
+        DestSize = (USHORT)strlen(SourceString);
         DestinationString->Length = DestSize;
         DestinationString->MaximumLength = DestSize + sizeof(CHAR);
     }
@@ -44,11 +44,11 @@ RtlInitLargeUnicodeString(
     IN PCWSTR SourceString,
     IN INT Unknown)
 {
-    ULONG DestSize;
+    USHORT DestSize;
 
     if (SourceString)
     {
-        DestSize = wcslen(SourceString) * sizeof(WCHAR);
+        DestSize = (USHORT)wcslen(SourceString) * sizeof(WCHAR);
         DestinationString->Length = DestSize;
         DestinationString->MaximumLength = DestSize + sizeof(WCHAR);
     }

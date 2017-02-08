@@ -6,12 +6,7 @@
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "samsrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -366,6 +361,8 @@ SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject)
 
         Status = SampRemoveMemberFromGroup(GroupObject,
                                            UserObject->RelativeId);
+        if (Status == STATUS_MEMBER_NOT_IN_GROUP)
+            Status = STATUS_SUCCESS;
 
         SampCloseDbObject(GroupObject);
 
@@ -375,11 +372,26 @@ SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject)
         }
     }
 
+    /* Remove all groups from the Groups attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+
 done:
     if (GroupsBuffer != NULL)
         midl_user_free(GroupsBuffer);
 
     return Status;
+}
+
+
+NTSTATUS
+SampRemoveUserFromAllAliases(IN PSAM_DB_OBJECT UserObject)
+{
+    FIXME("(%p)\n", UserObject);
+    return STATUS_SUCCESS;
 }
 
 
@@ -397,79 +409,159 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
     ULONG CurrentHistoryLength;
     ULONG MaxHistoryLength = 3;
     ULONG Length = 0;
+    BOOLEAN UseNtPassword;
+    BOOLEAN UseLmPassword;
     NTSTATUS Status;
 
-    /* Get the size of the NT history */
-    SampGetObjectAttribute(UserObject,
-                           L"NTPwdHistory",
-                           NULL,
-                           NULL,
-                           &Length);
+    UseNtPassword =
+       ((NtPasswordPresent != FALSE) &&
+        (NtPassword != NULL) &&
+        (memcmp(NtPassword, &EmptyNtHash, sizeof(ENCRYPTED_NT_OWF_PASSWORD)) != 0));
 
-    CurrentHistoryLength = Length / sizeof(ENCRYPTED_NT_OWF_PASSWORD);
-    if (CurrentHistoryLength < MaxHistoryLength)
-    {
-        NtHistoryLength = (CurrentHistoryLength + 1) * sizeof(ENCRYPTED_NT_OWF_PASSWORD);
-    }
-    else
-    {
-        NtHistoryLength = MaxHistoryLength * sizeof(ENCRYPTED_NT_OWF_PASSWORD);
-    }
+    UseLmPassword =
+       ((LmPasswordPresent != FALSE) &&
+        (LmPassword != NULL) &&
+        (memcmp(LmPassword, &EmptyLmHash, sizeof(ENCRYPTED_LM_OWF_PASSWORD)) != 0));
 
-    /* Allocate the history buffer */
-    NtHistory = midl_user_allocate(NtHistoryLength);
-    if (NtHistory == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    if (Length > 0)
+    /* Update the NT password history only if we have a new non-empty NT password */
+    if (UseNtPassword)
     {
-        /* Get the history */
-        Status = SampGetObjectAttribute(UserObject,
+        /* Get the size of the NT history */
+        SampGetObjectAttribute(UserObject,
+                               L"NTPwdHistory",
+                               NULL,
+                               NULL,
+                               &Length);
+
+        CurrentHistoryLength = Length / sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+        if (CurrentHistoryLength < MaxHistoryLength)
+        {
+            NtHistoryLength = (CurrentHistoryLength + 1) * sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+        }
+        else
+        {
+            NtHistoryLength = MaxHistoryLength * sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+        }
+
+        /* Allocate the history buffer */
+        NtHistory = midl_user_allocate(NtHistoryLength);
+        if (NtHistory == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        if (Length > 0)
+        {
+            /* Get the history */
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"NTPwdHistory",
+                                            NULL,
+                                            NtHistory,
+                                            &Length);
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+
+        /* Move the old passwords down by one entry */
+        if (NtHistoryLength > sizeof(ENCRYPTED_NT_OWF_PASSWORD))
+        {
+            MoveMemory(&(NtHistory[1]),
+                       &(NtHistory[0]),
+                       NtHistoryLength - sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+        }
+
+        /* Add the new password to the top of the history */
+        if (NtPasswordPresent)
+        {
+            CopyMemory(&(NtHistory[0]),
+                       NtPassword,
+                       sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+        }
+        else
+        {
+            ZeroMemory(&(NtHistory[0]),
+                       sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+        }
+
+        /* Set the history */
+        Status = SampSetObjectAttribute(UserObject,
                                         L"NTPwdHistory",
-                                        NULL,
-                                        NtHistory,
-                                        &Length);
+                                        REG_BINARY,
+                                        (PVOID)NtHistory,
+                                        NtHistoryLength);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
-    /* Get the size of the LM history */
-    Length = 0;
-    SampGetObjectAttribute(UserObject,
-                           L"LMPwdHistory",
-                           NULL,
-                           NULL,
-                           &Length);
-
-    CurrentHistoryLength = Length / sizeof(ENCRYPTED_LM_OWF_PASSWORD);
-    if (CurrentHistoryLength < MaxHistoryLength)
+    /* Update the LM password history only if we have a new non-empty LM password */
+    if (UseLmPassword)
     {
-        LmHistoryLength = (CurrentHistoryLength + 1) * sizeof(ENCRYPTED_LM_OWF_PASSWORD);
-    }
-    else
-    {
-        LmHistoryLength = MaxHistoryLength * sizeof(ENCRYPTED_LM_OWF_PASSWORD);
-    }
+        /* Get the size of the LM history */
+        Length = 0;
+        SampGetObjectAttribute(UserObject,
+                               L"LMPwdHistory",
+                               NULL,
+                               NULL,
+                               &Length);
 
-    /* Allocate the history buffer */
-    LmHistory = midl_user_allocate(LmHistoryLength);
-    if (LmHistory == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+        CurrentHistoryLength = Length / sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+        if (CurrentHistoryLength < MaxHistoryLength)
+        {
+            LmHistoryLength = (CurrentHistoryLength + 1) * sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+        }
+        else
+        {
+            LmHistoryLength = MaxHistoryLength * sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+        }
 
-    if (Length > 0)
-    {
-        /* Get the history */
-        Status = SampGetObjectAttribute(UserObject,
+        /* Allocate the history buffer */
+        LmHistory = midl_user_allocate(LmHistoryLength);
+        if (LmHistory == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        if (Length > 0)
+        {
+            /* Get the history */
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"LMPwdHistory",
+                                            NULL,
+                                            LmHistory,
+                                            &Length);
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+
+        /* Move the old passwords down by one entry */
+        if (LmHistoryLength > sizeof(ENCRYPTED_LM_OWF_PASSWORD))
+        {
+            MoveMemory(&(LmHistory[1]),
+                       &(LmHistory[0]),
+                       LmHistoryLength - sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+        }
+
+        /* Add the new password to the top of the history */
+        if (LmPasswordPresent)
+        {
+            CopyMemory(&(LmHistory[0]),
+                       LmPassword,
+                       sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+        }
+        else
+        {
+            ZeroMemory(&(LmHistory[0]),
+                       sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+        }
+
+        /* Set the LM password history */
+        Status = SampSetObjectAttribute(UserObject,
                                         L"LMPwdHistory",
-                                        NULL,
-                                        LmHistory,
-                                        &Length);
+                                        REG_BINARY,
+                                        (PVOID)LmHistory,
+                                        LmHistoryLength);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
-    /* Set the new password */
-    if (NtPasswordPresent)
+    /* Set the new NT password */
+    if (UseNtPassword)
     {
         Status = SampSetObjectAttribute(UserObject,
                                         L"NTPwd",
@@ -484,13 +576,14 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
         Status = SampSetObjectAttribute(UserObject,
                                         L"NTPwd",
                                         REG_BINARY,
-                                        NULL,
-                                        0);
+                                        &EmptyNtHash,
+                                        sizeof(ENCRYPTED_NT_OWF_PASSWORD));
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
-    if (LmPasswordPresent)
+    /* Set the new LM password */
+    if (UseLmPassword)
     {
         Status = SampSetObjectAttribute(UserObject,
                                         L"LMPwd",
@@ -505,71 +598,11 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
         Status = SampSetObjectAttribute(UserObject,
                                         L"LMPwd",
                                         REG_BINARY,
-                                        NULL,
-                                        0);
+                                        &EmptyLmHash,
+                                        sizeof(ENCRYPTED_LM_OWF_PASSWORD));
         if (!NT_SUCCESS(Status))
             goto done;
     }
-
-    /* Move the old passwords down by one entry */
-    if (NtHistoryLength > sizeof(ENCRYPTED_NT_OWF_PASSWORD))
-    {
-        MoveMemory(&(NtHistory[1]),
-                   &(NtHistory[0]),
-                   NtHistoryLength - sizeof(ENCRYPTED_NT_OWF_PASSWORD));
-    }
-
-    /* Add the new password on top of the history */
-    if (NtPasswordPresent)
-    {
-        CopyMemory(&(NtHistory[0]),
-                   NtPassword,
-                   sizeof(ENCRYPTED_NT_OWF_PASSWORD));
-    }
-    else
-    {
-        ZeroMemory(&(NtHistory[0]),
-                   sizeof(ENCRYPTED_NT_OWF_PASSWORD));
-    }
-
-    /* Set the history */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"NTPwdHistory",
-                                    REG_BINARY,
-                                    (PVOID)NtHistory,
-                                    NtHistoryLength);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    /* Move the old passwords down by one entry */
-    if (LmHistoryLength > sizeof(ENCRYPTED_LM_OWF_PASSWORD))
-    {
-        MoveMemory(&(LmHistory[1]),
-                   &(LmHistory[0]),
-                   LmHistoryLength - sizeof(ENCRYPTED_LM_OWF_PASSWORD));
-    }
-
-    /* Add the new password on top of the history */
-    if (LmPasswordPresent)
-    {
-        CopyMemory(&(LmHistory[0]),
-                   LmPassword,
-                   sizeof(ENCRYPTED_LM_OWF_PASSWORD));
-    }
-    else
-    {
-        ZeroMemory(&(LmHistory[0]),
-                   sizeof(ENCRYPTED_LM_OWF_PASSWORD));
-    }
-
-    /* Set the LM password history */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"LMPwdHistory",
-                                    REG_BINARY,
-                                    (PVOID)LmHistory,
-                                    LmHistoryLength);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
 done:
     if (NtHistory != NULL)

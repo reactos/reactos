@@ -446,7 +446,7 @@ static DWORD create_tmp_file(HMMIO* hFile, LPWSTR* pszTmpFileName)
 
     TRACE("%s!\n", debugstr_w(*pszTmpFileName));
 
-    if (*pszTmpFileName && (strlenW(*pszTmpFileName) > 0)) {
+    if (*pszTmpFileName && (*pszTmpFileName)[0]) {
 
         *hFile = mmioOpenW(*pszTmpFileName, NULL,
                            MMIO_ALLOCBUF | MMIO_READWRITE | MMIO_CREATE);
@@ -472,7 +472,7 @@ static LRESULT WAVE_mciOpenFile(WINE_MCIWAVE* wmw, LPCWSTR filename)
     HeapFree(GetProcessHeap(), 0, wmw->lpFileName);
     wmw->lpFileName = fn;
 
-    if (strlenW(filename) > 0) {
+    if (filename[0]) {
         /* FIXME : what should be done if wmw->hFile is already != 0, or the driver is playin' */
         TRACE("MCI_OPEN_ELEMENT %s!\n", debugstr_w(filename));
 
@@ -1120,7 +1120,7 @@ static DWORD WAVE_mciRecord(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt
 
     TRACE("Recording (normalized) from byte=%u for %u bytes\n", wmw->dwPosition, end - wmw->dwPosition);
 
-    dwRet = waveInStart(wmw->hWave);
+    waveInStart(wmw->hWave);
 
     if (hEvent) SetEvent(hEvent);
 

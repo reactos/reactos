@@ -1,190 +1,83 @@
-/////////////////////////////////////////////////////////////////////////////
-// Greek resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-#pragma code_page(1253)
-#endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDC_FDEBUG MENU DISCARDABLE
+/* Menu */
+IDC_FDEBUG MENU
 BEGIN
-    POPUP "&Αρχείο"
+    POPUP "&Ξ‘ΟΟ‡ΞµΞ―ΞΏ"
     BEGIN
-        MENUITEM "&Σύνδεση", IDM_FILE_CONNECT
-        MENUITEM "&Αποσύνδεση", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Ξ£ΟΞ½Ξ΄ΞµΟƒΞ·", IDM_FILE_CONNECT
+        MENUITEM "&Ξ‘Ο€ΞΏΟƒΟΞ½Ξ΄ΞµΟƒΞ·", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Καθαρισμός οθόνης", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&ΞΞ±ΞΈΞ±ΟΞΉΟƒΞΌΟΟ‚ ΞΏΞΈΟΞ½Ξ·Ο‚", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Έναρξη Capture", IDM_FILE_STARTCAPTURE
-        MENUITEM "Τε&ρματισμός Capture", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&ΞΞ½Ξ±ΟΞΎΞ· Capture", IDM_FILE_STARTCAPTURE
+        MENUITEM "Ξ¤Ξµ&ΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚ Capture", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Local Echo", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος", IDM_EXIT
+        MENUITEM "Ξ&ΞΎΞΏΞ΄ΞΏΟ‚", IDM_EXIT
     END
-    POPUP "&Βοήθεια"
+    POPUP "&Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
     BEGIN
-        MENUITEM "&Σχετικά...", IDM_ABOUT
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬...", IDM_ABOUT
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE
+/* Accelerators */
+IDC_FDEBUG ACCELERATORS
 BEGIN
-    63,            IDM_ABOUT,              ASCII,  ALT // "?"
-    47,            IDM_ABOUT,              ASCII,  ALT // "/"
+    63, IDM_ABOUT, ASCII, ALT // "?"
+    47, IDM_ABOUT, ASCII, ALT // "/"
 END
 
+/* Dialogs */
 
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-2 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""resource.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-1 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "resource.h\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE
-BEGIN
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 252
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 203
-    END
-
-    IDD_CONNECTION, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 189
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 93
-    END
-
-    IDD_CAPTURE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 244
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Σχετικά με την εκσφαλμάτωση του FreeLoader"
+CAPTION "Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„Ξ·Ξ½ ΞµΞΊΟƒΟ†Ξ±Ξ»ΞΌΞ¬Ο„Ο‰ΟƒΞ· Ο„ΞΏΟ… FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+    CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    DEFPUSHBUTTON "OK", IDOK, 183, 189, 44, 14, WS_GROUP
+    ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
+    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
-IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
+IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Επιλογές σύνδεσης"
+CAPTION "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚ ΟƒΟΞ½Ξ΄ΞµΟƒΞ·Ο‚"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Εισάγετε τη θύρα COM (π.χ. COM1):",IDC_STATIC,7,7,108,8
-    EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Εισάγετε το baud rate (π.χ. 115200):",IDC_STATIC,7,38,114,8
-    EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
-    PUSHBUTTON      "Άκυρο",IDCANCEL,100,79,50,14
+    LTEXT "Ξ•ΞΉΟƒΞ¬Ξ³ΞµΟ„Ξµ Ο„Ξ· ΞΈΟΟΞ± COM (Ο€.Ο‡. COM1):", IDC_STATIC, 7, 7, 108, 8
+    EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
+    LTEXT "Ξ•ΞΉΟƒΞ¬Ξ³ΞµΟ„Ξµ Ο„ΞΏ baud rate (Ο€.Ο‡. 115200):", IDC_STATIC, 7, 38, 114, 8
+    EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 45, 79, 50, 14
+    PUSHBUTTON "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 100, 79, 50, 14
 END
 
-IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
+IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Capture Αρχείο"
+CAPTION "Capture Ξ‘ΟΟ‡ΞµΞ―ΞΏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Capture όνομα αρχείου:",IDC_STATIC,7,17,62,8
-    EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Αναζήτηση",IDC_BROWSE,194,26,50,14
-    DEFPUSHBUTTON   "OK",IDOK,139,74,50,14
-    PUSHBUTTON      "Άκυρο",IDCANCEL,194,74,50,14
+    LTEXT "Capture ΟΞ½ΞΏΞΌΞ± Ξ±ΟΟ‡ΞµΞ―ΞΏΟ…:", IDC_STATIC, 7, 17, 62, 8
+    EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·", IDC_BROWSE, 194, 26, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 139, 74, 50, 14
+    PUSHBUTTON "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 194, 74, 50, 14
 END
 
+/* String Tables */
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "fdebug"
-    IDS_HELLO               "Hello World!"
-    IDC_FDEBUG              "FDEBUG"
+    IDS_APP_TITLE "FreeLoader Debugger"
+    IDS_HELLO "Hello World!"
+    IDC_FDEBUG "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
-
-#endif    // Greek resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

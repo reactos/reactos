@@ -19,73 +19,37 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/bootsup.h
+ * FILE:            base/setup/usetup/bootsup.h
  * PURPOSE:         Bootloader support functions
  * PROGRAMMER:      Eric Kohl
  */
 
 #pragma once
 
-NTSTATUS
-CreateFreeLoaderIniForDos(PWCHAR IniPath,
-			  PWCHAR ArcPath);
-
-NTSTATUS
-CreateFreeLoaderIniForReactos(PWCHAR IniPath,
-			      PWCHAR ArcPath);
-
-NTSTATUS
-UpdateFreeLoaderIni(PWCHAR IniPath,
-		    PWCHAR ArcPath);
-
-NTSTATUS
-SaveCurrentBootSector(PWSTR RootPath,
-		      PWSTR DstPath);
-
-NTSTATUS
-InstallFat16BootCodeToFile(PWSTR SrcPath,
-			   PWSTR DstPath,
-			   PWSTR RootPath);
-
-NTSTATUS
-InstallFat32BootCodeToFile(PWSTR SrcPath,
-			   PWSTR DstPath,
-			   PWSTR RootPath);
-
-NTSTATUS
-InstallMbrBootCodeToDisk (PWSTR SrcPath,
-			  PWSTR RootPath);
-
-NTSTATUS
-InstallFat16BootCodeToDisk(PWSTR SrcPath,
-			   PWSTR RootPath);
-
-NTSTATUS
-InstallFat32BootCodeToDisk(PWSTR SrcPath,
-			   PWSTR RootPath);
-
-NTSTATUS
-UpdateBootIni(PWSTR BootIniPath,
-	      PWSTR EntryName,
-	      PWSTR EntryValue);
-
 BOOLEAN
-CheckInstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath);
+IsThereAValidBootSector(PWSTR RootPath);
 
 NTSTATUS
-InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
-			      PUNICODE_STRING SourceRootPath,
-			      PUNICODE_STRING DestinationArcPath,
-			      UCHAR PartitionType);
+SaveBootSector(
+    PWSTR RootPath,
+    PWSTR DstPath,
+    ULONG Length);
 
 NTSTATUS
-InstallVBRToPartition(PUNICODE_STRING SystemRootPath,
-                      PUNICODE_STRING SourceRootPath,
-                      PUNICODE_STRING DestinationArcPath,
-                      UCHAR PartitionType);
+InstallMbrBootCodeToDisk(
+    PWSTR SrcPath,
+    PWSTR RootPath);
 
 NTSTATUS
-InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
-			   PUNICODE_STRING DestinationArcPath);
+InstallVBRToPartition(
+    PUNICODE_STRING SystemRootPath,
+    PUNICODE_STRING SourceRootPath,
+    PUNICODE_STRING DestinationArcPath,
+    UCHAR PartitionType);
+
+NTSTATUS
+InstallFatBootcodeToFloppy(
+    PUNICODE_STRING SourceRootPath,
+    PUNICODE_STRING DestinationArcPath);
 
 /* EOF */

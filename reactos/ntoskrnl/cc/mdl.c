@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/cc/fs.c
+ * FILE:            ntoskrnl/cc/mdl.c
  * PURPOSE:         Implements MDL Cache Manager Functions
  *
  * PROGRAMMERS:     Alex Ionescu
@@ -28,6 +28,9 @@ CcMdlRead (
     OUT PIO_STATUS_BLOCK IoStatus
     )
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu\n",
+        FileObject, FileOffset->QuadPart, Length);
+
     UNIMPLEMENTED;
 }
 
@@ -51,8 +54,9 @@ CcMdlRead (
 VOID
 NTAPI
 CcMdlReadComplete2 (
-    IN PMDL MemoryDescriptorList,
-    IN PFILE_OBJECT FileObject)
+    IN PFILE_OBJECT FileObject,
+    IN PMDL MemoryDescriptorList
+)
 {
     PMDL Mdl;
 
@@ -104,7 +108,7 @@ CcMdlReadComplete (
     }
 
     /* Use slow path */
-    CcMdlReadComplete2(MdlChain, FileObject);
+    CcMdlReadComplete2(FileObject, MdlChain);
 }
 
 /*
@@ -172,5 +176,8 @@ CcPrepareMdlWrite (
     OUT PMDL * MdlChain,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu\n",
+        FileObject, FileOffset->QuadPart, Length);
+
     UNIMPLEMENTED;
 }

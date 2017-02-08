@@ -225,6 +225,11 @@ static inline void process_nibble(unsigned nibble, int* idelta,
     if (*idelta < 16) *idelta = 16;
 }
 
+static inline unsigned char C168(short s)
+{
+    return HIBYTE(s) ^ (unsigned char)0x80;
+}
+
 static	void cvtSSms16K(const ACMDRVSTREAMINSTANCE *adsi,
                         const unsigned char* src, LPDWORD nsrc,
                         unsigned char* dst, LPDWORD ndst)
@@ -236,19 +241,27 @@ static	void cvtSSms16K(const ACMDRVSTREAMINSTANCE *adsi,
     int                 nsamp;
     int		        nsamp_blk = ((ADPCMWAVEFORMAT*)adsi->pwfxSrc)->wSamplesPerBlock;
     DWORD	        nblock = min(*nsrc / adsi->pwfxSrc->nBlockAlign,
-                                     *ndst / (nsamp_blk * 2 * 2));
+                                     *ndst / (nsamp_blk * adsi->pwfxDst->nBlockAlign));
 
     *nsrc = nblock * adsi->pwfxSrc->nBlockAlign;
-    *ndst = nblock * nsamp_blk * 2 * 2;
+    *ndst = nblock * nsamp_blk * adsi->pwfxDst->nBlockAlign;
 
     nsamp_blk -= 2; /* see below for samples from block head */
     for (; nblock > 0; nblock--)
     {
         const unsigned char*    in_src = src;
 
-        assert(*src <= 6);
+        /* Catch a problem from Tomb Raider III (bug 21000) where it passes
+         * invalid data after a valid sequence of blocks */
+        if (*src > 6 || *(src + 1) > 6)
+        {
+            /* Recalculate the amount of used output buffer. We are not changing
+             * nsrc, let's assume the bad data was parsed */
+            *ndst -= nblock * nsamp_blk * adsi->pwfxDst->nBlockAlign;
+            WARN("Invalid ADPCM data, stopping conversion\n");
+            break;
+        }
         coeffL = MSADPCM_CoeffSet[*src++];
-        assert(*src <= 6);
         coeffR = MSADPCM_CoeffSet[*src++];
 
         ideltaL  = R16(src);    src += 2;
@@ -258,18 +271,34 @@ static	void cvtSSms16K(const ACMDRVSTREAMINSTANCE *adsi,
         sample2L = R16(src);    src += 2;
         sample2R = R16(src);    src += 2;
 
-        /* store samples from block head */
-        W16(dst, sample2L);      dst += 2;
-        W16(dst, sample2R);      dst += 2;
-        W16(dst, sample1L);      dst += 2;
-        W16(dst, sample1R);      dst += 2;
+        if(adsi->pwfxDst->wBitsPerSample == 8){
+            /* store samples from block head */
+            *dst = C168(sample2L);      ++dst;
+            *dst = C168(sample2R);      ++dst;
+            *dst = C168(sample1L);      ++dst;
+            *dst = C168(sample1R);      ++dst;
 
-        for (nsamp = nsamp_blk; nsamp > 0; nsamp--)
-        {
-            process_nibble(*src >> 4, &ideltaL, &sample1L, &sample2L, &coeffL);
-            W16(dst, sample1L); dst += 2;
-            process_nibble(*src++ & 0x0F, &ideltaR, &sample1R, &sample2R, &coeffR);
-            W16(dst, sample1R); dst += 2;
+            for (nsamp = nsamp_blk; nsamp > 0; nsamp--)
+            {
+                process_nibble(*src >> 4, &ideltaL, &sample1L, &sample2L, &coeffL);
+                *dst = C168(sample1L); ++dst;
+                process_nibble(*src++ & 0x0F, &ideltaR, &sample1R, &sample2R, &coeffR);
+                *dst = C168(sample1R); ++dst;
+            }
+        }else if(adsi->pwfxDst->wBitsPerSample == 16){
+            /* store samples from block head */
+            W16(dst, sample2L);      dst += 2;
+            W16(dst, sample2R);      dst += 2;
+            W16(dst, sample1L);      dst += 2;
+            W16(dst, sample1R);      dst += 2;
+
+            for (nsamp = nsamp_blk; nsamp > 0; nsamp--)
+            {
+                process_nibble(*src >> 4, &ideltaL, &sample1L, &sample2L, &coeffL);
+                W16(dst, sample1L); dst += 2;
+                process_nibble(*src++ & 0x0F, &ideltaR, &sample1R, &sample2R, &coeffR);
+                W16(dst, sample1R); dst += 2;
+            }
         }
         src = in_src + adsi->pwfxSrc->nBlockAlign;
     }
@@ -285,10 +314,10 @@ static	void cvtMMms16K(const ACMDRVSTREAMINSTANCE *adsi,
     int                 nsamp;
     int		        nsamp_blk = ((ADPCMWAVEFORMAT*)adsi->pwfxSrc)->wSamplesPerBlock;
     DWORD	        nblock = min(*nsrc / adsi->pwfxSrc->nBlockAlign,
-                                     *ndst / (nsamp_blk * 2));
+                                     *ndst / (nsamp_blk * adsi->pwfxDst->nBlockAlign));
 
     *nsrc = nblock * adsi->pwfxSrc->nBlockAlign;
-    *ndst = nblock * nsamp_blk * 2;
+    *ndst = nblock * nsamp_blk * adsi->pwfxDst->nBlockAlign;
 
     nsamp_blk -= 2; /* see below for samples from block head */
     for (; nblock > 0; nblock--)
@@ -303,16 +332,30 @@ static	void cvtMMms16K(const ACMDRVSTREAMINSTANCE *adsi,
         sample2 = R16(src);     src += 2;
 
         /* store samples from block head */
-        W16(dst, sample2);      dst += 2;
-        W16(dst, sample1);      dst += 2;
+        if(adsi->pwfxDst->wBitsPerSample == 8){
+            *dst = C168(sample2);    ++dst;
+            *dst = C168(sample1);    ++dst;
 
-        for (nsamp = nsamp_blk; nsamp > 0; nsamp -= 2)
-        {
-            process_nibble(*src >> 4, &idelta, &sample1, &sample2, &coeff);
-            W16(dst, sample1); dst += 2;
-            process_nibble(*src++ & 0x0F, &idelta, &sample1, &sample2, &coeff);
-            W16(dst, sample1); dst += 2;
+            for (nsamp = nsamp_blk; nsamp > 0; nsamp -= 2)
+            {
+                process_nibble(*src >> 4, &idelta, &sample1, &sample2, &coeff);
+                *dst = C168(sample1); ++dst;
+                process_nibble(*src++ & 0x0F, &idelta, &sample1, &sample2, &coeff);
+                *dst = C168(sample1); ++dst;
+            }
+        }else if(adsi->pwfxDst->wBitsPerSample == 16){
+            W16(dst, sample2);      dst += 2;
+            W16(dst, sample1);      dst += 2;
+
+            for (nsamp = nsamp_blk; nsamp > 0; nsamp -= 2)
+            {
+                process_nibble(*src >> 4, &idelta, &sample1, &sample2, &coeff);
+                W16(dst, sample1); dst += 2;
+                process_nibble(*src++ & 0x0F, &idelta, &sample1, &sample2, &coeff);
+                W16(dst, sample1); dst += 2;
+            }
         }
+
         src = in_src + adsi->pwfxSrc->nBlockAlign;
     }
 }
@@ -339,8 +382,8 @@ static	LRESULT ADPCM_DriverDetails(PACMDRIVERDETAILSW add)
 {
     add->fccType = ACMDRIVERDETAILS_FCCTYPE_AUDIOCODEC;
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
-    add->wMid = 0xFF;
-    add->wPid = 0x00;
+    add->wMid = MM_MICROSOFT;
+    add->wPid = MM_MSFT_ACM_MSADPCM;
     add->vdwACM = 0x01000000;
     add->vdwDriver = 0x01000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
@@ -380,7 +423,7 @@ static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
             aftd->dwFormatTagIndex = 1; /* WAVE_FORMAT_ADPCM is bigger than PCM */
 	    break;
 	}
-	/* fall thru */
+	/* fall through */
     case ACM_FORMATTAGDETAILSF_FORMATTAG:
 	switch (aftd->dwFormatTag)
         {
@@ -509,6 +552,8 @@ static	LRESULT	ADPCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
         if (ADPCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
         break;
     case WAVE_FORMAT_ADPCM:
+        if (adfs->cbwfxDst < sizeof(ADPCMWAVEFORMAT) + (7 - 1) * sizeof(ADPCMCOEFSET))
+            return ACMERR_NOTPOSSIBLE;
         init_wfx_adpcm((ADPCMWAVEFORMAT*)adfs->pwfxDst);
         /* check if result is ok */
         if (ADPCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
@@ -555,12 +600,9 @@ static	LRESULT	ADPCM_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
     else if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_ADPCM &&
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
     {
-	/* resampling or mono <=> stereo not available
-         * ADPCM algo only define 16 bit per sample output
-         */
+	/* resampling or mono <=> stereo not available */
 	if (adsi->pwfxSrc->nSamplesPerSec != adsi->pwfxDst->nSamplesPerSec ||
-	    adsi->pwfxSrc->nChannels != adsi->pwfxDst->nChannels ||
-            adsi->pwfxDst->wBitsPerSample != 16)
+	    adsi->pwfxSrc->nChannels != adsi->pwfxDst->nChannels)
 	    goto theEnd;
 
 #if 0
@@ -579,9 +621,9 @@ static	LRESULT	ADPCM_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
 #endif
 
 	/* adpcm decoding... */
-	if (adsi->pwfxDst->wBitsPerSample == 16 && adsi->pwfxDst->nChannels == 2)
+	if (adsi->pwfxDst->nChannels == 2)
 	    aad->convert = cvtSSms16K;
-	if (adsi->pwfxDst->wBitsPerSample == 16 && adsi->pwfxDst->nChannels == 1)
+	else if (adsi->pwfxDst->nChannels == 1)
 	    aad->convert = cvtMMms16K;
     }
     else if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_PCM &&

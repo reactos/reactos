@@ -19,115 +19,116 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 
-#define RGB_MAX						64
-#define RGB_MAX_PER_ITERATION		64
+#define RGB_MAX                      64
+#define RGB_MAX_PER_ITERATION        64
+#define TAG_PALETTE_COLORS           'claP'
 
 VOID VideoSetAllColorsToBlack(ULONG ColorCount)
 {
-	UCHAR		Color;
+    UCHAR        Color;
 
-	MachVideoSync();
+    MachVideoSync();
 
-	for (Color=0; Color<ColorCount; Color++)
-	{
-		MachVideoSetPaletteColor(Color, 0, 0, 0);
-	}
+    for (Color=0; Color<ColorCount; Color++)
+    {
+        MachVideoSetPaletteColor(Color, 0, 0, 0);
+    }
 }
 
 VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
-	ULONG				Index;
-	UCHAR				Color;
-	PPALETTE_ENTRY	PaletteColors;
+    ULONG                Index;
+    UCHAR                Color;
+    PPALETTE_ENTRY    PaletteColors;
 
-	PaletteColors = MmHeapAlloc(sizeof(PALETTE_ENTRY) * ColorCount);
-	if (!PaletteColors) return;
+    PaletteColors = FrLdrTempAlloc(sizeof(PALETTE_ENTRY) * ColorCount, TAG_PALETTE_COLORS);
+    if (!PaletteColors) return;
 
-	for (Index=0; Index<RGB_MAX; Index++)
-	{
+    for (Index=0; Index<RGB_MAX; Index++)
+    {
 
-		for (Color=0; Color<ColorCount; Color++)
-		{
-			MachVideoGetPaletteColor(Color, &PaletteColors[Color].Red, &PaletteColors[Color].Green, &PaletteColors[Color].Blue);
+        for (Color=0; Color<ColorCount; Color++)
+        {
+            MachVideoGetPaletteColor(Color, &PaletteColors[Color].Red, &PaletteColors[Color].Green, &PaletteColors[Color].Blue);
 
-			// Increment each color so it approaches its real value
-			if (PaletteColors[Color].Red < Palette[Color].Red)
-			{
-				PaletteColors[Color].Red++;
-			}
-			if (PaletteColors[Color].Green < Palette[Color].Green)
-			{
-				PaletteColors[Color].Green++;
-			}
-			if (PaletteColors[Color].Blue < Palette[Color].Blue)
-			{
-				PaletteColors[Color].Blue++;
-			}
+            // Increment each color so it approaches its real value
+            if (PaletteColors[Color].Red < Palette[Color].Red)
+            {
+                PaletteColors[Color].Red++;
+            }
+            if (PaletteColors[Color].Green < Palette[Color].Green)
+            {
+                PaletteColors[Color].Green++;
+            }
+            if (PaletteColors[Color].Blue < Palette[Color].Blue)
+            {
+                PaletteColors[Color].Blue++;
+            }
 
-			// Make sure we haven't exceeded the real value
-			if (PaletteColors[Color].Red > Palette[Color].Red)
-			{
-				PaletteColors[Color].Red = Palette[Color].Red;
-			}
-			if (PaletteColors[Color].Green > Palette[Color].Green)
-			{
-				PaletteColors[Color].Green = Palette[Color].Green;
-			}
-			if (PaletteColors[Color].Blue > Palette[Color].Blue)
-			{
-				PaletteColors[Color].Blue = Palette[Color].Blue;
-			}
-		}
+            // Make sure we haven't exceeded the real value
+            if (PaletteColors[Color].Red > Palette[Color].Red)
+            {
+                PaletteColors[Color].Red = Palette[Color].Red;
+            }
+            if (PaletteColors[Color].Green > Palette[Color].Green)
+            {
+                PaletteColors[Color].Green = Palette[Color].Green;
+            }
+            if (PaletteColors[Color].Blue > Palette[Color].Blue)
+            {
+                PaletteColors[Color].Blue = Palette[Color].Blue;
+            }
+        }
 
-		// Set the colors
-		for (Color=0; Color<ColorCount; Color++)
-		{
-			if ((Color % RGB_MAX_PER_ITERATION) == 0)
-			{
-				MachVideoSync();
-			}
+        // Set the colors
+        for (Color=0; Color<ColorCount; Color++)
+        {
+            if ((Color % RGB_MAX_PER_ITERATION) == 0)
+            {
+                MachVideoSync();
+            }
 
-			MachVideoSetPaletteColor(Color, PaletteColors[Color].Red, PaletteColors[Color].Green, PaletteColors[Color].Blue);
-		}
-	}
+            MachVideoSetPaletteColor(Color, PaletteColors[Color].Red, PaletteColors[Color].Green, PaletteColors[Color].Blue);
+        }
+    }
 
-	MmHeapFree(PaletteColors);
+    FrLdrTempFree(PaletteColors, TAG_PALETTE_COLORS);
 }
 
 VOID VideoFadeOut(ULONG ColorCount)
 {
-	ULONG		Index;
-	UCHAR		Color;
-	UCHAR		Red;
-	UCHAR		Green;
-	UCHAR		Blue;
+    ULONG        Index;
+    UCHAR        Color;
+    UCHAR        Red;
+    UCHAR        Green;
+    UCHAR        Blue;
 
-	for (Index=0; Index<RGB_MAX; Index++)
-	{
-		for (Color=0; Color<ColorCount; Color++)
-		{
-			if ((Color % RGB_MAX_PER_ITERATION) == 0)
-			{
-				MachVideoSync();
-			}
+    for (Index=0; Index<RGB_MAX; Index++)
+    {
+        for (Color=0; Color<ColorCount; Color++)
+        {
+            if ((Color % RGB_MAX_PER_ITERATION) == 0)
+            {
+                MachVideoSync();
+            }
 
-			MachVideoGetPaletteColor(Color, &Red, &Green, &Blue);
+            MachVideoGetPaletteColor(Color, &Red, &Green, &Blue);
 
-			if (Red > 0)
-			{
-				Red--;
-			}
-			if (Green > 0)
-			{
-				Green--;
-			}
-			if (Blue > 0)
-			{
-				Blue--;
-			}
+            if (Red > 0)
+            {
+                Red--;
+            }
+            if (Green > 0)
+            {
+                Green--;
+            }
+            if (Blue > 0)
+            {
+                Blue--;
+            }
 
-			MachVideoSetPaletteColor(Color, Red, Green, Blue);
-		}
-	}
+            MachVideoSetPaletteColor(Color, Red, Green, Blue);
+        }
+    }
 }
 #endif

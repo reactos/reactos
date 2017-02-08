@@ -102,4 +102,4 @@ private:
 	bool fFaceUp;
 };
 
-#endif
+#endif /* _CARD_INCLUDED */

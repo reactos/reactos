@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CRT
- * FILE:            lib/crt/misc/i386/prolog.s
+ * FILE:            lib/sdk/crt/except/i386/prolog.s
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:     Wine Development Team
  */

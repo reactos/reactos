@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/vfwprintf.c
+ * FILE:            lib/sdk/crt/printf/vfwprintf_s.c
  * PURPOSE:         Implementation of vfwprintf
  * PROGRAMMER:      Timo Kreuzer
  *                  Samuel Serapión
@@ -13,10 +13,10 @@
 #include <stdarg.h>
 #include <internal/safecrt.h>
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
+int __cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
 int
-_cdecl
+__cdecl
 vfwprintf_s(FILE* file, const wchar_t *format, va_list argptr)
 {
     int ret;

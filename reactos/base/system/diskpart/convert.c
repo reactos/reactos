@@ -6,19 +6,10 @@
  *					an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL convert_main(INT argc, WCHAR **argv)
+BOOL convert_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-/*
- * help_convert():
- * Shows the description and explains each argument type of the convert command
- */
-VOID help_convert(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_CONVERT);
 }

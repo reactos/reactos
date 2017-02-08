@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/startuppage.c
+ * FILE:        base/applications/msconfig/startuppage.c
  * PURPOSE:     Startup page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *
@@ -93,11 +93,15 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
             {
                 dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
-                Data = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME * sizeof(TCHAR));
+                Data = HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME * sizeof(TCHAR));
                 if (Data == NULL)
                     break;
 
-                RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL);
+                if(RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+                {
+                    HeapFree(GetProcessHeap(), 0, Data);
+                    continue;
+                }
                 _stprintf(szSubPath, _T("%s\\%s"), szBasePath, szValueName);
                 memset(&item, 0, sizeof(LV_ITEM));
                 item.mask = LVIF_TEXT;
@@ -137,7 +141,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                 HeapFree(GetProcessHeap(), 0, Data);
             }
         }
-    RegCloseKey(hKey);
+        RegCloseKey(hKey);
     }
 }
 
@@ -160,7 +164,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
             {
                 dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
-                Data = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME * sizeof(TCHAR));
+                Data = HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME * sizeof(TCHAR));
                 if (Data == NULL)
                     break;
                 retVal = RegEnumValue(hKey, Index, lpValueName, &dwValueLength, NULL, &dwType, (LPBYTE)Data, &dwDataLength);
@@ -199,8 +203,8 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                     item.pszText = Path;
                     item.iSubItem = 2;
                     SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                    HeapFree(GetProcessHeap(), 0, Data);
                 }
+                HeapFree(GetProcessHeap(), 0, Data);
             }
         }
         RegCloseKey(hKey);

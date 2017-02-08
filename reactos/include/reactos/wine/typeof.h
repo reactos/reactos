@@ -23,6 +23,9 @@ struct tagCANDIDATELIST;
 struct tagIMEMENUITEMINFOW;
 struct _xsltStylesheet;
 struct jpeg_decompress_struct;
+struct _iobuf;
+struct _xsltTransformContext;
+struct _xmlOutputBuffer;
 
 typedef struct IWineD3D * (__stdcall typeof(WineDirect3DCreate))(unsigned int, struct IUnknown *);
 typedef struct IWineD3DClipper * (__stdcall typeof(WineDirect3DCreateClipper))(struct IUnknown *);
@@ -44,6 +47,12 @@ typedef int (__stdcall typeof(ImeProcessKey))(void *, unsigned int, __typeof_lon
 typedef unsigned int (__stdcall typeof(ImeGetRegisterWordStyle))(unsigned int, struct tagSTYLEBUFW *);
 typedef unsigned int (__stdcall typeof(ImeGetImeMenuItems))(void *, unsigned int, unsigned int, struct tagIMEMENUITEMINFOW *, struct tagIMEMENUITEMINFOW *, unsigned int);
 typedef struct _xmlDoc * (__cdecl typeof(xsltApplyStylesheet))(struct _xsltStylesheet *, struct _xmlDoc *, const char **);
+typedef struct _xmlDoc * (__cdecl typeof(xsltApplyStylesheetUser))(struct _xsltStylesheet *, struct _xmlDoc *, const char **, const char *, struct _iobuf *, struct _xsltTransformContext *);
+typedef struct _xsltTransformContext * (__cdecl typeof(xsltNewTransformContext))(struct _xsltStylesheet *, struct _xmlDoc *);
+typedef void (__cdecl typeof(xsltFreeTransformContext))(struct _xsltTransformContext *);
+typedef int (__cdecl typeof(xsltQuoteUserParams))(struct _xsltTransformContext *, const char **);
+typedef int (__cdecl typeof(xsltSaveResultTo))(struct _xmlOutputBuffer *, struct _xmlDoc *, struct _xsltStylesheet *);
+typedef struct _xsltStylesheet * (__cdecl typeof(xsltNextImport))(struct _xsltStylesheet *);
 typedef void (__cdecl typeof(xsltCleanupGlobals))(void);
 typedef void (__cdecl typeof(xsltFreeStylesheet))(struct _xsltStylesheet *);
 typedef struct _xsltStylesheet * (__cdecl typeof(xsltParseStylesheetDoc))(struct _xmlDoc *);

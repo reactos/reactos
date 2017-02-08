@@ -21,6 +21,9 @@
  */
 
 #include "precomp.h"
+#include <shlwapi.h>
+
+extern BOOL bInMenuLoop;        /* Tells us if we are in the menu loop - from taskmgr.c */
 
 TGraphCtrl PerformancePageCpuUsageHistoryGraph;
 TGraphCtrl PerformancePageMemUsageHistoryGraph;
@@ -67,7 +70,7 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     int   cx, cy, sx, sy;
 
     GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)));
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
     if (pos) {
         cx = rc.left;
         cy = rc.top;
@@ -197,9 +200,9 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /*
          *  Subclass graph buttons
          */
-        OldGraphWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hPerformancePageCpuUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
+        OldGraphWndProc = (WNDPROC)SetWindowLongPtrW(hPerformancePageCpuUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
         SetWindowLongPtrW(hPerformancePageMemUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
-        OldGraphCtrlWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hPerformancePageMemUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
+        OldGraphCtrlWndProc = (WNDPROC)SetWindowLongPtrW(hPerformancePageMemUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
         SetWindowLongPtrW(hPerformancePageCpuUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
         return TRUE;
 
@@ -311,36 +314,41 @@ void RefreshPerformancePage(void)
 
 DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 {
-    ULONG  CommitChargeTotal;
-    ULONG  CommitChargeLimit;
-    ULONG  CommitChargePeak;
+    ULONGLONG  CommitChargeTotal;
+    ULONGLONG  CommitChargeLimit;
+    ULONGLONG  CommitChargePeak;
 
     ULONG  CpuUsage;
     ULONG  CpuKernelUsage;
 
-    ULONG  KernelMemoryTotal;
-    ULONG  KernelMemoryPaged;
-    ULONG  KernelMemoryNonPaged;
+    ULONGLONG  KernelMemoryTotal;
+    ULONGLONG  KernelMemoryPaged;
+    ULONGLONG  KernelMemoryNonPaged;
 
-    ULONG  PhysicalMemoryTotal;
-    ULONG  PhysicalMemoryAvailable;
-    ULONG  PhysicalMemorySystemCache;
+    ULONGLONG  PhysicalMemoryTotal;
+    ULONGLONG  PhysicalMemoryAvailable;
+    ULONGLONG  PhysicalMemorySystemCache;
 
     ULONG  TotalHandles;
     ULONG  TotalThreads;
     ULONG  TotalProcesses;
 
-    WCHAR  Text[260];
-    WCHAR  szMemUsage[256];
-
     MSG    msg;
 
+    WCHAR  Text[260];
+    WCHAR  szMemUsage[256], szCpuUsage[256], szProcesses[256];
+
+    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
     LoadStringW(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, 256);
+    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     while (1)
     {
         int nBarsUsed1;
         int nBarsUsed2;
+
+        WCHAR szChargeTotalFormat[256];
+        WCHAR szChargeLimitFormat[256];
 
         /*  Wait for an the event or application close */
         if (GetMessage(&msg, NULL, 0, 0) <= 0)
@@ -353,15 +361,28 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
              */
             CommitChargeTotal = PerfDataGetCommitChargeTotalK();
             CommitChargeLimit = PerfDataGetCommitChargeLimitK();
-            CommitChargePeak = PerfDataGetCommitChargePeakK();
+            CommitChargePeak  = PerfDataGetCommitChargePeakK();
             _ultow(CommitChargeTotal, Text, 10);
             SetWindowTextW(hPerformancePageCommitChargeTotalEdit, Text);
             _ultow(CommitChargeLimit, Text, 10);
             SetWindowTextW(hPerformancePageCommitChargeLimitEdit, Text);
             _ultow(CommitChargePeak, Text, 10);
             SetWindowTextW(hPerformancePageCommitChargePeakEdit, Text);
-            wsprintfW(Text, szMemUsage, CommitChargeTotal, CommitChargeLimit);
-            SendMessageW(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
+
+            StrFormatByteSizeW(CommitChargeTotal * 1024,
+                               szChargeTotalFormat,
+                               _countof(szChargeTotalFormat));
+
+            StrFormatByteSizeW(CommitChargeLimit * 1024,
+                               szChargeLimitFormat,
+                               _countof(szChargeLimitFormat));
+
+            if (!bInMenuLoop)
+            {
+                wsprintfW(Text, szMemUsage, szChargeTotalFormat, szChargeLimitFormat,
+                    (CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0));
+                SendMessageW(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
+            }
 
             /*
              *  Update the kernel memory info
@@ -401,6 +422,11 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             SetWindowTextW(hPerformancePageTotalsThreadCountEdit, Text);
             _ultow(TotalProcesses, Text, 10);
             SetWindowTextW(hPerformancePageTotalsProcessCountEdit, Text);
+            if (!bInMenuLoop)
+            {
+                wsprintfW(Text, szProcesses, TotalProcesses);
+                SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)Text);
+            }
 
             /*
              *  Redraw the graphs
@@ -414,6 +440,12 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             CpuUsage = PerfDataGetProcessorUsage();
             if (CpuUsage <= 0 )       CpuUsage = 0;
             if (CpuUsage > 100)       CpuUsage = 100;
+
+            if (!bInMenuLoop)
+            {
+                wsprintfW(Text, szCpuUsage, CpuUsage);
+                SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)Text);
+            }
 
             if (TaskManagerSettings.ShowKernelTimes)
             {

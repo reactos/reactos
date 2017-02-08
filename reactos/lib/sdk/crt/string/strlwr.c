@@ -4,7 +4,7 @@
 /*
  * @implemented
  */
-char * _strlwr(char *x)
+char * CDECL _strlwr(char *x)
 {
 	char  *y=x;
 

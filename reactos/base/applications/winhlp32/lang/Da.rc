@@ -1,0 +1,110 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1997 Henrik Olsen
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2008 Jens Albretsen<jens@albretsen.dk>
+ *           2010 Thomas Larsen
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "&Filer" {
+  MENUITEM "Å&ben...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Udskriv emne", MNID_FILE_PRINT
+  MENUITEM "&Indstil printer", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "&Afslut", MNID_FILE_EXIT
+ }
+ POPUP "&Rediger" {
+   MENUITEM "K&opier...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Anmærk...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "Bog&mærke" {
+   MENUITEM "&Definer...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Options" {
+  MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "&Hjælp" {
+   MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
+   MENUITEM "&Information...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Notat...",            MNID_CTXT_ANNOTATE
+		MENUITEM "Kopier",              MNID_CTXT_COPY
+		MENUITEM "Udskriv...",          MNID_CTXT_PRINT
+		POPUP    "Skrifttype"
+		BEGIN
+			MENUITEM "Lille",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Stor",        MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"ReactOS Hjælp"
+STID_WHERROR, 		"FEJL"
+STID_WARNING,  		"ADVARSEL"
+STID_INFO,  		"Information"
+STID_NOT_IMPLEMENTED, 	"Ikke implementeret"
+STID_HLPFILE_ERROR_s, 	"Fejl ved indlæsning af filen `%s'"
+STID_INDEX, 		"&Indhold"
+STID_CONTENTS,		"Summary"
+STID_BACK, 		"&Tilbage"
+STID_ALL_FILES, 	"Alle filer (*.*)"
+STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan ikke finde '%s'. Vil du selv finde filen?"
+STID_NO_RICHEDIT	"Kan ikke finde en 'richedit' implementering... Afbryder"
+STID_PSH_INDEX,		"Help topics: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Søg"
+{
+    LTEXT  "Er ikke blevet implementeret endnu", -1, 10, 10, 180, 150
+}

@@ -22,6 +22,7 @@ interface IAMAudioInputMixer;
 interface IAMAudioRendererStats;
 interface IAMBufferNegotiation;
 interface IAMCameraControl;
+interface IAMCertifiedOutputProtection;
 interface IAMCopyCaptureFileProgress;
 interface IAMCrossbar;
 interface IAMDevMemoryAllocator;
@@ -45,6 +46,7 @@ interface IAMVfwCompressDialogs;
 interface IAMVideoCompression;
 interface IAMVideoDecimationProperties;
 interface IAMVideoProcAmp;
+interface IAMGraphBuilderCallback;
 interface ICaptureGraphBuilder;
 interface ICaptureGraphBuilder2;
 interface IConfigAviMux;
@@ -235,14 +237,14 @@ typedef struct
             {
                 ULONG cPins;
                 [size_is(cPins)] const REGFILTERPINS *rgPins;
-            } DUMMYSTRUCTNAME;
+            } DUMMYSTRUCTNAME1;
 
         [case(2)]
             struct
             {
                 ULONG cPins2;
                 [size_is(cPins2)] const REGFILTERPINS2 *rgPins2;
-            } DUMMYSTRUCTNAME1;
+            } DUMMYSTRUCTNAME2;
 
         [default]
             ;
@@ -745,6 +747,122 @@ interface ICaptureGraphBuilder2 : IUnknown
         [out] IPin **ppPin);
 }
 
+[
+    local,
+    object,
+    uuid(5acd6aa0-f482-11ce-8b67-00aa00a3f1a6),
+    pointer_default(unique)
+]
+interface IConfigAviMux : IUnknown
+{
+    HRESULT SetMasterStream(
+        [in] LONG iStream);
+
+    HRESULT GetMasterStream(
+        [out] LONG *pStream);
+
+    HRESULT SetOutputCompatibilityIndex(
+        [in] BOOL fOldIndex);
+
+    HRESULT GetOutputCompatibilityIndex(
+        [out] BOOL *pfOldIndex);
+}
+
+[
+    local,
+    object,
+    uuid(bee3d220-157b-11d0-bd23-00a0c911ce86),
+    pointer_default(unique)
+]
+interface IConfigInterleaving : IUnknown
+{
+    typedef enum InterleavingMode {
+        INTERLEAVE_NONE,
+        INTERLEAVE_CAPTURE,
+        INTERLEAVE_FULL,
+        INTERLEAVE_NONE_BUFFERED
+    } InterleavingMode;
+
+    HRESULT put_Mode(
+        [in] InterleavingMode mode);
+
+    HRESULT get_Mode(
+        [out] InterleavingMode *pMode);
+
+    HRESULT put_Interleaving(
+        [in] const REFERENCE_TIME *prtInterleave,
+        [in] const REFERENCE_TIME *prtPreroll);
+
+    HRESULT get_Interleaving(
+        [out] REFERENCE_TIME *prtInterleave,
+        [out] REFERENCE_TIME *prtPreroll);
+}
+
+[
+    local,
+    object,
+    uuid(9fd52741-176d-4b36-8f51-ca8f933223be),
+    pointer_default(unique)
+]
+interface IAMClockSlave : IUnknown
+{
+    HRESULT SetErrorTolerance(
+        [in] DWORD dwTolerance);
+
+    HRESULT GetErrorTolerance(
+        [out] DWORD *pdwTolerance);
+}
+
+typedef struct _AMCOPPSignature {
+    BYTE Signature[256];
+} AMCOPPSignature;
+
+typedef struct _AMCOPPCommand {
+    GUID macKDI;
+    GUID guidCommandID;
+    DWORD dwSequence;
+    DWORD bSizeData;
+    BYTE CommandData[4056];
+} AMCOPPCommand, *LPAMCOPPCommand;
+
+typedef struct _AMCOPPStatusInput {
+    GUID rApp;
+    GUID guidStatusRequestID;
+    DWORD dwSequence;
+    DWORD cbSizeData;
+    BYTE StatusData[4056];
+} AMCOPPStatusInput, *LPAMCOPPStatusInput;
+
+typedef struct _AMCOPPStatusOutput {
+    GUID macKDI;
+    DWORD cbSizeData;
+    BYTE COPPStatus[4076];
+} AMCOPPStatusOutput, *LPAMCOPPStatusOutput;
+
+[
+    local,
+    object,
+    uuid(6feded3e-0ff1-4901-a2f1-43f7012c8515),
+    pointer_default(unique)
+]
+interface IAMCertifiedOutputProtection : IUnknown
+{
+    HRESULT KeyExchange (
+        [out] GUID* pRandom,
+        [out] BYTE** VarLenCertGH,
+        [out] DWORD* pdwLengthCertGH);
+
+    HRESULT SessionSequenceStart(
+        [in] AMCOPPSignature* pSig);
+
+    HRESULT ProtectionCommand(
+        [in] const AMCOPPCommand* cmd);
+
+    HRESULT ProtectionStatus(
+        [in] const AMCOPPStatusInput* pStatusInput,
+        [out] AMCOPPStatusOutput* pStatusOutput);
+};
+
 enum _AM_RENSDEREXFLAGS
 {
     AM_RENDEREX_RENDERTOEXISTINGRENDERERS = 0x01
@@ -1068,6 +1186,21 @@ enum _AM_FILTER_MISC_FLAGS
 interface IAMFilterMiscFlags : IUnknown
 {
     ULONG GetMiscFlags();
+};
+
+[
+    local,
+    object,
+    uuid(4995f511-9ddb-4f12-bd3b-f04611807b79),
+    pointer_default(unique)
+]
+interface IAMGraphBuilderCallback : IUnknown
+{
+    HRESULT SelectedFilter(
+        [in] IMoniker *pMon);
+
+    HRESULT CreatedFilter(
+        [in] IBaseFilter *pFil);
 };
 
 [

@@ -103,7 +103,7 @@ ProbeForRead(IN CONST VOID *Address,
              IN SIZE_T Length,
              IN ULONG Alignment)
 {
-	ULONG_PTR Last, Current = (ULONG_PTR)Address;
+    ULONG_PTR Last, Current = (ULONG_PTR)Address;
     PAGED_CODE();
 
     /* Only probe if we have a valid length */

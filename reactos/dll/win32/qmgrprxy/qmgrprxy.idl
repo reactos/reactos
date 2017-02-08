@@ -16,7 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep ident
+#pragma makedep proxy
+#pragma makedep register
+
 #include "bits.idl"
 
 #define DO_NO_IMPORTS
 #include "bits1_5.idl"
+#include "bits2_0.idl"
+#include "bits2_5.idl"
+#include "bits3_0.idl"
+
+[
+    threading(both),
+    uuid(5ce34c0d-0dc9-4c1f-897c-daa1b78cee7c)  /* IBackgroundCopyManager */
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }

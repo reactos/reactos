@@ -47,16 +47,16 @@ dstFILE: here  is  stored FILE re-name(hi.txt)
 
 
 2)If srcPattern contains "\" then:
-		-we activate bPath, since srcPattern has a path inside of it.
-		-we explit the srcPattern to srcFile and srcPath.
-	-Now we check the dstPattern ¿does it contain a Path?:
-		-If does: we divide it in dstPath and dstFile.AND ALSO CHECK THAT dstPath and srcPath it´s the same(see syntax error).If they aren the same we launch an error.
-		-If doesnt then we copy srcPath to dstPath(see #way2) and also saving dstPattern as dstFile.
+        -we activate bPath, since srcPattern has a path inside of it.
+        -we explit the srcPattern to srcFile and srcPath.
+    -Now we check the dstPattern ¿does it contain a Path?:
+        -If does: we divide it in dstPath and dstFile.AND ALSO CHECK THAT dstPath and srcPath it´s the same(see syntax error).If they aren the same we launch an error.
+        -If doesnt then we copy srcPath to dstPath(see #way2) and also saving dstPattern as dstFile.
 3)If srcPattern doesnt contain "\" then:
-		-srcPattern is copied in srcFile(we dont need a previous split,because it´s just a name)
-	-Now we check the dstPattern ¿does it contains a Path?
-		-If does: we launch an error (see syntax error 2)
-		-If doesnt: we copy dstPattern to dstFile(we dont need a previous split because it´s just a name)
+        -srcPattern is copied in srcFile(we dont need a previous split,because it´s just a name)
+    -Now we check the dstPattern ¿does it contains a Path?
+        -If does: we launch an error (see syntax error 2)
+        -If doesnt: we copy dstPattern to dstFile(we dont need a previous split because it´s just a name)
 
 4)Now we are entering in the do...while:
 
@@ -74,11 +74,11 @@ If we are just renaming one file,then we dont make the while loop.The do..while 
 5)Now we have to check our Boolean.
 
 bPath==TRUE means that Source Argument was a Path so now we have to Join again the Path with the Name File:
-	-srcFINAL: srcPath+f.cFileName
-	-dstFINAL: dstPath+dstFile
+    -srcFINAL: srcPath+f.cFileName
+    -dstFINAL: dstPath+dstFile
 bPath==False then Souce wasn a Path an we dont need to join anything.
-	-srcFINAL:f.cFileName
-	-dstFINAL:dstFile
+    -srcFINAL:f.cFileName
+    -dstFINAL:dstFile
 
 
 At last we just make a MoveFile(srcFinal, dstFinal)):

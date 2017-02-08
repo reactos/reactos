@@ -19,7 +19,7 @@
 
 #include <freeldr.h>
 
-CHAR	FreeLoaderVersionString[80];
+CHAR FreeLoaderVersionString[80];
 
 PCHAR GetFreeLoaderVersionString(VOID)
 {
@@ -29,5 +29,5 @@ PCHAR GetFreeLoaderVersionString(VOID)
     sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION, FREELOADER_PATCH_VERSION);
 #endif
 
-	return FreeLoaderVersionString;
+    return FreeLoaderVersionString;
 }

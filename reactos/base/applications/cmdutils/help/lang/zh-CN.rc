@@ -1,0 +1,70 @@
+/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "通过帮助实用程序不支持此命令。\n试 ""%s /?""\n。"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "提供ReactOS命令的帮助信息。\n\n\
+HELP [command]\n\n\
+  command - 显示此命令的帮助信息。\n"
+    IDS_HELP1 "列出所有可用命令 (+ 它们的描述)\n\n\
+  help 命令\n\
+  命令 /?         得到特定命令的更多信息\n\n\
+?        列出所有可用命令 (没有描述)。\n\
+ALIAS    设置、删除或显示别名。\n\
+ATTRIB   显示或改变文件属性。\n\
+BEEP     使扬声器发声。\n\
+CALL     从一个批处理程序中调用另一个。\n\
+CD       显示当前目录的名称或更改当前目录。\n\
+CHCP     显示或设置活动代码页。\n\
+CHOICE   等待用户在一组选项中做出选择。\n\
+CLS      清除屏幕。\n\
+CMD      启动 ReactOS 命令行解释器的一个新实例。\n\
+COLOR    设置控制台默认的前景和背景颜色。\n\
+COPY     将一个或多个文件复制到另一个位置。\n\
+DATE     显示或设置日期。\n\
+DELETE   删除一个或多个文件。\n\
+DIR      显示一个目录中的文件列表和子目录。\n\
+ECHO     显示消息，或打开/关闭命令回显。\n\
+ERASE    删除一个或多个文件。\n\
+EXIT     退出 CMD.EXE 程序 (命令解释器)。\n\
+FOR      为一组文件中的每一个文件执行指定命令。\n\
+FREE     (空闲的) 磁盘空间。\n\
+GOTO     在批处理程序中指示 ReactOS 命令解释器跳转到被标记的行继续执行。\n\
+HELP     为 ReactOS 命令提供帮助信息。\n\
+HISTORY  列出所有曾被使用的命令。\n\
+IF       在批处理程序中执行条件控制。\n\
+LABEL    创建、更改或删除磁盘卷标。\n\
+MD       创建一个目录。\n\
+MKDIR    创建一个目录。\n\
+MKLINK   创建一个文件系统链接对象。\n\
+MOVE     将一个或多个文件从一个文件夹移动到另一个文件夹。\n\
+PATH     显示或设置可执行文件的搜索路径。\n\
+PAUSE    挂起批处理文件的执行并显示一条消息。\n\
+POPD     恢复由 PUSHD 存储的前一个当前目录的值。\n\
+PROMPT   更改命令提示符。\n\
+PUSHD    保存当前目录然后更改。\n\
+RD       删除一个目录。\n\
+REM      在批处理文件中记录注释 (评论)。\n\
+REN      重命名一个或多个文件。\n\
+RENAME   重命名一个或多个文件。\n\
+REPLACE  替换文件。\n\
+RMDIR    删除一个目录。\n\
+SCREEN   移动光标并可选地输出文本。\n\
+SET      显示、设置或删除 ReactOS 环境变量。\n\
+SHIFT    在批处理文件中移动可替换参数的位置。\n"
+    IDS_HELP2 "START    启动一个分隔的窗口来运行指定的程序或命令。\n\
+         执行命令。\n\
+TIME     显示或设置系统时间。\n\
+TIMER    允许使用至多十个停表。\n\
+TITLE    设置一个 CMD.EXE 会话的窗口标题。\n\
+TYPE     显示一个文本文件的内容。\n\
+VER      显示 ReactOS 版本。\n\
+VERIFY   决定 ReactOS 是否检验您的文件已被正确地写入磁盘。\n\
+VOL      显示磁盘卷标和序列号。\n"
+END

@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.h
  * PURPOSE:         Binary hive export code
@@ -27,7 +28,7 @@
 
 BOOL
 ExportBinaryHive(
-	IN PCSTR FileName,
-	IN PCMHIVE Hive);
+    IN PCSTR FileName,
+    IN PCMHIVE Hive);
 
 /* EOF */

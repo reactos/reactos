@@ -1,7 +1,6 @@
 
 add_subdirectory(cmd)
-if(NOT MSVC)
 add_subdirectory(explorer)
-endif()
-add_subdirectory(explorer-new)
-
+add_subdirectory(filebrowser)
+add_subdirectory(progman)
+add_subdirectory(rshell)

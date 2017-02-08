@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS EXT2 filesystem library
- * FILE:        include/fslib/ext2lib.h
+ * FILE:        include/reactos/libs/fslib/ext2lib.h
  * PURPOSE:     Public definitions for ext2 filesystem library
  */
 #ifndef __EXT2LIB_H

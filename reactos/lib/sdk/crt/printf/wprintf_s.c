@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/wprintf.c
+ * FILE:            lib/sdk/crt/printf/wprintf_s.c
  * PURPOSE:         Implementation of wprintf
  * PROGRAMMER:      Samuel Serapión
  */
@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 wprintf_s(const wchar_t *format, ...)
 {
     va_list argptr;

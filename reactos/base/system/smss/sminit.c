@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            base/system/smss/smss.c
+ * FILE:            base/system/smss/sminit.c
  * PURPOSE:         Main SMSS Code
  * PROGRAMMERS:     Alex Ionescu
  */
@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -37,7 +38,7 @@ PISECURITY_DESCRIPTOR SmpPrimarySecurityDescriptor, SmpLiberalSecurityDescriptor
 PISECURITY_DESCRIPTOR SmpKnownDllsSecurityDescriptor, SmpApiPortSecurityDescriptor;
 
 ULONG SmpAllowProtectedRenames, SmpProtectionMode = 1;
-BOOLEAN MiniNTBoot;
+BOOLEAN MiniNTBoot = FALSE;
 
 #define SMSS_CHECKPOINT(x, y)           \
 {                                       \
@@ -103,8 +104,8 @@ SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
         /* A new entry -- allocate it */
         RegEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                    SmBaseTag,
-                                   NameString.MaximumLength +
-                                   sizeof(SMP_REGISTRY_VALUE));
+                                   sizeof(SMP_REGISTRY_VALUE) +
+                                   NameString.MaximumLength);
         if (!RegEntry) return STATUS_NO_MEMORY;
 
         /* Initialize the list and set all values to NULL */
@@ -236,7 +237,7 @@ SmpConfigureProtectionMode(IN PWSTR ValueName,
 
     /* Recreate the security descriptors to take into account security mode */
     SmpCreateSecurityDescriptors(FALSE);
-    DPRINT("SmpProtectionMode: %d\n", SmpProtectionMode);
+    DPRINT("SmpProtectionMode: %lu\n", SmpProtectionMode);
     return STATUS_SUCCESS;
 }
 
@@ -261,7 +262,7 @@ SmpConfigureAllowProtectedRenames(IN PWSTR ValueName,
         SmpAllowProtectedRenames = 0;
     }
 
-    DPRINT("SmpAllowProtectedRenames: %d\n", SmpAllowProtectedRenames);
+    DPRINT("SmpAllowProtectedRenames: %lu\n", SmpAllowProtectedRenames);
     return STATUS_SUCCESS;
 }
 
@@ -324,7 +325,7 @@ SmpConfigureObjectDirectories(IN PWSTR ValueName,
         }
 
         /* Move to the next requested object */
-        while (*SourceString++);
+        SourceString += wcslen(SourceString) + 1;
     }
 
     /* All done */
@@ -354,15 +355,15 @@ SmpConfigureFileRenames(IN PWSTR ValueName,
                         IN PVOID EntryContext)
 {
     NTSTATUS Status;
-    static PWCHAR Canary;
+    static PWCHAR Canary = NULL;
 
     /* Check if this is the second call */
     if (Canary)
     {
         /* Save the data into the list */
-        DPRINT1("Renamed file: %S-%S\n", Canary, ValueData);
+        DPRINT("Renamed file: '%S' - '%S'\n", Canary, ValueData);
         Status = SmpSaveRegistryValue(EntryContext, Canary, ValueData, FALSE);
-        Canary = 0;
+        Canary = NULL;
     }
     else
     {
@@ -402,7 +403,7 @@ SmpConfigureExcludeKnownDlls(IN PWSTR ValueName,
             if (!(NT_SUCCESS(Status)) || (ValueType == REG_SZ)) return Status;
 
             /* Otherwise, move to the next DLL name */
-            while (*DllName++);
+            DllName += wcslen(DllName) + 1;
         }
     }
 
@@ -584,7 +585,7 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
             }
 
             /* Move to the next name */
-            while (*SubsystemName++);
+            SubsystemName += wcslen(SubsystemName) + 1;
         }
     }
 
@@ -607,7 +608,7 @@ SmpRegistryConfigurationTable[] =
 
     {
         SmpConfigureAllowProtectedRenames,
-        0, //RTL_QUERY_REGISTRY_DELETE,
+        RTL_QUERY_REGISTRY_DELETE,
         L"AllowProtectedRenames",
         NULL,
         REG_DWORD,
@@ -630,8 +631,8 @@ SmpRegistryConfigurationTable[] =
         0,
         L"BootExecute",
         &SmpBootExecuteList,
-        REG_NONE,
-        NULL,
+        REG_MULTI_SZ,
+        L"autocheck AutoChk.exe *\0",
         0
     },
 
@@ -647,7 +648,7 @@ SmpRegistryConfigurationTable[] =
 
     {
         SmpConfigureFileRenames,
-        0, //RTL_QUERY_REGISTRY_DELETE,
+        RTL_QUERY_REGISTRY_DELETE,
         L"PendingFileRenameOperations",
         &SmpFileRenameList,
         REG_NONE,
@@ -657,7 +658,7 @@ SmpRegistryConfigurationTable[] =
 
     {
         SmpConfigureFileRenames,
-        0, //RTL_QUERY_REGISTRY_DELETE,
+        RTL_QUERY_REGISTRY_DELETE,
         L"PendingFileRenameOperations2",
         &SmpFileRenameList,
         REG_NONE,
@@ -710,16 +711,6 @@ SmpRegistryConfigurationTable[] =
         RTL_QUERY_REGISTRY_SUBKEY,
         L"KnownDlls",
         &SmpKnownDllsList,
-        REG_NONE,
-        NULL,
-        0
-    },
-
-    {
-        SmpConfigureEnvironment,
-        RTL_QUERY_REGISTRY_SUBKEY,
-        L"Environment",
-        NULL,
         REG_NONE,
         NULL,
         0
@@ -1404,8 +1395,8 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     NTSTATUS Status, Status1;
     PLIST_ENTRY NextEntry;
     PSMP_REGISTRY_VALUE RegEntry;
-    //ULONG_PTR ErrorParameters[3];
-    //UNICODE_STRING ErrorResponse;
+    ULONG_PTR ErrorParameters[3];
+    UNICODE_STRING ErrorResponse;
     IO_STATUS_BLOCK IoStatusBlock;
     SECURITY_DESCRIPTOR_CONTROL OldFlag = 0;
     USHORT ImageCharacteristics;
@@ -1504,9 +1495,13 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     NextEntry = SmpKnownDllsList.Flink;
     while (NextEntry != &SmpKnownDllsList)
     {
-        /* Get the entry and skip it if it's in the exluded list */
+        /* Get the entry and move on */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+        NextEntry = NextEntry->Flink;
+
         DPRINT("Processing known DLL: %wZ-%wZ\n", &RegEntry->Name, &RegEntry->Value);
+
+        /* Skip the entry if it's in the exluded list */
         if ((SmpFindRegistryValue(&SmpExcludeKnownDllsList,
                                   RegEntry->Name.Buffer)) ||
             (SmpFindRegistryValue(&SmpExcludeKnownDllsList,
@@ -1521,21 +1516,21 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
                                    OBJ_CASE_INSENSITIVE,
                                    DirFileHandle,
                                    NULL);
-        Status = NtOpenFile(&FileHandle,
-                            SYNCHRONIZE | FILE_EXECUTE,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_SHARE_READ | FILE_SHARE_DELETE,
-                            FILE_NON_DIRECTORY_FILE |
-                            FILE_SYNCHRONOUS_IO_NONALERT);
-        if (!NT_SUCCESS(Status)) break;
+        Status1 = NtOpenFile(&FileHandle,
+                             SYNCHRONIZE | FILE_EXECUTE,
+                             &ObjectAttributes,
+                             &IoStatusBlock,
+                             FILE_SHARE_READ | FILE_SHARE_DELETE,
+                             FILE_NON_DIRECTORY_FILE |
+                             FILE_SYNCHRONOUS_IO_NONALERT);
+        /* If we failed, skip it */
+        if (!NT_SUCCESS(Status1)) continue;
 
         /* Checksum it */
         Status = LdrVerifyImageMatchesChecksum((HANDLE)((ULONG_PTR)FileHandle | 1),
                                                SmpProcessModuleImports,
                                                RegEntry,
                                                &ImageCharacteristics);
-#if 0
         if (!NT_SUCCESS(Status))
         {
             /* Checksum failed, so don't even try going further -- kill SMSS */
@@ -1546,8 +1541,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             ErrorParameters[2] = (ULONG)&RegEntry->Value;
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
         }
-        else
-        if (!(ImageCharacteristics & IMAGE_FILE_DLL))
+        else if (!(ImageCharacteristics & IMAGE_FILE_DLL))
         {
             /* An invalid known DLL entry will also kill SMSS */
             RtlInitUnicodeString(&ErrorResponse,
@@ -1557,7 +1551,6 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             ErrorParameters[2] = (ULONG)&RegEntry->Value;
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
         }
-#endif
 
         /* Temporarily hack the SD to use a default DACL for this section */
         if (SmpLiberalSecurityDescriptor)
@@ -1600,9 +1593,6 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
         /* Close the file since we can move on to the next one */
         Status1 = NtClose(FileHandle);
         ASSERT(NT_SUCCESS(Status1));
-
-        /* Go to the next entry */
-        NextEntry = NextEntry->Flink;
     }
 
 Quickie:
@@ -1663,7 +1653,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     UNICODE_STRING ValueName, DestinationString;
     HANDLE KeyHandle, KeyHandle2;
     ULONG ResultLength;
-    PWCHAR ArchName;
+    PWCHAR ValueData;
     WCHAR ValueBuffer[512], ValueBuffer2[512];
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo2 = (PVOID)ValueBuffer2;
@@ -1711,13 +1701,14 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* First let's write the OS variable */
     RtlInitUnicodeString(&ValueName, L"OS");
-    DPRINT("Setting %wZ to %S\n", &ValueName, L"Windows_NT");
+    ValueData = L"Windows_NT";
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueData);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
-                           L"Windows_NT",
-                           wcslen(L"Windows_NT") * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           ValueData,
+                           (wcslen(ValueData) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1732,30 +1723,30 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     {
         /* Pick the correct string that matches the architecture */
         case PROCESSOR_ARCHITECTURE_INTEL:
-            ArchName = L"x86";
+            ValueData = L"x86";
             break;
 
         case PROCESSOR_ARCHITECTURE_AMD64:
-            ArchName = L"AMD64";
+            ValueData = L"AMD64";
             break;
 
         case PROCESSOR_ARCHITECTURE_IA64:
-            ArchName = L"IA64";
+            ValueData = L"IA64";
             break;
 
         default:
-            ArchName = L"Unknown";
+            ValueData = L"Unknown";
             break;
     }
 
     /* Set it */
-    DPRINT("Setting %wZ to %S\n", &ValueName, ArchName);
+    DPRINT("Setting %wZ to %S\n", &ValueName, ValueData);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
-                           ArchName,
-                           wcslen(ArchName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           ValueData,
+                           (wcslen(ValueData) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1773,7 +1764,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1829,19 +1820,19 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     {
         /* To combine it into a single string */
         swprintf((PWCHAR)PartialInfo->Data + wcslen((PWCHAR)PartialInfo->Data),
-                 L", %ws",
+                 L", %S",
                  PartialInfo2->Data);
     }
 
     /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
     RtlInitUnicodeString(&ValueName, L"PROCESSOR_IDENTIFIER");
-    DPRINT("Setting %wZ to %S\n", &ValueName, PartialInfo->Data);
+    DPRINT("Setting %wZ to %s\n", &ValueName, PartialInfo->Data);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
                            PartialInfo->Data,
-                           wcslen((PWCHAR)PartialInfo->Data) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen((PWCHAR)PartialInfo->Data) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1883,7 +1874,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1894,14 +1885,14 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* And finally, write the number of CPUs */
     RtlInitUnicodeString(&ValueName, L"NUMBER_OF_PROCESSORS");
-    swprintf(ValueBuffer, L"%u", BasicInfo.NumberOfProcessors);
+    swprintf(ValueBuffer, L"%d", BasicInfo.NumberOfProcessors);
     DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
                            ValueBuffer,
-                           wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                           (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1955,7 +1946,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
                                    0,
                                    REG_SZ,
                                    ValueBuffer,
-                                   wcslen(ValueBuffer) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                                   (wcslen(ValueBuffer) + 1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("SMSS: Failed writing %wZ environment variable - %x\n",
@@ -1998,6 +1989,10 @@ SmpProcessFileRenames(VOID)
     Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &OldState);
     if (NT_SUCCESS(Status)) HavePrivilege = TRUE;
 
+    // FIXME: Handle SFC-protected file renames!
+    if (SmpAllowProtectedRenames)
+        DPRINT1("SMSS: FIXME: Handle SFC-protected file renames!\n");
+
     /* Process pending files to rename */
     Head = &SmpFileRenameList;
     while (!IsListEmpty(Head))
@@ -2005,7 +2000,7 @@ SmpProcessFileRenames(VOID)
         /* Get this entry */
         NextEntry = RemoveHeadList(Head);
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Processing PFRO: %wZ/%wZ\n", &RegEntry->Value, &RegEntry->Name);
+        DPRINT("Processing PFRO: '%wZ' / '%wZ'\n", &RegEntry->Value, &RegEntry->Name);
 
         /* Skip past the '@' marker */
         if (!(RegEntry->Value.Length) && (*RegEntry->Name.Buffer == L'@'))
@@ -2082,13 +2077,13 @@ SmpProcessFileRenames(VOID)
                                           InformationClass);
 
             /* Check if we seem to have failed because the file was readonly */
-            if ((NT_SUCCESS(Status) &&
+            if (!NT_SUCCESS(Status) &&
                 (InformationClass == FileRenameInformation) &&
                 (Status == STATUS_OBJECT_NAME_COLLISION) &&
-                (Buffer->ReplaceIfExists)))
+                Buffer->ReplaceIfExists)
             {
                 /* Open the file for write attribute access this time... */
-                DPRINT1("\nSMSS: %wZ => %wZ failed - Status == %x, Possible readonly target\n",
+                DPRINT("\nSMSS: '%wZ' => '%wZ' failed - Status == %x, Possible readonly target\n",
                         &RegEntry->Name,
                         &RegEntry->Value,
                         STATUS_OBJECT_NAME_COLLISION);
@@ -2115,7 +2110,7 @@ SmpProcessFileRenames(VOID)
                 else
                 {
                     /* Now remove the read-only attribute from the file */
-                    DPRINT1("     SMSS: Open Existing Success\n");
+                    DPRINT("     SMSS: Open Existing Success\n");
                     RtlZeroMemory(&BasicInfo, sizeof(BasicInfo));
                     BasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
                     Status = NtSetInformationFile(FileHandle,
@@ -2133,7 +2128,7 @@ SmpProcessFileRenames(VOID)
                     else
                     {
                         /* Now that the file is no longer read-only, delete! */
-                        DPRINT1("     SMSS: Set To NORMAL OK\n");
+                        DPRINT("     SMSS: Set To NORMAL OK\n");
                         Status = NtSetInformationFile(OtherFileHandle,
                                                       &IoStatusBlock,
                                                       Buffer,
@@ -2148,7 +2143,7 @@ SmpProcessFileRenames(VOID)
                         else
                         {
                             /* Everything ok */
-                            DPRINT1("     SMSS: Re-Rename Worked OK\n");
+                            DPRINT("     SMSS: Re-Rename Worked OK\n");
                         }
                     }
                 }
@@ -2161,18 +2156,18 @@ Quickie:
         if (!NT_SUCCESS(Status))
         {
             /* We totally failed */
-            DPRINT1("SMSS: %wZ => %wZ failed - Status == %x\n",
+            DPRINT1("SMSS: '%wZ' => '%wZ' failed - Status == %x\n",
                     &RegEntry->Name, &RegEntry->Value, Status);
         }
         else if (RegEntry->Value.Length)
         {
             /* We succeed with a rename */
-            DPRINT1("SMSS: %wZ (renamed to) %wZ\n", &RegEntry->Name, &RegEntry->Value);
+            DPRINT("SMSS: '%wZ' (renamed to) '%wZ'\n", &RegEntry->Name, &RegEntry->Value);
         }
         else
         {
             /* We suceeded with a delete */
-            DPRINT1("SMSS: %wZ (deleted)\n", &RegEntry->Name);
+            DPRINT("SMSS: '%wZ' (deleted)\n", &RegEntry->Name);
         }
 
         /* Now free this entry and keep going */
@@ -2247,7 +2242,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
     }
 
     /* Print out if this is the case */
-    if (MiniNTBoot) DPRINT1("SMSS: !!! MiniNT Boot !!!\n");
+    if (MiniNTBoot) DPRINT("SMSS: !!! MiniNT Boot !!!\n");
 
     /* Open the environment key to see if we are booted in safe mode */
     RtlInitUnicodeString(&DestinationString,
@@ -2346,25 +2341,29 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
         return Status;
     }
 
-    /* Loop every page file */
-    Head = &SmpPagingFileList;
-    while (!IsListEmpty(Head))
+    /* Create the needed page files */
+    if (!MiniNTBoot)
     {
-        /* Remove each one from the list */
-        NextEntry = RemoveHeadList(Head);
+        /* Loop every page file */
+        Head = &SmpPagingFileList;
+        while (!IsListEmpty(Head))
+        {
+            /* Remove each one from the list */
+            NextEntry = RemoveHeadList(Head);
 
-        /* Create the descriptor for it */
-        RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        SmpCreatePagingFileDescriptor(&RegEntry->Name);
+            /* Create the descriptor for it */
+            RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
+            SmpCreatePagingFileDescriptor(&RegEntry->Name);
 
-        /* And free it */
-        if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
-        if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+            /* And free it */
+            if (RegEntry->AnsiValue) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->AnsiValue);
+            if (RegEntry->Value.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry->Value.Buffer);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, RegEntry);
+        }
+
+        /* Now create all the paging files for the descriptors that we have */
+        SmpCreatePagingFiles();
     }
-
-    /* Now create all the paging files for the descriptors that we have */
-    SmpCreatePagingFiles();
 
     /* Tell Cm it's now safe to fully enable write access to the registry */
     NtInitializeRegistry(CM_BOOT_FLAG_SMSS);
@@ -2441,7 +2440,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
     RtlInitUnicodeString(&Os2Name, L"OS2");
 
     /* Create the SM API Port */
-    RtlInitUnicodeString(&PortName, L"\\SmApiPort2");
+    RtlInitUnicodeString(&PortName, L"\\SmApiPort");
     InitializeObjectAttributes(&ObjectAttributes, &PortName, 0, NULL, NULL);
     Status = NtCreatePort(&PortHandle,
                           &ObjectAttributes,

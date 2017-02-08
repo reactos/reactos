@@ -123,7 +123,7 @@ UniataAhciInit(
     IN PVOID HwDeviceExtension
     );
 
-#if DBG
+#ifdef _DEBUG
 VOID
 NTAPI
 UniataDumpAhciPortRegs(
@@ -407,8 +407,18 @@ BuildAhciInternalSrb (
     IN ULONG Length = 0
     );
 
-#define UniataAhciChanImplemented(deviceExtension, c) \
-    (((deviceExtension)->AHCI_PI) & (1 << c))
+__inline
+BOOLEAN
+UniataAhciChanImplemented(
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG c
+    )
+{
+#ifdef _DEBUG
+    KdPrint2((PRINT_PREFIX "imp: %#x & %#x\n", (deviceExtension)->AHCI_PI, (1<<c) ));
+#endif
+    return (((deviceExtension)->AHCI_PI) & ((ULONG)1 << c)) ? TRUE : FALSE;
+} // end UniataAhciChanImplemented()
 
 
 #endif //__UNIATA_SATA__H__

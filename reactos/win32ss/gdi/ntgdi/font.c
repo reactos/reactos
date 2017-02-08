@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/font.c
+ * FILE:            win32ss/gdi/ntgdi/font.c
  * PURPOSE:         Font
  * PROGRAMMER:
  */
@@ -13,7 +13,33 @@
 #define NDEBUG
 #include <debug.h>
 
+HFONT APIENTRY HfontCreate( IN PENUMLOGFONTEXDVW pelfw,IN ULONG cjElfw,IN LFTYPE lft,IN FLONG fl,IN PVOID pvCliData );
+
 /** Internal ******************************************************************/
+
+HFONT FASTCALL
+GreCreateFontIndirectW( LOGFONTW *lplf )
+{
+    if (lplf)
+    {
+        ENUMLOGFONTEXDVW Logfont;
+
+        RtlCopyMemory( &Logfont.elfEnumLogfontEx.elfLogFont, lplf, sizeof(LOGFONTW));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfFullName,
+                       sizeof(Logfont.elfEnumLogfontEx.elfFullName));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfStyle,
+                       sizeof(Logfont.elfEnumLogfontEx.elfStyle));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
+                       sizeof(Logfont.elfEnumLogfontEx.elfScript));
+
+        Logfont.elfDesignVector.dvNumAxes = 0;
+
+        RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
+
+        return HfontCreate((PENUMLOGFONTEXDVW)&Logfont, 0, 0, 0, NULL );
+    }
+    else return NULL;
+}
 
 DWORD
 FASTCALL
@@ -401,48 +427,51 @@ RealizeFontInit(HFONT hFont)
 INT
 APIENTRY
 NtGdiAddFontResourceW(
-    IN WCHAR *pwszFiles,
+    IN WCHAR *pwcFiles,
     IN ULONG cwc,
     IN ULONG cFiles,
     IN FLONG fl,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv)
 {
-  UNICODE_STRING SafeFileName;
-  PWSTR src;
-  NTSTATUS Status;
-  int Ret;
+    UNICODE_STRING SafeFileName;
+    INT Ret;
 
-  /* FIXME: Protect with SEH? */
-  RtlInitUnicodeString(&SafeFileName, pwszFiles);
+    DBG_UNREFERENCED_PARAMETER(cFiles);
+    DBG_UNREFERENCED_PARAMETER(dwPidTid);
+    DBG_UNREFERENCED_PARAMETER(pdv);
 
-  /* Reserve for prepending '\??\' */
-  SafeFileName.Length += 4 * sizeof(WCHAR);
-  SafeFileName.MaximumLength += 4 * sizeof(WCHAR);
+    /* cwc = Length + trailing zero. */
+    if (cwc <= 1 || cwc > UNICODE_STRING_MAX_CHARS)
+        return 0;
 
-  src = SafeFileName.Buffer;
-  SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
-  if(!SafeFileName.Buffer)
-  {
-    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
+    SafeFileName.MaximumLength = cwc * sizeof(WCHAR);
+    SafeFileName.Length = SafeFileName.MaximumLength - sizeof(UNICODE_NULL);
+    SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                SafeFileName.MaximumLength,
+                                                TAG_STRING);
+    if (!SafeFileName.Buffer)
+    {
+        return 0;
+    }
 
-  /* Prepend '\??\' */
-  RtlCopyMemory(SafeFileName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
+    _SEH2_TRY
+    {
+        ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
+        RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
+        _SEH2_YIELD(return 0);
+    }
+    _SEH2_END;
 
-  Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
-  if(!NT_SUCCESS(Status))
-  {
+    SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    Ret = IntGdiAddFontResource(&SafeFileName, fl);
+
     ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
-    SetLastNtError(Status);
-    return 0;
-  }
-
-  Ret = IntGdiAddFontResource(&SafeFileName, (DWORD)fl);
-
-  ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
-  return Ret;
+    return Ret;
 }
 
  /*
@@ -1003,6 +1032,61 @@ NtGdiGetRealizationInfo(
   return Ret;
 }
 
+
+HFONT
+APIENTRY
+HfontCreate(
+  IN PENUMLOGFONTEXDVW pelfw,
+  IN ULONG cjElfw,
+  IN LFTYPE lft,
+  IN FLONG  fl,
+  IN PVOID pvCliData )
+{
+  HFONT hNewFont;
+  PLFONT plfont;
+
+  if (!pelfw)
+  {
+      return NULL;
+  }
+
+  plfont = LFONT_AllocFontWithHandle();
+  if (!plfont)
+  {
+      return NULL;
+  }
+  hNewFont = plfont->BaseObject.hHmgr;
+
+  plfont->lft = lft;
+  plfont->fl  = fl;
+  RtlCopyMemory (&plfont->logfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
+  ExInitializePushLock(&plfont->lock);
+
+  if (pelfw->elfEnumLogfontEx.elfLogFont.lfEscapement !=
+      pelfw->elfEnumLogfontEx.elfLogFont.lfOrientation)
+  {
+    /* This should really depend on whether GM_ADVANCED is set */
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+  }
+  LFONT_UnlockFont(plfont);
+
+  if (pvCliData && hNewFont)
+  {
+    // FIXME: Use GDIOBJ_InsertUserData
+    KeEnterCriticalRegion();
+    {
+       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
+       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+       Entry->UserData = pvCliData;
+    }
+    KeLeaveCriticalRegion();
+  }
+
+  return hNewFont;
+}
+
+
 HFONT
 APIENTRY
 NtGdiHfontCreate(
@@ -1013,8 +1097,6 @@ NtGdiHfontCreate(
   IN PVOID pvCliData )
 {
   ENUMLOGFONTEXDVW SafeLogfont;
-  HFONT hNewFont;
-  PLFONT plfont;
   NTSTATUS Status = STATUS_SUCCESS;
 
   /* Silence GCC warnings */
@@ -1042,40 +1124,7 @@ NtGdiHfontCreate(
       return NULL;
   }
 
-  plfont = LFONT_AllocFontWithHandle();
-  if (!plfont)
-  {
-      return NULL;
-  }
-  hNewFont = plfont->BaseObject.hHmgr;
-
-  plfont->lft = lft;
-  plfont->fl  = fl;
-  RtlCopyMemory (&plfont->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
-  ExInitializePushLock(&plfont->lock);
-
-  if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
-      SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
-  {
-    /* This should really depend on whether GM_ADVANCED is set */
-    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-  }
-  LFONT_UnlockFont(plfont);
-
-  if (pvCliData && hNewFont)
-  {
-    // FIXME: Use GDIOBJ_InsertUserData
-    KeEnterCriticalRegion();
-    {
-       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
-       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-       Entry->UserData = pvCliData;
-    }
-    KeLeaveCriticalRegion();
-  }
-
-  return hNewFont;
+  return HfontCreate(&SafeLogfont, cjElfw, lft, fl, pvCliData);
 }
 
 

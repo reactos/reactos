@@ -472,7 +472,8 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue = *PushLock, NewValue, TempValue;
     BOOLEAN NeedWake;
-    DEFINE_WAIT_BLOCK(WaitBlock);
+    EX_PUSH_LOCK_WAIT_BLOCK Block;
+    PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock = &Block;
 
     /* Start main loop */
     for (;;)
@@ -645,7 +646,8 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue = *PushLock, NewValue;
     BOOLEAN NeedWake;
-    DEFINE_WAIT_BLOCK(WaitBlock);
+    EX_PUSH_LOCK_WAIT_BLOCK Block;
+    PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock = &Block;
 
     /* Start main loop */
     for (;;)
@@ -1128,7 +1130,7 @@ ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
             NewValue.Value = OldValue.Value &~ EX_PUSH_LOCK_LOCK;
 
             /* Sanity check */
-            ASSERT(NewValue.Waking && !NewValue.Waiting);
+            ASSERT(NewValue.Waking || !NewValue.Waiting);
 
             /* Write the New Value */
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,

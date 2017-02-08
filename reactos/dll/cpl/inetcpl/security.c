@@ -19,31 +19,7 @@
  *
  */
 
-#define COBJMACROS
-#define CONST_VTABLE
-#define NONAMELESSUNION
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-//#include <prsht.h>
-//#include "commctrl.h"
-
-//#include "ole2.h"
-//#include "urlmon.h"
-//#include "initguid.h"
-#include <winreg.h>
-#include <shlwapi.h>
-
 #include "inetcpl.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 
 typedef struct secdlg_data_s {
     HWND hsec;  /* security propsheet */
@@ -63,7 +39,6 @@ typedef struct secdlg_data_s {
 
 #define NUM_TRACKBAR_POS 5
 
-static WCHAR spaceW[] = {' ',0};
 static DWORD url_templates[] = {URLTEMPLATE_CUSTOM,
                                 URLTEMPLATE_LOW,
                                 URLTEMPLATE_MEDLOW,
@@ -139,13 +114,8 @@ static void update_zone_info(secdlg_data *sd, DWORD lv_index)
 
     SetWindowTextW(GetDlgItem(sd->hsec, IDC_SEC_ZONE_INFO), za->szDescription);
 
-    name[0] = ' ';
-    name[1] = 0;
-
-    LoadStringW(hcpl, IDS_SEC_SETTINGS, &name[1], sizeof(name)/sizeof(name[0]) - 3);
-    len = lstrlenW(name);
-    lstrcpynW(&name[len], za->szDisplayName, sizeof(name)/sizeof(name[0]) - len - 3);
-    lstrcatW(name, spaceW);
+    len = LoadStringW(hcpl, IDS_SEC_SETTINGS, name, sizeof(name)/sizeof(*name));
+    lstrcpynW(&name[len], za->szDisplayName, sizeof(name)/sizeof(*name) - len - 1);
 
     TRACE("new title: %s\n", debugstr_w(name));
     SetWindowTextW(GetDlgItem(sd->hsec, IDC_SEC_GROUP), name);

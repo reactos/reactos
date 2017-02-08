@@ -18,10 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _INETCOMM_PRIVATE_H_
+#define _INETCOMM_PRIVATE_H_
+
+#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+#include <mimeole.h>
 #include <winsock2.h>
-//#include "winuser.h"
-//#include "objbase.h"
 #include <imnxport.h>
+
+#include <wine/list.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 typedef struct InternetTransport InternetTransport;
 
@@ -82,3 +101,5 @@ HRESULT MimeInternational_Construct(IMimeInternational **internat) DECLSPEC_HIDD
 HRESULT SMTPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 HRESULT IMAPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 HRESULT POP3TransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+
+#endif /* _INETCOMM_PRIVATE_H_ */

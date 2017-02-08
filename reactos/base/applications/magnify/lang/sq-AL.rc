@@ -1,0 +1,75 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "D&il", IDM_EXIT
+        MENUITEM "&Opsione", IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Rreth ...", IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Rreth"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
+    LTEXT "Versioni i Zmadhues 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
+    PUSHBUTTON "OK", IDOK, 162, 48, 50, 14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Konfigurimet e zmadhuesit"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "Dil", IDOK, 96, 161, 50, 14
+    PUSHBUTTON "Ndihmë", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Niveli i zmadhuesit:", IDC_STATIC, 6, 8, 68, 8
+    COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Ndjekja", IDC_STATIC, 7, 25, 139, 59
+    GROUPBOX "Prezantimi", IDC_STATIC, 7, 87, 139, 57
+    CONTROL "Ndiq kursorin i miut", IDC_FOLLOWMOUSECHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
+    CONTROL "Ndiq fokusin e tastieres", IDC_FOLLOWKEYBOARDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
+    CONTROL "Ndiq editimin e tekstit", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
+    CONTROL "Konverto ngjyrat", IDC_INVERTCOLORSCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
+    CONTROL "Fillo minimizimin", IDC_STARTMINIMIZEDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
+    CONTROL "Shfaq Magnifierin", IDC_SHOWMAGNIFIERCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Zmadhuesi i ReactOS"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
+    LTEXT "Zmadhues ka për qëllim të sigurojë një nivel minimal të funksionalitetit për përdoruesit me dëmtime të lehta vizuale. Shumica e përdoruesve me dëmtime shikimi do të duhet një dobi zmadhim me funksionalitet të lartë për përdorim të përditshëm.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Zmadhuesi"
+END

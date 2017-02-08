@@ -203,7 +203,10 @@ typedef struct _NOTIFYICONDATAA {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
-#if _WIN32_IE >= 0x0500
+#if (NTDDI_VERSION < NTDDI_WIN2K)
+	CHAR szTip[64];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 	CHAR szTip[128];
 	DWORD dwState;
 	DWORD dwStateMask;
@@ -217,8 +220,11 @@ typedef struct _NOTIFYICONDATAA {
 #else
 	CHAR szTip[64];
 #endif
-#if _WIN32_IE >= 0x600
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 	GUID guidItem;
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+	HICON hBalloonIcon;
 #endif
 } NOTIFYICONDATAA,*PNOTIFYICONDATAA;
 
@@ -229,7 +235,10 @@ typedef struct _NOTIFYICONDATAW {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
-#if _WIN32_IE >= 0x0500
+#if (NTDDI_VERSION < NTDDI_WIN2K)
+	CHAR szTip[64];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 	WCHAR szTip[128];
 	DWORD dwState;
 	DWORD dwStateMask;
@@ -243,8 +252,11 @@ typedef struct _NOTIFYICONDATAW {
 #else
 	WCHAR szTip[64];
 #endif
-#if _WIN32_IE >= 0x600
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 	GUID guidItem;
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    HICON hBalloonIcon;
 #endif
 } NOTIFYICONDATAW,*PNOTIFYICONDATAW;
 
@@ -369,46 +381,221 @@ typedef struct _SHNAMEMAPPINGW {
 #define SHGNLI_NOUNIQUE    0x04
 #define SHGNLI_NOLNK       0x08
 
-BOOL WINAPI SHGetNewLinkInfoA(LPCSTR,LPCSTR,LPSTR,BOOL*,UINT);
-BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR,LPCWSTR,LPWSTR,BOOL*,UINT);
+LPWSTR * WINAPI CommandLineToArgvW(_In_ LPCWSTR, _Out_ int*);
+void WINAPI DragAcceptFiles(_In_ HWND, _In_ BOOL);
+void WINAPI DragFinish(_In_ HDROP);
 
-LPWSTR * WINAPI CommandLineToArgvW(LPCWSTR,int*);
-void WINAPI DragAcceptFiles(HWND,BOOL);
-void WINAPI DragFinish(HDROP);
-UINT WINAPI DragQueryFileA(HDROP,UINT,LPSTR,UINT);
-UINT WINAPI DragQueryFileW(HDROP,UINT,LPWSTR,UINT);
-BOOL WINAPI DragQueryPoint(HDROP,LPPOINT);
-HICON WINAPI ExtractAssociatedIconA(HINSTANCE,LPSTR,PWORD);
-HICON WINAPI ExtractAssociatedIconW(HINSTANCE,LPWSTR,PWORD);
-HICON WINAPI ExtractIconA(HINSTANCE,LPCSTR,UINT);
-HICON WINAPI ExtractIconW(HINSTANCE,LPCWSTR,UINT);
-UINT WINAPI ExtractIconExA(LPCSTR,int,HICON*,HICON*,UINT);
-UINT WINAPI ExtractIconExW(LPCWSTR,int,HICON*,HICON*,UINT);
-HINSTANCE WINAPI FindExecutableA(LPCSTR,LPCSTR,LPSTR);
-HINSTANCE WINAPI FindExecutableW(LPCWSTR,LPCWSTR,LPWSTR);
-UINT_PTR WINAPI SHAppBarMessage(DWORD,PAPPBARDATA);
-BOOL WINAPI Shell_NotifyIconA(DWORD,PNOTIFYICONDATAA);
-BOOL WINAPI Shell_NotifyIconW(DWORD,PNOTIFYICONDATAW);
-int WINAPI ShellAboutA(HWND,LPCSTR,LPCSTR,HICON);
-int WINAPI ShellAboutW(HWND,LPCWSTR,LPCWSTR,HICON);
-int WINAPI ShellMessageBoxA(HINSTANCE,HWND,LPCSTR,LPCSTR,UINT,...);
-int WINAPI ShellMessageBoxW(HINSTANCE,HWND,LPCWSTR,LPCWSTR,UINT,...);
-HINSTANCE WINAPI ShellExecuteA(HWND,LPCSTR,LPCSTR,LPCSTR,LPCSTR,INT);
-HINSTANCE WINAPI ShellExecuteW(HWND,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR,INT);
-BOOL WINAPI ShellExecuteExA(LPSHELLEXECUTEINFOA);
-BOOL WINAPI ShellExecuteExW(LPSHELLEXECUTEINFOW);
-int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA);
-int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW);
-void WINAPI SHFreeNameMappings(HANDLE);
-DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR,DWORD,SHFILEINFOA*,UINT,UINT);
-DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR,DWORD,SHFILEINFOW*,UINT,UINT);
-BOOL WINAPI SHGetNewLinkInfoA(LPCSTR,LPCSTR,LPSTR,BOOL*,UINT);
-BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR,LPCWSTR,LPWSTR,BOOL*,UINT);
-HRESULT WINAPI SHQueryRecycleBinA(LPCSTR, LPSHQUERYRBINFO);
-HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR, LPSHQUERYRBINFO);
-HRESULT WINAPI SHEmptyRecycleBinA(HWND,LPCSTR,DWORD);
-HRESULT WINAPI SHEmptyRecycleBinW(HWND,LPCWSTR,DWORD);
-BOOL WINAPI SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW);
+_Success_(return != 0)
+UINT
+WINAPI
+DragQueryFileA(
+  _In_ HDROP hDrop,
+  _In_ UINT iFile,
+  _Out_writes_opt_(cch) LPSTR lpszFile,
+  _In_ UINT cch);
+
+_Success_(return != 0)
+UINT
+WINAPI
+DragQueryFileW(
+  _In_ HDROP hDrop,
+  _In_ UINT iFile,
+  _Out_writes_opt_(cch) LPWSTR lpszFile,
+  _In_ UINT cch);
+
+BOOL WINAPI DragQueryPoint(_In_ HDROP, _Out_ LPPOINT);
+
+HICON
+WINAPI
+ExtractAssociatedIconA(
+  _Reserved_ HINSTANCE hInst,
+  _Inout_updates_(128) LPSTR pszIconPath,
+  _Inout_ WORD *piIcon);
+
+HICON
+WINAPI
+ExtractAssociatedIconW(
+  _Reserved_ HINSTANCE hInst,
+  _Inout_updates_(128) LPWSTR pszIconPath,
+  _Inout_ WORD *piIcon);
+
+HICON
+WINAPI
+ExtractIconA(
+  _Reserved_ HINSTANCE hInst,
+  _In_ LPCSTR pszExeFileName,
+  UINT nIconIndex);
+
+HICON
+WINAPI
+ExtractIconW(
+  _Reserved_ HINSTANCE hInst,
+  _In_ LPCWSTR pszExeFileName,
+  UINT nIconIndex);
+
+UINT
+WINAPI
+ExtractIconExA(
+  _In_ LPCSTR lpszFile,
+  _In_ int nIconIndex,
+  _Out_writes_opt_(nIcons) HICON *phiconLarge,
+  _Out_writes_opt_(nIcons) HICON *phiconSmall,
+  _In_ UINT nIcons);
+
+UINT
+WINAPI
+ExtractIconExW(
+  _In_ LPCWSTR lpszFile,
+  _In_ int nIconIndex,
+  _Out_writes_opt_(nIcons) HICON *phiconLarge,
+  _Out_writes_opt_(nIcons) HICON *phiconSmall,
+  _In_ UINT nIcons);
+
+_Success_(return > 32)
+HINSTANCE
+WINAPI
+FindExecutableA(
+  _In_ LPCSTR lpFile,
+  _In_opt_ LPCSTR lpDirectory,
+  _Out_writes_(MAX_PATH) LPSTR lpResult);
+
+_Success_(return > 32)
+HINSTANCE
+WINAPI
+FindExecutableW(
+  _In_ LPCWSTR lpFile,
+  _In_opt_ LPCWSTR lpDirectory,
+  _Out_writes_(MAX_PATH) LPWSTR lpResult);
+
+UINT_PTR WINAPI SHAppBarMessage(_In_ DWORD, _Inout_ PAPPBARDATA);
+BOOL WINAPI Shell_NotifyIconA(_In_ DWORD, _In_ PNOTIFYICONDATAA);
+BOOL WINAPI Shell_NotifyIconW(_In_ DWORD, _In_ PNOTIFYICONDATAW);
+
+int
+WINAPI
+ShellAboutA(
+  _In_opt_ HWND hWnd,
+  _In_ LPCSTR szApp,
+  _In_opt_ LPCSTR szOtherStuff,
+  _In_opt_ HICON hIcon);
+
+int
+WINAPI
+ShellAboutW(
+  _In_opt_ HWND hWnd,
+  _In_ LPCWSTR szApp,
+  _In_opt_ LPCWSTR szOtherStuff,
+  _In_opt_ HICON hIcon);
+
+int
+ShellMessageBoxA(
+  _In_opt_ HINSTANCE hAppInst,
+  _In_opt_ HWND hWnd,
+  _In_ LPCSTR lpcText,
+  _In_opt_ LPCSTR lpcTitle,
+  _In_ UINT fuStyle,
+  ...);
+
+int
+ShellMessageBoxW(
+  _In_opt_ HINSTANCE hAppInst,
+  _In_opt_ HWND hWnd,
+  _In_ LPCWSTR lpcText,
+  _In_opt_ LPCWSTR lpcTitle,
+  _In_ UINT fuStyle,
+  ...);
+
+HINSTANCE
+WINAPI
+ShellExecuteA(
+  _In_opt_ HWND hwnd,
+  _In_opt_ LPCSTR lpOperation,
+  _In_ LPCSTR lpFile,
+  _In_opt_ LPCSTR lpParameters,
+  _In_opt_ LPCSTR lpDirectory,
+  _In_ INT nShowCmd);
+
+HINSTANCE
+WINAPI
+ShellExecuteW(
+  _In_opt_ HWND hwnd,
+  _In_opt_ LPCWSTR lpOperation,
+  _In_ LPCWSTR lpFile,
+  _In_opt_ LPCWSTR lpParameters,
+  _In_opt_ LPCWSTR lpDirectory,
+  _In_ INT nShowCmd);
+
+BOOL WINAPI ShellExecuteExA(_Inout_ LPSHELLEXECUTEINFOA);
+BOOL WINAPI ShellExecuteExW(_Inout_ LPSHELLEXECUTEINFOW);
+int WINAPI SHFileOperationA(_Inout_ LPSHFILEOPSTRUCTA);
+int WINAPI SHFileOperationW(_Inout_ LPSHFILEOPSTRUCTW);
+void WINAPI SHFreeNameMappings(_In_opt_ HANDLE);
+
+DWORD_PTR
+WINAPI
+SHGetFileInfoA(
+  _In_ LPCSTR pszPath,
+  DWORD dwFileAttributes,
+  _Inout_updates_bytes_opt_(cbFileInfo) SHFILEINFOA *psfi,
+  UINT cbFileInfo,
+  UINT uFlags);
+
+DWORD_PTR
+WINAPI
+SHGetFileInfoW(
+  _In_ LPCWSTR pszPath,
+  DWORD dwFileAttributes,
+  _Inout_updates_bytes_opt_(cbFileInfo) SHFILEINFOW *psfi,
+  UINT cbFileInfo,
+  UINT uFlags);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+SHGetNewLinkInfoA(
+  _In_ LPCSTR pszLinkTo,
+  _In_ LPCSTR pszDir,
+  _Out_writes_(MAX_PATH) LPSTR pszName,
+  _Out_ BOOL *pfMustCopy,
+  _In_ UINT uFlags);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+SHGetNewLinkInfoW(
+  _In_ LPCWSTR pszLinkTo,
+  _In_ LPCWSTR pszDir,
+  _Out_writes_(MAX_PATH) LPWSTR pszName,
+  _Out_ BOOL *pfMustCopy,
+  _In_ UINT uFlags);
+
+HRESULT
+WINAPI
+SHQueryRecycleBinA(
+  _In_opt_ LPCSTR pszRootPath,
+  _Inout_ LPSHQUERYRBINFO pSHQueryRBInfo);
+
+HRESULT
+WINAPI
+SHQueryRecycleBinW(
+  _In_opt_ LPCWSTR pszRootPath,
+  _Inout_ LPSHQUERYRBINFO pSHQueryRBInfo);
+
+HRESULT
+WINAPI
+SHEmptyRecycleBinA(
+  _In_opt_ HWND hwnd,
+  _In_opt_ LPCSTR pszRootPath,
+  DWORD dwFlags);
+
+HRESULT
+WINAPI
+SHEmptyRecycleBinW(
+  _In_opt_ HWND hwnd,
+  _In_opt_ LPCWSTR pszRootPath,
+  DWORD dwFlags);
+
+BOOL WINAPI SHCreateProcessAsUserW(_Inout_ PSHCREATEPROCESSINFOW);
 
 DWORD
 WINAPI
@@ -444,7 +631,6 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define ShellMessageBox ShellMessageBoxW
 #define SHFileOperation SHFileOperationW
 #define SHGetFileInfo SHGetFileInfoW
-#define SHGetNewLinkInfo SHGetNewLinkInfoW
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
@@ -472,12 +658,132 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define ShellMessageBox ShellMessageBoxA
 #define SHFileOperation SHFileOperationA
 #define SHGetFileInfo SHGetFileInfoA
-#define SHGetNewLinkInfo SHGetNewLinkInfoA
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
 #define DoEnvironmentSubst DoEnvironmentSubstA
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef struct _SHSTOCKICONINFO {
+  DWORD cbSize;
+  HICON hIcon;
+  int iSysImageIndex;
+  int iIcon;
+  WCHAR szPath[MAX_PATH];
+} SHSTOCKICONINFO;
+
+#define SHGSI_ICONLOCATION 0
+
+typedef enum SHSTOCKICONID
+{
+  SIID_INVALID=-1,
+  SIID_DOCNOASSOC,
+  SIID_DOCASSOC,
+  SIID_APPLICATION,
+  SIID_FOLDER,
+  SIID_FOLDEROPEN,
+  SIID_DRIVE525,
+  SIID_DRIVE35,
+  SIID_DRIVERREMOVE,
+  SIID_DRIVERFIXED,
+  SIID_DRIVERNET,
+  SIID_DRIVERNETDISABLE,
+  SIID_DRIVERCD,
+  SIID_DRIVERRAM,
+  SIID_WORLD,
+  /* Missing: 14 */
+  SIID_SERVER = 15,
+  SIID_PRINTER,
+  SIID_MYNETWORK,
+  /* Missing: 18 - 21 */
+  SIID_FIND = 22,
+  SIID_HELP,
+  /* Missing: 24 - 27 */
+  SIID_SHARE = 28,
+  SIID_LINK,
+  SIID_SLOWFILE,
+  SIID_RECYCLER,
+  SIID_RECYCLERFULL,
+  /* Missing: 33 - 39 */
+  SIID_MEDIACDAUDIO = 40,
+  /* Missing: 41 - 46 */
+  SIID_LOCK = 47,
+  /* Missing: 48 */
+  SIID_AUTOLIST = 49,
+  SIID_PRINTERNET,
+  SIID_SERVERSHARE,
+  SIID_PRINTERFAX,
+  SIID_PRINTERFAXNET,
+  SIID_PRINTERFILE,
+  SIID_STACK,
+  SIID_MEDIASVCD,
+  SIID_STUFFEDFOLDER,
+  SIID_DRIVEUNKNOWN,
+  SIID_DRIVEDVD,
+  SIID_MEDIADVD,
+  SIID_MEDIADVDRAM,
+  SIID_MEDIADVDRW,
+  SIID_MEDIADVDR,
+  SIID_MEDIADVDROM,
+  SIID_MEDIACDAUDIOPLUS,
+  SIID_MEDIACDRW,
+  SIID_MEDIACDR,
+  SIID_MEDIACDBURN,
+  SIID_MEDIABLANKCD,
+  SIID_MEDIACDROM,
+  SIID_AUDIOFILES,
+  SIID_IMAGEFILES,
+  SIID_VIDEOFILES,
+  SIID_MIXEDFILES,
+  SIID_FOLDERBACK,
+  SIID_FOLDERFRONT,
+  SIID_SHIELD,
+  SIID_WARNING,
+  SIID_INFO,
+  SIID_ERROR,
+  SIID_KEY,
+  SIID_SOFTWARE,
+  SIID_RENAME,
+  SIID_DELETE,
+  SIID_MEDIAAUDIODVD,
+  SIID_MEDIAMOVIEDVD,
+  SIID_MEDIAENHANCEDCD,
+  SIID_MEDIAENHANCEDDVD,
+  SIID_MEDIAHDDVD,
+  SIID_MEDIABLUERAY,
+  SIID_MEDIAVCD,
+  SIID_MEDIADVDPLUSR,
+  SIID_MEDIADVDPLUSRW,
+  SIID_DESKTOPPC,
+  SIID_MOBILEPC,
+  SIID_USERS,
+  SIID_MEDIASMARTMEDIA,
+  SIID_MEDIACOMPACTFLASH,
+  SIID_DEVICECELLPHONE,
+  SIID_DEVICECAMERA,
+  SIID_DEVICEVIDEOCAMERA,
+  SIID_DEVICEAUDIOPLAYER,
+  SIID_NETWORKCONNECT,
+  SIID_INTERNET,
+  SIID_ZIPFILE,
+  SIID_SETTINGS,
+  /* Missing: 107 - 131 */
+  SIID_DRIVEHDDVD = 132,
+  SIID_DRIVEBD,
+  SIID_MEDIAHDDVDROM,
+  SIID_MEDIAHDDVDR,
+  SIID_MEDIAHDDVDRAM,
+  SIID_MEDIABDROM,
+  SIID_MEDIABDR,
+  SIID_MEDIABDRE,
+  SIID_CLUSTEREDDRIVE,
+  /* Missing: 141 - 174 */
+  SIID_MAX_ICONS = 175
+} SHSTOCKICONID;
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if !defined(_WIN64)
 #include <poppack.h>

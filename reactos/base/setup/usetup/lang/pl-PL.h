@@ -3,6 +3,8 @@
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
+ *      Updated by Wojo664 (July, 2014)
+ *      Updated by Saibamen (July, 2015)
  */
 
 #pragma once
@@ -20,7 +22,7 @@ static MUI_ENTRY plPLLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -66,7 +68,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -142,7 +144,7 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -166,42 +168,12 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         8,
         13,
-        "- Instalator obsˆuguje jedn¥ partycj© Podstawow¥ na dysku.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Instalator nie mo¾e skasowa† partycji podstawowej z dysku",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  o ile nadal znajduje si© na nim tak¾e partycja Rozszerzona.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Instalator nie mo¾e skasowa† pierwszej partycji Rozszerzonej z dysku",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  o ile nadal znajduj¥ si© na nim kolejne partycje Rozszerzone.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Instalator obsˆuguje jedynie system plik¢w FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Brakuje sprawdzenia poprawno˜ci systemu plik¢w.",
         TEXT_STYLE_NORMAL
     },
@@ -236,7 +208,7 @@ static MUI_ENTRY plPLLicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -360,7 +332,7 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -453,7 +425,7 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -511,12 +483,13 @@ static MUI_ENTRY plPLRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY plPLComputerPageEntries[] =
 {
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -568,7 +541,7 @@ static MUI_ENTRY plPLFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -608,7 +581,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -654,7 +627,7 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -705,7 +678,7 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -751,7 +724,7 @@ static MUI_ENTRY plPLBootPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -798,7 +771,7 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -828,12 +801,24 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Naci˜nij C, by stworzy† now¥ partycj©.",
+        "\x07  Naci˜nij P, by stworzy† partycj© podstawow¥.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Naci˜nij E, by stworzy† partycj© rozszerzon¥.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Naci˜nij L, by stworzy† partycj© logiczn¥.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Naci˜nij D, by skasowa† istniej¥c¥ partycj©.",
         TEXT_STYLE_NORMAL
     },
@@ -851,12 +836,106 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY plPLConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY plPLFormatPartitionEntries[] =
 {
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -890,7 +969,7 @@ static MUI_ENTRY plPLInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -942,7 +1021,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -982,7 +1061,7 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1006,13 +1085,13 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         8,
         14,
-        " Wgraj bootloader na dyskietk©.",
+        "Wgraj bootloader na dyskietk©.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        " Pomiä wgrywanie bootloadera.",
+        "Pomiä wgrywanie bootloadera.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1034,7 +1113,7 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1086,7 +1165,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1139,7 +1218,7 @@ static MUI_ENTRY plPLPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1168,7 +1247,7 @@ static MUI_ENTRY plPLSelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1215,7 +1294,7 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1261,7 +1340,7 @@ static MUI_ENTRY plPLRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalator ReactOS ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1288,6 +1367,10 @@ static MUI_ENTRY plPLRegistryEntries[] =
 MUI_ERROR plPLErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Sukces\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS nie zostaˆ w peˆni zainstalowany na twoim\n"
         "komputerze. Je˜li wyjdziesz teraz, trzeba b©dzie\n"
@@ -1295,7 +1378,7 @@ MUI_ERROR plPLErrorEntries[] =
         "\n"
         "  \x07  Naci˜nij ENTER, aby kontynuowa† instalacj©.\n"
         "  \x07  Naci˜nij F3, aby wyj˜† z instalatora.",
-        "F3= Wyj˜cie  ENTER = Kontynuacja"
+        "F3 = Wyj˜cie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NO_HDD
@@ -1359,9 +1442,9 @@ MUI_ERROR plPLErrorEntries[] =
         "\n"
         "Tworzenie lub kasowanie partycji mo¾e zniszczy† caˆ¥ tablic© partycji.\n"
         "\n"
-        "  \x07  Naci˜nij F3, aby wyj˜† z instalatora."
+        "  \x07  Naci˜nij F3, aby wyj˜† z instalatora.\n"
         "  \x07  Naci˜nij ENTER, aby kontynuowa†.",
-        "F3= Wyj˜cie  ENTER = Kontynuacja"
+        "F3 = Wyj˜cie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1492,17 +1575,44 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Brak wystarczaj¥cej wolnej przestrzeni w wybranej partycji.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Nieprawidˆowa nazwa katalogu.\n"
+        "\n"
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Wybrana partycja nie jest wystarczaj¥co du¾a, aby zainstalowa† ReactOS.\n"
+        "Instalacyjna partycja musi mie† rozmiar co najmniej %lu MB.\n"
+        "\n"
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "Nie mo¾na utworzy† na tym dysku partycji podstawowej lub\n" // FIXME
+        "rozszerzonej, poniewa¾ tabela partycji jest pe©na.\n"
+        "\n"
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "Nie mo¾esz utworzy† wi©cej ni¾ jednej partycji rozszerzonej na dysku.\n"
+        "\n"
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Instalator nie m¢gˆ sformatowa† partycji:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Restart komputera"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE plPLPages[] =
 {
@@ -1545,6 +1655,10 @@ MUI_PAGE plPLPages[] =
     {
         SELECT_PARTITION_PAGE,
         plPLSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        plPLConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1609,13 +1723,21 @@ MUI_STRING plPLStrings[] =
     {STRING_PLEASEWAIT,
      "   Prosz© czeka†..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalacja   C = Utworzenie Partycji   F3 = Wyj˜cie"},
+     "  ENTER = Instalacja   P = Partycja Podstawowa   E = Rozszerzona   F3 = Wyj˜cie"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Instalacja   L = Utworzenie Partycji Logicznej   F3 = Wyj˜cie"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalacja   D = Skasowanie Partycji   F3 = Wyj˜cie"},
+    {STRING_DELETEPARTITION,
+     "   D = Skasowanie Partycji   F3 = Wyj˜cie"},
     {STRING_PARTITIONSIZE,
      "Rozmiar nowej partycji:"},
     {STRING_CHOOSENEWPARTITION,
-     "Wybrane: utworzenie nowej partycji na"},
+     "Wybrane: utworzenie nowej partycji podstawowej na"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "Wybrane: utworzenie nowej partycji rozszerzonej na"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "Wybrane: utworzenie nowej partycji logicznej na"},
     {STRING_HDDSIZE,
     "Prosz© wprowadzi† rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,
@@ -1624,12 +1746,18 @@ MUI_STRING plPLStrings[] =
     "Nast©puj¥ca partycja zostanie sformatowana."},
     {STRING_NONFORMATTEDPART,
     "Mo¾esz zainstalowa† ReactOS na nowej lub niesformatowanej partycji."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "Partycja systemowa nie jest jeszcze sformatowana."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "Nowa partycja nie jest jeszcze sformatowana."},
     {STRING_INSTALLONPART,
     "Instalator kopiuje pliki systemu na wybran¥ partycj©."},
     {STRING_CHECKINGPART,
     "Instalator sprawdza wybran¥ partycj©."},
+    {STRING_CONTINUE,
+    "ENTER = Kontynuacja"},
     {STRING_QUITCONTINUE,
-    "F3= Wyj˜cie  ENTER = Kontynuacja"},
+    "F3 = Wyj˜cie  ENTER = Kontynuacja"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restart komputera"},
     {STRING_TXTSETUPFAILED,
@@ -1655,11 +1783,11 @@ MUI_STRING plPLStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Restart komputera"},
     {STRING_CONSOLEFAIL1,
-    "Otwarcie konsoli nieudane\n\n"},
+    "Otwarcie konsoli nieudane\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Najcz©stsz¥ tego przyczyn¥ jest u¾ycie klawiatury USB.\n"},
+    "Najcz©stsz¥ tego przyczyn¥ jest u¾ycie klawiatury USB.\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Nie s¥ obecnie w peˆni obsˆugiwane.\n"},
+    "Nie s¥ obecnie w peˆni obsˆugiwane.\r\n"},
     {STRING_FORMATTINGDISK,
     "Instalator formatuje tw¢j dysk"},
     {STRING_CHECKINGDISK,
@@ -1675,7 +1803,7 @@ MUI_STRING plPLStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Dysk 02 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  03Typ %lu    %I64u %s"},
+    "   %c%c  03Typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "na %I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1683,11 +1811,11 @@ MUI_STRING plPLStrings[] =
     {STRING_HDINFOPARTZEROED,
     "Dysk Twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  07Typ %lu    %I64u %s"},
+    "%c%c  07Typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "na Dysku Twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  09Typ %-3u                         %6lu %s"},
+    "%c%c %c %s09Typ %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Dysk Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,
@@ -1695,9 +1823,11 @@ MUI_STRING plPLStrings[] =
     {STRING_NEWPARTITION,
     "Instalator utworzyˆ now¥ partycj©"},
     {STRING_UNPSPACE,
-    "    Miejsce poza partycjami              %6lu %s"},
+    "    %sMiejsce poza partycjami%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Partycja Rozszerzona"},
     {STRING_UNFORMATTED,
     "Nowa (Niesformatowana)"},
     {STRING_FORMATUNUSED,

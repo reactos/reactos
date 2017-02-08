@@ -19,42 +19,27 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Userinit Logon Application
- * FILE:        subsys/system/userinit/userinit.c
+ * FILE:        base/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *              Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <wincon.h>
-#include <shellapi.h>
-#include <regstr.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <undocuser.h>
-#include <wine/debug.h>
-
-#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(userinit);
+#include "userinit.h"
 
 #define CMP_MAGIC  0x01234567
 
 /* GLOBALS ******************************************************************/
 
+HINSTANCE hInstance;
+
+
 /* FUNCTIONS ****************************************************************/
 
-static LONG
+LONG
 ReadRegSzKey(
     IN HKEY hKey,
     IN LPCWSTR pszKey,
-    OUT LPWSTR* pValue)
+    OUT LPWSTR *pValue)
 {
     LONG rc;
     DWORD dwType;
@@ -227,7 +212,7 @@ StartAutoApplications(
     {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (findData.nFileSizeHigh || findData.nFileSizeLow))
         {
-            memset(&ExecInfo, 0x0, sizeof(SHELLEXECUTEINFOW));
+            ZeroMemory(&ExecInfo, sizeof(SHELLEXECUTEINFOW));
             ExecInfo.cbSize = sizeof(ExecInfo);
             wcscpy(&szPath[len+1], findData.cFileName);
             ExecInfo.lpVerb = L"open";
@@ -382,7 +367,7 @@ VOID StartShell(VOID)
     if (!TryToStartShell(Shell))
     {
         WARN("Failed to start default shell %s\n", debugstr_w(Shell));
-        LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+        LoadString( GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
         MessageBox(0, szMsg, NULL, 0);
     }
 }
@@ -430,11 +415,9 @@ COLORREF StrToColorref(
 
     TRACE("(%s)\n", debugstr_w(lpszCol));
 
-    rgb[0] = StrToIntW(lpszCol);
-    lpszCol = StrChrW(lpszCol, L' ') + 1;
-    rgb[1] = StrToIntW(lpszCol);
-    lpszCol = StrChrW(lpszCol, L' ') + 1;
-    rgb[2] = StrToIntW(lpszCol);
+    rgb[0] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
+    rgb[1] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
+    rgb[2] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
     return RGB(rgb[0], rgb[1], rgb[2]);
 }
 
@@ -443,7 +426,7 @@ VOID SetUserSysColors(VOID)
 {
     HKEY hKey;
     INT i;
-    WCHAR szColor[20];
+    WCHAR szColor[25];
     DWORD Type, Size;
     COLORREF crColor;
     LONG rc;
@@ -550,6 +533,27 @@ NotifyLogon(VOID)
         WARN("LoadLibrary() failed with error %lu\n", GetLastError());
 }
 
+static
+VOID
+StartInstaller(VOID)
+{
+    WCHAR Shell[MAX_PATH];
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
+
+    if (GetWindowsDirectory(Shell, MAX_PATH - 12))
+        wcscat(Shell, L"\\reactos.exe");
+    else
+        wcscpy(Shell, L"reactos.exe");
+
+    if (!TryToStartShell(Shell))
+    {
+        ERR("Failed to start the installer: %s\n", debugstr_w(Shell));
+        LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+        MessageBoxW(0, szMsg, NULL, 0);
+    }
+}
+
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif /* _MSC_VER */
@@ -560,9 +564,38 @@ wWinMain(IN HINSTANCE hInst,
          IN LPWSTR lpszCmdLine,
          IN int nCmdShow)
 {
+    STATE State;
+
+    hInstance = hInst;
+
     SetUserSettings();
-    StartShell();
-    NotifyLogon();
+
+    if (IsLiveCD())
+    {
+        State.NextPage = LOCALEPAGE;
+        State.Run = SHELL;
+    }
+    else
+    {
+        State.NextPage = DONE;
+        State.Run = SHELL;
+    }
+
+    if (State.NextPage != DONE)
+    {
+        RunLiveCD(&State);
+    }
+
+    if (State.Run == SHELL)
+    {
+        StartShell();
+        NotifyLogon();
+    }
+    else if (State.Run == INSTALLER)
+    {
+        StartInstaller();
+    }
+
     return 0;
 }
 

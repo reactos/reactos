@@ -1,19 +1,19 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison interface for Yacc-like parsers in C
-   
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
-   
+
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
@@ -26,209 +26,217 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-   
+
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-
-/* Tokens.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     aIDENTIFIER = 258,
-     aKNOWNTYPE = 259,
-     aNUM = 260,
-     aHEXNUM = 261,
-     aDOUBLE = 262,
-     aSTRING = 263,
-     aWSTRING = 264,
-     aSQSTRING = 265,
-     aUUID = 266,
-     aEOF = 267,
-     SHL = 268,
-     SHR = 269,
-     MEMBERPTR = 270,
-     EQUALITY = 271,
-     INEQUALITY = 272,
-     GREATEREQUAL = 273,
-     LESSEQUAL = 274,
-     LOGICALOR = 275,
-     LOGICALAND = 276,
-     ELLIPSIS = 277,
-     tAGGREGATABLE = 278,
-     tALLOCATE = 279,
-     tANNOTATION = 280,
-     tAPPOBJECT = 281,
-     tASYNC = 282,
-     tASYNCUUID = 283,
-     tAUTOHANDLE = 284,
-     tBINDABLE = 285,
-     tBOOLEAN = 286,
-     tBROADCAST = 287,
-     tBYTE = 288,
-     tBYTECOUNT = 289,
-     tCALLAS = 290,
-     tCALLBACK = 291,
-     tCASE = 292,
-     tCDECL = 293,
-     tCHAR = 294,
-     tCOCLASS = 295,
-     tCODE = 296,
-     tCOMMSTATUS = 297,
-     tCONST = 298,
-     tCONTEXTHANDLE = 299,
-     tCONTEXTHANDLENOSERIALIZE = 300,
-     tCONTEXTHANDLESERIALIZE = 301,
-     tCONTROL = 302,
-     tCPPQUOTE = 303,
-     tDECODE = 304,
-     tDEFAULT = 305,
-     tDEFAULTBIND = 306,
-     tDEFAULTCOLLELEM = 307,
-     tDEFAULTVALUE = 308,
-     tDEFAULTVTABLE = 309,
-     tDISABLECONSISTENCYCHECK = 310,
-     tDISPLAYBIND = 311,
-     tDISPINTERFACE = 312,
-     tDLLNAME = 313,
-     tDOUBLE = 314,
-     tDUAL = 315,
-     tENABLEALLOCATE = 316,
-     tENCODE = 317,
-     tENDPOINT = 318,
-     tENTRY = 319,
-     tENUM = 320,
-     tERRORSTATUST = 321,
-     tEXPLICITHANDLE = 322,
-     tEXTERN = 323,
-     tFALSE = 324,
-     tFASTCALL = 325,
-     tFAULTSTATUS = 326,
-     tFLOAT = 327,
-     tFORCEALLOCATE = 328,
-     tHANDLE = 329,
-     tHANDLET = 330,
-     tHELPCONTEXT = 331,
-     tHELPFILE = 332,
-     tHELPSTRING = 333,
-     tHELPSTRINGCONTEXT = 334,
-     tHELPSTRINGDLL = 335,
-     tHIDDEN = 336,
-     tHYPER = 337,
-     tID = 338,
-     tIDEMPOTENT = 339,
-     tIGNORE = 340,
-     tIIDIS = 341,
-     tIMMEDIATEBIND = 342,
-     tIMPLICITHANDLE = 343,
-     tIMPORT = 344,
-     tIMPORTLIB = 345,
-     tIN = 346,
-     tIN_LINE = 347,
-     tINLINE = 348,
-     tINPUTSYNC = 349,
-     tINT = 350,
-     tINT3264 = 351,
-     tINT64 = 352,
-     tINTERFACE = 353,
-     tLCID = 354,
-     tLENGTHIS = 355,
-     tLIBRARY = 356,
-     tLICENSED = 357,
-     tLOCAL = 358,
-     tLONG = 359,
-     tMAYBE = 360,
-     tMESSAGE = 361,
-     tMETHODS = 362,
-     tMODULE = 363,
-     tNOCODE = 364,
-     tNONBROWSABLE = 365,
-     tNONCREATABLE = 366,
-     tNONEXTENSIBLE = 367,
-     tNOTIFY = 368,
-     tNOTIFYFLAG = 369,
-     tNULL = 370,
-     tOBJECT = 371,
-     tODL = 372,
-     tOLEAUTOMATION = 373,
-     tOPTIMIZE = 374,
-     tOPTIONAL = 375,
-     tOUT = 376,
-     tPARTIALIGNORE = 377,
-     tPASCAL = 378,
-     tPOINTERDEFAULT = 379,
-     tPROGID = 380,
-     tPROPERTIES = 381,
-     tPROPGET = 382,
-     tPROPPUT = 383,
-     tPROPPUTREF = 384,
-     tPROXY = 385,
-     tPTR = 386,
-     tPUBLIC = 387,
-     tRANGE = 388,
-     tREADONLY = 389,
-     tREF = 390,
-     tREGISTER = 391,
-     tREPRESENTAS = 392,
-     tREQUESTEDIT = 393,
-     tRESTRICTED = 394,
-     tRETVAL = 395,
-     tSAFEARRAY = 396,
-     tSHORT = 397,
-     tSIGNED = 398,
-     tSIZEIS = 399,
-     tSIZEOF = 400,
-     tSMALL = 401,
-     tSOURCE = 402,
-     tSTATIC = 403,
-     tSTDCALL = 404,
-     tSTRICTCONTEXTHANDLE = 405,
-     tSTRING = 406,
-     tSTRUCT = 407,
-     tSWITCH = 408,
-     tSWITCHIS = 409,
-     tSWITCHTYPE = 410,
-     tTHREADING = 411,
-     tTRANSMITAS = 412,
-     tTRUE = 413,
-     tTYPEDEF = 414,
-     tUIDEFAULT = 415,
-     tUNION = 416,
-     tUNIQUE = 417,
-     tUNSIGNED = 418,
-     tUSESGETLASTERROR = 419,
-     tUSERMARSHAL = 420,
-     tUUID = 421,
-     tV1ENUM = 422,
-     tVARARG = 423,
-     tVERSION = 424,
-     tVIPROGID = 425,
-     tVOID = 426,
-     tWCHAR = 427,
-     tWIREMARSHAL = 428,
-     tAPARTMENT = 429,
-     tNEUTRAL = 430,
-     tSINGLE = 431,
-     tFREE = 432,
-     tBOTH = 433,
-     ADDRESSOF = 434,
-     NEG = 435,
-     POS = 436,
-     PPTR = 437,
-     CAST = 438
-   };
+#ifndef YY_PARSER_PARSER_TAB_H_INCLUDED
+# define YY_PARSER_PARSER_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int parser_debug;
 #endif
 
+/* Token type.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+  enum yytokentype
+  {
+    aIDENTIFIER = 258,
+    aPRAGMA = 259,
+    aKNOWNTYPE = 260,
+    aNUM = 261,
+    aHEXNUM = 262,
+    aDOUBLE = 263,
+    aSTRING = 264,
+    aWSTRING = 265,
+    aSQSTRING = 266,
+    aUUID = 267,
+    aEOF = 268,
+    SHL = 269,
+    SHR = 270,
+    MEMBERPTR = 271,
+    EQUALITY = 272,
+    INEQUALITY = 273,
+    GREATEREQUAL = 274,
+    LESSEQUAL = 275,
+    LOGICALOR = 276,
+    LOGICALAND = 277,
+    ELLIPSIS = 278,
+    tAGGREGATABLE = 279,
+    tALLOCATE = 280,
+    tANNOTATION = 281,
+    tAPPOBJECT = 282,
+    tASYNC = 283,
+    tASYNCUUID = 284,
+    tAUTOHANDLE = 285,
+    tBINDABLE = 286,
+    tBOOLEAN = 287,
+    tBROADCAST = 288,
+    tBYTE = 289,
+    tBYTECOUNT = 290,
+    tCALLAS = 291,
+    tCALLBACK = 292,
+    tCASE = 293,
+    tCDECL = 294,
+    tCHAR = 295,
+    tCOCLASS = 296,
+    tCODE = 297,
+    tCOMMSTATUS = 298,
+    tCONST = 299,
+    tCONTEXTHANDLE = 300,
+    tCONTEXTHANDLENOSERIALIZE = 301,
+    tCONTEXTHANDLESERIALIZE = 302,
+    tCONTROL = 303,
+    tCPPQUOTE = 304,
+    tDECODE = 305,
+    tDEFAULT = 306,
+    tDEFAULTBIND = 307,
+    tDEFAULTCOLLELEM = 308,
+    tDEFAULTVALUE = 309,
+    tDEFAULTVTABLE = 310,
+    tDISABLECONSISTENCYCHECK = 311,
+    tDISPLAYBIND = 312,
+    tDISPINTERFACE = 313,
+    tDLLNAME = 314,
+    tDOUBLE = 315,
+    tDUAL = 316,
+    tENABLEALLOCATE = 317,
+    tENCODE = 318,
+    tENDPOINT = 319,
+    tENTRY = 320,
+    tENUM = 321,
+    tERRORSTATUST = 322,
+    tEXPLICITHANDLE = 323,
+    tEXTERN = 324,
+    tFALSE = 325,
+    tFASTCALL = 326,
+    tFAULTSTATUS = 327,
+    tFLOAT = 328,
+    tFORCEALLOCATE = 329,
+    tHANDLE = 330,
+    tHANDLET = 331,
+    tHELPCONTEXT = 332,
+    tHELPFILE = 333,
+    tHELPSTRING = 334,
+    tHELPSTRINGCONTEXT = 335,
+    tHELPSTRINGDLL = 336,
+    tHIDDEN = 337,
+    tHYPER = 338,
+    tID = 339,
+    tIDEMPOTENT = 340,
+    tIGNORE = 341,
+    tIIDIS = 342,
+    tIMMEDIATEBIND = 343,
+    tIMPLICITHANDLE = 344,
+    tIMPORT = 345,
+    tIMPORTLIB = 346,
+    tIN = 347,
+    tIN_LINE = 348,
+    tINLINE = 349,
+    tINPUTSYNC = 350,
+    tINT = 351,
+    tINT3264 = 352,
+    tINT64 = 353,
+    tINTERFACE = 354,
+    tLCID = 355,
+    tLENGTHIS = 356,
+    tLIBRARY = 357,
+    tLICENSED = 358,
+    tLOCAL = 359,
+    tLONG = 360,
+    tMAYBE = 361,
+    tMESSAGE = 362,
+    tMETHODS = 363,
+    tMODULE = 364,
+    tNAMESPACE = 365,
+    tNOCODE = 366,
+    tNONBROWSABLE = 367,
+    tNONCREATABLE = 368,
+    tNONEXTENSIBLE = 369,
+    tNOTIFY = 370,
+    tNOTIFYFLAG = 371,
+    tNULL = 372,
+    tOBJECT = 373,
+    tODL = 374,
+    tOLEAUTOMATION = 375,
+    tOPTIMIZE = 376,
+    tOPTIONAL = 377,
+    tOUT = 378,
+    tPARTIALIGNORE = 379,
+    tPASCAL = 380,
+    tPOINTERDEFAULT = 381,
+    tPROGID = 382,
+    tPROPERTIES = 383,
+    tPROPGET = 384,
+    tPROPPUT = 385,
+    tPROPPUTREF = 386,
+    tPROXY = 387,
+    tPTR = 388,
+    tPUBLIC = 389,
+    tRANGE = 390,
+    tREADONLY = 391,
+    tREF = 392,
+    tREGISTER = 393,
+    tREPRESENTAS = 394,
+    tREQUESTEDIT = 395,
+    tRESTRICTED = 396,
+    tRETVAL = 397,
+    tSAFEARRAY = 398,
+    tSHORT = 399,
+    tSIGNED = 400,
+    tSIZEIS = 401,
+    tSIZEOF = 402,
+    tSMALL = 403,
+    tSOURCE = 404,
+    tSTATIC = 405,
+    tSTDCALL = 406,
+    tSTRICTCONTEXTHANDLE = 407,
+    tSTRING = 408,
+    tSTRUCT = 409,
+    tSWITCH = 410,
+    tSWITCHIS = 411,
+    tSWITCHTYPE = 412,
+    tTHREADING = 413,
+    tTRANSMITAS = 414,
+    tTRUE = 415,
+    tTYPEDEF = 416,
+    tUIDEFAULT = 417,
+    tUNION = 418,
+    tUNIQUE = 419,
+    tUNSIGNED = 420,
+    tUSESGETLASTERROR = 421,
+    tUSERMARSHAL = 422,
+    tUUID = 423,
+    tV1ENUM = 424,
+    tVARARG = 425,
+    tVERSION = 426,
+    tVIPROGID = 427,
+    tVOID = 428,
+    tWCHAR = 429,
+    tWIREMARSHAL = 430,
+    tAPARTMENT = 431,
+    tNEUTRAL = 432,
+    tSINGLE = 433,
+    tFREE = 434,
+    tBOTH = 435,
+    CAST = 436,
+    PPTR = 437,
+    POS = 438,
+    NEG = 439,
+    ADDRESSOF = 440
+  };
+#endif
 
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
 {
-
-/* Line 2068 of yacc.c  */
-#line 153 "parser.y"
+#line 137 "parser.y" /* yacc.c:1909  */
 
 	attr_t *attr;
 	attr_list_t *attr_list;
@@ -255,16 +263,15 @@ typedef union YYSTYPE
 	struct _decl_spec_t *declspec;
 	enum storage_class stgclass;
 
-
-
-/* Line 2068 of yacc.c  */
-#line 262 "parser.tab.h"
-} YYSTYPE;
+#line 267 "parser.tab.h" /* yacc.c:1909  */
+};
 # define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+
 extern YYSTYPE parser_lval;
 
+int parser_parse (void);
 
+#endif /* !YY_PARSER_PARSER_TAB_H_INCLUDED  */

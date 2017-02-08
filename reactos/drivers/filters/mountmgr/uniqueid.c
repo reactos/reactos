@@ -23,8 +23,6 @@
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "mntmgr.h"
 
 #define NDEBUG

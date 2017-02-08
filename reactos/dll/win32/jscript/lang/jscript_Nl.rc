@@ -1,0 +1,66 @@
+/*
+ * Copyright 2009 Paul Vriens
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Fout bij het omzetten van het object naar een primitief type"
+    IDS_INVALID_CALL_ARG    "Ongeldige procedure-aanroep of argument"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
+    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_CREATE_OBJ_ERROR    "Automatiseringsserver kan het object niet creëren"
+    IDS_NO_PROPERTY         "Dit object ondersteunt deze eigenschap of methode niet"
+    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_ARG_NOT_OPT         "Argument is niet optioneel"
+    IDS_SYNTAX_ERROR        "Syntax fout"
+    IDS_SEMICOLON           "';' verwacht"
+    IDS_LBRACKET            "'(' verwacht"
+    IDS_RBRACKET            "')' verwacht"
+    IDS_EXPECTED_IDENTIFIER "Expected identifier"
+    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_INVALID_CHAR        "Invalid character"
+    IDS_UNTERMINATED_STR    "Onafgesloten tekenreeksconstante"
+    IDS_MISPLACED_RETURN    "'return' statement outside of function"
+    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
+    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_LABEL_REDEFINED     "Label redefined"
+    IDS_LABEL_NOT_FOUND     "Label not found"
+    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_DISABLED_CC         "Conditional compilation is turned off"
+    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_NOT_FUNC            "Functie verwacht"
+    IDS_NOT_DATE            "'[object]' is geen datum object"
+    IDS_NOT_NUM             "Getal verwacht"
+    IDS_OBJECT_EXPECTED     "Object verwacht"
+    IDS_ILLEGAL_ASSIGN      "Ongeldige toekenning"
+    IDS_UNDEFINED           "'|' is ongedefinieerd"
+    IDS_NOT_BOOL            "Boolean object verwacht"
+    IDS_INVALID_DELETE      "Cannot delete '|'"
+    IDS_NOT_VBARRAY         "VBArray object expected"
+    IDS_JSCRIPT_EXPECTED    "JScript object verwacht"
+    IDS_REGEXP_SYNTAX_ERROR "Syntax fout in reguliere expressie"
+    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
+    IDS_URI_INVALID_CHAR    "De te coderen URI bevat ongeldige tekens"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
+    IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
+    IDS_INVALID_LENGTH      "Array lengte moet een eindig, positief geheel getal zijn"
+    IDS_ARRAY_EXPECTED      "Array object verwacht"
+}

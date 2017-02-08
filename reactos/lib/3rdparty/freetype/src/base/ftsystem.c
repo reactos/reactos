@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific FreeType low-level system interface (body).            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2006, 2008, 2009, 2010 by                   */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -71,7 +71,7 @@
   {
     FT_UNUSED( memory );
 
-    return ft_smalloc( size );
+    return ft_smalloc( (size_t)size );
   }
 
 
@@ -104,7 +104,7 @@
     FT_UNUSED( memory );
     FT_UNUSED( cur_size );
 
-    return ft_srealloc( block, new_size );
+    return ft_srealloc( block, (size_t)new_size );
   }
 
 
@@ -137,6 +137,7 @@
   /*                                                                       */
   /*************************************************************************/
 
+#ifndef FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT
 
   /*************************************************************************/
   /*                                                                       */
@@ -170,7 +171,7 @@
 
     stream->descriptor.pointer = NULL;
     stream->size               = 0;
-    stream->base               = 0;
+    stream->base               = NULL;
   }
 
 
@@ -211,7 +212,7 @@
     file = STREAM_FILE( stream );
 
     if ( stream->pos != offset )
-      ft_fseek( file, offset, SEEK_SET );
+      ft_fseek( file, (long)offset, SEEK_SET );
 
     return (unsigned long)ft_fread( buffer, 1, count, file );
   }
@@ -227,11 +228,11 @@
 
 
     if ( !stream )
-      return FT_Err_Invalid_Stream_Handle;
+      return FT_THROW( Invalid_Stream_Handle );
 
     stream->descriptor.pointer = NULL;
     stream->pathname.pointer   = (char*)filepathname;
-    stream->base               = 0;
+    stream->base               = NULL;
     stream->pos                = 0;
     stream->read               = NULL;
     stream->close              = NULL;
@@ -242,17 +243,17 @@
       FT_ERROR(( "FT_Stream_Open:"
                  " could not open `%s'\n", filepathname ));
 
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
     }
 
     ft_fseek( file, 0, SEEK_END );
-    stream->size = ft_ftell( file );
+    stream->size = (unsigned long)ft_ftell( file );
     if ( !stream->size )
     {
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " opened `%s' but zero-sized\n", filepathname ));
       ft_fclose( file );
-      return FT_Err_Cannot_Open_Stream;
+      return FT_THROW( Cannot_Open_Stream );
     }
     ft_fseek( file, 0, SEEK_SET );
 
@@ -267,6 +268,7 @@
     return FT_Err_Ok;
   }
 
+#endif /* !FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
 
 #ifdef FT_DEBUG_MEMORY
 
@@ -290,7 +292,7 @@
     memory = (FT_Memory)ft_smalloc( sizeof ( *memory ) );
     if ( memory )
     {
-      memory->user    = 0;
+      memory->user    = NULL;
       memory->alloc   = ft_alloc;
       memory->realloc = ft_realloc;
       memory->free    = ft_free;

@@ -9,6 +9,14 @@
 
 #include "wdmaud.h"
 
+#include <winreg.h>
+#include <setupapi.h>
+#include <mmixer.h>
+
+#define NDEBUG
+#include <debug.h>
+#include <mmebuddy_debug.h>
+
 typedef struct
 {
     KSSTREAM_HEADER Header;

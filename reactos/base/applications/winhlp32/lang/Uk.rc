@@ -1,0 +1,113 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * Ukrainian language support
+ *
+ * Copyright (C) 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+MAIN_MENU MENU
+{
+ POPUP "&Файл" {
+  MENUITEM "&Відкрити", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Друк", MNID_FILE_PRINT
+  MENUITEM "Налаштування &принтера...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "В&ихід", MNID_FILE_EXIT
+ }
+ POPUP "&Правка" {
+   MENUITEM "&Копіювати...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Замітки...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Закладка" {
+   MENUITEM "&Задати...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Налаштування" {
+  MENUITEM "Завжди &зверху", MNID_HELP_HELPTOP
+  MENUITEM "Історія",		MNID_OPTS_HISTORY
+  POPUP    "Шрифти"
+  BEGIN
+    MENUITEM "Малий",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Нормальний",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Великий",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "&Довідка" {
+   MENUITEM "Довідка &про Довідку", MNID_HELP_HELPON
+   MENUITEM "&Інформація...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Замітки...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Копіювати",                MNID_CTXT_COPY
+		MENUITEM "Друк...",            MNID_CTXT_PRINT
+		POPUP    "Шрифти"
+		BEGIN
+			MENUITEM "Малий",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Нормальний",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Великий",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Довідка ReactOS"
+STID_WHERROR, 		"ПОМИЛКА"
+STID_WARNING,  		"УВАГА"
+STID_INFO,  		"Інформація"
+STID_NOT_IMPLEMENTED, 	"Не впроваджено"
+STID_HLPFILE_ERROR_s, 	"Помилка читання файлу довідки `%s'"
+STID_INDEX, 		"&Зміст"
+STID_CONTENTS,		"Сумарно"
+STID_BACK, 		"&Назад"
+STID_ALL_FILES, 	"Всі файли (*.*)"
+STID_HELP_FILES_HLP, 	"Файли довідки (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Не можу знайти '%s'. Хочете знайти цей файл самотужки?"
+STID_NO_RICHEDIT	"Не можу знайти richedit... Скасовую"
+STID_PSH_INDEX,		"Розділи Довідки: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Вказівник"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Пошук"
+{
+    LTEXT  "Ще не впроваджено", -1, 10, 10, 180, 150
+}

@@ -1,12 +1,7 @@
-#include <ntifs.h>
-#include <ntddk.h>
+#ifndef _SYSAUDIO_PCH_
+#define _SYSAUDIO_PCH_
+
 #include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#define NDEBUG
-#include <debug.h>
-#include <stdio.h>
 
 typedef struct
 {
@@ -124,3 +119,4 @@ VOID
 FreeItem(
     IN PVOID Item);
 
+#endif /* _SYSAUDIO_PCH_ */

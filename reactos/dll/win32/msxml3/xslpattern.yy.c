@@ -526,16 +526,13 @@ static yyconst flex_int16_t yy_chk[178] =
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #line 22 "xslpattern.l"
-#include "config.h"
+#include "precomp.h"
 #include "wine/port.h"
 
 #ifdef HAVE_LIBXML2
 
 #include "xslpattern.h"
 #include "xslpattern.tab.h"
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #define SCAN    xslpattern_get_extra(yyscanner)
 
@@ -2214,6 +2211,7 @@ void xslpattern_free (void * ptr , yyscan_t yyscanner)
 
 
 
+xmlChar* XSLPattern_to_XPath(xmlXPathContextPtr, xmlChar const*) DECLSPEC_HIDDEN;
 xmlChar* XSLPattern_to_XPath(xmlXPathContextPtr ctxt, xmlChar const* xslpat_str)
 {
     parser_param p;

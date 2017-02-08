@@ -12,6 +12,55 @@
 #define NDEBUG
 #include <debug.h>
 
+/* INLINED FUNCTIONS *********************************************************/
+
+/*
+ * @implemented
+ */
+FORCEINLINE
+VOID
+FsRtlNotifyAcquireFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
+{
+    ULONG_PTR CurrentThread = (ULONG_PTR)KeGetCurrentThread();
+
+    /* Only acquire fast mutex if it's not already acquired by the current thread */
+    if (RealNotifySync->OwningThread != CurrentThread)
+    {
+        ExAcquireFastMutexUnsafe(&(RealNotifySync->FastMutex));
+        RealNotifySync->OwningThread = CurrentThread;
+    }
+    /* Whatever the case, keep trace of the attempt to acquire fast mutex */
+    RealNotifySync->OwnerCount++;
+}
+
+/*
+ * @implemented
+ */
+FORCEINLINE
+VOID
+FsRtlNotifyReleaseFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
+{
+    RealNotifySync->OwnerCount--;
+    /* Release the fast mutex only if no other instance needs it */
+    if (!RealNotifySync->OwnerCount)
+    {
+        ExReleaseFastMutexUnsafe(&(RealNotifySync->FastMutex));
+        RealNotifySync->OwningThread = (ULONG_PTR)0;
+    }
+}
+
+#define FsRtlNotifyGetLastPartOffset(FullLen, TargLen, Type, Chr)                 \
+    for (FullPosition = 0; FullPosition < FullLen; ++FullPosition)                \
+        if (((Type)NotifyChange->FullDirectoryName->Buffer)[FullPosition] == Chr) \
+            ++FullNumberOfParts;                                                  \
+    for (LastPartOffset = 0; LastPartOffset < TargLen; ++LastPartOffset) {        \
+        if ( ((Type)TargetDirectory.Buffer)[LastPartOffset] == Chr) {             \
+            ++TargetNumberOfParts;                                                \
+        if (TargetNumberOfParts == FullNumberOfParts)                             \
+            break;                                                                \
+        }                                                                         \
+    }
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -22,13 +71,161 @@ BOOLEAN
 FsRtlNotifySetCancelRoutine(IN PIRP Irp,
                             IN PNOTIFY_CHANGE NotifyChange OPTIONAL);
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
+    PVOID Buffer;
+    PIRP NotifyIrp;
+    ULONG BufferLength;
+    PIO_STACK_LOCATION Stack;
+    PNOTIFY_CHANGE NotifyChange;
+    PREAL_NOTIFY_SYNC RealNotifySync;
+    PSECURITY_SUBJECT_CONTEXT _SEH2_VOLATILE SubjectContext = NULL;
+
+    /* Get the NOTIFY_CHANGE struct and reset it */
+    NotifyChange = (PNOTIFY_CHANGE)Irp->IoStatus.Information;
+    Irp->IoStatus.Information = 0;
+    /* Reset the cancel routine */
+    IoSetCancelRoutine(Irp, NULL);
+    /* And release lock */
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-    UNIMPLEMENTED;
+    /* Get REAL_NOTIFY_SYNC struct */
+    RealNotifySync = NotifyChange->NotifySync;
+
+    FsRtlNotifyAcquireFastMutex(RealNotifySync);
+
+   _SEH2_TRY
+   {
+       /* Remove the IRP from the notifications list and mark it pending */
+       RemoveEntryList(&(Irp->Tail.Overlay.ListEntry));
+       IoMarkIrpPending(Irp);
+
+       /* Now, the tricky part - let's find a buffer big enough to hold the return data */
+       if (NotifyChange->Buffer && NotifyChange->AllocatedBuffer == NULL &&
+           ((Irp->MdlAddress && MmGetSystemAddressForMdl(Irp->MdlAddress) == NotifyChange->Buffer) ||
+           NotifyChange->Buffer == Irp->AssociatedIrp.SystemBuffer))
+       {
+           /* Assume we didn't find any */
+           Buffer = NULL;
+           BufferLength = 0;
+
+           /* If we don't have IRPs, check if current buffer is big enough */
+           if (IsListEmpty(&NotifyChange->NotifyIrps))
+           {
+               if (NotifyChange->BufferLength >= NotifyChange->DataLength)
+               {
+                   BufferLength = NotifyChange->BufferLength;
+               }
+           }
+           else
+           {
+               /* Otherwise, try to look at next IRP available */
+               NotifyIrp = CONTAINING_RECORD(NotifyChange->NotifyIrps.Flink, IRP, Tail.Overlay.ListEntry);
+               Stack = IoGetCurrentIrpStackLocation(NotifyIrp);
+
+               /* If its buffer is big enough, get it */
+               if (Stack->Parameters.NotifyDirectory.Length >= NotifyChange->BufferLength)
+               {
+                   /* Is it MDL? */
+                   if (NotifyIrp->AssociatedIrp.SystemBuffer == NULL)
+                   {
+                       if (NotifyIrp->MdlAddress != NULL)
+                       {
+                           Buffer = MmGetSystemAddressForMdl(NotifyIrp->MdlAddress);
+                       }
+                   }
+                   else
+                   {
+                       Buffer = NotifyIrp->AssociatedIrp.MasterIrp;
+                   }
+
+                   /* Backup our accepted buffer length */
+                   BufferLength = Stack->Parameters.NotifyDirectory.Length;
+                   if (BufferLength > NotifyChange->BufferLength)
+                   {
+                       BufferLength = NotifyChange->BufferLength;
+                   }
+               }
+           }
+
+           /* At that point, we *may* have a buffer */
+
+           /* If it has null length, then note that we won't use it */
+           if (BufferLength == 0)
+           {
+               NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
+           }
+           else
+           {
+               /* If we have a buffer length, but no buffer then allocate one */
+               if (Buffer == NULL)
+               {
+                   PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, BufferLength);
+                   Buffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, BufferLength, TAG_FS_NOTIFICATIONS);
+                   NotifyChange->AllocatedBuffer = Buffer;
+               }
+
+               /* Copy data in that buffer */
+               RtlCopyMemory(Buffer, NotifyChange->Buffer, NotifyChange->DataLength);
+               NotifyChange->ThisBufferLength = BufferLength;
+               NotifyChange->Buffer = Buffer;
+           }
+
+           /* If we have to notify immediately, ensure that any buffer is 0-ed out */
+           if (NotifyChange->Flags & NOTIFY_IMMEDIATELY)
+           {
+               NotifyChange->Buffer = 0;
+               NotifyChange->AllocatedBuffer = 0;
+               NotifyChange->LastEntry = 0;
+               NotifyChange->DataLength = 0;
+               NotifyChange->ThisBufferLength = 0;
+           }
+       }
+
+       /* It's now time to complete - data are ready */
+
+       /* Set appropriate status and complete */
+       Irp->IoStatus.Status = STATUS_CANCELLED;
+       IofCompleteRequest(Irp, EVENT_INCREMENT);
+
+       /* If that notification isn't referenced any longer, drop it */
+       if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))
+       {
+           /* If it had an allocated buffer, delete */
+           if (NotifyChange->AllocatedBuffer)
+           {
+               PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
+               ExFreePoolWithTag(NotifyChange->AllocatedBuffer, TAG_FS_NOTIFICATIONS);
+           }
+
+           /* In case of full name, remember subject context for later deletion */
+           if (NotifyChange->FullDirectoryName)
+           {
+               SubjectContext = NotifyChange->SubjectContext;
+           }
+
+           /* We mustn't have ANY change left anymore */
+           ASSERT(NotifyChange->NotifyList.Flink == NULL);
+           ExFreePoolWithTag(NotifyChange, 0);
+       }
+    }
+    _SEH2_FINALLY
+    {
+        FsRtlNotifyReleaseFastMutex(RealNotifySync);
+
+        /* If the subject security context was captured, release and free it */
+        if (SubjectContext)
+        {
+            SeReleaseSubjectContext(SubjectContext);
+            ExFreePool(SubjectContext);
+        }
+    }
+    _SEH2_END;
 }
 
 /*
@@ -58,6 +255,9 @@ FsRtlCheckNotifyForDelete(IN PLIST_ENTRY NotifyList,
     }
 }
 
+/*
+ *@implemented
+ */
 PNOTIFY_CHANGE
 FsRtlIsNotifyOnList(IN PLIST_ENTRY NotifyList,
                     IN PVOID FsContext)
@@ -81,22 +281,6 @@ FsRtlIsNotifyOnList(IN PLIST_ENTRY NotifyList,
         }
     }
     return NULL;
-}
-
-VOID
-FORCEINLINE
-FsRtlNotifyAcquireFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
-{
-    ULONG_PTR CurrentThread = (ULONG_PTR)KeGetCurrentThread();
-
-    /* Only acquire fast mutex if it's not already acquired by the current thread */
-    if (RealNotifySync->OwningThread != CurrentThread)
-    {
-        ExAcquireFastMutexUnsafe(&(RealNotifySync->FastMutex));
-        RealNotifySync->OwningThread = CurrentThread;
-    }
-    /* Whatever the case, keep trace of the attempt to acquire fast mutex */
-    RealNotifySync->OwnerCount++;
 }
 
 /*
@@ -216,7 +400,7 @@ FsRtlNotifyCompleteIrpList(IN PNOTIFY_CHANGE NotifyChange,
 
     DataLength = NotifyChange->DataLength;
 
-    NotifyChange->Flags &= (INVALIDATE_BUFFERS | WATCH_TREE);
+    NotifyChange->Flags &= (NOTIFY_IMMEDIATELY | WATCH_TREE);
     NotifyChange->DataLength = 0;
     NotifyChange->LastEntry = 0;
 
@@ -230,19 +414,6 @@ FsRtlNotifyCompleteIrpList(IN PNOTIFY_CHANGE NotifyChange,
         /* If we're notifying success, just notify first one */
         if (Status == STATUS_SUCCESS)
             break;
-    }
-}
-
-VOID
-FORCEINLINE
-FsRtlNotifyReleaseFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
-{
-    RealNotifySync->OwnerCount--;
-    /* Release the fast mutex only if no other instance needs it */
-    if (!RealNotifySync->OwnerCount)
-    {
-        ExReleaseFastMutexUnsafe(&(RealNotifySync->FastMutex));
-        RealNotifySync->OwningThread = (ULONG_PTR)0;
     }
 }
 
@@ -295,6 +466,92 @@ FsRtlNotifySetCancelRoutine(IN PIRP Irp,
     return FALSE;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
+                        IN ULONG Action,
+                        IN PSTRING ParentName,
+                        IN PSTRING TargetName,
+                        IN PSTRING StreamName,
+                        IN BOOLEAN IsUnicode,
+                        IN ULONG DataLength)
+{
+    /* Unless there's an issue with buffers, there's no reason to fail */
+    BOOLEAN Succeed = TRUE;
+    ULONG AlreadyWritten = 0, ResultSize;
+
+    PAGED_CODE();
+
+    /* Update user buffer with the change that occured
+     * First copy parent name if any
+     * Then copy target name, there's always one
+     * And finally, copy stream name if any
+     * If these names aren't unicode, then convert first
+     */
+    _SEH2_TRY
+    {
+        OutputBuffer->NextEntryOffset = 0;
+        OutputBuffer->Action = Action;
+        OutputBuffer->FileNameLength = DataLength - FIELD_OFFSET(FILE_NOTIFY_INFORMATION, FileName);
+        if (IsUnicode)
+        {
+            if (ParentName->Length)
+            {
+                RtlCopyMemory(OutputBuffer->FileName, ParentName->Buffer, ParentName->Length);
+                OutputBuffer->FileName[ParentName->Length / sizeof(WCHAR)] = L'\\';
+                AlreadyWritten = ParentName->Length + sizeof(WCHAR);
+            }
+            RtlCopyMemory((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten),
+                          TargetName->Buffer, TargetName->Length);
+            if (StreamName)
+            {
+                AlreadyWritten += TargetName->Length;
+                OutputBuffer->FileName[AlreadyWritten / sizeof(WCHAR)] = L':';
+                RtlCopyMemory((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten + sizeof(WCHAR)),
+                              StreamName->Buffer, StreamName->Length);
+            }
+        }
+        else
+        {
+            if (!ParentName->Length)
+            {
+                ASSERT(StreamName);
+                RtlCopyMemory(OutputBuffer->FileName, StreamName->Buffer, StreamName->Length);
+            }
+            else
+            {
+                RtlOemToUnicodeN(OutputBuffer->FileName, OutputBuffer->FileNameLength,
+                                 &ResultSize, ParentName->Buffer,
+                                 ParentName->Length);
+                OutputBuffer->FileName[ResultSize / sizeof(WCHAR)] = L'\\';
+                AlreadyWritten = ResultSize + sizeof(WCHAR);
+
+                RtlOemToUnicodeN((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten),
+                                 OutputBuffer->FileNameLength, &ResultSize,
+                                 TargetName->Buffer, TargetName->Length);
+
+                if (StreamName)
+                {
+                    AlreadyWritten += ResultSize;
+                    OutputBuffer->FileName[AlreadyWritten / sizeof(WCHAR)] = L':';
+                    RtlOemToUnicodeN((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten + sizeof(WCHAR)),
+                                     OutputBuffer->FileNameLength, &ResultSize,
+                                     StreamName->Buffer, StreamName->Length);
+                }
+            }
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Succeed = FALSE;
+    }
+    _SEH2_END;
+
+    return Succeed;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -302,7 +559,7 @@ FsRtlNotifySetCancelRoutine(IN PIRP Irp,
  * @implemented
  *
  * Lets FSD know if changes occures in the specified directory.
- * Directory will be reenumerated. 
+ * Directory will be reenumerated.
  *
  * @param NotifySync
  *        Synchronization object pointer
@@ -311,7 +568,7 @@ FsRtlNotifySetCancelRoutine(IN PIRP Irp,
  *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        String (A or W) containing the full directory name 
+ *        String (A or W) containing the full directory name
  *
  * @param NotifyList
  *        Notify list pointer (to head)
@@ -363,7 +620,7 @@ FsRtlNotifyChangeDirectory(IN PNOTIFY_SYNC NotifySync,
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FsContext
  *        Used to identify the notify structure
@@ -381,7 +638,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
 {
     PNOTIFY_CHANGE NotifyChange;
     PREAL_NOTIFY_SYNC RealNotifySync;
-    PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
+    PSECURITY_SUBJECT_CONTEXT _SEH2_VOLATILE SubjectContext = NULL;
 
     /* Get real structure hidden behind the opaque pointer */
     RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
@@ -424,7 +681,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                 }
 
                 /* Finally, free the notification, as it's not needed anymore */
-                ExFreePool(NotifyChange);
+                ExFreePoolWithTag(NotifyChange, 'FSrN');
             }
         }
     }
@@ -445,7 +702,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
 
 /*++
  * @name FsRtlNotifyFilterChangeDirectory
- * @unimplemented
+ * @implemented
  *
  * FILLME
  *
@@ -503,12 +760,12 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
 {
     ULONG SavedLength;
     PIO_STACK_LOCATION Stack;
-    PNOTIFY_CHANGE NotifyChange;
+    PNOTIFY_CHANGE NotifyChange = NULL;
     PREAL_NOTIFY_SYNC RealNotifySync;
 
     PAGED_CODE();
 
-    DPRINT("FsRtlNotifyFilterChangeDirectory(): %p, %p, %p, %wZ, %d, %d, %u, %p, %p, %p, %p\n",
+    DPRINT("FsRtlNotifyFilterChangeDirectory(): %p, %p, %p, %wZ, %u, %u, %u, %p, %p, %p, %p\n",
     NotifySync, NotifyList, FsContext, FullDirectoryName, WatchTree, IgnoreBuffer, CompletionFilter, NotifyIrp,
     TraverseCallback, SubjectContext, FilterCallback);
 
@@ -559,16 +816,16 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                 NotifyIrp->IoStatus.Status = STATUS_DELETE_PENDING;
                 IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
             }
-            /* Complete if there is directory enumeration and no buffer available any more */
-            if ((NotifyChange->Flags & INVALIDATE_BUFFERS) && (NotifyChange->Flags & ENUMERATE_DIR))
+            /* Complete now if asked to (and not asked to notify later on) */
+            if ((NotifyChange->Flags & NOTIFY_IMMEDIATELY) && !(NotifyChange->Flags & NOTIFY_LATER))
             {
-                NotifyChange->Flags &= ~INVALIDATE_BUFFERS;
+                NotifyChange->Flags &= ~NOTIFY_IMMEDIATELY;
                 IoMarkIrpPending(NotifyIrp);
                 NotifyIrp->IoStatus.Status = STATUS_NOTIFY_ENUM_DIR;
                 IoCompleteRequest(NotifyIrp, EVENT_INCREMENT);
             }
-            /* If no data yet, or directory enumeration, handle */
-            else if (NotifyChange->DataLength == 0 || (NotifyChange->Flags & ENUMERATE_DIR))
+            /* If no data yet, or asked to notify later on, handle */
+            else if (NotifyChange->DataLength == 0 || (NotifyChange->Flags & NOTIFY_LATER))
             {
                 goto HandleIRP;
             }
@@ -612,20 +869,13 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
         else
         {
             /* If it can't contain WCHAR, it's ANSI */
-            if (FullDirectoryName->Length < sizeof(WCHAR))
+            if (FullDirectoryName->Length < sizeof(WCHAR) || ((CHAR*)FullDirectoryName->Buffer)[1] != 0)
             {
                 NotifyChange->CharacterSize = sizeof(CHAR);
-            }
-            /* First char is \, so in unicode, right part is 0
-             * whereas in ANSI it contains next char
-             */
-            else if (((CHAR*)FullDirectoryName->Buffer)[1] == 0)
-            {
-                NotifyChange->CharacterSize = sizeof(WCHAR);
             }
             else
             {
-                NotifyChange->CharacterSize = sizeof(CHAR);
+                NotifyChange->CharacterSize = sizeof(WCHAR);
             }
 
             /* Now, check is user is willing to watch root */
@@ -668,7 +918,7 @@ HandleIRP:
         FsRtlNotifyReleaseFastMutex(RealNotifySync);
 
         /* If the subject security context was captured and there's no notify */
-        if (SubjectContext && (!NotifyChange || FullDirectoryName))
+        if (SubjectContext && (!NotifyChange || NotifyChange->FullDirectoryName))
         {
             SeReleaseSubjectContext(SubjectContext);
             ExFreePool(SubjectContext);
@@ -679,7 +929,7 @@ HandleIRP:
 
 /*++
  * @name FsRtlNotifyFilterReportChange
- * @unimplemented
+ * @implemented
  *
  * FILLME
  *
@@ -731,26 +981,451 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                               IN PVOID TargetContext,
                               IN PVOID FilterContext)
 {
-    KeBugCheck(FILE_SYSTEM);
+    PIRP Irp;
+    PVOID OutputBuffer;
+    USHORT FullPosition;
+    PLIST_ENTRY NextEntry;
+    PIO_STACK_LOCATION Stack;
+    PNOTIFY_CHANGE NotifyChange;
+    PREAL_NOTIFY_SYNC RealNotifySync;
+    PFILE_NOTIFY_INFORMATION FileNotifyInfo;
+    BOOLEAN IsStream, IsParent, PoolQuotaCharged;
+    STRING TargetDirectory, TargetName, ParentName, IntNormalizedParentName;
+    ULONG NumberOfBytes, TargetNumberOfParts, FullNumberOfParts, LastPartOffset, ParentNameOffset, ParentNameLength;
+    ULONG DataLength, AlignedDataLength;
+
+    TargetDirectory.Length = 0;
+    TargetDirectory.MaximumLength = 0;
+    TargetDirectory.Buffer = NULL;
+    TargetName.Length = 0;
+    TargetName.MaximumLength = 0;
+    TargetName.Buffer = NULL;
+    ParentName.Length = 0;
+    ParentName.MaximumLength = 0;
+    ParentName.Buffer = NULL;
+    IsStream = FALSE;
+
+    PAGED_CODE();
+
+    DPRINT("FsRtlNotifyFilterReportChange(%p, %p, %p, %u, %p, %p, %p, %x, %x, %p, %p)\n",
+           NotifySync, NotifyList, FullTargetName, TargetNameOffset, StreamName, NormalizedParentName,
+           FilterMatch, Action, TargetContext, FilterContext);
+
+    /* We need offset in name */
+    if (!TargetNameOffset && FullTargetName)
+    {
+        return;
+    }
+
+    /* Get real structure hidden behind the opaque pointer */
+    RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
+    /* Acquire lock - will be released in finally block */
+    FsRtlNotifyAcquireFastMutex(RealNotifySync);
+    _SEH2_TRY
+    {
+        /* Browse all the registered notifications we have */
+        for (NextEntry = NotifyList->Flink; NextEntry != NotifyList;
+             NextEntry = NextEntry->Flink)
+        {
+            /* Try to find an entry matching our change */
+            NotifyChange = CONTAINING_RECORD(NextEntry, NOTIFY_CHANGE, NotifyList);
+            if (FullTargetName != NULL)
+            {
+                ASSERT(NotifyChange->FullDirectoryName != NULL);
+                if (!NotifyChange->FullDirectoryName->Length)
+                {
+                    continue;
+                }
+
+                if (!(FilterMatch & NotifyChange->CompletionFilter))
+                {
+                    continue;
+                }
+
+                /* If no normalized name provided, construct it from full target name */
+                if (NormalizedParentName == NULL)
+                {
+                    IntNormalizedParentName.Buffer = FullTargetName->Buffer;
+                    if (TargetNameOffset != NotifyChange->CharacterSize)
+                    {
+                        IntNormalizedParentName.MaximumLength =
+                        IntNormalizedParentName.Length = TargetNameOffset - NotifyChange->CharacterSize;
+                    }
+                    else
+                    {
+                        IntNormalizedParentName.MaximumLength =
+                        IntNormalizedParentName.Length = TargetNameOffset;
+                    }
+                    NormalizedParentName = &IntNormalizedParentName;
+                }
+
+                /* heh? Watched directory bigger than changed file? */
+                if (NormalizedParentName->Length < NotifyChange->FullDirectoryName->Length)
+                {
+                    continue;
+                }
+
+                /* Same len => parent */
+                if (NormalizedParentName->Length == NotifyChange->FullDirectoryName->Length)
+                {
+                    IsParent = TRUE;
+                }
+                /* If not, then, we have to be watching the tree, otherwise we don't have to report such changes */
+                else if (!(NotifyChange->Flags & WATCH_TREE))
+                {
+                    continue;
+                }
+                /* And finally, we've to check we're properly \-terminated */
+                else
+                {
+                    if (!(NotifyChange->Flags & WATCH_ROOT))
+                    {
+                        if (NotifyChange->CharacterSize == sizeof(CHAR))
+                        {
+                            if (((PSTR)NormalizedParentName->Buffer)[NotifyChange->FullDirectoryName->Length] != '\\')
+                            {
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            if (((PWSTR)NormalizedParentName->Buffer)[NotifyChange->FullDirectoryName->Length / sizeof (WCHAR)] != L'\\')
+                            {
+                                continue;
+                            }
+                        }
+                    }
+
+                    IsParent = FALSE;
+                }
+
+                /* If len matches, then check that both name are equal */
+                if (!RtlEqualMemory(NormalizedParentName->Buffer, NotifyChange->FullDirectoryName->Buffer,
+                                    NotifyChange->FullDirectoryName->Length))
+                {
+                    continue;
+                }
+
+                /* Call traverse callback (only if we have to traverse ;-)) */
+                if (!IsParent
+                    && NotifyChange->TraverseCallback != NULL
+                    && !NotifyChange->TraverseCallback(NotifyChange->FsContext,
+                                                       TargetContext,
+                                                       NotifyChange->SubjectContext))
+                {
+                    continue;
+                }
+
+                /* And then, filter callback if provided */
+                if (NotifyChange->FilterCallback != NULL
+                    && FilterContext != NULL
+                    && !NotifyChange->FilterCallback(NotifyChange->FsContext, FilterContext))
+                {
+                    continue;
+                }
+            }
+            /* We have a stream! */
+            else
+            {
+                ASSERT(NotifyChange->FullDirectoryName == NULL);
+                if (TargetContext != NotifyChange->SubjectContext)
+                {
+                    continue;
+                }
+
+                ParentName.Buffer = NULL;
+                ParentName.Length = 0;
+                IsStream = TRUE;
+                IsParent = FALSE;
+            }
+
+            /* If we don't have to notify immediately, prepare for output */
+            if (!(NotifyChange->Flags & NOTIFY_IMMEDIATELY))
+            {
+                /* If we have something to output... */
+                if (NotifyChange->BufferLength)
+                {
+                    /* Get size of the output */
+                    NumberOfBytes = 0;
+                    Irp = NULL;
+                    if (!NotifyChange->ThisBufferLength)
+                    {
+                        if (IsListEmpty(&NotifyChange->NotifyIrps))
+                        {
+                            NumberOfBytes = NotifyChange->BufferLength;
+                        }
+                        else
+                        {
+                            Irp = CONTAINING_RECORD(NotifyChange->NotifyIrps.Flink, IRP, Tail.Overlay.ListEntry);
+                            Stack = IoGetCurrentIrpStackLocation(Irp);
+                            NumberOfBytes = Stack->Parameters.NotifyDirectory.Length;
+                        }
+                    }
+                    else
+                    {
+                        NumberOfBytes = NotifyChange->ThisBufferLength;
+                    }
+
+                    /* If we're matching parent, we don't care about parent (redundant) */
+                    if (IsParent)
+                    {
+                        ParentName.Length = 0;
+                    }
+                    else
+                    {
+                        /* If we don't deal with streams, some more work is required */
+                        if (!IsStream)
+                        {
+                            if (NotifyChange->Flags & WATCH_ROOT ||
+                                (NormalizedParentName->Buffer != FullTargetName->Buffer))
+                            {
+                                /* Construct TargetDirectory if we don't have it yet */
+                                if (TargetDirectory.Buffer == NULL)
+                                {
+                                    TargetDirectory.Buffer = FullTargetName->Buffer;
+                                    TargetDirectory.Length = TargetNameOffset;
+                                    if (TargetNameOffset != NotifyChange->CharacterSize)
+                                    {
+                                        TargetDirectory.Length = TargetNameOffset - NotifyChange->CharacterSize;
+                                    }
+                                    TargetDirectory.MaximumLength = TargetDirectory.Length;
+                                }
+                                /* Now, we start looking for matching parts (unless we watch root) */
+                                TargetNumberOfParts = 0;
+                                if (!(NotifyChange->Flags & WATCH_ROOT))
+                                {
+                                    FullNumberOfParts = 1;
+                                    if (NotifyChange->CharacterSize == sizeof(CHAR))
+                                    {
+                                        FsRtlNotifyGetLastPartOffset(NotifyChange->FullDirectoryName->Length,
+                                                                     TargetDirectory.Length, PSTR, '\\');
+                                    }
+                                    else
+                                    {
+                                        FsRtlNotifyGetLastPartOffset(NotifyChange->FullDirectoryName->Length / sizeof(WCHAR),
+                                                                     TargetDirectory.Length / sizeof(WCHAR), PWSTR, L'\\');
+                                        LastPartOffset *= NotifyChange->CharacterSize;
+                                    }
+                                }
+
+                                /* Then, we can construct proper parent name */
+                                ParentNameOffset = NotifyChange->CharacterSize + LastPartOffset;
+                                ParentName.Buffer = &TargetDirectory.Buffer[ParentNameOffset];
+                                ParentNameLength = TargetDirectory.Length;
+                            }
+                            else
+                            {
+                                /* Construct parent name even for streams */
+                                ParentName.Buffer = &NormalizedParentName->Buffer[NotifyChange->FullDirectoryName->Length] + NotifyChange->CharacterSize;
+                                ParentNameLength = NormalizedParentName->Length - NotifyChange->FullDirectoryName->Length;
+                                ParentNameOffset = NotifyChange->CharacterSize;
+                            }
+                            ParentNameLength -= ParentNameOffset;
+                            ParentName.Length = ParentNameLength;
+                            ParentName.MaximumLength = ParentNameLength;
+                        }
+                    }
+
+                    /* Start to count amount of data to write, we've first the structure itself */
+                    DataLength = FIELD_OFFSET(FILE_NOTIFY_INFORMATION, FileName);
+
+                    /* If stream, we'll just append stream name */
+                    if (IsStream)
+                    {
+                        ASSERT(StreamName != NULL);
+                        DataLength += StreamName->Length;
+                    }
+                    else
+                    {
+                        /* If not parent, we've to append parent name */
+                        if (!IsParent)
+                        {
+                            if (NotifyChange->CharacterSize == sizeof(CHAR))
+                            {
+                                DataLength += RtlOemStringToCountedUnicodeSize(&ParentName);
+                            }
+                            else
+                            {
+                                DataLength += ParentName.Length;
+                            }
+                            DataLength += sizeof(WCHAR);
+                        }
+
+                        /* Look for target name & construct it, if required */
+                        if (TargetName.Buffer == NULL)
+                        {
+                            TargetName.Buffer = &FullTargetName->Buffer[TargetNameOffset];
+                            TargetName.Length =
+                            TargetName.MaximumLength = FullTargetName->Length - TargetNameOffset;
+                        }
+
+                        /* Then, we will append it as well */
+                        if (NotifyChange->CharacterSize == sizeof(CHAR))
+                        {
+                            DataLength += RtlOemStringToCountedUnicodeSize(&TargetName);
+                        }
+                        else
+                        {
+                            DataLength += TargetName.Length;
+                        }
+
+                        /* If we also had a stream name, then we can append it as well */
+                        if (StreamName != NULL)
+                        {
+                            if (NotifyChange->CharacterSize == sizeof(WCHAR))
+                            {
+                                DataLength += StreamName->Length + sizeof(WCHAR);
+                            }
+                            else
+                            {
+                                DataLength = DataLength + RtlOemStringToCountedUnicodeSize(&TargetName) + sizeof(CHAR);
+                            }
+                        }
+                    }
+
+                    /* Get the position where we can put our data (aligned!) */
+                    AlignedDataLength = ROUND_UP(NotifyChange->DataLength, sizeof(ULONG));
+                    /* If it's higher than buffer length, then, bail out without outputing */
+                    if (DataLength > NumberOfBytes || AlignedDataLength + DataLength > NumberOfBytes)
+                    {
+                        NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
+                    }
+                    else
+                    {
+                        OutputBuffer = NULL;
+                        FileNotifyInfo = NULL;
+                        /* If we already had a buffer, update last entry position */
+                        if (NotifyChange->Buffer != NULL)
+                        {
+                            FileNotifyInfo = (PVOID)((ULONG_PTR)NotifyChange->Buffer + NotifyChange->LastEntry);
+                            FileNotifyInfo->NextEntryOffset = AlignedDataLength - NotifyChange->LastEntry;
+                            NotifyChange->LastEntry = AlignedDataLength;
+                            /* And get our output buffer */
+                            OutputBuffer = (PVOID)((ULONG_PTR)NotifyChange->Buffer + AlignedDataLength);
+                        }
+                        /* If we hadn't buffer, try to find one */
+                        else if (Irp != NULL)
+                        {
+                            if (Irp->AssociatedIrp.SystemBuffer != NULL)
+                            {
+                                OutputBuffer = Irp->AssociatedIrp.SystemBuffer;
+                            }
+                            else if (Irp->MdlAddress != NULL)
+                            {
+                                OutputBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+                            }
+
+                            NotifyChange->Buffer = OutputBuffer;
+                            NotifyChange->ThisBufferLength = NumberOfBytes;
+                        }
+
+                        /* If we couldn't find one, then allocate one */
+                        if (NotifyChange->Buffer == NULL)
+                        {
+                            PoolQuotaCharged = FALSE;
+                            _SEH2_TRY
+                            {
+                                PsChargePoolQuota(NotifyChange->OwningProcess, PagedPool, NumberOfBytes);
+                                PoolQuotaCharged = TRUE;
+                                OutputBuffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                                     NumberOfBytes, TAG_FS_NOTIFICATIONS);
+                                NotifyChange->Buffer = OutputBuffer;
+                                NotifyChange->AllocatedBuffer = OutputBuffer;
+                            }
+                            /* If something went wrong during allocation, notify immediately instead of outputing */
+                            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                            {
+                                if (PoolQuotaCharged)
+                                {
+                                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NumberOfBytes);
+                                }
+                                NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
+                            }
+                            _SEH2_END;
+                        }
+
+                        /* Finally, if we have a buffer, fill it in! */
+                        if (OutputBuffer != NULL)
+                        {
+                            if (FsRtlNotifyUpdateBuffer((FILE_NOTIFY_INFORMATION *)OutputBuffer,
+                                                         Action, &ParentName, &TargetName,
+                                                         StreamName, NotifyChange->CharacterSize == sizeof(WCHAR),
+                                                         DataLength))
+                            {
+                                NotifyChange->DataLength = DataLength + AlignedDataLength;
+                            }
+                            /* If it failed, notify immediately */
+                            else
+                            {
+                                NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
+                            }
+                        }
+                    }
+
+                    /* If we have to notify right now (something went wrong?) */
+                    if (NotifyChange->Flags & NOTIFY_IMMEDIATELY)
+                    {
+                        /* Ensure that all our buffers are NULL */
+                        if (NotifyChange->Buffer != NULL)
+                        {
+                            if (NotifyChange->AllocatedBuffer != NULL)
+                            {
+                                PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
+                                ExFreePoolWithTag(NotifyChange->AllocatedBuffer, TAG_FS_NOTIFICATIONS);
+                            }
+
+                            NotifyChange->Buffer = NULL;
+                            NotifyChange->AllocatedBuffer = NULL;
+                            NotifyChange->LastEntry = 0;
+                            NotifyChange->DataLength = 0;
+                            NotifyChange->ThisBufferLength = 0;
+                        }
+                    }
+                }
+            }
+
+            /* If asking for old name in case of a rename, notify later on,
+             * so that we can wait for new name.
+             * http://msdn.microsoft.com/en-us/library/dn392331.aspx
+             */
+            if (Action == FILE_ACTION_RENAMED_OLD_NAME)
+            {
+                NotifyChange->Flags |= NOTIFY_LATER;
+            }
+            else
+            {
+                NotifyChange->Flags &= ~NOTIFY_LATER;
+                if (!IsListEmpty(&NotifyChange->NotifyIrps))
+                {
+                    FsRtlNotifyCompleteIrpList(NotifyChange, STATUS_SUCCESS);
+                }
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+        FsRtlNotifyReleaseFastMutex(RealNotifySync);
+    }
+    _SEH2_END;
 }
 
 /*++
  * @name FsRtlNotifyFullChangeDirectory
  * @implemented
  *
- * Lets FSD know if changes occures in the specified directory. 
+ * Lets FSD know if changes occures in the specified directory.
  *
  * @param NotifySync
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FsContext
  *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        String (A or W) containing the full directory name 
+ *        String (A or W) containing the full directory name
  *
  * @param WatchTree
  *        True to notify changes in subdirectories too
@@ -814,13 +1489,13 @@ FsRtlNotifyFullChangeDirectory(IN PNOTIFY_SYNC NotifySync,
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FullTargetName
  *        String (A or W) containing the full directory name that changed
  *
  * @param TargetNameOffset
- *        Offset, in FullTargetName, of the final component that is in the changed directory 
+ *        Offset, in FullTargetName, of the final component that is in the changed directory
  *
  * @param StreamName
  *        String (A or W) containing a stream name
@@ -888,7 +1563,7 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
     PREAL_NOTIFY_SYNC RealNotifySync;
 
     *NotifySync = NULL;
-    
+
     RealNotifySync = ExAllocatePoolWithTag(NonPagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                            sizeof(REAL_NOTIFY_SYNC), 'FSNS');
     ExInitializeFastMutex(&(RealNotifySync->FastMutex));
@@ -908,7 +1583,7 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FullTargetName
  *        String (A or W) containing the full directory name that changed
@@ -941,7 +1616,7 @@ FsRtlNotifyReportChange(IN PNOTIFY_SYNC NotifySync,
                                     FilterMatch,
                                     0,
                                     NULL,
-                                    NULL); 
+                                    NULL);
 }
 
 /*++

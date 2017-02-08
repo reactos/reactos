@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -20,8 +21,60 @@ LONG LdrpLoaderLockAcquisitonCount;
 BOOLEAN LdrpShowRecursiveLoads, LdrpBreakOnRecursiveDllLoads;
 UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 ULONG AlternateResourceModuleCount;
+extern PLDR_MANIFEST_PROBER_ROUTINE LdrpManifestProberRoutine;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+LdrFindCreateProcessManifest(IN ULONG Flags,
+                             IN PVOID Image,
+                             IN PVOID IdPath,
+                             IN ULONG IdPathLength,
+                             IN PVOID OutDataEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrDestroyOutOfProcessImage(IN PVOID Image)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrCreateOutOfProcessImage(IN ULONG Flags,
+                           IN HANDLE ProcessHandle,
+                           IN HANDLE DllHandle,
+                           IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrAccessOutOfProcessResource(IN PVOID Unknown,
+                              IN PVOID Image,
+                              IN PVOID Unknown1,
+                              IN PVOID Unknown2,
+                              IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+LdrSetDllManifestProber(
+    _In_ PLDR_MANIFEST_PROBER_ROUTINE Routine)
+{
+    LdrpManifestProberRoutine = Routine;
+}
 
 BOOLEAN
 NTAPI
@@ -31,8 +84,8 @@ LdrAlternateResourcesEnabled(VOID)
     return FALSE;
 }
 
-ULONG_PTR
 FORCEINLINE
+ULONG_PTR
 LdrpMakeCookie(VOID)
 {
     /* Generate a cookie */
@@ -159,9 +212,6 @@ LdrLockLoaderLock(IN ULONG Flags,
         return STATUS_INVALID_PARAMETER_3;
     }
 
-    /* Do or Do Not. There is no Try */
-    ASSERT((Disposition != NULL) || !(Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY));
-
     /* If the flag is set, make sure we have a valid pointer to use */
     if ((Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY) && !(Disposition))
     {
@@ -256,6 +306,7 @@ LdrLockLoaderLock(IN ULONG Flags,
  */
 NTSTATUS
 NTAPI
+DECLSPEC_HOTPATCH
 LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
            IN PULONG DllCharacteristics OPTIONAL,
            IN PUNICODE_STRING DllName,
@@ -270,10 +321,8 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
     PTEB Teb = NtCurrentTeb();
 
     /* Initialize the strings */
+    RtlInitEmptyUnicodeString(&DllString1, StringBuffer, sizeof(StringBuffer));
     RtlInitEmptyUnicodeString(&DllString2, NULL, 0);
-    DllString1.Buffer = StringBuffer;
-    DllString1.Length = 0;
-    DllString1.MaximumLength = sizeof(StringBuffer);
 
     /* Check if the SxS Assemblies specify another file */
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
@@ -310,14 +359,14 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
         if ((ShowSnaps) || (LdrpShowRecursiveLoads) || (LdrpBreakOnRecursiveDllLoads))
         {
             /* Print out debug messages */
-            DPRINT1("[%lx, %lx] LDR: Recursive DLL Load\n",
+            DPRINT1("[%p, %p] LDR: Recursive DLL Load\n",
                     Teb->RealClientId.UniqueProcess,
                     Teb->RealClientId.UniqueThread);
-            DPRINT1("[%lx, %lx]      Previous DLL being loaded \"%wZ\"\n",
+            DPRINT1("[%p, %p]      Previous DLL being loaded \"%wZ\"\n",
                     Teb->RealClientId.UniqueProcess,
                     Teb->RealClientId.UniqueThread,
                     OldTldDll);
-            DPRINT1("[%lx, %lx]      DLL being requested \"%wZ\"\n",
+            DPRINT1("[%p, %p]      DLL being requested \"%wZ\"\n",
                     Teb->RealClientId.UniqueProcess,
                     Teb->RealClientId.UniqueThread,
                     DllName);
@@ -325,13 +374,13 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
             /* Was it initializing too? */
             if (!LdrpCurrentDllInitializer)
             {
-                DPRINT1("[%lx, %lx] LDR: No DLL Initializer was running\n",
+                DPRINT1("[%p, %p] LDR: No DLL Initializer was running\n",
                         Teb->RealClientId.UniqueProcess,
                         Teb->RealClientId.UniqueThread);
             }
             else
             {
-                DPRINT1("[%lx, %lx]      DLL whose initializer was currently running \"%wZ\"\n",
+                DPRINT1("[%p, %p]      DLL whose initializer was currently running \"%wZ\"\n",
                         Teb->ClientId.UniqueProcess,
                         Teb->ClientId.UniqueThread,
                         &LdrpCurrentDllInitializer->BaseDllName);
@@ -358,8 +407,7 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
              (Status != STATUS_OBJECT_NAME_NOT_FOUND) &&
              (Status != STATUS_DLL_INIT_FAILED))
     {
-        // 85 == DPFLTR_LDR_ID;
-        DbgPrintEx(85,
+        DbgPrintEx(DPFLTR_LDR_ID,
                    DPFLTR_WARNING_LEVEL,
                    "LDR: %s - failing because LdrpLoadDll(%wZ) returned status %x\n",
                    __FUNCTION__,
@@ -428,7 +476,7 @@ LdrFindEntryForAddress(PVOID Address,
     while (NextEntry != ListHead)
     {
         /* Get the entry and NT Headers */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
         NtHeader = RtlImageNtHeader(LdrEntry->DllBase);
         if (NtHeader)
         {
@@ -451,8 +499,11 @@ LdrFindEntryForAddress(PVOID Address,
     }
 
     /* Nothing found */
-    // 85 == DPFLTR_LDR_ID;
-    DbgPrintEx(85, DPFLTR_WARNING_LEVEL, "LDR: %s() exiting 0x%08lx\n", __FUNCTION__, STATUS_NO_MORE_ENTRIES);
+    DbgPrintEx(DPFLTR_LDR_ID,
+               DPFLTR_WARNING_LEVEL,
+               "LDR: %s() exiting 0x%08lx\n",
+               __FUNCTION__,
+               STATUS_NO_MORE_ENTRIES);
     return STATUS_NO_MORE_ENTRIES;
 }
 
@@ -985,7 +1036,7 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
 
                 while (InitEntry != InitListHead)
                 {
-                    InitModule = CONTAINING_RECORD(InitEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+                    InitModule = CONTAINING_RECORD(InitEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
 
                     /* Increase the index */
                     ModulePtr->InitOrderIndex++;
@@ -1247,7 +1298,7 @@ quickie:
                             (Status != STATUS_DLL_NOT_FOUND) &&
                             (Status != STATUS_OBJECT_NAME_NOT_FOUND)))
         {
-            DPRINT1("LDR: LdrAddRefDll(%p) 0x%08lx\n", BaseAddress);
+            DPRINT1("LDR: LdrAddRefDll(%p) 0x%08lx\n", BaseAddress, Status);
         }
     }
 
@@ -1333,7 +1384,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Get the entry */
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
-                                     InInitializationOrderModuleList);
+                                     InInitializationOrderLinks);
         NextEntry = NextEntry->Blink;
 
         /* Remove flag */
@@ -1345,7 +1396,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             /* Show message */
             if (ShowSnaps)
             {
-                DPRINT1("(%d) [%ws] %ws (%lx) deinit %lx\n",
+                DPRINT1("(%lu) [%ws] %ws (%lx) deinit %p\n",
                         LdrpActiveUnloadCount,
                         LdrEntry->BaseDllName.Buffer,
                         LdrEntry->FullDllName.Buffer,
@@ -1357,8 +1408,8 @@ LdrUnloadDll(IN PVOID BaseAddress)
 
             /* Unlink it */
             CurrentEntry = LdrEntry;
-            RemoveEntryList(&CurrentEntry->InInitializationOrderModuleList);
-            RemoveEntryList(&CurrentEntry->InMemoryOrderModuleList);
+            RemoveEntryList(&CurrentEntry->InInitializationOrderLinks);
+            RemoveEntryList(&CurrentEntry->InMemoryOrderLinks);
             RemoveEntryList(&CurrentEntry->HashLinks);
 
             /* If there's more then one active unload */
@@ -1366,7 +1417,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             {
                 /* Flush the cached DLL handle and clear the list */
                 LdrpLoadedDllHandleCache = NULL;
-                CurrentEntry->InMemoryOrderModuleList.Flink = NULL;
+                CurrentEntry->InMemoryOrderLinks.Flink = NULL;
             }
 
             /* Add the entry on the unload list */
@@ -1392,7 +1443,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Set the entry and clear it from the list */
         CurrentEntry = LdrEntry;
         LdrpLoadedDllHandleCache = NULL;
-        CurrentEntry->InMemoryOrderModuleList.Flink = NULL;
+        CurrentEntry->InMemoryOrderLinks.Flink = NULL;
 
         /* Move it from the global to the local list */
         RemoveEntryList(&CurrentEntry->HashLinks);
@@ -1407,7 +1458,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             /* Show message */
             if (ShowSnaps)
             {
-                DPRINT1("LDR: Calling deinit %lx\n", EntryPoint);
+                DPRINT1("LDR: Calling deinit %p\n", EntryPoint);
             }
 
             /* Set up the Act Ctx */
@@ -1532,31 +1583,6 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
 
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
-{
-    ULONG_PTR Cookie;
-
-    /* Acquire the loader lock */
-    LdrLockLoaderLock(TRUE, NULL, &Cookie);
-
-    /* Check if there's any alternate resources loaded */
-    if (AlternateResourceModuleCount)
-    {
-        UNIMPLEMENTED;
-    }
-
-    /* Release the loader lock */
-    LdrUnlockLoaderLock(1, Cookie);
-
-    /* All done */
-    return TRUE;
-}
-
 /* FIXME: Add to ntstatus.mc */
 #define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
 
@@ -1573,6 +1599,42 @@ LdrLoadAlternateResourceModule(IN PVOID Module,
 
     UNIMPLEMENTED;
     return STATUS_MUI_FILE_NOT_FOUND;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+{
+    ULONG_PTR Cookie;
+
+    /* Acquire the loader lock */
+    LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
+
+    /* Check if there's any alternate resources loaded */
+    if (AlternateResourceModuleCount)
+    {
+        UNIMPLEMENTED;
+    }
+
+    /* Release the loader lock */
+    LdrUnlockLoaderLock(1, Cookie);
+
+    /* All done */
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+LdrFlushAlternateResourceModules(VOID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

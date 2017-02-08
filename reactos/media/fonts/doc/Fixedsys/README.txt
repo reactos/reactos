@@ -42,3 +42,12 @@ Authors: Jean-Baptiste Lallement, and Derek Veit
 Credits: Darien Gavin Valentine
 
 https://bugs.launchpad.net/ubuntu/+bug/200671
+
+
++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
+
+
+PostScript Monospace flag added, and PANOSE proportion byte fixed to Monospace,
+in FSEX301.ttf and FSEX301-L2.ttf.
+
+Hermès Bélusca-Maïto

@@ -20,32 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-#include <assert.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <rpc.h>
-//#include "rpcndr.h"
-//#include "excpt.h"
-
-#include <wine/debug.h>
-#include <wine/exception.h>
-
-#include "rpc_server.h"
-#include "rpc_assoc.h"
-#include "rpc_message.h"
-//#include "rpc_defs.h"
-#include "ncastatus.h"
+#include <secext.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -541,6 +518,7 @@ static DWORD CALLBACK RPCRT4_worker_thread(LPVOID the_arg)
   RpcPacket *pkt = the_arg;
   RPCRT4_process_packet(pkt->conn, pkt->hdr, pkt->msg, pkt->auth_data,
                         pkt->auth_length);
+  RPCRT4_ReleaseConnection(pkt->conn);
   HeapFree(GetProcessHeap(), 0, pkt);
   return 0;
 }
@@ -587,7 +565,7 @@ static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
         HeapFree(GetProcessHeap(), 0, auth_data);
         goto exit;
       }
-      packet->conn = conn;
+      packet->conn = RPCRT4_GrabConnection( conn );
       packet->hdr = hdr;
       packet->msg = msg;
       packet->auth_data = auth_data;
@@ -623,7 +601,7 @@ static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
     }
   }
 exit:
-  RPCRT4_DestroyConnection(conn);
+  RPCRT4_ReleaseConnection(conn);
   return 0;
 }
 
@@ -633,7 +611,7 @@ void RPCRT4_new_client(RpcConnection* conn)
   if (!thread) {
     DWORD err = GetLastError();
     ERR("failed to create thread, error=%08x\n", err);
-    RPCRT4_DestroyConnection(conn);
+    RPCRT4_ReleaseConnection(conn);
   }
   /* we could set conn->thread, but then we'd have to make the io_thread wait
    * for that, otherwise the thread might finish, destroy the connection, and
@@ -762,9 +740,18 @@ static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
   return status;
 }
 
-static void RPCRT4_stop_listen(BOOL auto_listen)
+static RPC_STATUS RPCRT4_stop_listen(BOOL auto_listen)
 {
+  RPC_STATUS status = RPC_S_OK;
+
   EnterCriticalSection(&listen_cs);
+
+  if (!std_listen)
+  {
+    status = RPC_S_NOT_LISTENING;
+    goto done;
+  }
+
   if (auto_listen || (--manual_listen_count == 0))
   {
     if (listen_count != 0 && --listen_count == 0) {
@@ -779,12 +766,14 @@ static void RPCRT4_stop_listen(BOOL auto_listen)
       EnterCriticalSection(&listen_cs);
       if (listen_done_event) SetEvent( listen_done_event );
       listen_done_event = 0;
-      LeaveCriticalSection(&listen_cs);
-      return;
+      goto done;
     }
     assert(listen_count >= 0);
   }
+
+done:
   LeaveCriticalSection(&listen_cs);
+  return status;
 }
 
 static BOOL RPCRT4_protseq_is_endpoint_registered(RpcServerProtseq *protseq, const char *endpoint)
@@ -933,6 +922,7 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, const char *Protseq, RpcSe
   (*ps)->MaxCalls = 0;
   (*ps)->conn = NULL;
   InitializeCriticalSection(&(*ps)->cs);
+  (*ps)->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": RpcServerProtseq.cs");
   (*ps)->is_listening = FALSE;
   (*ps)->mgr_mutex = NULL;
   (*ps)->server_ready_event = NULL;
@@ -948,6 +938,7 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, const char *Protseq, RpcSe
 static void destroy_serverprotoseq(RpcServerProtseq *ps)
 {
     RPCRT4_strfree(ps->Protseq);
+    ps->cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&ps->cs);
     CloseHandle(ps->mgr_mutex);
     CloseHandle(ps->server_ready_event);
@@ -1073,9 +1064,13 @@ void RPCRT4_destroy_all_protseqs(void)
     EnterCriticalSection(&server_cs);
     LIST_FOR_EACH_ENTRY_SAFE(cps, cursor2, &protseqs, RpcServerProtseq, entry)
     {
+        if (listen_count != 0)
+            RPCRT4_sync_with_server_thread(cps);
         destroy_serverprotoseq(cps);
     }
     LeaveCriticalSection(&server_cs);
+    DeleteCriticalSection(&server_cs);
+    DeleteCriticalSection(&listen_cs);
 }
 
 /***********************************************************************
@@ -1319,6 +1314,7 @@ void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
         HeapFree(GetProcessHeap(), 0, auth_info);
     }
     LeaveCriticalSection(&server_auth_info_cs);
+    DeleteCriticalSection(&server_auth_info_cs);
 }
 
 /***********************************************************************
@@ -1451,6 +1447,45 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG Au
     return RPC_S_OK;
 }
 
+/******************************************************************************
+ * RpcServerInqDefaultPrincNameA   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcServerInqDefaultPrincNameA(ULONG AuthnSvc, RPC_CSTR *PrincName)
+{
+    RPC_STATUS ret;
+    RPC_WSTR principalW;
+
+    TRACE("%u, %p\n", AuthnSvc, PrincName);
+
+    if ((ret = RpcServerInqDefaultPrincNameW( AuthnSvc, &principalW )) == RPC_S_OK)
+    {
+        if (!(*PrincName = (RPC_CSTR)RPCRT4_strdupWtoA( principalW ))) return RPC_S_OUT_OF_MEMORY;
+        RpcStringFreeW( &principalW );
+    }
+    return ret;
+}
+
+/******************************************************************************
+ * RpcServerInqDefaultPrincNameW   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcServerInqDefaultPrincNameW(ULONG AuthnSvc, RPC_WSTR *PrincName)
+{
+    ULONG len = 0;
+
+    FIXME("%u, %p\n", AuthnSvc, PrincName);
+
+    if (AuthnSvc != RPC_C_AUTHN_WINNT) return RPC_S_UNKNOWN_AUTHN_SERVICE;
+
+    GetUserNameExW( NameSamCompatible, NULL, &len );
+    if (GetLastError() != ERROR_MORE_DATA) return RPC_S_INTERNAL_ERROR;
+
+    if (!(*PrincName = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+        return RPC_S_OUT_OF_MEMORY;
+
+    GetUserNameExW( NameSamCompatible, *PrincName, &len );
+    return RPC_S_OK;
+}
+
 /***********************************************************************
  *             RpcServerListen (RPCRT4.@)
  */
@@ -1514,9 +1549,7 @@ RPC_STATUS WINAPI RpcMgmtStopServerListening ( RPC_BINDING_HANDLE Binding )
     return RPC_S_WRONG_KIND_OF_BINDING;
   }
   
-  RPCRT4_stop_listen(FALSE);
-
-  return RPC_S_OK;
+  return RPCRT4_stop_listen(FALSE);
 }
 
 /***********************************************************************
@@ -1617,8 +1650,20 @@ RPC_STATUS WINAPI RpcMgmtEpEltInqBegin(RPC_BINDING_HANDLE Binding, ULONG Inquiry
  */
 RPC_STATUS WINAPI RpcMgmtIsServerListening(RPC_BINDING_HANDLE Binding)
 {
-  FIXME("(%p): stub\n", Binding);
-  return RPC_S_INVALID_BINDING;
+  RPC_STATUS status = RPC_S_NOT_LISTENING;
+
+  TRACE("(%p)\n", Binding);
+
+  if (Binding) {
+    RpcBinding *rpc_binding = (RpcBinding*)Binding;
+    status = RPCRT4_IsServerListening(rpc_binding->Protseq, rpc_binding->Endpoint);
+  }else {
+    EnterCriticalSection(&listen_cs);
+    if (manual_listen_count > 0) status = RPC_S_OK;
+    LeaveCriticalSection(&listen_cs);
+  }
+
+  return status;
 }
 
 /***********************************************************************

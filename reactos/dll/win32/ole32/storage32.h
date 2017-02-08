@@ -27,21 +27,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 #ifndef __STORAGE32_H__
 #define __STORAGE32_H__
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winnt.h"
-#include <objbase.h>
-#include <winreg.h>
-#include "winternl.h"
-#include <wine/list.h>
 
 /*
  * Definitions for the file format offsets.
@@ -54,6 +42,7 @@ static const ULONG OFFSET_SMALLBLOCKSIZEBITS = 0x00000020;
 static const ULONG OFFSET_DIRSECTORCOUNT     = 0x00000028;
 static const ULONG OFFSET_BBDEPOTCOUNT	     = 0x0000002C;
 static const ULONG OFFSET_ROOTSTARTBLOCK     = 0x00000030;
+static const ULONG OFFSET_TRANSACTIONSIG     = 0x00000034;
 static const ULONG OFFSET_SMALLBLOCKLIMIT    = 0x00000038;
 static const ULONG OFFSET_SBDEPOTSTART	     = 0x0000003C;
 static const ULONG OFFSET_SBDEPOTCOUNT       = 0x00000040;
@@ -73,12 +62,14 @@ static const ULONG OFFSET_PS_MTIMELOW        = 0x0000006C;
 static const ULONG OFFSET_PS_MTIMEHIGH       = 0x00000070;
 static const ULONG OFFSET_PS_STARTBLOCK	     = 0x00000074;
 static const ULONG OFFSET_PS_SIZE	     = 0x00000078;
+static const ULONG OFFSET_PS_SIZE_HIGH	     = 0x0000007C;
 static const WORD  DEF_BIG_BLOCK_SIZE_BITS   = 0x0009;
 static const WORD  MIN_BIG_BLOCK_SIZE_BITS   = 0x0009;
 static const WORD  MAX_BIG_BLOCK_SIZE_BITS   = 0x000c;
 static const WORD  DEF_SMALL_BLOCK_SIZE_BITS = 0x0006;
 static const WORD  DEF_BIG_BLOCK_SIZE        = 0x0200;
 static const WORD  DEF_SMALL_BLOCK_SIZE      = 0x0040;
+static const ULONG BLOCK_FIRST_SPECIAL       = 0xFFFFFFFB;
 static const ULONG BLOCK_EXTBBDEPOT          = 0xFFFFFFFC;
 static const ULONG BLOCK_SPECIAL             = 0xFFFFFFFD;
 static const ULONG BLOCK_END_OF_CHAIN        = 0xFFFFFFFE;
@@ -166,6 +157,12 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
 HRESULT STORAGE_CreateOleStream(IStorage*, DWORD) DECLSPEC_HIDDEN;
 HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName) DECLSPEC_HIDDEN;
 
+enum swmr_mode
+{
+  SWMR_None,
+  SWMR_Writer,
+  SWMR_Reader
+};
 
 /****************************************************************************
  * StorageBaseImpl definitions.
@@ -180,6 +177,7 @@ struct StorageBaseImpl
 {
   IStorage IStorage_iface;
   IPropertySetStorage IPropertySetStorage_iface; /* interface for adding a properties stream */
+  IDirectWriterLock IDirectWriterLock_iface;
   LONG ref;
 
   /*
@@ -196,7 +194,7 @@ struct StorageBaseImpl
   /*
    * TRUE if this object has been invalidated
    */
-  int reverted;
+  BOOL reverted;
 
   /*
    * Index of the directory entry of this storage
@@ -218,13 +216,14 @@ struct StorageBaseImpl
    */
   DWORD stateBits;
 
-  BOOL             create;     /* Was the storage created or opened.
-                                  The behaviour of STGM_SIMPLE depends on this */
+  BOOL  create;     /* Was the storage created or opened.
+                       The behaviour of STGM_SIMPLE depends on this */
   /*
    * If this storage was opened in transacted mode, the object that implements
    * the transacted snapshot or cache.
    */
   StorageBaseImpl *transactedChild;
+  enum swmr_mode lockingrole;
 };
 
 /* virtual methods for StorageBaseImpl objects */
@@ -241,6 +240,10 @@ struct StorageBaseImplVtbl {
   HRESULT (*StreamWriteAt)(StorageBaseImpl*,DirRef,ULARGE_INTEGER,ULONG,const void*,ULONG*);
   HRESULT (*StreamSetSize)(StorageBaseImpl*,DirRef,ULARGE_INTEGER);
   HRESULT (*StreamLink)(StorageBaseImpl*,DirRef,DirRef);
+  HRESULT (*GetTransactionSig)(StorageBaseImpl*,ULONG*,BOOL);
+  HRESULT (*SetTransactionSig)(StorageBaseImpl*,ULONG);
+  HRESULT (*LockTransaction)(StorageBaseImpl*,BOOL);
+  HRESULT (*UnlockTransaction)(StorageBaseImpl*,BOOL);
 };
 
 static inline void StorageBaseImpl_Destroy(StorageBaseImpl *This)
@@ -318,6 +321,28 @@ static inline HRESULT StorageBaseImpl_StreamLink(StorageBaseImpl *This,
   return This->baseVtbl->StreamLink(This, dst, src);
 }
 
+static inline HRESULT StorageBaseImpl_GetTransactionSig(StorageBaseImpl *This,
+  ULONG* result, BOOL refresh)
+{
+  return This->baseVtbl->GetTransactionSig(This, result, refresh);
+}
+
+static inline HRESULT StorageBaseImpl_SetTransactionSig(StorageBaseImpl *This,
+  ULONG value)
+{
+  return This->baseVtbl->SetTransactionSig(This, value);
+}
+
+static inline HRESULT StorageBaseImpl_LockTransaction(StorageBaseImpl *This, BOOL write)
+{
+  return This->baseVtbl->LockTransaction(This, write);
+}
+
+static inline HRESULT StorageBaseImpl_UnlockTransaction(StorageBaseImpl *This, BOOL write)
+{
+  return This->baseVtbl->UnlockTransaction(This, write);
+}
+
 /****************************************************************************
  * StorageBaseImpl stream list handlers
  */
@@ -329,9 +354,9 @@ void StorageBaseImpl_RemoveStream(StorageBaseImpl * stg, StgStreamImpl * strm) D
 #define BLOCKCHAIN_CACHE_SIZE 4
 
 /****************************************************************************
- * Storage32Impl definitions.
+ * StorageImpl definitions.
  *
- * This implementation of the IStorage32 interface represents a root
+ * This implementation of the IStorage interface represents a root
  * storage. Basically, a document file.
  */
 struct StorageImpl
@@ -354,6 +379,7 @@ struct StorageImpl
   ULONG extBigBlockDepotLocationsSize;
   ULONG extBigBlockDepotCount;
   ULONG bigBlockDepotStart[COUNT_BBDEPOTINHEADER];
+  ULONG transactionSig;
 
   ULONG extBlockDepotCached[MAX_BIG_BLOCK_SIZE / 4];
   ULONG indexExtBlockDepotCached;
@@ -376,41 +402,12 @@ struct StorageImpl
   BlockChainStream* blockChainCache[BLOCKCHAIN_CACHE_SIZE];
   UINT blockChainToEvict;
 
+  ULONG locks_supported;
+
   ILockBytes* lockBytes;
+
+  ULONG locked_bytes[8];
 };
-
-HRESULT StorageImpl_ReadRawDirEntry(
-            StorageImpl *This,
-            ULONG index,
-            BYTE *buffer) DECLSPEC_HIDDEN;
-
-void UpdateRawDirEntry(
-    BYTE *buffer,
-    const DirEntry *newData) DECLSPEC_HIDDEN;
-
-HRESULT StorageImpl_WriteRawDirEntry(
-            StorageImpl *This,
-            ULONG index,
-            const BYTE *buffer) DECLSPEC_HIDDEN;
-
-HRESULT StorageImpl_ReadDirEntry(
-            StorageImpl*    This,
-            DirRef          index,
-            DirEntry*       buffer) DECLSPEC_HIDDEN;
-
-HRESULT StorageImpl_WriteDirEntry(
-            StorageImpl*        This,
-            DirRef              index,
-            const DirEntry*     buffer) DECLSPEC_HIDDEN;
-
-BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
-                      StorageImpl* This,
-                      SmallBlockChainStream** ppsbChain) DECLSPEC_HIDDEN;
-
-SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
-                      StorageImpl* This,
-                      BlockChainStream** ppbbChain,
-                      ULARGE_INTEGER newSize) DECLSPEC_HIDDEN;
 
 /****************************************************************************
  * StgStreamImpl definitions.
@@ -463,6 +460,60 @@ StgStreamImpl* StgStreamImpl_Construct(
     DirRef           dirEntry) DECLSPEC_HIDDEN;
 
 
+/* Range lock constants.
+ *
+ * The storage format reserves the region from 0x7fffff00-0x7fffffff for
+ * locking and synchronization. Because it reserves the entire block containing
+ * that range, and the minimum block size is 512 bytes, 0x7ffffe00-0x7ffffeff
+ * also cannot be used for any other purpose.
+ * Unfortunately, the spec doesn't say which bytes
+ * within that range are used, and for what. These are guesses based on testing.
+ * In particular, ends of ranges may be wrong.
+
+ 0x0 through 0x57: Unknown. Causes read-only exclusive opens to fail.
+ 0x58 through 0x6b: Priority mode.
+ 0x6c through 0x7f: No snapshot mode.
+ 0x80: Commit lock.
+ 0x81 through 0x91: Priority mode, again. Not sure why it uses two regions.
+ 0x92: Lock-checking lock. Held while opening so ranges can be tested without
+  causing spurious failures if others try to grab or test those ranges at the
+  same time.
+ 0x93 through 0xa6: Read mode.
+ 0xa7 through 0xba: Write mode.
+ 0xbb through 0xce: Deny read.
+ 0xcf through 0xe2: Deny write.
+ 0xe2 through 0xff: Unknown. Causes read-only exclusive opens to fail.
+*/
+
+#define RANGELOCK_UNK1_FIRST            0x7ffffe00
+#define RANGELOCK_UNK1_LAST             0x7fffff57
+#define RANGELOCK_PRIORITY1_FIRST       0x7fffff58
+#define RANGELOCK_PRIORITY1_LAST        0x7fffff6b
+#define RANGELOCK_NOSNAPSHOT_FIRST      0x7fffff6c
+#define RANGELOCK_NOSNAPSHOT_LAST       0x7fffff7f
+#define RANGELOCK_COMMIT                0x7fffff80
+#define RANGELOCK_PRIORITY2_FIRST       0x7fffff81
+#define RANGELOCK_PRIORITY2_LAST        0x7fffff91
+#define RANGELOCK_CHECKLOCKS            0x7fffff92
+#define RANGELOCK_READ_FIRST            0x7fffff93
+#define RANGELOCK_READ_LAST             0x7fffffa6
+#define RANGELOCK_WRITE_FIRST           0x7fffffa7
+#define RANGELOCK_WRITE_LAST            0x7fffffba
+#define RANGELOCK_DENY_READ_FIRST       0x7fffffbb
+#define RANGELOCK_DENY_READ_LAST        0x7fffffce
+#define RANGELOCK_DENY_WRITE_FIRST      0x7fffffcf
+#define RANGELOCK_DENY_WRITE_LAST       0x7fffffe2
+#define RANGELOCK_UNK2_FIRST            0x7fffffe3
+#define RANGELOCK_UNK2_LAST             0x7fffffff
+#define RANGELOCK_TRANSACTION_FIRST     RANGELOCK_COMMIT
+#define RANGELOCK_TRANSACTION_LAST      RANGELOCK_CHECKLOCKS
+#define RANGELOCK_FIRST                 RANGELOCK_UNK1_FIRST
+#define RANGELOCK_LAST                  RANGELOCK_UNK2_LAST
+
+/* internal value for LockRegion/UnlockRegion */
+#define WINE_LOCK_READ                  0x80000000
+
+
 /******************************************************************************
  * Endian conversion macros
  */
@@ -499,117 +550,6 @@ void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value) DECLSPEC
 void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value) DECLSPEC_HIDDEN;
 void StorageUtl_CopyDirEntryToSTATSTG(StorageBaseImpl *storage,STATSTG* destination,
  const DirEntry* source, int statFlags) DECLSPEC_HIDDEN;
-
-/****************************************************************************
- * BlockChainStream definitions.
- *
- * The BlockChainStream class is a utility class that is used to create an
- * abstraction of the big block chains in the storage file.
- */
-struct BlockChainRun
-{
-  /* This represents a range of blocks that happen reside in consecutive sectors. */
-  ULONG firstSector;
-  ULONG firstOffset;
-  ULONG lastOffset;
-};
-
-typedef struct BlockChainBlock
-{
-  ULONG index;
-  ULONG sector;
-  int read;
-  int dirty;
-  BYTE data[MAX_BIG_BLOCK_SIZE];
-} BlockChainBlock;
-
-struct BlockChainStream
-{
-  StorageImpl* parentStorage;
-  ULONG*       headOfStreamPlaceHolder;
-  DirRef       ownerDirEntry;
-  struct BlockChainRun* indexCache;
-  ULONG        indexCacheLen;
-  ULONG        indexCacheSize;
-  BlockChainBlock cachedBlocks[2];
-  ULONG        blockToEvict;
-  ULONG        tailIndex;
-  ULONG        numBlocks;
-};
-
-/*
- * Methods for the BlockChainStream class.
- */
-BlockChainStream* BlockChainStream_Construct(
-		StorageImpl* parentStorage,
-		ULONG*         headOfStreamPlaceHolder,
-		DirRef         dirEntry) DECLSPEC_HIDDEN;
-
-void BlockChainStream_Destroy(
-		BlockChainStream* This) DECLSPEC_HIDDEN;
-
-HRESULT BlockChainStream_ReadAt(
-		BlockChainStream* This,
-		ULARGE_INTEGER offset,
-		ULONG          size,
-		void*          buffer,
-		ULONG*         bytesRead) DECLSPEC_HIDDEN;
-
-HRESULT BlockChainStream_WriteAt(
-		BlockChainStream* This,
-		ULARGE_INTEGER offset,
-		ULONG          size,
-		const void*    buffer,
-		ULONG*         bytesWritten) DECLSPEC_HIDDEN;
-
-BOOL BlockChainStream_SetSize(
-		BlockChainStream* This,
-		ULARGE_INTEGER    newSize) DECLSPEC_HIDDEN;
-
-HRESULT BlockChainStream_Flush(
-                BlockChainStream* This) DECLSPEC_HIDDEN;
-
-/****************************************************************************
- * SmallBlockChainStream definitions.
- *
- * The SmallBlockChainStream class is a utility class that is used to create an
- * abstraction of the small block chains in the storage file.
- */
-struct SmallBlockChainStream
-{
-  StorageImpl* parentStorage;
-  DirRef         ownerDirEntry;
-  ULONG*         headOfStreamPlaceHolder;
-};
-
-/*
- * Methods of the SmallBlockChainStream class.
- */
-SmallBlockChainStream* SmallBlockChainStream_Construct(
-           StorageImpl*   parentStorage,
-           ULONG*         headOfStreamPlaceHolder,
-           DirRef         dirEntry) DECLSPEC_HIDDEN;
-
-void SmallBlockChainStream_Destroy(
-	       SmallBlockChainStream* This) DECLSPEC_HIDDEN;
-
-HRESULT SmallBlockChainStream_ReadAt(
-	       SmallBlockChainStream* This,
-	       ULARGE_INTEGER offset,
-	       ULONG          size,
-	       void*          buffer,
-	       ULONG*         bytesRead) DECLSPEC_HIDDEN;
-
-HRESULT SmallBlockChainStream_WriteAt(
-	       SmallBlockChainStream* This,
-	       ULARGE_INTEGER offset,
-	       ULONG          size,
-	       const void*    buffer,
-	       ULONG*         bytesWritten) DECLSPEC_HIDDEN;
-
-BOOL SmallBlockChainStream_SetSize(
-	       SmallBlockChainStream* This,
-	       ULARGE_INTEGER          newSize) DECLSPEC_HIDDEN;
 
 
 #endif /* __STORAGE32_H__ */

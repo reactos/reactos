@@ -69,7 +69,7 @@
  *        Some minor changes and improvements.
  *
  *    10-Jul-2004 (Jens Collin <jens.collin@lakhei.com>)
- *        Fixed searxhing for files with specific extensions in PATHEXT order..
+ *        Fixed searching for files with specific extensions in PATHEXT order.
  *
  */
 
@@ -85,127 +85,140 @@
 BOOL
 SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pPathExt, LPTSTR pDirectory)
 {
-	TCHAR  szPathBuffer[CMDLINE_LENGTH], *pszPathEnd;
-	LPTSTR s,f;
-	/* initialize full name buffer */
-	*pFullName = _T('\0');
+    TCHAR  szPathBuffer[CMDLINE_LENGTH], *pszPathEnd;
+    LPTSTR s,f;
+    /* initialize full name buffer */
+    *pFullName = _T('\0');
 
-	TRACE ("SearchForExecutableSingle: \'%s\' in dir: \'%s\'\n",
-		debugstr_aw(pFileName), debugstr_aw(pDirectory));
+    TRACE ("SearchForExecutableSingle: \'%s\' in dir: \'%s\'\n",
+        debugstr_aw(pFileName), debugstr_aw(pDirectory));
 
-	pszPathEnd = szPathBuffer;
-	if (pDirectory != NULL)
-	{
-		_tcscpy(szPathBuffer, pDirectory);
-		pszPathEnd += _tcslen(pszPathEnd);
-		*pszPathEnd++ = _T('\\');
-	}
-	_tcscpy(pszPathEnd, pFileName);
-	pszPathEnd += _tcslen(pszPathEnd);
+    pszPathEnd = szPathBuffer;
+    if (pDirectory != NULL)
+    {
+        _tcscpy(szPathBuffer, pDirectory);
+        pszPathEnd += _tcslen(pszPathEnd);
+        *pszPathEnd++ = _T('\\');
+    }
+    _tcscpy(pszPathEnd, pFileName);
+    pszPathEnd += _tcslen(pszPathEnd);
 
-	if (IsExistingFile (szPathBuffer))
-	{
-		TRACE ("Found: \'%s\'\n", debugstr_aw(szPathBuffer));
-		_tcscpy (pFullName, szPathBuffer);
-		return TRUE;
-	}
+    if (IsExistingFile (szPathBuffer))
+    {
+        TRACE ("Found: \'%s\'\n", debugstr_aw(szPathBuffer));
+        _tcscpy (pFullName, szPathBuffer);
+        return TRUE;
+    }
 
-	s = pPathExt;
-	while (s && *s)
-	{
-		f = _tcschr (s, _T(';'));
+    s = pPathExt;
+    while (s && *s)
+    {
+        f = _tcschr (s, _T(';'));
 
-		if (f)
-		{
-			_tcsncpy (pszPathEnd, s, (size_t)(f-s));
-			pszPathEnd[f-s] = _T('\0');
-			s = f + 1;
-		}
-		else
-		{
-			_tcscpy (pszPathEnd, s);
-			s = NULL;
-		}
+        if (f)
+        {
+            _tcsncpy (pszPathEnd, s, (size_t)(f-s));
+            pszPathEnd[f-s] = _T('\0');
+            s = f + 1;
+        }
+        else
+        {
+            _tcscpy (pszPathEnd, s);
+            s = NULL;
+        }
 
-		if (IsExistingFile (szPathBuffer))
-		{
-			TRACE ("Found: \'%s\'\n", debugstr_aw(szPathBuffer));
-			_tcscpy (pFullName, szPathBuffer);
-			return TRUE;
-		}
-	}
-	return FALSE;
+        if (IsExistingFile (szPathBuffer))
+        {
+            TRACE ("Found: \'%s\'\n", debugstr_aw(szPathBuffer));
+            _tcscpy (pFullName, szPathBuffer);
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 
 BOOL
 SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 {
-	static TCHAR pszDefaultPathExt[] = _T(".com;.exe;.bat;.cmd");
-	LPTSTR pszPathExt, pszPath;
-	LPTSTR pCh;
-	DWORD  dwBuffer;
-	TRACE ("SearchForExecutable: \'%s\'\n", debugstr_aw(pFileName));
+    static TCHAR pszDefaultPathExt[] = _T(".com;.exe;.bat;.cmd");
+    LPTSTR pszPathExt, pszPath;
+    LPTSTR pCh;
+    DWORD  dwBuffer;
+    TRACE ("SearchForExecutable: \'%s\'\n", debugstr_aw(pFileName));
 
-	/* load environment varable PATHEXT */
-	pszPathExt = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
-	dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, ENV_BUFFER_SIZE);
-	if (dwBuffer > ENV_BUFFER_SIZE)
-	{
-		pszPathExt = (LPTSTR)cmd_realloc (pszPathExt, dwBuffer * sizeof (TCHAR));
-		GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, dwBuffer);
-		_tcslwr(pszPathExt);
-	}
-	else if (0 == dwBuffer)
-	{
-		_tcscpy(pszPathExt, pszDefaultPathExt);
-	}
-	else
-	{
-		_tcslwr(pszPathExt);
-	}
+    /* load environment varable PATHEXT */
+    pszPathExt = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+    dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, ENV_BUFFER_SIZE);
+    if (dwBuffer > ENV_BUFFER_SIZE)
+    {
+        LPTSTR pszOldPathExt = pszPathExt;
+        pszPathExt = (LPTSTR)cmd_realloc (pszPathExt, dwBuffer * sizeof (TCHAR));
+        if (pszPathExt == NULL)
+        {
+            cmd_free(pszOldPathExt);
+            return FALSE;
+        }
+        GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, dwBuffer);
+        _tcslwr(pszPathExt);
+    }
+    else if (0 == dwBuffer)
+    {
+        _tcscpy(pszPathExt, pszDefaultPathExt);
+    }
+    else
+    {
+        _tcslwr(pszPathExt);
+    }
 
-	/* Check if valid directly on specified path */
-	if (SearchForExecutableSingle(pFileName, pFullName, pszPathExt, NULL))
-	{
-		cmd_free(pszPathExt);
-		return TRUE;
-	}
+    /* Check if valid directly on specified path */
+    if (SearchForExecutableSingle(pFileName, pFullName, pszPathExt, NULL))
+    {
+        cmd_free(pszPathExt);
+        return TRUE;
+    }
 
-	/* If an explicit directory was given, stop here - no need to search PATH. */
-	if (pFileName[1] == _T(':') || _tcschr(pFileName, _T('\\')))
-	{
-		cmd_free(pszPathExt);
-		return FALSE;
-	}
+    /* If an explicit directory was given, stop here - no need to search PATH. */
+    if (pFileName[1] == _T(':') || _tcschr(pFileName, _T('\\')))
+    {
+        cmd_free(pszPathExt);
+        return FALSE;
+    }
 
-	/* load environment varable PATH into buffer */
-	pszPath = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
-	dwBuffer = GetEnvironmentVariable (_T("PATH"), pszPath, ENV_BUFFER_SIZE);
-	if (dwBuffer > ENV_BUFFER_SIZE)
-	{
-		pszPath = (LPTSTR)cmd_realloc (pszPath, dwBuffer * sizeof (TCHAR));
-		GetEnvironmentVariable (_T("PATH"), pszPath, dwBuffer);
-	}
+    /* load environment varable PATH into buffer */
+    pszPath = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+    dwBuffer = GetEnvironmentVariable (_T("PATH"), pszPath, ENV_BUFFER_SIZE);
+    if (dwBuffer > ENV_BUFFER_SIZE)
+    {
+        LPTSTR pszOldPath = pszPath;
+        pszPath = (LPTSTR)cmd_realloc (pszPath, dwBuffer * sizeof (TCHAR));
+        if (pszPath == NULL)
+        {
+            cmd_free(pszOldPath);
+            cmd_free(pszPathExt);
+            return FALSE;
+        }
+        GetEnvironmentVariable (_T("PATH"), pszPath, dwBuffer);
+    }
 
-	TRACE ("SearchForExecutable(): Loaded PATH: %s\n", debugstr_aw(pszPath));
+    TRACE ("SearchForExecutable(): Loaded PATH: %s\n", debugstr_aw(pszPath));
 
-	/* search in PATH */
-	pCh = _tcstok(pszPath, _T(";"));
-	while (pCh)
-	{
-		if (SearchForExecutableSingle(pFileName, pFullName, pszPathExt, pCh))
-		{
-			cmd_free(pszPath);
-			cmd_free(pszPathExt);
-			return TRUE;
-		}
-		pCh = _tcstok(NULL, _T(";"));
-	}
+    /* search in PATH */
+    pCh = _tcstok(pszPath, _T(";"));
+    while (pCh)
+    {
+        if (SearchForExecutableSingle(pFileName, pFullName, pszPathExt, pCh))
+        {
+            cmd_free(pszPath);
+            cmd_free(pszPathExt);
+            return TRUE;
+        }
+        pCh = _tcstok(NULL, _T(";"));
+    }
 
-	cmd_free(pszPath);
-	cmd_free(pszPathExt);
-	return FALSE;
+    cmd_free(pszPath);
+    cmd_free(pszPathExt);
+    return FALSE;
 }
 
 /* EOF */

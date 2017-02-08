@@ -18,23 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-//#include <assert.h>
-#include <stdarg.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <objbase.h>
-#include <wine/debug.h>
-#include "moniker.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -128,7 +112,7 @@ AntiMonikerImpl_Release(IMoniker* iface)
 
     ref = InterlockedDecrement(&This->ref);
 
-    /* destroy the object if there's no more reference on it */
+    /* destroy the object if there are no more references to it */
     if (ref == 0)
     {
         if (This->pMarshal) IUnknown_Release(This->pMarshal);

@@ -1,3 +1,6 @@
+#ifndef _DXG_PCH_
+#define _DXG_PCH_
+
 #include <ntifs.h>
 
 /* Win32 Headers */
@@ -68,6 +71,7 @@ typedef struct _EDD_SURFACE_LOCAL
 NTSTATUS NTAPI DriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS NTAPI GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS APIENTRY DxDdCleanupDxGraphics(VOID);
+BOOL NTAPI DxDdEnableDirectDraw(PVOID arg1, BOOL arg2);
 
 /* Global pointers */
 extern ULONG gcSizeDdHmgr;
@@ -101,3 +105,5 @@ PVOID FASTCALL DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned);
 #define drvDxEngUnlockDC        gpEngFuncs[DXENG_INDEX_DxEngUnlockDC]
 #define drvDxEngUnlockHdev      gpEngFuncs[DXENG_INDEX_DxEngUnlockHdev]
 #define drvDxEngLockHdev        gpEngFuncs[DXENG_INDEX_DxEngLockHdev]
+
+#endif /* _DXG_PCH_ */

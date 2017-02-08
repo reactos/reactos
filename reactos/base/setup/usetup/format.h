@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/format.h
+ * FILE:            base/setup/usetup/format.h
  * PURPOSE:         Filesystem format support functions
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */

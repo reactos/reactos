@@ -13,16 +13,16 @@ list(APPEND SOURCE
     cabinet_main.c
     fci.c
     fdi.c
+    cabinet.h)
+
+add_library(cabinet SHARED
+    ${SOURCE}
     stubs.c
     cabinet.rc
     ${CMAKE_CURRENT_BINARY_DIR}/cabinet.def)
 
-add_library(cabinet SHARED ${SOURCE})
-
 set_module_type(cabinet win32dll)
 target_link_libraries(cabinet wine zlib)
 add_importlibs(cabinet msvcrt kernel32 ntdll)
-
-add_pch(cabinet cabinet.h)
-add_dependencies(cabinet psdk)
+add_pch(cabinet cabinet.h SOURCE)
 add_cd_file(TARGET cabinet DESTINATION reactos/system32 FOR all)

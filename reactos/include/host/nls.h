@@ -161,7 +161,7 @@ typedef DWORD LCID;
 /* non standard; keep the number high enough (but < 0xff) */
 #define LANG_ESPERANTO			 0x8f
 #define LANG_WALON			 0x90
-#define LANG_CORNISH                     0x91
+#define LANG_CORNISH                     0x92
 #define LANG_GAELIC                      0x94
 
 /* Sublanguage definitions */

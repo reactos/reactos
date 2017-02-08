@@ -15,13 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winnls.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -33,11 +27,11 @@ typedef struct _WINE_FILESTOREINFO
     HANDLE     file;
     DWORD      type;
     BOOL       dirty;
-} WINE_FILESTOREINFO, *PWINE_FILESTOREINFO;
+} WINE_FILESTOREINFO;
 
 static void WINAPI CRYPT_FileCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %08x)\n", store, dwFlags);
     if (store->dirty)
@@ -50,7 +44,7 @@ static void WINAPI CRYPT_FileCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 static BOOL WINAPI CRYPT_FileWriteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT cert, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, cert, dwFlags);
     store->dirty = TRUE;
@@ -60,7 +54,7 @@ static BOOL WINAPI CRYPT_FileWriteCert(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileDeleteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT pCertContext, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", hCertStore, pCertContext, dwFlags);
     store->dirty = TRUE;
@@ -70,7 +64,7 @@ static BOOL WINAPI CRYPT_FileDeleteCert(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileWriteCRL(HCERTSTORE hCertStore,
  PCCRL_CONTEXT crl, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, crl, dwFlags);
     store->dirty = TRUE;
@@ -80,7 +74,7 @@ static BOOL WINAPI CRYPT_FileWriteCRL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileDeleteCRL(HCERTSTORE hCertStore,
  PCCRL_CONTEXT pCrlContext, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", hCertStore, pCrlContext, dwFlags);
     store->dirty = TRUE;
@@ -90,7 +84,7 @@ static BOOL WINAPI CRYPT_FileDeleteCRL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileWriteCTL(HCERTSTORE hCertStore,
  PCCTL_CONTEXT ctl, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, ctl, dwFlags);
     store->dirty = TRUE;
@@ -100,7 +94,7 @@ static BOOL WINAPI CRYPT_FileWriteCTL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_FileDeleteCTL(HCERTSTORE hCertStore,
  PCCTL_CONTEXT pCtlContext, DWORD dwFlags)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", hCertStore, pCtlContext, dwFlags);
     store->dirty = TRUE;
@@ -119,8 +113,11 @@ static BOOL CRYPT_ReadBlobFromFile(HANDLE file, PCERT_BLOB blob)
         {
             DWORD read;
 
-            ret = ReadFile(file, blob->pbData, blob->cbData, &read, NULL);
+            ret = ReadFile(file, blob->pbData, blob->cbData, &read, NULL) && read == blob->cbData;
+            if (!ret) CryptMemFree(blob->pbData);
         }
+        else
+            ret = FALSE;
     }
     return ret;
 }
@@ -128,7 +125,7 @@ static BOOL CRYPT_ReadBlobFromFile(HANDLE file, PCERT_BLOB blob)
 static BOOL WINAPI CRYPT_FileControl(HCERTSTORE hCertStore, DWORD dwFlags,
  DWORD dwCtrlType, void const *pvCtrlPara)
 {
-    PWINE_FILESTOREINFO store = hCertStore;
+    WINE_FILESTOREINFO *store = hCertStore;
     BOOL ret;
 
     TRACE("(%p, %08x, %d, %p)\n", hCertStore, dwFlags, dwCtrlType,
@@ -212,11 +209,11 @@ static void *fileProvFuncs[] = {
     CRYPT_FileControl,
 };
 
-static PWINECRYPT_CERTSTORE CRYPT_CreateFileStore(DWORD dwFlags,
+static WINECRYPT_CERTSTORE *CRYPT_CreateFileStore(DWORD dwFlags,
  HCERTSTORE memStore, HANDLE file, DWORD type)
 {
-    PWINECRYPT_CERTSTORE store = NULL;
-    PWINE_FILESTOREINFO info = CryptMemAlloc(sizeof(WINE_FILESTOREINFO));
+    WINECRYPT_CERTSTORE *store = NULL;
+    WINE_FILESTOREINFO *info = CryptMemAlloc(sizeof(WINE_FILESTOREINFO));
 
     if (info)
     {
@@ -237,10 +234,10 @@ static PWINECRYPT_CERTSTORE CRYPT_CreateFileStore(DWORD dwFlags,
     return store;
 }
 
-PWINECRYPT_CERTSTORE CRYPT_FileOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
+WINECRYPT_CERTSTORE *CRYPT_FileOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
  const void *pvPara)
 {
-    PWINECRYPT_CERTSTORE store = NULL;
+    WINECRYPT_CERTSTORE *store = NULL;
     HANDLE file = (HANDLE)pvPara;
 
     TRACE("(%ld, %08x, %p)\n", hCryptProv, dwFlags, pvPara);
@@ -287,7 +284,7 @@ PWINECRYPT_CERTSTORE CRYPT_FileOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
     return store;
 }
 
-PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
+WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
  DWORD dwFlags, const void *pvPara)
 {
     HCERTSTORE store = 0;
@@ -378,11 +375,11 @@ PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
     return store;
 }
 
-PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
+WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
  DWORD dwFlags, const void *pvPara)
 {
     int len;
-    PWINECRYPT_CERTSTORE ret = NULL;
+    WINECRYPT_CERTSTORE *ret = NULL;
 
     TRACE("(%ld, %08x, %s)\n", hCryptProv, dwFlags,
      debugstr_a(pvPara));

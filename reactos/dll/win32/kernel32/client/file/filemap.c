@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/mem/section.c
+ * FILE:            dll/win32/kernel32/client/file/filemap.c
  * PURPOSE:         Handles virtual memory APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -346,16 +346,14 @@ NTAPI
 FlushViewOfFile(IN LPCVOID lpBaseAddress,
                 IN SIZE_T dwNumberOfBytesToFlush)
 {
-    SIZE_T NumberOfBytesToFlush;
     NTSTATUS Status;
+    PVOID BaseAddress = (PVOID)lpBaseAddress;
+    SIZE_T NumberOfBytesToFlush = dwNumberOfBytesToFlush;
     IO_STATUS_BLOCK IoStatusBlock;
-
-    /* Save amount of bytes to flush to a local var */
-    NumberOfBytesToFlush = dwNumberOfBytesToFlush;
 
     /* Flush the view */
     Status = NtFlushVirtualMemory(NtCurrentProcess(),
-                                  (LPVOID)lpBaseAddress,
+                                  &BaseAddress,
                                   &NumberOfBytesToFlush,
                                   &IoStatusBlock);
     if (!NT_SUCCESS(Status) && (Status != STATUS_NOT_MAPPED_DATA))

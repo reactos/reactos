@@ -1,0 +1,737 @@
+/*
+ * Core Audio device topology definitions
+ *
+ * Copyright 2009 Maarten Lankhorst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+interface IPart;
+interface IControlInterface;
+interface IDeviceTopology;
+interface IControlChangeNotify;
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "propidl.idl";
+
+cpp_quote("#ifndef E_NOTFOUND")
+cpp_quote("#define E_NOTFOUND HRESULT_FROM_WIN32(ERROR_NOT_FOUND)")
+cpp_quote("#endif")
+
+cpp_quote("#define DEVTOPO_HARDWARE_INITIATED_EVENTCONTEXT 0x64726148 /* 'draH' */")
+cpp_quote("DEFINE_GUID(EVENTCONTEXT_VOLUMESLIDER, 0xe2c2e9de, 0x09b1, 0x4b04,0x84,0xe5, 0x07, 0x93, 0x12, 0x25, 0xee, 0x04);")
+
+cpp_quote("#define _IKsControl_")
+cpp_quote("#include <ks.h>")
+cpp_quote("#include <ksmedia.h>")
+cpp_quote("#ifndef _KS_")
+
+typedef struct {
+    ULONG FormatSize;
+    ULONG Flags;
+    ULONG SampleSize;
+    ULONG Reserved;
+    GUID MajorFormat;
+    GUID SubFormat;
+    GUID Specifier;
+} KSDATAFORMAT;
+
+typedef KSDATAFORMAT *PKSDATAFORMAT;
+
+typedef struct
+{
+    union
+    {
+        struct {
+            GUID Set;
+            ULONG Id;
+            ULONG Flags;
+        };
+        LONGLONG Alignment;
+    };
+} KSIDENTIFIER;
+
+typedef KSIDENTIFIER KSPROPERTY, *PKSPROPERTY;
+typedef KSIDENTIFIER KSMETHOD, *PKSMETHOD;
+typedef KSIDENTIFIER KSEVENT, *PKSEVENT;
+
+typedef enum
+{
+    eConnTypeUnknown = 0,
+    eConnType3Point5mm,
+    eConnTypeQuarter,
+    eConnTypeAtapiInternal,
+    eConnTypeRCA,
+    eConnTypeOptical,
+    eConnTypeOtherDigital,
+    eConnTypeOtherAnalog,
+    eConnTypeMultichannelAnalogDIN,
+    eConnTypeXlrProfessional,
+    eConnTypeRJ11Modem,
+    eConnTypeCombination
+} EPcxConnectionType;
+
+typedef enum
+{
+    eGeoLocRear = 1,
+    eGeoLocFront,
+    eGeoLocLeft,
+    eGeoLocRight,
+    eGeoLocTop,
+    eGeoLocBottom,
+    eGeoLocRearPanel,
+    eGeoLocRiser,
+    eGeoLocInsideMobileLid,
+    eGeoLocDrivebay,
+    eGeoLocHDMI,
+    eGeoLocOutsideMobileLid,
+    eGeoLocATAPI,
+    eGeoLocReserved5,
+    eGeoLocReserved6
+} EPcxGeoLocation;
+
+typedef enum
+{
+    eGenLocPrimaryBox = 0,
+    eGenLocInternal,
+    eGenLocSeparate,
+    eGenLocOther
+} EPcxGenLocation;
+
+typedef enum
+{
+    ePortConnJack = 0,
+    ePortConnIntegratedDevice,
+    ePortConnBothIntegratedAndJack,
+    ePortConnUnknown
+} EPxcPortConnection;
+
+typedef struct
+{
+    DWORD ChannelMapping;
+    COLORREF Color;
+    EPcxConnectionType ConnectionType;
+    EPcxGeoLocation GeoLocation;
+    EPcxGenLocation GenLocation;
+    EPxcPortConnection PortConnection;
+    BOOL IsConnected;
+} KSJACK_DESCRIPTION;
+
+typedef KSJACK_DESCRIPTION *PKSJACK_DESCRIPTION;
+
+typedef struct _LUID
+{
+    DWORD LowPart;
+    LONG HighPart;
+} LUID;
+
+typedef struct _LUID *PLUID;
+
+typedef enum
+{
+    KSJACK_SINK_CONNECTIONTYPE_HDMI = 0,
+    KSJACK_SINK_CONNECTIONTYPE_DISPLAYPORT
+} KSJACK_SINK_CONNECTIONTYPE;
+
+typedef struct _tagKSJACK_SINK_INFORMATION
+{
+    KSJACK_SINK_CONNECTIONTYPE ConnType;
+    WORD ManufacturerId;
+    WORD ProductId;
+    WORD AudioLatency;
+    BOOL HDCPCapable;
+    BOOL AICapable;
+    UCHAR SinkDescriptionLength;
+    WCHAR SinkDescription[32];
+    LUID PortId;
+} KSJACK_SINK_INFORMATION;
+
+typedef struct _tagKSJACK_DESCRIPTION2
+{
+    DWORD DeviceStateInfo;
+    DWORD JackCapabilities;
+} KSJACK_DESCRIPTION2;
+
+typedef struct _tagKSJACK_DESCRIPTION2 *PKSJACK_DESCRIPTION2;
+
+cpp_quote("#endif")
+
+typedef enum
+{
+    In = 0,
+    Out
+} DataFlow;
+
+typedef enum
+{
+    Connector = 0,
+    Subunit
+} PartType;
+
+typedef enum
+{
+    Unknown_Connector = 0,
+    Physical_Internal,
+    Physical_External,
+    Software_IO,
+    Software_Fixed,
+    Network
+} ConnectorType;
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(28f54685-06fd-11d2-b27a-00a0c9223196),
+    local,
+    object
+]
+interface IKsControl : IUnknown
+{
+    HRESULT KsProperty(
+        [in] PKSPROPERTY Property,
+        [in] ULONG PropertyLength,
+        [in,out] void *PropertyData,
+        [in] ULONG DataLength,
+        [out] ULONG *BytesReturned
+    );
+    HRESULT KsMethod(
+        [in] PKSMETHOD Method,
+        [in] ULONG MethodLength,
+        [in,out] void *MethodData,
+        [in] ULONG DataLength,
+        [out] ULONG *BytesReturned
+    );
+    HRESULT KsEvent(
+        [in] PKSEVENT Event,
+        [in] ULONG EventLength,
+        [in,out] void *EventData,
+        [in] ULONG DataLength,
+        [out] ULONG *BytesReturned
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(c2f8e001-f205-4bc9-99bc-c13b1e048ccb),
+    local,
+    object
+]
+interface IPerChannelDbLevel : IUnknown
+{
+    HRESULT GetChannelCount(
+        [out] UINT *pcChannels
+    );
+    HRESULT GetLevelRange(
+        [in] UINT nChannel,
+        [out] float *pfMinLevelDB,
+        [out] float *pfMaxLevelDB,
+        [out] float *pfStepping
+    );
+    HRESULT GetLevel(
+        [in] UINT nChannel,
+        [out] float *pfLevelDB
+    );
+    HRESULT SetLevel(
+        [in] UINT nChannel,
+        [in] float fLevelDB,
+        [in,unique] LPCGUID pguidEventContext
+    );
+    HRESULT SetLevelUniform(
+        [in] float fLevelDB,
+        [in,unique] LPCGUID pguidEventContext
+    );
+    HRESULT SetLevelAllChannels(
+        [size_is(cChannels),in] float *aLevelsDB,
+        [in] ULONG cChannels,
+        [in] LPCGUID pguidEventContext
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(7fb7b48f-531d-44a2-bcb3-5ad5a134b3dc),
+    local,
+    object
+]
+interface IAudioVolumeLevel : IPerChannelDbLevel
+{
+    /* Empty */
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(bb11c46f-ec28-493c-b88a-5db88062ce98),
+    local,
+    object
+]
+interface IAudioChannelConfig : IUnknown
+{
+    HRESULT SetChannelConfig(
+        [in] DWORD dwConfig,
+        [in] LPCGUID pguidEventContext
+    );
+    HRESULT GetChannelConfig(
+        [in] DWORD dwConfig,
+        [retval,out] DWORD *pdwConfig
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(7d8b1437-dd53-4350-9c1b-1ee2890bf938),
+    local,
+    object
+]
+interface IAudioLoudness : IUnknown
+{
+    HRESULT GetEnabled(
+        [out] BOOL *pbEnabled
+    );
+    HRESULT SetEnabled(
+        [in] BOOL bEnabled,
+        [in] LPCGUID pguidEventContext
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(4f03dc02-5e6e-4653-8f72-a030c123d598),
+    local,
+    object
+]
+interface IAudioInputSelector : IUnknown
+{
+    HRESULT GetSelection(
+        [out] UINT *pnIdSelected
+    );
+    HRESULT SetSelection(
+        [in] UINT nIdSelect,
+        [unique,in] LPCGUID pguidEventContext
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(bb515f69-94a7-429e-8b9c-271b3f11a3ab),
+    local,
+    object
+]
+interface IAudioOutputSelector : IUnknown
+{
+    HRESULT GetSelection(
+        [out] UINT *pnIdSelected
+    );
+    HRESULT SetSelection(
+        [in] UINT nIdSelect,
+        [unique,in] LPCGUID pguidEventContext
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(df45aeea-b74a-4b6b-afad-2366b6aa012e),
+    local,
+    object
+]
+interface IAudioMute : IUnknown
+{
+    HRESULT SetMute(
+        [in] BOOL bMute,
+        [unique,in] LPCGUID pguidEventContext
+    );
+    HRESULT GetMute(
+        [out] BOOL *pbMute
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(a2b1a1d9-4db3-425d-a2b2-bd335cb3e2e5),
+    local,
+    object
+]
+interface IAudioBass : IPerChannelDbLevel
+{
+    /* Empty */
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(5e54b6d7-b44b-40d9-9a9e-e691d9ce6edf),
+    local,
+    object
+]
+interface IAudioMidRange : IPerChannelDbLevel
+{
+    /* Empty */
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(0a717812-694e-4907-b74b-bafa5cfdca7b),
+    local,
+    object
+]
+interface IAudioTreble : IPerChannelDbLevel
+{
+    /* Empty */
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(85401fd4-6de4-4b9d-9869-2d6753a82f3c),
+    local,
+    object
+]
+interface IAudioAutoGainControl : IUnknown
+{
+    HRESULT GetEnabled(
+        [in] BOOL bEnabled,
+        [unique,in] LPCGUID pguidEventContext
+    );
+    HRESULT GetMute(
+        [out] BOOL *pbEnabled
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(dd79923c-0599-45e0-b8b6-c8df7db6e796),
+    local,
+    object
+]
+interface IAudioPeakMeter : IUnknown
+{
+    HRESULT GetChannelCount(
+        [out] UINT *pcChannels
+    );
+    HRESULT GetLevel(
+        [in] UINT nChannel,
+        [out] float *pfLevel
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(3b22bcbf-2586-4af0-8583-205d391b807c),
+    local,
+    object
+]
+interface IDeviceSpecificProperty : IUnknown
+{
+    HRESULT GetType(
+        [out] VARTYPE *pVType
+    );
+    HRESULT GetValue(
+        [out] VARTYPE *pvType,
+        [out,in] DWORD *pcbValue
+    );
+    HRESULT SetValue(
+        [in] void *pvValue,
+        [in] DWORD cbValue,
+        [in] LPCGUID pguidEventContext
+    );
+    HRESULT Get4BRange(
+        [out] LONG *plMin,
+        [out] LONG *plMax,
+        [out] LONG *plStepping
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(3cb4a69d-bb6f-4d2b-95b7-452d2c155db5),
+    local,
+    object
+]
+interface IKsFormatSupport : IUnknown
+{
+    HRESULT IsFormatSupported(
+        [size_is(cbFormat),in] PKSDATAFORMAT pKsFormat,
+        [in] DWORD cbFormat,
+        [out] BOOL *pbSupported
+    );
+    HRESULT GetDevicePreferredFormat(
+        [out] PKSDATAFORMAT *ppKsFormat
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(4509f757-2d46-4637-8e62-ce7db944f57b),
+    local,
+    object
+]
+interface IKsJackDescription : IUnknown
+{
+    HRESULT GetJackCount(
+        [out] UINT *pcJacks
+    );
+    HRESULT GetJackDescription(
+        [in] UINT nJack,
+        [out] KSJACK_DESCRIPTION *pDescription
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(478f3a9b-e0c9-4827-9228-6f5505ffe76a),
+    local,
+    object
+]
+interface IKsJackDescription2 : IUnknown
+{
+    HRESULT GetJackCount(
+        [out] UINT *pcJacks
+    );
+    HRESULT GetJackDescription2(
+        [in] UINT nJack,
+        [out] KSJACK_DESCRIPTION2 *pDescription2
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(d9bd72ed-290f-4581-9ff3-61027a8fe532),
+    local,
+    object
+]
+interface IKsJackSinkInformation : IUnknown
+{
+    HRESULT GetJackSinkInformation(
+        [out] KSJACK_SINK_INFORMATION *pJackSinkInformation
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(6daa848c-5eb0-45cc-aea5-998a2cda1ffb),
+    local,
+    object
+]
+interface IPartsList : IUnknown
+{
+    HRESULT GetCount(
+        [out] UINT *pCount
+    );
+    HRESULT GetPart(
+        [in] UINT nIndex,
+        [out] IPart **ppPart
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(ae2de0e4-5bca-4f2d-aa46-5d13f8fdb3a9),
+    local,
+    object
+]
+interface IPart : IUnknown
+{
+    HRESULT GetName(
+        [out] LPWSTR *ppwstrName
+    );
+    HRESULT GetLocalId(
+        [out] UINT *pnId
+    );
+    HRESULT GetGlobalId(
+        [out] LPWSTR *ppwstrGlobalId
+    );
+    HRESULT GetPartType(
+        [out] PartType *pPartType
+    );
+    HRESULT GetSubType(
+        [out] GUID *pSubType
+    );
+    HRESULT GetControlInterfaceCount(
+        [out] UINT *pCount
+    );
+    HRESULT GetControlInterface(
+        [in] UINT nIndex,
+        [out] IControlInterface **ppInterfaceDesc
+    );
+    HRESULT EnumPartsIncoming(
+        [out] IPartsList **ppParts
+    );
+    HRESULT EnumPartsOutgoing(
+        [out] IPartsList **ppParts
+    );
+    HRESULT GetTopologyObjects(
+        [out] IDeviceTopology **ppTopology
+    );
+    HRESULT Activate(
+        [in] DWORD dwClsContext,
+        [in] REFIID refiid,
+        [iid_is(refiid),out] void **ppvObject
+    );
+    HRESULT RegisterControlChangeCallback(
+        [in] REFGUID riid,
+        [in] IControlChangeNotify *pNotify
+    );
+    HRESULT UnregisterControlChangeCallback(
+        [in] IControlChangeNotify *pNotify
+    );
+};
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(9c2c4058-23f5-41de-877a-df3af236a09e),
+    local,
+    object
+]
+interface IConnector : IUnknown
+{
+    HRESULT GetType(
+        [out] ConnectorType *pType
+    );
+    HRESULT GetDataFlow(
+        [out] DataFlow *pFlow
+    );
+    HRESULT ConnectTo(
+        [in] IConnector *pConnectTo
+    );
+    HRESULT Disconnect(void);
+    HRESULT IsConnected(
+        [out] BOOL *pbConnected
+    );
+    HRESULT GetConnectedTo(
+        [out] IConnector **ppConTo
+    );
+    HRESULT GetConnectorIdConnectedTo(
+        [out] LPWSTR *ppwstrConnectorId
+    );
+    HRESULT GetDeviceIdConnectedTo(
+        [out] LPWSTR *ppwstrDeviceId
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(82149a85-dba6-4487-86bb-ea8f7fefcc71),
+    local,
+    object
+]
+interface ISubUnit: IUnknown
+{
+    /* Empty IUnknown interface.. */
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(45d37c3f-5140-444a-ae24-400789f3cbf3),
+    local,
+    object
+]
+interface IControlInterface : IUnknown
+{
+    HRESULT GetName(
+        [out] LPWSTR *ppwstrName
+    );
+    HRESULT GetIID(
+        [out] GUID *pIID
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(a09513ed-c709-4d21-bd7b-5f34c47f3947),
+    local,
+    object
+]
+interface IControlChangeNotify : IUnknown
+{
+    HRESULT OnNotify(
+        [in] DWORD dwSenderProcessId,
+        [in] LPCGUID ppguidEventContext
+    );
+}
+
+[
+    pointer_default(unique),
+    nonextensible,
+    uuid(2a07407e-6497-4a18-9787-32f79bd0d98f),
+    local,
+    object
+]
+interface IDeviceTopology : IUnknown
+{
+    HRESULT GetConnectorCount(
+        [out] UINT *pCount
+    );
+    HRESULT GetConnector(
+        [in] UINT nIndex,
+        [out] IConnector **ppConnector
+    );
+    HRESULT GetSubunitCount(
+        [out] UINT *pCount
+    );
+    HRESULT GetSubunit(
+        [in] UINT nIndex,
+        [out] ISubUnit **ppConnector
+    );
+    HRESULT GetPartById(
+        [in] UINT nId,
+        [out] IPart **ppPart
+    );
+    HRESULT GetDeviceId(
+        [out] LPWSTR *ppwstrDeviceId
+    );
+    HRESULT GetSignalPath(
+        [in] IPart *pIPartFrom,
+        [in] IPart *pIPartTo,
+        [in] BOOL bRejectMixedPaths,
+        [out] IPartsList **ppParts
+    );
+}
+
+[
+    uuid(51b9a01d-8181-4363-b59c-e678f476dd0e),
+    version(1.0)
+]
+library DevTopologyLib
+{
+    [
+        uuid(1df639d0-5ec1-47aa-9379-828dc1aa8c59),
+    ]
+    coclass DeviceTopology
+    {
+        interface IDeviceTopology;
+    }
+}

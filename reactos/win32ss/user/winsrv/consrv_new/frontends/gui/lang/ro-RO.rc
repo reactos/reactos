@@ -1,0 +1,26 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Edit&are"
+    IDS_MARK "&Marchează"
+    IDS_COPY "&Copiază\tEnter"
+    IDS_PASTE "&Lipește"
+    IDS_SELECTALL "Selectează t&ot"
+    IDS_SCROLL "Derulea&ză"
+    IDS_FIND "&Găsire…"
+    IDS_DEFAULTS "Impli&cite"
+    IDS_PROPERTIES "&Proprietăți"
+/*
+    IDS_SCROLLHERE "Derulează aici"
+    IDS_SCROLLTOP "Derulează la început"
+    IDS_SCROLLBOTTOM "Derulează la sfârșit"
+    IDS_SCROLLPAGE_UP "Pagina anterioară"
+    IDS_SCROLLPAGE_DOWN "Pagina următoare"
+    IDS_SCROLLUP "Derulează în sus"
+    IDS_SCROLLDOWN "Derulează în jos"
+*/
+    IDS_TERMINAL_TITLE "Consola ReactOS"
+END

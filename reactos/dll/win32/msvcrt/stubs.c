@@ -47,6 +47,7 @@ size_t _heapused( size_t *pUsed, size_t *pCommit )
     return( 0 );
 }
 
+#ifdef _M_IX86
 int MSVCRT__inp(
    unsigned short port)
 {
@@ -86,3 +87,4 @@ unsigned long MSVCRT__outpd(
 {
     return _outpd(port, dataword);
 }
+#endif

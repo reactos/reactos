@@ -16,8 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _SPOOLSS_H_
+#define _SPOOLSS_H_
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(spoolss);
 
 /* ################################ */
 
@@ -40,3 +49,5 @@ static inline BOOL heap_free( void *mem )
 {
     return HeapFree( GetProcessHeap(), 0, mem );
 }
+
+#endif /* _SPOOLSS_H_ */

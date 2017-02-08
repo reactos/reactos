@@ -179,6 +179,11 @@ typedef enum
 typedef BOOL (CALLBACK *PBMCALLBACKFN)(ULONG,ULONG,LPARAM);
 typedef PBMCALLBACKFN LPPBMCALLBACKFN;
 
+#define INTENT_PERCEPTUAL               0
+#define INTENT_RELATIVE_COLORIMETRIC    1
+#define INTENT_SATURATION               2
+#define INTENT_ABSOLUTE_COLORIMETRIC    3
+
 typedef struct tagPROFILEHEADER
 {
     DWORD phSize;
@@ -359,7 +364,6 @@ BOOL       WINAPI GetColorProfileElement(HPROFILE,TAGTYPE,DWORD,PDWORD,PVOID,PBO
 BOOL       WINAPI GetColorProfileElementTag(HPROFILE,DWORD,PTAGTYPE);
 BOOL       WINAPI GetColorProfileFromHandle(HPROFILE,PBYTE,PDWORD);
 BOOL       WINAPI GetColorProfileHeader(HPROFILE,PPROFILEHEADER);
-HCOLORSPACE WINAPI GetColorSpace(HDC);
 BOOL       WINAPI GetCountColorProfileElements(HPROFILE,PDWORD);
 BOOL       WINAPI GetNamedProfileInfo(HPROFILE,PNAMED_PROFILE_INFO);
 BOOL       WINAPI GetPS2ColorRenderingDictionary(HPROFILE,DWORD,PBYTE,PDWORD,PBOOL);
@@ -384,7 +388,6 @@ BOOL       WINAPI SetColorProfileElement(HPROFILE,TAGTYPE,DWORD,PDWORD,PVOID);
 BOOL       WINAPI SetColorProfileElementReference(HPROFILE,TAGTYPE,TAGTYPE);
 BOOL       WINAPI SetColorProfileElementSize(HPROFILE,TAGTYPE,DWORD);
 BOOL       WINAPI SetColorProfileHeader(HPROFILE,PPROFILEHEADER);
-HCOLORSPACE WINAPI SetColorSpace(HDC,HCOLORSPACE);
 BOOL       WINAPI SetStandardColorSpaceProfileA(PCSTR,DWORD,PSTR);
 BOOL       WINAPI SetStandardColorSpaceProfileW(PCWSTR,DWORD,PWSTR);
 #define    SetStandardColorSpaceProfile WINELIB_NAME_AW(SetStandardColorSpaceProfile)

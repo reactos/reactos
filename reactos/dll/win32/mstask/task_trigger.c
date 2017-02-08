@@ -16,16 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <winternl.h>
 #include "mstask_private.h"
-#include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(mstask);
+#include <winternl.h>
 
 typedef struct
 {
@@ -141,8 +134,6 @@ static HRESULT WINAPI MSTASK_ITaskTrigger_SetTrigger(
     /* Verify duration and interval pair */
     if (pTrigger->MinutesDuration <= pTrigger->MinutesInterval &&
             pTrigger->MinutesInterval > 0)
-        return E_INVALIDARG;
-    if (pTrigger->MinutesDuration > 0 && pTrigger->MinutesInterval == 0)
         return E_INVALIDARG;
     tmp_trigger_cond.MinutesDuration = pTrigger->MinutesDuration;
     tmp_trigger_cond.MinutesInterval = pTrigger->MinutesInterval;

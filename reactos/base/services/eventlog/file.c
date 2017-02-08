@@ -1,7 +1,7 @@
 /*
  * PROJECT:          ReactOS kernel
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             services/eventlog/file.c
+ * FILE:             base/services/eventlog/file.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
                      Michael Martin
@@ -11,6 +11,11 @@
 
 #include "eventlog.h"
 
+#include <ndk/iofuncs.h>
+
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY LogFileListHead;
@@ -19,62 +24,78 @@ static CRITICAL_SECTION LogFileListCs;
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-LogfInitializeNew(PLOGFILE LogFile)
+LogfInitializeNew(PLOGFILE LogFile,
+                  ULONG ulMaxSize,
+                  ULONG ulRetention)
 {
-    DWORD dwWritten;
+    IO_STATUS_BLOCK IoStatusBlock;
     EVENTLOGEOF EofRec;
+    NTSTATUS Status;
 
     ZeroMemory(&LogFile->Header, sizeof(EVENTLOGHEADER));
     SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN);
     SetEndOfFile(LogFile->hFile);
 
     LogFile->Header.HeaderSize = sizeof(EVENTLOGHEADER);
-    LogFile->Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
-    LogFile->Header.StartOffset = sizeof(EVENTLOGHEADER);
-    LogFile->Header.EndOffset = sizeof(EVENTLOGHEADER);
+    LogFile->Header.Signature = LOGFILE_SIGNATURE;
     LogFile->Header.MajorVersion = MAJORVER;
     LogFile->Header.MinorVersion = MINORVER;
+    LogFile->Header.StartOffset = sizeof(EVENTLOGHEADER);
+    LogFile->Header.EndOffset = sizeof(EVENTLOGHEADER);
     LogFile->Header.CurrentRecordNumber = 1;
     LogFile->Header.OldestRecordNumber = 1;
-    /* FIXME: Read MaxSize from registry for this LogFile.
-       But for now limit EventLog size to just under 5K. */
-    LogFile->Header.MaxSize = 5000;
-    LogFile->Header.Signature = LOGFILE_SIGNATURE;
-    if (!WriteFile(LogFile->hFile,
-                   &LogFile->Header,
-                   sizeof(EVENTLOGHEADER),
-                   &dwWritten,
-                   NULL))
+    LogFile->Header.MaxSize = ulMaxSize;
+    LogFile->Header.Flags = 0;
+    LogFile->Header.Retention = ulRetention;
+    LogFile->Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
+
+    Status = NtWriteFile(LogFile->hFile,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &LogFile->Header,
+                         sizeof(EVENTLOGHEADER),
+                         NULL,
+                         NULL);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WriteFile failed:%d!\n", GetLastError());
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
+    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
     EofRec.Ones = 0x11111111;
     EofRec.Twos = 0x22222222;
     EofRec.Threes = 0x33333333;
     EofRec.Fours = 0x44444444;
-    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
-    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
-    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
-    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
     EofRec.BeginRecord = LogFile->Header.StartOffset;
     EofRec.EndRecord = LogFile->Header.EndOffset;
+    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
+    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
 
-    if (!WriteFile(LogFile->hFile,
-                   &EofRec,
-                   sizeof(EVENTLOGEOF),
-                   &dwWritten,
-                   NULL))
+    Status = NtWriteFile(LogFile->hFile,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &EofRec,
+                         sizeof(EVENTLOGEOF),
+                         NULL,
+                         NULL);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WriteFile failed:%d!\n", GetLastError());
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
-    if (!FlushFileBuffers(LogFile->hFile))
+    Status = NtFlushBuffersFile(LogFile->hFile,
+                                &IoStatusBlock);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("FlushFileBuffers failed:%d!\n", GetLastError());
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("NtFlushBuffersFile failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     return STATUS_SUCCESS;
@@ -82,7 +103,8 @@ LogfInitializeNew(PLOGFILE LogFile)
 
 
 static NTSTATUS
-LogfInitializeExisting(PLOGFILE LogFile)
+LogfInitializeExisting(PLOGFILE LogFile,
+                       BOOL Backup)
 {
     DWORD dwRead;
     DWORD dwRecordsNumber = 0;
@@ -260,31 +282,30 @@ LogfInitializeExisting(PLOGFILE LogFile)
     if (LogFile->Header.CurrentRecordNumber == 0)
         LogFile->Header.CurrentRecordNumber = 1;
 
-    /* FIXME: Read MaxSize from registry for this LogFile.
-       But for now limit EventLog size to just under 5K. */
-    LogFile->Header.MaxSize = 5000;
-
-    if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
-        INVALID_SET_FILE_POINTER)
+    if (!Backup)
     {
-        DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
+        if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
+            INVALID_SET_FILE_POINTER)
+        {
+            DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
 
-    if (!WriteFile(LogFile->hFile,
-                   &LogFile->Header,
-                   sizeof(EVENTLOGHEADER),
-                   &dwRead,
-                   NULL))
-    {
-        DPRINT1("WriteFile failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
+        if (!WriteFile(LogFile->hFile,
+                       &LogFile->Header,
+                       sizeof(EVENTLOGHEADER),
+                       &dwRead,
+                       NULL))
+        {
+            DPRINT1("WriteFile failed! %d\n", GetLastError());
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
 
-    if (!FlushFileBuffers(LogFile->hFile))
-    {
-        DPRINT1("FlushFileBuffers failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
+        if (!FlushFileBuffers(LogFile->hFile))
+        {
+            DPRINT1("FlushFileBuffers failed! %d\n", GetLastError());
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
     }
 
     return STATUS_SUCCESS;
@@ -293,8 +314,10 @@ LogfInitializeExisting(PLOGFILE LogFile)
 
 NTSTATUS
 LogfCreate(PLOGFILE *LogFile,
-           WCHAR * LogName,
+           WCHAR *LogName,
            PUNICODE_STRING FileName,
+           ULONG ulMaxSize,
+           ULONG ulRetention,
            BOOL Permanent,
            BOOL Backup)
 {
@@ -347,7 +370,8 @@ LogfCreate(PLOGFILE *LogFile,
         goto fail;
     }
 
-    lstrcpyW(pLogFile->LogName, LogName);
+    if (LogName)
+        StringCchCopy(pLogFile->LogName,lstrlenW(LogName) + 1, LogName);
 
     pLogFile->FileName =
         (WCHAR *) HeapAlloc(MyHeap,
@@ -360,7 +384,7 @@ LogfCreate(PLOGFILE *LogFile,
         goto fail;
     }
 
-    lstrcpyW(pLogFile->FileName, FileName->Buffer);
+    StringCchCopy(pLogFile->FileName, lstrlenW(FileName->Buffer) + 1, FileName->Buffer);
 
     pLogFile->OffsetInfo =
         (PEVENT_OFFSET_INFO) HeapAlloc(MyHeap,
@@ -378,9 +402,9 @@ LogfCreate(PLOGFILE *LogFile,
     pLogFile->Permanent = Permanent;
 
     if (bCreateNew)
-        Status = LogfInitializeNew(pLogFile);
+        Status = LogfInitializeNew(pLogFile, ulMaxSize, ulRetention);
     else
-        Status = LogfInitializeExisting(pLogFile);
+        Status = LogfInitializeExisting(pLogFile, Backup);
 
     if (!NT_SUCCESS(Status))
         goto fail;
@@ -971,6 +995,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
             if (RecBuf->Reserved != LOGFILE_SIGNATURE)
             {
                 DPRINT1("LogFile corrupt!\n");
+                HeapFree(GetProcessHeap(), 0, RecBuf);
                 RtlReleaseResource(&LogFile->Lock);
                 return FALSE;
             }
@@ -1091,18 +1116,33 @@ NTSTATUS
 LogfClearFile(PLOGFILE LogFile,
               PUNICODE_STRING BackupFileName)
 {
+    NTSTATUS Status;
+
     RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
 
     if (BackupFileName->Length > 0)
     {
-        /* FIXME: Write a backup file */
+        /* Write a backup file */
+        Status = LogfBackupFile(LogFile,
+                                BackupFileName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("LogfBackupFile failed (Status: 0x%08lx)\n", Status);
+            return Status;
+        }
     }
 
-    LogfInitializeNew(LogFile);
+    Status = LogfInitializeNew(LogFile,
+                               LogFile->Header.MaxSize,
+                               LogFile->Header.Retention);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LogfInitializeNew failed (Status: 0x%08lx)\n", Status);
+    }
 
     RtlReleaseResource(&LogFile->Lock);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -1122,7 +1162,7 @@ LogfBackupFile(PLOGFILE LogFile,
 
     DWORD dwOffset, dwRead, dwRecSize;
 
-    DPRINT("LogfBackupFile(%p, %wZ)\n", LogFile, BackupFileName);
+    DPRINT1("LogfBackupFile(%p, %wZ)\n", LogFile, BackupFileName);
 
     /* Lock the log file shared */
     RtlAcquireResourceShared(&LogFile->Lock, TRUE);
@@ -1159,7 +1199,7 @@ LogfBackupFile(PLOGFILE LogFile,
     Header.EndOffset = sizeof(EVENTLOGHEADER);
     Header.CurrentRecordNumber = 1;
     Header.OldestRecordNumber = 1;
-    Header.MaxSize = 0;
+    Header.MaxSize = LogFile->Header.MaxSize;
     Header.Flags = ELF_LOGFILE_HEADER_DIRTY;
     Header.Retention = LogFile->Header.Retention;
     Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
@@ -1211,7 +1251,7 @@ LogfBackupFile(PLOGFILE LogFile,
             goto Done;
         }
 
-        if (!ReadFile(LogFile->hFile, &Buffer, dwRecSize, &dwRead, NULL))
+        if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
         {
             DPRINT1("ReadFile() failed!\n");
             goto Done;
@@ -1229,7 +1269,7 @@ LogfBackupFile(PLOGFILE LogFile,
                              NULL);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("NtWriteFile() failed!\n");
+            DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
             goto Done;
         }
 
@@ -1288,7 +1328,7 @@ LogfBackupFile(PLOGFILE LogFile,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtWriteFile() failed!\n");
+        DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
     }
 
 Done:

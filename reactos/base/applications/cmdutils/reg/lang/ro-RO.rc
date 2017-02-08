@@ -1,40 +1,33 @@
 /*
- * REG.EXE - Wine-compatible reg program.
- *
- * Copyright 2008 Andrew Riedi
- * Copyright 2010 Claudia Cotună
- *                Michael Stefaniuc
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Translators: Claudia Cotună
+ *              Michael Stefaniuc
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
  */
-
-#include "reg.h"
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
-    STRING_USAGE,           "Sintaxa acestei comenzi este:\n\nREG [ ADD | DELETE | QUERY ]\nREG comandă /?\n"
-    STRING_ADD_USAGE,       "REG ADD nume_cheie [/v nume_valoare | /ve] [/t tip] [/s separator] [/d date] [/f]\n"
-    STRING_DELETE_USAGE,    "REG DELETE nume_cheie [/v nume_valoare | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE,     "REG QUERY nume_cheie [/v nume_valoare | /ve] [/s]\n"
-    STRING_SUCCESS,         "Operațiunea a fost finalizată cu succes\n"
-    STRING_INVALID_KEY,     "Eroare: Nume de cheie nevalid\n"
+    STRING_USAGE, "Sintaxa acestei comenzi este:\n\nREG [ ADD | DELETE | QUERY ]\nREG comandă /?\n"
+    STRING_ADD_USAGE, "REG ADD nume_cheie [/v nume_valoare | /ve] [/t tip] [/s separator] [/d date] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nume_cheie [/v nume_valoare | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nume_cheie [/v nume_valoare | /ve] [/s]\n"
+    STRING_SUCCESS, "Operația a fost îndeplinită cu succes\n"
+    STRING_INVALID_KEY, "Eroare: Nume de cheie nevalid\n"
     STRING_INVALID_CMDLINE, "Eroare: Parametri nevalizi pentru linia de comandă\n"
-    STRING_NO_REMOTE,       "Eroare: Nu se pot adăuga chei pe calculatorul de la distanță\n"
-    STRING_CANNOT_FIND,     "Eroare: Sistemul nu a putut găsi cheia sau valoarea de registru specificată\n"
+    STRING_NO_REMOTE, "Eroare: Nu se pot adăuga chei pe calculatorul de la distanță\n"
+    STRING_CANNOT_FIND, "Eroare: Sistemul nu a putut găsi cheia sau valoarea de registru specificată\n"
+    STRING_UNSUPPORTED_TYPE, "Eroare: Tip nerecunoscut\n"
+    STRING_MISSING_INTEGER, "reg: The option [/d] must be followed by a valid integer\n"
+    STRING_MISSING_HEXDATA, "reg: The option [/d] must be followed by a valid hexadecimal value\n"
+    STRING_UNHANDLED_TYPE, "reg: Unhandled registry data type [/t 0x%1!x!, /d %2]\n"
+    STRING_OVERWRITE_VALUE, "The registry value '%1' already exists. Do you want to overwrite it?"
+    STRING_YESNO, " (Yes|No)"
+    STRING_YES, "Y"
+    STRING_NO, "N"
+    STRING_CANCELLED, "The registry operation was cancelled\n"
+    STRING_DEFAULT_VALUE, "(Default)"
+    STRING_DELETE_VALUE, "Are you sure you want to delete the registry value '%1'?"
+    STRING_DELETE_VALUEALL, "Are you sure you want to delete all registry values in '%1'?"
+    STRING_DELETE_SUBKEY, "Are you sure you want to delete the registry key '%1'?"
 }

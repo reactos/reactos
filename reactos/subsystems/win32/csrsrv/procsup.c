@@ -11,6 +11,8 @@
 
 #include <srv.h>
 
+#include <winuser.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -55,7 +57,7 @@ CsrSetToNormalPriority(VOID)
     NtSetInformationProcess(NtCurrentProcess(),
                             ProcessBasePriority,
                             &BasePriority,
-                            sizeof(KPRIORITY));
+                            sizeof(BasePriority));
 }
 
 /*++
@@ -77,7 +79,7 @@ VOID
 NTAPI
 CsrSetToShutdownPriority(VOID)
 {
-    KPRIORITY SetBasePriority = (8 + 1) + 6;
+    KPRIORITY BasePriority = (8 + 1) + 6;
     BOOLEAN Old;
 
     /* Get the shutdown privilege */
@@ -89,112 +91,9 @@ CsrSetToShutdownPriority(VOID)
         /* Set the Priority */
         NtSetInformationProcess(NtCurrentProcess(),
                                 ProcessBasePriority,
-                                &SetBasePriority,
-                                sizeof(KPRIORITY));
+                                &BasePriority,
+                                sizeof(BasePriority));
     }
-}
-
-/*++
- * @name FindProcessForShutdown
- *
- * The FindProcessForShutdown routine returns a CSR Process which is ready
- * to be shutdown, and sets the appropriate shutdown flags for it.
- *
- * @param CallerLuid
- *        Pointer to the LUID of the CSR Process calling this routine.
- *
- * @return Pointer to a CSR Process which is ready to be shutdown.
- *
- * @remarks None.
- *
- *--*/
-PCSR_PROCESS
-NTAPI
-FindProcessForShutdown(IN PLUID CallerLuid)
-{
-    PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
-    // PCSR_THREAD CsrThread;
-    NTSTATUS Status;
-    ULONG Level = 0;
-    LUID ProcessLuid;
-    LUID SystemLuid = SYSTEM_LUID;
-    // BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
-    PLIST_ENTRY NextEntry;
-
-    /* Set the List Pointers */
-    NextEntry = CsrRootProcess->ListLink.Flink;
-    while (NextEntry != &CsrRootProcess->ListLink)
-    {
-        /* Get the process */
-        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
-
-        /* Move to the next entry */
-        NextEntry = NextEntry->Flink;
-
-        /* Skip this process if it's already been processed */
-        if (CsrProcess->Flags & CsrProcessSkipShutdown) continue;
-
-        /* Get the LUID of this Process */
-        Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
-
-        /* Check if we didn't get access to the LUID */
-        if (Status == STATUS_ACCESS_DENIED)
-        {
-            /* FIXME: Check if we have any threads */
-/*
-            /\* Check if we have any threads *\/
-            if (CsrProcess->ThreadCount)
-            {
-                /\* Impersonate one of the threads and retry *\/
-                CsrThread = CONTAINING_RECORD(CsrProcess->ThreadList.Flink,
-                                              CSR_THREAD,
-                                              Link);
-                CsrImpersonateClient(CsrThread);
-                Status = CsrGetProcessLuid(NULL, &ProcessLuid);
-                CsrRevertToSelf();
-            }
-*/
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-            /* We didn't have access, so skip it */
-            CsrProcess->Flags |= CsrProcessSkipShutdown;
-            continue;
-        }
-
-        /* Check if this is the System LUID */
-        if ((/*IsSystemLuid =*/ RtlEqualLuid(&ProcessLuid, &SystemLuid)))
-        {
-            /* Mark this process */
-            CsrProcess->ShutdownFlags |= CsrShutdownSystem;
-        }
-        else if (!(/*IsOurLuid =*/ RtlEqualLuid(&ProcessLuid, CallerLuid)))
-        {
-            /* Our LUID doesn't match with the caller's */
-            CsrProcess->ShutdownFlags |= CsrShutdownOther;
-        }
-
-        /* Check if we're past the previous level */
-        // FIXME: if ((CsrProcess->ShutdownLevel > Level) || !(ReturnCsrProcess))
-        if (CsrProcess->ShutdownLevel > Level /* || !ReturnCsrProcess */)
-        {
-            /* Update the level */
-            Level = CsrProcess->ShutdownLevel;
-
-            /* Set the final process */
-            ReturnCsrProcess = CsrProcess;
-        }
-    }
-
-    /* Check if we found a process */
-    if (ReturnCsrProcess)
-    {
-        /* Skip this one next time */
-        ReturnCsrProcess->Flags |= CsrProcessSkipShutdown;
-    }
-
-    return ReturnCsrProcess;
 }
 
 /*++
@@ -371,7 +270,7 @@ CsrInitializeProcessStructure(VOID)
     CsrRootProcess->ClientId = NtCurrentTeb()->ClientId;
 
     /* Initialize the Thread Hash List */
-    for (i = 0; i < 256; i++) InitializeListHead(&CsrThreadHashTable[i]);
+    for (i = 0; i < NUMBER_THREAD_HASH_BUCKETS; i++) InitializeListHead(&CsrThreadHashTable[i]);
 
     /* Initialize the Wait Lock */
     return RtlInitializeCriticalSection(&CsrWaitListsLock);
@@ -589,11 +488,11 @@ CsrCreateProcess(IN HANDLE hProcess,
         }
     }
 
-    /* Set the Exception port for us */
+    /* Set the Exception Port for us */
     Status = NtSetInformationProcess(hProcess,
                                      ProcessExceptionPort,
                                      &CsrApiPort,
-                                     sizeof(HANDLE));
+                                     sizeof(CsrApiPort));
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
@@ -603,15 +502,18 @@ CsrCreateProcess(IN HANDLE hProcess,
     }
 
     /* Check if CreateProcess got CREATE_NEW_PROCESS_GROUP */
-    if ((Flags & CsrProcessCreateNewGroup) == 0)
+    if (Flags & CsrProcessCreateNewGroup)
     {
-        /* Create new data */
+        /*
+         * We create the process group leader of a new process group, therefore
+         * its process group ID and sequence number are its own ones.
+         */
         CsrProcess->ProcessGroupId = HandleToUlong(ClientId->UniqueProcess);
         CsrProcess->ProcessGroupSequence = CsrProcess->SequenceNumber;
     }
     else
     {
-        /* Copy it from the current process */
+        /* Inherit the process group ID and sequence number from the current process */
         CsrProcess->ProcessGroupId = CurrentProcess->ProcessGroupId;
         CsrProcess->ProcessGroupSequence = CurrentProcess->ProcessGroupSequence;
     }
@@ -647,7 +549,7 @@ CsrCreateProcess(IN HANDLE hProcess,
         Status = NtSetInformationProcess(hProcess,
                                          ProcessDebugPort,
                                          &CsrApiPort,
-                                         sizeof(HANDLE));
+                                         sizeof(CsrApiPort));
         ASSERT(NT_SUCCESS(Status));
         if (!NT_SUCCESS(Status))
         {
@@ -661,7 +563,7 @@ CsrCreateProcess(IN HANDLE hProcess,
     /* Get the Thread Create Time */
     Status = NtQueryInformationThread(hThread,
                                       ThreadTimes,
-                                      (PVOID)&KernelTimes,
+                                      &KernelTimes,
                                       sizeof(KernelTimes),
                                       NULL);
     if (!NT_SUCCESS(Status))
@@ -690,7 +592,15 @@ CsrCreateProcess(IN HANDLE hProcess,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrDeallocateProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        CsrReleaseProcessLock();
+        return Status;
+    }
 
     /* Reference the session */
     CsrReferenceNtSession(NtSession);
@@ -732,7 +642,7 @@ NTAPI
 CsrDebugProcess(IN PCSR_PROCESS CsrProcess)
 {
     /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    DPRINT("CSRSRV: %s(0x%p) called\n", __FUNCTION__, CsrProcess);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -756,7 +666,7 @@ NTAPI
 CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess)
 {
     /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    DPRINT("CSRSRV: %s(0x%p) called\n", __FUNCTION__, CsrProcess);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1162,7 +1072,7 @@ CsrRevertToSelf(VOID)
     Status = NtSetInformationThread(NtCurrentThread(),
                                     ThreadImpersonationToken,
                                     &ImpersonationToken,
-                                    sizeof(HANDLE));
+                                    sizeof(ImpersonationToken));
 
     /* Return TRUE or FALSE */
     return NT_SUCCESS(Status);
@@ -1187,16 +1097,16 @@ VOID
 NTAPI
 CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess)
 {
-    PROCESS_PRIORITY_CLASS PriorityClass;
+    PROCESS_FOREGROUND_BACKGROUND ProcessPriority;
 
     /* Set the Foreground bit off */
-    PriorityClass.Foreground = FALSE;
+    ProcessPriority.Foreground = FALSE;
 
-    /* Set the new Priority */
+    /* Set the new priority */
     NtSetInformationProcess(CsrProcess->ProcessHandle,
-                            ProcessPriorityClass,
-                            &PriorityClass,
-                            sizeof(PriorityClass));
+                            ProcessForegroundInformation,
+                            &ProcessPriority,
+                            sizeof(ProcessPriority));
 }
 
 /*++
@@ -1218,16 +1128,120 @@ VOID
 NTAPI
 CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess)
 {
-    PROCESS_PRIORITY_CLASS PriorityClass;
+    PROCESS_FOREGROUND_BACKGROUND ProcessPriority;
 
     /* Set the Foreground bit on */
-    PriorityClass.Foreground = TRUE;
+    ProcessPriority.Foreground = TRUE;
 
-    /* Set the new Priority */
+    /* Set the new priority */
     NtSetInformationProcess(CsrProcess->ProcessHandle,
-                            ProcessPriorityClass,
-                            &PriorityClass,
-                            sizeof(PriorityClass));
+                            ProcessForegroundInformation,
+                            &ProcessPriority,
+                            sizeof(ProcessPriority));
+}
+
+/*++
+ * @name FindProcessForShutdown
+ *
+ * The FindProcessForShutdown routine returns a CSR Process which is ready
+ * to be shutdown, and sets the appropriate shutdown flags for it.
+ *
+ * @param CallerLuid
+ *        Pointer to the LUID of the CSR Process calling this routine.
+ *
+ * @return Pointer to a CSR Process which is ready to be shutdown.
+ *
+ * @remarks None.
+ *
+ *--*/
+PCSR_PROCESS
+NTAPI
+FindProcessForShutdown(IN PLUID CallerLuid)
+{
+    PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
+    PCSR_THREAD CsrThread;
+    NTSTATUS Status;
+    ULONG Level = 0;
+    LUID ProcessLuid;
+    LUID SystemLuid = SYSTEM_LUID;
+    PLIST_ENTRY NextEntry;
+
+    /* Set the List Pointers */
+    NextEntry = CsrRootProcess->ListLink.Flink;
+    while (NextEntry != &CsrRootProcess->ListLink)
+    {
+        /* Get the process */
+        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
+        /* Skip this process if it's already been processed */
+        if (CsrProcess->Flags & CsrProcessSkipShutdown) continue;
+
+        /* Get the LUID of this process */
+        Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
+
+        /* Check if we didn't get access to the LUID */
+        if (Status == STATUS_ACCESS_DENIED)
+        {
+            /* Check if we have any threads */
+            if (CsrProcess->ThreadCount)
+            {
+                /* Impersonate one of the threads and retry */
+                CsrThread = CONTAINING_RECORD(CsrProcess->ThreadList.Flink,
+                                              CSR_THREAD,
+                                              Link);
+                if (CsrImpersonateClient(CsrThread))
+                {
+                    Status = CsrGetProcessLuid(NULL, &ProcessLuid);
+                    CsrRevertToSelf();
+                }
+                else
+                {
+                    Status = STATUS_BAD_IMPERSONATION_LEVEL;
+                }
+            }
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* We didn't have access, so skip it */
+            CsrProcess->Flags |= CsrProcessSkipShutdown;
+            continue;
+        }
+
+        /* Check if this is the System LUID */
+        if (RtlEqualLuid(&ProcessLuid, &SystemLuid))
+        {
+            /* Mark this process */
+            CsrProcess->ShutdownFlags |= CsrShutdownSystem;
+        }
+        else if (!RtlEqualLuid(&ProcessLuid, CallerLuid))
+        {
+            /* Our LUID doesn't match with the caller's */
+            CsrProcess->ShutdownFlags |= CsrShutdownOther;
+        }
+
+        /* Check if we're past the previous level */
+        if ((CsrProcess->ShutdownLevel > Level) || !ReturnCsrProcess)
+        {
+            /* Update the level */
+            Level = CsrProcess->ShutdownLevel;
+
+            /* Set the final process */
+            ReturnCsrProcess = CsrProcess;
+        }
+    }
+
+    /* Check if we found a process */
+    if (ReturnCsrProcess)
+    {
+        /* Skip this one next time */
+        ReturnCsrProcess->Flags |= CsrProcessSkipShutdown;
+    }
+
+    return ReturnCsrProcess;
 }
 
 /*++
@@ -1260,7 +1274,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
     BOOLEAN FirstTry;
     ULONG i;
     PCSR_SERVER_DLL ServerDll;
-    ULONG Result = 0; /* Intentionally invalid enumeratee to silence compiler warning */
+    ULONG Result = 0;
 
     /* Acquire process lock */
     CsrAcquireProcessLock();
@@ -1283,7 +1297,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
         CsrProcess->ShutdownFlags = 0;
     }
 
-    /* Set shudown Priority */
+    /* Set shutdown Priority */
     CsrSetToShutdownPriority();
 
     /* Start looping */
@@ -1340,7 +1354,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
             }
 
             /* No matches during the first try, so loop again */
-            if ((FirstTry) && (Result == CsrShutdownNonCsrProcess))
+            if (FirstTry && (Result == CsrShutdownNonCsrProcess))
             {
                 FirstTry = FALSE;
                 continue;
@@ -1364,100 +1378,6 @@ Quickie:
 
     return Status;
 }
-
-/* HACK: Temporary hack. This is really "CsrShutdownProcesses", mostly. Used by winsrv */
-#if 0
-NTSTATUS
-WINAPI
-CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
-                 IN PVOID Context)
-{
-    PVOID* RealContext = (PVOID*)Context;
-    PLUID CallerLuid = RealContext[0];
-    PCSR_PROCESS CsrProcess = NULL;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    BOOLEAN FirstTry;
-    PLIST_ENTRY NextEntry;
-    ULONG Result = 0;
-
-    /* Acquire process lock */
-    CsrAcquireProcessLock();
-    
-    /* Get the list pointers */
-    NextEntry = CsrRootProcess->ListLink.Flink;
-    while (NextEntry != &CsrRootProcess->ListLink)
-    {
-        /* Get the Process */
-        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
-
-        /* Move to the next entry */
-        NextEntry = NextEntry->Flink;
-
-        /* Remove the skip flag, set shutdown flags to 0 */
-        CsrProcess->Flags &= ~CsrProcessSkipShutdown;
-        CsrProcess->ShutdownFlags = 0;
-    }
-    
-    /* Set shudown Priority */
-    CsrSetToShutdownPriority();
-
-    /* Loop all processes */
-    //DPRINT1("Enumerating for LUID: %lx %lx\n", CallerLuid->HighPart, CallerLuid->LowPart);
-    
-    /* Start looping */
-    while (TRUE)
-    {
-        /* Find the next process to shutdown */
-        FirstTry = TRUE;
-        if (!(CsrProcess = FindProcessForShutdown(CallerLuid)))
-        {
-            /* Done, quit */
-            CsrReleaseProcessLock();
-            Status = STATUS_SUCCESS;
-            goto Quickie;
-        }
-
-LoopAgain:
-        /* Release the lock, make the callback, and acquire it back */
-        //DPRINT1("Found process: %lx\n", CsrProcess->ClientId.UniqueProcess);
-        CsrReleaseProcessLock();
-        Result = (ULONG)EnumProc(CsrProcess, (PVOID)((ULONG_PTR)Context | FirstTry));
-        CsrAcquireProcessLock();
-
-        /* Check the result */
-        //DPRINT1("Result: %d\n", Result);
-        if (Result == CsrShutdownCsrProcess)
-        {
-            /* The callback unlocked the process */
-            break;
-        }
-        else if (Result == CsrShutdownNonCsrProcess)
-        {
-            /* A non-CSR process, the callback didn't touch it */
-            //continue;
-        }
-        else if (Result == CsrShutdownCancelled)
-        {
-            /* Shutdown was cancelled, unlock and exit */
-            CsrReleaseProcessLock();
-            Status = STATUS_CANCELLED;
-            goto Quickie;
-        }
-
-        /* No matches during the first try, so loop again */
-        if (FirstTry && Result == CsrShutdownNonCsrProcess)
-        {
-            FirstTry = FALSE;
-            goto LoopAgain;
-        }
-    }
-
-Quickie:
-    /* Return to normal priority */
-    CsrSetToNormalPriority();
-    return Status;
-}
-#endif
 
 /*++
  * @name CsrUnlockProcess

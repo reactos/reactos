@@ -15,10 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 #ifndef __WINE_CRYPTRES_H__
 #define __WINE_CRYPTRES_H__
-
-//#include <windef.h>
 
 #define IDS_AUTHORITY_KEY_ID 1000
 #define IDS_KEY_ATTRIBUTES 1001
@@ -61,9 +60,6 @@
 #define IDS_NETSCAPE_CA_POLICY_URL 1038
 #define IDS_NETSCAPE_SSL_SERVER_NAME 1039
 #define IDS_NETSCAPE_COMMENT 1040
-#define IDS_SPC_SP_AGENCY_INFO 1041
-#define IDS_SPC_FINANCIAL_CRITERIA 1042
-#define IDS_SPC_MINIMAL_CRITERIA 1043
 #define IDS_COUNTRY 1044
 #define IDS_ORGANIZATION 1045
 #define IDS_ORGANIZATIONAL_UNIT 1046

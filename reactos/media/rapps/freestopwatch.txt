@@ -1,0 +1,27 @@
+[Section]
+Name = Free Stopwatch
+Version = 3.0.2
+License = Freeware
+Description = A flexible digital stopwatch software.
+Size = 1.5 MiB
+Category = 12
+URLSite = http://free-stopwatch.com/
+URLDownload = http://free-stopwatch.com/FreeStopwatchSetup.exe
+SHA1 = 17df516838698e717925b2d58a5e76ad14f795c9
+CDPath = none
+
+[Section.0407]
+Description = Eine flexible digitale Stoppuhr-Software.
+Size = 1,5 MiB
+
+[Section.0418]
+License = Gratuită
+Description = Aplicație flexibilă de cronometru digital.
+Size = 1,5 Mio
+
+[Section.041f]
+Name = Ücretsiz Süreölçer
+License = Ücretsiz
+Description = Esnek bir sayılık süreölçer yazılımı.
+Size = 1,5 MiB
+

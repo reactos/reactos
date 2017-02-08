@@ -130,7 +130,7 @@ RegisterDeviceInterfaces(
             /* Register device interface */
             Status = IoRegisterDeviceInterface(DeviceExtension->PhysicalDeviceObject,
                                                StreamInformation->Category,
-                                               NULL, /* see bug 4566 */
+                                               NULL, /* see CORE-4218 and r42457 */
                                                &SymbolicLink);
 
             if (NT_SUCCESS(Status))

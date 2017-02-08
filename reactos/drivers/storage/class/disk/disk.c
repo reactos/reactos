@@ -12,14 +12,13 @@
 #include <ntddscsi.h>
 #include <mountdev.h>
 #include <mountmgr.h>
+#include <ntiologc.h>
 #include <include/class2.h>
 #include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 
-#define IO_WRITE_CACHE_ENABLED  ((NTSTATUS)0x80040020L)
-#define IO_WRITE_CACHE_DISABLED ((NTSTATUS)0x80040022L)
 
 #ifdef POOL_TAGGING
 #ifdef ExAllocatePool
@@ -309,6 +308,11 @@ NTAPI
 ResetScsiBus(
     IN PDEVICE_OBJECT DeviceObject
     );
+
+NTSTATUS
+NTAPI
+ScsiDiskFileSystemControl(PDEVICE_OBJECT DeviceObject,
+                          PIRP Irp);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, DriverEntry)
@@ -1183,7 +1187,7 @@ CreatePartitionDeviceObjects(
         // Allocate and zero a partition list.
         //
 
-        partitionList = ExAllocatePool(NonPagedPool, sizeof(*partitionList ));
+        partitionList = ExAllocatePool(NonPagedPool, sizeof(*partitionList));
 
 
         if (partitionList != NULL) {
@@ -1446,6 +1450,10 @@ CreatePartitionDeviceObjects(
 
         ExFreePool(partitionList);
 
+        if (dmSkew) {
+            ExFreePool(dmSkew);
+        }
+
     } else {
 
 CreatePartitionDeviceObjectsExit:
@@ -1455,6 +1463,10 @@ CreatePartitionDeviceObjectsExit:
         }
         if (initData) {
             ExFreePool(initData);
+        }
+
+        if (dmSkew) {
+            ExFreePool(dmSkew);
         }
 
         return status;
@@ -1502,6 +1514,15 @@ Return Value:
     LARGE_INTEGER startingOffset;
 
     //
+    // HACK: How can we end here with null sector size?!
+    //
+
+    if (deviceExtension->DiskGeometry->Geometry.BytesPerSector == 0) {
+        DPRINT1("Hack! Received invalid sector size\n");
+        deviceExtension->DiskGeometry->Geometry.BytesPerSector = 512;
+    }
+
+    //
     // Verify parameters of this request.
     // Check that ending sector is within partition and
     // that number of bytes to transfer is a multiple of
@@ -1535,6 +1556,18 @@ Return Value:
             //
 
             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        }
+
+        if (startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) {
+            DPRINT1("Reading beyond partition end! startingOffset: %I64d, PartitionLength: %I64d\n", startingOffset.QuadPart, deviceExtension->PartitionLength.QuadPart);
+        }
+
+        if (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1)) {
+            DPRINT1("Not reading sectors! TransferByteCount: %lu, BytesPerSector: %lu\n", transferByteCount, deviceExtension->DiskGeometry->Geometry.BytesPerSector);
+        }
+
+        if (Irp->IoStatus.Status == STATUS_DEVICE_NOT_READY) {
+            DPRINT1("Failing due to device not ready!\n");
         }
 
         return STATUS_INVALID_PARAMETER;
@@ -1909,7 +1942,7 @@ Return Value:
                 case EXECUTE_OFFLINE_DIAGS:
                     controlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
                     break;
-      
+
           default:
                     status = STATUS_INVALID_PARAMETER;
                     break;
@@ -2090,13 +2123,13 @@ Return Value:
             RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
                           deviceExtension->DiskGeometry,
                           (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) ?
-                          sizeof(DISK_GEOMETRY) : 
+                          sizeof(DISK_GEOMETRY) :
                           sizeof(DISK_GEOMETRY_EX));
 
             status = STATUS_SUCCESS;
             Irp->IoStatus.Information =
                (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) ?
-               sizeof(DISK_GEOMETRY) : 
+               sizeof(DISK_GEOMETRY) :
                sizeof(DISK_GEOMETRY_EX);
         }
 
@@ -2215,6 +2248,11 @@ Return Value:
 
             PPARTITION_INFORMATION outputBuffer;
 
+            if (diskData->PartitionNumber == 0) {
+                DPRINT1("HACK: Handling partition 0 request!\n");
+                //ASSERT(FALSE);
+            }
+
             //
             // Update the geometry in case it has changed.
             //
@@ -2236,12 +2274,6 @@ Return Value:
             //
 
             diskData->DriveNotReady = FALSE;
-// HACK: ReactOS partition numbers must be wrong (>0 part)
-            if (diskData->PartitionType == 0 && (diskData->PartitionNumber > 0)) {
-
-                status = STATUS_INVALID_DEVICE_REQUEST;
-                break;
-            }
 
             outputBuffer =
                     (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
@@ -2278,6 +2310,7 @@ Return Value:
             status = STATUS_INFO_LENGTH_MISMATCH;
 
         }
+#if 0 // HACK: ReactOS partition numbers must be wrong
         else if (diskData->PartitionNumber == 0) {
 
             //
@@ -2288,9 +2321,15 @@ Return Value:
             status = STATUS_INVALID_DEVICE_REQUEST;
 
         }
+#endif
         else {
 
             PPARTITION_INFORMATION_EX outputBuffer;
+
+            if (diskData->PartitionNumber == 0) {
+                DPRINT1("HACK: Handling partition 0 request!\n");
+                //ASSERT(FALSE);
+            }
 
             //
             // Update the geometry in case it has changed.
@@ -2485,7 +2524,7 @@ Return Value:
                     partitionEntry = &partitionList->PartitionEntry[i];
 
                     //
-                    // Check if empty, or describes extended partiton or hasn't changed.
+                    // Check if empty, or describes extended partition or hasn't changed.
                     //
 
                     if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
@@ -4846,7 +4885,7 @@ Return Value:
             partitionEntry = &partitionList->PartitionEntry[partition];
 
             //
-            // Check if empty, or describes extended partiton or hasn't changed.
+            // Check if empty, or describes extended partition or hasn't changed.
             //
 
             if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
@@ -4956,7 +4995,7 @@ Return Value:
         partitionEntry = &partitionList->PartitionEntry[partition];
 
         //
-        // Check if empty, or describes an extended partiton.
+        // Check if empty, or describes an extended partition.
         //
 
         if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
@@ -5194,3 +5233,4 @@ Return Value:
     }
 
 } // end UpdateDeviceObjects()
+

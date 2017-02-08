@@ -672,7 +672,6 @@ enum EmfPlusRecordType {
     EmfPlusRecordTypeSetAntiAliasMode,
     EmfPlusRecordTypeSetTextRenderingHint,
     EmfPlusRecordTypeSetTextContrast,
-    EmfPlusRecordTypeSetGammaValue,
     EmfPlusRecordTypeSetInterpolationMode,
     EmfPlusRecordTypeSetPixelOffsetMode,
     EmfPlusRecordTypeSetCompositingMode,
@@ -703,6 +702,8 @@ enum EmfPlusRecordType {
     EmfPlusRecordTypeMax = EmfPlusRecordTotal-1,
     EmfPlusRecordTypeMin = EmfPlusRecordTypeHeader
 };
+
+#define FlatnessDefault 0.25f
 
 #ifndef __cplusplus
 

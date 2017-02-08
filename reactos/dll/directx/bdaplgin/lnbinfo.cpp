@@ -4,7 +4,7 @@
  * FILE:            dll/directx/bdaplgin/lnbinfo.cpp
  * PURPOSE:         IBDA_LNBInfo interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "precomp.h"

@@ -1,0 +1,491 @@
+/*
+ * Resources for Common Dialogs
+ *
+ * Copyright 1999 Bertho Stultiens
+ * Copyright 1999 Klaas van Gend
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_FILENOTFOUND        "Fitxer no trobat"
+    IDS_VERIFYFILE          "Si us plau, verifiqueu que es hagués donat el nom correct del fitxer"
+    IDS_CREATEFILE          "El fitxer no existeix.\n\
+El voleu crear?"
+    IDS_OVERWRITEFILE       "El fitxer ja existeix.\n\
+El voleu reemplaçar?"
+    IDS_INVALID_FILENAME_TITLE "Hi ha caràcters invàlids en la ruta"
+    IDS_INVALID_FILENAME    "Un nom de fitxer no pot contenir cualsevol dels caràcters següents:\n\
+                          / : < > |"
+    IDS_PATHNOTEXISTING     "La ruta no existeix"
+    IDS_FILENOTEXISTING     "El fitxer no existeix"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+}
+
+STRINGTABLE
+{
+    IDS_UPFOLDER         "Un Nivell Amunt"
+    IDS_NEWFOLDER        "Crear Nova Carpeta"
+    IDS_LISTVIEW         "Llista"
+    IDS_REPORTVIEW       "Detalls"
+    IDS_TODESKTOP        "Anar a Escriptori"
+}
+
+STRINGTABLE
+{
+    PD32_PRINT_TITLE       "Imprimeix"
+
+    PD32_VALUE_UREADABLE                  "Entrada Il·legible"
+    PD32_INVALID_PAGE_RANGE "Aquest valor no cau entre l'abast de la pàgina.\n\
+Si us plau, introdueix un valor entre %1!d! i %2!d!."
+    PD32_FROM_NOT_ABOVE_TO                "La entrada 'de' no pot superar la entrada 'a'."
+    PD32_MARGINS_OVERLAP                  "Els marges es superposen o cauen fora dels límits de la pàgina.\n\
+Si us plau, reintrodueix els marges."
+    PD32_NR_OF_COPIES_EMPTY               "El camp 'Nombre de còpies' no pot estar buit."
+    PD32_TOO_LARGE_COPIES                 "Aquest gran nombre de còpies no és compatible amb la vostre impressora.\n\
+Si us plau, introduïu un valor entre 1 i %d."
+    PD32_PRINT_ERROR                      "S'ha produït un error d'impressora."
+    PD32_NO_DEFAULT_PRINTER               "No s'ha seleccionat cap impressora predeterminada."
+    PD32_CANT_FIND_PRINTER                "No es pot trobar la impressora."
+    PD32_OUT_OF_MEMORY                    "No queda memòria."
+    PD32_GENERIC_ERROR                    "Un error s'ha produït."
+    PD32_DRIVER_UNKNOWN                   "Controlador d'impressora desconegut."
+    PD32_NO_DEVICES                       "Abans que pugueu realitzar tasques relacionats amb la impressora com configurar la pàgina o imprimir un document, cal instal·lar una impressora. Si us plau, instal·leu una i torneu a intentar."
+
+    PD32_DEFAULT_PRINTER                  "Impressora Predeterminada; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Hi ha %d documents en la cua"
+    PD32_MARGINS_IN_INCHES                "Marges [polzades]"
+    PD32_MARGINS_IN_MILLIMETERS           "Marges [mm]"
+    PD32_MILLIMETERS                      "unidad: mil·límetres"
+
+    PD32_PRINTER_STATUS_READY             "Llest"
+    PD32_PRINTER_STATUS_PAUSED            "Pausada; "
+    PD32_PRINTER_STATUS_ERROR             "Error; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Pendent d'eliminació; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Embús de paper; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "No queda paper; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Introduir paper manualment; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Problema de paper; "
+    PD32_PRINTER_STATUS_OFFLINE           "Impressora fora de línea; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "E/S Actius; "
+    PD32_PRINTER_STATUS_BUSY              "Ocupada; "
+    PD32_PRINTER_STATUS_PRINTING          "Imprimint; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "La safata de sortida està plena; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "No disponible; "
+    PD32_PRINTER_STATUS_WAITING           "Esperant; "
+    PD32_PRINTER_STATUS_PROCESSING        "Realitzant; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Inicialitzant; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Escalfant; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Tòner baix; "
+    PD32_PRINTER_STATUS_NO_TONER          "Falta tòner; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Expulsió de pàgina; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Interromput per usuari; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "No queda memòria; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "La porta de la impressora està oberta; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Servidor d'impresió desconegut; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Mode d'estalvi d'energia; "
+}
+
+STRINGTABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Regular"
+    IDS_FONT_BOLD          "Negreta"
+    IDS_FONT_ITALIC        "Cursiva"
+    IDS_FONT_BOLD_ITALIC   "Negreta Cursiva"
+}
+
+STRINGTABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Negre"
+    IDS_COLOR_MAROON    "Granat"
+    IDS_COLOR_GREEN     "Verd"
+    IDS_COLOR_OLIVE     "Oliva"
+    IDS_COLOR_NAVY      "Marí"
+    IDS_COLOR_PURPLE    "Porpra"
+    IDS_COLOR_TEAL      "Xarxet"
+    IDS_COLOR_GRAY      "Gris"
+    IDS_COLOR_SILVER    "Plata"
+    IDS_COLOR_RED       "Vermell"
+    IDS_COLOR_LIME      "Llima"
+    IDS_COLOR_YELLOW    "Groc"
+    IDS_COLOR_BLUE      "Blau"
+    IDS_COLOR_FUCHSIA   "Fúcsia"
+    IDS_COLOR_AQUA      "Aigua"
+    IDS_COLOR_WHITE     "Blanc"
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SIZE   "Seleccioneu una mida de lletra entre %1!d! i %2!d! punts."
+    IDS_SAVE_BUTTON "&Desa"
+    IDS_SAVE_IN     "Desa &en:"
+    IDS_SAVE        "Desa"
+    IDS_SAVE_AS     "Anomenar i Desar"
+    IDS_OPEN_FILE   "Obre Fitxer"
+    IDS_SELECT_FOLDER "Select Folder"
+    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+}
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+OPEN_FILE DIALOG 36, 24, 275, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Obre"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Nom de Fitxer:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Directoris:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Tipus de fitxers:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Unitats:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Obre", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel·la", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "A&juda", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Només Lectura", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG 36, 24, 275, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Anomenar i desar..."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Nom de Fitxer:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Directoris:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Tipus de fitxers:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Unitats:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Anomenar i Desar", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel·la", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "A&juda", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Només Lectura", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG 36, 24, 264, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Imprimeix"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Impressora:", stc1, 6, 6, 40, 9
+ LTEXT "", stc2, 60, 6, 150, 9
+ GROUPBOX "Interval d'impressi", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Tot", rad1, 16, 45, 60, 12
+ RADIOBUTTON "&Selecció", rad2, 16, 60, 60, 12
+ RADIOBUTTON "Pà&gines", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "Imprimeix", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel·la", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Configuració", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&De:", stc3, 60, 80, 30, 9
+ LTEXT "&A:", stc4, 120, 80, 30, 9
+ LTEXT "&Qualitat d'Impressió:", stc5, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "Imprimir a un &Fitxer", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Condensat", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG 36, 24, 264, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configuració d'Impressió"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "Impressora:", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "Impressora per &Defecte", rad1, 16, 16, 150, 12
+ LTEXT "[cap]", stc1, 35, 30, 120, 9
+ RADIOBUTTON "Impressora &Específica:", rad2, 16, 44, 150, 12
+ COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "D'acord", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel·la", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Configuració", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Orientació", grp2, 6, 82, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&Vertical", rad3, 50, 95, 50, 12
+ RADIOBUTTON "&Horizontal", rad4, 50, 110, 50, 12
+ ICON "LANDSCAP", stc10, 10, 95, 32, 32
+ ICON "PORTRAIT", stc11, 10, 95, 32, 32
+ GROUPBOX "Paper", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ LTEXT "&Mida", stc2, 126, 95, 35, 9
+ LTEXT "&Font:", stc3, 126, 110, 35, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG  13, 54, 274, 147
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tipus de Lletra"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Tipus de lletra:",stc1 ,6,3,90,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&Estil del Tipus de Lletra:",stc2 ,108,3,60,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&Mida:",stc3,179,3,32,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "D'acord",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Cancel·la",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Aplica", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "A&juda" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Efectes",grp1,6,72,84,36,WS_GROUP
+    CHECKBOX	    "&Ratllat", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Subratllat", chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    LTEXT           "&Color:", stc4 ,6,114,80,9
+    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Exemple",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Scr&ipt:",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG 36, 24, 300, 185
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Color"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Colors &Básics:",   stc1, 4,    4,  140, 10
+ LTEXT "Colors &Personalitzats:",  stc2, 4,   106, 140, 10
+ LTEXT "Color |  Sòl&id",  stc3, 150, 151,  48, 10
+ LTEXT   "Ver&mell:", IDC_COLOR_RL /*1094*/,247,126,27,10
+ EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "Ver&d:", IDC_COLOR_GL /*1095*/,247,140,27,10
+ EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Blau:", IDC_COLOR_BL /*1096*/,247,154,27,10
+ EDITTEXT IDC_COLOR_EDIT_B, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Ton.:" , IDC_COLOR_HL /*1091*/,200,126,24,10
+ EDITTEXT IDC_COLOR_EDIT_H, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Sat.:", IDC_COLOR_SL /*1092*/,200,140,24,10
+ EDITTEXT IDC_COLOR_EDIT_S, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Llum.:", IDC_COLOR_LL /*1093*/,200,154,24,10
+ EDITTEXT IDC_COLOR_EDIT_L, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" , IDC_COLOR_PREDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" , IDC_COLOR_USRDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" , IDC_COLOR_GRAPH, "STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" , IDC_COLOR_LUMBAR, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" , IDC_COLOR_RESULT, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "D'acord",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel·la", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Ajuda", pshHelp,100,166, 44, 14
+ PUSHBUTTON "&Afegeix als Colors Personalitzats",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Defineix els Colors Personalitzats >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Color |  Sòl&id", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
+}
+
+
+FINDDLGORD DIALOG 36, 24, 276, 62
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cerca"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Cerca Por:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Troba només paraules &completes", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Distingir majúscules de minúscules", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Direcció", grp1, 147, 21, 58, 38
+ CONTROL "A&munt", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+ CONTROL "A &Baix", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+
+ DEFPUSHBUTTON "&Continuació", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Cancel·la", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "A&juda", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG 36, 24, 276, 94
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Substitució"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Cerca Por:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "&Substituir per:", -1, 4, 26, 52, 8
+ EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Troba només paraules &completes", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Distingir majúscules de minúscules", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "&Continuació", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "S&ubstitució", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Substitució &automàtica", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel·la", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "A&juda", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG  32, 32, 288, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "Imprimeix"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "D'acord",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Cancel·la", IDCANCEL, 230,164, 50,14, WS_GROUP
+    PUSHBUTTON      "A&juda",  pshHelp,  50, 161, 50,14, WS_GROUP
+
+    GROUPBOX        "Impressora:",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Imprimeix a &fitxer", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "&Propietats",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Nom:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Estat:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipus:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "On:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Comentari:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Copies",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Nombre de &copies:",stc5,168,105,68,8
+    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "C&ompagina",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Interval d'impressi",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Tot",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "Pa&ges",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "&Selecci",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "&de:",         stc2,  52,124,  20,8
+    RTEXT           "&a:",           stc3,  99,124,  20,8
+}
+
+PRINT32_SETUP DIALOG  32, 32, 288, 178
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Configuració d'Impressió"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "D'acord",IDOK,176,156,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel·la",IDCANCEL,230,156,50,14
+/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Impressora:",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Propietats",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Nom:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Estat:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipus:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "On:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Comentari:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Paper",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Mi&da:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Font:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Orientació",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "&Vertical",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "&Horizontal",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG 32, 32, 240, 240
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Configuració de la Pgina"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Paper", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Mida:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "&Safata:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Orientació", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Vertical", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Horizontal", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Vores", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "&Esquerra:", stc15, 88, 172, 30, 8
+  EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Dreta:", stc16, 159, 172, 30, 8
+  EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "S&uperior:", stc17, 88, 192, 30, 8
+  EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Inferior:", stc18, 159, 192, 30, 8
+  EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "D'acord", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Cancel·la", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Imp&ressora...", psh3, 182, 220, 50, 14
+END
+
+NEWFILEOPENORD DIALOG 0, 0, 280, 164
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Obre"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"Cerca &en:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"&Nom de fitxer:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+    CONTROL     "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
+
+    LTEXT	"Fitxers de &tipus:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Obre per només &lectura",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+
+    DEFPUSHBUTTON	"&Obre",		 IDOK,222,110,54,14
+    PUSHBUTTON		"Cancel·la",		 IDCANCEL,222,128,54,14
+    PUSHBUTTON		"A&juda",		 pshHelp,222,145,54,14
+}
+
+NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
+      WS_THICKFRAME
+CAPTION "Obre"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "Nom de fitxer:", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
+
+    LTEXT           "Fitxers de tipus:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+                    CBS_HASSTRINGS | CBS_DROPDOWNLIST
+
+    DEFPUSHBUTTON   "&Obre",  IDOK,     350, 240, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel·la", IDCANCEL, 395, 240, 40, 14
+    PUSHBUTTON      "A&juda",  pshHelp,  350, 272, 40, 14
+}

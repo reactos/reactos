@@ -1,0 +1,60 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_BATTERY ICON "resources/1.ico"
+IDI_EXTRACT ICON "resources/2.ico"
+IDI_VOLUME  ICON "resources/3.ico"
+IDI_VOLMUTE ICON "resources/4.ico"
+
+IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
+
+#include <reactos/manifest_dll.rc>
+
+// Strings common to all languages
+STRINGTABLE
+BEGIN
+    // Power related strings
+    IDS_PWR_RUN         "shell32.dll,Control_RunDLL PowerCfg.cpl"
+
+    // Hotplug related strings
+    IDS_HOTPLUG_RUN     "shell32.dll,Control_RunDLL hotplug.dll"
+
+    // Volume related strings
+    IDS_VOL_RUN         "SNDVOL32.EXE"
+END
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

@@ -98,7 +98,7 @@ ULONG
 NTAPI
 LdrRelocateImage(
     _In_ PVOID NewBase,
-    _In_ PUCHAR LoaderName,
+    _In_ PCCH LoaderName,
     _In_ ULONG Success,
     _In_ ULONG Conflict,
     _In_ ULONG Invalid

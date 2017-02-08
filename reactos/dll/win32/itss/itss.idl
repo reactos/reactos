@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep register
+
 [
     helpstring("Microsoft InfoTech Protocol for IE 3.0"),
     threading(both),

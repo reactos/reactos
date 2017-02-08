@@ -33,17 +33,15 @@
 @ stdcall GetBestRoute( long long long )
 @ stub GetBestRouteFromStack
 @ stdcall GetExtendedTcpTable( ptr ptr long long long long )
-@ stub GetExtendedUdpTable
+@ stdcall -stub GetExtendedUdpTable( ptr ptr long long long long )
 @ stdcall GetFriendlyIfIndex( long )
 @ stdcall GetIcmpStatistics( ptr )
 @ stdcall GetIcmpStatisticsEx(ptr long)
 @ stub GetIcmpStatsFromStack
 @ stub GetIcmpStatsFromStackEx
 @ stdcall GetIfEntry( ptr )
-@ stdcall GetIfEntry2( ptr )
 @ stub GetIfEntryFromStack
 @ stdcall GetIfTable( ptr ptr long )
-@ stdcall GetIfTable2(ptr)
 @ stub GetIfTableFromStack
 @ stub GetIgmpList
 @ stdcall GetInterfaceInfo( ptr ptr )
@@ -81,14 +79,14 @@
 @ stdcall GetUdpTable( ptr ptr long )
 @ stub GetUdpTableFromStack
 @ stdcall GetUniDirectionalAdapterInfo( ptr ptr )
-@ stub Icmp6CreateFile
-@ stub Icmp6ParseReplies
-@ stub Icmp6SendEcho2
-@ stdcall IcmpCloseHandle(ptr) icmp.IcmpCloseHandle
-@ stdcall IcmpCreateFile() icmp.IcmpCreateFile
-@ stdcall IcmpParseReplies(ptr long) icmp.IcmpParseReplies
-@ stdcall IcmpSendEcho(ptr long ptr long ptr ptr long long) icmp.IcmpSendEcho
-@ stdcall IcmpSendEcho2(ptr ptr ptr ptr long ptr long ptr ptr long long) icmp.IcmpSendEcho2
+@ stdcall Icmp6CreateFile()
+@ stdcall -stub Icmp6ParseReplies(ptr long)
+@ stdcall Icmp6SendEcho2(ptr ptr ptr ptr ptr ptr ptr long ptr ptr long long)
+@ stdcall IcmpCloseHandle(ptr)
+@ stdcall IcmpCreateFile()
+@ stdcall -stub IcmpParseReplies(ptr long)
+@ stdcall IcmpSendEcho2(ptr ptr ptr ptr long ptr long ptr ptr long long)
+@ stdcall IcmpSendEcho(ptr long ptr long ptr ptr long long)
 @ stub InternalCreateIpForwardEntry
 @ stub InternalCreateIpNetEntry
 @ stub InternalDeleteIpForwardEntry

@@ -1,10 +1,4 @@
-/*
- * PROJECT:     ReactOS subst
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/subst/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for subst
- * TRANSLATOR:  Igor Paliychuk
- */
+/* Ukraianian translation by Igor Paliychuk */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
@@ -13,8 +7,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Невірна кількість параметрів - %s\n"
     IDS_INVALID_PARAMETER "Невірна кількість параметрів - %s\n"
     IDS_INVALID_PARAMETER2 "Невірний параметр - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "До диску вже застосовано SUBST\n"
-    IDS_FAILED_WITH_ERROCODE "Невдача з кодом помилки 0x%x: %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "До диску вже застосовано SUBST\n"
+    IDS_FAILED_WITH_ERRORCODE "Невдача з кодом помилки 0x%x: %s\n"
     IDS_USAGE "Асоціює шлях з буквою диску.\n\n\
 SUBST [диск1: [диск2:]шлях]\n\
 SUBST диск1: /D\n\n\

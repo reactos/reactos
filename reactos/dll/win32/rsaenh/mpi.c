@@ -1387,7 +1387,7 @@ static int mp_lshd (mp_int * a, int b)
 {
   int     x, res;
 
-  /* if its less than zero return */
+  /* if it's less than zero return */
   if (b <= 0) {
     return MP_OKAY;
   }
@@ -1624,7 +1624,7 @@ static int mp_div (const mp_int * a, const mp_int * b, mp_int * c, mp_int * d)
      norm = 0;
   }
 
-  /* note hac does 0 based, so if used==5 then its 0,1,2,3,4, e.g. use 4 */
+  /* note hac does 0 based, so if used==5 then it's 0,1,2,3,4, e.g. use 4 */
   n = x.used - 1;
   t = y.used - 1;
 
@@ -1745,17 +1745,17 @@ __Q:mp_clear (&q);
   return res;
 }
 
-static int s_is_power_of_two(mp_digit b, int *p)
+static BOOL s_is_power_of_two(mp_digit b, int *p)
 {
    int x;
 
    for (x = 1; x < DIGIT_BIT; x++) {
       if (b == (((mp_digit)1)<<x)) {
          *p = x;
-         return 1;
+         return TRUE;
       }
    }
-   return 0;
+   return FALSE;
 }
 
 /* single digit division (based on routine from MPI) */
@@ -1783,7 +1783,7 @@ static int mp_div_d (const mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
   }
 
   /* power of two ? */
-  if (s_is_power_of_two(b, &ix) == 1) {
+  if (s_is_power_of_two(b, &ix)) {
      if (d != NULL) {
         *d = a->dp[0] & ((((mp_digit)1)<<ix) - 1);
      }
@@ -1955,8 +1955,8 @@ int mp_exptmod (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y)
 
   dr = 0;
 
-  /* if the modulus is odd or dr != 0 use the fast method */
-  if (mp_isodd (P) == 1 || dr !=  0) {
+  /* if the modulus is odd use the fast method */
+  if (mp_isodd (P) == 1) {
     return mp_exptmod_fast (G, X, P, Y, dr);
   } else {
     /* otherwise use the generic Barrett reduction technique */
@@ -2536,7 +2536,7 @@ top:
     goto __ERR;
   }
 
-  /* if its too low */
+  /* if it's too low */
   while (mp_cmp_d(&C, 0) == MP_LT) {
       if ((res = mp_add(&C, b, &C)) != MP_OKAY) {
          goto __ERR;
@@ -2821,13 +2821,13 @@ int mp_lcm (const mp_int * a, const mp_int * b, mp_int * c)
 
   /* divide the smallest by the GCD */
   if (mp_cmp_mag(a, b) == MP_LT) {
-     /* store quotient in t2 such that t2 * b is the LCM */
+     /* store quotient in t2 so that t2 * b is the LCM */
      if ((res = mp_div(a, &t1, &t2, NULL)) != MP_OKAY) {
         goto __T;
      }
      res = mp_mul(b, &t2, c);
   } else {
-     /* store quotient in t2 such that t2 * a is the LCM */
+     /* store quotient in t2 so that t2 * a is the LCM */
      if ((res = mp_div(b, &t1, &t2, NULL)) != MP_OKAY) {
         goto __T;
      }
@@ -3519,8 +3519,8 @@ mp_read_unsigned_bin (mp_int * a, const unsigned char *b, int c)
       return res;
     }
 
-      a->dp[0] |= *b++;
-      a->used += 1;
+    a->dp[0] |= *b++;
+    a->used += 1;
   }
   mp_clamp (a);
   return MP_OKAY;

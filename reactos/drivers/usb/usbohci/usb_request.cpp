@@ -8,10 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
-
 #include "usbohci.h"
-#include "hardware.h"
+
+#define NDEBUG
+#include <debug.h>
 
 class CUSBRequest : public IOHCIRequest
 {
@@ -1288,6 +1288,14 @@ CUSBRequest::BuildBulkInterruptEndpoint(
                                           &FirstDescriptor,
                                           &LastDescriptor,
                                           &ChainDescriptorLength);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to build transfer descriptor chain
+        //
+        m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
+        return Status;
+    }
 
     //
     // move to next offset

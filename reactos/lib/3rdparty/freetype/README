@@ -1,24 +1,22 @@
-  Special notes to Unix users
-  ===========================
-
-  Please  read  the file  `docs/UPGRADE.UNIX'.  It contains  important
-  information regarding the installation  of FreeType on Unix systems,
-  especially GNU based operating systems like GNU/Linux.
-
-  FreeType 2's  library is called `libfreetype',  FreeType 1's library
-  is called `libttf'.  They are *not* compatible!
-
-
-  FreeType 2.4.4
+  FreeType 2.6.3
   ==============
+
+  Homepage: http://www.freetype.org
+
+  FreeType is a freely available software library to render fonts.
+
+  It  is  written  in  C,  designed to  be  small,  efficient,  highly
+  customizable, and  portable while capable of  producing high-quality
+  output  (glyph  images) of  most  vector  and bitmap  font  formats.
 
   Please   read   the  docs/CHANGES   file,   it  contains   IMPORTANT
   INFORMATION.
 
-  Read the files `docs/INSTALL' for installation instructions.
+  Read the  files `docs/INSTALL*'  for installation  instructions; see
+  the file `docs/LICENSE.TXT' for the available licenses.
 
   The FreeType 2 API reference is located in `docs/reference'; use the
-  file   `ft2-doc.html'   as   the   top  entry   point.    Additional
+  file   `ft2-toc.html'   as   the   top  entry   point.    Additional
   documentation is available as a separate package from our sites.  Go
   to
 
@@ -26,22 +24,44 @@
 
   and download one of the following files.
 
-    freetype-doc-2.4.4.tar.bz2
-    freetype-doc-2.4.4.tar.gz
-    ftdoc244.zip
+    freetype-doc-2.6.3.tar.bz2
+    freetype-doc-2.6.3.tar.gz
+    ftdoc263.zip
+
+  To view the documentation online, go to
+
+    http://www.freetype.org/freetype2/documentation.html
+
+
+  Mailing Lists
+  =============
+
+  The preferred way  of communication with the FreeType  team is using
+  e-mail lists.
+
+    general use and discussion:      freetype@nongnu.org
+    engine internals, porting, etc.: freetype-devel@nongnu.org
+    announcements:                   freetype-announce@nongnu.org
+    git repository tracker:          freetype-commit@nongnu.org
+
+  The lists are moderated; see
+
+    http://www.freetype.org/contact.html
+
+  how to subscribe.
 
 
   Bugs
   ====
 
-  Please report bugs  by e-mail to `freetype-devel@nongnu.org'.  Don't
-  forget to  send a  detailed explanation of  the problem --  there is
-  nothing  worse than  receiving a  terse message  that only  says `it
-  doesn't work'.
-
-  Alternatively, you may submit a bug report at
+  Please submit bug reports at
 
     https://savannah.nongnu.org/bugs/?group=freetype
+
+  Alternatively,    you   might    report    bugs    by   e-mail    to
+  `freetype-devel@nongnu.org'.   Don't  forget   to  send  a  detailed
+  explanation of the problem --  there is nothing worse than receiving
+  a terse message that only says `it doesn't work'.
 
 
   Enjoy!
@@ -51,7 +71,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006, 2007, 2008, 2009, 2010 by
+Copyright 2006-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

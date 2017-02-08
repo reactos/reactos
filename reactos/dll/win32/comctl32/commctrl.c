@@ -3,6 +3,7 @@
  *
  * Copyright 1997 Dimitrie O. Paun
  * Copyright 1998,2000 Eric Kohl
+ * Copyright 2014-2015 Michael Müller
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -52,26 +53,10 @@
  *   -- ICC_WIN95_CLASSES
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "comctl32.h"
 
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "wingdi.h"
-//#include "winuser.h"
-#include <winnls.h>
-//#include "commctrl.h"
-//#include "winerror.h"
-#include <winreg.h>
 #define NO_SHLWAPI_STREAM
 #include <shlwapi.h>
-#include "comctl32.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
@@ -119,7 +104,7 @@ static BOOL create_manifest(BOOL install)
     HANDLE hFile;
     BOOL bRet = FALSE;
 
-    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", RT_MANIFEST);
+    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", (LPWSTR)RT_MANIFEST);
     if (!hResInfo)
         return FALSE;
 
@@ -235,7 +220,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
 
 	case DLL_PROCESS_DETACH:
-            /* clean up subclassing */ 
+            if (lpvReserved) break;
+            /* clean up subclassing */
             THEMING_Uninitialize();
 
             /* unregister all common control classes */
@@ -263,14 +249,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
             /* delete local pattern brush */
             DeleteObject (COMCTL32_hPattern55AABrush);
-            COMCTL32_hPattern55AABrush = NULL;
             DeleteObject (COMCTL32_hPattern55AABitmap);
-            COMCTL32_hPattern55AABitmap = NULL;
 
             /* delete global subclassing atom */
             GlobalDeleteAtom (LOWORD(COMCTL32_wSubclass));
             TRACE("Subclassing atom deleted: %p\n", COMCTL32_wSubclass);
-            COMCTL32_wSubclass = NULL;
             break;
     }
 
@@ -947,7 +930,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
  *     Failure: 0
  *
  * NOTES
- *     Do not use this functions anymore. Use CreateToolbarEx instead.
+ *     Do not use this function anymore. Use CreateToolbarEx instead.
  */
 
 HWND WINAPI
@@ -1013,7 +996,7 @@ HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
         ERR("create_manifest failed!\n");
         return HRESULT_FROM_WIN32(GetLastError());
     }
-        
+
     return S_OK;
 }
 
@@ -1170,7 +1153,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
  * Gets the Reference data from a subclass.
  *
  * PARAMS
- *     hWnd [in] Handle to window which were subclassing
+ *     hWnd [in] Handle to the window which we are subclassing
  *     pfnSubclass [in] Pointer to the subclass procedure
  *     uID [in] Unique identifier of the subclassing procedure
  *     pdwRef [out] Pointer to the reference data
@@ -1213,7 +1196,7 @@ BOOL WINAPI GetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
  * Removes a window subclass.
  *
  * PARAMS
- *     hWnd [in] Handle to the window were subclassing
+ *     hWnd [in] Handle to the window which we are subclassing
  *     pfnSubclass [in] Pointer to the subclass procedure
  *     uID [in] Unique identifier of this subclass
  *
@@ -1578,7 +1561,7 @@ void COMCTL32_GetFontMetrics(HFONT hFont, TEXTMETRICW *ptm)
  * identifies them.
  *
  * Some of the codes are in the CCM_FIRST..CCM_LAST range, but there is no
- * colision with defined CCM_ codes.
+ * collision with defined CCM_ codes.
  */
 BOOL COMCTL32_IsReflectedMessage(UINT uMsg)
 {
@@ -1627,7 +1610,7 @@ BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2)
     return FALSE;
 }
 
-static inline int IsDelimiter(WCHAR c)
+static inline BOOL IsDelimiter(WCHAR c)
 {
     switch(c)
     {
@@ -1824,6 +1807,54 @@ HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *pTaskConfig, int *pnBu
     if (pnRadioButton) *pnRadioButton = pTaskConfig->nDefaultButton;
     if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
     return S_OK;
+}
+
+/***********************************************************************
+ * LoadIconWithScaleDown [COMCTL32.@]
+ */
+HRESULT WINAPI LoadIconWithScaleDown(HINSTANCE hinst, const WCHAR *name, int cx, int cy, HICON *icon)
+{
+    TRACE("(%p, %s, %d, %d, %p)\n", hinst, debugstr_w(name), cx, cy, icon);
+
+    *icon = NULL;
+
+    if (!name)
+        return E_INVALIDARG;
+
+    *icon = LoadImageW(hinst, name, IMAGE_ICON, cx, cy,
+                       (hinst || IS_INTRESOURCE(name)) ? 0 : LR_LOADFROMFILE);
+    if (!*icon)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    return S_OK;
+}
+
+/***********************************************************************
+ * LoadIconMetric [COMCTL32.@]
+ */
+HRESULT WINAPI LoadIconMetric(HINSTANCE hinst, const WCHAR *name, int size, HICON *icon)
+{
+    int cx, cy;
+
+    TRACE("(%p, %s, %d, %p)\n", hinst, debugstr_w(name), size, icon);
+
+    if (size == LIM_SMALL)
+    {
+        cx = GetSystemMetrics(SM_CXSMICON);
+        cy = GetSystemMetrics(SM_CYSMICON);
+    }
+    else if (size == LIM_LARGE)
+    {
+        cx = GetSystemMetrics(SM_CXICON);
+        cy = GetSystemMetrics(SM_CYICON);
+    }
+    else
+    {
+        *icon = NULL;
+        return E_INVALIDARG;
+    }
+
+    return LoadIconWithScaleDown(hinst, name, cx, cy, icon);
 }
 
 /***********************************************************************

@@ -29,9 +29,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
-static const WCHAR szServerNameClass[] = {'D','d','e','S','e','r','v','e','r','N','a','m','e',0};
-const char WDML_szServerConvClassA[] = "DdeServerConvAnsi";
-const WCHAR WDML_szServerConvClassW[] = {'D','d','e','S','e','r','v','e','r','C','o','n','v','U','n','i','c','o','d','e',0};
+static const WCHAR szServerNameClass[] = L"DDEMLMom";
+const char WDML_szServerConvClassA[] = "DDEMLAnsiServer";
+const WCHAR WDML_szServerConvClassW[] = L"DDEMLUnicodeServer";
 
 static LRESULT CALLBACK WDML_ServerNameProc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK WDML_ServerConvProc(HWND, UINT, WPARAM, LPARAM);
@@ -50,19 +50,19 @@ static LRESULT CALLBACK WDML_ServerConvProc(HWND, UINT, WPARAM, LPARAM);
  */
 BOOL WINAPI DdePostAdvise(DWORD idInst, HSZ hszTopic, HSZ hszItem)
 {
-    WDML_INSTANCE*	pInstance = NULL;
-    WDML_LINK*		pLink = NULL;
-    HDDEDATA		hDdeData = 0;
-    HGLOBAL             hItemData = 0;
-    WDML_CONV*		pConv = NULL;
-    ATOM		atom = 0;
+    WDML_INSTANCE*	pInstance;
+    WDML_LINK*		pLink;
+    HDDEDATA		hDdeData;
+    HGLOBAL		hItemData;
+    WDML_CONV*		pConv;
+    ATOM		atom;
     UINT		count;
 
     TRACE("(%d,%p,%p)\n", idInst, hszTopic, hszItem);
 
     pInstance = WDML_GetInstance(idInst);
 
-    if (pInstance == NULL || pInstance->links == NULL)
+    if (pInstance == NULL)
         return FALSE;
 
     atom = WDML_MakeAtomFromHsz(hszItem);
@@ -135,7 +135,7 @@ BOOL WINAPI DdePostAdvise(DWORD idInst, HSZ hszTopic, HSZ hszItem)
     return TRUE;
 
  theError:
-    if (atom) GlobalDeleteAtom(atom);
+    GlobalDeleteAtom(atom);
     return FALSE;
 }
 
@@ -368,7 +368,7 @@ static LRESULT CALLBACK WDML_ServerNameProc(HWND hwndServer, UINT iMsg, WPARAM w
 {
     HWND		hwndClient;
     HSZ			hszApp, hszTop;
-    HDDEDATA		hDdeData = 0;
+    HDDEDATA		hDdeData;
     WDML_INSTANCE*	pInstance;
     UINT_PTR		uiLo, uiHi;
 
@@ -384,8 +384,8 @@ static LRESULT CALLBACK WDML_ServerNameProc(HWND hwndServer, UINT iMsg, WPARAM w
 	hwndClient = (HWND)wParam;
 
 	pInstance = WDML_GetInstanceFromWnd(hwndServer);
-	TRACE("idInst=%d, threadID=0x%x\n", pInstance->instanceID, GetCurrentThreadId());
 	if (!pInstance) return 0;
+	TRACE("idInst=%d, threadID=0x%x\n", pInstance->instanceID, GetCurrentThreadId());
 
 	/* don't free DDEParams, since this is a broadcast */
 	UnpackDDElParam(WM_DDE_INITIATE, lParam, &uiLo, &uiHi);
@@ -708,7 +708,7 @@ static	WDML_QUEUE_STATE WDML_ServerHandleUnadvise(WDML_CONV* pConv, WDML_XACT* p
 			  pXAct->hszItem, TRUE, pXAct->wFmt);
     if (pLink == NULL)
     {
-	ERR("Couln'd find link for %p, dropping request\n", pXAct->hszItem);
+	ERR("Couldn't find link for %p, dropping request\n", pXAct->hszItem);
 	FreeDDElParam(WM_DDE_UNADVISE, pXAct->lParam);
 	return WDML_QS_ERROR;
     }
@@ -748,6 +748,54 @@ static	WDML_XACT* WDML_ServerQueueExecute(WDML_CONV* pConv, LPARAM lParam)
     return pXAct;
 }
 
+static BOOL data_looks_unicode( const WCHAR *data, DWORD size )
+{
+    DWORD i;
+
+    if (size % sizeof(WCHAR)) return FALSE;
+    for (i = 0; i < size / sizeof(WCHAR); i++) if (data[i] > 255) return FALSE;
+    return TRUE;
+}
+
+/* convert data to Unicode, unless it looks like it's already Unicode */
+static HDDEDATA map_A_to_W( DWORD instance, void *ptr, DWORD size )
+{
+    HDDEDATA ret;
+    DWORD len;
+    const char *end;
+
+    if (!data_looks_unicode( ptr, size ))
+    {
+        if ((end = memchr( ptr, 0, size ))) size = end + 1 - (const char *)ptr;
+        len = MultiByteToWideChar( CP_ACP, 0, ptr, size, NULL, 0 );
+        ret = DdeCreateDataHandle( instance, NULL, len * sizeof(WCHAR), 0, 0, CF_TEXT, 0);
+        MultiByteToWideChar( CP_ACP, 0, ptr, size, (WCHAR *)DdeAccessData(ret, NULL), len );
+    }
+    else ret = DdeCreateDataHandle( instance, ptr, size, 0, 0, CF_TEXT, 0 );
+
+    return ret;
+}
+
+/* convert data to ASCII, unless it looks like it's not in Unicode format */
+static HDDEDATA map_W_to_A( DWORD instance, void *ptr, DWORD size )
+{
+    HDDEDATA ret;
+    DWORD len;
+    const WCHAR *end;
+
+    if (data_looks_unicode( ptr, size ))
+    {
+        size /= sizeof(WCHAR);
+        if ((end = memchrW( ptr, 0, size ))) size = end + 1 - (const WCHAR *)ptr;
+        len = WideCharToMultiByte( CP_ACP, 0, ptr, size, NULL, 0, NULL, NULL );
+        ret = DdeCreateDataHandle( instance, NULL, len, 0, 0, CF_TEXT, 0);
+        WideCharToMultiByte( CP_ACP, 0, ptr, size, (char *)DdeAccessData(ret, NULL), len, NULL, NULL );
+    }
+    else ret = DdeCreateDataHandle( instance, ptr, size, 0, 0, CF_TEXT, 0 );
+
+    return ret;
+}
+
  /******************************************************************
  *		WDML_ServerHandleExecute
  *
@@ -761,11 +809,16 @@ static	WDML_QUEUE_STATE WDML_ServerHandleExecute(WDML_CONV* pConv, WDML_XACT* pX
     if (!(pConv->instance->CBFflags & CBF_FAIL_EXECUTES))
     {
 	LPVOID	ptr = GlobalLock(pXAct->hMem);
+        DWORD size = GlobalSize(pXAct->hMem);
 
 	if (ptr)
 	{
-	    hDdeData = DdeCreateDataHandle(pConv->instance->instanceID, ptr, GlobalSize(pXAct->hMem),
-					   0, 0, CF_TEXT, 0);
+            if (pConv->instance->unicode)  /* Unicode server, try to map A->W */
+                hDdeData = map_A_to_W( pConv->instance->instanceID, ptr, size );
+            else if (!IsWindowUnicode( pConv->hwndClient )) /* ASCII server and client, try to map W->A */
+                hDdeData = map_W_to_A( pConv->instance->instanceID, ptr, size );
+            else
+                hDdeData = DdeCreateDataHandle(pConv->instance->instanceID, ptr, size, 0, 0, CF_TEXT, 0);
 	    GlobalUnlock(pXAct->hMem);
 	}
 	hDdeData = WDML_InvokeCallback(pConv->instance, XTYP_EXECUTE, 0, (HCONV)pConv,

@@ -2,49 +2,80 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "CrÈer un lien"
+CAPTION "Cr√©er un lien"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Texte1", -1, 115, 15, 160, 24
-	LTEXT "Texte2", -1, 115, 35, 160, 17
+    LTEXT "Texte1", -1, 115, 15, 160, 24
+    LTEXT "Texte2", -1, 115, 35, 160, 17
 END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "CrÈer un lien"
+CAPTION "Cr√©er un lien"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Texte1",-1,10,0,225,40
-	LTEXT "Texte2",-1,10,40,120,20
-	LTEXT "Texte3",-1,10,55,120,20
+    LTEXT "Texte1",-1,10,0,225,40
+    LTEXT "Texte2",-1,10,40,120,20
+    LTEXT "Texte3",-1,10,55,120,20
 END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "CrÈer un raccourci"
+CAPTION "Cr√©er un raccourci"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Cet assistant vous aider ‡ crÈer des raccourcis vers des programmes, des fichiers, des dossiers, des ordinateurs,\nou des adresses Internet locaux ou sur le rÈseau.", -1, 120, 15, 200, 30
-  LTEXT "Entrez la localisation de l'ÈlÈment :", -1, 120, 50, 120, 10
-  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Parcourir...", IDC_SHORTCUT_BROWSE, 272, 65, 60, 15, ES_LEFT
-  LTEXT "Cliquez sur Suivant pour continuer.", -1, 120, 97, 162, 10
+    LTEXT "Cet assistant vous aide √† cr√©er des raccourcis vers des programmes, des fichiers, des dossiers, des ordinateurs,\nou des adresses Internet locaux ou sur le r√©seau.", -1, 120, 15, 200, 30
+    LTEXT "Entrez la localisation de l'√©l√©ment :", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Parcourir...", IDC_SHORTCUT_BROWSE, 272, 65, 60, 15, ES_LEFT
+    LTEXT "Cliquez sur Suivant pour continuer.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "SÈlectionnez un titre pour le programme"
+CAPTION "S√©lectionnez un titre pour le programme"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "En&trez un nom pour ce raccourci :", -1, 120, 15, 150, 10
-  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Cliquez sur Terminer pour crÈer le raccourci.", -1, 118, 97, 178, 17
+    LTEXT "En&trez un nom pour ce raccourci :", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Cliquez sur Terminer pour cr√©er le raccourci.", -1, 118, 97, 178, 17
+END
+
+IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Shortcuts/Folders"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", -1, 10, 10, 192, 16
+    CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
+    PUSHBUTTON "&Remove", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Close", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation du package Wine Gecko"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS n'a trouv√© aucun package Wine Gecko n√©cessaire pour pouvoir ex√©cuter correctement les applications incluant du code HTML. ReactOS est capable de t√©l√©charger et d'installer automatiquement le package pour vous.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Installer", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Annuler", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Ajouter/Supprimer des Programmes"
-	IDS_CPLSYSTEMDESCRIPTION "Installe des programmes et crÈÈ des raccourcis."
-    IDS_CREATE_SHORTCUT "CrÈer un raccourci"
-    IDS_ERROR_NOT_FOUND "Le fichier %s n'a pas ÈtÈ trouvÈ."
+    IDS_CPLSYSTEMNAME "Ajouter/Supprimer des Programmes"
+    IDS_CPLSYSTEMDESCRIPTION "Installe des programmes et cr√©e des raccourcis."
+    IDS_CREATE_SHORTCUT "Cr√©er un raccourci"
+    IDS_ERROR_NOT_FOUND "Le fichier %s n'a pas √©t√© trouv√©."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DOWNLOADING "T√©l√©chargement..."
+    IDS_INSTALLING "Installation..."
+    IDS_INVALID_SHA "La somme de contr√¥le du fichier t√©l√©charg√© est erron√©e. Abandon de l'installation du fichier corrompu."
 END

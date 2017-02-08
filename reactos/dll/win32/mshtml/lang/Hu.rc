@@ -1,0 +1,57 @@
+/*
+ * Copyright 2010 Andras Kovacs
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_STATUS_DONE            "Done"
+    IDS_STATUS_DOWNLOADINGFROM "Downloading from %s..."
+}
+
+STRINGTABLE
+{
+    IDS_HTMLDOCUMENT    "HTML dokumentum"
+}
+
+IDD_HYPERLINK DIALOGEX 0, 0, 255, 65
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Hiperhivatkozás"
+FONT 8, "MS Shell Dlg"
+{
+    GROUPBOX "Hiperhivatkozás információ", -1, 5, 5, 190, 55
+    LTEXT "&Típus:", -1, 10, 22, 24, 10
+    COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
+    LTEXT "&URL:", -1, 10, 42, 24, 10
+    EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 200, 10, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Mégse", IDCANCEL, 200, 28, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+ID_PROMPT_DIALOG DIALOGEX 0, 0, 200, 90
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
+    EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 40, 65, 50, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Mégse", IDCANCEL, 110, 65, 50, 15, WS_GROUP | WS_TABSTOP
+}

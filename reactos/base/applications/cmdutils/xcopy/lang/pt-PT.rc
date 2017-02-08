@@ -1,0 +1,57 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
+    STRING_INVPARM,  "Parâmetro inválido '%1' -  Use xcopy /? para ajuda\n"
+    STRING_PAUSE,    "Carregue <Enter> para iniciar cópia\n"
+    STRING_SIMCOPY,  "%1!d! ficheiro(s) seriam copiado(s)\n"
+    STRING_COPY,     "%1!d! ficheiro(s) copiado(s)\n"
+    STRING_QISDIR,   "'%1' é um ficheiro ou directório\n\
+                     no alvo?\n\
+                     (F - Ficheiro, D - Directório)\n"
+    STRING_SRCPROMPT,"%1? (Yes|No)\n"
+    STRING_OVERWRITE,"Reescrever %1? (Yes|No|All)\n"
+    STRING_COPYFAIL, "Cópia de '%1' para '%2' falhou com r/c %3!d!\n"
+    STRING_OPENFAIL, "Falhou ao abrir '%1'\n"
+    STRING_READFAIL, "Falhou a ler '%1'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Copia ficheiros ou directórios para um destino\n\
+\n\
+Sintaxe:\n\
+XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Onde:\n\
+\n\
+[/I]  Assume directório se o destino não existe e está a copiar 2 ou\n\
+\tmais ficheiros\n\
+[/S]  Copiar directórios e subdirectórios\n\
+[/E]  Copiar directórios e subdirectórios, incluindo os vazios\n\
+[/Q]  Não mostrar nomes durante a cópia, ie quiet.\n\
+[/F]  Mostrar por completo os nomes de fonte e destino durante a cópia\n\
+[/L]  Simular a operação, mostrando os nomes que seriam copiados\n\
+[/W]  Alerta antes de iniciar a operação de cópia\n\
+[/T]  Cria a estrutura de directórios mas não copia ficheiros\n\
+[/Y]  Suprimir alertas quando reescreve ficheiros\n\
+[/-Y] Alertar quando reescreve ficheiros\n\
+[/P]  Alertar antes de cada ficheiro ser copiado\n\
+[/N]  Copiar usando nomes pequenos\n\
+[/U]  Copiar apenas ficheiros que já existem no destino\n\
+[/R]  Reescrever quaisquer ficheiros apenas de leitura\n\
+[/H]  Incluir ficheiros ocultos e de sistema na cópia\n\
+[/C]  Continuar mesmo que ocorra um erro durante a cópia\n\
+[/A]  Copiar apenas ficheiros com atributo de arquivo\n\
+[/M]  Copiar apenas ficheiros com atributo de arquivo, removendo\n\
+\to atributo de arquivo\n\
+[/D | /D:m-d-y] Copiar novos ficheiros ou os alterados após a data fornecida\n\
+\t\tSe nenhuma data for fornecida, apenas copiar se o destino\n\
+\t\tfor mais antigo que a fonte\n\n"
+
+}

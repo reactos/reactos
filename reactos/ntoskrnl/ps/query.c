@@ -17,9 +17,6 @@
 /* FIXME: From winbase.h... what to do? */
 #define SEM_NOALIGNMENTFAULTEXCEPT 0x04
 
-/* Include Information Class Tables */
-#include "internal/ps_i.h"
-
 /* Debugging Level */
 ULONG PspTraceLevel = 0;
 
@@ -73,6 +70,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
         (PPROCESS_BASIC_INFORMATION)ProcessInformation;
     PKERNEL_USER_TIMES ProcessTime = (PKERNEL_USER_TIMES)ProcessInformation;
+    ULONG UserTime, KernelTime;
     PPROCESS_PRIORITY_CLASS PsPriorityClass = (PPROCESS_PRIORITY_CLASS)ProcessInformation;
     ULONG HandleCount;
     PPROCESS_SESSION_INFORMATION SessionInfo =
@@ -108,12 +106,13 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         _SEH2_END;
     }
 
-    if((ProcessInformationClass == ProcessCookie) &&
+    if (((ProcessInformationClass == ProcessCookie) ||
+         (ProcessInformationClass == ProcessImageInformation)) &&
         (ProcessHandle != NtCurrentProcess()))
     {
         /*
-         * Retreiving the process cookie is only allowed for the calling process
-         * itself! XP only allowes NtCurrentProcess() as process handles even if
+         * Retrieving the process cookie is only allowed for the calling process
+         * itself! XP only allows NtCurrentProcess() as process handles even if
          * a real handle actually represents the current process.
          */
         return STATUS_INVALID_PARAMETER;
@@ -153,7 +152,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 ProcessBasicInfo->UniqueProcessId = (ULONG_PTR)Process->
                                                     UniqueProcessId;
                 ProcessBasicInfo->InheritedFromUniqueProcessId =
-                    (ULONG)Process->InheritedFromUniqueProcessId;
+                    (ULONG_PTR)Process->InheritedFromUniqueProcessId;
                 ProcessBasicInfo->BasePriority = Process->Pcb.BasePriority;
 
             }
@@ -298,12 +297,10 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Copy time information from EPROCESS/KPROCESS */
-                /* FIXME: Call KeQueryRuntimeProcess */
+                KernelTime = KeQueryRuntimeProcess(&Process->Pcb, &UserTime);
                 ProcessTime->CreateTime = Process->CreateTime;
-                ProcessTime->UserTime.QuadPart = Process->Pcb.UserTime *
-                                                 KeMaximumIncrement;
-                ProcessTime->KernelTime.QuadPart = Process->Pcb.KernelTime *
-                                                   KeMaximumIncrement;
+                ProcessTime->UserTime.QuadPart = (LONGLONG)UserTime * KeMaximumIncrement;
+                ProcessTime->KernelTime.QuadPart = (LONGLONG)KernelTime * KeMaximumIncrement;
                 ProcessTime->ExitTime = Process->ExitTime;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -421,7 +418,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Write back the Session ID */
-                SessionInfo->SessionId = PtrToUlong(PsGetProcessSessionId(Process));
+                SessionInfo->SessionId = PsGetProcessSessionId(Process);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -699,7 +696,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 }
 
                 /* Free the image path */
-                ExFreePool(ImageName);
+                ExFreePoolWithTag(ImageName, TAG_SEPA);
             }
             /* Dereference the process */
             ObDereferenceObject(Process);
@@ -823,8 +820,30 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             break;
 
         case ProcessImageInformation:
-            DPRINT1("Image Information Query Not implemented: %lx\n", ProcessInformationClass);
-            Status = STATUS_NOT_IMPLEMENTED;
+
+            /* Set the length required and validate it */
+            Length = sizeof(SECTION_IMAGE_INFORMATION);
+            if (ProcessInformationLength != Length)
+            {
+                /* Break out */
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH to protect write */
+            _SEH2_TRY
+            {
+                MmGetImageInformation((PSECTION_IMAGE_INFORMATION)ProcessInformation);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Indicate success */
+            Status = STATUS_SUCCESS;
             break;
 
         case ProcessDebugObjectHandle:
@@ -940,6 +959,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             Length = sizeof(ULONG_PTR);
             if (ProcessInformationLength != Length)
             {
+                Length = 0;
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
@@ -1149,7 +1169,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Getting VDM powers requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Bail out */
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 DPRINT1("Need TCB privilege\n");
                 break;
@@ -1193,7 +1213,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Setting the error port requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Can't set the session ID, bail out. */
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
@@ -1312,10 +1332,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Setting the session id requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Can't set the session ID, bail out. */
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
+
+#if 0 // OLD AND DEPRECATED CODE!!!!
 
             /* FIXME - update the session id for the process token */
             //Status = PsLockProcess(Process, FALSE);
@@ -1352,6 +1374,27 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
             /* Unlock the process */
             //PsUnlockProcess(Process);
+
+#endif
+
+            /*
+             * Since we cannot change the session ID of the given
+             * process anymore because it is set once and for all
+             * at process creation time and because it is stored
+             * inside the Process->Session structure managed by MM,
+             * we fake changing it: we just return success if the
+             * user-defined value is the same as the session ID of
+             * the process, and otherwise we fail.
+             */
+            if (SessionInfo.SessionId == PsGetProcessSessionId(Process))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                Status = STATUS_ACCESS_DENIED;
+            }
+
             break;
 
         case ProcessPriorityClass:
@@ -1485,6 +1528,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Validate the number */
             if ((BasePriority > HIGH_PRIORITY) || (BasePriority <= LOW_PRIORITY))
             {
+                ObDereferenceObject(Process);
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1592,6 +1636,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Setting 'break on termination' requires the SeDebugPrivilege */
             if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
             {
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
@@ -1817,7 +1862,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only TCB can do this */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Fail */
+                /* We don't hold the privilege, bail out */
                 DPRINT1("Need TCB to set IOPL\n");
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
@@ -1873,8 +1918,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
              break;
 
         case ProcessQuotaLimits:
-            DPRINT1("Quota Limits not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+
+            Status = PspSetQuotaLimits(Process,
+                                     1,
+                                     ProcessInformation,
+                                     ProcessInformationLength,
+                                     PreviousMode);
             break;
 
         case ProcessWorkingSetWatch:
@@ -2346,6 +2395,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             /* Setting 'break on termination' requires the SeDebugPrivilege */
             if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
             {
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
@@ -2392,6 +2442,7 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
         (PTHREAD_BASIC_INFORMATION)ThreadInformation;
     PKERNEL_USER_TIMES ThreadTime = (PKERNEL_USER_TIMES)ThreadInformation;
     KIRQL OldIrql;
+    ULONG ThreadTerminated;
     PAGED_CODE();
 
     /* Check if we were called from user mode */
@@ -2639,6 +2690,31 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+            break;
+
+        case ThreadIsTerminated:
+
+            /* Set the return length*/
+            Length = sizeof(ThreadTerminated);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            ThreadTerminated = PsIsThreadTerminating(Thread);
+
+            _SEH2_TRY
+            {
+                *(PULONG)ThreadInformation = ThreadTerminated ? 1 : 0;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
             break;
 
         /* Anything else */

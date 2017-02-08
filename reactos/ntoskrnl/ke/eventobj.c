@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/event.c
+ * FILE:            ntoskrnl/ke/eventobj.c
  * PURPOSE:         Implements the Event Dispatcher Object
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

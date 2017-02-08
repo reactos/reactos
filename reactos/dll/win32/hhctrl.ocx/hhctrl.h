@@ -20,31 +20,34 @@
 #ifndef HHCTRL_H
 #define HHCTRL_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-
 #define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#include <winnls.h>
 #include <htmlhelp.h>
 #include <ole2.h>
 #include <exdisp.h>
 #include <mshtmhst.h>
 #include <commctrl.h>
 
-#ifdef INIT_GUID
-#include <initguid.h>
-#endif
-
 #include <wine/itss.h>
 #include <wine/unicode.h>
 #include <wine/list.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
+
+#include "resource.h"
+#include "stream.h"
 
 #define WB_GOBACK     0
 #define WB_GOFORWARD  1
@@ -173,9 +176,20 @@ struct wintype_stringsA {
 };
 
 typedef struct {
-    IOleClientSite *client_site;
+    IOleClientSite IOleClientSite_iface;
+    IOleInPlaceSite IOleInPlaceSite_iface;
+    IOleInPlaceFrame IOleInPlaceFrame_iface;
+    IDocHostUIHandler IDocHostUIHandler_iface;
+
+    LONG ref;
+
+    IOleObject *ole_obj;
     IWebBrowser2 *web_browser;
-    IOleObject *wb_object;
+    HWND hwndWindow;
+} WebBrowserContainer;
+
+typedef struct {
+    WebBrowserContainer *web_browser;
 
     HH_WINTYPEW WinType;
 
@@ -201,7 +215,7 @@ typedef struct {
 BOOL InitWebBrowser(HHInfo*,HWND) DECLSPEC_HIDDEN;
 void ReleaseWebBrowser(HHInfo*) DECLSPEC_HIDDEN;
 void ResizeWebBrowser(HHInfo*,DWORD,DWORD) DECLSPEC_HIDDEN;
-void DoPageAction(HHInfo*,DWORD) DECLSPEC_HIDDEN;
+void DoPageAction(WebBrowserContainer*,DWORD) DECLSPEC_HIDDEN;
 
 void InitContent(HHInfo*) DECLSPEC_HIDDEN;
 void ReleaseContent(HHInfo*) DECLSPEC_HIDDEN;
@@ -218,6 +232,7 @@ IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*) DECLSPEC_HIDDEN;
 LPWSTR FindContextAlias(CHMInfo*,DWORD) DECLSPEC_HIDDEN;
 WCHAR *GetDocumentTitle(CHMInfo*,LPCWSTR) DECLSPEC_HIDDEN;
 
+extern struct list window_list DECLSPEC_HIDDEN;
 HHInfo *CreateHelpViewer(HHInfo*,LPCWSTR,HWND) DECLSPEC_HIDDEN;
 void ReleaseHelpViewer(HHInfo*) DECLSPEC_HIDDEN;
 BOOL NavigateToUrl(HHInfo*,LPCWSTR) DECLSPEC_HIDDEN;
@@ -322,4 +337,4 @@ static inline LPSTR strdupWtoA(LPCWSTR str)
 extern HINSTANCE hhctrl_hinstance DECLSPEC_HIDDEN;
 extern BOOL hh_process DECLSPEC_HIDDEN;
 
-#endif
+#endif /* HHCTRL_H */

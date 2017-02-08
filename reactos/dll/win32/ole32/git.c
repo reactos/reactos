@@ -24,26 +24,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "objbase.h"
-#include <ole2.h>
-//#include "winerror.h"
-
-#include "compobj_private.h" 
-
-//#include "wine/list.h"
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -69,13 +50,12 @@ typedef struct StdGlobalInterfaceTableImpl
 {
   IGlobalInterfaceTable IGlobalInterfaceTable_iface;
 
-  ULONG ref;
   struct list list;
   ULONG nextCookie;
   
 } StdGlobalInterfaceTableImpl;
 
-void* StdGlobalInterfaceTableInstance;
+static IGlobalInterfaceTable *std_git;
 
 static CRITICAL_SECTION git_section;
 static CRITICAL_SECTION_DEBUG critsect_debug =
@@ -90,16 +70,6 @@ static CRITICAL_SECTION git_section = { &critsect_debug, -1, 0, 0, 0, 0 };
 static inline StdGlobalInterfaceTableImpl *impl_from_IGlobalInterfaceTable(IGlobalInterfaceTable *iface)
 {
   return CONTAINING_RECORD(iface, StdGlobalInterfaceTableImpl, IGlobalInterfaceTable_iface);
-}
-
-/** This destroys it again. It should revoke all the held interfaces first **/
-static void StdGlobalInterfaceTable_Destroy(void* This)
-{
-  TRACE("(%p)\n", This);
-  FIXME("Revoke held interfaces here\n");
-  
-  HeapFree(GetProcessHeap(), 0, This);
-  StdGlobalInterfaceTableInstance = NULL;
 }
 
 /***
@@ -150,25 +120,13 @@ StdGlobalInterfaceTable_QueryInterface(IGlobalInterfaceTable* iface,
 static ULONG WINAPI
 StdGlobalInterfaceTable_AddRef(IGlobalInterfaceTable* iface)
 {
-  StdGlobalInterfaceTableImpl* const This = impl_from_IGlobalInterfaceTable(iface);
-
-  /* InterlockedIncrement(&This->ref); */
-  return This->ref;
+  return 1;
 }
 
 static ULONG WINAPI
 StdGlobalInterfaceTable_Release(IGlobalInterfaceTable* iface)
 {
-  StdGlobalInterfaceTableImpl* const This = impl_from_IGlobalInterfaceTable(iface);
-
-  /* InterlockedDecrement(&This->ref); */
-  if (This->ref == 0) {
-    /* Hey ho, it's time to go, so long again 'till next weeks show! */
-    StdGlobalInterfaceTable_Destroy(This);
-    return 0;
-  }
-
-  return This->ref;
+  return 1;
 }
 
 /***
@@ -206,7 +164,12 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
 
   entry = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGITEntry));
-  if (entry == NULL) return E_OUTOFMEMORY;
+  if (!entry)
+  {
+      CoReleaseMarshalData(stream);
+      IStream_Release(stream);
+      return E_OUTOFMEMORY;
+  }
 
   EnterCriticalSection(&git_section);
   
@@ -299,7 +262,7 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
   hres = CoUnmarshalInterface(stream, riid, ppv);
   IStream_Release(stream);
 
-  if (hres) {
+  if (hres != S_OK) {
     WARN("Failed to unmarshal stream\n");
     return hres;
   }
@@ -314,8 +277,8 @@ static HRESULT WINAPI
 GITCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
 {
   *ppv = NULL;
-  if (IsEqualIID(riid,&IID_IUnknown) ||
-      IsEqualIID(riid,&IID_IGlobalInterfaceTable))
+  if (IsEqualIID(riid, &IID_IUnknown) ||
+      IsEqualIID(riid, &IID_IClassFactory))
   {
     *ppv = iface;
     return S_OK;
@@ -338,9 +301,8 @@ GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
                      REFIID riid, LPVOID *ppv)
 {
   if (IsEqualIID(riid,&IID_IGlobalInterfaceTable)) {
-    if (StdGlobalInterfaceTableInstance == NULL) 
-      StdGlobalInterfaceTableInstance = StdGlobalInterfaceTable_Construct();
-    return IGlobalInterfaceTable_QueryInterface( (IGlobalInterfaceTable*) StdGlobalInterfaceTableInstance, riid, ppv);
+    IGlobalInterfaceTable *git = get_std_git();
+    return IGlobalInterfaceTable_QueryInterface(git, riid, ppv);
   }
 
   FIXME("(%s), not supported.\n",debugstr_guid(riid));
@@ -361,11 +323,11 @@ static const IClassFactoryVtbl GITClassFactoryVtbl = {
     GITCF_LockServer
 };
 
-static const IClassFactoryVtbl *PGITClassFactoryVtbl = &GITClassFactoryVtbl;
+static IClassFactory git_classfactory = { &GITClassFactoryVtbl };
 
 HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv)
 {
-  *ppv = &PGITClassFactoryVtbl;
+  *ppv = &git_classfactory;
   TRACE("Returning GIT classfactory\n");
   return S_OK;
 }
@@ -381,19 +343,46 @@ static const IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
   StdGlobalInterfaceTable_GetInterfaceFromGlobal
 };
 
-/** This function constructs the GIT. It should only be called once **/
-void* StdGlobalInterfaceTable_Construct(void)
+IGlobalInterfaceTable* get_std_git(void)
 {
-  StdGlobalInterfaceTableImpl* newGIT;
+  if (!std_git)
+  {
+    StdGlobalInterfaceTableImpl* newGIT;
 
-  newGIT = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGlobalInterfaceTableImpl));
-  if (newGIT == 0) return newGIT;
+    newGIT = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGlobalInterfaceTableImpl));
+    if (!newGIT) return NULL;
 
-  newGIT->IGlobalInterfaceTable_iface.lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
-  newGIT->ref = 1;      /* Initialise the reference count */
-  list_init(&newGIT->list);
-  newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
-  TRACE("Created the GIT at %p\n", newGIT);
+    newGIT->IGlobalInterfaceTable_iface.lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
+    list_init(&newGIT->list);
+    newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */
 
-  return (void*)newGIT;
+    if (InterlockedCompareExchangePointer((void**)&std_git, &newGIT->IGlobalInterfaceTable_iface, NULL))
+    {
+      HeapFree(GetProcessHeap(), 0, newGIT);
+    }
+    else
+      TRACE("Created the GIT at %p\n", newGIT);
+  }
+
+  return std_git;
+}
+
+void release_std_git(void)
+{
+  StdGlobalInterfaceTableImpl *git;
+  StdGITEntry *entry, *entry2;
+
+  if (!std_git) return;
+
+  git = impl_from_IGlobalInterfaceTable(std_git);
+  LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &git->list, StdGITEntry, entry)
+  {
+      list_remove(&entry->entry);
+
+      CoReleaseMarshalData(entry->stream);
+      IStream_Release(entry->stream);
+      HeapFree(GetProcessHeap(), 0, entry);
+  }
+
+  HeapFree(GetProcessHeap(), 0, git);
 }

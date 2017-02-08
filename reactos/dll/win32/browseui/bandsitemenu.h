@@ -25,9 +25,10 @@
 class CBandSiteMenu :
     public CComCoClass<CBandSiteMenu, &CLSID_BandSiteMenu>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellService,
-    public IContextMenu2
+    public IContextMenu3,
+    public IShellService
 {
+    CComPtr<IUnknown> m_Owner;
 public:
     CBandSiteMenu();
     ~CBandSiteMenu();
@@ -42,6 +43,9 @@ public:
 
     // *** IContextMenu2 methods ***
     virtual HRESULT STDMETHODCALLTYPE HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    // *** IContextMenu3 methods ***
+    virtual HRESULT STDMETHODCALLTYPE HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_BANDSITEMENU)
     DECLARE_NOT_AGGREGATABLE(CBandSiteMenu)

@@ -84,8 +84,10 @@ typedef struct _MASTER_BOOT_RECORD
 #define EFI_HEADER_SIGNATURE  0x5452415020494645ULL
 /* Defines version 1.0 */
 #define EFI_HEADER_REVISION_1 0x00010000
-/* Defines system type for MBR showing that a GPT is following */ 
+/* Defines system type for MBR showing that a GPT is following */
 #define EFI_PMBR_OSTYPE_EFI 0xEE
+/* Defines size to store a complete GUID + null char */
+#define EFI_GUID_STRING_SIZE 0x27
 
 #define IS_VALID_DISK_INFO(Disk) \
   (Disk)               &&        \
@@ -129,6 +131,17 @@ NTSTATUS
 NTAPI
 FstubWriteBootSectorEFI(IN PDISK_INFORMATION Disk
 );
+
+NTSTATUS
+NTAPI
+FstubWriteHeaderEFI(IN PDISK_INFORMATION Disk,
+                    IN ULONG PartitionsSizeSector,
+                    IN GUID DiskGUID,
+                    IN ULONG NumberOfEntries,
+                    IN ULONGLONG FirstUsableLBA,
+                    IN ULONGLONG LastUsableLBA,
+                    IN ULONG PartitionEntryCRC32,
+                    IN BOOLEAN WriteBackupTable);
 
 NTSTATUS
 NTAPI
@@ -218,7 +231,7 @@ FstubAllocateDiskInformation(IN PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        DiskInformation->DiskGeometry = *DiskGeometry;
+        RtlCopyMemory(&DiskInformation->DiskGeometry, DiskGeometry, sizeof(DISK_GEOMETRY_EX));
     }
 
     /* Ensure read/received information are correct */
@@ -534,7 +547,7 @@ NTAPI
 FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
 {
     ULONG i;
-    CHAR Guid[38];
+    CHAR Guid[EFI_GUID_STRING_SIZE];
     PAGED_CODE();
 
     DPRINT("FSTUB: DRIVE_LAYOUT_INFORMATION_EX: %p\n", DriveLayout);
@@ -543,7 +556,7 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
         case PARTITION_STYLE_MBR:
             if (DriveLayout->PartitionCount % 4 != 0)
             {
-                DPRINT("Warning: Partition count isn't a 4-factor: %ld!\n", DriveLayout->PartitionCount);
+                DPRINT("Warning: Partition count isn't a 4-factor: %lu!\n", DriveLayout->PartitionCount);
             }
 
             DPRINT("Signature: %8.8x\n", DriveLayout->Mbr.Signature);
@@ -558,7 +571,7 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
             DPRINT("DiskId: %s\n", Guid);
             DPRINT("StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
             DPRINT("UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
-            DPRINT("MaxPartitionCount: %ld\n", DriveLayout->Gpt.MaxPartitionCount);
+            DPRINT("MaxPartitionCount: %lu\n", DriveLayout->Gpt.MaxPartitionCount);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
@@ -566,7 +579,7 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
 
             break;
         default:
-            DPRINT("Unsupported partition style: %ld\n", DriveLayout->PartitionStyle);
+            DPRINT("Unsupported partition style: %lu\n", DriveLayout->PartitionStyle);
     }
 }
 
@@ -575,32 +588,32 @@ NTAPI
 FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
                          IN ULONG PartitionNumber)
 {
-    CHAR Guid[38];
+    CHAR Guid[EFI_GUID_STRING_SIZE];
     PAGED_CODE();
 
-    DPRINT("Printing partition %ld\n", PartitionNumber);
+    DPRINT("Printing partition %lu\n", PartitionNumber);
 
     switch (PartitionEntry[PartitionNumber].PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
             DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
             DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT("  RewritePartition: %d\n", PartitionEntry[PartitionNumber].RewritePartition);
+            DPRINT("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
             DPRINT("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
-            DPRINT("  BootIndicator: %d\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
-            DPRINT("  RecognizedPartition: %d\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
-            DPRINT("  HiddenSectors: %ld\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
+            DPRINT("  BootIndicator: %u\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
+            DPRINT("  RecognizedPartition: %u\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
+            DPRINT("  HiddenSectors: %lu\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
 
             break;
         case PARTITION_STYLE_GPT:
             DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
             DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT("  RewritePartition: %d\n", PartitionEntry[PartitionNumber].RewritePartition);
+            DPRINT("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionType), Guid);
             DPRINT("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionId), Guid);
             DPRINT("  PartitionId: %s\n", Guid);
-            DPRINT("  Attributes: %16x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
+            DPRINT("  Attributes: %I64x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
             DPRINT("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
 
             break;
@@ -614,11 +627,11 @@ NTAPI
 FstubDbgPrintSetPartitionEx(IN PSET_PARTITION_INFORMATION_EX PartitionEntry,
                             IN ULONG PartitionNumber)
 {
-    CHAR Guid[38];
+    CHAR Guid[EFI_GUID_STRING_SIZE];
     PAGED_CODE();
 
     DPRINT("FSTUB: SET_PARTITION_INFORMATION_EX: %p\n", PartitionEntry);
-    DPRINT("Modifying partition %ld\n", PartitionNumber);
+    DPRINT("Modifying partition %lu\n", PartitionNumber);
     switch (PartitionEntry->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
@@ -630,7 +643,7 @@ FstubDbgPrintSetPartitionEx(IN PSET_PARTITION_INFORMATION_EX PartitionEntry,
             DPRINT("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionId), Guid);
             DPRINT("  PartitionId: %s\n", Guid);
-            DPRINT("  Attributes: %16x\n", PartitionEntry->Gpt.Attributes);
+            DPRINT("  Attributes: %I64x\n", PartitionEntry->Gpt.Attributes);
             DPRINT("  Name: %ws\n", PartitionEntry->Gpt.Name);
 
             break;
@@ -797,7 +810,7 @@ NTSTATUS
 NTAPI
 FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
                    IN BOOLEAN ReadBackupTable,
-                   PEFI_PARTITION_HEADER HeaderBuffer)
+                   PEFI_PARTITION_HEADER * HeaderBuffer)
 {
     NTSTATUS Status;
     PUCHAR Sector = NULL;
@@ -929,7 +942,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
     if (PreviousCRC32 == EFIHeader->PartitionEntryCRC32)
     {
         /* In case of a success, return read header */
-        *HeaderBuffer = *EFIHeader;
+        *HeaderBuffer = EFIHeader;
         return STATUS_SUCCESS;
     }
     else
@@ -947,10 +960,11 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
                            OUT struct _DRIVE_LAYOUT_INFORMATION_EX** DriveLayout)
 {
     NTSTATUS Status;
-    EFI_PARTITION_HEADER EfiHeader;
-    ULONGLONG SectorsForPartitions;
+    ULONG NumberOfEntries;
+    PEFI_PARTITION_HEADER EfiHeader;
     EFI_PARTITION_ENTRY PartitionEntry;
     BOOLEAN UpdatedPartitionTable = FALSE;
+    ULONGLONG SectorsForPartitions, PartitionEntryLBA;
     PDRIVE_LAYOUT_INFORMATION_EX DriveLayoutEx = NULL;
     ULONG i, PartitionCount, PartitionIndex, PartitionsPerSector;
     PAGED_CODE();
@@ -969,27 +983,34 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         return Status;
     }
 
+    /* Backup the number of entries, will be used later on */
+    NumberOfEntries = EfiHeader->NumberOfEntries;
+
     /* Allocate a DRIVE_LAYOUT_INFORMATION_EX struct big enough */
     DriveLayoutEx = ExAllocatePoolWithTag(NonPagedPool,
                                           FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry) +
-                                          EfiHeader.NumberOfEntries * sizeof(PARTITION_INFORMATION_EX),
+                                          EfiHeader->NumberOfEntries * sizeof(PARTITION_INFORMATION_EX),
                                           TAG_FSTUB);
     if (!DriveLayoutEx)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (ReadBackupTable)
+    if (!ReadBackupTable)
     {
-        /* If we read backup but if it doesn't match with current geometry */
-        if ((Disk->SectorCount - 1ULL) != EfiHeader.AlternateLBA)
+        /* If we weren't ask to read backup table,
+         * check the status of the backup table.
+         * In case it's not where we're expecting it, move it and ask
+         * for a partition table rewrite.
+         */
+        if ((Disk->SectorCount - 1ULL) != EfiHeader->AlternateLBA)
         {
             /* We'll update it. First, count number of sectors needed to store partitions */
-            SectorsForPartitions = ((ULONGLONG)EfiHeader.NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
+            SectorsForPartitions = ((ULONGLONG)EfiHeader->NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
             /* Then set first usable LBA: Legacy MBR + GPT header + Partitions entries */
-            EfiHeader.FirstUsableLBA = SectorsForPartitions + 2;
+            EfiHeader->FirstUsableLBA = SectorsForPartitions + 2;
             /* Then set last usable LBA: Last sector - GPT header - Partitions entries */
-            EfiHeader.LastUsableLBA = Disk->SectorCount - SectorsForPartitions - 1;
+            EfiHeader->LastUsableLBA = Disk->SectorCount - SectorsForPartitions - 1;
             /* Inform that we'll rewrite partition table */
             UpdatedPartitionTable = TRUE;
         }
@@ -997,16 +1018,21 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
 
     DriveLayoutEx->PartitionStyle = PARTITION_STYLE_GPT;
     /* Translate LBA -> Offset */
-    DriveLayoutEx->Gpt.StartingUsableOffset.QuadPart = EfiHeader.FirstUsableLBA * Disk->SectorSize;
-    DriveLayoutEx->Gpt.UsableLength.QuadPart = EfiHeader.LastUsableLBA - EfiHeader.FirstUsableLBA * Disk->SectorSize;
-    DriveLayoutEx->Gpt.MaxPartitionCount = EfiHeader.NumberOfEntries;
-    DriveLayoutEx->Gpt.DiskId = EfiHeader.DiskGUID;
+    DriveLayoutEx->Gpt.StartingUsableOffset.QuadPart = EfiHeader->FirstUsableLBA * Disk->SectorSize;
+    DriveLayoutEx->Gpt.UsableLength.QuadPart = EfiHeader->LastUsableLBA - EfiHeader->FirstUsableLBA * Disk->SectorSize;
+    DriveLayoutEx->Gpt.MaxPartitionCount = EfiHeader->NumberOfEntries;
+    DriveLayoutEx->Gpt.DiskId = EfiHeader->DiskGUID;
 
+    /* Backup partition entry position */
+    PartitionEntryLBA = EfiHeader->PartitionEntryLBA;
     /* Count number of partitions per sector */
     PartitionsPerSector = (Disk->SectorSize / PARTITION_ENTRY_SIZE);
-    /* Read all partitions and fill in structure */
+    /* Read all partitions and fill in structure
+     * BEWARE! Past that point EfiHeader IS NOT VALID ANYMORE
+     * It will be erased by the reading of the partition entry
+     */
     for (i = 0, PartitionCount = 0, PartitionIndex = PartitionsPerSector;
-         i < EfiHeader.NumberOfEntries;
+         i < NumberOfEntries;
          i++)
     {
         /* Only read following sector if we finished with previous sector */
@@ -1014,7 +1040,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         {
             Status = FstubReadSector(Disk->DeviceObject,
                                      Disk->SectorSize,
-                                     EfiHeader.PartitionEntryLBA + (i / PartitionsPerSector),
+                                     PartitionEntryLBA + (i / PartitionsPerSector),
                                      Disk->Buffer);
             if (!NT_SUCCESS(Status))
             {
@@ -1057,7 +1083,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     }
     DriveLayoutEx->PartitionCount = PartitionCount;
 
-    /* If we updated partition table using backup table, rewrite partition table */ 
+    /* If we updated partition table using backup table, rewrite partition table */
     if (UpdatedPartitionTable)
     {
         IoWritePartitionTableEx(Disk->DeviceObject,
@@ -1243,9 +1269,9 @@ FstubVerifyPartitionTableEFI(IN PDISK_INFORMATION Disk,
                              IN BOOLEAN FixErrors)
 {
     NTSTATUS Status;
-    PEFI_PARTITION_HEADER EFIHeader;
-    EFI_PARTITION_HEADER ReadEFIHeader;
-    BOOLEAN PrimaryValid = FALSE, BackupValid = FALSE;
+    PEFI_PARTITION_HEADER EFIHeader, ReadEFIHeader;
+    BOOLEAN PrimaryValid = FALSE, BackupValid = FALSE, WriteBackup;
+    ULONGLONG ReadPosition, WritePosition, SectorsForPartitions, PartitionIndex;
     PAGED_CODE();
 
     EFIHeader = ExAllocatePoolWithTag(NonPagedPool, sizeof(EFI_PARTITION_HEADER), TAG_FSTUB);
@@ -1258,43 +1284,112 @@ FstubVerifyPartitionTableEFI(IN PDISK_INFORMATION Disk,
     if (NT_SUCCESS(Status))
     {
         PrimaryValid = TRUE;
+        ASSERT(ReadEFIHeader);
+        RtlCopyMemory(EFIHeader, ReadEFIHeader, sizeof(EFI_PARTITION_HEADER));
     }
 
     Status = FstubReadHeaderEFI(Disk, TRUE, &ReadEFIHeader);
     if (NT_SUCCESS(Status))
     {
         BackupValid = TRUE;
+        ASSERT(ReadEFIHeader);
+        RtlCopyMemory(EFIHeader, ReadEFIHeader, sizeof(EFI_PARTITION_HEADER));
     }
 
-    if (!PrimaryValid)
-    {
-        if (!BackupValid || !FixErrors)
-        {
-            ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
-            return STATUS_DISK_CORRUPT_ERROR;
-        }
-
-        DPRINT1("EFI::Partition table fixing not yet supported!\n");
-        ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
-        return STATUS_NOT_IMPLEMENTED;
-    }
-    else if (!BackupValid)
-    {
-        if (!PrimaryValid || !FixErrors)
-        {
-            ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
-            return STATUS_DISK_CORRUPT_ERROR;
-        }
-
-        DPRINT1("EFI::Partition table fixing not yet supported!\n");
-        ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
-        return STATUS_NOT_IMPLEMENTED;
-    }
-    else
+    /* If both are sane, just return */
+    if (PrimaryValid && BackupValid)
     {
         ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
         return STATUS_SUCCESS;
     }
+
+    /* If both are damaged OR if we have not been ordered to fix
+     * Then, quit and warn about disk corruption
+     */
+    if ((!PrimaryValid && !BackupValid) || !FixErrors)
+    {
+        ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Compute sectors taken by partitions */
+    SectorsForPartitions = (((ULONGLONG)EFIHeader->NumberOfEntries * PARTITION_ENTRY_SIZE) + Disk->SectorSize - 1) / Disk->SectorSize;
+    if (PrimaryValid)
+    {
+        WriteBackup = TRUE;
+        /* Take position at backup table for writing */
+        WritePosition = Disk->SectorCount - SectorsForPartitions;
+        /* And read from primary table */
+        ReadPosition = 2ULL;
+
+        DPRINT("EFI::Will repair backup table from primary\n");
+    }
+    else
+    {
+        ASSERT(BackupValid);
+        WriteBackup = FALSE;
+        /* Take position at primary table for writing */
+        WritePosition = 2ULL;
+        /* And read from backup table */
+        ReadPosition = Disk->SectorCount - SectorsForPartitions;
+
+        DPRINT("EFI::Will repair primary table from backup\n");
+    }
+
+    PartitionIndex = 0ULL;
+
+    /* If no partitions are to be copied, just restore header */
+    if (SectorsForPartitions <= 0)
+    {
+        Status = FstubWriteHeaderEFI(Disk,
+                                     SectorsForPartitions,
+                                     EFIHeader->DiskGUID,
+                                     EFIHeader->NumberOfEntries,
+                                     EFIHeader->FirstUsableLBA,
+                                     EFIHeader->LastUsableLBA,
+                                     EFIHeader->PartitionEntryCRC32,
+                                     WriteBackup);
+
+        goto Cleanup;
+    }
+
+    /* Copy all the partitions */
+    for (; PartitionIndex < SectorsForPartitions; ++PartitionIndex)
+    {
+        /* First, read the partition from the first table */
+        Status = FstubReadSector(Disk->DeviceObject,
+                                 Disk->SectorSize,
+                                 ReadPosition + PartitionIndex,
+                                 Disk->Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
+
+        /* Then, write it in the other table */
+        Status = FstubWriteSector(Disk->DeviceObject,
+                                  Disk->SectorSize,
+                                  WritePosition + PartitionIndex,
+                                  Disk->Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
+    }
+
+    /* Now we're done, write the header */
+    Status = FstubWriteHeaderEFI(Disk,
+                                 SectorsForPartitions,
+                                 EFIHeader->DiskGUID,
+                                 EFIHeader->NumberOfEntries,
+                                 EFIHeader->FirstUsableLBA,
+                                 EFIHeader->LastUsableLBA,
+                                 EFIHeader->PartitionEntryCRC32,
+                                 WriteBackup);
+
+Cleanup:
+    ExFreePoolWithTag(EFIHeader, TAG_FSTUB);
+    return Status;
 }
 
 NTSTATUS
@@ -1382,7 +1477,7 @@ FstubWriteEntryEFI(IN PDISK_INFORMATION Disk,
     /* Copy the entry at the proper place into the buffer
      * That way, we don't erase previous entries
      */
-    RtlCopyMemory(Disk->Buffer + (((PartitionEntryNumber * PARTITION_ENTRY_SIZE) % Disk->SectorSize) / sizeof(PUSHORT)),
+    RtlCopyMemory((PVOID)((ULONG_PTR)Disk->Buffer + ((PartitionEntryNumber * PARTITION_ENTRY_SIZE) % Disk->SectorSize)),
                   PartitionEntry,
                   sizeof(EFI_PARTITION_ENTRY));
     /* Compute size of buffer */
@@ -1401,6 +1496,7 @@ FstubWriteEntryEFI(IN PDISK_INFORMATION Disk,
         {
             return Status;
         }
+
         /* We clean buffer */
         RtlZeroMemory(Disk->Buffer, Disk->SectorSize);
     }
@@ -1482,13 +1578,18 @@ FstubWriteHeaderEFI(IN PDISK_INFORMATION Disk,
 
     /* Debug the way we'll break disk, to let user pray */
     DPRINT("FSTUB: About to write the following header for %s table\n", (WriteBackupTable ? "backup" : "primary"));
-    DPRINT(" Signature: %I64x\n Revision: %x\n HeaderSize: %x\n HeaderCRC32: %x\n",
-           EFIHeader->Signature, EFIHeader->Revision, EFIHeader->HeaderSize, EFIHeader->HeaderCRC32);
-    DPRINT(" MyLBA: %I64x\n AlternateLBA: %I64x\n FirstUsableLBA: %I64x\n LastUsableLBA: %I64x\n",
-           EFIHeader->MyLBA, EFIHeader->AlternateLBA, EFIHeader->FirstUsableLBA, EFIHeader->LastUsableLBA);
-    DPRINT(" PartitionEntryLBA: %I64x\n NumberOfEntries: %x\n SizeOfPartitionEntry: %x\n PartitionEntryCRC32: %x\n",
-           EFIHeader->PartitionEntryLBA, EFIHeader->NumberOfEntries,
-           EFIHeader->SizeOfPartitionEntry, EFIHeader->PartitionEntryCRC32);
+    DPRINT(" Signature: %I64x\n", EFIHeader->Signature);
+    DPRINT(" Revision: %x\n", EFIHeader->Revision);
+    DPRINT(" HeaderSize: %x\n", EFIHeader->HeaderSize);
+    DPRINT(" HeaderCRC32: %x\n", EFIHeader->HeaderCRC32);
+    DPRINT(" MyLBA: %I64x\n", EFIHeader->MyLBA);
+    DPRINT(" AlternateLBA: %I64x\n", EFIHeader->AlternateLBA);
+    DPRINT(" FirstUsableLBA: %I64x\n", EFIHeader->FirstUsableLBA);
+    DPRINT(" LastUsableLBA: %I64x\n", EFIHeader->LastUsableLBA);
+    DPRINT(" PartitionEntryLBA: %I64x\n", EFIHeader->PartitionEntryLBA);
+    DPRINT(" NumberOfEntries: %x\n", EFIHeader->NumberOfEntries);
+    DPRINT(" SizeOfPartitionEntry: %x\n", EFIHeader->SizeOfPartitionEntry);
+    DPRINT(" PartitionEntryCRC32: %x\n", EFIHeader->PartitionEntryCRC32);
 
     /* Write header to disk */
     return FstubWriteSector(Disk->DeviceObject,
@@ -1777,6 +1878,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
         }
 
         /* Prepare for getting disk geometry */
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
                                             DeviceObject,
                                             NULL,
@@ -1793,7 +1895,6 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
         }
 
         /* Then, call the drive, and wait for it if needed */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
@@ -1886,6 +1987,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* And call the drive to get information about partition */
+                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO_EX,
                                                             DeviceObject,
                                                             NULL,
@@ -1903,7 +2005,6 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* Call & wait if needed */
-                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Status = IoCallDriver(DeviceObject, Irp);
                         if (Status == STATUS_PENDING)
                         {
@@ -1957,6 +2058,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* And call the drive to get information about partition */
+                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO_EX,
                                                             DeviceObject,
                                                             NULL,
@@ -1974,7 +2076,6 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* Call & wait if needed */
-                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Status = IoCallDriver(DeviceObject, Irp);
                         if (Status == STATUS_PENDING)
                         {
@@ -2322,10 +2423,12 @@ NTAPI
 IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                         IN struct _DRIVE_LAYOUT_INFORMATION_EX* DriveLayout)
 {
+    GUID DiskGuid;
     NTSTATUS Status;
+    ULONG NumberOfEntries;
     PDISK_INFORMATION Disk;
-    ULONGLONG SectorsForPartitions;
-    EFI_PARTITION_HEADER EfiHeader;
+    PEFI_PARTITION_HEADER EfiHeader;
+    ULONGLONG SectorsForPartitions, FirstUsableLBA, LastUsableLBA;
     PAGED_CODE();
 
     ASSERT(DeviceObject);
@@ -2365,20 +2468,23 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
             if (NT_SUCCESS(Status))
             {
                 /* Check if there are enough places for the partitions to be written */
-                if (DriveLayout->PartitionCount <= EfiHeader.NumberOfEntries)
+                if (DriveLayout->PartitionCount <= EfiHeader->NumberOfEntries)
                 {
+                    /* Backup data */
+                    NumberOfEntries = EfiHeader->NumberOfEntries;
+                    RtlCopyMemory(&DiskGuid, &EfiHeader->DiskGUID, sizeof(GUID));
                     /* Count number of sectors needed to store partitions */
-                    SectorsForPartitions = (EfiHeader.NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
+                    SectorsForPartitions = ((ULONGLONG)NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
                     /* Set first usable LBA: Legacy MBR + GPT header + Partitions entries */
-                    EfiHeader.FirstUsableLBA = SectorsForPartitions + 2;
+                    FirstUsableLBA = SectorsForPartitions + 2;
                     /* Set last usable LBA: Last sector - GPT header - Partitions entries */
-                    EfiHeader.LastUsableLBA = Disk->SectorCount - SectorsForPartitions - 1;
+                    LastUsableLBA = Disk->SectorCount - SectorsForPartitions - 1;
                     /* Write primary table */
                     Status = FstubWritePartitionTableEFI(Disk,
-                                                         EfiHeader.DiskGUID,
-                                                         EfiHeader.NumberOfEntries,
-                                                         EfiHeader.FirstUsableLBA,
-                                                         EfiHeader.LastUsableLBA,
+                                                         DiskGuid,
+                                                         NumberOfEntries,
+                                                         FirstUsableLBA,
+                                                         LastUsableLBA,
                                                          FALSE,
                                                          DriveLayout->PartitionCount,
                                                          DriveLayout->PartitionEntry);
@@ -2386,10 +2492,10 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                     if (NT_SUCCESS(Status))
                     {
                         Status = FstubWritePartitionTableEFI(Disk,
-                                                             EfiHeader.DiskGUID,
-                                                             EfiHeader.NumberOfEntries,
-                                                             EfiHeader.FirstUsableLBA,
-                                                             EfiHeader.LastUsableLBA,
+                                                             DiskGuid,
+                                                             NumberOfEntries,
+                                                             FirstUsableLBA,
+                                                             LastUsableLBA,
                                                              TRUE,
                                                              DriveLayout->PartitionCount,
                                                              DriveLayout->PartitionEntry);
@@ -2399,7 +2505,7 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         default:
-            DPRINT("Unsupported partition style: %ld\n", DriveLayout->PartitionStyle);
+            DPRINT("Unsupported partition style: %lu\n", DriveLayout->PartitionStyle);
             Status = STATUS_NOT_SUPPORTED;
     }
 

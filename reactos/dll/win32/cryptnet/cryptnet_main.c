@@ -466,7 +466,6 @@ static BOOL CRYPT_GetObjectFromFile(HANDLE hFile, PCRYPT_BLOB_ARRAY pObject)
             blob.pbData = CryptMemAlloc(size.u.LowPart);
             if (blob.pbData)
             {
-                blob.cbData = size.u.LowPart;
                 ret = ReadFile(hFile, blob.pbData, size.u.LowPart, &blob.cbData,
                  NULL);
                 if (ret)
@@ -959,18 +958,12 @@ static BOOL WINAPI HTTP_RetrieveEncodedObjectW(LPCWSTR pszURL,
                     if (ret && !(dwRetrievalFlags & CRYPT_DONT_CACHE_RESULT))
                     {
                         SYSTEMTIME st;
+                        FILETIME ft;
                         DWORD len = sizeof(st);
 
-                        if (HttpQueryInfoW(hHttp,
-                         HTTP_QUERY_EXPIRES | HTTP_QUERY_FLAG_SYSTEMTIME, &st,
-                         &len, NULL))
-                        {
-                            FILETIME ft;
-
-                            SystemTimeToFileTime(&st, &ft);
-                            CRYPT_CacheURL(pszURL, pObject, dwRetrievalFlags,
-                             ft);
-                        }
+                        if (HttpQueryInfoW(hHttp, HTTP_QUERY_EXPIRES | HTTP_QUERY_FLAG_SYSTEMTIME,
+                                    &st, &len, NULL) && SystemTimeToFileTime(&st, &ft))
+                            CRYPT_CacheURL(pszURL, pObject, dwRetrievalFlags, ft);
                     }
                     InternetCloseHandle(hHttp);
                 }
@@ -1193,10 +1186,27 @@ static BOOL WINAPI CRYPT_CreateBlob(LPCSTR pszObjectOid,
 typedef BOOL (WINAPI *AddContextToStore)(HCERTSTORE hCertStore,
  const void *pContext, DWORD dwAddDisposition, const void **ppStoreContext);
 
+static BOOL decode_base64_blob( const CRYPT_DATA_BLOB *in, CRYPT_DATA_BLOB *out )
+{
+    BOOL ret;
+    DWORD len = in->cbData;
+
+    while (len && !in->pbData[len - 1]) len--;
+    if (!CryptStringToBinaryA( (char *)in->pbData, len, CRYPT_STRING_BASE64_ANY,
+                               NULL, &out->cbData, NULL, NULL )) return FALSE;
+
+    if (!(out->pbData = CryptMemAlloc( out->cbData ))) return FALSE;
+    ret = CryptStringToBinaryA( (char *)in->pbData, len, CRYPT_STRING_BASE64_ANY,
+                                out->pbData, &out->cbData, NULL, NULL );
+    if (!ret) CryptMemFree( out->pbData );
+    return ret;
+}
+
 static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
  DWORD dwExpectedContentTypeFlags, AddContextToStore addFunc, void **ppvContext)
 {
     BOOL ret = TRUE;
+    CRYPT_DATA_BLOB blob;
 
     if (!pObject->cBlob)
     {
@@ -1206,9 +1216,20 @@ static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
     }
     else if (pObject->cBlob == 1)
     {
-        if (!CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &pObject->rgBlob[0],
-         dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL,
-         NULL, NULL, NULL, NULL, (const void **)ppvContext))
+        if (decode_base64_blob(&pObject->rgBlob[0], &blob))
+        {
+            ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &blob,
+             dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY, 0,
+             NULL, NULL, NULL, NULL, NULL, (const void **)ppvContext);
+            CryptMemFree(blob.pbData);
+        }
+        else
+        {
+            ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &pObject->rgBlob[0],
+             dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY, 0,
+             NULL, NULL, NULL, NULL, NULL, (const void **)ppvContext);
+        }
+        if (!ret)
         {
             SetLastError(CRYPT_E_NO_MATCH);
             ret = FALSE;
@@ -1226,10 +1247,21 @@ static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
 
             for (i = 0; i < pObject->cBlob; i++)
             {
-                if (CryptQueryObject(CERT_QUERY_OBJECT_BLOB,
-                 &pObject->rgBlob[i], dwExpectedContentTypeFlags,
-                 CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL, NULL, NULL, NULL,
-                 NULL, &context))
+                if (decode_base64_blob(&pObject->rgBlob[i], &blob))
+                {
+                    ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &blob,
+                     dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY,
+                     0, NULL, NULL, NULL, NULL, NULL, &context);
+                    CryptMemFree(blob.pbData);
+                }
+                else
+                {
+                    ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB,
+                     &pObject->rgBlob[i], dwExpectedContentTypeFlags,
+                     CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL, NULL, NULL, NULL,
+                     NULL, &context);
+                }
+                if (ret)
                 {
                     if (!addFunc(store, context, CERT_STORE_ADD_ALWAYS, NULL))
                         ret = FALSE;
@@ -1433,61 +1465,24 @@ static BOOL CRYPT_GetCreateFunction(LPCSTR pszObjectOid,
     return ret;
 }
 
-typedef BOOL (*get_object_expiration_func)(const void *pvContext,
- FILETIME *expiration);
-
-static BOOL CRYPT_GetExpirationFromCert(const void *pvObject, FILETIME *expiration)
+static BOOL CRYPT_GetExpiration(const void *object, const char *pszObjectOid, FILETIME *expiration)
 {
-    PCCERT_CONTEXT cert = pvObject;
+    if (!IS_INTOID(pszObjectOid))
+        return FALSE;
 
-    *expiration = cert->pCertInfo->NotAfter;
-    return TRUE;
-}
-
-static BOOL CRYPT_GetExpirationFromCRL(const void *pvObject, FILETIME *expiration)
-{
-    PCCRL_CONTEXT cert = pvObject;
-
-    *expiration = cert->pCrlInfo->NextUpdate;
-    return TRUE;
-}
-
-static BOOL CRYPT_GetExpirationFromCTL(const void *pvObject, FILETIME *expiration)
-{
-    PCCTL_CONTEXT cert = pvObject;
-
-    *expiration = cert->pCtlInfo->NextUpdate;
-    return TRUE;
-}
-
-static BOOL CRYPT_GetExpirationFunction(LPCSTR pszObjectOid,
- get_object_expiration_func *getExpiration)
-{
-    BOOL ret;
-
-    if (IS_INTOID(pszObjectOid))
-    {
-        switch (LOWORD(pszObjectOid))
-        {
-        case LOWORD(CONTEXT_OID_CERTIFICATE):
-            *getExpiration = CRYPT_GetExpirationFromCert;
-            ret = TRUE;
-            break;
-        case LOWORD(CONTEXT_OID_CRL):
-            *getExpiration = CRYPT_GetExpirationFromCRL;
-            ret = TRUE;
-            break;
-        case LOWORD(CONTEXT_OID_CTL):
-            *getExpiration = CRYPT_GetExpirationFromCTL;
-            ret = TRUE;
-            break;
-        default:
-            ret = FALSE;
-        }
+    switch (LOWORD(pszObjectOid)) {
+    case LOWORD(CONTEXT_OID_CERTIFICATE):
+        *expiration = ((const CERT_CONTEXT*)object)->pCertInfo->NotAfter;
+        return TRUE;
+    case LOWORD(CONTEXT_OID_CRL):
+        *expiration = ((const CRL_CONTEXT*)object)->pCrlInfo->NextUpdate;
+        return TRUE;
+    case LOWORD(CONTEXT_OID_CTL):
+        *expiration = ((const CTL_CONTEXT*)object)->pCtlInfo->NextUpdate;
+        return TRUE;
     }
-    else
-        ret = FALSE;
-    return ret;
+
+    return FALSE;
 }
 
 /***********************************************************************
@@ -1520,22 +1515,18 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
         CRYPT_BLOB_ARRAY object = { 0, NULL };
         PFN_FREE_ENCODED_OBJECT_FUNC freeObject;
         void *freeContext;
+        FILETIME expires;
 
         ret = retrieve(pszURL, pszObjectOid, dwRetrievalFlags, dwTimeout,
          &object, &freeObject, &freeContext, hAsyncRetrieve, pCredentials,
          pAuxInfo);
         if (ret)
         {
-            get_object_expiration_func getExpiration;
-
             ret = create(pszObjectOid, dwRetrievalFlags, &object, ppvObject);
             if (ret && !(dwRetrievalFlags & CRYPT_DONT_CACHE_RESULT) &&
-             CRYPT_GetExpirationFunction(pszObjectOid, &getExpiration))
+                CRYPT_GetExpiration(*ppvObject, pszObjectOid, &expires))
             {
-                FILETIME expires;
-
-                if (getExpiration(*ppvObject, &expires))
-                    CRYPT_CacheURL(pszURL, &object, dwRetrievalFlags, expires);
+                CRYPT_CacheURL(pszURL, &object, dwRetrievalFlags, expires);
             }
             freeObject(pszObjectOid, &object, freeContext);
         }
@@ -1603,7 +1594,8 @@ static DWORD verify_cert_revocation_from_dist_points_ext(
                 endTime = timeout = 0;
             if (!ret)
                 error = GetLastError();
-            for (j = 0; !error && j < urlArray->cUrl; j++)
+            /* continue looping if one was offline; break if revoked or timed out */
+            for (j = 0; (!error || error == CRYPT_E_REVOCATION_OFFLINE) && j < urlArray->cUrl; j++)
             {
                 PCCRL_CONTEXT crl;
 
@@ -1820,14 +1812,14 @@ typedef struct _CERT_REVOCATION_PARA_NO_EXTRA_FIELDS {
     HCERTSTORE               *rgCertStore;
     HCERTSTORE                hCrlStore;
     LPFILETIME                pftTimeToUse;
-} CERT_REVOCATION_PARA_NO_EXTRA_FIELDS, *PCERT_REVOCATION_PARA_NO_EXTRA_FIELDS;
+} CERT_REVOCATION_PARA_NO_EXTRA_FIELDS;
 
 typedef struct _OLD_CERT_REVOCATION_STATUS {
     DWORD cbSize;
     DWORD dwIndex;
     DWORD dwError;
     DWORD dwReason;
-} OLD_CERT_REVOCATION_STATUS, *POLD_CERT_REVOCATION_STATUS;
+} OLD_CERT_REVOCATION_STATUS;
 
 /***********************************************************************
  *    CertDllVerifyRevocation (CRYPTNET.@)

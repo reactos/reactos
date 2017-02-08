@@ -22,6 +22,10 @@
 
 #include <arc/setupblk.h>
 
+#define TAG_WLDR_DTE 'eDlW'
+#define TAG_WLDR_BDE 'dBlW'
+#define TAG_WLDR_NAME 'mNlW'
+
 /* Entry-point to kernel */
 typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
 
@@ -36,15 +40,15 @@ typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
 #include <pshpack1.h>
 typedef struct  /* Root System Descriptor Pointer */
 {
-	CHAR             signature [8];          /* contains "RSD PTR " */
-	UCHAR            checksum;               /* to make sum of struct == 0 */
-	CHAR             oem_id [6];             /* OEM identification */
-	UCHAR            revision;               /* Must be 0 for 1.0, 2 for 2.0 */
-	ULONG            rsdt_physical_address;  /* 32-bit physical address of RSDT */
-	ULONG            length;                 /* XSDT Length in bytes including hdr */
-	ULONGLONG        xsdt_physical_address;  /* 64-bit physical address of XSDT */
-	UCHAR            extended_checksum;      /* Checksum of entire table */
-	CHAR             reserved [3];           /* reserved field must be 0 */
+    CHAR             signature [8];          /* contains "RSD PTR " */
+    UCHAR            checksum;               /* to make sum of struct == 0 */
+    CHAR             oem_id [6];             /* OEM identification */
+    UCHAR            revision;               /* Must be 0 for 1.0, 2 for 2.0 */
+    ULONG            rsdt_physical_address;  /* 32-bit physical address of RSDT */
+    ULONG            length;                 /* XSDT Length in bytes including hdr */
+    ULONGLONG        xsdt_physical_address;  /* 64-bit physical address of XSDT */
+    UCHAR            extended_checksum;      /* Checksum of entire table */
+    CHAR             reserved [3];           /* reserved field must be 0 */
 } RSDP_DESCRIPTOR, *PRSDP_DESCRIPTOR;
 #include <poppack.h>
 
@@ -157,12 +161,9 @@ VOID
 WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 BOOLEAN
-MempAllocatePageTables();
-
-BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
-				IN PFN_NUMBER NumberOfPages,
-				IN BOOLEAN KernelMapping);
+                IN PFN_NUMBER NumberOfPages,
+                IN BOOLEAN KernelMapping);
 
 VOID
 MempUnmapPage(PFN_NUMBER Page);
@@ -187,4 +188,3 @@ WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
 WinLdrSetProcessorContext(VOID);
-

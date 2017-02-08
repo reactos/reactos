@@ -7,11 +7,11 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
+#ifndef _SERIAL_PCH_
+#define _SERIAL_PCH_
+
 #include <ntddk.h>
-#include <ndk/haltypes.h>
 #include <ntddser.h>
-#include <stdio.h>
-#include <debug.h>
 
 /* See winbase.h */
 #define PST_RS232 1
@@ -300,3 +300,5 @@ DRIVER_DISPATCH SerialPower;
 
 DRIVER_DISPATCH SerialRead;
 DRIVER_DISPATCH SerialWrite;
+
+#endif /* _SERIAL_PCH_ */

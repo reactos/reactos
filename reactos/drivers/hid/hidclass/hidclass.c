@@ -10,21 +10,25 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 static LPWSTR ClientIdentificationAddress = L"HIDCLASS";
 static ULONG HidClassDeviceNumber = 0;
 
-ULONG
+NTSTATUS
 NTAPI
-DllInitialize(ULONG Unknown)
+DllInitialize(
+    IN PUNICODE_STRING RegistryPath)
 {
-    return 0;
+    return STATUS_SUCCESS;
 }
 
-ULONG
+NTSTATUS
 NTAPI
-DllUnload()
+DllUnload(VOID)
 {
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -41,7 +45,6 @@ HidClassAddDevice(
     ULONG DeviceExtensionSize;
     PHIDCLASS_DRIVER_EXTENSION DriverExtension;
 
-
     /* increment device number */
     InterlockedIncrement((PLONG)&HidClassDeviceNumber);
 
@@ -52,7 +55,7 @@ HidClassAddDevice(
     RtlInitUnicodeString(&DeviceName, CharDeviceName);
 
     /* get driver object extension */
-    DriverExtension = (PHIDCLASS_DRIVER_EXTENSION) IoGetDriverObjectExtension(DriverObject, ClientIdentificationAddress);
+    DriverExtension = IoGetDriverObjectExtension(DriverObject, ClientIdentificationAddress);
     if (!DriverExtension)
     {
         /* device removed */
@@ -73,7 +76,7 @@ HidClassAddDevice(
     }
 
     /* get device extension */
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)NewDeviceObject->DeviceExtension;
+    FDODeviceExtension = NewDeviceObject->DeviceExtension;
 
     /* zero device extension */
     RtlZeroMemory(FDODeviceExtension, sizeof(HIDCLASS_FDO_EXTENSION));
@@ -140,26 +143,15 @@ HidClass_Create(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
     if (CommonDeviceExtension->IsFDO)
     {
-#ifndef __REACTOS__
-
          //
          // only supported for PDO
          //
          Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
          return STATUS_UNSUCCESSFUL;
-#else
-         //
-         // ReactOS PnP manager [...]
-         //
-         DPRINT1("[HIDCLASS] PnP HACK\n");
-         Irp->IoStatus.Status = STATUS_SUCCESS;
-         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-         return STATUS_SUCCESS;
-#endif
     }
 
     //
@@ -170,7 +162,7 @@ HidClass_Create(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)CommonDeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // get stack location
@@ -184,7 +176,7 @@ HidClass_Create(
     //
     // allocate context
     //
-    Context = (PHIDCLASS_FILEOP_CONTEXT)ExAllocatePool(NonPagedPool, sizeof(HIDCLASS_FILEOP_CONTEXT));
+    Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(HIDCLASS_FILEOP_CONTEXT), HIDCLASS_TAG);
     if (!Context)
     {
         //
@@ -209,7 +201,7 @@ HidClass_Create(
     // store context
     //
     ASSERT(IoStack->FileObject);
-    IoStack->FileObject->FsContext = (PVOID)Context;
+    IoStack->FileObject->FsContext = Context;
 
     //
     // done
@@ -236,7 +228,7 @@ HidClass_Close(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // is it a FDO request
@@ -265,7 +257,7 @@ HidClass_Close(
     //
     // get irp context
     //
-    IrpContext = (PHIDCLASS_FILEOP_CONTEXT)IoStack->FileObject->FsContext;
+    IrpContext = IoStack->FileObject->FsContext;
     ASSERT(IrpContext);
 
     //
@@ -313,7 +305,7 @@ HidClass_Close(
     //
     // now free all irps
     //
-    while(!IsListEmpty(&IrpContext->IrpCompletedListHead))
+    while (!IsListEmpty(&IrpContext->IrpCompletedListHead))
     {
         //
         // remove head irp
@@ -323,7 +315,7 @@ HidClass_Close(
         //
         // get irp
         //
-        ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+        ListIrp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
         //
         // free the irp
@@ -336,9 +328,6 @@ HidClass_Close(
     //
     KeReleaseSpinLock(&IrpContext->Lock, OldLevel);
 
-
-
-
     //
     // remove context
     //
@@ -347,7 +336,7 @@ HidClass_Close(
     //
     // free context
     //
-    ExFreePool(IrpContext);
+    ExFreePoolWithTag(IrpContext, HIDCLASS_TAG);
 
     //
     // complete request
@@ -355,31 +344,6 @@ HidClass_Close(
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
-}
-
-PVOID
-HidClass_GetSystemAddress(
-    IN PMDL ReportMDL)
-{
-    //
-    // sanity check
-    //
-    ASSERT(ReportMDL);
-
-    if (ReportMDL->MdlFlags & (MDL_SOURCE_IS_NONPAGED_POOL | MDL_MAPPED_TO_SYSTEM_VA))
-    {
-       //
-       // buffer is non paged pool
-       //
-       return ReportMDL->MappedSystemVa;
-    }
-    else
-    {
-       //
-       // map mdl
-       //
-       return MmMapLockedPages(ReportMDL, KernelMode);
-    }
 }
 
 NTSTATUS
@@ -400,7 +364,7 @@ HidClass_ReadCompleteIrp(
     //
     // get irp context
     //
-    IrpContext = (PHIDCLASS_IRP_CONTEXT)Ctx;
+    IrpContext = Ctx;
 
     DPRINT("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
     DPRINT("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
@@ -418,7 +382,7 @@ HidClass_ReadCompleteIrp(
         //
         // get address
         //
-        Address = (PUCHAR)HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
+        Address = MmGetSystemAddressForMdlSafe(IrpContext->OriginalIrp->MdlAddress, NormalPagePriority);
         if (Address)
         {
             //
@@ -429,13 +393,15 @@ HidClass_ReadCompleteIrp(
             //
             // get collection description
             //
-            CollectionDescription = HidClassPDO_GetCollectionDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+            CollectionDescription = HidClassPDO_GetCollectionDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription,
+                                                                         IrpContext->FileOp->DeviceExtension->CollectionNumber);
             ASSERT(CollectionDescription);
 
             //
             // get report description
             //
-            ReportDescription = HidClassPDO_GetReportDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+            ReportDescription = HidClassPDO_GetReportDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription,
+                                                                 IrpContext->FileOp->DeviceExtension->CollectionNumber);
             ASSERT(ReportDescription);
 
             if (CollectionDescription && ReportDescription)
@@ -463,7 +429,7 @@ HidClass_ReadCompleteIrp(
     //
     // free input report buffer
     //
-    ExFreePool(IrpContext->InputReportBuffer);
+    ExFreePoolWithTag(IrpContext->InputReportBuffer, HIDCLASS_TAG);
 
     //
     // remove us from pending list
@@ -518,7 +484,7 @@ HidClass_ReadCompleteIrp(
     //
     // free irp context
     //
-    ExFreePool(IrpContext);
+    ExFreePoolWithTag(IrpContext, HIDCLASS_TAG);
 
     //
     // done
@@ -552,7 +518,7 @@ HidClass_GetIrp(
         //
         // get irp
         //
-        Irp = (PIRP)CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
+        Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
     }
 
     //
@@ -612,7 +578,7 @@ HidClass_BuildIrp(
     //
     // allocate completion context
     //
-    IrpContext = (PHIDCLASS_IRP_CONTEXT)ExAllocatePool(NonPagedPool, sizeof(HIDCLASS_IRP_CONTEXT));
+    IrpContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(HIDCLASS_IRP_CONTEXT), HIDCLASS_TAG);
     if (!IrpContext)
     {
         //
@@ -625,7 +591,7 @@ HidClass_BuildIrp(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
@@ -638,13 +604,15 @@ HidClass_BuildIrp(
     //
     // get collection description
     //
-    CollectionDescription = HidClassPDO_GetCollectionDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+    CollectionDescription = HidClassPDO_GetCollectionDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription,
+                                                                 IrpContext->FileOp->DeviceExtension->CollectionNumber);
     ASSERT(CollectionDescription);
 
     //
     // get report description
     //
-    ReportDescription = HidClassPDO_GetReportDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription, IrpContext->FileOp->DeviceExtension->CollectionNumber);
+    ReportDescription = HidClassPDO_GetReportDescription(&IrpContext->FileOp->DeviceExtension->Common.DeviceDescription,
+                                                         IrpContext->FileOp->DeviceExtension->CollectionNumber);
     ASSERT(ReportDescription);
 
     //
@@ -664,7 +632,6 @@ HidClass_BuildIrp(
 
     }
 
-
     //
     // store report length
     //
@@ -673,14 +640,14 @@ HidClass_BuildIrp(
     //
     // allocate buffer
     //
-    IrpContext->InputReportBuffer = ExAllocatePool(NonPagedPool, IrpContext->InputReportBufferLength);
+    IrpContext->InputReportBuffer = ExAllocatePoolWithTag(NonPagedPool, IrpContext->InputReportBufferLength, HIDCLASS_TAG);
     if (!IrpContext->InputReportBuffer)
     {
         //
         // no memory
         //
         IoFreeIrp(Irp);
-        ExFreePool(IrpContext);
+        ExFreePoolWithTag(IrpContext, HIDCLASS_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -712,7 +679,6 @@ HidClass_BuildIrp(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 HidClass_Read(
@@ -735,7 +701,7 @@ HidClass_Read(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(CommonDeviceExtension->IsFDO == FALSE);
 
     //
@@ -747,7 +713,7 @@ HidClass_Read(
     //
     // get context
     //
-    Context = (PHIDCLASS_FILEOP_CONTEXT)IoStack->FileObject->FsContext;
+    Context = IoStack->FileObject->FsContext;
     ASSERT(Context);
 
     //
@@ -757,21 +723,25 @@ HidClass_Read(
 
     if (Context->StopInProgress)
     {
-         //
-         // stop in progress
-         //
-         DPRINT1("[HIDCLASS] Stop In Progress\n");
-         Irp->IoStatus.Status = STATUS_CANCELLED;
-         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-         return STATUS_CANCELLED;
-
+        //
+        // stop in progress
+        //
+        DPRINT1("[HIDCLASS] Stop In Progress\n");
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_CANCELLED;
     }
-
 
     //
     // build irp request
     //
-    Status = HidClass_BuildIrp(DeviceObject, Irp, Context, IOCTL_HID_READ_REPORT, IoStack->Parameters.Read.Length, &NewIrp, &NewIrpContext);
+    Status = HidClass_BuildIrp(DeviceObject,
+                               Irp,
+                               Context,
+                               IOCTL_HID_READ_REPORT,
+                               IoStack->Parameters.Read.Length,
+                               &NewIrp,
+                               &NewIrpContext);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -814,7 +784,7 @@ HidClass_Read(
     IoMarkIrpPending(Irp);
 
     //
-    // lets dispatch the request
+    // let's dispatch the request
     //
     ASSERT(Context->DeviceExtension);
     Status = Context->DeviceExtension->Common.DriverExtension->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL](Context->DeviceExtension->FDODeviceObject, NewIrp);
@@ -853,7 +823,7 @@ HidClass_DeviceControl(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // only PDO are supported
@@ -874,14 +844,14 @@ HidClass_DeviceControl(
     //
     // get pdo device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // get stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    switch(IoStack->Parameters.DeviceIoControl.IoControlCode)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_HID_GET_COLLECTION_INFORMATION:
         {
@@ -901,13 +871,14 @@ HidClass_DeviceControl(
             //
             // get output buffer
             //
-            CollectionInformation = (PHID_COLLECTION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+            CollectionInformation = Irp->AssociatedIrp.SystemBuffer;
             ASSERT(CollectionInformation);
 
             //
             // get collection description
             //
-            CollectionDescription = HidClassPDO_GetCollectionDescription(&CommonDeviceExtension->DeviceDescription, PDODeviceExtension->CollectionNumber);
+            CollectionDescription = HidClassPDO_GetCollectionDescription(&CommonDeviceExtension->DeviceDescription,
+                                                                         PDODeviceExtension->CollectionNumber);
             ASSERT(CollectionDescription);
 
             //
@@ -932,7 +903,8 @@ HidClass_DeviceControl(
             //
             // get collection description
             //
-            CollectionDescription = HidClassPDO_GetCollectionDescription(&CommonDeviceExtension->DeviceDescription, PDODeviceExtension->CollectionNumber);
+            CollectionDescription = HidClassPDO_GetCollectionDescription(&CommonDeviceExtension->DeviceDescription,
+                                                                         PDODeviceExtension->CollectionNumber);
             ASSERT(CollectionDescription);
 
             //
@@ -985,15 +957,27 @@ HidClass_InternalDeviceControl(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 NTSTATUS
 NTAPI
 HidClass_Power(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
+ 
+    if (CommonDeviceExtension->IsFDO)
+    {
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+        return HidClassFDO_DispatchRequest(DeviceObject, Irp);
+    }
+    else
+    {
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        PoStartNextPowerIrp(Irp);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
 }
 
 NTSTATUS
@@ -1007,7 +991,7 @@ HidClass_PnP(
     //
     // get common device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // check type of device object
@@ -1039,7 +1023,7 @@ HidClass_DispatchDefault(
     //
     // get common device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // FIXME: support PDO
@@ -1056,7 +1040,6 @@ HidClass_DispatchDefault(
     //
     return IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, Irp);
 }
-
 
 NTSTATUS
 NTAPI
@@ -1075,7 +1058,7 @@ HidClassDispatch(
     //
     // dispatch request based on major function
     //
-    switch(IoStack->MajorFunction)
+    switch (IoStack->MajorFunction)
     {
         case IRP_MJ_CREATE:
             return HidClass_Create(DeviceObject, Irp);
@@ -1115,7 +1098,10 @@ HidRegisterMinidriver(
     }
 
     /* now allocate the driver object extension */
-    Status = IoAllocateDriverObjectExtension(MinidriverRegistration->DriverObject, (PVOID)ClientIdentificationAddress, sizeof(HIDCLASS_DRIVER_EXTENSION), (PVOID*)&DriverExtension);
+    Status = IoAllocateDriverObjectExtension(MinidriverRegistration->DriverObject,
+                                             ClientIdentificationAddress,
+                                             sizeof(HIDCLASS_DRIVER_EXTENSION),
+                                             (PVOID *)&DriverExtension);
     if (!NT_SUCCESS(Status))
     {
         /* failed to allocate driver extension */
@@ -1134,7 +1120,9 @@ HidRegisterMinidriver(
     DriverExtension->DriverUnload = MinidriverRegistration->DriverObject->DriverUnload;
 
     /* copy driver dispatch routines */
-    RtlCopyMemory(DriverExtension->MajorFunction, MinidriverRegistration->DriverObject->MajorFunction, sizeof(PDRIVER_DISPATCH) * (IRP_MJ_MAXIMUM_FUNCTION+1));
+    RtlCopyMemory(DriverExtension->MajorFunction,
+                  MinidriverRegistration->DriverObject->MajorFunction,
+                  sizeof(PDRIVER_DISPATCH) * (IRP_MJ_MAXIMUM_FUNCTION + 1));
 
     /* initialize lock */
     KeInitializeSpinLock(&DriverExtension->Lock);

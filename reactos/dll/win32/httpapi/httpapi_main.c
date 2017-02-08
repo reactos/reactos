@@ -42,8 +42,6 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls( hinst );
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }
@@ -178,5 +176,14 @@ ULONG WINAPI HttpSetServiceConfiguration( HANDLE handle, HTTP_SERVICE_CONFIG_ID 
 ULONG WINAPI HttpCreateHttpHandle( PHANDLE handle, ULONG reserved )
 {
     FIXME( "(%p, %d): stub!\n", handle, reserved);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *        HttpAddUrl     (HTTPAPI.@)
+ */
+ULONG WINAPI HttpAddUrl( HANDLE handle, PCWSTR url, PVOID reserved )
+{
+    FIXME( "(%p, %s, %p): stub!\n", handle, debugstr_w(url), reserved );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }

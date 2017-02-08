@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/mui.c
+ * FILE:            base/setup/usetup/mui.c
  * PURPOSE:         Text-mode setup
  * PROGRAMMER:
  */
@@ -63,8 +63,10 @@ FindLanguageIndex(VOID)
     return 0;
 }
 
+
 BOOLEAN
-IsLanguageAvailable(PWCHAR LanguageId)
+IsLanguageAvailable(
+    PWCHAR LanguageId)
 {
     ULONG lngIndex = 0;
 
@@ -82,7 +84,8 @@ IsLanguageAvailable(PWCHAR LanguageId)
 
 static
 const MUI_ENTRY *
-FindMUIEntriesOfPage(IN ULONG PageNumber)
+FindMUIEntriesOfPage(
+    IN ULONG PageNumber)
 {
     ULONG muiIndex = 0;
     ULONG lngIndex;
@@ -102,6 +105,7 @@ FindMUIEntriesOfPage(IN ULONG PageNumber)
     return NULL;
 }
 
+
 static
 const MUI_ERROR *
 FindMUIErrorEntries(VOID)
@@ -109,6 +113,7 @@ FindMUIErrorEntries(VOID)
     ULONG lngIndex = max(FindLanguageIndex(), 0);
     return LanguageList[lngIndex].MuiErrors;
 }
+
 
 static
 const MUI_STRING *
@@ -118,12 +123,14 @@ FindMUIStringEntries(VOID)
     return LanguageList[lngIndex].MuiStrings;
 }
 
+
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
     return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
+
 
 PWCHAR
 MUIGetGeoID(VOID)
@@ -132,6 +139,7 @@ MUIGetGeoID(VOID)
     return LanguageList[lngIndex].GeoID;
 }
 
+
 const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID)
 {
@@ -139,8 +147,10 @@ MUIGetLayoutsList(VOID)
     return LanguageList[lngIndex].MuiLayouts;
 }
 
+
 VOID
-MUIClearPage(IN ULONG page)
+MUIClearPage(
+    IN ULONG page)
 {
     const MUI_ENTRY * entry;
     int index;
@@ -167,8 +177,10 @@ MUIClearPage(IN ULONG page)
     while (entry[index].Buffer != NULL);
 }
 
+
 VOID
-MUIDisplayPage(IN ULONG page)
+MUIDisplayPage(
+    IN ULONG page)
 {
     const MUI_ENTRY * entry;
     int index;
@@ -196,10 +208,17 @@ MUIDisplayPage(IN ULONG page)
     while (entry[index].Buffer != NULL);
 }
 
+
 VOID
-MUIDisplayError(IN ULONG ErrorNum, OUT PINPUT_RECORD Ir, IN ULONG WaitEvent)
+MUIDisplayError(
+    IN ULONG ErrorNum,
+    OUT PINPUT_RECORD Ir,
+    IN ULONG WaitEvent,
+    ...)
 {
     const MUI_ERROR * entry;
+    CHAR Buffer[2048];
+    va_list ap;
 
     if (ErrorNum >= ERROR_LAST_ERROR_CODE)
     {
@@ -221,18 +240,24 @@ MUIDisplayError(IN ULONG ErrorNum, OUT PINPUT_RECORD Ir, IN ULONG WaitEvent)
         return;
     }
 
-    PopupError(entry[ErrorNum].ErrorText,
+    va_start(ap, WaitEvent);
+    vsprintf(Buffer, entry[ErrorNum].ErrorText, ap);
+    va_end(ap);
+
+    PopupError(Buffer,
                entry[ErrorNum].ErrorStatus,
                Ir,
                WaitEvent);
 }
 
+
 LPSTR
-MUIGetString(ULONG Number)
+MUIGetString(
+    ULONG Number)
 {
     ULONG i;
     const MUI_STRING * entry;
-    CHAR szErr[100];
+    CHAR szErr[128];
 
     entry = FindMUIStringEntries();
     if (entry)
@@ -249,15 +274,20 @@ MUIGetString(ULONG Number)
     sprintf(szErr, "Error: failed find string id %lu for language index %lu\n", Number, FindLanguageIndex());
 
     PopupError(szErr,
-                NULL,
-                NULL,
-                POPUP_WAIT_NONE);
+               NULL,
+               NULL,
+               POPUP_WAIT_NONE);
 
     return "<nostring>";
 }
 
-static BOOLEAN
-AddHotkeySettings(IN LPCWSTR Hotkey, IN LPCWSTR LangHotkey, IN LPCWSTR LayoutHotkey)
+
+static
+BOOLEAN
+AddHotkeySettings(
+    IN LPCWSTR Hotkey,
+    IN LPCWSTR LangHotkey,
+    IN LPCWSTR LayoutHotkey)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -340,8 +370,10 @@ AddHotkeySettings(IN LPCWSTR Hotkey, IN LPCWSTR LangHotkey, IN LPCWSTR LayoutHot
     return TRUE;
 }
 
+
 BOOLEAN
-AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
+AddKbLayoutsToRegistry(
+    IN const MUI_LAYOUTS *MuiLayouts)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -461,7 +493,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
         }
         else
         {
-            swprintf(szLangID, L"d%03u%s", uCount, MuiLayouts[uIndex].LangID);
+            swprintf(szLangID, L"d%03lu%s", uCount, MuiLayouts[uIndex].LangID);
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
@@ -509,10 +541,12 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
     return TRUE;
 }
 
+
 BOOLEAN
 AddKeyboardLayouts(VOID)
 {
     ULONG lngIndex = 0;
+
     do
     {
         if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
@@ -527,8 +561,13 @@ AddKeyboardLayouts(VOID)
     return FALSE;
 }
 
-static BOOLEAN
-AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPage)
+
+static
+BOOLEAN
+AddCodepageToRegistry(
+    IN LPCWSTR ACPage,
+    IN LPCWSTR OEMCPage,
+    IN LPCWSTR MACCPage)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -603,8 +642,11 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
     return TRUE;
 }
 
-static BOOLEAN
-AddFontsSettingsToRegistry(IN const MUI_SUBFONT * MuiSubFonts)
+
+static
+BOOLEAN
+AddFontsSettingsToRegistry(
+    IN const MUI_SUBFONT * MuiSubFonts)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -654,6 +696,7 @@ AddFontsSettingsToRegistry(IN const MUI_SUBFONT * MuiSubFonts)
     return TRUE;
 }
 
+
 BOOLEAN
 AddCodePage(VOID)
 {
@@ -681,6 +724,7 @@ AddCodePage(VOID)
 
     return FALSE;
 }
+
 
 VOID
 SetConsoleCodePage(VOID)

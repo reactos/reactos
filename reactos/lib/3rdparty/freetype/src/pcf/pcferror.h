@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PCF error codes (specification only).                                */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2012 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,19 +22,20 @@
   /*                                                                       */
   /*************************************************************************/
 
-#ifndef __PCFERROR_H__
-#define __PCFERROR_H__
+#ifndef PCFERROR_H_
+#define PCFERROR_H_
 
 #include FT_MODULE_ERRORS_H
 
-#undef __FTERRORS_H__
+#undef FTERRORS_H_
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  PCF_Err_
 #define FT_ERR_BASE    FT_Mod_Err_PCF
 
 #include FT_ERRORS_H
 
-#endif /* __PCFERROR_H__ */
+#endif /* PCFERROR_H_ */
 
 
 /* END */

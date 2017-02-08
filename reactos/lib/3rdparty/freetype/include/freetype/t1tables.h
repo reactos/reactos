@@ -5,7 +5,7 @@
 /*    Basic Type 1/Type 2 tables definitions and interface (specification  */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,8 +17,8 @@
 /***************************************************************************/
 
 
-#ifndef __T1TABLES_H__
-#define __T1TABLES_H__
+#ifndef T1TABLES_H_
+#define T1TABLES_H_
 
 
 #include <ft2build.h>
@@ -48,6 +48,26 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    This section contains the definition of Type 1-specific tables,    */
   /*    including structures related to other PostScript font formats.     */
+  /*                                                                       */
+  /* <Order>                                                               */
+  /*    PS_FontInfoRec                                                     */
+  /*    PS_FontInfo                                                        */
+  /*    PS_PrivateRec                                                      */
+  /*    PS_Private                                                         */
+  /*                                                                       */
+  /*    CID_FaceDictRec                                                    */
+  /*    CID_FaceDict                                                       */
+  /*    CID_FaceInfoRec                                                    */
+  /*    CID_FaceInfo                                                       */
+  /*                                                                       */
+  /*    FT_Has_PS_Glyph_Names                                              */
+  /*    FT_Get_PS_Font_Info                                                */
+  /*    FT_Get_PS_Font_Private                                             */
+  /*    FT_Get_PS_Font_Value                                               */
+  /*                                                                       */
+  /*    T1_Blend_Flags                                                     */
+  /*    T1_EncodingType                                                    */
+  /*    PS_Dict_Keys                                                       */
   /*                                                                       */
   /*************************************************************************/
 
@@ -190,14 +210,30 @@ FT_BEGIN_HEADER
   /*    given blend dictionary (font info or private).  Used to support    */
   /*    Multiple Masters fonts.                                            */
   /*                                                                       */
+  /* <Values>                                                              */
+  /*    T1_BLEND_UNDERLINE_POSITION ::                                     */
+  /*    T1_BLEND_UNDERLINE_THICKNESS ::                                    */
+  /*    T1_BLEND_ITALIC_ANGLE ::                                           */
+  /*    T1_BLEND_BLUE_VALUES ::                                            */
+  /*    T1_BLEND_OTHER_BLUES ::                                            */
+  /*    T1_BLEND_STANDARD_WIDTH ::                                         */
+  /*    T1_BLEND_STANDARD_HEIGHT ::                                        */
+  /*    T1_BLEND_STEM_SNAP_WIDTHS ::                                       */
+  /*    T1_BLEND_STEM_SNAP_HEIGHTS ::                                      */
+  /*    T1_BLEND_BLUE_SCALE ::                                             */
+  /*    T1_BLEND_BLUE_SHIFT ::                                             */
+  /*    T1_BLEND_FAMILY_BLUES ::                                           */
+  /*    T1_BLEND_FAMILY_OTHER_BLUES ::                                     */
+  /*    T1_BLEND_FORCE_BOLD ::                                             */
+  /*                                                                       */
   typedef enum  T1_Blend_Flags_
   {
-    /*# required fields in a FontInfo blend dictionary */
+    /* required fields in a FontInfo blend dictionary */
     T1_BLEND_UNDERLINE_POSITION = 0,
     T1_BLEND_UNDERLINE_THICKNESS,
     T1_BLEND_ITALIC_ANGLE,
 
-    /*# required fields in a Private blend dictionary */
+    /* required fields in a Private blend dictionary */
     T1_BLEND_BLUE_VALUES,
     T1_BLEND_OTHER_BLUES,
     T1_BLEND_STANDARD_WIDTH,
@@ -210,15 +246,13 @@ FT_BEGIN_HEADER
     T1_BLEND_FAMILY_OTHER_BLUES,
     T1_BLEND_FORCE_BOLD,
 
-    /*# never remove */
-    T1_BLEND_MAX
+    T1_BLEND_MAX    /* do not remove */
 
   } T1_Blend_Flags;
 
-  /* */
 
-
-  /*# backwards compatible definitions */
+  /* these constants are deprecated; use the corresponding */
+  /* `T1_Blend_Flags' values instead                       */
 #define t1_blend_underline_position   T1_BLEND_UNDERLINE_POSITION
 #define t1_blend_underline_thickness  T1_BLEND_UNDERLINE_THICKNESS
 #define t1_blend_italic_angle         T1_BLEND_ITALIC_ANGLE
@@ -234,6 +268,8 @@ FT_BEGIN_HEADER
 #define t1_blend_family_other_blues   T1_BLEND_FAMILY_OTHER_BLUES
 #define t1_blend_force_bold           T1_BLEND_FORCE_BOLD
 #define t1_blend_max                  T1_BLEND_MAX
+
+  /* */
 
 
   /* maximum number of Multiple Masters designs, as defined in the spec */
@@ -333,10 +369,17 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct CID_FaceDictRec_*  CID_FaceDict;
 
-  /* */
 
-
-  /* backwards-compatible definition */
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    CID_FontDict                                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    This type is equivalent to @CID_FaceDictRec.  It is deprecated but */
+  /*    kept to maintain source compatibility between various versions of  */
+  /*    FreeType.                                                          */
+  /*                                                                       */
   typedef CID_FaceDictRec  CID_FontDict;
 
 
@@ -449,8 +492,9 @@ FT_BEGIN_HEADER
    *    FreeType error code.  0~means success.
    *
    * @note:
-   *    The string pointers within the font info structure are owned by
-   *    the face and don't need to be freed by the caller.
+   *    String pointers within the @PS_FontInfoRec structure are owned by
+   *    the face and don't need to be freed by the caller.  Missing entries
+   *    in the font's FontInfo dictionary are represented by NULL pointers.
    *
    *    If the font's format is not PostScript-based, this function will
    *    return the `FT_Err_Invalid_Argument' error code.
@@ -493,12 +537,225 @@ FT_BEGIN_HEADER
   FT_Get_PS_Font_Private( FT_Face     face,
                           PS_Private  afont_private );
 
-  /* */
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Enum>                                                                */
+  /*    T1_EncodingType                                                    */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    An enumeration describing the `Encoding' entry in a Type 1         */
+  /*    dictionary.                                                        */
+  /*                                                                       */
+  /* <Values>                                                              */
+  /*    T1_ENCODING_TYPE_NONE ::                                           */
+  /*    T1_ENCODING_TYPE_ARRAY ::                                          */
+  /*    T1_ENCODING_TYPE_STANDARD ::                                       */
+  /*    T1_ENCODING_TYPE_ISOLATIN1 ::                                      */
+  /*    T1_ENCODING_TYPE_EXPERT ::                                         */
+  /*                                                                       */
+  typedef enum  T1_EncodingType_
+  {
+    T1_ENCODING_TYPE_NONE = 0,
+    T1_ENCODING_TYPE_ARRAY,
+    T1_ENCODING_TYPE_STANDARD,
+    T1_ENCODING_TYPE_ISOLATIN1,
+    T1_ENCODING_TYPE_EXPERT
+
+  } T1_EncodingType;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Enum>                                                                */
+  /*    PS_Dict_Keys                                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    An enumeration used in calls to @FT_Get_PS_Font_Value to identify  */
+  /*    the Type~1 dictionary entry to retrieve.                           */
+  /*                                                                       */
+  /* <Values>                                                              */
+  /*    PS_DICT_FONT_TYPE ::                                               */
+  /*    PS_DICT_FONT_MATRIX ::                                             */
+  /*    PS_DICT_FONT_BBOX ::                                               */
+  /*    PS_DICT_PAINT_TYPE ::                                              */
+  /*    PS_DICT_FONT_NAME ::                                               */
+  /*    PS_DICT_UNIQUE_ID ::                                               */
+  /*    PS_DICT_NUM_CHAR_STRINGS ::                                        */
+  /*    PS_DICT_CHAR_STRING_KEY ::                                         */
+  /*    PS_DICT_CHAR_STRING ::                                             */
+  /*    PS_DICT_ENCODING_TYPE ::                                           */
+  /*    PS_DICT_ENCODING_ENTRY ::                                          */
+  /*    PS_DICT_NUM_SUBRS ::                                               */
+  /*    PS_DICT_SUBR ::                                                    */
+  /*    PS_DICT_STD_HW ::                                                  */
+  /*    PS_DICT_STD_VW ::                                                  */
+  /*    PS_DICT_NUM_BLUE_VALUES ::                                         */
+  /*    PS_DICT_BLUE_VALUE ::                                              */
+  /*    PS_DICT_BLUE_FUZZ ::                                               */
+  /*    PS_DICT_NUM_OTHER_BLUES ::                                         */
+  /*    PS_DICT_OTHER_BLUE ::                                              */
+  /*    PS_DICT_NUM_FAMILY_BLUES ::                                        */
+  /*    PS_DICT_FAMILY_BLUE ::                                             */
+  /*    PS_DICT_NUM_FAMILY_OTHER_BLUES ::                                  */
+  /*    PS_DICT_FAMILY_OTHER_BLUE ::                                       */
+  /*    PS_DICT_BLUE_SCALE ::                                              */
+  /*    PS_DICT_BLUE_SHIFT ::                                              */
+  /*    PS_DICT_NUM_STEM_SNAP_H ::                                         */
+  /*    PS_DICT_STEM_SNAP_H ::                                             */
+  /*    PS_DICT_NUM_STEM_SNAP_V ::                                         */
+  /*    PS_DICT_STEM_SNAP_V ::                                             */
+  /*    PS_DICT_FORCE_BOLD ::                                              */
+  /*    PS_DICT_RND_STEM_UP ::                                             */
+  /*    PS_DICT_MIN_FEATURE ::                                             */
+  /*    PS_DICT_LEN_IV ::                                                  */
+  /*    PS_DICT_PASSWORD ::                                                */
+  /*    PS_DICT_LANGUAGE_GROUP ::                                          */
+  /*    PS_DICT_VERSION ::                                                 */
+  /*    PS_DICT_NOTICE ::                                                  */
+  /*    PS_DICT_FULL_NAME ::                                               */
+  /*    PS_DICT_FAMILY_NAME ::                                             */
+  /*    PS_DICT_WEIGHT ::                                                  */
+  /*    PS_DICT_IS_FIXED_PITCH ::                                          */
+  /*    PS_DICT_UNDERLINE_POSITION ::                                      */
+  /*    PS_DICT_UNDERLINE_THICKNESS ::                                     */
+  /*    PS_DICT_FS_TYPE ::                                                 */
+  /*    PS_DICT_ITALIC_ANGLE ::                                            */
+  /*                                                                       */
+  typedef enum  PS_Dict_Keys_
+  {
+    /* conventionally in the font dictionary */
+    PS_DICT_FONT_TYPE,              /* FT_Byte         */
+    PS_DICT_FONT_MATRIX,            /* FT_Fixed        */
+    PS_DICT_FONT_BBOX,              /* FT_Fixed        */
+    PS_DICT_PAINT_TYPE,             /* FT_Byte         */
+    PS_DICT_FONT_NAME,              /* FT_String*      */
+    PS_DICT_UNIQUE_ID,              /* FT_Int          */
+    PS_DICT_NUM_CHAR_STRINGS,       /* FT_Int          */
+    PS_DICT_CHAR_STRING_KEY,        /* FT_String*      */
+    PS_DICT_CHAR_STRING,            /* FT_String*      */
+    PS_DICT_ENCODING_TYPE,          /* T1_EncodingType */
+    PS_DICT_ENCODING_ENTRY,         /* FT_String*      */
+
+    /* conventionally in the font Private dictionary */
+    PS_DICT_NUM_SUBRS,              /* FT_Int     */
+    PS_DICT_SUBR,                   /* FT_String* */
+    PS_DICT_STD_HW,                 /* FT_UShort  */
+    PS_DICT_STD_VW,                 /* FT_UShort  */
+    PS_DICT_NUM_BLUE_VALUES,        /* FT_Byte    */
+    PS_DICT_BLUE_VALUE,             /* FT_Short   */
+    PS_DICT_BLUE_FUZZ,              /* FT_Int     */
+    PS_DICT_NUM_OTHER_BLUES,        /* FT_Byte    */
+    PS_DICT_OTHER_BLUE,             /* FT_Short   */
+    PS_DICT_NUM_FAMILY_BLUES,       /* FT_Byte    */
+    PS_DICT_FAMILY_BLUE,            /* FT_Short   */
+    PS_DICT_NUM_FAMILY_OTHER_BLUES, /* FT_Byte    */
+    PS_DICT_FAMILY_OTHER_BLUE,      /* FT_Short   */
+    PS_DICT_BLUE_SCALE,             /* FT_Fixed   */
+    PS_DICT_BLUE_SHIFT,             /* FT_Int     */
+    PS_DICT_NUM_STEM_SNAP_H,        /* FT_Byte    */
+    PS_DICT_STEM_SNAP_H,            /* FT_Short   */
+    PS_DICT_NUM_STEM_SNAP_V,        /* FT_Byte    */
+    PS_DICT_STEM_SNAP_V,            /* FT_Short   */
+    PS_DICT_FORCE_BOLD,             /* FT_Bool    */
+    PS_DICT_RND_STEM_UP,            /* FT_Bool    */
+    PS_DICT_MIN_FEATURE,            /* FT_Short   */
+    PS_DICT_LEN_IV,                 /* FT_Int     */
+    PS_DICT_PASSWORD,               /* FT_Long    */
+    PS_DICT_LANGUAGE_GROUP,         /* FT_Long    */
+
+    /* conventionally in the font FontInfo dictionary */
+    PS_DICT_VERSION,                /* FT_String* */
+    PS_DICT_NOTICE,                 /* FT_String* */
+    PS_DICT_FULL_NAME,              /* FT_String* */
+    PS_DICT_FAMILY_NAME,            /* FT_String* */
+    PS_DICT_WEIGHT,                 /* FT_String* */
+    PS_DICT_IS_FIXED_PITCH,         /* FT_Bool    */
+    PS_DICT_UNDERLINE_POSITION,     /* FT_Short   */
+    PS_DICT_UNDERLINE_THICKNESS,    /* FT_UShort  */
+    PS_DICT_FS_TYPE,                /* FT_UShort  */
+    PS_DICT_ITALIC_ANGLE,           /* FT_Long    */
+
+    PS_DICT_MAX = PS_DICT_ITALIC_ANGLE
+
+  } PS_Dict_Keys;
+
+
+  /************************************************************************
+   *
+   * @function:
+   *    FT_Get_PS_Font_Value
+   *
+   * @description:
+   *    Retrieve the value for the supplied key from a PostScript font.
+   *
+   * @input:
+   *    face ::
+   *       PostScript face handle.
+   *
+   *    key ::
+   *       An enumeration value representing the dictionary key to retrieve.
+   *
+   *    idx ::
+   *       For array values, this specifies the index to be returned.
+   *
+   *    value ::
+   *       A pointer to memory into which to write the value.
+   *
+   *    valen_len ::
+   *       The size, in bytes, of the memory supplied for the value.
+   *
+   * @output:
+   *    value ::
+   *       The value matching the above key, if it exists.
+   *
+   * @return:
+   *    The amount of memory (in bytes) required to hold the requested
+   *    value (if it exists, -1 otherwise).
+   *
+   * @note:
+   *    The values returned are not pointers into the internal structures of
+   *    the face, but are `fresh' copies, so that the memory containing them
+   *    belongs to the calling application.  This also enforces the
+   *    `read-only' nature of these values, i.e., this function cannot be
+   *    used to manipulate the face.
+   *
+   *    `value' is a void pointer because the values returned can be of
+   *    various types.
+   *
+   *    If either `value' is NULL or `value_len' is too small, just the
+   *    required memory size for the requested entry is returned.
+   *
+   *    The `idx' parameter is used, not only to retrieve elements of, for
+   *    example, the FontMatrix or FontBBox, but also to retrieve name keys
+   *    from the CharStrings dictionary, and the charstrings themselves.  It
+   *    is ignored for atomic values.
+   *
+   *    PS_DICT_BLUE_SCALE returns a value that is scaled up by 1000.  To
+   *    get the value as in the font stream, you need to divide by
+   *    65536000.0 (to remove the FT_Fixed scale, and the x1000 scale).
+   *
+   *    IMPORTANT: Only key/value pairs read by the FreeType interpreter can
+   *    be retrieved.  So, for example, PostScript procedures such as NP,
+   *    ND, and RD are not available.  Arbitrary keys are, obviously, not be
+   *    available either.
+   *
+   *    If the font's format is not PostScript-based, this function returns
+   *    the `FT_Err_Invalid_Argument' error code.
+   *
+   */
+  FT_EXPORT( FT_Long )
+  FT_Get_PS_Font_Value( FT_Face       face,
+                        PS_Dict_Keys  key,
+                        FT_UInt       idx,
+                        void         *value,
+                        FT_Long       value_len );
+
+  /* */
 
 FT_END_HEADER
 
-#endif /* __T1TABLES_H__ */
+#endif /* T1TABLES_H_ */
 
 
 /* END */

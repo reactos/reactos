@@ -37,9 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* GLOBALS *******************************************************************/
 
-static const WORD wPattern_AA55[8] = { 0xaaaa, 0x5555, 0xaaaa, 0x5555,
-                                       0xaaaa, 0x5555, 0xaaaa, 0x5555 };
-
 /* These tables are used in:
  * UITOOLS_DrawDiagEdge()
  * UITOOLS_DrawRectEdge()
@@ -623,9 +620,7 @@ static void UITOOLS_DrawCheckedRect( HDC dc, LPRECT rect )
 {
     if(GetSysColor(COLOR_BTNHIGHLIGHT) == RGB(255, 255, 255))
     {
-//        HBITMAP hbm = CreateBitmap(8, 8, 1, 1, wPattern_AA55); gpsi->hbrGray
         HBRUSH hbsave;
-//        HBRUSH hb = CreatePatternBrush(hbm);
         COLORREF bg;
 
         FillRect(dc, rect, GetSysColorBrush(COLOR_BTNFACE));
@@ -634,8 +629,6 @@ static void UITOOLS_DrawCheckedRect( HDC dc, LPRECT rect )
         PatBlt(dc, rect->left, rect->top, rect->right-rect->left, rect->bottom-rect->top, 0x00FA0089);
         SelectObject(dc, hbsave);
         SetBkColor(dc, bg);
-//        DeleteObject(hb);
-//        DeleteObject(hbm);
     }
     else
     {
@@ -986,6 +979,14 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     TCHAR Symbol;
     switch(uFlags & 0xff)
     {
+        case DFCS_MENUARROWUP:
+            Symbol = '5';
+            break;
+
+        case DFCS_MENUARROWDOWN:
+            Symbol = '6';
+            break;
+
         case DFCS_MENUARROW:
             Symbol = '8';
             break;
@@ -1018,16 +1019,20 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     hFont = CreateFontIndirect(&lf);
     /* save font */
     hOldFont = SelectObject(dc, hFont);
-    // FIXME selecting color doesn't work
-#if 0
-    if(uFlags & DFCS_INACTIVE)
+
+    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||  
+        (uFlags & 0xff) == DFCS_MENUARROWDOWN ) 
     {
-        /* draw shadow */
-        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-        TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
-    }
-    SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+#if 0
+       if (uFlags & DFCS_INACTIVE)
+       {
+           /* draw shadow */
+           SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+           TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
+       }
 #endif
+       SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
+    }
     /* draw selected symbol */
     TextOut(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */
@@ -1278,6 +1283,10 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
                 break;
 
             case DST_COMPLEX: /* cx and cy must be set in this mode */
+                return FALSE;
+
+            default:
+                ERR("Invalid opcode: %u\n", opcode);
                 return FALSE;
         }
 
@@ -1559,7 +1568,7 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
         /* Handle system colors */
         if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
             hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
-        
+
         prevhbr = SelectObject(hDC, hbr);
         if (prevhbr == NULL)
             return (INT)FALSE;

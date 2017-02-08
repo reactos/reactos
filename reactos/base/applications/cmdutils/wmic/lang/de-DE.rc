@@ -1,0 +1,8 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Fehler: Befehlszeile nicht unterstützt\n"
+    STRING_ALIAS_NOT_FOUND, "Fehler: Alias nicht gefunden\n"
+    STRING_INVALID_QUERY, "Fehler: Ungültige Abfrage\n"
+}

@@ -1,38 +1,38 @@
 /*
- *      translated by Polish Translation Team (Apr, 2007)
- *      Updated by Caemyr and Maciej Bia�as (2008)
- *      https://sourceforge.net/projects/reactospl
- *      UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Polish Translation Team (Apr, 2007)
+ *    Updated by Caemyr and Maciej Białas (2008)
+ *    https://sourceforge.net/projects/reactospl
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Możesz automatycznie pobrać ustawienia sieciowe protokołu IP, jeżeli Twoja sieć obsługuje te funkcje. W innym przypadku musisz skontaktować się z administratorem sieci w celu zdobycia odpowiednich ustawień.", -1, 9, 9, 228, 27
- CONTROL "Pobierz adres IP automatycznie", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
- GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Użyj następującego adresu IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "Adres IP:", -1, 14, 75, 135, 8
- CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
- LTEXT "Maska podsieci:", -1, 14, 90, 135, 8
- CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "Brama domyślna:", -1, 14, 105, 135, 8
- CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
- CONTROL "Pobierz adresy serwerów DNS automatycznie", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
- GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "&Użyj poniższych adresów serwera DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Pierwszy serwer DNS:", -1, 14, 171, 135, 8
- CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
- LTEXT "Alternatywny serwer DNS:", -1, 14, 186, 135, 8
- CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
- PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    LTEXT "Możesz automatycznie pobrać ustawienia sieciowe protokołu IP, jeżeli Twoja sieć obsługuje te funkcje. W innym przypadku musisz skontaktować się z administratorem sieci w celu zdobycia odpowiednich ustawień.", -1, 9, 9, 235, 27
+    CONTROL "Pobierz adres IP automatycznie", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "&Użyj następującego adresu IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "Adres IP:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "Maska podsieci:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "Brama domyślna:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "Pobierz adresy serwerów DNS automatycznie", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "&Użyj poniższych adresów serwera DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    LTEXT "Pierwszy serwer DNS:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "Alternatywny serwer DNS:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Konfiguracja alternatywna"
 FONT 8, "MS Shell Dlg"
@@ -42,29 +42,29 @@ BEGIN
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "&Ustawienia konfigurowane przez użytkownika", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "Adres &IP:", -1, 14, 75, 135, 8
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
     LTEXT "&Maska podsieci:", -1, 14, 95, 135, 8
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "&Brama domyślna:", -1, 14, 115, 135, 8
-    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "&Preferowany serwer DNS:", -1, 14, 150, 135, 8
-    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
     LTEXT "&Alternatywny serwer DNS:", -1, 14, 165, 180, 8
-    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
-IDD_TCPIP_ADVIP_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
+IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Ustawienia protokołu IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Adresy IP", -1, 5, 5, 240, 90
-    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "Dodaj...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Edytuj...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Usuń", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
     GROUPBOX "Bramy domyślne:", -1, 5, 100, 240, 90
-    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "Dodaj...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Edytuj...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Usuń", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
@@ -74,86 +74,85 @@ BEGIN
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
-IDD_TCPIP_ADVDNS_DLG DIALOGEX DISCARDABLE  0, 0, 247, 270
+IDD_TCPIP_ADVDNS_DLG DIALOGEX 0, 0, 247, 270
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
     LTEXT "Adresy serwerów D&NS według kolejności używania:", -1, 5, 5, 180, 12
-    PUSHBUTTON "W górę", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "W dół", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Dodaj...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Edytuj...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Usuń", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "W górę", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
+    PUSHBUTTON "W dół", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Dodaj...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Edytuj...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Usuń", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "Trzy poniższe ustawienia dotyczą wszystkich połączeń o włączonym protokole TCP/IP. W celu rozpoznawania nazw niekwalifikowanych:", -1, 5, 90, 220, 24
-    CONTROL "D&ołącz sufiksy DNS: podstawowy i konkretnego połączenia", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "Dołącz su&fiksy nadrzędne podstawowego sufiksu DNS", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Dołą&cz poniższe sufiksy DNS (w podanej kolejności):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
-    LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
-    PUSHBUTTON "W górę", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "W dół", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Dod&aj...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Ed&ytuj...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "U&suń", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "Sufiks DNS dla &tego połączenia:", -1, 5, 225, 110, 14
+    CONTROL "D&ołącz sufiksy DNS: podstawowy i konkretnego połączenia", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Dołącz su&fiksy nadrzędne podstawowego sufiksu DNS", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Dołą&cz poniższe sufiksy DNS (w podanej kolejności):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
+    PUSHBUTTON "W górę", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "W dół", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Dod&aj...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Ed&ytuj...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "U&suń", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "Sufiks DNS dla &tego połączenia:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Zarejestruj adresy tego połączenia w DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Uży&j sufiksu DNS tego połączenia do rejestracji w DNS", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
+    CHECKBOX "Uży&j sufiksu DNS tego połączenia do rejestracji w DNS", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
-IDD_TCPIP_ADVOPT_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
+IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Opcje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "&Ustawienia opcjonalne", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Właściwości", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "&Właściwości", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Opis:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
-IDD_TCPIPADDIP_DLG DIALOGEX DISCARDABLE  0, 0, 200, 70
+IDD_TCPIPADDIP_DLG DIALOGEX 0, 0, 200, 70
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Adres TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Adres IP:", -1, 5, 15, 70, 12
     LTEXT "Maska podsieci:", -1, 5, 30, 70, 12
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
-    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Anuluj", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
+IDD_TCPIPGW_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Adres bramy TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Brama:", -1, 5, 15, 70, 12
     CHECKBOX "Metryka automatyczna", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metryka:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
-    PUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
     PUSHBUTTON "Anuluj", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIPDNS_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
+IDD_TCPIPDNS_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Serwer DNS TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
     LTEXT "Serwer DNS:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Anuluj", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIPSUFFIX_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
+IDD_TCPIPSUFFIX_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sufiks domeny TCP/IP"
 FONT 8, "MS Shell Dlg"
@@ -164,7 +163,7 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_FILTER_DLG DIALOGEX DISCARDABLE  0, 0, 305, 220
+IDD_TCPIP_FILTER_DLG DIALOGEX 0, 0, 305, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Filtrowanie TCP/IP"
 FONT 8, "MS Shell Dlg"
@@ -192,7 +191,7 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_PORT_DLG DIALOGEX DISCARDABLE  0, 0, 200, 60
+IDD_TCPIP_PORT_DLG DIALOGEX 0, 0, 200, 60
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dodaj filtr"
 FONT 8, "MS Shell Dlg"
@@ -205,32 +204,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Połączenie sieciowe"
-	IDS_NO_IPADDR_SET   "Ta karta wymaga co najmniej jednego adresu IP. Wprowadź adres IP."
-	IDS_NO_SUBMASK_SET  "Wprowadzono adres, w którym brakuje maski podsieci. Wprowadź maskę podsieci."
-	IDS_TCPFILTERDESC   "Filtrowanie pakietów TCP/IP pozwala na kontrolowanie w sieci tego typu ruchu TCP/IP, który dociera do danego komputera."
-	IDS_TCPFILTER       "Filtrowanie protokołu TCP/IP"
-	IDS_IPADDR          "Adres IP"
-	IDS_SUBMASK         "Maska podsieci"
-	IDS_GATEWAY         "Brama"
-	IDS_METRIC          "Metryka"
-	IDS_DHCPACTIVE      "DHCP włączone"
-	IDS_AUTOMATIC       "Automatyczna"
-	IDS_NOITEMSEL       "Nie wybrano żadnego elementu. Najpierw wybierz element."
-	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "Dodaj"
-	IDS_MOD             "OK"
-	IDS_TCP_PORTS       "Porty TCP"
-	IDS_UDP_PORTS       "Porty UDP"
-	IDS_IP_PROTO        "Protokoły IP"
-	IDS_PORT_RANGE      "Numery portów muszą być większe od 0 i mniejsze od 65536. Wprowadź liczbę z tego zakresu."
-	IDS_PROT_RANGE      "Numery protokołów muszą być większe od 0 i mniejsze od 256. Wprowadź liczbę z tego zakresu."
-	IDS_DUP_NUMBER      "Podana liczba znajduje się już na liście. Wprowadź inną liczbę."
-	IDS_DISABLE_FILTER  "Wyłączenie tego globalnego ustawienia protokołu TCP/IP będzie miało wpływ na wszystkie karty."
-	IDS_NO_SUFFIX       "Aktualne ustawienie przeszukiwania wymaga podania przynajmniej jednego sufiksu DNS. Wprowadź sufiks DNS lub zmień ustawienia."
-	IDS_DOMAIN_SUFFIX   "Podany sufiks domeny jest nieprawidłowy."
-	IDS_DNS_SUFFIX      "Nazwa domeny DNS ""%s"" jest nieprawidłowa."
-	IDS_DUP_SUFFIX      "Sufiks DNS znajduje się już na liście."
-	IDS_DUP_IPADDR      "Adres IP znajduje się już na liście."
-	IDS_DUP_GW          "Domyślna brama znajduje się już na liście."
+    IDS_NET_CONNECT "Połączenie sieciowe"
+    IDS_NO_IPADDR_SET "Ta karta wymaga co najmniej jednego adresu IP. Wprowadź adres IP."
+    IDS_NO_SUBMASK_SET "Wprowadzono adres, w którym brakuje maski podsieci. Wprowadź maskę podsieci."
+    IDS_TCPFILTERDESC "Filtrowanie pakietów TCP/IP pozwala na kontrolowanie w sieci tego typu ruchu TCP/IP, który dociera do danego komputera."
+    IDS_TCPFILTER "Filtrowanie protokołu TCP/IP"
+    IDS_IPADDR "Adres IP"
+    IDS_SUBMASK "Maska podsieci"
+    IDS_GATEWAY "Brama"
+    IDS_METRIC "Metryka"
+    IDS_DHCPACTIVE "DHCP włączone"
+    IDS_AUTOMATIC "Automatyczna"
+    IDS_NOITEMSEL "Nie wybrano żadnego elementu. Najpierw wybierz element."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Dodaj"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "Porty TCP"
+    IDS_UDP_PORTS "Porty UDP"
+    IDS_IP_PROTO "Protokoły IP"
+    IDS_PORT_RANGE "Numery portów muszą być większe od 0 i mniejsze od 65536. Wprowadź liczbę z tego zakresu."
+    IDS_PROT_RANGE "Numery protokołów muszą być większe od 0 i mniejsze od 256. Wprowadź liczbę z tego zakresu."
+    IDS_DUP_NUMBER "Podana liczba znajduje się już na liście. Wprowadź inną liczbę."
+    IDS_DISABLE_FILTER "Wyłączenie tego globalnego ustawienia protokołu TCP/IP będzie miało wpływ na wszystkie karty."
+    IDS_NO_SUFFIX "Aktualne ustawienie przeszukiwania wymaga podania przynajmniej jednego sufiksu DNS. Wprowadź sufiks DNS lub zmień ustawienia."
+    IDS_DOMAIN_SUFFIX "Podany sufiks domeny jest nieprawidłowy."
+    IDS_DNS_SUFFIX "Nazwa domeny DNS ""%s"" jest nieprawidłowa."
+    IDS_DUP_SUFFIX "Sufiks DNS znajduje się już na liście."
+    IDS_DUP_IPADDR "Adres IP znajduje się już na liście."
+    IDS_DUP_GW "Domyślna brama znajduje się już na liście."
 END

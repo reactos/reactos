@@ -1,7 +1,7 @@
 /*
  * jdarith.c
  *
- * Developed 1997-2012 by Guido Vollbeding.
+ * Developed 1997-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -395,6 +395,8 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
 /*
  * MCU decoding for DC successive approximation refinement scan.
+ * Note: we assume such scans can be multi-component,
+ * although the spec is not very clear on the point.
  */
 
 METHODDEF(boolean)
@@ -744,6 +746,17 @@ start_pass (j_decompress_ptr cinfo)
 
 
 /*
+ * Finish up at the end of an arithmetic-compressed scan.
+ */
+
+METHODDEF(void)
+finish_pass (j_decompress_ptr cinfo)
+{
+  /* no work necessary here */
+}
+
+
+/*
  * Module initialization routine for arithmetic entropy decoding.
  */
 
@@ -758,6 +771,7 @@ jinit_arith_decoder (j_decompress_ptr cinfo)
 				SIZEOF(arith_entropy_decoder));
   cinfo->entropy = &entropy->pub;
   entropy->pub.start_pass = start_pass;
+  entropy->pub.finish_pass = finish_pass;
 
   /* Mark tables unallocated */
   for (i = 0; i < NUM_ARITH_TBLS; i++) {

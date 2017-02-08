@@ -9,8 +9,82 @@
 #include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+/* GLOBALS *****************************************************************/
+
+HANDLE LsaHandle = NULL;
+ULONG AuthenticationPackage = 0;
 
 /* FUNCTIONS ***************************************************************/
+
+static
+NTSTATUS
+OpenLogonLsaHandle(VOID)
+{
+    LSA_STRING LogonProcessName;
+    LSA_STRING PackageName;
+    LSA_OPERATIONAL_MODE SecurityMode = 0;
+    NTSTATUS Status;
+
+    RtlInitAnsiString((PANSI_STRING)&LogonProcessName,
+                      "User32LogonProcess");
+
+    Status = LsaRegisterLogonProcess(&LogonProcessName,
+                                     &LsaHandle,
+                                     &SecurityMode);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsaRegisterLogonProcess failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    RtlInitAnsiString((PANSI_STRING)&PackageName,
+                      MSV1_0_PACKAGE_NAME);
+
+    Status = LsaLookupAuthenticationPackage(LsaHandle,
+                                            &PackageName,
+                                            &AuthenticationPackage);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsaLookupAuthenticationPackage failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("AuthenticationPackage: 0x%08lx\n", AuthenticationPackage);
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (LsaHandle != NULL)
+        {
+            Status = LsaDeregisterLogonProcess(LsaHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
+            }
+        }
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+CloseLogonLsaHandle(VOID)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (LsaHandle != NULL)
+    {
+        Status = LsaDeregisterLogonProcess(LsaHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
+        }
+    }
+
+    return Status;
+}
+
 
 /*
  * @implemented
@@ -31,6 +105,10 @@ CreateProcessAsUserA(HANDLE hToken,
     PROCESS_ACCESS_TOKEN AccessToken;
     NTSTATUS Status;
 
+    TRACE("%p %s %s %p %p %d 0x%08x %p %s %p %p\n", hToken, debugstr_a(lpApplicationName),
+        debugstr_a(lpCommandLine), lpProcessAttributes, lpThreadAttributes, bInheritHandles,
+        dwCreationFlags, lpEnvironment, debugstr_a(lpCurrentDirectory), lpStartupInfo, lpProcessInformation);
+
     /* Create the process with a suspended main thread */
     if (!CreateProcessA(lpApplicationName,
                         lpCommandLine,
@@ -43,27 +121,33 @@ CreateProcessAsUserA(HANDLE hToken,
                         lpStartupInfo,
                         lpProcessInformation))
     {
+        ERR("CreateProcessA failed! GLE: %d\n", GetLastError());
         return FALSE;
     }
 
-    AccessToken.Token = hToken;
-    AccessToken.Thread = NULL;
-
-    /* Set the new process token */
-    Status = NtSetInformationProcess(lpProcessInformation->hProcess,
-                                     ProcessAccessToken,
-                                     (PVOID)&AccessToken,
-                                     sizeof(AccessToken));
-    if (!NT_SUCCESS (Status))
+    if (hToken != NULL)
     {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
+        AccessToken.Token = hToken;
+        AccessToken.Thread = NULL;
+
+        /* Set the new process token */
+        Status = NtSetInformationProcess(lpProcessInformation->hProcess,
+                                         ProcessAccessToken,
+                                         (PVOID)&AccessToken,
+                                         sizeof(AccessToken));
+        if (!NT_SUCCESS (Status))
+        {
+            ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+            TerminateProcess(lpProcessInformation->hProcess, Status);
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
     }
 
     /* Resume the main thread */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
     {
-       ResumeThread(lpProcessInformation->hThread);
+        ResumeThread(lpProcessInformation->hThread);
     }
 
     return TRUE;
@@ -89,6 +173,10 @@ CreateProcessAsUserW(HANDLE hToken,
     PROCESS_ACCESS_TOKEN AccessToken;
     NTSTATUS Status;
 
+    TRACE("%p %s %s %p %p %d 0x%08x %p %s %p %p\n", hToken, debugstr_w(lpApplicationName),
+        debugstr_w(lpCommandLine), lpProcessAttributes, lpThreadAttributes, bInheritHandles,
+        dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory), lpStartupInfo, lpProcessInformation);
+
     /* Create the process with a suspended main thread */
     if (!CreateProcessW(lpApplicationName,
                         lpCommandLine,
@@ -101,21 +189,27 @@ CreateProcessAsUserW(HANDLE hToken,
                         lpStartupInfo,
                         lpProcessInformation))
     {
+        ERR("CreateProcessW failed! GLE: %d\n", GetLastError());
         return FALSE;
     }
 
-    AccessToken.Token = hToken;
-    AccessToken.Thread = NULL;
-
-    /* Set the new process token */
-    Status = NtSetInformationProcess(lpProcessInformation->hProcess,
-                                     ProcessAccessToken,
-                                     (PVOID)&AccessToken,
-                                     sizeof(AccessToken));
-    if (!NT_SUCCESS (Status))
+    if (hToken != NULL)
     {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
+        AccessToken.Token = hToken;
+        AccessToken.Thread = NULL;
+
+        /* Set the new process token */
+        Status = NtSetInformationProcess(lpProcessInformation->hProcess,
+                                         ProcessAccessToken,
+                                         (PVOID)&AccessToken,
+                                         sizeof(AccessToken));
+        if (!NT_SUCCESS (Status))
+        {
+            ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+            TerminateProcess(lpProcessInformation->hProcess, Status);
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
     }
 
     /* Resume the main thread */
@@ -125,30 +219,6 @@ CreateProcessAsUserW(HANDLE hToken,
     }
 
     return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-CreateProcessWithLogonW(LPCWSTR lpUsername,
-                        LPCWSTR lpDomain,
-                        LPCWSTR lpPassword,
-                        DWORD dwLogonFlags,
-                        LPCWSTR lpApplicationName,
-                        LPWSTR lpCommandLine,
-                        DWORD dwCreationFlags,
-                        LPVOID lpEnvironment,
-                        LPCWSTR lpCurrentDirectory,
-                        LPSTARTUPINFOW lpStartupInfo,
-                        LPPROCESS_INFORMATION lpProcessInformation)
-{
-    FIXME("%s %s %s 0x%08x %s %s 0x%08x %p %s %p %p stub\n", debugstr_w(lpUsername), debugstr_w(lpDomain),
-    debugstr_w(lpPassword), dwLogonFlags, debugstr_w(lpApplicationName),
-    debugstr_w(lpCommandLine), dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory),
-    lpStartupInfo, lpProcessInformation);
-
-    return FALSE;
 }
 
 /*
@@ -212,363 +282,8 @@ UsernameDone:
 }
 
 
-static BOOL WINAPI
-GetAccountDomainSid(PSID *Sid)
-{
-    PPOLICY_ACCOUNT_DOMAIN_INFO Info = NULL;
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-    LSA_HANDLE PolicyHandle;
-    PSID lpSid;
-    ULONG Length;
-    NTSTATUS Status;
-
-    *Sid = NULL;
-
-    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
-    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
-
-    Status = LsaOpenPolicy(NULL,
-                           &ObjectAttributes,
-                           POLICY_VIEW_LOCAL_INFORMATION,
-                           &PolicyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
-        return FALSE;
-    }
-
-    Status = LsaQueryInformationPolicy(PolicyHandle,
-                                       PolicyAccountDomainInformation,
-                                       (PVOID *)&Info);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("LsaQueryInformationPolicy failed (Status: 0x%08lx)\n", Status);
-        LsaClose(PolicyHandle);
-        return FALSE;
-    }
-
-    Length = RtlLengthSid(Info->DomainSid);
-
-    lpSid = RtlAllocateHeap(RtlGetProcessHeap(),
-                            0,
-                            Length);
-    if (lpSid == NULL)
-    {
-        ERR("Failed to allocate SID buffer!\n");
-        LsaFreeMemory(Info);
-        LsaClose(PolicyHandle);
-        return FALSE;
-    }
-
-    memcpy(lpSid, Info->DomainSid, Length);
-
-    *Sid = lpSid;
-
-    LsaFreeMemory(Info);
-    LsaClose(PolicyHandle);
-
-    return TRUE;
-}
-
-
-static PSID
-AppendRidToSid(PSID SrcSid,
-               ULONG Rid)
-{
-    ULONG Rids[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    UCHAR RidCount;
-    PSID DstSid;
-    ULONG i;
-
-    RidCount = *RtlSubAuthorityCountSid(SrcSid);
-    if (RidCount >= 8)
-        return NULL;
-
-    for (i = 0; i < RidCount; i++)
-        Rids[i] = *RtlSubAuthoritySid(SrcSid, i);
-
-    Rids[RidCount] = Rid;
-    RidCount++;
-
-    RtlAllocateAndInitializeSid(RtlIdentifierAuthoritySid(SrcSid),
-                                RidCount,
-                                Rids[0],
-                                Rids[1],
-                                Rids[2],
-                                Rids[3],
-                                Rids[4],
-                                Rids[5],
-                                Rids[6],
-                                Rids[7],
-                                &DstSid);
-
-    return DstSid;
-}
-
-
-static BOOL WINAPI
-GetUserSid(LPCWSTR UserName,
-           PSID *Sid)
-{
-    PSID SidBuffer = NULL;
-    PWSTR DomainBuffer = NULL;
-    DWORD cbSidSize = 0;
-    DWORD cchDomSize = 0;
-    SID_NAME_USE Use;
-    BOOL res = TRUE;
-
-    *Sid = NULL;
-
-    LookupAccountNameW(NULL,
-                       UserName,
-                       NULL,
-                       &cbSidSize,
-                       NULL,
-                       &cchDomSize,
-                       &Use);
-
-    if (cbSidSize == 0 || cchDomSize == 0)
-        return FALSE;
-
-    SidBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                HEAP_ZERO_MEMORY,
-                                cbSidSize);
-    if (SidBuffer == NULL)
-        return FALSE;
-
-    DomainBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                   HEAP_ZERO_MEMORY,
-                                   cchDomSize * sizeof(WCHAR));
-    if (DomainBuffer == NULL)
-    {
-        res = FALSE;
-        goto done;
-    }
-
-    if (!LookupAccountNameW(NULL,
-                            UserName,
-                            SidBuffer,
-                            &cbSidSize,
-                            DomainBuffer,
-                            &cchDomSize,
-                            &Use))
-    {
-        res = FALSE;
-        goto done;
-    }
-
-    if (Use != SidTypeUser)
-    {
-        res = FALSE;
-        goto done;
-    }
-
-    *Sid = SidBuffer;
-
-done:
-    if (DomainBuffer != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainBuffer);
-
-    if (res == FALSE)
-    {
-        if (SidBuffer != NULL)
-            RtlFreeHeap(RtlGetProcessHeap(), 0, SidBuffer);
-    }
-
-    return res;
-}
-
-
-static PTOKEN_GROUPS
-AllocateGroupSids(OUT PSID *PrimaryGroupSid,
-                  OUT PSID *OwnerSid)
-{
-    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
-    SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
-    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-    PTOKEN_GROUPS TokenGroups;
-#define MAX_GROUPS 8
-    DWORD GroupCount = 0;
-    PSID DomainSid;
-    PSID Sid;
-    LUID Luid;
-    NTSTATUS Status;
-
-    Status = NtAllocateLocallyUniqueId(&Luid);
-    if (!NT_SUCCESS(Status))
-        return NULL;
-
-    if (!GetAccountDomainSid(&DomainSid))
-        return NULL;
-
-    TokenGroups = RtlAllocateHeap(
-        GetProcessHeap(), 0,
-        sizeof(TOKEN_GROUPS) +
-        MAX_GROUPS * sizeof(SID_AND_ATTRIBUTES));
-    if (TokenGroups == NULL)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-        return NULL;
-    }
-
-    Sid = AppendRidToSid(DomainSid, DOMAIN_GROUP_RID_USERS);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-
-    /* Member of the domain */
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    *PrimaryGroupSid = Sid;
-    GroupCount++;
-
-    /* Member of 'Everyone' */
-    RtlAllocateAndInitializeSid(&WorldAuthority,
-                                1,
-                                SECURITY_WORLD_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-#if 1
-    /* Member of 'Administrators' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                2,
-                                SECURITY_BUILTIN_DOMAIN_RID,
-                                DOMAIN_ALIAS_RID_ADMINS,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-#else
-    TRACE("Not adding user to Administrators group\n");
-#endif
-
-    /* Member of 'Users' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                2,
-                                SECURITY_BUILTIN_DOMAIN_RID,
-                                DOMAIN_ALIAS_RID_USERS,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-    /* Logon SID */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                SECURITY_LOGON_IDS_RID_COUNT,
-                                SECURITY_LOGON_IDS_RID,
-                                Luid.HighPart,
-                                Luid.LowPart,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY | SE_GROUP_LOGON_ID;
-    GroupCount++;
-    *OwnerSid = Sid;
-
-    /* Member of 'Local users */
-    RtlAllocateAndInitializeSid(&LocalAuthority,
-                                1,
-                                SECURITY_LOCAL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-    /* Member of 'Interactive users' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                1,
-                                SECURITY_INTERACTIVE_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-    /* Member of 'Authenticated users' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                1,
-                                SECURITY_AUTHENTICATED_USER_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-    TokenGroups->GroupCount = GroupCount;
-    ASSERT(TokenGroups->GroupCount <= MAX_GROUPS);
-
-    return TokenGroups;
-}
-
-
-static VOID
-FreeGroupSids(PTOKEN_GROUPS TokenGroups)
-{
-    ULONG i;
-
-    for (i = 0; i < TokenGroups->GroupCount; i++)
-    {
-        if (TokenGroups->Groups[i].Sid != NULL)
-            RtlFreeHeap(GetProcessHeap(), 0, TokenGroups->Groups[i].Sid);
-    }
-
-    RtlFreeHeap(GetProcessHeap(), 0, TokenGroups);
-}
-
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 LogonUserW(LPWSTR lpszUsername,
@@ -578,204 +293,245 @@ LogonUserW(LPWSTR lpszUsername,
            DWORD dwLogonProvider,
            PHANDLE phToken)
 {
-    /* FIXME shouldn't use hard-coded list of privileges */
-    static struct
-    {
-      LPCWSTR PrivName;
-      DWORD Attributes;
-    }
-    DefaultPrivs[] =
-    {
-      { L"SeMachineAccountPrivilege", 0 },
-      { L"SeSecurityPrivilege", 0 },
-      { L"SeTakeOwnershipPrivilege", 0 },
-      { L"SeLoadDriverPrivilege", 0 },
-      { L"SeSystemProfilePrivilege", 0 },
-      { L"SeSystemtimePrivilege", 0 },
-      { L"SeProfileSingleProcessPrivilege", 0 },
-      { L"SeIncreaseBasePriorityPrivilege", 0 },
-      { L"SeCreatePagefilePrivilege", 0 },
-      { L"SeBackupPrivilege", 0 },
-      { L"SeRestorePrivilege", 0 },
-      { L"SeShutdownPrivilege", 0 },
-      { L"SeDebugPrivilege", 0 },
-      { L"SeSystemEnvironmentPrivilege", 0 },
-      { L"SeChangeNotifyPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
-      { L"SeRemoteShutdownPrivilege", 0 },
-      { L"SeUndockPrivilege", 0 },
-      { L"SeEnableDelegationPrivilege", 0 },
-      { L"SeImpersonatePrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
-      { L"SeCreateGlobalPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT }
-    };
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    SECURITY_QUALITY_OF_SERVICE Qos;
-    TOKEN_USER TokenUser;
-    TOKEN_OWNER TokenOwner;
-    TOKEN_PRIMARY_GROUP TokenPrimaryGroup;
-    PTOKEN_GROUPS TokenGroups = NULL;
-    PTOKEN_PRIVILEGES TokenPrivileges = NULL;
-    TOKEN_DEFAULT_DACL TokenDefaultDacl;
-    LARGE_INTEGER ExpirationTime;
-    LUID AuthenticationId;
-    TOKEN_SOURCE TokenSource;
-    PSID UserSid = NULL;
-    PSID PrimaryGroupSid = NULL;
-    PSID OwnerSid = NULL;
-    PSID LocalSystemSid;
-    PACL Dacl = NULL;
+    SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-    unsigned i;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PSID LogonSid = NULL;
+    PSID LocalSid = NULL;
+    LSA_STRING OriginName;
+    UNICODE_STRING DomainName;
+    UNICODE_STRING UserName;
+    UNICODE_STRING Password;
+    PMSV1_0_INTERACTIVE_LOGON AuthInfo = NULL;
+    ULONG AuthInfoLength;
+    ULONG_PTR Ptr;
+    TOKEN_SOURCE TokenSource;
+    PTOKEN_GROUPS TokenGroups = NULL;
+    PMSV1_0_INTERACTIVE_PROFILE ProfileBuffer = NULL;
+    ULONG ProfileBufferLength = 0;
+    LUID Luid = {0, 0};
+    LUID LogonId = {0, 0};
+    HANDLE TokenHandle = NULL;
+    QUOTA_LIMITS QuotaLimits;
+    SECURITY_LOGON_TYPE LogonType;
+    NTSTATUS SubStatus = STATUS_SUCCESS;
+    NTSTATUS Status;
 
-    Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
-    Qos.ImpersonationLevel = SecurityAnonymous;
-    Qos.ContextTrackingMode = SECURITY_STATIC_TRACKING;
-    Qos.EffectiveOnly = FALSE;
+    *phToken = NULL;
 
-    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-    ObjectAttributes.RootDirectory = NULL;
-    ObjectAttributes.ObjectName = NULL;
-    ObjectAttributes.Attributes = 0;
-    ObjectAttributes.SecurityDescriptor = NULL;
-    ObjectAttributes.SecurityQualityOfService = &Qos;
+    switch (dwLogonType)
+    {
+        case LOGON32_LOGON_INTERACTIVE:
+            LogonType = Interactive;
+            break;
 
-    Status = NtAllocateLocallyUniqueId(&AuthenticationId);
+        case LOGON32_LOGON_NETWORK:
+            LogonType = Network;
+            break;
+
+        case LOGON32_LOGON_BATCH:
+            LogonType = Batch;
+            break;
+
+        case LOGON32_LOGON_SERVICE:
+            LogonType = Service;
+            break;
+
+       default:
+            ERR("Invalid logon type: %ul\n", dwLogonType);
+            Status = STATUS_INVALID_PARAMETER;
+            goto done;
+    }
+
+    if (LsaHandle == NULL)
+    {
+        Status = OpenLogonLsaHandle();
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    RtlInitAnsiString((PANSI_STRING)&OriginName,
+                      "Advapi32 Logon");
+
+    RtlInitUnicodeString(&DomainName,
+                         lpszDomain);
+
+    RtlInitUnicodeString(&UserName,
+                         lpszUsername);
+
+    RtlInitUnicodeString(&Password,
+                         lpszPassword);
+
+    AuthInfoLength = sizeof(MSV1_0_INTERACTIVE_LOGON)+
+                     DomainName.MaximumLength +
+                     UserName.MaximumLength +
+                     Password.MaximumLength;
+
+    AuthInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               AuthInfoLength);
+    if (AuthInfo == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    AuthInfo->MessageType = MsV1_0InteractiveLogon;
+
+    Ptr = (ULONG_PTR)AuthInfo + sizeof(MSV1_0_INTERACTIVE_LOGON);
+
+    AuthInfo->LogonDomainName.Length = DomainName.Length;
+    AuthInfo->LogonDomainName.MaximumLength = DomainName.MaximumLength;
+    AuthInfo->LogonDomainName.Buffer = (DomainName.Buffer == NULL) ? NULL : (PWCHAR)Ptr;
+    if (DomainName.MaximumLength > 0)
+    {
+        RtlCopyMemory(AuthInfo->LogonDomainName.Buffer,
+                      DomainName.Buffer,
+                      DomainName.MaximumLength);
+
+        Ptr += DomainName.MaximumLength;
+    }
+
+    AuthInfo->UserName.Length = UserName.Length;
+    AuthInfo->UserName.MaximumLength = UserName.MaximumLength;
+    AuthInfo->UserName.Buffer = (PWCHAR)Ptr;
+    if (UserName.MaximumLength > 0)
+        RtlCopyMemory(AuthInfo->UserName.Buffer,
+                      UserName.Buffer,
+                      UserName.MaximumLength);
+
+    Ptr += UserName.MaximumLength;
+
+    AuthInfo->Password.Length = Password.Length;
+    AuthInfo->Password.MaximumLength = Password.MaximumLength;
+    AuthInfo->Password.Buffer = (PWCHAR)Ptr;
+    if (Password.MaximumLength > 0)
+        RtlCopyMemory(AuthInfo->Password.Buffer,
+                      Password.Buffer,
+                      Password.MaximumLength);
+
+    /* Create the Logon SID*/
+    AllocateLocallyUniqueId(&LogonId);
+    Status = RtlAllocateAndInitializeSid(&SystemAuthority,
+                                         SECURITY_LOGON_IDS_RID_COUNT,
+                                         SECURITY_LOGON_IDS_RID,
+                                         LogonId.HighPart,
+                                         LogonId.LowPart,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         &LogonSid);
     if (!NT_SUCCESS(Status))
-    {
-        return FALSE;
-    }
+        goto done;
 
-    ExpirationTime.QuadPart = -1;
+    /* Create the Local SID*/
+    Status = RtlAllocateAndInitializeSid(&LocalAuthority,
+                                         1,
+                                         SECURITY_LOCAL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         SECURITY_NULL_RID,
+                                         &LocalSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    /* Get the user SID from the registry */
-    if (!GetUserSid (lpszUsername, &UserSid))
-    {
-        ERR("SamGetUserSid() failed\n");
-        return FALSE;
-    }
-
-    TokenUser.User.Sid = UserSid;
-    TokenUser.User.Attributes = 0;
-
-    /* Allocate and initialize token groups */
-    TokenGroups = AllocateGroupSids(&PrimaryGroupSid,
-                                    &OwnerSid);
+    /* Allocate and set the token groups */
+    TokenGroups = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  sizeof(TOKEN_GROUPS) + ((2 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES)));
     if (TokenGroups == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
     }
 
-    /* Allocate and initialize token privileges */
-    TokenPrivileges = RtlAllocateHeap(GetProcessHeap(), 0,
-                                      sizeof(TOKEN_PRIVILEGES)
-                                    + sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0])
-                                      * sizeof(LUID_AND_ATTRIBUTES));
-    if (TokenPrivileges == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
+    TokenGroups->GroupCount = 2;
+    TokenGroups->Groups[0].Sid = LogonSid;
+    TokenGroups->Groups[0].Attributes = SE_GROUP_MANDATORY | SE_GROUP_ENABLED |
+                                        SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_LOGON_ID;
+    TokenGroups->Groups[1].Sid = LocalSid;
+    TokenGroups->Groups[1].Attributes = SE_GROUP_MANDATORY | SE_GROUP_ENABLED |
+                                        SE_GROUP_ENABLED_BY_DEFAULT;
 
-    TokenPrivileges->PrivilegeCount = 0;
-    for (i = 0; i < sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0]); i++)
-    {
-        if (! LookupPrivilegeValueW(NULL,
-                                    DefaultPrivs[i].PrivName,
-                                    &TokenPrivileges->Privileges[TokenPrivileges->PrivilegeCount].Luid))
-        {
-            WARN("Can't set privilege %S\n", DefaultPrivs[i].PrivName);
-        }
-        else
-        {
-            TokenPrivileges->Privileges[TokenPrivileges->PrivilegeCount].Attributes = DefaultPrivs[i].Attributes;
-            TokenPrivileges->PrivilegeCount++;
-        }
-    }
+    /* Set the token source */
+    strncpy(TokenSource.SourceName, "Advapi  ", sizeof(TokenSource.SourceName));
+    AllocateLocallyUniqueId(&TokenSource.SourceIdentifier);
 
-    TokenOwner.Owner = OwnerSid;
-    TokenPrimaryGroup.PrimaryGroup = PrimaryGroupSid;
-
-    Dacl = RtlAllocateHeap(GetProcessHeap(), 0, 1024);
-    if (Dacl == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    Status = RtlCreateAcl(Dacl, 1024, ACL_REVISION);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    RtlAddAccessAllowedAce(Dacl,
-                           ACL_REVISION,
-                           GENERIC_ALL,
-                           OwnerSid);
-
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                1,
-                                SECURITY_LOCAL_SYSTEM_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &LocalSystemSid);
-
-    /* SID: S-1-5-18 */
-    RtlAddAccessAllowedAce(Dacl,
-                           ACL_REVISION,
-                           GENERIC_ALL,
-                           LocalSystemSid);
-
-    RtlFreeSid(LocalSystemSid);
-
-    TokenDefaultDacl.DefaultDacl = Dacl;
-
-    memcpy(TokenSource.SourceName,
-           "User32  ",
-           8);
-
-    Status = NtAllocateLocallyUniqueId(&TokenSource.SourceIdentifier);
+    Status = LsaLogonUser(LsaHandle,
+                          &OriginName,
+                          LogonType,
+                          AuthenticationPackage,
+                          (PVOID)AuthInfo,
+                          AuthInfoLength,
+                          TokenGroups,
+                          &TokenSource,
+                          (PVOID*)&ProfileBuffer,
+                          &ProfileBufferLength,
+                          &Luid,
+                          &TokenHandle,
+                          &QuotaLimits,
+                          &SubStatus);
     if (!NT_SUCCESS(Status))
     {
-        RtlFreeHeap(GetProcessHeap(), 0, Dacl);
-        FreeGroupSids(TokenGroups);
-        RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-        RtlFreeSid(UserSid);
-       return FALSE;
+        ERR("LsaLogonUser failed (Status 0x%08lx)\n", Status);
+        goto done;
     }
 
-    Status = NtCreateToken(phToken,
-                           TOKEN_ALL_ACCESS,
-                           &ObjectAttributes,
-                           TokenPrimary,
-                           &AuthenticationId,
-                           &ExpirationTime,
-                           &TokenUser,
-                           TokenGroups,
-                           TokenPrivileges,
-                           &TokenOwner,
-                           &TokenPrimaryGroup,
-                           &TokenDefaultDacl,
-                           &TokenSource);
+    if (ProfileBuffer != NULL)
+    {
+        TRACE("ProfileBuffer: %p\n", ProfileBuffer);
+        TRACE("MessageType: %u\n", ProfileBuffer->MessageType);
+
+        TRACE("FullName: %p\n", ProfileBuffer->FullName.Buffer);
+        TRACE("FullName: %S\n", ProfileBuffer->FullName.Buffer);
+
+        TRACE("LogonServer: %p\n", ProfileBuffer->LogonServer.Buffer);
+        TRACE("LogonServer: %S\n", ProfileBuffer->LogonServer.Buffer);
+    }
+
+    TRACE("Luid: 0x%08lx%08lx\n", Luid.HighPart, Luid.LowPart);
+
+    if (TokenHandle != NULL)
+    {
+        TRACE("TokenHandle: %p\n", TokenHandle);
+    }
+
+    *phToken = TokenHandle;
 
 done:
-    if (Dacl != NULL)
-        RtlFreeHeap(GetProcessHeap(), 0, Dacl);
+    if (ProfileBuffer != NULL)
+        LsaFreeReturnBuffer(ProfileBuffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (TokenHandle != NULL)
+            CloseHandle(TokenHandle);
+    }
 
     if (TokenGroups != NULL)
-        FreeGroupSids(TokenGroups);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TokenGroups);
 
-    if (TokenPrivileges != NULL)
-        RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
+    if (LocalSid != NULL)
+        RtlFreeSid(LocalSid);
 
-    if (UserSid != NULL)
-        RtlFreeHeap(GetProcessHeap(), 0, UserSid);
+    if (LogonSid != NULL)
+        RtlFreeSid(LogonSid);
 
-    return NT_SUCCESS(Status);
+    if (AuthInfo != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AuthInfo);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */

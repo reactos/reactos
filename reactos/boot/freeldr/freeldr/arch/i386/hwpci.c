@@ -41,6 +41,14 @@ GetPciIrqRoutingTable(VOID)
         {
             TRACE("Found signature\n");
 
+            if (Table->TableSize < FIELD_OFFSET(PCI_IRQ_ROUTING_TABLE, Slot) ||
+                Table->TableSize % 16 != 0)
+            {
+                ERR("Invalid routing table size (%u) at 0x%p. Continue searching...\n", Table->TableSize, Table);
+                Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
+                continue;
+            }
+
             Ptr = (PUCHAR)Table;
             Sum = 0;
             for (i = 0; i < Table->TableSize; i++)
@@ -50,17 +58,19 @@ GetPciIrqRoutingTable(VOID)
 
             if ((Sum & 0xFF) != 0)
             {
-                ERR("Invalid routing table\n");
-                return NULL;
+                ERR("Invalid routing table checksum (%#lx) at 0x%p. Continue searching...\n", Sum & 0xFF, Table);
             }
-
-            TRACE("Valid checksum\n");
-
-            return Table;
+            else
+            {
+                TRACE("Valid checksum (%#lx): found routing table at 0x%p\n", Sum & 0xFF, Table);
+                return Table;
+            }
         }
 
         Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
     }
+
+    ERR("No valid routing table found!\n");
 
     return NULL;
 }
@@ -120,7 +130,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         /* Set 'Configuration Data' value */
         Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
                2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -178,7 +188,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         /* Set 'Configuration Data' value */
         Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -216,7 +226,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                     PartialDescriptors) +
                        sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
                        sizeof(PCI_REGISTRY_INFO);
-                PartialResourceList = MmHeapAlloc(Size);
+                PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {
                     ERR("Failed to allocate resource descriptor\n");
@@ -241,7 +251,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                 /* Set 'Configuration Data' value */
                 Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                                     PartialDescriptors);
-                PartialResourceList = MmHeapAlloc(Size);
+                PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {
                     ERR("Failed to allocate resource descriptor\n");

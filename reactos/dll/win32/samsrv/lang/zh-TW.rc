@@ -1,0 +1,27 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "內建"
+    IDS_GROUP_NONE_NAME "無"
+    IDS_GROUP_NONE_COMMENT "普通使用者"
+    IDS_ALIAS_ADMINISTRATORS_NAME "管理員"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "管理員可以無限制地訪問計算機或域。"
+    IDS_ALIAS_GUESTS_NAME "來賓"
+    IDS_ALIAS_GUESTS_COMMENT "來賓在默認情況下享有同樣的權利的使用者組的成員。"
+    IDS_ALIAS_POWER_USERS_NAME "超級使用者"
+    IDS_ALIAS_POWER_USERS_COMMENT "超級使用者有大多數行政權利有一些限制條件。"
+    IDS_ALIAS_USERS_NAME "使用者"
+    IDS_ALIAS_USERS_COMMENT "防止使用者進行全系統更改。"
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administrator"
+    IDS_USER_ADMINISTRATOR_COMMENT "用於管理計算機或域的內建帳戶。"
+    IDS_USER_GUEST_NAME "來賓"
+    IDS_USER_GUEST_COMMENT "來賓訪問計算機或域的內建帳戶。"
+END

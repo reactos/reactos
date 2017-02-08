@@ -16,28 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winreg.h"
-#include <wingdi.h>
-#include <objbase.h>
-#include <wincodec.h>
-
 #include "wincodecs_private.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+#include <wingdi.h>
 
 struct bmp_pixelformat {
     const WICPixelFormatGUID *guid;
@@ -264,63 +245,22 @@ static HRESULT WINAPI BmpFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
 {
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    WICRect rc;
-    WICPixelFormatGUID guid;
     TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
 
-    if (!This->initialized || !This->width || !This->height)
+    if (!This->initialized)
         return WINCODEC_ERR_WRONGSTATE;
 
-    if (!This->format)
+    hr = configure_write_source(iface, pIBitmapSource, prc,
+        This->format ? This->format->guid : NULL, This->width, This->height,
+        This->xres, This->yres);
+
+    if (SUCCEEDED(hr))
     {
-        hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-        if (FAILED(hr)) return hr;
-        hr = BmpFrameEncode_SetPixelFormat(iface, &guid);
-        if (FAILED(hr)) return hr;
+        hr = write_source(iface, pIBitmapSource, prc,
+            This->format->guid, This->format->bpp, This->width, This->height);
     }
 
-    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-    if (FAILED(hr)) return hr;
-    if (memcmp(&guid, This->format->guid, sizeof(GUID)) != 0)
-    {
-        /* should use WICConvertBitmapSource to convert, but that's unimplemented */
-        ERR("format %s unsupported\n", debugstr_guid(&guid));
-        return E_FAIL;
-    }
-
-    if (This->xres == 0.0 || This->yres == 0.0)
-    {
-        double xres, yres;
-        hr = IWICBitmapSource_GetResolution(pIBitmapSource, &xres, &yres);
-        if (FAILED(hr)) return hr;
-        hr = BmpFrameEncode_SetResolution(iface, xres, yres);
-        if (FAILED(hr)) return hr;
-    }
-
-    if (!prc)
-    {
-        UINT width, height;
-        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
-        if (FAILED(hr)) return hr;
-        rc.X = 0;
-        rc.Y = 0;
-        rc.Width = width;
-        rc.Height = height;
-        prc = &rc;
-    }
-
-    if (prc->Width != This->width) return E_INVALIDARG;
-
-    hr = BmpFrameEncode_AllocateBits(This);
-    if (FAILED(hr)) return hr;
-
-    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, This->stride,
-        This->stride*(This->height-This->lineswritten),
-        This->bits + This->stride*This->lineswritten);
-
-    This->lineswritten += prc->Height;
-
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
@@ -364,7 +304,7 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
         bih.bV5GreenMask = This->format->greenmask;
         bih.bV5BlueMask = This->format->bluemask;
         bih.bV5AlphaMask = This->format->alphamask;
-        bih.bV5AlphaMask = LCS_DEVICE_RGB;
+        bih.bV5CSType = LCS_DEVICE_RGB;
     }
 
     bfh.bfSize = sizeof(BITMAPFILEHEADER) + info_size + bih.bV5SizeImage;
@@ -542,7 +482,7 @@ static HRESULT WINAPI BmpEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (!This->stream) return WINCODEC_ERR_NOTINITIALIZED;
 
-    hr = CreatePropertyBag2(ppIEncoderOptions);
+    hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
     if (FAILED(hr)) return hr;
 
     encode = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpFrameEncode));
@@ -605,16 +545,14 @@ static const IWICBitmapEncoderVtbl BmpEncoder_Vtbl = {
     BmpEncoder_GetMetadataQueryWriter
 };
 
-HRESULT BmpEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT BmpEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     BmpEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpEncoder));
     if (!This) return E_OUTOFMEMORY;

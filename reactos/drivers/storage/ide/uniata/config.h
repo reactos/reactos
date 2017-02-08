@@ -43,6 +43,7 @@
 /***************************************/
 
 //#define UNIATA_DUMP_ATAPI
+#define UNIATA_DUMP_RW
 
 /***************************************/
 // Optimization for uni-processor machines

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/inffile.c
+ * FILE:            base/setup/usetup/inffile.c
  * PURPOSE:         .inf files support functions
  * PROGRAMMER:      Hervé Poussineau
  */
@@ -35,173 +35,179 @@
 
 #ifdef __REACTOS__
 
-BOOL WINAPI
+BOOL
+WINAPI
 InfpFindFirstLineW(
-	IN HINF InfHandle,
-	IN PCWSTR Section,
-	IN PCWSTR Key,
-	IN OUT PINFCONTEXT Context)
+    IN HINF InfHandle,
+    IN PCWSTR Section,
+    IN PCWSTR Key,
+    IN OUT PINFCONTEXT Context)
 {
-	PINFCONTEXT pContext;
-	BOOL ret;
+    PINFCONTEXT pContext;
+    BOOL ret;
 
-	ret = InfFindFirstLine(InfHandle, Section, Key, &pContext);
-	if (!ret)
-		return FALSE;
+    ret = InfFindFirstLine(InfHandle, Section, Key, &pContext);
+    if (!ret)
+        return FALSE;
 
-	memcpy(Context, pContext, sizeof(INFCONTEXT));
-	InfFreeContext(pContext);
-	return TRUE;
+    memcpy(Context, pContext, sizeof(INFCONTEXT));
+    InfFreeContext(pContext);
+    return TRUE;
 }
 
-HINF WINAPI
+
+HINF
+WINAPI
 InfpOpenInfFileW(
-	IN PCWSTR FileName,
-	IN PCWSTR InfClass,
-	IN DWORD InfStyle,
-	IN LCID LocaleId,
-	OUT PUINT ErrorLine)
+    IN PCWSTR FileName,
+    IN PCWSTR InfClass,
+    IN DWORD InfStyle,
+    IN LCID LocaleId,
+    OUT PUINT ErrorLine)
 {
-	HINF hInf = NULL;
-	UNICODE_STRING FileNameU;
-	ULONG ErrorLineUL;
-	NTSTATUS Status;
+    HINF hInf = NULL;
+    UNICODE_STRING FileNameU;
+    ULONG ErrorLineUL;
+    NTSTATUS Status;
 
-	RtlInitUnicodeString(&FileNameU, FileName);
-	Status = InfOpenFile(
-		&hInf,
-		&FileNameU,
-		LANGIDFROMLCID(LocaleId),
-		&ErrorLineUL);
-	*ErrorLine = (UINT)ErrorLineUL;
-	if (!NT_SUCCESS(Status))
-		return INVALID_HANDLE_VALUE;
+    RtlInitUnicodeString(&FileNameU, FileName);
+    Status = InfOpenFile(&hInf,
+                         &FileNameU,
+                         LANGIDFROMLCID(LocaleId),
+                         &ErrorLineUL);
+    *ErrorLine = (UINT)ErrorLineUL;
+    if (!NT_SUCCESS(Status))
+        return INVALID_HANDLE_VALUE;
 
-	return hInf;
+    return hInf;
 }
-
 #endif /* __REACTOS__ */
+
 
 BOOLEAN
 INF_GetData(
-	IN PINFCONTEXT Context,
-	OUT PWCHAR *Key,
-	OUT PWCHAR *Data)
+    IN PINFCONTEXT Context,
+    OUT PWCHAR *Key,
+    OUT PWCHAR *Data)
 {
 #ifdef __REACTOS__
-	return InfGetData(Context, Key, Data);
+    return InfGetData(Context, Key, Data);
 #else
-	static PWCHAR pLastCallData[4] = { NULL, NULL, NULL, NULL };
-	static DWORD currentIndex = 0;
-	DWORD dwSize, i;
-	BOOL ret;
+    static PWCHAR pLastCallData[4] = { NULL, NULL, NULL, NULL };
+    static DWORD currentIndex = 0;
+    DWORD dwSize, i;
+    BOOL ret;
 
-	currentIndex ^= 2;
+    currentIndex ^= 2;
 
-	if (Key) *Key = NULL;
-	if (Data) *Data = NULL;
+    if (Key)
+        *Key = NULL;
 
-	if (SetupGetFieldCount(Context) != 1)
-		return FALSE;
+    if (Data)
+        *Data = NULL;
 
-	for (i = 0; i <= 1; i++)
-	{
-		ret = SetupGetStringFieldW(
-			Context,
-			i,
-			NULL,
-			0,
-			&dwSize);
-		if (!ret)
-			return FALSE;
-		HeapFree(GetProcessHeap(), 0, pLastCallData[i + currentIndex]);
-		pLastCallData[i + currentIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-		ret = SetupGetStringFieldW(
-			Context,
-			i,
-			pLastCallData[i + currentIndex],
-			dwSize,
-			NULL);
-		if (!ret)
-			return FALSE;
-	}
+    if (SetupGetFieldCount(Context) != 1)
+        return FALSE;
 
-	if (Key)
-		*Key = pLastCallData[0 + currentIndex];
-	if (Data)
-		*Data = pLastCallData[1 + currentIndex];
-	return TRUE;
+    for (i = 0; i <= 1; i++)
+    {
+        ret = SetupGetStringFieldW(Context,
+                                   i,
+                                   NULL,
+                                   0,
+                                   &dwSize);
+        if (!ret)
+            return FALSE;
+
+        HeapFree(GetProcessHeap(), 0, pLastCallData[i + currentIndex]);
+        pLastCallData[i + currentIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+        ret = SetupGetStringFieldW(Context,
+                                   i,
+                                   pLastCallData[i + currentIndex],
+                                   dwSize,
+                                   NULL);
+        if (!ret)
+            return FALSE;
+    }
+
+    if (Key)
+        *Key = pLastCallData[0 + currentIndex];
+
+    if (Data)
+        *Data = pLastCallData[1 + currentIndex];
+
+    return TRUE;
 #endif /* !__REACTOS__ */
 }
+
 
 BOOLEAN
 INF_GetDataField(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	OUT PWCHAR *Data)
+    IN PINFCONTEXT Context,
+    IN ULONG FieldIndex,
+    OUT PWCHAR *Data)
 {
 #ifdef __REACTOS__
-	return InfGetDataField(Context, FieldIndex, Data);
+    return InfGetDataField(Context, FieldIndex, Data);
 #else
-	static PWCHAR pLastCallsData[] = { NULL, NULL, NULL };
-	static DWORD NextIndex = 0;
-	DWORD dwSize;
-	BOOL ret;
+    static PWCHAR pLastCallsData[] = { NULL, NULL, NULL };
+    static DWORD NextIndex = 0;
+    DWORD dwSize;
+    BOOL ret;
 
-	*Data = NULL;
+    *Data = NULL;
 
-	ret = SetupGetStringFieldW(
-		Context,
-		FieldIndex,
-		NULL,
-		0,
-		&dwSize);
-	if (!ret)
-		return FALSE;
-	HeapFree(GetProcessHeap(), 0, pLastCallsData[NextIndex]);
-	pLastCallsData[NextIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-	ret = SetupGetStringFieldW(
-		Context,
-		FieldIndex,
-		pLastCallsData[NextIndex],
-		dwSize,
-		NULL);
-	if (!ret)
-		return FALSE;
+    ret = SetupGetStringFieldW(Context,
+                               FieldIndex,
+                               NULL,
+                               0,
+                               &dwSize);
+    if (!ret)
+        return FALSE;
 
-	*Data = pLastCallsData[NextIndex];
-	NextIndex = (NextIndex + 1) % (sizeof(pLastCallsData) / sizeof(pLastCallsData[0]));
-	return TRUE;
+    HeapFree(GetProcessHeap(), 0, pLastCallsData[NextIndex]);
+    pLastCallsData[NextIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    ret = SetupGetStringFieldW(Context,
+                               FieldIndex,
+                               pLastCallsData[NextIndex],
+                               dwSize,
+                               NULL);
+    if (!ret)
+        return FALSE;
+
+    *Data = pLastCallsData[NextIndex];
+    NextIndex = (NextIndex + 1) % (sizeof(pLastCallsData) / sizeof(pLastCallsData[0]));
+    return TRUE;
 #endif /* !__REACTOS__ */
 }
 
+
 HINF WINAPI
 INF_OpenBufferedFileA(
-	IN PSTR FileBuffer,
-	IN ULONG FileSize,
-	IN PCSTR InfClass,
-	IN DWORD InfStyle,
-	IN LCID LocaleId,
-	OUT PUINT ErrorLine)
+    IN PSTR FileBuffer,
+    IN ULONG FileSize,
+    IN PCSTR InfClass,
+    IN DWORD InfStyle,
+    IN LCID LocaleId,
+    OUT PUINT ErrorLine)
 {
 #ifdef __REACTOS__
-	HINF hInf = NULL;
-	ULONG ErrorLineUL;
-	NTSTATUS Status;
+    HINF hInf = NULL;
+    ULONG ErrorLineUL;
+    NTSTATUS Status;
 
-	Status = InfOpenBufferedFile(
-		&hInf,
-		FileBuffer,
-		FileSize,
-		LANGIDFROMLCID(LocaleId),
-		&ErrorLineUL);
-	*ErrorLine = (UINT)ErrorLineUL;
-	if (!NT_SUCCESS(Status))
-		return INVALID_HANDLE_VALUE;
+    Status = InfOpenBufferedFile(&hInf,
+                                 FileBuffer,
+                                 FileSize,
+                                 LANGIDFROMLCID(LocaleId),
+                                 &ErrorLineUL);
+    *ErrorLine = (UINT)ErrorLineUL;
+    if (!NT_SUCCESS(Status))
+        return INVALID_HANDLE_VALUE;
 
-	return hInf;
+    return hInf;
 #else
-	return INVALID_HANDLE_VALUE;
+    return INVALID_HANDLE_VALUE;
 #endif /* !__REACTOS__ */
 }
 

@@ -19,28 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-//#include "winbase.h"
-#include <winreg.h>
-//#include "winnls.h"
-//#include "shlwapi.h"
-#include <wine/debug.h>
-//#include "msi.h"
 #include "msipriv.h"
-//#include "wincrypt.h"
-#include <wine/unicode.h>
-//#include "winver.h"
-//#include "winuser.h"
-#include <sddl.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -104,12 +83,6 @@ static const WCHAR szInstallProperties_fmt[] = {
     '%','s','\\','P','r','o','d','u','c','t','s','\\','%','s','\\',
     'I','n','s','t','a','l','l','P','r','o','p','e','r','t','i','e','s',0};
 
-static const WCHAR szInstaller_LocalManaged_fmt[] = {
-    'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-    'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'I','n','s','t','a','l','l','e','r','\\','M','a','n','a','g','e','d','\\','%','s','\\',
-    'I','n','s','t','a','l','l','e','r','\\','P','r','o','d','u','c','t','s',0};
-
 static const WCHAR szInstaller_LocalManagedProd_fmt[] = {
     'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
     'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
@@ -131,11 +104,6 @@ static const WCHAR szInstaller_Patches[] = {
     'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
     'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
     'I','n','s','t','a','l','l','e','r','\\','P','a','t','c','h','e','s',0};
-
-static const WCHAR szInstaller_Components[] = {
-    'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-    'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'I','n','s','t','a','l','l','e','r','\\','C','o','m','p','o','n','e','n','t','s',0};
 
 static const WCHAR szInstaller_LocalClassesProducts[] = {
     'S','o','f','t','w','a','r','e','\\','C','l','a','s','s','e','s','\\',
@@ -187,6 +155,10 @@ static const WCHAR szUninstall_32node[] = {
 
 static const WCHAR szUserComponents[] = {
     'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+    'I','n','s','t','a','l','l','e','r','\\','C','o','m','p','o','n','e','n','t','s','\\',0};
+
+static const WCHAR szInstaller_Components[] = {
+    'S','o','f','t','w','a','r','e','\\','C','l','a','s','s','e','s','\\',
     'I','n','s','t','a','l','l','e','r','\\','C','o','m','p','o','n','e','n','t','s','\\',0};
 
 static const WCHAR szUserFeatures[] = {
@@ -666,6 +638,7 @@ UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINS
 UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY *key, BOOL create)
 {
     WCHAR squished_cc[GUID_SIZE], keypath[0x200];
+    UINT ret;
 
     if (!squash_guid(szComponent, squished_cc)) return ERROR_FUNCTION_FAILED;
     TRACE("%s squished %s\n", debugstr_w(szComponent), debugstr_w(squished_cc));
@@ -674,7 +647,12 @@ UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY *key, BOOL create)
     strcatW(keypath, squished_cc);
 
     if (create) return RegCreateKeyW(HKEY_CURRENT_USER, keypath, key);
-    return RegOpenKeyW(HKEY_CURRENT_USER, keypath, key);
+    ret = RegOpenKeyW(HKEY_CURRENT_USER, keypath, key);
+    if (ret != ERROR_FILE_NOT_FOUND) return ret;
+
+    strcpyW(keypath, szInstaller_Components);
+    strcatW(keypath, squished_cc);
+    return RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
 }
 
 UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid, HKEY *key, BOOL create)
@@ -1327,7 +1305,7 @@ static UINT fetch_user_component( const WCHAR *usersid, DWORD ctx, DWORD index, 
     REGSAM access = KEY_ENUMERATE_SUB_KEYS | KEY_WOW64_64KEY;
     HKEY key_users, key_components;
 
-    if (ctx == MSIINSTALLCONTEXT_USERMANAGED) /* FIXME: were to find these? */
+    if (ctx == MSIINSTALLCONTEXT_USERMANAGED) /* FIXME: where to find these? */
         return ERROR_NO_MORE_ITEMS;
 
     if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, userdataW, 0, access, &key_users ))
@@ -1516,6 +1494,24 @@ UINT WINAPI MsiEnumClientsW(LPCWSTR szComponent, DWORD index, LPWSTR szProduct)
     }
     RegCloseKey(hkeyComp);
     return r;
+}
+
+UINT WINAPI MsiEnumClientsExA(LPCSTR component, LPCSTR usersid, DWORD ctx, DWORD index,
+                              CHAR installed_product[GUID_SIZE],
+                              MSIINSTALLCONTEXT *installed_ctx, LPSTR sid, LPDWORD sid_len)
+{
+    FIXME("%s, %s, %u, %u, %p, %p, %p, %p\n", debugstr_a(component), debugstr_a(usersid),
+          ctx, index, installed_product, installed_ctx, sid, sid_len);
+    return ERROR_ACCESS_DENIED;
+}
+
+UINT WINAPI MsiEnumClientsExW(LPCWSTR component, LPCWSTR usersid, DWORD ctx, DWORD index,
+                              WCHAR installed_product[GUID_SIZE],
+                              MSIINSTALLCONTEXT *installed_ctx, LPWSTR sid, LPDWORD sid_len)
+{
+    FIXME("%s, %s, %u, %u, %p, %p, %p, %p\n", debugstr_w(component), debugstr_w(usersid),
+          ctx, index, installed_product, installed_ctx, sid, sid_len);
+    return ERROR_ACCESS_DENIED;
 }
 
 static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,

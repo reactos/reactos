@@ -1,9 +1,12 @@
 /*
- * PROJECT:   registry manipulation library
+ * PROJECT:   Registry manipulation library
  * LICENSE:   GPL - See COPYING in the top level directory
  * COPYRIGHT: Copyright 2005 Filip Navara <navaraf@reactos.org>
  *            Copyright 2001 - 2005 Eric Kohl
  */
+
+#ifndef _CMLIB_H_
+#define _CMLIB_H_
 
 //
 // Debug support switch
@@ -14,6 +17,41 @@
     #include <typedefs.h>
     #include <stdio.h>
     #include <string.h>
+
+    // NTDDI_xxx versions we allude to in the library (see psdk/sdkddkver.h)
+    #define NTDDI_WS03SP4                       0x05020400
+    #define NTDDI_WIN6                          0x06000000
+    #define NTDDI_LONGHORN                      NTDDI_WIN6
+    #define NTDDI_VISTA                         NTDDI_WIN6
+    #define NTDDI_WIN7                          0x06010000
+
+    #define NTDDI_VERSION   NTDDI_WS03SP4 // This is the ReactOS NT kernel version
+
+    /* C_ASSERT Definition */
+    #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
+
+    #ifdef _WIN32
+    #define strncasecmp _strnicmp
+    #define strcasecmp _stricmp
+    #endif // _WIN32
+
+    #if (!defined(_MSC_VER) || (_MSC_VER < 1500))
+    #define _In_
+    #define _Out_
+    #define _Inout_
+    #define _In_opt_
+    #define _In_range_(x, y)
+    #endif
+
+    #define __drv_aliasesMem
+
+    #ifndef min
+    #define min(a, b)  (((a) < (b)) ? (a) : (b))
+    #endif
+
+    // #ifndef max
+    // #define max(a, b)  (((a) > (b)) ? (a) : (b))
+    // #endif
 
     // Definitions copied from <ntstatus.h>
     // We only want to include host headers, so we define them manually
@@ -29,9 +67,16 @@
     #define OBJ_CASE_INSENSITIVE             0x00000040L
     #define USHORT_MAX                       USHRT_MAX
 
+    #define OBJ_NAME_PATH_SEPARATOR          ((WCHAR)L'\\')
+    #define UNICODE_NULL                     ((WCHAR)0)
+
     VOID NTAPI
     KeQuerySystemTime(
         OUT PLARGE_INTEGER CurrentTime);
+
+    WCHAR NTAPI
+    RtlUpcaseUnicodeChar(
+        IN WCHAR Source);
 
     VOID NTAPI
     RtlInitializeBitMap(
@@ -66,7 +111,26 @@
     #define PWORK_QUEUE_ITEM PVOID
     #define EX_PUSH_LOCK PULONG_PTR
 
+    // Definitions copied from <ntifs.h>
+    // We only want to include host headers, so we define them manually
+
+    typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
+
+    typedef struct _SECURITY_DESCRIPTOR_RELATIVE
+    {
+        UCHAR Revision;
+        UCHAR Sbz1;
+        SECURITY_DESCRIPTOR_CONTROL Control;
+        ULONG Owner;
+        ULONG Group;
+        ULONG Sacl;
+        ULONG Dacl;
+    } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
     #define CMLTRACE(x, ...)
+    #undef PAGED_CODE
+    #define PAGED_CODE()
+    #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
 #else
     //
     // Debug/Tracing support
@@ -83,7 +147,10 @@
     #endif
 
     #include <ntdef.h>
-    #include <ntddk.h>
+    #include <ntifs.h>
+    #include <bugcodes.h>
+    #undef PAGED_CODE
+    #define PAGED_CODE()
 
     /* Prevent inclusion of Windows headers through <wine/unicode.h> */
     #define _WINDEF_
@@ -95,7 +162,7 @@
 //
 // These define the Debug Masks Supported
 //
-#define CMLIB_HCELL_DEBUG                                 0x01
+#define CMLIB_HCELL_DEBUG       0x01
 
 #ifndef ROUND_UP
 #define ROUND_UP(a,b)        ((((a)+(b)-1)/(b))*(b))
@@ -113,7 +180,10 @@
 #endif
 #endif
 
-#define TAG_CM 'CM25'
+#define TAG_CM     '  MC'
+#define TAG_KCB    'bkMC'
+#define TAG_CMHIVE 'vHMC'
+#define TAG_CMSD   'DSMC'
 
 #define CMAPI NTAPI
 
@@ -122,12 +192,17 @@
 #include "hivedata.h"
 #include "cmdata.h"
 
-#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H)
+#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H) // || defined(_BLDR_)
 
-#define PCM_KEY_SECURITY_CACHE_ENTRY PVOID
-#define PCM_KEY_CONTROL_BLOCK PVOID
-#define CMP_SECURITY_HASH_LISTS                         64
-#define PCM_CELL_REMAP_BLOCK PVOID
+#define PCM_KEY_SECURITY_CACHE_ENTRY    PVOID
+#define PCM_KEY_CONTROL_BLOCK           PVOID
+#define PCM_CELL_REMAP_BLOCK            PVOID
+
+// See also ntoskrnl/include/internal/cm.h
+#define CMP_SECURITY_HASH_LISTS         64
+
+// #endif // Commented out until one finds a way to properly include
+          // this header in freeldr and in ntoskrnl.
 
 //
 // Use Count Log and Entry
@@ -194,7 +269,7 @@ typedef struct _CMHIVE
     PKTHREAD CreatorOwner;
 } CMHIVE, *PCMHIVE;
 
-#endif
+#endif // See comment above
 
 typedef struct _HV_HIVE_CELL_PAIR
 {
@@ -214,24 +289,74 @@ typedef struct _HV_TRACK_CELL_REF
 
 extern ULONG CmlibTraceLevel;
 
+//
+// Hack since bigkeys are not yet supported
+//
+#define ASSERT_VALUE_BIG(h, s)                          \
+    ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
+
+//
+// Returns whether or not this is a small valued key
+//
+static inline
+BOOLEAN
+CmpIsKeyValueSmall(OUT PULONG RealLength,
+                   IN ULONG Length)
+{
+    /* Check if the length has the special size value */
+    if (Length >= CM_KEY_VALUE_SPECIAL_SIZE)
+    {
+        /* It does, so this is a small key: return the real length */
+        *RealLength = Length - CM_KEY_VALUE_SPECIAL_SIZE;
+        return TRUE;
+    }
+
+    /* This is not a small key, return the length we read */
+    *RealLength = Length;
+    return FALSE;
+}
+
+//
+// Returns whether or not this is a big valued key
+//
+static inline
+BOOLEAN
+CmpIsKeyValueBig(IN PHHIVE Hive,
+                 IN ULONG Length)
+{
+    /* Check if the hive is XP Beta 1 or newer */
+    if (Hive->Version >= HSYS_WHISTLER_BETA1)
+    {
+        /* Check if the key length is valid for a big value key */
+        if ((Length < CM_KEY_VALUE_SPECIAL_SIZE) && (Length > CM_KEY_VALUE_BIG))
+        {
+            /* Yes, this value is big */
+            return TRUE;
+        }
+    }
+
+    /* Not a big value key */
+    return FALSE;
+}
+
 /*
- * Public functions.
+ * Public Hive functions.
  */
 NTSTATUS CMAPI
 HvInitialize(
-             PHHIVE RegistryHive,
-   ULONG Operation,
-   ULONG HiveType,
-   ULONG HiveFlags,
-   PVOID HiveData OPTIONAL,
-   PALLOCATE_ROUTINE Allocate,
-   PFREE_ROUTINE Free,
-   PFILE_SET_SIZE_ROUTINE FileSetSize,
-   PFILE_WRITE_ROUTINE FileWrite,
-   PFILE_READ_ROUTINE FileRead,
-   PFILE_FLUSH_ROUTINE FileFlush,
-   ULONG Cluster OPTIONAL,
-   PUNICODE_STRING FileName);
+    PHHIVE RegistryHive,
+    ULONG OperationType,
+    ULONG HiveFlags,
+    ULONG FileType,
+    PVOID HiveData OPTIONAL,
+    PALLOCATE_ROUTINE Allocate,
+    PFREE_ROUTINE Free,
+    PFILE_SET_SIZE_ROUTINE FileSetSize,
+    PFILE_WRITE_ROUTINE FileWrite,
+    PFILE_READ_ROUTINE FileRead,
+    PFILE_FLUSH_ROUTINE FileFlush,
+    ULONG Cluster OPTIONAL,
+    PCUNICODE_STRING FileName OPTIONAL);
 
 VOID CMAPI
 HvFree(
@@ -303,16 +428,6 @@ BOOLEAN CMAPI
 HvWriteHive(
    PHHIVE RegistryHive);
 
-BOOLEAN CMAPI
-CmCreateRootNode(
-   PHHIVE Hive,
-   PCWSTR Name);
-
-VOID CMAPI
-CmPrepareHive(
-   PHHIVE RegistryHive);
-
-
 BOOLEAN
 CMAPI
 HvTrackCellRef(
@@ -344,3 +459,256 @@ HvpCreateHiveFreeCellList(
 ULONG CMAPI
 HvpHiveHeaderChecksum(
    PHBASE_BLOCK HiveHeader);
+
+
+/* Old-style Public "Cmlib" functions */
+
+BOOLEAN CMAPI
+CmCreateRootNode(
+   PHHIVE Hive,
+   PCWSTR Name);
+
+VOID CMAPI
+CmPrepareHive(
+   PHHIVE RegistryHive);
+
+
+/* NT-style Public Cm functions */
+
+//
+// Cell Index Routines
+//
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Parent,
+    IN PCUNICODE_STRING SearchName
+);
+
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByNumber(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Node,
+    IN ULONG Number
+);
+
+ULONG
+NTAPI
+CmpComputeHashKey(
+    IN ULONG Hash,
+    IN PCUNICODE_STRING Name,
+    IN BOOLEAN AllowSeparators
+);
+
+BOOLEAN
+NTAPI
+CmpAddSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Parent,
+    IN HCELL_INDEX Child
+);
+
+BOOLEAN
+NTAPI
+CmpRemoveSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ParentKey,
+    IN HCELL_INDEX TargetKey
+);
+
+BOOLEAN
+NTAPI
+CmpMarkIndexDirty(
+    IN PHHIVE Hive,
+    HCELL_INDEX ParentKey,
+    HCELL_INDEX TargetKey
+);
+
+
+//
+// Name Functions
+//
+LONG
+NTAPI
+CmpCompareCompressedName(
+    IN PCUNICODE_STRING SearchName,
+    IN PWCHAR CompressedName,
+    IN ULONG NameLength
+);
+
+USHORT
+NTAPI
+CmpNameSize(
+    IN PHHIVE Hive,
+    IN PUNICODE_STRING Name
+);
+
+USHORT
+NTAPI
+CmpCompressedNameSize(
+    IN PWCHAR Name,
+    IN ULONG Length
+);
+
+USHORT
+NTAPI
+CmpCopyName(
+    IN PHHIVE Hive,
+    IN PWCHAR Destination,
+    IN PUNICODE_STRING Source
+);
+
+VOID
+NTAPI
+CmpCopyCompressedName(
+    IN PWCHAR Destination,
+    IN ULONG DestinationLength,
+    IN PWCHAR Source,
+    IN ULONG SourceLength
+);
+
+BOOLEAN
+NTAPI
+CmpFindNameInList(
+    IN PHHIVE Hive,
+    IN PCHILD_LIST ChildList,
+    IN PUNICODE_STRING Name,
+    OUT PULONG ChildIndex,
+    OUT PHCELL_INDEX CellIndex
+);
+
+
+//
+// Cell Value Routines
+//
+HCELL_INDEX
+NTAPI
+CmpFindValueByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE KeyNode,
+    IN PUNICODE_STRING Name
+);
+
+PCELL_DATA
+NTAPI
+CmpValueToData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    OUT PULONG Length
+);
+
+NTSTATUS
+NTAPI
+CmpSetValueDataNew(
+    IN PHHIVE Hive,
+    IN PVOID Data,
+    IN ULONG DataSize,
+    IN ULONG StorageType,
+    IN HCELL_INDEX ValueCell,
+    OUT PHCELL_INDEX DataCell
+);
+
+NTSTATUS
+NTAPI
+CmpAddValueToList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ValueCell,
+    IN ULONG Index,
+    IN ULONG Type,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValue(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
+);
+
+BOOLEAN
+NTAPI
+CmpMarkValueDataDirty(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValueData(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX DataCell,
+    IN ULONG DataLength
+);
+
+NTSTATUS
+NTAPI
+CmpRemoveValueFromList(
+    IN PHHIVE Hive,
+    IN ULONG Index,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpGetValueData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    OUT PULONG Length,
+    OUT PVOID *Buffer,
+    OUT PBOOLEAN BufferAllocated,
+    OUT PHCELL_INDEX CellToRelease
+);
+
+NTSTATUS
+NTAPI
+CmpCopyKeyValueList(
+    IN PHHIVE SourceHive,
+    IN PCHILD_LIST SrcValueList,
+    IN PHHIVE DestinationHive,
+    IN OUT PCHILD_LIST DestValueList,
+    IN HSTORAGE_TYPE StorageType
+);
+
+NTSTATUS
+NTAPI
+CmpFreeKeyByCell(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN BOOLEAN Unlink
+);
+
+VOID
+NTAPI
+CmpRemoveSecurityCellList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX SecurityCell
+);
+
+VOID
+NTAPI
+CmpFreeSecurityDescriptor(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
+);
+
+/******************************************************************************/
+
+/* To be implemented by the user of this library */
+PVOID
+NTAPI
+CmpAllocate(
+    IN SIZE_T Size,
+    IN BOOLEAN Paged,
+    IN ULONG Tag
+    );
+
+VOID
+NTAPI
+CmpFree(
+    IN PVOID Ptr,
+    IN ULONG Quota
+    );
+
+#endif /* _CMLIB_H_ */

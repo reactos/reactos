@@ -19,7 +19,7 @@ extern "C" {
   errno_t
   __cdecl
   _dupenv_s(
-    _Outptr_result_buffer_maybenull_(*_PBufferSizeInBytes) _Outptr_result_z_ char **_PBuffer,
+    _Outptr_result_buffer_maybenull_(*_PBufferSizeInBytes) _Outptr_result_maybenull_z_ char **_PBuffer,
     _Out_opt_ size_t *_PBufferSizeInBytes,
     _In_z_ const char *_VarName);
 
@@ -108,16 +108,17 @@ extern "C" {
     _In_ wchar_t _WCh,
     _In_opt_ _locale_t _Locale);
 
+  _Success_(return!=EINVAL)
   _Check_return_wat_
   _CRTIMP
   errno_t
   __cdecl
   wcstombs_s(
-    _Out_opt_ size_t *_PtNumOfCharConverted,
-    _Out_writes_bytes_to_opt_(_DstSizeInBytes, *_PtNumOfCharConverted) char *_Dst,
-    _In_ size_t _DstSizeInBytes,
-    _In_z_ const wchar_t *_Src,
-    _In_ size_t _MaxCountInBytes);
+    _Out_opt_ size_t *pcchConverted,
+    _Out_writes_bytes_to_opt_(cjDstSize, *pcchConverted) char *pmbstrDst,
+    _In_ size_t cjDstSize,
+    _In_z_ const wchar_t *pwszSrc,
+    _In_ size_t cjMaxCount);
 
   _Check_return_wat_
   _CRTIMP
@@ -179,7 +180,7 @@ extern "C" {
   errno_t
   __cdecl
   _wdupenv_s(
-    _Outptr_result_buffer_maybenull_(*_BufferSizeInWords) _Outptr_result_z_ wchar_t **_Buffer,
+    _Outptr_result_buffer_maybenull_(*_BufferSizeInWords) _Outptr_result_maybenull_z_ wchar_t **_Buffer,
     _Out_opt_ size_t *_BufferSizeInWords,
     _In_z_ const wchar_t *_VarName);
 
@@ -274,15 +275,15 @@ extern "C" {
   errno_t
   __cdecl
   _splitpath_s(
-    _In_z_ const char *_FullPath,
-    _Out_writes_opt_z_(_DriveSize) char *_Drive,
-    _In_ size_t _DriveSize,
-    _Out_writes_opt_z_(_DirSize) char *_Dir,
-    _In_ size_t _DirSize,
-    _Out_writes_opt_z_(_FilenameSize) char *_Filename,
-    _In_ size_t _FilenameSize,
-    _Out_writes_opt_z_(_ExtSize) char *_Ext,
-    _In_ size_t _ExtSize);
+    _In_z_ const char *path,
+    _Out_writes_opt_z_(drive_size) char *drive,
+    _In_ size_t drive_size,
+    _Out_writes_opt_z_(dir_size) char *dir,
+    _In_ size_t dir_size,
+    _Out_writes_opt_z_(fname_size) char *fname,
+    _In_ size_t fname_size,
+    _Out_writes_opt_z_(ext_size) char *ext,
+    _In_ size_t ext_size);
 
 #ifndef _WSTDLIBP_S_DEFINED
 #define _WSTDLIBP_S_DEFINED
@@ -320,15 +321,15 @@ extern "C" {
   errno_t
   __cdecl
   _wsplitpath_s(
-    _In_z_ const wchar_t *_FullPath,
-    _Out_writes_opt_z_(_DriveSizeInWords) wchar_t *_Drive,
-    _In_ size_t _DriveSizeInWords,
-    _Out_writes_opt_z_(_DirSizeInWords) wchar_t *_Dir,
-    _In_ size_t _DirSizeInWords,
-    _Out_writes_opt_z_(_FilenameSizeInWords) wchar_t *_Filename,
-    _In_ size_t _FilenameSizeInWords,
-    _Out_writes_opt_z_(_ExtSizeInWords) wchar_t *_Ext,
-    _In_ size_t _ExtSizeInWords);
+    _In_z_ const wchar_t *path,
+    _Out_writes_opt_z_(drive_size) wchar_t *drive,
+    _In_ size_t drive_size,
+    _Out_writes_opt_z_(dir_size) wchar_t *dir,
+    _In_ size_t dir_size,
+    _Out_writes_opt_z_(fname_size) wchar_t *fname,
+    _In_ size_t fname_size,
+    _Out_writes_opt_z_(ext_size) wchar_t *ext,
+    _In_ size_t ext_size);
 
 #endif /* _WSTDLIBP_S_DEFINED */
 

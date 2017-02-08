@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/proc/proc.c
+ * FILE:            dll/win32/kernel32/client/proc.c
  * PURPOSE:         Process functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
@@ -60,32 +60,35 @@ StuffStdHandle(IN HANDLE ProcessHandle,
 {
     NTSTATUS Status;
     HANDLE DuplicatedHandle;
-    SIZE_T Dummy;
+    SIZE_T NumberOfBytesWritten;
+
+    /* If there is no handle to duplicate, return immediately */
+    if (!StandardHandle) return;
 
     /* Duplicate the handle */
     Status = NtDuplicateObject(NtCurrentProcess(),
                                StandardHandle,
                                ProcessHandle,
                                &DuplicatedHandle,
-                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES,
                                0,
-                               0);
-    if (NT_SUCCESS(Status))
-    {
-        /* Write it */
-        NtWriteVirtualMemory(ProcessHandle,
-                             Address,
-                             &DuplicatedHandle,
-                             sizeof(HANDLE),
-                             &Dummy);
-    }
+                               0,
+                               DUPLICATE_SAME_ACCESS |
+                               DUPLICATE_SAME_ATTRIBUTES);
+    if (!NT_SUCCESS(Status)) return;
+
+    /* Write it */
+    NtWriteVirtualMemory(ProcessHandle,
+                         Address,
+                         &DuplicatedHandle,
+                         sizeof(HANDLE),
+                         &NumberOfBytesWritten);
 }
 
 BOOLEAN
 WINAPI
-BuildSubSysCommandLine(IN LPWSTR SubsystemName,
-                       IN LPWSTR ApplicationName,
-                       IN LPWSTR CommandLine,
+BuildSubSysCommandLine(IN LPCWSTR SubsystemName,
+                       IN LPCWSTR ApplicationName,
+                       IN LPCWSTR CommandLine,
                        OUT PUNICODE_STRING SubsysCommandLine)
 {
     UNICODE_STRING CommandLineString, ApplicationNameString;
@@ -99,7 +102,7 @@ BuildSubSysCommandLine(IN LPWSTR SubsystemName,
     /* Allocate buffer for the output string */
     Length = CommandLineString.MaximumLength + ApplicationNameString.MaximumLength + 32;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, Length);
+    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, (USHORT)Length);
     if (!Buffer)
     {
         /* Fail, no memory */
@@ -184,9 +187,9 @@ BasepConfigureAppCertDlls(IN PWSTR ValueName,
 
 NTSTATUS
 WINAPI
-BasepIsProcessAllowed(IN PCHAR ApplicationName)
+BasepIsProcessAllowed(IN LPWSTR ApplicationName)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, Status1;
     PWCHAR Buffer;
     UINT Length;
     HMODULE TrustLibrary;
@@ -250,19 +253,22 @@ BasepIsProcessAllowed(IN PCHAR ApplicationName)
         else
         {
             /* Other systems have a registry entry for this */
-            Status = NtOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
-            if (NT_SUCCESS(Status))
+            Status1 = NtOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+            if (NT_SUCCESS(Status1))
             {
                 /* Close it, we'll query it through Rtl */
                 NtClose(KeyHandle);
 
                 /* Do the query, which will call a special callback */
-                Status = RtlQueryRegistryValues(2,
+                Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
                                                 L"Session Manager",
                                                 BasepAppCertTable,
-                                                0,
-                                                0);
-                if (Status == 0xC0000034) Status = STATUS_SUCCESS;
+                                                NULL,
+                                                NULL);
+                if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                {
+                    Status = STATUS_SUCCESS;
+                }
             }
         }
 
@@ -493,11 +499,10 @@ WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                        IN PCLIENT_ID ClientId)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
     PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
-    DPRINT("BasepNotifyCsrOfThread: Thread: %lx, Handle %lx\n",
+    DPRINT("BasepNotifyCsrOfThread: Thread: %p, Handle %p\n",
             ClientId->UniqueThread, ThreadHandle);
 
     /* Fill out the request */
@@ -505,249 +510,18 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     CreateThreadRequest->ThreadHandle = ThreadHandle;
 
     /* Call CSR */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
-                                 sizeof(BASE_CREATE_THREAD));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
+                        sizeof(*CreateThreadRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", Status);
-        return Status;
+        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", ApiMessage.Status);
+        return ApiMessage.Status;
     }
 
     /* Return Success */
     return STATUS_SUCCESS;
-}
-
-/*
- * Creates the first Thread in a Proces
- */
-HANDLE
-WINAPI
-BasepCreateFirstThread(HANDLE ProcessHandle,
-                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                       PSECTION_IMAGE_INFORMATION SectionImageInfo,
-                       PCLIENT_ID ClientId,
-                       DWORD dwCreationFlags)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES LocalObjectAttributes;
-    POBJECT_ATTRIBUTES ObjectAttributes;
-    CONTEXT Context;
-    INITIAL_TEB InitialTeb;
-    HANDLE hThread;
-    BASE_API_MESSAGE ApiMessage;
-    PBASE_CREATE_PROCESS CreateProcessRequest = &ApiMessage.Data.CreateProcessRequest;
-
-    DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
-
-    /* Create the Thread's Stack */
-    BaseCreateStack(ProcessHandle,
-                     SectionImageInfo->MaximumStackSize,
-                     SectionImageInfo->CommittedStackSize,
-                     &InitialTeb);
-
-    /* Create the Thread's Context */
-    BaseInitializeContext(&Context,
-                           NtCurrentPeb(),
-                           SectionImageInfo->TransferAddress,
-                           InitialTeb.StackBase,
-                           0);
-
-    /* Convert the thread attributes */
-    ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
-                                                    lpThreadAttributes,
-                                                    NULL);
-
-    /* Create the Kernel Thread Object */
-    Status = NtCreateThread(&hThread,
-                            THREAD_ALL_ACCESS,
-                            ObjectAttributes,
-                            ProcessHandle,
-                            ClientId,
-                            &Context,
-                            &InitialTeb,
-                            TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        return NULL;
-    }
-
-    /* Fill out the request to notify CSRSS */
-    CreateProcessRequest->ClientId = *ClientId;
-    CreateProcessRequest->ProcessHandle = ProcessHandle;
-    CreateProcessRequest->ThreadHandle = hThread;
-    CreateProcessRequest->CreationFlags = dwCreationFlags;
-
-    /*
-     * For GUI applications we turn on the 2nd bit. This also allows
-     * us to know whether or not this is a GUI or a TUI application.
-     */
-    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo->SubSystemType)
-    {
-        CreateProcessRequest->ProcessHandle = (HANDLE)
-            ((ULONG_PTR)CreateProcessRequest->ProcessHandle | 2);
-    }
-
-    /* Call CSR */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateProcess),
-                                 sizeof(BASE_CREATE_PROCESS));
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to tell CSRSS about new process: %lx\n", Status);
-        return NULL;
-    }
-
-    /* Success */
-    return hThread;
-}
-
-/*
- * Converts ANSI to Unicode Environment
- */
-PVOID
-WINAPI
-BasepConvertUnicodeEnvironment(OUT SIZE_T* EnvSize,
-                               IN PVOID lpEnvironment)
-{
-    PCHAR pcScan;
-    ANSI_STRING AnsiEnv;
-    UNICODE_STRING UnicodeEnv;
-    NTSTATUS Status;
-
-    DPRINT("BasepConvertUnicodeEnvironment\n");
-
-    /* Scan the environment to calculate its Unicode size */
-    AnsiEnv.Buffer = pcScan = (PCHAR)lpEnvironment;
-    while (*pcScan)
-    {
-        pcScan += strlen(pcScan) + 1;
-    }
-
-    /* Create our ANSI String */
-    if (pcScan == (PCHAR)lpEnvironment)
-    {
-        AnsiEnv.Length = 2 * sizeof(CHAR);
-    }
-    else
-    {
-
-        AnsiEnv.Length = (USHORT)((ULONG_PTR)pcScan - (ULONG_PTR)lpEnvironment + sizeof(CHAR));
-    }
-    AnsiEnv.MaximumLength = AnsiEnv.Length + 1;
-
-    /* Allocate memory for the Unicode Environment */
-    UnicodeEnv.Buffer = NULL;
-    *EnvSize = AnsiEnv.MaximumLength * sizeof(WCHAR);
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                     (PVOID)&UnicodeEnv.Buffer,
-                                     0,
-                                     EnvSize,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-    /* Failure */
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(Status);
-        *EnvSize = 0;
-        return NULL;
-    }
-
-    /* Use the allocated size */
-    UnicodeEnv.MaximumLength = (USHORT)*EnvSize;
-
-    /* Convert */
-    RtlAnsiStringToUnicodeString(&UnicodeEnv, &AnsiEnv, FALSE);
-    return UnicodeEnv.Buffer;
-}
-
-/*
- * Converts a Win32 Priority Class to NT
- */
-ULONG
-WINAPI
-BasepConvertPriorityClass(IN ULONG dwCreationFlags)
-{
-    ULONG ReturnClass;
-
-    if(dwCreationFlags & IDLE_PRIORITY_CLASS)
-    {
-        ReturnClass = PROCESS_PRIORITY_CLASS_IDLE;
-    }
-    else if(dwCreationFlags & BELOW_NORMAL_PRIORITY_CLASS)
-    {
-        ReturnClass = PROCESS_PRIORITY_CLASS_BELOW_NORMAL;
-    }
-    else if(dwCreationFlags & NORMAL_PRIORITY_CLASS)
-    {
-        ReturnClass = PROCESS_PRIORITY_CLASS_NORMAL;
-    }
-    else if(dwCreationFlags & ABOVE_NORMAL_PRIORITY_CLASS)
-    {
-        ReturnClass = PROCESS_PRIORITY_CLASS_ABOVE_NORMAL;
-    }
-    else if(dwCreationFlags & HIGH_PRIORITY_CLASS)
-    {
-        ReturnClass = PROCESS_PRIORITY_CLASS_HIGH;
-    }
-    else if(dwCreationFlags & REALTIME_PRIORITY_CLASS)
-    {
-        /* Check for Privilege First */
-        if (BasepIsRealtimeAllowed(TRUE))
-        {
-            ReturnClass = PROCESS_PRIORITY_CLASS_REALTIME;
-        }
-        else
-        {
-            ReturnClass = PROCESS_PRIORITY_CLASS_HIGH;
-        }
-    }
-    else
-    {
-        ReturnClass = PROCESS_PRIORITY_CLASS_INVALID;
-    }
-
-    return ReturnClass;
-}
-
-/*
- * Duplicates a standard handle and writes it where requested.
- */
-VOID
-WINAPI
-BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
-                             IN HANDLE StandardHandle,
-                             IN PHANDLE Address)
-{
-    NTSTATUS Status;
-    HANDLE DuplicatedHandle;
-    SIZE_T Dummy;
-
-    DPRINT("BasepDuplicateAndWriteHandle. hProcess: %lx, Handle: %lx,"
-           "Address: %p\n", ProcessHandle, StandardHandle, Address);
-
-    /* Don't touch Console Handles */
-    if (IsConsoleHandle(StandardHandle)) return;
-
-    /* Duplicate the handle */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               StandardHandle,
-                               ProcessHandle,
-                               &DuplicatedHandle,
-                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES,
-                               0,
-                               0);
-    if (NT_SUCCESS(Status))
-    {
-        /* Write it */
-        NtWriteVirtualMemory(ProcessHandle,
-                             Address,
-                             &DuplicatedHandle,
-                             sizeof(HANDLE),
-                             &Dummy);
-    }
 }
 
 BOOLEAN
@@ -854,6 +628,14 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
 
     /* Create the Parameter Block */
     ProcessParameters = NULL;
+    DPRINT("ImageName: '%wZ'\n", &ImageName);
+    DPRINT("DllPath  : '%wZ'\n", &DllPath);
+    DPRINT("CurDir   : '%wZ'\n", &CurrentDirectory);
+    DPRINT("CmdLine  : '%wZ'\n", &CommandLine);
+    DPRINT("Title    : '%wZ'\n", &Title);
+    DPRINT("Desktop  : '%wZ'\n", &Desktop);
+    DPRINT("Shell    : '%wZ'\n", &Shell);
+    DPRINT("Runtime  : '%wZ'\n", &Runtime);
     Status = RtlCreateProcessParameters(&ProcessParameters,
                                         &ImageName,
                                         &DllPath,
@@ -890,9 +672,8 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
     if (lpEnvironment)
     {
         /* Find the environment size */
-        while ((ScanChar[0]) || (ScanChar[1])) ++ScanChar;
-        ScanChar += (2 * sizeof(UNICODE_NULL));
-        EnviroSize = (ULONG_PTR)ScanChar - (ULONG_PTR)lpEnvironment;
+        while (*ScanChar++) while (*ScanChar++);
+        EnviroSize = (ULONG)((ULONG_PTR)ScanChar - (ULONG_PTR)lpEnvironment);
 
         /* Allocate and Initialize new Environment Block */
         Size = EnviroSize;
@@ -944,7 +725,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         ProcessParameters->StandardError = StartupInfo->hStdError;
     }
 
-    /* Use Special Flags for BasepInitConsole in Kernel32 */
+    /* Use Special Flags for ConDllInitialize in Kernel32 */
     if (CreationFlags & DETACHED_PROCESS)
     {
         ProcessParameters->ConsoleHandle = HANDLE_DETACHED_PROCESS;
@@ -992,16 +773,16 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         ProcessParameters->ConsoleFlags = 1;
     }
 
-    /* See if the first 1MB should be reserved */
+    /* Check if there's a .local file present */
     if (ParameterFlags & 1)
     {
-        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
+        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH;
     }
 
-    /* See if the first 16MB should be reserved */
+    /* Check if we failed to open the IFEO key */
     if (ParameterFlags & 2)
     {
-        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_16MB;
+        ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_IMAGE_KEY_MISSING;
     }
 
     /* Allocate memory for the parameter block */
@@ -1095,7 +876,7 @@ Quickie:
     if (ProcessParameters) RtlDestroyProcessParameters(ProcessParameters);
     return Result;
 FailPath:
-    DPRINT1("Failure to create proecss parameters: %lx\n", Status);
+    DPRINT1("Failure to create process parameters: %lx\n", Status);
     BaseSetLastNTError(Status);
     Result = FALSE;
     goto Quickie;
@@ -1184,25 +965,24 @@ WINAPI
 GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
                              OUT LPDWORD lpdwFlags)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &ApiMessage.Data.GetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &ApiMessage.Data.ShutdownParametersRequest;
 
     /* Ask CSRSS for shutdown information */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
-                                 sizeof(BASE_GET_PROCESS_SHUTDOWN_PARAMS));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
+                        sizeof(*ShutdownParametersRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
     /* Get the data back */
-    *lpdwLevel = GetShutdownParametersRequest->Level;
-    *lpdwFlags = GetShutdownParametersRequest->Flags;
+    *lpdwLevel = ShutdownParametersRequest->ShutdownLevel;
+    *lpdwFlags = ShutdownParametersRequest->ShutdownFlags;
     return TRUE;
 }
 
@@ -1214,21 +994,20 @@ WINAPI
 SetProcessShutdownParameters(IN DWORD dwLevel,
                              IN DWORD dwFlags)
 {
-    NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &ApiMessage.Data.SetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &ApiMessage.Data.ShutdownParametersRequest;
 
     /* Write the data into the CSRSS request and send it */
-    SetShutdownParametersRequest->Level = dwLevel;
-    SetShutdownParametersRequest->Flags = dwFlags;
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
-                                 sizeof(BASE_SET_PROCESS_SHUTDOWN_PARAMS));
-    if (!NT_SUCCESS(Status))
+    ShutdownParametersRequest->ShutdownLevel = dwLevel;
+    ShutdownParametersRequest->ShutdownFlags = dwFlags;
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
+                        sizeof(*ShutdownParametersRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -1655,7 +1434,7 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
                         StartupInfo->lpTitle = TitleString.Buffer;
 
                         /* We finished with the ANSI version, try to cache it */
-                        if (!InterlockedCompareExchangePointer(&BaseAnsiStartupInfo,
+                        if (!InterlockedCompareExchangePointer((PVOID*)&BaseAnsiStartupInfo,
                                                                StartupInfo,
                                                                NULL))
                         {
@@ -1728,12 +1507,12 @@ BOOL
 WINAPI
 FlushInstructionCache(IN HANDLE hProcess,
                       IN LPCVOID lpBaseAddress,
-                      IN SIZE_T dwSize)
+                      IN SIZE_T nSize)
 {
     NTSTATUS Status;
 
     /* Call the native function */
-    Status = NtFlushInstructionCache(hProcess, (PVOID)lpBaseAddress, dwSize);
+    Status = NtFlushInstructionCache(hProcess, (PVOID)lpBaseAddress, nSize);
     if (!NT_SUCCESS(Status))
     {
         /* Handle failure case */
@@ -1773,7 +1552,7 @@ ExitProcess(IN UINT uExitCode)
         CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitProcess),
-                            sizeof(BASE_EXIT_PROCESS));
+                            sizeof(*ExitProcessRequest));
 
         /* Now do it again */
         NtTerminateProcess(NtCurrentProcess(), uExitCode);
@@ -2055,7 +1834,7 @@ GetProcessVersion(IN DWORD ProcessId)
             ProcessHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
                                         FALSE,
                                         ProcessId);
-            if (!ProcessHandle) return 0;
+            if (!ProcessHandle) _SEH2_YIELD(return 0);
 
             /* Try to find out where its PEB lives */
             Status = NtQueryInformationProcess(ProcessHandle,
@@ -2480,89 +2259,217 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
     return FALSE;
 }
 
+
+#define AddToHandle(x,y)  (x) = (HANDLE)((ULONG_PTR)(x) | (y));
+#define RemoveFromHandle(x,y)  (x) = (HANDLE)((ULONG_PTR)(x) & ~(y));
+C_ASSERT(PROCESS_PRIORITY_CLASS_REALTIME == (PROCESS_PRIORITY_CLASS_HIGH + 1));
+
 /*
  * @implemented
  */
 BOOL
 WINAPI
-CreateProcessInternalW(HANDLE hToken,
-                       LPCWSTR lpApplicationName,
-                       LPWSTR lpCommandLine,
-                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
-                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                       BOOL bInheritHandles,
-                       DWORD dwCreationFlags,
-                       LPVOID lpEnvironment,
-                       LPCWSTR lpCurrentDirectory,
-                       LPSTARTUPINFOW lpStartupInfo,
-                       LPPROCESS_INFORMATION lpProcessInformation,
-                       PHANDLE hNewToken)
+CreateProcessInternalW(IN HANDLE hUserToken,
+                       IN LPCWSTR lpApplicationName,
+                       IN LPWSTR lpCommandLine,
+                       IN LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       IN BOOL bInheritHandles,
+                       IN DWORD dwCreationFlags,
+                       IN LPVOID lpEnvironment,
+                       IN LPCWSTR lpCurrentDirectory,
+                       IN LPSTARTUPINFOW lpStartupInfo,
+                       IN LPPROCESS_INFORMATION lpProcessInformation,
+                       OUT PHANDLE hNewToken)
 {
-    NTSTATUS Status;
-    PROCESS_PRIORITY_CLASS PriorityClass;
-    BOOLEAN FoundQuotes = FALSE;
-    BOOLEAN QuotesNeeded = FALSE;
-    BOOLEAN CmdLineIsAppName = FALSE;
-    UNICODE_STRING ApplicationName = { 0, 0, NULL };
+    //
+    // Core variables used for creating the initial process and thread
+    //
+    SECURITY_ATTRIBUTES LocalThreadAttributes, LocalProcessAttributes;
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE hSection = NULL, hProcess = NULL, hThread = NULL, hDebug = NULL;
-    SECTION_IMAGE_INFORMATION SectionImageInfo;
-    LPWSTR CurrentDirectory = NULL;
-    LPWSTR CurrentDirectoryPart;
-    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
-    STARTUPINFOW StartupInfo;
-    ULONG Dummy;
-    LPWSTR BatchCommandLine;
-    ULONG CmdLineLength;
-    UNICODE_STRING CommandLineString;
-    PWCHAR Extension;
-    LPWSTR QuotedCmdLine = NULL;
-    LPWSTR ScanString;
-    LPWSTR NullBuffer = NULL;
-    LPWSTR NameBuffer = NULL;
-    WCHAR SaveChar = 0;
-    ULONG RetVal;
-    UINT Error = 0;
-    BOOLEAN SearchDone = FALSE;
-    BOOLEAN Escape = FALSE;
+    SECTION_IMAGE_INFORMATION ImageInformation;
+    IO_STATUS_BLOCK IoStatusBlock;
     CLIENT_ID ClientId;
-    PPEB OurPeb = NtCurrentPeb();
-    PPEB RemotePeb;
-    SIZE_T EnvSize = 0;
-    BOOL Ret = FALSE;
+    ULONG NoWindow, RegionSize, StackSize, ErrorCode, Flags;
+    USHORT ImageMachine;
+    ULONG ParameterFlags, PrivilegeValue, HardErrorMode, ErrorResponse;
+    ULONG_PTR ErrorParameters[2];
+    BOOLEAN InJob, SaferNeeded, UseLargePages, HavePrivilege;
+    BOOLEAN QuerySection, SkipSaferAndAppCompat;
+    CONTEXT Context;
+    BASE_API_MESSAGE CsrMsg[2];
+    PBASE_CREATE_PROCESS CreateProcessMsg;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    PVOID BaseAddress, PrivilegeState, RealTimePrivilegeState;
+    HANDLE DebugHandle, TokenHandle, JobHandle, KeyHandle, ThreadHandle;
+    HANDLE FileHandle, SectionHandle, ProcessHandle;
+    ULONG ResumeCount;
+    PROCESS_PRIORITY_CLASS PriorityClass;
+    NTSTATUS Status, Status1, ImageDbgStatus;
+    PPEB Peb, RemotePeb;
+    PTEB Teb;
+    INITIAL_TEB InitialTeb;
+    PVOID TibValue;
+    PIMAGE_NT_HEADERS NtHeaders;
+    STARTUPINFOW StartupInfo;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+    UNICODE_STRING DebuggerString;
+    BOOL Result;
+    //
+    // Variables used for command-line and argument parsing
+    //
+    PCHAR pcScan;
+    SIZE_T n;
+    WCHAR SaveChar;
+    ULONG Length, CurdirLength, CmdQuoteLength;
+    ULONG CmdLineLength, ResultSize;
+    PWCHAR QuotedCmdLine, AnsiCmdCommand, ExtBuffer, CurrentDirectory;
+    PWCHAR NullBuffer, ScanString, NameBuffer, SearchPath, DebuggerCmdLine;
+    ANSI_STRING AnsiEnv;
+    UNICODE_STRING UnicodeEnv, PathName;
+    BOOLEAN SearchRetry, QuotesNeeded, CmdLineIsAppName, HasQuotes;
 
-    /* FIXME should process
-     * HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
-     * key (see http://blogs.msdn.com/oldnewthing/archive/2005/12/19/505449.aspx)
-     */
+    //
+    // Variables used for Fusion/SxS (Side-by-Side Assemblies)
+    //
+    RTL_PATH_TYPE SxsPathType, PathType;
+#if _SXS_SUPPORT_ENABLED_
+    PRTL_BUFFER ByteBuffer;
+    PRTL_UNICODE_STRING_BUFFER ThisBuffer, Buffer, SxsStaticBuffers[5];
+    PRTL_UNICODE_STRING_BUFFER* BufferHead, SxsStringBuffer;
+    RTL_UNICODE_STRING_BUFFER SxsWin32ManifestPath, SxsNtManifestPath;
+    RTL_UNICODE_STRING_BUFFER SxsWin32PolicyPath, SxsNtPolicyPath;
+    RTL_UNICODE_STRING_BUFFER SxsWin32AssemblyDirectory;
+    BASE_MSG_SXS_HANDLES MappedHandles, Handles, FileHandles;
+    PVOID CapturedStrings[3];
+    SXS_WIN32_NT_PATH_PAIR ExePathPair, ManifestPathPair, PolicyPathPair;
+    SXS_OVERRIDE_MANIFEST OverrideMannifest;
+    UNICODE_STRING FreeString, SxsNtExePath;
+    PWCHAR SxsConglomeratedBuffer, StaticBuffer;
+    ULONG ConglomeratedBufferSizeBytes, StaticBufferSize, i;
+#endif
+    ULONG FusionFlags;
 
-    DPRINT("CreateProcessW: lpApplicationName: %S lpCommandLine: %S"
-           " lpEnvironment: %p lpCurrentDirectory: %S dwCreationFlags: %lx\n",
-           lpApplicationName, lpCommandLine, lpEnvironment, lpCurrentDirectory,
-           dwCreationFlags);
+    //
+    // Variables used for path conversion (and partially Fusion/SxS)
+    //
+    PWCHAR FilePart, PathBuffer, FreeBuffer;
+    BOOLEAN TranslationStatus;
+    RTL_RELATIVE_NAME_U SxsWin32RelativePath;
+    UNICODE_STRING PathBufferString, SxsWin32ExePath;
 
-    /* Flags we don't handle yet */
-    if (dwCreationFlags & CREATE_SEPARATE_WOW_VDM)
-    {
-        DPRINT1("CREATE_SEPARATE_WOW_VDM not handled\n");
-    }
-    if (dwCreationFlags & CREATE_SHARED_WOW_VDM)
-    {
-        DPRINT1("CREATE_SHARED_WOW_VDM not handled\n");
-    }
-    if (dwCreationFlags & CREATE_FORCEDOS)
-    {
-        DPRINT1("CREATE_FORCEDOS not handled\n");
-    }
+    //
+    // Variables used by Application Compatibility (and partially Fusion/SxS)
+    //
+    PVOID AppCompatSxsData, AppCompatData;
+    ULONG AppCompatSxsDataSize, AppCompatDataSize;
+    //
+    // Variables used by VDM (Virtual Dos Machine) and WOW32 (16-bit Support)
+    //
+    ULONG BinarySubType, VdmBinaryType, VdmTask, VdmReserve;
+    ULONG VdmUndoLevel;
+    BOOLEAN UseVdmReserve;
+    HANDLE VdmWaitObject;
+    ANSI_STRING VdmAnsiEnv;
+    UNICODE_STRING VdmString, VdmUnicodeEnv;
+    BOOLEAN IsWowApp;
+    PBASE_CHECK_VDM CheckVdmMsg;
 
-    /* Fail on this flag, it's only valid with the WithLogonW function */
-    if (dwCreationFlags & CREATE_PRESERVE_CODE_AUTHZ_LEVEL)
-    {
-        DPRINT1("Invalid flag used\n");
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    /* Zero out the initial core variables and handles */
+    QuerySection = FALSE;
+    InJob = FALSE;
+    SkipSaferAndAppCompat = TRUE; // HACK for making .bat/.cmd launch working again.
+    ParameterFlags = 0;
+    Flags = 0;
+    DebugHandle = NULL;
+    JobHandle = NULL;
+    TokenHandle = NULL;
+    FileHandle = NULL;
+    SectionHandle = NULL;
+    ProcessHandle = NULL;
+    ThreadHandle = NULL;
+    BaseAddress = (PVOID)1;
+
+    /* Zero out initial SxS and Application Compatibility state */
+    AppCompatData = NULL;
+    AppCompatDataSize = 0;
+    AppCompatSxsData = NULL;
+    AppCompatSxsDataSize = 0;
+    CaptureBuffer = NULL;
+#if _SXS_SUPPORT_ENABLED_
+    SxsConglomeratedBuffer = NULL;
+#endif
+    FusionFlags = 0;
+
+    /* Zero out initial parsing variables -- others are initialized later */
+    DebuggerCmdLine = NULL;
+    PathBuffer = NULL;
+    SearchPath = NULL;
+    NullBuffer = 0;
+    FreeBuffer = NULL;
+    NameBuffer = NULL;
+    CurrentDirectory = NULL;
+    FilePart = NULL;
+    DebuggerString.Buffer = NULL;
+    HasQuotes = FALSE;
+    QuotedCmdLine = NULL;
+
+    /* Zero out initial VDM state */
+    VdmAnsiEnv.Buffer = NULL;
+    VdmUnicodeEnv.Buffer = NULL;
+    VdmString.Buffer = NULL;
+    VdmTask = 0;
+    VdmUndoLevel = 0;
+    VdmBinaryType = 0;
+    VdmReserve = 0;
+    VdmWaitObject = NULL;
+    UseVdmReserve = FALSE;
+    IsWowApp = FALSE;
+
+    /* Set message structures */
+    CreateProcessMsg = &CsrMsg[0].Data.CreateProcessRequest;
+    CheckVdmMsg = &CsrMsg[1].Data.CheckVDMRequest;
+
+    /* Clear the more complex structures by zeroing out their entire memory */
+    RtlZeroMemory(&Context, sizeof(Context));
+#if _SXS_SUPPORT_ENABLED_
+    RtlZeroMemory(&FileHandles, sizeof(FileHandles));
+    RtlZeroMemory(&MappedHandles, sizeof(MappedHandles));
+    RtlZeroMemory(&Handles, sizeof(Handles));
+#endif
+    RtlZeroMemory(&CreateProcessMsg->Sxs, sizeof(CreateProcessMsg->Sxs));
+    RtlZeroMemory(&LocalProcessAttributes, sizeof(LocalProcessAttributes));
+    RtlZeroMemory(&LocalThreadAttributes, sizeof(LocalThreadAttributes));
+
+    /* Zero out output arguments as well */
+    RtlZeroMemory(lpProcessInformation, sizeof(*lpProcessInformation));
+    if (hNewToken) *hNewToken = NULL;
+
+    /* Capture the special window flag */
+    NoWindow = dwCreationFlags & CREATE_NO_WINDOW;
+    dwCreationFlags &= ~CREATE_NO_WINDOW;
+
+#if _SXS_SUPPORT_ENABLED_
+    /* Setup the SxS static string arrays and buffers */
+    SxsStaticBuffers[0] = &SxsWin32ManifestPath;
+    SxsStaticBuffers[1] = &SxsWin32PolicyPath;
+    SxsStaticBuffers[2] = &SxsWin32AssemblyDirectory;
+    SxsStaticBuffers[3] = &SxsNtManifestPath;
+    SxsStaticBuffers[4] = &SxsNtPolicyPath;
+    ExePathPair.Win32 = &SxsWin32ExePath;
+    ExePathPair.Nt = &SxsNtExePath;
+    ManifestPathPair.Win32 = &SxsWin32ManifestPath.String;
+    ManifestPathPair.Nt = &SxsNtManifestPath.String;
+    PolicyPathPair.Win32 = &SxsWin32PolicyPath.String;
+    PolicyPathPair.Nt = &SxsNtPolicyPath.String;
+#endif
+
+    DPRINT("CreateProcessInternalW: '%S' '%S' %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
+
+    /* Finally, set our TEB and PEB */
+    Teb = NtCurrentTeb();
+    Peb = NtCurrentPeb();
 
     /* This combination is illegal (see MSDN) */
     if ((dwCreationFlags & (DETACHED_PROCESS | CREATE_NEW_CONSOLE)) ==
@@ -2573,445 +2480,1361 @@ CreateProcessInternalW(HANDLE hToken,
         return FALSE;
     }
 
-    /* Another illegal combo */
-    if ((dwCreationFlags & (CREATE_SEPARATE_WOW_VDM | CREATE_SHARED_WOW_VDM)) ==
-        (CREATE_SEPARATE_WOW_VDM | CREATE_SHARED_WOW_VDM))
+    /* Convert the priority class */
+    if (dwCreationFlags & IDLE_PRIORITY_CLASS)
     {
-        DPRINT1("Invalid flag combo used\n");
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_IDLE;
+    }
+    else if (dwCreationFlags & BELOW_NORMAL_PRIORITY_CLASS)
+    {
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_BELOW_NORMAL;
+    }
+    else if (dwCreationFlags & NORMAL_PRIORITY_CLASS)
+    {
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
+    }
+    else if (dwCreationFlags & ABOVE_NORMAL_PRIORITY_CLASS)
+    {
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_ABOVE_NORMAL;
+    }
+    else if (dwCreationFlags & HIGH_PRIORITY_CLASS)
+    {
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
+    }
+    else if (dwCreationFlags & REALTIME_PRIORITY_CLASS)
+    {
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
+        PriorityClass.PriorityClass += (BasepIsRealtimeAllowed(FALSE) != NULL);
+    }
+    else
+    {
+        PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_INVALID;
+    }
+
+    /* Done with the priority masks, so get rid of them */
+    PriorityClass.Foreground = FALSE;
+    dwCreationFlags &= ~(NORMAL_PRIORITY_CLASS |
+                         IDLE_PRIORITY_CLASS |
+                         HIGH_PRIORITY_CLASS |
+                         REALTIME_PRIORITY_CLASS |
+                         BELOW_NORMAL_PRIORITY_CLASS |
+                         ABOVE_NORMAL_PRIORITY_CLASS);
+
+    /* You cannot request both a shared and a separate WoW VDM */
+    if ((dwCreationFlags & CREATE_SEPARATE_WOW_VDM) &&
+        (dwCreationFlags & CREATE_SHARED_WOW_VDM))
+    {
+        /* Fail such nonsensical attempts */
+        DPRINT1("Invalid WOW flags\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-
-    if (lpCurrentDirectory)
+    else if (!(dwCreationFlags & CREATE_SHARED_WOW_VDM) &&
+             (BaseStaticServerData->DefaultSeparateVDM))
     {
-        if ((GetFileAttributesW(lpCurrentDirectory) == INVALID_FILE_ATTRIBUTES) ||
-            !(GetFileAttributesW(lpCurrentDirectory) & FILE_ATTRIBUTE_DIRECTORY))
+        /* A shared WoW VDM was not requested but system enforces separation */
+        dwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
+    }
+
+    /* If a shared WoW VDM is used, make sure the process isn't in a job */
+    if (!(dwCreationFlags & CREATE_SEPARATE_WOW_VDM) &&
+        (NtIsProcessInJob(NtCurrentProcess(), NULL)))
+    {
+        /* Remove the shared flag and add the separate flag */
+        dwCreationFlags = (dwCreationFlags &~ CREATE_SHARED_WOW_VDM) |
+                                              CREATE_SEPARATE_WOW_VDM;
+    }
+
+    /* Convert the environment */
+    if ((lpEnvironment) && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+    {
+        /* Scan the environment to calculate its Unicode size */
+        AnsiEnv.Buffer = pcScan = (PCHAR)lpEnvironment;
+        while ((*pcScan) || (*(pcScan + 1))) ++pcScan;
+
+        /* Create our ANSI String */
+        AnsiEnv.Length = pcScan - (PCHAR)lpEnvironment + sizeof(ANSI_NULL);
+        AnsiEnv.MaximumLength = AnsiEnv.Length + sizeof(ANSI_NULL);
+
+        /* Allocate memory for the Unicode Environment */
+        UnicodeEnv.Buffer = NULL;
+        RegionSize = AnsiEnv.MaximumLength * sizeof(WCHAR);
+        Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                         (PVOID)&UnicodeEnv.Buffer,
+                                         0,
+                                         &RegionSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
         {
-            SetLastError(ERROR_DIRECTORY);
+            /* Fail */
+            BaseSetLastNTError(Status);
             return FALSE;
         }
+
+        /* Use the allocated size and convert */
+        UnicodeEnv.MaximumLength = (USHORT)RegionSize;
+        Status = RtlAnsiStringToUnicodeString(&UnicodeEnv, &AnsiEnv, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            NtFreeVirtualMemory(NtCurrentProcess(),
+                                (PVOID)&UnicodeEnv.Buffer,
+                                &RegionSize,
+                                MEM_RELEASE);
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
+
+        /* Now set the Unicode environment as the environment string pointer */
+        lpEnvironment = UnicodeEnv.Buffer;
     }
 
-    /*
-     * We're going to modify and mask out flags and stuff in lpStartupInfo,
-     * so we'll use our own local copy for that.
-     */
+    /* Make a copy of the caller's startup info since we'll modify it */
     StartupInfo = *lpStartupInfo;
 
-    /* FIXME: Use default Separate/Shared VDM Flag */
-
-    /* If we are inside a Job, use Separate VDM so it won't escape the Job */
-    if (!(dwCreationFlags & CREATE_SEPARATE_WOW_VDM))
-    {
-        if (NtIsProcessInJob(NtCurrentProcess(), NULL))
-        {
-            /* Remove the shared flag and add the separate flag. */
-            dwCreationFlags = (dwCreationFlags &~ CREATE_SHARED_WOW_VDM) |
-                                                  CREATE_SEPARATE_WOW_VDM;
-        }
-    }
-
-    /*
-     * According to some sites, ShellExecuteEx uses an undocumented flag to
-     * send private handle data (such as HMONITOR or HICON). See:
-     * www.catch22.net/tuts/undoc01.asp. This implies that we can't use the
-     * standard handles anymore since we'd be overwriting this private data
-     */
+    /* Check if private data is being sent on the same channel as std handles */
     if ((StartupInfo.dwFlags & STARTF_USESTDHANDLES) &&
         (StartupInfo.dwFlags & (STARTF_USEHOTKEY | STARTF_SHELLPRIVATE)))
     {
+        /* Cannot use the std handles since we have monitor/hotkey values */
         StartupInfo.dwFlags &= ~STARTF_USESTDHANDLES;
     }
 
-    /* Start by zeroing out the fields */
-    RtlZeroMemory(lpProcessInformation, sizeof(PROCESS_INFORMATION));
-
-    /* Easy stuff first, convert the process priority class */
-    PriorityClass.Foreground = FALSE;
-    PriorityClass.PriorityClass = (UCHAR)BasepConvertPriorityClass(dwCreationFlags);
-
-    if (lpCommandLine)
+    /* If there's a debugger, or we have to launch cmd.exe, we go back here */
+AppNameRetry:
+    /* New iteration -- free any existing name buffer */
+    if (NameBuffer)
     {
-        /* Search for escape sequences */
-        ScanString = lpCommandLine;
-        while (NULL != (ScanString = wcschr(ScanString, L'^')))
-        {
-            ScanString++;
-            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\\')
-            {
-                Escape = TRUE;
-                break;
-            }
-        }
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
+        NameBuffer = NULL;
     }
 
-    /* Get the application name and do all the proper formating necessary */
-GetAppName:
-    /* See if we have an application name (oh please let us have one!) */
+    /* New iteration -- free any existing free buffer */
+    if (FreeBuffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FreeBuffer);
+        FreeBuffer = NULL;
+    }
+
+    /* New iteration -- close any existing file handle */
+    if (FileHandle)
+    {
+        NtClose(FileHandle);
+        FileHandle = NULL;
+    }
+
+    /* Set the initial parsing state. This code can loop -- don't move this! */
+    ErrorCode = 0;
+    SearchRetry = TRUE;
+    QuotesNeeded = FALSE;
+    CmdLineIsAppName = FALSE;
+
+    /* First check if we don't have an application name */
     if (!lpApplicationName)
     {
-        /* The fun begins */
+        /* This should be the first time we attempt creating one */
+        ASSERT(NameBuffer == NULL);
+
+        /* Allocate a buffer to hold it */
         NameBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                      0,
                                      MAX_PATH * sizeof(WCHAR));
-        if (NameBuffer == NULL)
+        if (!NameBuffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Cleanup;
+            Result = FALSE;
+            goto Quickie;
         }
 
-        /* This is all we have to work with :( */
-        lpApplicationName = lpCommandLine;
+        /* Initialize the application name and our parsing parameters */
+        lpApplicationName = NullBuffer = ScanString = lpCommandLine;
 
-        /* Initialize our friends at the beginning */
-        NullBuffer = (LPWSTR)lpApplicationName;
-        ScanString = (LPWSTR)lpApplicationName;
-
-        /* We will start by looking for a quote */
-        if (*ScanString == L'\"')
+        /* Check for an initial quote*/
+        if (*lpCommandLine == L'\"')
         {
-             /* That was quick */
-             SearchDone = TRUE;
+            /* We found a quote, keep searching for another one */
+            SearchRetry = FALSE;
+            ScanString++;
+            lpApplicationName = ScanString;
+            while (*ScanString)
+            {
+                /* Have we found the terminating quote? */
+                if (*ScanString == L'\"')
+                {
+                    /* We're done, get out of here */
+                    NullBuffer = ScanString;
+                    HasQuotes = TRUE;
+                    break;
+                }
 
-             /* Advance past quote */
-             ScanString++;
-             lpApplicationName = ScanString;
-
-             /* Find the closing quote */
-             while (*ScanString)
-             {
-                 if (*ScanString == L'\"' && *(ScanString - 1) != L'^')
-                 {
-                     /* Found it */
-                     NullBuffer = ScanString;
-                     FoundQuotes = TRUE;
-                     break;
-                 }
-
-                 /* Keep looking */
-                 ScanString++;
-                 NullBuffer = ScanString;
-             }
+                /* Keep searching for the quote */
+                ScanString++;
+                NullBuffer = ScanString;
+            }
         }
         else
         {
-            /* No quotes, so we'll be looking for white space */
-        WhiteScan:
-            /* Reset the pointer */
+StartScan:
+            /* We simply make the application name be the command line*/
             lpApplicationName = lpCommandLine;
-
-            /* Find whitespace of Tab */
             while (*ScanString)
             {
-                if (*ScanString == ' ' || *ScanString == '\t')
+                /* Check if it starts with a space or tab */
+                if ((*ScanString == L' ') || (*ScanString == L'\t'))
                 {
-                    /* Found it */
+                    /* Break out of the search loop */
                     NullBuffer = ScanString;
                     break;
                 }
 
-                /* Keep looking */
+                /* Keep searching for a space or tab */
                 ScanString++;
                 NullBuffer = ScanString;
             }
         }
 
-        /* Set the Null Buffer */
+        /* We have found the end of the application name, terminate it */
         SaveChar = *NullBuffer;
         *NullBuffer = UNICODE_NULL;
 
-        /* Do a search for the file */
-        DPRINT("Ready for SearchPathW: %S\n", lpApplicationName);
-        RetVal = SearchPathW(NULL,
+        /* New iteration -- free any existing saved path */
+        if (SearchPath)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
+            SearchPath = NULL;
+        }
+
+        /* Now compute the final EXE path based on the name */
+        SearchPath = BaseComputeProcessExePath((LPWSTR)lpApplicationName);
+        DPRINT("Search Path: %S\n", SearchPath);
+        if (!SearchPath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* And search for the executable in the search path */
+        Length = SearchPathW(SearchPath,
                              lpApplicationName,
                              L".exe",
                              MAX_PATH,
                              NameBuffer,
-                             NULL) * sizeof(WCHAR);
+                             NULL);
 
-        /* Did it find something? */
-        if (RetVal)
+        /* Did we find it? */
+        if ((Length) && (Length < MAX_PATH))
         {
             /* Get file attributes */
-            ULONG Attributes = GetFileAttributesW(NameBuffer);
-            if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+            CurdirLength = GetFileAttributesW(NameBuffer);
+            if ((CurdirLength != 0xFFFFFFFF) &&
+                (CurdirLength & FILE_ATTRIBUTE_DIRECTORY))
             {
-                /* Give it a length of 0 to fail, this was a directory. */
-                RetVal = 0;
+                /* This was a directory, fail later on */
+                Length = 0;
             }
             else
             {
                 /* It's a file! */
-                RetVal += sizeof(WCHAR);
+                Length++;
             }
         }
 
-        /* Now check if we have a file, and if the path size is OK */
-        if (!RetVal || RetVal >= (MAX_PATH * sizeof(WCHAR)))
+        DPRINT("Length: %lu Buffer: %S\n", Length, NameBuffer);
+
+        /* Check if there was a failure in SearchPathW */
+        if ((Length) && (Length < MAX_PATH))
         {
-            ULONG PathType;
-            HANDLE hFile;
-
-            /* We failed, try to get the Path Type */
-            DPRINT("SearchPathW failed. Retval: %ld\n", RetVal);
+            /* Everything looks good, restore the name */
+            *NullBuffer = SaveChar;
+            lpApplicationName = NameBuffer;
+        }
+        else
+        {
+            /* Check if this was a relative path, which would explain it */
             PathType = RtlDetermineDosPathNameType_U(lpApplicationName);
-
-            /* If it's not relative, try to get the error */
             if (PathType != RtlPathTypeRelative)
             {
                 /* This should fail, and give us a detailed LastError */
-                hFile = CreateFileW(lpApplicationName,
-                                    GENERIC_READ,
-                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                    NULL,
-                                    OPEN_EXISTING,
-                                    FILE_ATTRIBUTE_NORMAL,
-                                    NULL);
-
-                /* Did it actually NOT fail? */
-                if (hFile != INVALID_HANDLE_VALUE)
+                FileHandle = CreateFileW(lpApplicationName,
+                                         GENERIC_READ,
+                                         FILE_SHARE_READ |
+                                         FILE_SHARE_WRITE,
+                                         NULL,
+                                         OPEN_EXISTING,
+                                         FILE_ATTRIBUTE_NORMAL,
+                                         NULL);
+                if (FileHandle != INVALID_HANDLE_VALUE)
                 {
-                    /* Fake the error */
-                    CloseHandle(hFile);
+                    /* It worked? Return a generic error */
+                    CloseHandle(FileHandle);
+                    FileHandle = NULL;
                     BaseSetLastNTError(STATUS_OBJECT_NAME_NOT_FOUND);
                 }
             }
             else
             {
-                /* Immediately set the error */
+                /* Path was absolute, which means it doesn't exist */
                 BaseSetLastNTError(STATUS_OBJECT_NAME_NOT_FOUND);
             }
 
             /* Did we already fail once? */
-            if (Error)
+            if (ErrorCode)
             {
-                SetLastError(Error);
+                /* Set the error code */
+                SetLastError(ErrorCode);
             }
             else
             {
                 /* Not yet, cache it */
-                Error = GetLastError();
+                ErrorCode = GetLastError();
             }
 
             /* Put back the command line */
             *NullBuffer = SaveChar;
             lpApplicationName = NameBuffer;
 
-            /*
-             * If the search isn't done and we still have cmdline
-             * then start over. Ex: c:\ha ha ha\haha.exe
-             */
-            if (*ScanString && !SearchDone)
+            /* It's possible there's whitespace in the directory name */
+            if (!(*ScanString) || !(SearchRetry))
             {
-                /* Move in the buffer */
-                ScanString++;
-                NullBuffer = ScanString;
-
-                /* We will have to add a quote, since there is a space*/
-                QuotesNeeded = TRUE;
-
-                /* And we will also fake the fact we found one */
-                FoundQuotes = TRUE;
-
-                /* Start over */
-                goto WhiteScan;
+                /* Not the case, give up completely */
+                Result = FALSE;
+                goto Quickie;
             }
 
-            /* We totally failed */
-            goto Cleanup;
-        }
+            /* There are spaces, so keep trying the next possibility */
+            ScanString++;
+            NullBuffer = ScanString;
 
-        /* Put back the command line */
-        *NullBuffer = SaveChar;
-        lpApplicationName = NameBuffer;
-        DPRINT("SearchPathW suceeded (%ld): %S\n", RetVal, NameBuffer);
+            /* We will have to add a quote, since there is a space */
+            QuotesNeeded = TRUE;
+            HasQuotes = TRUE;
+            goto StartScan;
+        }
     }
-    else if (!lpCommandLine || *lpCommandLine == UNICODE_NULL)
+    else if (!(lpCommandLine) || !(*lpCommandLine))
     {
-        /* We have an app name (good!) but no command line */
+        /* We don't have a command line, so just use the application name */
         CmdLineIsAppName = TRUE;
         lpCommandLine = (LPWSTR)lpApplicationName;
     }
 
-    /* At this point the name has been toyed with enough to be openable */
-    Status = BasepMapFile(lpApplicationName, &hSection, &ApplicationName);
+    /* Convert the application name to its NT path */
+    TranslationStatus = RtlDosPathNameToRelativeNtPathName_U(lpApplicationName,
+                                                             &PathName,
+                                                             NULL,
+                                                             &SxsWin32RelativePath);
+    if (!TranslationStatus)
+    {
+        /* Path must be invaild somehow, bail out */
+        DPRINT1("Path translation for SxS failed\n");
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        Result = FALSE;
+        goto Quickie;
+    }
 
-    /* Check for failure */
+    /* Setup the buffer that needs to be freed at the end */
+    ASSERT(FreeBuffer == NULL);
+    FreeBuffer = PathName.Buffer;
+
+    /* Check what kind of path the application is, for SxS (Fusion) purposes */
+    RtlInitUnicodeString(&SxsWin32ExePath, lpApplicationName);
+    SxsPathType = RtlDetermineDosPathNameType_U(lpApplicationName);
+    if ((SxsPathType != RtlPathTypeDriveAbsolute) &&
+        (SxsPathType != RtlPathTypeLocalDevice) &&
+        (SxsPathType != RtlPathTypeRootLocalDevice) &&
+        (SxsPathType != RtlPathTypeUncAbsolute))
+    {
+        /* Relative-type path, get the full path */
+        RtlInitEmptyUnicodeString(&PathBufferString, NULL, 0);
+        Status = RtlGetFullPathName_UstrEx(&SxsWin32ExePath,
+                                           NULL,
+                                           &PathBufferString,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &SxsPathType,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail the rest of the create */
+            RtlReleaseRelativeName(&SxsWin32RelativePath);
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Use this full path as the SxS path */
+        SxsWin32ExePath = PathBufferString;
+        PathBuffer = PathBufferString.Buffer;
+        PathBufferString.Buffer = NULL;
+        DPRINT("SxS Path: %S\n", PathBuffer);
+    }
+
+    /* Also set the .EXE path based on the path name */
+#if _SXS_SUPPORT_ENABLED_
+    SxsNtExePath = PathName;
+#endif
+    if (SxsWin32RelativePath.RelativeName.Length)
+    {
+        /* If it's relative, capture the relative name */
+        PathName = SxsWin32RelativePath.RelativeName;
+    }
+    else
+    {
+        /* Otherwise, it's absolute, make sure no relative dir is used */
+        SxsWin32RelativePath.ContainingDirectory = NULL;
+    }
+
+    /* Now use the path name, and the root path, to try opening the app */
+    DPRINT("Path: %wZ. Dir: %p\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
+    InitializeObjectAttributes(&LocalObjectAttributes,
+                               &PathName,
+                               OBJ_CASE_INSENSITIVE,
+                               SxsWin32RelativePath.ContainingDirectory,
+                               NULL);
+    Status = NtOpenFile(&FileHandle,
+                        SYNCHRONIZE |
+                        FILE_READ_ATTRIBUTES |
+                        FILE_READ_DATA |
+                        FILE_EXECUTE,
+                        &LocalObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT |
+                        FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        /* Could be a non-PE File */
-        switch (Status)
+        /* Try to open the app just for execute purposes instead */
+        Status = NtOpenFile(&FileHandle,
+                            SYNCHRONIZE | FILE_EXECUTE,
+                            &LocalObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_DELETE,
+                            FILE_SYNCHRONOUS_IO_NONALERT |
+                            FILE_NON_DIRECTORY_FILE);
+    }
+
+    /* Cleanup in preparation for failure or success */
+    RtlReleaseRelativeName(&SxsWin32RelativePath);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure path, try to understand why */
+        DPRINT1("Open file failed: %lx\n", Status);
+        if (RtlIsDosDeviceName_U(lpApplicationName))
         {
-            /* Check if the Kernel tells us it's not even valid MZ */
-            case STATUS_INVALID_IMAGE_NE_FORMAT:
-            case STATUS_INVALID_IMAGE_PROTECT:
-            case STATUS_INVALID_IMAGE_NOT_MZ:
-
-#if 0
-            /* If it's a DOS app, use VDM */
-            if ((BasepCheckDosApp(&ApplicationName)))
-            {
-                DPRINT1("Launching VDM...\n");
-                RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
-                RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-                return CreateProcessW(L"ntvdm.exe",
-                                      (LPWSTR)((ULONG_PTR)lpApplicationName), /* FIXME: Buffer must be writable!!! */
-                                      lpProcessAttributes,
-                                      lpThreadAttributes,
-                                      bInheritHandles,
-                                      dwCreationFlags,
-                                      lpEnvironment,
-                                      lpCurrentDirectory,
-                                      &StartupInfo,
-                                      lpProcessInformation);
-            }
-#endif
-            /* It's a batch file */
-            Extension = &ApplicationName.Buffer[ApplicationName.Length /
-                                                sizeof(WCHAR) - 4];
-
-            /* Make sure the extensions are correct */
-            if (_wcsnicmp(Extension, L".bat", 4) && _wcsnicmp(Extension, L".cmd", 4))
-            {
-                SetLastError(ERROR_BAD_EXE_FORMAT);
-                return FALSE;
-            }
-
-            /* Calculate the length of the command line */
-            CmdLineLength = wcslen(CMD_STRING) + wcslen(lpCommandLine) + 1;
-
-            /* If we found quotes, then add them into the length size */
-            if (CmdLineIsAppName || FoundQuotes) CmdLineLength += 2;
-            CmdLineLength *= sizeof(WCHAR);
-
-            /* Allocate space for the new command line */
-            BatchCommandLine = RtlAllocateHeap(RtlGetProcessHeap(),
-                                               0,
-                                               CmdLineLength);
-            if (BatchCommandLine == NULL)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto Cleanup;
-            }
-
-            /* Build it */
-            wcscpy(BatchCommandLine, CMD_STRING);
-            if (CmdLineIsAppName || FoundQuotes)
-            {
-                wcscat(BatchCommandLine, L"\"");
-            }
-            wcscat(BatchCommandLine, lpCommandLine);
-            if (CmdLineIsAppName || FoundQuotes)
-            {
-                wcscat(BatchCommandLine, L"\"");
-            }
-
-            /* Create it as a Unicode String */
-            RtlInitUnicodeString(&CommandLineString, BatchCommandLine);
-
-            /* Set the command line to this */
-            lpCommandLine = CommandLineString.Buffer;
-            lpApplicationName = NULL;
-
-            /* Free memory */
-            RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-            ApplicationName.Buffer = NULL;
-            goto GetAppName;
-            break;
-
-            case STATUS_INVALID_IMAGE_WIN_16:
-
-                /* It's a Win16 Image, use VDM */
-                DPRINT1("Launching VDM...\n");
-                RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
-                RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-                return CreateProcessW(L"ntvdm.exe",
-                                      (LPWSTR)((ULONG_PTR)lpApplicationName), /* FIXME: Buffer must be writable!!! */
-                                      lpProcessAttributes,
-                                      lpThreadAttributes,
-                                      bInheritHandles,
-                                      dwCreationFlags,
-                                      lpEnvironment,
-                                      lpCurrentDirectory,
-                                      &StartupInfo,
-                                      lpProcessInformation);
-
-            case STATUS_OBJECT_NAME_NOT_FOUND:
-            case STATUS_OBJECT_PATH_NOT_FOUND:
-                BaseSetLastNTError(Status);
-                goto Cleanup;
-
-            default:
-                /* Invalid Image Type */
-                SetLastError(ERROR_BAD_EXE_FORMAT);
-                goto Cleanup;
+            /* If a device is being executed, return this special error code */
+            SetLastError(ERROR_BAD_DEVICE);
+            Result = FALSE;
+            goto Quickie;
+        }
+        else
+        {
+            /* Otherwise return the converted NT error code */
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
         }
     }
 
-    /* Use our desktop if we didn't get any */
+    /* Did the caller specify a desktop? */
     if (!StartupInfo.lpDesktop)
     {
-        StartupInfo.lpDesktop = OurPeb->ProcessParameters->DesktopInfo.Buffer;
+        /* Use the one from the current process */
+        StartupInfo.lpDesktop = Peb->ProcessParameters->DesktopInfo.Buffer;
     }
 
-    /* FIXME: Check if Application is allowed to run */
-
-    /* FIXME: Allow CREATE_SEPARATE only for WOW Apps, once we have that. */
-
-    /* Get some information about the executable */
-    Status = NtQuerySection(hSection,
-                            SectionImageInformation,
-                            &SectionImageInfo,
-                            sizeof(SectionImageInfo),
-                            NULL);
-    if(!NT_SUCCESS(Status))
+    /* Create a section for this file */
+    Status = NtCreateSection(&SectionHandle,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE,
+                             SEC_IMAGE,
+                             FileHandle);
+    DPRINT("Section status: %lx\n", Status);
+    if (NT_SUCCESS(Status))
     {
-        DPRINT1("Unable to get SectionImageInformation, status 0x%x\n", Status);
-        BaseSetLastNTError(Status);
-        goto Cleanup;
+        /* Are we running on Windows Embedded, Datacenter, Blade or Starter? */
+        if (SharedUserData->SuiteMask & (VER_SUITE_EMBEDDEDNT |
+                                         VER_SUITE_DATACENTER |
+                                         VER_SUITE_PERSONAL |
+                                         VER_SUITE_BLADE))
+        {
+            /* These SKUs do not allow running certain applications */
+            Status = BasepCheckWebBladeHashes(FileHandle);
+            if (Status == STATUS_ACCESS_DENIED)
+            {
+                /* And this is one of them! */
+                DPRINT1("Invalid Blade hashes!\n");
+                SetLastError(ERROR_ACCESS_DISABLED_WEBBLADE);
+                Result = FALSE;
+                goto Quickie;
+            }
+
+            /* Did we get some other failure? */
+            if (!NT_SUCCESS(Status))
+            {
+                /* If we couldn't check the hashes, assume nefariousness */
+                DPRINT1("Tampered Blade hashes!\n");
+                SetLastError(ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER);
+                Result = FALSE;
+                goto Quickie;
+            }
+        }
+
+        /* Now do Winsafer, etc, checks */
+        Status = BasepIsProcessAllowed((LPWSTR)lpApplicationName);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail if we're not allowed to launch the process */
+            DPRINT1("Process not allowed to launch: %lx\n", Status);
+            BaseSetLastNTError(Status);
+            if (SectionHandle)
+            {
+                NtClose(SectionHandle);
+                SectionHandle = NULL;
+            }
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Is a DOS VDM being forced, but we already have a WOW32 instance ready? */
+        if ((dwCreationFlags & CREATE_FORCEDOS) &&
+            (BaseStaticServerData->IsWowTaskReady))
+        {
+            /* This request can't be satisfied, instead, a separate VDM is needed */
+            dwCreationFlags &= ~(CREATE_FORCEDOS | CREATE_SHARED_WOW_VDM);
+            dwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
+
+            /* Set a failure code, ask for VDM reservation */
+            Status = STATUS_INVALID_IMAGE_WIN_16;
+            UseVdmReserve = TRUE;
+
+            /* Close the current handle */
+            NtClose(SectionHandle);
+            SectionHandle = NULL;
+
+            /* Don't query the section later */
+            QuerySection = FALSE;
+        }
     }
 
-    /* Don't execute DLLs */
-    if (SectionImageInfo.ImageCharacteristics & IMAGE_FILE_DLL)
+    /* Did we already do these checks? */
+    if (!SkipSaferAndAppCompat)
     {
-        DPRINT1("Can't execute a DLL\n");
+        /* Is everything OK so far, OR do we have an non-MZ, non-DOS app? */
+        if ((NT_SUCCESS(Status)) ||
+            ((Status == STATUS_INVALID_IMAGE_NOT_MZ) &&
+            !(BaseIsDosApplication(&PathName, Status))))
+        {
+            /* Clear the machine type in case of failure */
+            ImageMachine = 0;
+
+            /* Clean any app compat data that may have accumulated */
+            BasepFreeAppCompatData(AppCompatData, AppCompatSxsData);
+            AppCompatData = NULL;
+            AppCompatSxsData = NULL;
+
+            /* Do we have a section? */
+            if (SectionHandle)
+            {
+                /* Have we already queried it? */
+                if (QuerySection)
+                {
+                    /* Nothing to do */
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    /* Get some information about the executable */
+                    Status = NtQuerySection(SectionHandle,
+                                            SectionImageInformation,
+                                            &ImageInformation,
+                                            sizeof(ImageInformation),
+                                            NULL);
+                }
+
+                /* Do we have section information now? */
+                if (NT_SUCCESS(Status))
+                {
+                    /* Don't ask for it again, save the machine type */
+                    QuerySection = TRUE;
+                    ImageMachine = ImageInformation.Machine;
+                }
+            }
+
+            /* Is there a reason/Shim we shouldn't run this application? */
+            Status = BasepCheckBadapp(FileHandle,
+                                      FreeBuffer,
+                                      lpEnvironment,
+                                      ImageMachine,
+                                      &AppCompatData,
+                                      &AppCompatDataSize,
+                                      &AppCompatSxsData,
+                                      &AppCompatSxsDataSize,
+                                      &FusionFlags);
+            if (!NT_SUCCESS(Status))
+            {
+                /* This is usually the status we get back */
+                DPRINT1("App compat launch failure: %lx\n", Status);
+                if (Status == STATUS_ACCESS_DENIED)
+                {
+                    /* Convert it to something more Win32-specific */
+                    SetLastError(ERROR_CANCELLED);
+                }
+                else
+                {
+                    /* Some other error */
+                    BaseSetLastNTError(Status);
+                }
+
+                /* Did we have a section? */
+                if (SectionHandle)
+                {
+                    /* Clean it up */
+                    NtClose(SectionHandle);
+                    SectionHandle = NULL;
+                }
+
+                /* Fail the call */
+                Result = FALSE;
+                goto Quickie;
+            }
+        }
+    }
+
+    //ASSERT((dwFusionFlags & ~SXS_APPCOMPACT_FLAG_APP_RUNNING_SAFEMODE) == 0);
+
+    /* Have we already done, and do we need to do, SRP (WinSafer) checks? */
+    if (!(SkipSaferAndAppCompat) &&
+        ~(dwCreationFlags & CREATE_PRESERVE_CODE_AUTHZ_LEVEL))
+    {
+        /* Assume yes */
+        SaferNeeded = TRUE;
+        switch (Status)
+        {
+            case STATUS_INVALID_IMAGE_NE_FORMAT:
+            case STATUS_INVALID_IMAGE_PROTECT:
+            case STATUS_INVALID_IMAGE_WIN_16:
+            case STATUS_FILE_IS_OFFLINE:
+                /* For all DOS, 16-bit, OS/2 images, we do*/
+                break;
+
+            case STATUS_INVALID_IMAGE_NOT_MZ:
+                /* For invalid files, we don't, unless it's a .BAT file */
+                if (BaseIsDosApplication(&PathName, Status)) break;
+
+            default:
+                /* Any other error codes we also don't */
+                if (!NT_SUCCESS(Status))
+                {
+                    SaferNeeded = FALSE;
+                }
+
+                /* But for success, we do */
+                break;
+        }
+
+        /* Okay, so what did the checks above result in? */
+        if (SaferNeeded)
+        {
+            /* We have to call into the WinSafer library and actually check */
+            Status = BasepCheckWinSaferRestrictions(hUserToken,
+                                                    (LPWSTR)lpApplicationName,
+                                                    FileHandle,
+                                                    &InJob,
+                                                    &TokenHandle,
+                                                    &JobHandle);
+            if (Status == 0xFFFFFFFF)
+            {
+                /* Back in 2003, they didn't have an NTSTATUS for this... */
+                DPRINT1("WinSafer blocking process launch\n");
+                SetLastError(ERROR_ACCESS_DISABLED_BY_POLICY);
+                Result = FALSE;
+                goto Quickie;
+            }
+
+            /* Other status codes are not-Safer related, just convert them */
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Error checking WinSafer: %lx\n", Status);
+                BaseSetLastNTError(Status);
+                Result = FALSE;
+                goto Quickie;
+            }
+        }
+    }
+
+    /* The last step is to figure out why the section object was not created */
+    switch (Status)
+    {
+        case STATUS_INVALID_IMAGE_WIN_16:
+        {
+            /* 16-bit binary. Should we use WOW or does the caller force VDM? */
+            if (!(dwCreationFlags & CREATE_FORCEDOS))
+            {
+                /* Remember that we're launching WOW */
+                IsWowApp = TRUE;
+
+                /* Create the VDM environment, it's valid for WOW too */
+                Result = BaseCreateVDMEnvironment(lpEnvironment,
+                                                  &VdmAnsiEnv,
+                                                  &VdmUnicodeEnv);
+                if (!Result)
+                {
+                    DPRINT1("VDM environment for WOW app failed\n");
+                    goto Quickie;
+                }
+
+                /* We're going to try this twice, so do a loop */
+                while (TRUE)
+                {
+                    /* Pick which kind of WOW mode we want to run in */
+                    VdmBinaryType = (dwCreationFlags &
+                                     CREATE_SEPARATE_WOW_VDM) ?
+                                     BINARY_TYPE_SEPARATE_WOW : BINARY_TYPE_WOW;
+
+                    /* Get all the VDM settings and current status */
+                    Status = BaseCheckVDM(VdmBinaryType,
+                                          lpApplicationName,
+                                          lpCommandLine,
+                                          lpCurrentDirectory,
+                                          &VdmAnsiEnv,
+                                          &CsrMsg[1],
+                                          &VdmTask,
+                                          dwCreationFlags,
+                                          &StartupInfo,
+                                          hUserToken);
+
+                    /* If it worked, no need to try again */
+                    if (NT_SUCCESS(Status)) break;
+
+                    /* Check if it's disallowed or if it's our second time */
+                    BaseSetLastNTError(Status);
+                    if ((Status == STATUS_VDM_DISALLOWED) ||
+                        (VdmBinaryType == BINARY_TYPE_SEPARATE_WOW) ||
+                        (GetLastError() == ERROR_ACCESS_DENIED))
+                    {
+                        /* Fail the call -- we won't try again */
+                        DPRINT1("VDM message failure for WOW: %lx\n", Status);
+                        Result = FALSE;
+                        goto Quickie;
+                    }
+
+                    /* Try one more time, but with a separate WOW instance */
+                    dwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
+                }
+
+                /* Check which VDM state we're currently in */
+                switch (CheckVdmMsg->VDMState & (VDM_NOT_LOADED |
+                                                 VDM_NOT_READY |
+                                                 VDM_READY))
+                {
+                    case VDM_NOT_LOADED:
+                        /* VDM is not fully loaded, so not that much to undo */
+                        VdmUndoLevel = VDM_UNDO_PARTIAL;
+
+                        /* Reset VDM reserve if needed */
+                        if (UseVdmReserve) VdmReserve = 1;
+
+                        /* Get the required parameters and names for launch */
+                        Result = BaseGetVdmConfigInfo(lpCommandLine,
+                                                      VdmTask,
+                                                      VdmBinaryType,
+                                                      &VdmString,
+                                                      &VdmReserve);
+                        if (!Result)
+                        {
+                            DPRINT1("VDM Configuration failed for WOW\n");
+                            BaseSetLastNTError(Status);
+                            goto Quickie;
+                        }
+
+                        /* Update the command-line with the VDM one instead */
+                        lpCommandLine = VdmString.Buffer;
+                        lpApplicationName = NULL;
+
+                        /* We don't want a console, detachment, nor a window */
+                        dwCreationFlags |= CREATE_NO_WINDOW;
+                        dwCreationFlags &= ~(CREATE_NEW_CONSOLE | DETACHED_PROCESS);
+
+                        /* Force feedback on */
+                        StartupInfo.dwFlags |= STARTF_FORCEONFEEDBACK;
+                        break;
+
+
+                    case VDM_READY:
+                        /* VDM is ready, so we have to undo everything */
+                        VdmUndoLevel = VDM_UNDO_REUSE;
+
+                        /* Check if CSRSS wants us to wait on VDM */
+                        VdmWaitObject = CheckVdmMsg->WaitObjectForParent;
+                        break;
+
+                    case VDM_NOT_READY:
+                        /* Something is wrong with VDM, we'll fail the call */
+                        DPRINT1("VDM is not ready for WOW\n");
+                        SetLastError(ERROR_NOT_READY);
+                        Result = FALSE;
+                        goto Quickie;
+
+                    default:
+                        break;
+                }
+
+                /* Since to get NULL, we allocate from 0x1, account for this */
+                VdmReserve--;
+
+                /* This implies VDM is ready, so skip everything else */
+                if (VdmWaitObject) goto VdmShortCircuit;
+
+                /* Don't inherit handles since we're doing VDM now */
+                bInheritHandles = FALSE;
+
+                /* Had the user passed in environment? If so, destroy it */
+                if ((lpEnvironment) &&
+                    !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+                {
+                    RtlDestroyEnvironment(lpEnvironment);
+                }
+
+                /* We've already done all these checks, don't do them again */
+                SkipSaferAndAppCompat = TRUE;
+                goto AppNameRetry;
+            }
+
+            // There is no break here on purpose, so FORCEDOS drops down!
+        }
+
+        case STATUS_INVALID_IMAGE_PROTECT:
+        case STATUS_INVALID_IMAGE_NOT_MZ:
+        case STATUS_INVALID_IMAGE_NE_FORMAT:
+        {
+            /* We're launching an executable application */
+            BinarySubType = BINARY_TYPE_EXE;
+
+            /* We can drop here from other "cases" above too, so check */
+            if ((Status == STATUS_INVALID_IMAGE_PROTECT) ||
+                (Status == STATUS_INVALID_IMAGE_NE_FORMAT) ||
+                (BinarySubType = BaseIsDosApplication(&PathName, Status)))
+            {
+                /* We're launching a DOS application */
+                VdmBinaryType = BINARY_TYPE_DOS;
+
+                /* Based on the caller environment, create a VDM one */
+                Result = BaseCreateVDMEnvironment(lpEnvironment,
+                                                  &VdmAnsiEnv,
+                                                  &VdmUnicodeEnv);
+                if (!Result)
+                {
+                    DPRINT1("VDM environment for DOS failed\n");
+                    goto Quickie;
+                }
+
+                /* Check the current state of the VDM subsystem */
+                Status = BaseCheckVDM(VdmBinaryType | BinarySubType,
+                                      lpApplicationName,
+                                      lpCommandLine,
+                                      lpCurrentDirectory,
+                                      &VdmAnsiEnv,
+                                      &CsrMsg[1],
+                                      &VdmTask,
+                                      dwCreationFlags,
+                                      &StartupInfo,
+                                      NULL);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Failed to inquire about VDM, fail the call */
+                    DPRINT1("VDM message failure for DOS: %lx\n", Status);
+                    BaseSetLastNTError(Status);
+                    Result = FALSE;
+                    goto Quickie;
+                };
+
+                /* Handle possible VDM states */
+                switch (CheckVdmMsg->VDMState & (VDM_NOT_LOADED |
+                                                 VDM_NOT_READY |
+                                                 VDM_READY))
+                {
+                    case VDM_NOT_LOADED:
+                        /* If VDM is not loaded, we'll do a partial undo */
+                        VdmUndoLevel = VDM_UNDO_PARTIAL;
+
+                        /* A VDM process can't also be detached, so fail */
+                        if (dwCreationFlags & DETACHED_PROCESS)
+                        {
+                            DPRINT1("Detached process but no VDM, not allowed\n");
+                            SetLastError(ERROR_ACCESS_DENIED);
+                            return FALSE;
+                        }
+
+                        /* Get the required parameters and names for launch */
+                        Result = BaseGetVdmConfigInfo(lpCommandLine,
+                                                      VdmTask,
+                                                      VdmBinaryType,
+                                                      &VdmString,
+                                                      &VdmReserve);
+                        if (!Result)
+                        {
+                            DPRINT1("VDM Configuration failed for DOS\n");
+                            BaseSetLastNTError(Status);
+                            goto Quickie;
+                        }
+
+                        /* Update the command-line to launch VDM instead */
+                        lpCommandLine = VdmString.Buffer;
+                        lpApplicationName = NULL;
+                        break;
+
+                    case VDM_READY:
+                        /* VDM is ready, so we have to undo everything */
+                        VdmUndoLevel = VDM_UNDO_REUSE;
+
+                        /* Check if CSRSS wants us to wait on VDM */
+                        VdmWaitObject = CheckVdmMsg->WaitObjectForParent;
+                        break;
+
+                    case VDM_NOT_READY:
+                        /* Something is wrong with VDM, we'll fail the call */
+                        DPRINT1("VDM is not ready for DOS\n");
+                        SetLastError(ERROR_NOT_READY);
+                        Result = FALSE;
+                        goto Quickie;
+
+                    default:
+                        break;
+                }
+
+                /* Since to get NULL, we allocate from 0x1, account for this */
+                VdmReserve--;
+
+                /* This implies VDM is ready, so skip everything else */
+                if (VdmWaitObject) goto VdmShortCircuit;
+
+                /* Don't inherit handles since we're doing VDM now */
+                bInheritHandles = FALSE;
+
+                /* Had the user passed in environment? If so, destroy it */
+                if ((lpEnvironment) &&
+                    !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+                {
+                    RtlDestroyEnvironment(lpEnvironment);
+                }
+
+                /* Use our VDM Unicode environment instead */
+                lpEnvironment = VdmUnicodeEnv.Buffer;
+            }
+            else
+            {
+                /* It's a batch file, get the extension */
+                ExtBuffer = &PathName.Buffer[PathName.Length / sizeof(WCHAR) - 4];
+
+                /* Make sure the extensions are correct */
+                if ((PathName.Length < (4 * sizeof(WCHAR))) ||
+                    ((_wcsnicmp(ExtBuffer, L".bat", 4)) &&
+                     (_wcsnicmp(ExtBuffer, L".cmd", 4))))
+                {
+                    DPRINT1("'%wZ': Invalid EXE, and not a batch or script file\n", &PathName);
+                    SetLastError(ERROR_BAD_EXE_FORMAT);
+                    Result = FALSE;
+                    goto Quickie;
+                }
+
+                /* Check if we need to account for quotes around the path */
+                CmdQuoteLength = CmdLineIsAppName || HasQuotes;
+                if (!CmdLineIsAppName)
+                {
+                    if (HasQuotes) CmdQuoteLength++;
+                }
+                else
+                {
+                    CmdQuoteLength++;
+                }
+
+                /* Calculate the length of the command line */
+                CmdLineLength = wcslen(lpCommandLine);
+                CmdLineLength += wcslen(CMD_STRING);
+                CmdLineLength += CmdQuoteLength + sizeof(ANSI_NULL);
+                CmdLineLength *= sizeof(WCHAR);
+
+                /* Allocate space for the new command line */
+                AnsiCmdCommand = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                 0,
+                                                 CmdLineLength);
+                if (!AnsiCmdCommand)
+                {
+                    BaseSetLastNTError(STATUS_NO_MEMORY);
+                    Result = FALSE;
+                    goto Quickie;
+                }
+
+                /* Build it */
+                wcscpy(AnsiCmdCommand, CMD_STRING);
+                if ((CmdLineIsAppName) || (HasQuotes))
+                {
+                    wcscat(AnsiCmdCommand, L"\"");
+                }
+                wcscat(AnsiCmdCommand, lpCommandLine);
+                if ((CmdLineIsAppName) || (HasQuotes))
+                {
+                    wcscat(AnsiCmdCommand, L"\"");
+                }
+
+                /* Create it as a Unicode String */
+                RtlInitUnicodeString(&DebuggerString, AnsiCmdCommand);
+
+                /* Set the command line to this */
+                lpCommandLine = DebuggerString.Buffer;
+                lpApplicationName = NULL;
+                DPRINT1("Retrying with: %S\n", lpCommandLine);
+            }
+
+            /* We've already done all these checks, don't do them again */
+            SkipSaferAndAppCompat = TRUE;
+            goto AppNameRetry;
+        }
+
+        case STATUS_INVALID_IMAGE_WIN_64:
+        {
+            /* 64-bit binaries are not allowed to run on 32-bit ReactOS */
+            DPRINT1("64-bit binary, failing\n");
+            SetLastError(ERROR_EXE_MACHINE_TYPE_MISMATCH);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        case STATUS_FILE_IS_OFFLINE:
+        {
+            /* Set the correct last error for this */
+            DPRINT1("File is offline, failing\n");
+            SetLastError(ERROR_FILE_OFFLINE);
+            break;
+        }
+
+        default:
+        {
+            /* Any other error, convert it to a generic Win32 error */
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to create section: %lx\n", Status);
+                SetLastError(ERROR_BAD_EXE_FORMAT);
+                Result = FALSE;
+                goto Quickie;
+            }
+
+            /* Otherwise, this must be success */
+            ASSERT(Status == STATUS_SUCCESS);
+            break;
+        }
+    }
+
+    /* Is this not a WOW application, but a WOW32 VDM was requested for it? */
+    if (!(IsWowApp) && (dwCreationFlags & CREATE_SEPARATE_WOW_VDM))
+    {
+        /* Ignore the nonsensical request */
+        dwCreationFlags &= ~CREATE_SEPARATE_WOW_VDM;
+    }
+
+    /* Did we already check information for the section? */
+    if (!QuerySection)
+    {
+        /* Get some information about the executable */
+        Status = NtQuerySection(SectionHandle,
+                                SectionImageInformation,
+                                &ImageInformation,
+                                sizeof(ImageInformation),
+                                NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed, bail out */
+            DPRINT1("Section query failed\n");
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Don't check this later */
+        QuerySection = TRUE;
+    }
+
+    /* Check if this was linked as a DLL */
+    if (ImageInformation.ImageCharacteristics & IMAGE_FILE_DLL)
+    {
+        /* These aren't valid images to try to execute! */
+        DPRINT1("Trying to launch a DLL, failing\n");
         SetLastError(ERROR_BAD_EXE_FORMAT);
-        goto Cleanup;
+        Result = FALSE;
+        goto Quickie;
     }
 
-    /* FIXME: Check for Debugger */
+    /* Don't let callers pass in this flag -- we'll only get it from IFRO */
+    Flags &= ~PROCESS_CREATE_FLAGS_LARGE_PAGES;
 
-    /* FIXME: Check if Machine Type and SubSys Version Match */
+    /* Clear the IFEO-missing flag, before we know for sure... */
+    ParameterFlags &= ~2;
 
-    /* We don't support POSIX or anything else for now */
-    if (IMAGE_SUBSYSTEM_WINDOWS_GUI != SectionImageInfo.SubSystemType &&
-        IMAGE_SUBSYSTEM_WINDOWS_CUI != SectionImageInfo.SubSystemType)
+    /* If the process is being debugged, only read IFEO if the PEB says so */
+    if (!(dwCreationFlags & (DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS)) ||
+        (NtCurrentPeb()->ReadImageFileExecOptions))
     {
-        DPRINT1("Invalid subsystem %d\n", SectionImageInfo.SubSystemType);
-        /*
-         * Despite the name of the error code suggests, it corresponds to the
-         * well-known "The %1 application cannot be run in Win32 mode" message.
-         */
-        SetLastError(ERROR_CHILD_NOT_COMPLETE);
-        goto Cleanup;
+        /* Let's do this! Attempt to open IFEO */
+        Status1 = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
+        if (!NT_SUCCESS(Status1))
+        {
+            /* We failed, set the flag so we store this in the parameters */
+            if (Status1 == STATUS_OBJECT_NAME_NOT_FOUND) ParameterFlags |= 2;
+        }
+        else
+        {
+            /* Was this our first time going through this path? */
+            if (!DebuggerCmdLine)
+            {
+                /* Allocate a buffer for the debugger path */
+                DebuggerCmdLine = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                  0,
+                                                  MAX_PATH * sizeof(WCHAR));
+                if (!DebuggerCmdLine)
+                {
+                    /* Close IFEO on failure */
+                    Status1 = NtClose(KeyHandle);
+                    ASSERT(NT_SUCCESS(Status1));
+
+                    /* Fail the call */
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    Result = FALSE;
+                    goto Quickie;
+                }
+            }
+
+            /* Now query for the debugger */
+            Status1 = LdrQueryImageFileKeyOption(KeyHandle,
+                                                 L"Debugger",
+                                                 REG_SZ,
+                                                 DebuggerCmdLine,
+                                                 MAX_PATH * sizeof(WCHAR),
+                                                 &ResultSize);
+            if (!(NT_SUCCESS(Status1)) ||
+                (ResultSize < sizeof(WCHAR)) ||
+                (DebuggerCmdLine[0] == UNICODE_NULL))
+            {
+                /* If it's not there, or too small, or invalid, ignore it */
+                RtlFreeHeap(RtlGetProcessHeap(), 0, DebuggerCmdLine);
+                DebuggerCmdLine = NULL;
+            }
+
+            /* Also query if we should map with large pages */
+            Status1 = LdrQueryImageFileKeyOption(KeyHandle,
+                                                 L"UseLargePages",
+                                                 REG_DWORD,
+                                                 &UseLargePages,
+                                                 sizeof(UseLargePages),
+                                                 NULL);
+            if ((NT_SUCCESS(Status1)) && (UseLargePages))
+            {
+                /* Do it! This is the only way this flag can be set */
+                Flags |= PROCESS_CREATE_FLAGS_LARGE_PAGES;
+            }
+
+            /* We're done with IFEO, can close it now */
+            Status1 = NtClose(KeyHandle);
+            ASSERT(NT_SUCCESS(Status1));
+        }
     }
 
-    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo.SubSystemType)
+    /* Make sure the image was compiled for this processor */
+    if ((ImageInformation.Machine < SharedUserData->ImageNumberLow) ||
+        (ImageInformation.Machine > SharedUserData->ImageNumberHigh))
     {
-        /* Do not create a console for GUI applications */
-        dwCreationFlags &= ~CREATE_NEW_CONSOLE;
-        dwCreationFlags |= DETACHED_PROCESS;
+        /* It was not -- raise a hard error */
+        ErrorResponse = ResponseOk;
+        ErrorParameters[0] = (ULONG_PTR)&PathName;
+        NtRaiseHardError(STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE,
+                         1,
+                         1,
+                         ErrorParameters,
+                         OptionOk,
+                         &ErrorResponse);
+        if (Peb->ImageSubsystemMajorVersion <= 3)
+        {
+            /* If it's really old, return this error */
+            SetLastError(ERROR_BAD_EXE_FORMAT);
+        }
+        else
+        {
+            /* Otherwise, return a more modern error */
+            SetLastError(ERROR_EXE_MACHINE_TYPE_MISMATCH);
+        }
+
+        /* Go to the failure path */
+        DPRINT1("Invalid image architecture: %lx\n", ImageInformation.Machine);
+        Result = FALSE;
+        goto Quickie;
+    }
+
+    /* Check if this isn't a Windows image */
+    if ((ImageInformation.SubSystemType != IMAGE_SUBSYSTEM_WINDOWS_GUI) &&
+        (ImageInformation.SubSystemType != IMAGE_SUBSYSTEM_WINDOWS_CUI))
+    {
+        /* Get rid of section-related information since we'll retry */
+        NtClose(SectionHandle);
+        SectionHandle = NULL;
+        QuerySection = FALSE;
+
+        /* The only other non-Windows image type we support here is POSIX */
+        if (ImageInformation.SubSystemType != IMAGE_SUBSYSTEM_POSIX_CUI)
+        {
+            /* Bail out if it's something else */
+            SetLastError(ERROR_CHILD_NOT_COMPLETE);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Now build the command-line to have posix launch this image */
+        Result = BuildSubSysCommandLine(L"POSIX /P ",
+                                        lpApplicationName,
+                                        lpCommandLine,
+                                        &DebuggerString);
+        if (!Result)
+        {
+            /* Bail out if that failed */
+            DPRINT1("Subsystem command line failed\n");
+            goto Quickie;
+        }
+
+        /* And re-try launching the process, with the new command-line now */
+        lpCommandLine = DebuggerString.Buffer;
+        lpApplicationName = NULL;
+
+        /* We've already done all these checks, don't do them again */
+        SkipSaferAndAppCompat = TRUE;
+        DPRINT1("Retrying with: %S\n", lpCommandLine);
+        goto AppNameRetry;
+    }
+
+    /* Was this image built for a version of Windows whose images we can run? */
+    Result = BasepIsImageVersionOk(ImageInformation.SubSystemMajorVersion,
+                                   ImageInformation.SubSystemMinorVersion);
+    if (!Result)
+    {
+        /* It was not, bail out */
+        DPRINT1("Invalid subsystem version: %hu.%hu\n",
+                ImageInformation.SubSystemMajorVersion,
+                ImageInformation.SubSystemMinorVersion);
+        SetLastError(ERROR_BAD_EXE_FORMAT);
+        goto Quickie;
+    }
+
+    /* Check if there is a debugger associated with the application */
+    if (DebuggerCmdLine)
+    {
+        /* Get the length of the command line */
+        n = wcslen(lpCommandLine);
+        if (!n)
+        {
+            /* There's no command line, use the application name instead */
+            lpCommandLine = (LPWSTR)lpApplicationName;
+            n = wcslen(lpCommandLine);
+        }
+
+        /* Protect against overflow */
+        if (n > UNICODE_STRING_MAX_CHARS)
+        {
+            BaseSetLastNTError(STATUS_NAME_TOO_LONG);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Now add the length of the debugger command-line */
+        n += wcslen(DebuggerCmdLine);
+
+        /* Again make sure we don't overflow */
+        if (n > UNICODE_STRING_MAX_CHARS)
+        {
+            BaseSetLastNTError(STATUS_NAME_TOO_LONG);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Account for the quotes and space between the two */
+        n += sizeof("\" \"") - sizeof(ANSI_NULL);
+
+        /* Convert to bytes, and make sure we don't overflow */
+        n *= sizeof(WCHAR);
+        if (n > UNICODE_STRING_MAX_BYTES)
+        {
+            BaseSetLastNTError(STATUS_NAME_TOO_LONG);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Allocate space for the string */
+        DebuggerString.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, n);
+        if (!DebuggerString.Buffer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Set the length */
+        RtlInitEmptyUnicodeString(&DebuggerString,
+                                  DebuggerString.Buffer,
+                                  (USHORT)n);
+
+        /* Now perform the command line creation */
+        ImageDbgStatus = RtlAppendUnicodeToString(&DebuggerString,
+                                                  DebuggerCmdLine);
+        ASSERT(NT_SUCCESS(ImageDbgStatus));
+        ImageDbgStatus = RtlAppendUnicodeToString(&DebuggerString, L" ");
+        ASSERT(NT_SUCCESS(ImageDbgStatus));
+        ImageDbgStatus = RtlAppendUnicodeToString(&DebuggerString, lpCommandLine);
+        ASSERT(NT_SUCCESS(ImageDbgStatus));
+
+        /* Make sure it all looks nice */
+        DbgPrint("BASE: Calling debugger with '%wZ'\n", &DebuggerString);
+
+        /* Update the command line and application name */
+        lpCommandLine = DebuggerString.Buffer;
+        lpApplicationName = NULL;
+
+        /* Close all temporary state */
+        NtClose(SectionHandle);
+        SectionHandle = NULL;
+        QuerySection = FALSE;
+
+        /* Free all temporary memory */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
+        NameBuffer = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FreeBuffer);
+        FreeBuffer = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DebuggerCmdLine);
+        DebuggerCmdLine = NULL;
+        DPRINT1("Retrying with: %S\n", lpCommandLine);
+        goto AppNameRetry;
     }
 
     /* Initialize the process object attributes */
     ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
-                                                    lpProcessAttributes,
-                                                    NULL);
+                                                  lpProcessAttributes,
+                                                  NULL);
+    if ((hUserToken) && (lpProcessAttributes))
+    {
+        /* Auggment them with information from the user */
+
+        LocalProcessAttributes = *lpProcessAttributes;
+        LocalProcessAttributes.lpSecurityDescriptor = NULL;
+        ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
+                                                      &LocalProcessAttributes,
+                                                      NULL);
+    }
 
     /* Check if we're going to be debugged */
     if (dwCreationFlags & DEBUG_PROCESS)
     {
-        /* FIXME: Set process flag */
+        /* Set process flag */
+        Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;
     }
 
     /* Check if we're going to be debugged */
@@ -3023,275 +3846,757 @@ GetAppName:
         {
             DPRINT1("Failed to connect to DbgUI!\n");
             BaseSetLastNTError(Status);
-            goto Cleanup;
+            Result = FALSE;
+            goto Quickie;
         }
 
         /* Get the debug object */
-        hDebug = DbgUiGetThreadDebugObject();
+        DebugHandle = DbgUiGetThreadDebugObject();
 
         /* Check if only this process will be debugged */
         if (dwCreationFlags & DEBUG_ONLY_THIS_PROCESS)
         {
             /* Set process flag */
-            hDebug = (HANDLE)((ULONG_PTR)hDebug | 0x1);
+            Flags |= PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT;
         }
     }
 
-    /* Create the Process */
-    Status = NtCreateProcess(&hProcess,
-                             PROCESS_ALL_ACCESS,
-                             ObjectAttributes,
-                             NtCurrentProcess(),
-                             (BOOLEAN)bInheritHandles,
-                             hSection,
-                             hDebug,
-                             NULL);
-    if (!NT_SUCCESS(Status))
+    /* Set inherit flag */
+    if (bInheritHandles) Flags |= PROCESS_CREATE_FLAGS_INHERIT_HANDLES;
+
+    /* Check if the process should be created with large pages */
+    HavePrivilege = FALSE;
+    PrivilegeState = NULL;
+    if (Flags & PROCESS_CREATE_FLAGS_LARGE_PAGES)
     {
-        DPRINT1("Unable to create process, status 0x%x\n", Status);
-        BaseSetLastNTError(Status);
-        goto Cleanup;
+        /* Acquire the required privilege so that the kernel won't fail the call */
+        PrivilegeValue = SE_LOCK_MEMORY_PRIVILEGE;
+        Status = RtlAcquirePrivilege(&PrivilegeValue, 1, 0, &PrivilegeState);
+        if (NT_SUCCESS(Status))
+        {
+            /* Remember to release it later */
+            HavePrivilege = TRUE;
+        }
     }
 
-    if (PriorityClass.PriorityClass != PROCESS_PRIORITY_CLASS_INVALID)
+    /* Save the current TIB value since kernel overwrites it to store PEB */
+    TibValue = Teb->NtTib.ArbitraryUserPointer;
+
+    /* Tell the kernel to create the process */
+    Status = NtCreateProcessEx(&ProcessHandle,
+                               PROCESS_ALL_ACCESS,
+                               ObjectAttributes,
+                               NtCurrentProcess(),
+                               Flags,
+                               SectionHandle,
+                               DebugHandle,
+                               NULL,
+                               InJob);
+
+    /* Load the PEB address from the hacky location where the kernel stores it */
+    RemotePeb = Teb->NtTib.ArbitraryUserPointer;
+
+    /* And restore the old TIB value */
+    Teb->NtTib.ArbitraryUserPointer = TibValue;
+
+    /* Release the large page privilege if we had acquired it */
+    if (HavePrivilege) RtlReleasePrivilege(PrivilegeState);
+
+    /* And now check if the kernel failed to create the process */
+    if (!NT_SUCCESS(Status))
     {
-        /* Set new class */
-        Status = NtSetInformationProcess(hProcess,
+        /* Go to failure path */
+        DPRINT1("Failed to create process: %lx\n", Status);
+        BaseSetLastNTError(Status);
+        Result = FALSE;
+        goto Quickie;
+    }
+
+    /* Check if there is a priority class to set */
+    if (PriorityClass.PriorityClass)
+    {
+        /* Reset current privilege state */
+        RealTimePrivilegeState = NULL;
+
+        /* Is realtime priority being requested? */
+        if (PriorityClass.PriorityClass == PROCESS_PRIORITY_CLASS_REALTIME)
+        {
+            /* Check if the caller has real-time access, and enable it if so */
+            RealTimePrivilegeState = BasepIsRealtimeAllowed(TRUE);
+        }
+
+        /* Set the new priority class and release the privilege */
+        Status = NtSetInformationProcess(ProcessHandle,
                                          ProcessPriorityClass,
                                          &PriorityClass,
                                          sizeof(PROCESS_PRIORITY_CLASS));
-        if(!NT_SUCCESS(Status))
+        if (RealTimePrivilegeState) RtlReleasePrivilege(RealTimePrivilegeState);
+
+        /* Check if we failed to set the priority class */
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Unable to set new process priority, status 0x%x\n", Status);
+            /* Bail out on failure */
+            DPRINT1("Failed to set priority class: %lx\n", Status);
             BaseSetLastNTError(Status);
-            goto Cleanup;
+            Result = FALSE;
+            goto Quickie;
         }
     }
 
-    /* Set Error Mode */
+    /* Check if the caller wants the default error mode */
     if (dwCreationFlags & CREATE_DEFAULT_ERROR_MODE)
     {
-        ULONG ErrorMode = SEM_FAILCRITICALERRORS;
-        NtSetInformationProcess(hProcess,
+        /* Set Error Mode to only fail on critical errors */
+        HardErrorMode = SEM_FAILCRITICALERRORS;
+        NtSetInformationProcess(ProcessHandle,
                                 ProcessDefaultHardErrorMode,
-                                &ErrorMode,
+                                &HardErrorMode,
                                 sizeof(ULONG));
     }
 
-    /* Convert the directory to a full path */
-    if (lpCurrentDirectory)
+    /* Check if this was a VDM binary */
+    if (VdmBinaryType)
     {
-        /* Allocate a buffer */
-        CurrentDirectory = RtlAllocateHeap(RtlGetProcessHeap(),
-                                           0,
-                                           (MAX_PATH + 1) * sizeof(WCHAR));
-        if (CurrentDirectory == NULL)
+        /* Update VDM by telling it the process has now been created */
+        VdmWaitObject = ProcessHandle;
+        Result = BaseUpdateVDMEntry(VdmEntryUpdateProcess,
+                                    &VdmWaitObject,
+                                    VdmTask,
+                                    VdmBinaryType);
+
+        if (!Result)
         {
-            DPRINT1("Cannot allocate memory for directory name\n");
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Cleanup;
+            /* Bail out on failure */
+            DPRINT1("Failed to update VDM with wait object\n");
+            VdmWaitObject = NULL;
+            goto Quickie;
         }
 
-        /* Get the length */
-        if (GetFullPathNameW(lpCurrentDirectory,
-                             MAX_PATH,
-                             CurrentDirectory,
-                             &CurrentDirectoryPart) > MAX_PATH)
+        /* At this point, a failure means VDM has to undo all the state */
+        VdmUndoLevel |= VDM_UNDO_FULL;
+    }
+
+    /* Check if VDM needed reserved low-memory */
+    if (VdmReserve)
+    {
+        /* Reserve the requested allocation */
+        Status = NtAllocateVirtualMemory(ProcessHandle,
+                                         &BaseAddress,
+                                         0,
+                                         &VdmReserve,
+                                         MEM_RESERVE,
+                                         PAGE_EXECUTE_READWRITE);
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Directory name too long\n");
+            /* Bail out on failure */
+            DPRINT1("Failed to reserve memory for VDM: %lx\n", Status);
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
+        }
+    }
+
+    /* Check if we've already queried information on the section */
+    if (!QuerySection)
+    {
+        /* We haven't, so get some information about the executable */
+        Status = NtQuerySection(SectionHandle,
+                                SectionImageInformation,
+                                &ImageInformation,
+                                sizeof(ImageInformation),
+                                NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Bail out on failure */
+            DPRINT1("Failed to query section: %lx\n", Status);
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* If we encounter a restart, don't re-query this information again */
+        QuerySection = TRUE;
+    }
+
+    /* Do we need to apply SxS to this image? */
+    if (!(ImageInformation.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_ISOLATION))
+    {
+        /* Too bad, we don't support this yet */
+        DPRINT1("Image should receive SxS Fusion Isolation\n");
+    }
+
+    /* There's some SxS flag that we need to set if fusion flags have 1 set */
+    if (FusionFlags & 1) CreateProcessMsg->Sxs.Flags |= 0x10;
+
+    /* Check if we have a current directory */
+    if (lpCurrentDirectory)
+    {
+        /* Allocate a buffer so we can keep a Unicode copy */
+        DPRINT("Current directory: %S\n", lpCurrentDirectory);
+        CurrentDirectory = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           (MAX_PATH * sizeof(WCHAR)) +
+                                           sizeof(UNICODE_NULL));
+        if (!CurrentDirectory)
+        {
+            /* Bail out if this failed */
+            BaseSetLastNTError(STATUS_NO_MEMORY);
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Get the length in Unicode */
+        Length = GetFullPathNameW(lpCurrentDirectory,
+                                  MAX_PATH,
+                                  CurrentDirectory,
+                                  &FilePart);
+        if (Length > MAX_PATH)
+        {
+            /* The directory is too long, so bail out */
             SetLastError(ERROR_DIRECTORY);
-            goto Cleanup;
+            Result = FALSE;
+            goto Quickie;
+        }
+
+        /* Make sure the directory is actually valid */
+        CurdirLength = GetFileAttributesW(CurrentDirectory);
+        if ((CurdirLength == 0xffffffff) ||
+           !(CurdirLength & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            /* It isn't, so bail out */
+            DPRINT1("Current directory is invalid\n");
+            SetLastError(ERROR_DIRECTORY);
+            Result = FALSE;
+            goto Quickie;
         }
     }
 
     /* Insert quotes if needed */
-    if (QuotesNeeded || CmdLineIsAppName)
+    if ((QuotesNeeded) || (CmdLineIsAppName))
     {
-        /* Allocate a buffer */
+        /* Allocate our buffer, plus enough space for quotes and a NULL */
         QuotedCmdLine = RtlAllocateHeap(RtlGetProcessHeap(),
                                         0,
-                                        (wcslen(lpCommandLine) + 2 + 1) *
-                                        sizeof(WCHAR));
-        if (QuotedCmdLine == NULL)
+                                        (wcslen(lpCommandLine) * sizeof(WCHAR)) +
+                                        (2 * sizeof(L'\"') + sizeof(UNICODE_NULL)));
+        if (QuotedCmdLine)
         {
-            DPRINT1("Cannot allocate memory for quoted command line\n");
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Cleanup;
-        }
+            /* Copy the first quote */
+            wcscpy(QuotedCmdLine, L"\"");
 
-        /* Copy the first quote */
-        wcscpy(QuotedCmdLine, L"\"");
-
-        /* Save a null char */
-        if (QuotesNeeded)
-        {
-            SaveChar = *NullBuffer;
-            *NullBuffer = UNICODE_NULL;
-        }
-
-        /* Add the command line and the finishing quote */
-        wcscat(QuotedCmdLine, lpCommandLine);
-        wcscat(QuotedCmdLine, L"\"");
-
-        /* Add the null char */
-        if (QuotesNeeded)
-        {
-            *NullBuffer = SaveChar;
-            wcscat(QuotedCmdLine, NullBuffer);
-        }
-
-        DPRINT("Quoted CmdLine: %S\n", QuotedCmdLine);
-    }
-
-    if (Escape)
-    {
-        if (QuotedCmdLine == NULL)
-        {
-            QuotedCmdLine = RtlAllocateHeap(RtlGetProcessHeap(),
-                                            0,
-                                            (wcslen(lpCommandLine) + 1) * sizeof(WCHAR));
-            if (QuotedCmdLine == NULL)
+            /* Save the current null-character */
+            if (QuotesNeeded)
             {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto Cleanup;
+                SaveChar = *NullBuffer;
+                *NullBuffer = UNICODE_NULL;
             }
-            wcscpy(QuotedCmdLine, lpCommandLine);
-        }
 
-        ScanString = QuotedCmdLine;
-        while (NULL != (ScanString = wcschr(ScanString, L'^')))
-        {
-            ScanString++;
-            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\\')
+            /* Copy the command line and the final quote */
+            wcscat(QuotedCmdLine, lpCommandLine);
+            wcscat(QuotedCmdLine, L"\"");
+
+            /* Copy the null-char back */
+            if (QuotesNeeded)
             {
-                memmove(ScanString-1, ScanString, wcslen(ScanString) * sizeof(WCHAR) + sizeof(WCHAR));
+                *NullBuffer = SaveChar;
+                wcscat(QuotedCmdLine, NullBuffer);
             }
         }
+        else
+        {
+            /* We can't put quotes around the thing, so try it anyway */
+            if (QuotesNeeded) QuotesNeeded = FALSE;
+            if (CmdLineIsAppName) CmdLineIsAppName = FALSE;
+        }
     }
 
-    /* Get the Process Information */
-    Status = NtQueryInformationProcess(hProcess,
-                                       ProcessBasicInformation,
-                                       &ProcessBasicInfo,
-                                       sizeof(ProcessBasicInfo),
-                                       NULL);
+    /* Use isolation if needed */
+    if (CreateProcessMsg->Sxs.Flags & 1) ParameterFlags |= 1;
 
-    /* Convert the environment */
-    if(lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+    /* Set the new command-line if needed */
+    if ((QuotesNeeded) || (CmdLineIsAppName)) lpCommandLine = QuotedCmdLine;
+
+    /* Call the helper function in charge of RTL_USER_PROCESS_PARAMETERS */
+    Result = BasePushProcessParameters(ParameterFlags,
+                                       ProcessHandle,
+                                       RemotePeb,
+                                       lpApplicationName,
+                                       CurrentDirectory,
+                                       lpCommandLine,
+                                       lpEnvironment,
+                                       &StartupInfo,
+                                       dwCreationFlags | NoWindow,
+                                       bInheritHandles,
+                                       IsWowApp ? IMAGE_SUBSYSTEM_WINDOWS_GUI: 0,
+                                       AppCompatData,
+                                       AppCompatDataSize);
+    if (!Result)
     {
-        lpEnvironment = BasepConvertUnicodeEnvironment(&EnvSize, lpEnvironment);
-        if (!lpEnvironment) goto Cleanup;
+        /* The remote process would have an undefined state, so fail the call */
+        DPRINT1("BasePushProcessParameters failed\n");
+        goto Quickie;
     }
 
-    /* Create Process Environment */
-    RemotePeb = ProcessBasicInfo.PebBaseAddress;
-    Ret = BasePushProcessParameters(0,
-                                    hProcess,
-                                    RemotePeb,
-                                    (LPWSTR)lpApplicationName,
-                                    CurrentDirectory,
-                                    (QuotesNeeded || CmdLineIsAppName || Escape) ?
-                                    QuotedCmdLine : lpCommandLine,
-                                    lpEnvironment,
-                                    &StartupInfo,
-                                    dwCreationFlags,
-                                    bInheritHandles,
-                                    0,
-                                    NULL,
-                                    0);
-    if (!Ret) goto Cleanup;
+    /* Free the VDM command line string as it's no longer needed */
+    RtlFreeUnicodeString(&VdmString);
+    VdmString.Buffer = NULL;
 
-    /* Cleanup Environment */
-    if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+    /* Non-VDM console applications usually inherit handles unless specified */
+    if (!(VdmBinaryType) &&
+        !(bInheritHandles) &&
+        !(StartupInfo.dwFlags & STARTF_USESTDHANDLES) &&
+        !(dwCreationFlags & (CREATE_NO_WINDOW |
+                             CREATE_NEW_CONSOLE |
+                             DETACHED_PROCESS)) &&
+        (ImageInformation.SubSystemType == IMAGE_SUBSYSTEM_WINDOWS_CUI))
     {
-        RtlDestroyEnvironment(lpEnvironment);
-    }
-
-    /* Close the section */
-    NtClose(hSection);
-    hSection = NULL;
-
-    /* Duplicate the handles if needed */
-    if (!bInheritHandles && !(StartupInfo.dwFlags & STARTF_USESTDHANDLES) &&
-        SectionImageInfo.SubSystemType == IMAGE_SUBSYSTEM_WINDOWS_CUI)
-    {
-        PRTL_USER_PROCESS_PARAMETERS RemoteParameters;
-
         /* Get the remote parameters */
-        Status = NtReadVirtualMemory(hProcess,
+        Status = NtReadVirtualMemory(ProcessHandle,
                                      &RemotePeb->ProcessParameters,
-                                     &RemoteParameters,
-                                     sizeof(PVOID),
+                                     &ProcessParameters,
+                                     sizeof(PRTL_USER_PROCESS_PARAMETERS),
                                      NULL);
+        if (NT_SUCCESS(Status))
+        {
+            /* Duplicate standard input unless it's a console handle */
+            if (!IsConsoleHandle(Peb->ProcessParameters->StandardInput))
+            {
+                StuffStdHandle(ProcessHandle,
+                               Peb->ProcessParameters->StandardInput,
+                               &ProcessParameters->StandardInput);
+            }
+
+            /* Duplicate standard output unless it's a console handle */
+            if (!IsConsoleHandle(Peb->ProcessParameters->StandardOutput))
+            {
+                StuffStdHandle(ProcessHandle,
+                               Peb->ProcessParameters->StandardOutput,
+                               &ProcessParameters->StandardOutput);
+            }
+
+            /* Duplicate standard error unless it's a console handle */
+            if (!IsConsoleHandle(Peb->ProcessParameters->StandardError))
+            {
+                StuffStdHandle(ProcessHandle,
+                               Peb->ProcessParameters->StandardError,
+                               &ProcessParameters->StandardError);
+            }
+        }
+    }
+
+    /* Create the Thread's Stack */
+    StackSize = max(256 * 1024, ImageInformation.MaximumStackSize);
+    Status = BaseCreateStack(ProcessHandle,
+                             ImageInformation.CommittedStackSize,
+                             StackSize,
+                             &InitialTeb);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Creating the thread stack failed: %lx\n", Status);
+        BaseSetLastNTError(Status);
+        Result = FALSE;
+        goto Quickie;
+    }
+
+    /* Create the Thread's Context */
+    BaseInitializeContext(&Context,
+                          Peb,
+                          ImageInformation.TransferAddress,
+                          InitialTeb.StackBase,
+                          0);
+
+    /* Convert the thread attributes */
+    ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
+                                                  lpThreadAttributes,
+                                                  NULL);
+    if ((hUserToken) && (lpThreadAttributes))
+    {
+        /* If the caller specified a user token, zero the security descriptor */
+        LocalThreadAttributes = *lpThreadAttributes;
+        LocalThreadAttributes.lpSecurityDescriptor = NULL;
+        ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
+                                                      &LocalThreadAttributes,
+                                                      NULL);
+    }
+
+    /* Create the Kernel Thread Object */
+    Status = NtCreateThread(&ThreadHandle,
+                            THREAD_ALL_ACCESS,
+                            ObjectAttributes,
+                            ProcessHandle,
+                            &ClientId,
+                            &Context,
+                            &InitialTeb,
+                            TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* A process is not allowed to exist without a main thread, so fail */
+        DPRINT1("Creating the main thread failed: %lx\n", Status);
+        BaseSetLastNTError(Status);
+        Result = FALSE;
+        goto Quickie;
+    }
+
+    /* Begin filling out the CSRSS message, first with our IDs and handles */
+    CreateProcessMsg->ProcessHandle = ProcessHandle;
+    CreateProcessMsg->ThreadHandle = ThreadHandle;
+    CreateProcessMsg->ClientId = ClientId;
+
+    /* Write the remote PEB address and clear it locally, we no longer use it */
+    CreateProcessMsg->PebAddressNative = RemotePeb;
+    CreateProcessMsg->PebAddressWow64 = (ULONG)RemotePeb;
+    RemotePeb = NULL;
+
+    /* Now check what kind of architecture this image was made for */
+    switch (ImageInformation.Machine)
+    {
+        /* IA32, IA64 and AMD64 are supported in Server 2003 */
+        case IMAGE_FILE_MACHINE_I386:
+            CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
+            break;
+        case IMAGE_FILE_MACHINE_IA64:
+            CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_IA64;
+            break;
+        case IMAGE_FILE_MACHINE_AMD64:
+            CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64;
+            break;
+
+        /* Anything else results in image unknown -- but no failure */
+        default:
+            DbgPrint("kernel32: No mapping for ImageInformation.Machine == %04x\n",
+                     ImageInformation.Machine);
+            CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
+            break;
+    }
+
+    /* Write the input creation flags except any debugger-related flags */
+    CreateProcessMsg->CreationFlags = dwCreationFlags &
+                                      ~(DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS);
+
+    /* CSRSS needs to know if this is a GUI app or not */
+    if ((ImageInformation.SubSystemType == IMAGE_SUBSYSTEM_WINDOWS_GUI) ||
+        (IsWowApp))
+    {
+        /*
+         * For GUI apps we turn on the 2nd bit. This allow CSRSS server dlls
+         * (basesrv in particular) to know whether or not this is a GUI or a
+         * TUI application.
+         */
+        AddToHandle(CreateProcessMsg->ProcessHandle, 2);
+
+        /* Also check if the parent is also a GUI process */
+        NtHeaders = RtlImageNtHeader(GetModuleHandle(NULL));
+        if ((NtHeaders) &&
+            (NtHeaders->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI))
+        {
+            /* Let it know that it should display the hourglass mouse cursor */
+            AddToHandle(CreateProcessMsg->ProcessHandle, 1);
+        }
+    }
+
+    /* For all apps, if this flag is on, the hourglass mouse cursor is shown */
+    if (StartupInfo.dwFlags & STARTF_FORCEONFEEDBACK)
+    {
+        AddToHandle(CreateProcessMsg->ProcessHandle, 1);
+    }
+
+    /* Likewise, the opposite holds as well */
+    if (StartupInfo.dwFlags & STARTF_FORCEOFFFEEDBACK)
+    {
+        RemoveFromHandle(CreateProcessMsg->ProcessHandle, 1);
+    }
+
+    /* Also store which kind of VDM app (if any) this is */
+    CreateProcessMsg->VdmBinaryType = VdmBinaryType;
+
+    /* And if it really is a VDM app... */
+    if (VdmBinaryType)
+    {
+        /* Store the task ID and VDM console handle */
+        CreateProcessMsg->hVDM = VdmTask ? 0 : Peb->ProcessParameters->ConsoleHandle;
+        CreateProcessMsg->VdmTask = VdmTask;
+    }
+    else if (VdmReserve)
+    {
+        /* Extended VDM, set a flag */
+        CreateProcessMsg->VdmBinaryType |= BINARY_TYPE_WOW_EX;
+    }
+
+    /* Check if there's side-by-side assembly data associated with the process */
+    if (CreateProcessMsg->Sxs.Flags)
+    {
+        /* This should not happen in ReactOS yet */
+        DPRINT1("This is an SxS Message -- should not happen yet\n");
+        BaseSetLastNTError(STATUS_NOT_IMPLEMENTED);
+        NtTerminateProcess(ProcessHandle, STATUS_NOT_IMPLEMENTED);
+        Result = FALSE;
+        goto Quickie;
+    }
+
+    /* We are finally ready to call CSRSS to tell it about our new process! */
+    CsrClientCallServer((PCSR_API_MESSAGE)&CsrMsg[0],
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX,
+                                              BasepCreateProcess),
+                        sizeof(*CreateProcessMsg));
+
+    /* CSRSS has returned, free the capture buffer now if we had one */
+    if (CaptureBuffer)
+    {
+        CsrFreeCaptureBuffer(CaptureBuffer);
+        CaptureBuffer = NULL;
+    }
+
+    /* Check if CSRSS failed to accept ownership of the new Windows process */
+    if (!NT_SUCCESS(CsrMsg[0].Status))
+    {
+        /* Terminate the process and enter failure path with the CSRSS status */
+        DPRINT1("Failed to tell csrss about new process\n");
+        BaseSetLastNTError(CsrMsg[0].Status);
+        NtTerminateProcess(ProcessHandle, CsrMsg[0].Status);
+        Result = FALSE;
+        goto Quickie;
+    }
+
+    /* Check if we have a token due to Authz/Safer, not passed by the user */
+    if ((TokenHandle) && !(hUserToken))
+    {
+        /* Replace the process and/or thread token with the one from Safer */
+        Status = BasepReplaceProcessThreadTokens(TokenHandle,
+                                                 ProcessHandle,
+                                                 ThreadHandle);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to read memory\n");
-            goto Cleanup;
+            /* If this failed, kill the process and enter the failure path */
+            DPRINT1("Failed to update process token: %lx\n", Status);
+            NtTerminateProcess(ProcessHandle, Status);
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
         }
-
-        /* Duplicate and write the handles */
-        BasepDuplicateAndWriteHandle(hProcess,
-                                     OurPeb->ProcessParameters->StandardInput,
-                                     &RemoteParameters->StandardInput);
-        BasepDuplicateAndWriteHandle(hProcess,
-                                     OurPeb->ProcessParameters->StandardOutput,
-                                     &RemoteParameters->StandardOutput);
-        BasepDuplicateAndWriteHandle(hProcess,
-                                     OurPeb->ProcessParameters->StandardError,
-                                     &RemoteParameters->StandardError);
     }
 
-    /* Create the first thread */
-    DPRINT("Creating thread for process (EntryPoint = 0x%p)\n",
-            SectionImageInfo.TransferAddress);
-    hThread = BasepCreateFirstThread(hProcess,
-                                     lpThreadAttributes,
-                                     &SectionImageInfo,
-                                     &ClientId,
-                                     dwCreationFlags);
-
-    if (hThread == NULL)
+    /* Check if a job was associated with this process */
+    if (JobHandle)
     {
-        DPRINT1("Could not create Initial Thread\n");
-        /* FIXME - set last error code */
-        goto Cleanup;
+        /* Bind the process and job together now */
+        Status = NtAssignProcessToJobObject(JobHandle, ProcessHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Kill the process and enter the failure path if binding failed */
+            DPRINT1("Failed to assign process to job: %lx\n", Status);
+            NtTerminateProcess(ProcessHandle, STATUS_ACCESS_DENIED);
+            BaseSetLastNTError(Status);
+            Result = FALSE;
+            goto Quickie;
+        }
     }
 
+    /* Finally, resume the thread to actually get the process started */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
     {
-        NtResumeThread(hThread, &Dummy);
+        NtResumeThread(ThreadHandle, &ResumeCount);
     }
 
-    /* Return Data */
-    lpProcessInformation->dwProcessId = (DWORD)ClientId.UniqueProcess;
-    lpProcessInformation->dwThreadId = (DWORD)ClientId.UniqueThread;
-    lpProcessInformation->hProcess = hProcess;
-    lpProcessInformation->hThread = hThread;
-    DPRINT("hThread[%p]: %p inside hProcess[%p]: %p\n", hThread,
-            ClientId.UniqueThread, ClientId.UniqueProcess, hProcess);
-    hProcess = hThread = NULL;
-    Ret = TRUE;
+VdmShortCircuit:
+    /* We made it this far, meaning we have a fully created process and thread */
+    Result = TRUE;
 
-Cleanup:
-    /* De-allocate heap strings */
-    if (NameBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
-    if (ApplicationName.Buffer)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-    if (CurrentDirectory) RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDirectory);
-    if (QuotedCmdLine) RtlFreeHeap(RtlGetProcessHeap(), 0, QuotedCmdLine);
+    /* Anyone doing a VDM undo should now undo everything, since we are done */
+    if (VdmUndoLevel) VdmUndoLevel |= VDM_UNDO_COMPLETED;
 
-    /* Kill any handles still alive */
-    if (hSection) NtClose(hSection);
-    if (hThread)
+    /* Having a VDM wait object implies this must be a VDM process */
+    if (VdmWaitObject)
     {
-        /* We don't know any more details than this */
-        NtTerminateProcess(hProcess, STATUS_UNSUCCESSFUL);
-        NtClose(hThread);
-    }
-    if (hProcess) NtClose(hProcess);
+        /* Check if it's a 16-bit separate WOW process */
+        if (VdmBinaryType == BINARY_TYPE_SEPARATE_WOW)
+        {
+            /* OR-in the special flag to indicate this, and return to caller */
+            AddToHandle(VdmWaitObject, 2);
+            lpProcessInformation->hProcess = VdmWaitObject;
 
-    /* Return Success */
-    return Ret;
+            /* Check if this was a re-used VDM */
+            if (VdmUndoLevel & VDM_UNDO_REUSE)
+            {
+                /* No Client ID should be returned in this case */
+                ClientId.UniqueProcess = 0;
+                ClientId.UniqueThread = 0;
+            }
+        }
+        else
+        {
+            /* OR-in the special flag to indicate this is not a separate VDM */
+            AddToHandle(VdmWaitObject, 1);
+
+            /* Return handle to the caller */
+            lpProcessInformation->hProcess = VdmWaitObject;
+        }
+
+        /* Close the original process handle, since it's not needed for VDM */
+        if (ProcessHandle) NtClose(ProcessHandle);
+    }
+    else
+    {
+        /* This is a regular process, so return the real process handle */
+        lpProcessInformation->hProcess = ProcessHandle;
+    }
+
+    /* Return the rest of the process information based on what we have so far */
+    lpProcessInformation->hThread = ThreadHandle;
+    lpProcessInformation->dwProcessId = HandleToUlong(ClientId.UniqueProcess);
+    lpProcessInformation->dwThreadId = HandleToUlong(ClientId.UniqueThread);
+
+    /* NULL these out here so we know to treat this as a success scenario */
+    ProcessHandle = NULL;
+    ThreadHandle = NULL;
+
+Quickie:
+    /* Free the debugger command line if one was allocated */
+    if (DebuggerCmdLine) RtlFreeHeap(RtlGetProcessHeap(), 0, DebuggerCmdLine);
+
+    /* Check if an SxS full path as queried */
+    if (PathBuffer)
+    {
+        /* Reinitialize the executable path */
+        RtlInitEmptyUnicodeString(&SxsWin32ExePath, NULL, 0);
+        SxsWin32ExePath.Length = 0;
+
+        /* Free the path buffer */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+    }
+
+#if _SXS_SUPPORT_ENABLED_
+    /* Check if this was a non-VDM process */
+    if (!VdmBinaryType)
+    {
+        /* Then it must've had SxS data, so close the handles used for it */
+        BasepSxsCloseHandles(&Handles);
+        BasepSxsCloseHandles(&FileHandles);
+
+        /* Check if we built SxS byte buffers for this create process request */
+        if (SxsConglomeratedBuffer)
+        {
+            /* Loop all of them */
+            for (i = 0; i < 5; i++)
+            {
+                /* Check if this one was allocated */
+                ThisBuffer = SxsStaticBuffers[i];
+                if (ThisBuffer)
+                {
+                    /* Get the underlying RTL_BUFFER structure */
+                    ByteBuffer = &ThisBuffer->ByteBuffer;
+                    if ((ThisBuffer != (PVOID)-8) && (ByteBuffer->Buffer))
+                    {
+                        /* Check if it was dynamic */
+                        if (ByteBuffer->Buffer != ByteBuffer->StaticBuffer)
+                        {
+                            /* Free it from the heap */
+                            FreeString.Buffer = (PWCHAR)ByteBuffer->Buffer;
+                            RtlFreeUnicodeString(&FreeString);
+                        }
+
+                        /* Reset the buffer to its static data */
+                        ByteBuffer->Buffer = ByteBuffer->StaticBuffer;
+                        ByteBuffer->Size = ByteBuffer->StaticSize;
+                    }
+
+                    /* Reset the string to the static buffer */
+                    RtlInitEmptyUnicodeString(&ThisBuffer->String,
+                                              (PWCHAR)ByteBuffer->StaticBuffer,
+                                              ByteBuffer->StaticSize);
+                    if (ThisBuffer->String.Buffer)
+                    {
+                        /* Also NULL-terminate it */
+                        *ThisBuffer->String.Buffer = UNICODE_NULL;
+                    }
+                }
+            }
+        }
+    }
+#endif
+    /* Check if an environment was passed in */
+    if ((lpEnvironment) && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
+    {
+        /* Destroy it */
+        RtlDestroyEnvironment(lpEnvironment);
+
+        /* If this was the VDM environment too, clear that as well */
+        if (VdmUnicodeEnv.Buffer == lpEnvironment) VdmUnicodeEnv.Buffer = NULL;
+        lpEnvironment = NULL;
+    }
+
+    /* Unconditionally free all the name parsing buffers we always allocate */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, QuotedCmdLine);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDirectory);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FreeBuffer);
+
+    /* Close open file/section handles */
+    if (FileHandle) NtClose(FileHandle);
+    if (SectionHandle) NtClose(SectionHandle);
+
+    /* If we have a thread handle, this was a failure path */
+    if (ThreadHandle)
+    {
+        /* So kill the process and close the thread handle */
+        NtTerminateProcess(ProcessHandle, 0);
+        NtClose(ThreadHandle);
+    }
+
+    /* If we have a process handle, this was a failure path, so close it */
+    if (ProcessHandle) NtClose(ProcessHandle);
+
+    /* Thread/process handles, if any, are now processed. Now close this one. */
+    if (JobHandle) NtClose(JobHandle);
+
+    /* Check if we had created a token */
+    if (TokenHandle)
+    {
+        /* And if the user asked for one */
+        if (hUserToken)
+        {
+            /* Then return it */
+            *hNewToken = TokenHandle;
+        }
+        else
+        {
+            /* User didn't want it, so we used it temporarily -- close it */
+            NtClose(TokenHandle);
+        }
+    }
+
+    /* Free any temporary app compatibility data, it's no longer needed */
+    BasepFreeAppCompatData(AppCompatData, AppCompatSxsData);
+
+    /* Free a few strings. The API takes care of these possibly being NULL */
+    RtlFreeUnicodeString(&VdmString);
+    RtlFreeUnicodeString(&DebuggerString);
+
+    /* Check if we had built any sort of VDM environment */
+    if ((VdmAnsiEnv.Buffer) || (VdmUnicodeEnv.Buffer))
+    {
+        /* Free it */
+        BaseDestroyVDMEnvironment(&VdmAnsiEnv, &VdmUnicodeEnv);
+    }
+
+    /* Check if this was any kind of VDM application that we ended up creating */
+    if ((VdmUndoLevel) && (!(VdmUndoLevel & VDM_UNDO_COMPLETED)))
+    {
+        /* Send an undo */
+        BaseUpdateVDMEntry(VdmEntryUndo,
+                           (PHANDLE)&VdmTask,
+                           VdmUndoLevel,
+                           VdmBinaryType);
+
+        /* And close whatever VDM handle we were using for notifications */
+        if (VdmWaitObject) NtClose(VdmWaitObject);
+    }
+
+    /* Check if we ended up here with an allocated search path, and free it */
+    if (SearchPath) RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
+
+    /* Finally, return the API's result */
+    return Result;
 }
 
 /*
@@ -3299,6 +4604,7 @@ Cleanup:
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CreateProcessW(LPCWSTR lpApplicationName,
                LPWSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -3311,7 +4617,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
                LPPROCESS_INFORMATION lpProcessInformation)
 {
     /* Call the internal (but exported) version */
-    return CreateProcessInternalW(0,
+    return CreateProcessInternalW(NULL,
                                   lpApplicationName,
                                   lpCommandLine,
                                   lpProcessAttributes,
@@ -3351,8 +4657,8 @@ CreateProcessInternalA(HANDLE hToken,
     BOOL bRetVal;
     STARTUPINFOW StartupInfo;
 
-    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
-            "lpStartupInfo %x, lpProcessInformation %x\n",
+    DPRINT("dwCreationFlags %x, lpEnvironment %p, lpCurrentDirectory %p, "
+            "lpStartupInfo %p, lpProcessInformation %p\n",
             dwCreationFlags, lpEnvironment, lpCurrentDirectory,
             lpStartupInfo, lpProcessInformation);
 
@@ -3467,6 +4773,7 @@ CreateProcessInternalA(HANDLE hToken,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CreateProcessA(LPCSTR lpApplicationName,
                LPSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -3479,7 +4786,7 @@ CreateProcessA(LPCSTR lpApplicationName,
                LPPROCESS_INFORMATION lpProcessInformation)
 {
     /* Call the internal (but exported) version */
-    return CreateProcessInternalA(0,
+    return CreateProcessInternalA(NULL,
                                   lpApplicationName,
                                   lpCommandLine,
                                   lpProcessAttributes,

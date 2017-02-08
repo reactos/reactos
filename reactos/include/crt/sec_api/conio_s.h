@@ -15,28 +15,133 @@
 extern "C" {
 #endif
 
-  _CRTIMP errno_t __cdecl _cgets_s(char *_Buffer,size_t _Size,size_t *_SizeRead);
-  _CRTIMP int __cdecl _cprintf_s(const char *_Format,...);
-  _CRTIMP int __cdecl _cscanf_s(const char *_Format,...);
-  _CRTIMP int __cdecl _cscanf_s_l(const char *_Format,_locale_t _Locale,...);
-  _CRTIMP int __cdecl _vcprintf_s(const char *_Format,va_list _ArgList);
-  _CRTIMP int __cdecl _cprintf_s_l(const char *_Format,_locale_t _Locale,...);
-  _CRTIMP int __cdecl _vcprintf_s_l(const char *_Format,_locale_t _Locale,va_list _ArgList);
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  _cgets_s(
+    _Out_writes_z_(_Size) char *_Buffer,
+    _In_ size_t _Size,
+    _Out_ size_t *_SizeRead);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cprintf_s(
+    _In_z_ _Printf_format_string_ const char *_Format,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cscanf_s(
+    _In_z_ _Scanf_s_format_string_ const char *_Format,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cscanf_s_l(
+    _In_z_ _Scanf_s_format_string_ const char *_Format,
+    _In_opt_ _locale_t _Locale,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _vcprintf_s(
+    _In_z_ _Printf_format_string_ const char *_Format,
+    va_list _ArgList);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cprintf_s_l(
+    _In_z_ _Printf_format_string_ const char *_Format,
+    _In_opt_ _locale_t _Locale,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _vcprintf_s_l(
+    _In_z_ _Printf_format_string_ const char *_Format,
+    _In_opt_ _locale_t _Locale,
+    va_list _ArgList);
 
 #ifndef _WCONIO_DEFINED_S
 #define _WCONIO_DEFINED_S
-  _CRTIMP errno_t __cdecl _cgetws_s(wchar_t *_Buffer,size_t _SizeInWords,size_t *_SizeRead);
-  _CRTIMP int __cdecl _cwprintf_s(const wchar_t *_Format,...);
-  _CRTIMP int __cdecl _cwscanf_s(const wchar_t *_Format,...);
-  _CRTIMP int __cdecl _cwscanf_s_l(const wchar_t *_Format,_locale_t _Locale,...);
-  _CRTIMP int __cdecl _vcwprintf_s(const wchar_t *_Format,va_list _ArgList);
-  _CRTIMP int __cdecl _cwprintf_s_l(const wchar_t *_Format,_locale_t _Locale,...);
-  _CRTIMP int __cdecl _vcwprintf_s_l(const wchar_t *_Format,_locale_t _Locale,va_list _ArgList);
-#endif
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  _cgetws_s(
+    _Out_writes_to_(_SizeInWords, *_SizeRead) wchar_t *_Buffer,
+    _In_ size_t _SizeInWords,
+    _Out_ size_t *_SizeRead);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cwprintf_s(
+    _In_z_ _Printf_format_string_ const wchar_t *_Format,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cwscanf_s(
+    _In_z_ _Scanf_s_format_string_ const wchar_t *_Format,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _cwscanf_s_l(
+    _In_z_ _Scanf_s_format_string_ const wchar_t *_Format,
+    _In_opt_ _locale_t _Locale,
+    ...);
+
+  _Check_return_opt_
+  _CRTIMP
+  int
+  __cdecl
+  _vcwprintf_s(
+    _In_z_ _Printf_format_string_ const wchar_t *_Format,
+    va_list _ArgList);
+
+  _CRTIMP
+  int
+  __cdecl
+  _cwprintf_s_l(
+    _In_z_ _Printf_format_string_ const wchar_t *_Format,
+    _In_opt_ _locale_t _Locale,
+    ...);
+
+  _CRTIMP
+  int
+  __cdecl
+  _vcwprintf_s_l(
+    _In_z_ _Printf_format_string_ const wchar_t *_Format,
+    _In_opt_ _locale_t _Locale,
+    va_list _ArgList);
+
+#endif /* _WCONIO_DEFINED_S */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-#endif
+#endif /* MINGW_HAS_SECURE_API */
+
+#endif /* _INC_CONIO_S */

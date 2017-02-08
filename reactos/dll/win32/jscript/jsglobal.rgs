@@ -1,0 +1,146 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}'
+        {
+            '1.0' = s 'JSGlobal'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B086}' = s 'GlobalObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B087}' = s 'DateObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B088}' = s 'MathObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B089}' = s 'NumberObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B090}' = s 'RegExpObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B091}' = s 'StringObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B092}' = s 'ArrayInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B093}' = s 'FunctionInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B094}' = s 'StringInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B095}' = s 'BoolInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B096}' = s 'NumberInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B097}' = s 'ObjectInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B098}' = s 'DateInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B099}' = s 'RegExpInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B09A}' = s 'ErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B09B}' = s 'EvalErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B09C}' = s 'RangeErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B09D}' = s 'ReferenceErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B09E}' = s 'SyntaxErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B09F}' = s 'TypeErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B0A0}' = s 'URIErrorInstance'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9759-35FC-11D1-8CE4-00C04FC2B085}' { val Version = s '1.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+    }
+}

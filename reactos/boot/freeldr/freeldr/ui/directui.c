@@ -29,37 +29,37 @@ INT
 TuiPrintf(const char *Format,
           ...)
 {
-	int i;
-	int Length;
-	va_list ap;
-	CHAR Buffer[512];
+    int i;
+    int Length;
+    va_list ap;
+    CHAR Buffer[512];
 
-	va_start(ap, Format);
-	Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
-	va_end(ap);
+    va_start(ap, Format);
+    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
+    va_end(ap);
 
-	if (Length == -1) Length = sizeof(Buffer);
+    if (Length == -1) Length = sizeof(Buffer);
 
-	for (i = 0; i < Length; i++)
-	{
-		MachConsPutChar(Buffer[i]);
-	}
+    for (i = 0; i < Length; i++)
+    {
+        MachConsPutChar(Buffer[i]);
+    }
 
-	return Length;
+    return Length;
 }
 
 BOOLEAN
 UiInitialize(IN BOOLEAN ShowGui)
 {
-	ULONG Depth;
+    ULONG Depth;
 
-	/* Nothing to do */
-	if (!ShowGui) return TRUE;
+    /* Nothing to do */
+    if (!ShowGui) return TRUE;
 
-	/* Set mode and query size */
-	MachVideoSetDisplayMode(NULL, TRUE);
-	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
-	return TRUE;
+    /* Set mode and query size */
+    MachVideoSetDisplayMode(NULL, TRUE);
+    MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+    return TRUE;
 }
 
 VOID
@@ -72,8 +72,8 @@ UiUnInitialize(IN PCSTR BootText)
 VOID
 UiDrawBackdrop(VOID)
 {
-	/* Clear the screen */
-	MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
+    /* Clear the screen */
+    MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
 }
 
 VOID
@@ -82,14 +82,14 @@ UiDrawText(IN ULONG X,
            IN PCSTR Text,
            IN UCHAR Attr)
 {
-	ULONG i, j;
+    ULONG i, j;
 
-	/* Draw the text character by character, but don't exceed the width */
-	for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
-	{
-		/* Write the character */
-		MachVideoPutChar(Text[j], Attr, i, Y);
-	}
+    /* Draw the text character by character, but don't exceed the width */
+    for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
+    {
+        /* Write the character */
+        MachVideoPutChar(Text[j], Attr, i, Y);
+    }
 }
 
 VOID
@@ -99,14 +99,14 @@ UiDrawText2(IN ULONG X,
             IN PCSTR Text,
             IN UCHAR Attr)
 {
-	ULONG i, j;
+    ULONG i, j;
 
-	/* Draw the text character by character, but don't exceed the width */
-	for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
-	{
-		/* Write the character */
-		MachVideoPutChar(Text[j], Attr, i, Y);
-	}
+    /* Draw the text character by character, but don't exceed the width */
+    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
+    {
+        /* Write the character */
+        MachVideoPutChar(Text[j], Attr, i, Y);
+    }
 }
 
 VOID
@@ -117,66 +117,66 @@ UiDrawCenteredText(IN ULONG Left,
                    IN PCSTR TextString,
                    IN UCHAR Attr)
 {
-	ULONG TextLength, BoxWidth, BoxHeight, LineBreakCount, Index, LastIndex;
-	ULONG RealLeft, RealTop, X, Y;
-	CHAR Temp[2];
+    ULONG TextLength, BoxWidth, BoxHeight, LineBreakCount, Index, LastIndex;
+    ULONG RealLeft, RealTop, X, Y;
+    CHAR Temp[2];
 
     /* Query text length */
-	TextLength = strlen(TextString);
+    TextLength = strlen(TextString);
 
     /* Count the new lines and the box width */
-	LineBreakCount = 0;
-	BoxWidth = 0;
-	LastIndex = 0;
-	for (Index=0; Index < TextLength; Index++)
-	{
-	    /* Scan for new lines */
-		if (TextString[Index] == '\n')
-		{
-		    /* Remember the new line */
-			LastIndex = Index;
-			LineBreakCount++;
-		}
-		else
-		{
-		    /* Check for new larger box width */
-			if ((Index - LastIndex) > BoxWidth)
-			{
-			    /* Update it */
-				BoxWidth = (Index - LastIndex);
-			}
-		}
-	}
+    LineBreakCount = 0;
+    BoxWidth = 0;
+    LastIndex = 0;
+    for (Index=0; Index < TextLength; Index++)
+    {
+        /* Scan for new lines */
+        if (TextString[Index] == '\n')
+        {
+            /* Remember the new line */
+            LastIndex = Index;
+            LineBreakCount++;
+        }
+        else
+        {
+            /* Check for new larger box width */
+            if ((Index - LastIndex) > BoxWidth)
+            {
+                /* Update it */
+                BoxWidth = (Index - LastIndex);
+            }
+        }
+    }
 
     /* Base the box height on the number of lines */
-	BoxHeight = LineBreakCount + 1;
+    BoxHeight = LineBreakCount + 1;
 
     /* Create the centered coordinates */
-	RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
-	RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
+    RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
+    RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
 
     /* Now go for a second scan */
-	LastIndex = 0;
-	for (Index=0; Index < TextLength; Index++)
-	{
-	    /* Look for new lines again */
-		if (TextString[Index] == '\n')
-		{
-		    /* Update where the text should start */
-			RealTop++;
-			LastIndex = 0;
-		}
-		else
-		{
-		    /* We've got a line of text to print, do it */
-			X = RealLeft + LastIndex;
-			Y = RealTop;
-			LastIndex++;
-			Temp[0] = TextString[Index];
-			Temp[1] = 0;
-			UiDrawText(X, Y, Temp, Attr);
-		}
-	}
+    LastIndex = 0;
+    for (Index=0; Index < TextLength; Index++)
+    {
+        /* Look for new lines again */
+        if (TextString[Index] == '\n')
+        {
+            /* Update where the text should start */
+            RealTop++;
+            LastIndex = 0;
+        }
+        else
+        {
+            /* We've got a line of text to print, do it */
+            X = RealLeft + LastIndex;
+            Y = RealTop;
+            LastIndex++;
+            Temp[0] = TextString[Index];
+            Temp[1] = 0;
+            UiDrawText(X, Y, Temp, Attr);
+        }
+    }
 }
 
 VOID
@@ -210,45 +210,45 @@ UiDrawProgressBarCenter(IN ULONG Position,
 {
     ULONG Left, Top, Right, Bottom, Width, Height;
 
-	/* Build the coordinates and sizes */
-	Height = 2;
-	Width = UiScreenWidth;
-	Left = 0;
-	Right = (Left + Width) - 1;
-	Top = UiScreenHeight - Height - 4;
-	Bottom = Top + Height + 1;
+    /* Build the coordinates and sizes */
+    Height = 2;
+    Width = UiScreenWidth;
+    Left = 0;
+    Right = (Left + Width) - 1;
+    Top = UiScreenHeight - Height - 4;
+    Bottom = Top + Height + 1;
 
     /* Draw the progress bar */
-	UiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    UiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
 VOID
 UiDrawProgressBar(IN ULONG Left,
                   IN ULONG Top,
                   IN ULONG Right,
-                  IN ULONG Bottom, 
+                  IN ULONG Bottom,
                   IN ULONG Position,
                   IN ULONG Range,
                   IN PCHAR ProgressText)
 {
     ULONG i, ProgressBarWidth;
-	
-	/* Calculate the width of the bar proper */
-	ProgressBarWidth = (Right - Left) - 3;
 
-	/* First make sure the progress bar text fits */
-	UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
-	if (Position > Range) Position = Range;
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = (Right - Left) - 3;
 
-	/* Draw the "Loading..." text */
-	UiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
+    /* First make sure the progress bar text fits */
+    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
+    if (Position > Range) Position = Range;
 
-	/* Draw the percent complete */
-	for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
-	{
-	    /* Use the fill character */
-		UiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
-	}
+    /* Draw the "Loading..." text */
+    UiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
+
+    /* Draw the percent complete */
+    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
+    {
+        /* Use the fill character */
+        UiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
+    }
 }
 
 VOID

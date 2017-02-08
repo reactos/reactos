@@ -1,0 +1,32 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{3EEF9758-35FC-11D1-8CE4-00C04FC2B185}'
+        {
+            '1.0' = s 'Microsoft VBScript Globals'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B186}' = s 'GlobalObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9758-35FC-11D1-8CE4-00C04FC2B185}' { val Version = s '1.0' }
+        }
+        '{3EEF9758-35FC-11D1-8CE4-00C04FC2B187}' = s 'ErrObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3EEF9758-35FC-11D1-8CE4-00C04FC2B185}' { val Version = s '1.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+    }
+}

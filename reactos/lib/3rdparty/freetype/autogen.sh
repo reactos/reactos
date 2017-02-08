@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2005, 2006, 2007, 2008, 2009, 2010 by
+# Copyright 2005-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -55,7 +55,7 @@ compare_to_minimum_version ()
   if test $MAJOR1 -lt $MAJOR2; then
     echo 0
     return
-  else 
+  else
     if test $MAJOR1 -gt $MAJOR2; then
       echo 1
       return
@@ -67,7 +67,7 @@ compare_to_minimum_version ()
   if test $MINOR1 -lt $MINOR2; then
     echo 0
     return
-  else 
+  else
     if test $MINOR1 -gt $MINOR2; then
       echo 1
       return
@@ -118,9 +118,12 @@ fi
 
 # On MacOS X, the GNU libtool is named `glibtool'.
 HOSTOS=`uname`
-LIBTOOLIZE=libtoolize
-if test "$HOSTOS"x = Darwinx; then
+if test "$LIBTOOLIZE"x != x; then
+  :
+elif test "$HOSTOS"x = Darwinx; then
   LIBTOOLIZE=glibtoolize
+else
+  LIBTOOLIZE=libtoolize
 fi
 
 if test "$ACLOCAL"x = x; then
@@ -153,7 +156,6 @@ run aclocal -I . --force
 run $LIBTOOLIZE --force --copy --install
 run autoconf --force
 
-chmod +x mkinstalldirs
 chmod +x install-sh
 
 cd ../..

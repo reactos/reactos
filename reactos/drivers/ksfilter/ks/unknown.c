@@ -7,8 +7,10 @@
  *                  KJK::Hyperion
  */
 
+#include "precomp.h"
 
-#include "priv.h"
+#define NDEBUG
+#include <debug.h>
 
 #ifdef _X86_
 #define KS_DECL_CXX(RET_) extern RET_ __fastcall

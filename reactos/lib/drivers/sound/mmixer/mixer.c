@@ -6,9 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#include "precomp.h"
 
-
-#include "priv.h"
+#define YDEBUG
+#include <debug.h>
 
 ULONG
 MMixerGetCount(
@@ -327,7 +328,7 @@ MMixerGetLineControls(
 
     if (MixerLineControls->cbmxctrl != sizeof(MIXERCONTROLW))
     {
-        DPRINT1("Invalid MixerLineControls cbmxctrl passed %lu expected %lu\n", MixerLineControls->cbStruct, sizeof(MIXERLINECONTROLSW));
+        DPRINT1("Invalid MixerLineControls cbmxctrl passed %lu expected %lu\n", MixerLineControls->cbmxctrl, sizeof(MIXERCONTROLW));
         /* invalid parameter */
         return MM_STATUS_INVALID_PARAMETER;
     }

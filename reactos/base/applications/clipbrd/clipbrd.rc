@@ -1,0 +1,42 @@
+#include <windef.h>
+#include <winuser.h>
+
+#include "resources.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Clipboard Viewer"
+#define REACTOS_STR_INTERNAL_NAME     "clipbrd"
+#define REACTOS_STR_ORIGINAL_FILENAME "clipbrd.exe"
+#include <reactos/version.rc>
+
+CLIPBRD_ICON ICON "res/clipbrd.ico"
+CLPFILE_ICON ICON "res/clpfile.ico"
+
+#include <reactos/manifest_exe.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

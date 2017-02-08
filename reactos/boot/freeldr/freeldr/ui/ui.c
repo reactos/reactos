@@ -21,451 +21,464 @@
 #include <freeldr.h>
 #include <debug.h>
 
+#define TAG_UI_TEXT 'xTiU'
+
 DBG_DEFAULT_CHANNEL(UI);
 
-ULONG	UiScreenWidth;										// Screen Width
-ULONG	UiScreenHeight;										// Screen Height
+ULONG    UiScreenWidth;                                        // Screen Width
+ULONG    UiScreenHeight;                                        // Screen Height
 
-UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
-UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
-UCHAR	UiBackdropFgColor			= COLOR_WHITE;			// Backdrop foreground color
-UCHAR	UiBackdropBgColor			= COLOR_BLUE;			// Backdrop background color
-UCHAR	UiBackdropFillStyle			= MEDIUM_FILL;			// Backdrop fill style
-UCHAR	UiTitleBoxFgColor			= COLOR_WHITE;			// Title box foreground color
-UCHAR	UiTitleBoxBgColor			= COLOR_RED;			// Title box background color
-UCHAR	UiMessageBoxFgColor			= COLOR_WHITE;			// Message box foreground color
-UCHAR	UiMessageBoxBgColor			= COLOR_BLUE;			// Message box background color
-UCHAR	UiMenuFgColor				= COLOR_WHITE;			// Menu foreground color
-UCHAR	UiMenuBgColor				= COLOR_BLUE;			// Menu background color
-UCHAR	UiTextColor					= COLOR_YELLOW;			// Normal text color
-UCHAR	UiSelectedTextColor			= COLOR_BLACK;			// Selected text color
-UCHAR	UiSelectedTextBgColor		= COLOR_GRAY;			// Selected text background color
-UCHAR	UiEditBoxTextColor			= COLOR_WHITE;			// Edit box text color
-UCHAR	UiEditBoxBgColor			= COLOR_BLACK;			// Edit box text background color
+UCHAR    UiStatusBarFgColor            = COLOR_BLACK;            // Status bar foreground color
+UCHAR    UiStatusBarBgColor            = COLOR_CYAN;            // Status bar background color
+UCHAR    UiBackdropFgColor            = COLOR_WHITE;            // Backdrop foreground color
+UCHAR    UiBackdropBgColor            = COLOR_BLUE;            // Backdrop background color
+UCHAR    UiBackdropFillStyle            = MEDIUM_FILL;            // Backdrop fill style
+UCHAR    UiTitleBoxFgColor            = COLOR_WHITE;            // Title box foreground color
+UCHAR    UiTitleBoxBgColor            = COLOR_RED;            // Title box background color
+UCHAR    UiMessageBoxFgColor            = COLOR_WHITE;            // Message box foreground color
+UCHAR    UiMessageBoxBgColor            = COLOR_BLUE;            // Message box background color
+UCHAR    UiMenuFgColor                = COLOR_WHITE;            // Menu foreground color
+UCHAR    UiMenuBgColor                = COLOR_BLUE;            // Menu background color
+UCHAR    UiTextColor                    = COLOR_YELLOW;            // Normal text color
+UCHAR    UiSelectedTextColor            = COLOR_BLACK;            // Selected text color
+UCHAR    UiSelectedTextBgColor        = COLOR_GRAY;            // Selected text background color
+UCHAR    UiEditBoxTextColor            = COLOR_WHITE;            // Edit box text color
+UCHAR    UiEditBoxBgColor            = COLOR_BLACK;            // Edit box text background color
 
-CHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
+CHAR    UiTitleBoxTitleText[260]    = "Boot Menu";            // Title box's title text
 
-BOOLEAN	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
-BOOLEAN	UiDrawTime					= TRUE;					// Tells us if we should draw the time
-BOOLEAN	UiCenterMenu				= TRUE;					// Tells us if we should use a centered or left-aligned menu
-BOOLEAN	UiMenuBox					= TRUE;					// Tells us if we shuld draw a box around the menu
-CHAR	UiTimeText[260] = "[Time Remaining: ] ";
+BOOLEAN    UiUseSpecialEffects            = FALSE;                // Tells us if we should use fade effects
+BOOLEAN    UiDrawTime                    = TRUE;                    // Tells us if we should draw the time
+BOOLEAN    UiCenterMenu                = TRUE;                    // Tells us if we should use a centered or left-aligned menu
+BOOLEAN    UiMenuBox                    = TRUE;                    // Tells us if we shuld draw a box around the menu
+CHAR    UiTimeText[260] = "[Time Remaining: ] ";
 
-const CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
+const CHAR    UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
 UIVTBL UiVtbl =
 {
-	NoUiInitialize,
-	NoUiUnInitialize,
-	NoUiDrawBackdrop,
-	NoUiFillArea,
-	NoUiDrawShadow,
-	NoUiDrawBox,
-	NoUiDrawText,
-	NoUiDrawText2,
-	NoUiDrawCenteredText,
-	NoUiDrawStatusText,
-	NoUiUpdateDateTime,
-	NoUiMessageBox,
-	NoUiMessageBoxCritical,
-	NoUiDrawProgressBarCenter,
-	NoUiDrawProgressBar,
-	NoUiEditBox,
-	NoUiTextToColor,
-	NoUiTextToFillStyle,
-	NoUiFadeInBackdrop,
-	NoUiFadeOut,
-	NoUiDisplayMenu,
-	NoUiDrawMenu,
+    NoUiInitialize,
+    NoUiUnInitialize,
+    NoUiDrawBackdrop,
+    NoUiFillArea,
+    NoUiDrawShadow,
+    NoUiDrawBox,
+    NoUiDrawText,
+    NoUiDrawText2,
+    NoUiDrawCenteredText,
+    NoUiDrawStatusText,
+    NoUiUpdateDateTime,
+    NoUiMessageBox,
+    NoUiMessageBoxCritical,
+    NoUiDrawProgressBarCenter,
+    NoUiDrawProgressBar,
+    NoUiEditBox,
+    NoUiTextToColor,
+    NoUiTextToFillStyle,
+    NoUiFadeInBackdrop,
+    NoUiFadeOut,
+    NoUiDisplayMenu,
+    NoUiDrawMenu,
 };
 
 BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
-	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
-	BOOLEAN UiMinimal = FALSE; // Tells us if we are using a minimal console-like UI
-	ULONG_PTR SectionId;
-	CHAR	DisplayModeText[260];
-	CHAR	SettingText[260];
-	ULONG	Depth;
+    VIDEODISPLAYMODE    UiDisplayMode; // Tells us if we are in text or graphics mode
+    BOOLEAN UiMinimal = FALSE; // Tells us if we are using a minimal console-like UI
+    ULONG_PTR SectionId;
+    CHAR    DisplayModeText[260];
+    CHAR    SettingText[260];
+    ULONG    Depth;
 
-	if (!ShowGui)
-	{
-		if (!UiVtbl.Initialize())
-		{
-			MachVideoSetDisplayMode(NULL, FALSE);
-			return FALSE;
-		}
-		return TRUE;
-	}
+    if (!ShowGui)
+    {
+        if (!UiVtbl.Initialize())
+        {
+            MachVideoSetDisplayMode(NULL, FALSE);
+            return FALSE;
+        }
+        return TRUE;
+    }
 
-	TRACE("Initializing User Interface.\n");
-	TRACE("Reading in UI settings from [Display] section.\n");
+    TRACE("Initializing User Interface.\n");
+    TRACE("Reading in UI settings from [Display] section.\n");
 
-	DisplayModeText[0] = '\0';
-	if (IniOpenSection("Display", &SectionId))
-	{
-		if (!IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
-		{
-			DisplayModeText[0] = '\0';
-		}
-		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
-		{
-			UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
-		}
-	}
+    DisplayModeText[0] = '\0';
+    if (IniOpenSection("Display", &SectionId))
+    {
+        if (!IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
+        {
+            DisplayModeText[0] = '\0';
+        }
+        if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
+        {
+            UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        }
+    }
 
-	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
-	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+    UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
+    MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 
-	if (VideoTextMode == UiDisplayMode)
-		UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
-	else
-		UiVtbl = GuiVtbl;
+    if (VideoTextMode == UiDisplayMode)
+        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
+    else
+        UiVtbl = GuiVtbl;
 
-	if (!UiVtbl.Initialize())
-	{
-		MachVideoSetDisplayMode(NULL, FALSE);
-		return FALSE;
-	}
+    if (!UiVtbl.Initialize())
+    {
+        MachVideoSetDisplayMode(NULL, FALSE);
+        return FALSE;
+    }
 
-	if (IniOpenSection("Display", &SectionId))
-	{
-		if (IniReadSettingByName(SectionId, "TitleText", SettingText, sizeof(SettingText)))
-		{
-			strcpy(UiTitleBoxTitleText, SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "TimeText", SettingText, sizeof(SettingText)))
-		{
-			strcpy(UiTimeText, SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "StatusBarColor", SettingText, sizeof(SettingText)))
-		{
-			UiStatusBarBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "StatusBarTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiStatusBarFgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "BackdropTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiBackdropFgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "BackdropColor", SettingText, sizeof(SettingText)))
-		{
-			UiBackdropBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "BackdropFillStyle", SettingText, sizeof(SettingText)))
-		{
-			UiBackdropFillStyle = UiTextToFillStyle(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "TitleBoxTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiTitleBoxFgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "TitleBoxColor", SettingText, sizeof(SettingText)))
-		{
-			UiTitleBoxBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "MessageBoxTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiMessageBoxFgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "MessageBoxColor", SettingText, sizeof(SettingText)))
-		{
-			UiMessageBoxBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "MenuTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiMenuFgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "MenuColor", SettingText, sizeof(SettingText)))
-		{
-			UiMenuBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "TextColor", SettingText, sizeof(SettingText)))
-		{
-			UiTextColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "SelectedTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiSelectedTextColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "SelectedColor", SettingText, sizeof(SettingText)))
-		{
-			UiSelectedTextBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "EditBoxTextColor", SettingText, sizeof(SettingText)))
-		{
-			UiEditBoxTextColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "EditBoxColor", SettingText, sizeof(SettingText)))
-		{
-			UiEditBoxBgColor = UiTextToColor(SettingText);
-		}
-		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, sizeof(SettingText)))
-		{
-			UiUseSpecialEffects = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
-		}
-		if (IniReadSettingByName(SectionId, "ShowTime", SettingText, sizeof(SettingText)))
-		{
-			UiDrawTime = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
-		}
-		if (IniReadSettingByName(SectionId, "MenuBox", SettingText, sizeof(SettingText)))
-		{
-			UiMenuBox = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
-		}
-		if (IniReadSettingByName(SectionId, "CenterMenu", SettingText, sizeof(SettingText)))
-		{
-			UiCenterMenu = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
-		}
-	}
+    if (IniOpenSection("Display", &SectionId))
+    {
+        if (IniReadSettingByName(SectionId, "TitleText", SettingText, sizeof(SettingText)))
+        {
+            strcpy(UiTitleBoxTitleText, SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "TimeText", SettingText, sizeof(SettingText)))
+        {
+            strcpy(UiTimeText, SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "StatusBarColor", SettingText, sizeof(SettingText)))
+        {
+            UiStatusBarBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "StatusBarTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiStatusBarFgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "BackdropTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiBackdropFgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "BackdropColor", SettingText, sizeof(SettingText)))
+        {
+            UiBackdropBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "BackdropFillStyle", SettingText, sizeof(SettingText)))
+        {
+            UiBackdropFillStyle = UiTextToFillStyle(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "TitleBoxTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiTitleBoxFgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "TitleBoxColor", SettingText, sizeof(SettingText)))
+        {
+            UiTitleBoxBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "MessageBoxTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiMessageBoxFgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "MessageBoxColor", SettingText, sizeof(SettingText)))
+        {
+            UiMessageBoxBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "MenuTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiMenuFgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "MenuColor", SettingText, sizeof(SettingText)))
+        {
+            UiMenuBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "TextColor", SettingText, sizeof(SettingText)))
+        {
+            UiTextColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "SelectedTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiSelectedTextColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "SelectedColor", SettingText, sizeof(SettingText)))
+        {
+            UiSelectedTextBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "EditBoxTextColor", SettingText, sizeof(SettingText)))
+        {
+            UiEditBoxTextColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "EditBoxColor", SettingText, sizeof(SettingText)))
+        {
+            UiEditBoxBgColor = UiTextToColor(SettingText);
+        }
+        if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, sizeof(SettingText)))
+        {
+            UiUseSpecialEffects = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        }
+        if (IniReadSettingByName(SectionId, "ShowTime", SettingText, sizeof(SettingText)))
+        {
+            UiDrawTime = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        }
+        if (IniReadSettingByName(SectionId, "MenuBox", SettingText, sizeof(SettingText)))
+        {
+            UiMenuBox = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        }
+        if (IniReadSettingByName(SectionId, "CenterMenu", SettingText, sizeof(SettingText)))
+        {
+            UiCenterMenu = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        }
+    }
 
-	// Draw the backdrop and fade it in if special effects are enabled
-	UiFadeInBackdrop();
+    // Draw the backdrop and fade it in if special effects are enabled
+    UiFadeInBackdrop();
 
-	TRACE("UiInitialize() returning TRUE.\n");
-	return TRUE;
+    TRACE("UiInitialize() returning TRUE.\n");
+    return TRUE;
 }
 
 VOID UiUnInitialize(PCSTR BootText)
 {
-	UiDrawBackdrop();
-	UiDrawStatusText(BootText);
-	UiInfoBox(BootText);
+    UiDrawBackdrop();
+    UiDrawStatusText(BootText);
+    UiInfoBox(BootText);
 
-	UiVtbl.UnInitialize();
+    UiVtbl.UnInitialize();
 }
 
 VOID UiDrawBackdrop(VOID)
 {
-	UiVtbl.DrawBackdrop();
+    UiVtbl.DrawBackdrop();
 }
 
 VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-	UiVtbl.FillArea(Left, Top, Right, Bottom, FillChar, Attr);
+    UiVtbl.FillArea(Left, Top, Right, Bottom, FillChar, Attr);
 }
 
 VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
-	UiVtbl.DrawShadow(Left, Top, Right, Bottom);
+    UiVtbl.DrawShadow(Left, Top, Right, Bottom);
 }
 
 VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
 {
-	UiVtbl.DrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
+    UiVtbl.DrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 }
 
 VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
-	UiVtbl.DrawText(X, Y, Text, Attr);
+    UiVtbl.DrawText(X, Y, Text, Attr);
 }
 
 VOID UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
 {
-	UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
+    UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
 VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
-	UiVtbl.DrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
+    UiVtbl.DrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }
 
 VOID UiDrawStatusText(PCSTR StatusText)
 {
-	UiVtbl.DrawStatusText(StatusText);
+    UiVtbl.DrawStatusText(StatusText);
 }
 
 VOID UiUpdateDateTime(VOID)
 {
-	UiVtbl.UpdateDateTime();
+    UiVtbl.UpdateDateTime();
 }
 
 VOID UiInfoBox(PCSTR MessageText)
 {
-	SIZE_T		TextLength;
-	ULONG		BoxWidth;
-	ULONG		BoxHeight;
-	ULONG		LineBreakCount;
-	SIZE_T		Index;
-	SIZE_T		LastIndex;
-	ULONG		Left;
-	ULONG		Top;
-	ULONG		Right;
-	ULONG		Bottom;
+    SIZE_T        TextLength;
+    ULONG        BoxWidth;
+    ULONG        BoxHeight;
+    ULONG        LineBreakCount;
+    SIZE_T        Index;
+    SIZE_T        LastIndex;
+    ULONG        Left;
+    ULONG        Top;
+    ULONG        Right;
+    ULONG        Bottom;
 
-	TextLength = strlen(MessageText);
+    TextLength = strlen(MessageText);
 
-	// Count the new lines and the box width
-	LineBreakCount = 0;
-	BoxWidth = 0;
-	LastIndex = 0;
-	for (Index=0; Index<TextLength; Index++)
-	{
-		if (MessageText[Index] == '\n')
-		{
-			LastIndex = Index;
-			LineBreakCount++;
-		}
-		else
-		{
-			if ((Index - LastIndex) > BoxWidth)
-			{
-				BoxWidth = (ULONG)(Index - LastIndex);
-			}
-		}
-	}
+    // Count the new lines and the box width
+    LineBreakCount = 0;
+    BoxWidth = 0;
+    LastIndex = 0;
+    for (Index=0; Index<TextLength; Index++)
+    {
+        if (MessageText[Index] == '\n')
+        {
+            LastIndex = Index;
+            LineBreakCount++;
+        }
+        else
+        {
+            if ((Index - LastIndex) > BoxWidth)
+            {
+                BoxWidth = (ULONG)(Index - LastIndex);
+            }
+        }
+    }
 
-	// Calc the box width & height
-	BoxWidth += 6;
-	BoxHeight = LineBreakCount + 4;
+    // Calc the box width & height
+    BoxWidth += 6;
+    BoxHeight = LineBreakCount + 4;
 
-	// Calc the box coordinates
-	Left = (UiScreenWidth / 2) - (BoxWidth / 2);
-	Top =(UiScreenHeight / 2) - (BoxHeight / 2);
-	Right = (UiScreenWidth / 2) + (BoxWidth / 2);
-	Bottom = (UiScreenHeight / 2) + (BoxHeight / 2);
+    // Calc the box coordinates
+    Left = (UiScreenWidth / 2) - (BoxWidth / 2);
+    Top =(UiScreenHeight / 2) - (BoxHeight / 2);
+    Right = (UiScreenWidth / 2) + (BoxWidth / 2);
+    Bottom = (UiScreenHeight / 2) + (BoxHeight / 2);
 
-	// Draw the box
-	UiDrawBox(Left,
-			  Top,
-			  Right,
-			  Bottom,
-			  VERT,
-			  HORZ,
-			  TRUE,
-			  TRUE,
-			  ATTR(UiMenuFgColor, UiMenuBgColor)
-			  );
+    // Draw the box
+    UiDrawBox(Left,
+              Top,
+              Right,
+              Bottom,
+              VERT,
+              HORZ,
+              TRUE,
+              TRUE,
+              ATTR(UiMenuFgColor, UiMenuBgColor)
+              );
 
-	// Draw the text
-	UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
+    // Draw the text
+    UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
 }
 
-VOID UiMessageBox(PCSTR MessageText)
+VOID UiMessageBox(PCSTR Format, ...)
 {
-	UiVtbl.MessageBox(MessageText);
+    CHAR Buffer[256];
+    va_list ap;
+
+    va_start(ap, Format);
+    vsnprintf(Buffer, sizeof(Buffer) - sizeof(CHAR), Format, ap);
+    UiVtbl.MessageBox(Buffer);
+    va_end(ap);
 }
 
 VOID UiMessageBoxCritical(PCSTR MessageText)
 {
-	UiVtbl.MessageBoxCritical(MessageText);
+    UiVtbl.MessageBoxCritical(MessageText);
 }
 
 UCHAR UiTextToColor(PCSTR ColorText)
 {
-	return UiVtbl.TextToColor(ColorText);
+    return UiVtbl.TextToColor(ColorText);
 }
 
 UCHAR UiTextToFillStyle(PCSTR FillStyleText)
 {
-	return UiVtbl.TextToFillStyle(FillStyleText);
+    return UiVtbl.TextToFillStyle(FillStyleText);
 }
 
 VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-	UiVtbl.DrawProgressBarCenter(Position, Range, ProgressText);
+    UiVtbl.DrawProgressBarCenter(Position, Range, ProgressText);
 }
 
 VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-	UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
 VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 {
-	ULONG	Idx;
-	CHAR	SettingName[80];
-	CHAR	SettingValue[80];
-	PCHAR	MessageBoxText;
-	ULONG		MessageBoxTextSize;
-	ULONG_PTR	SectionId;
+    ULONG    Idx;
+    CHAR    SettingName[80];
+    CHAR    SettingValue[80];
+    PCHAR    MessageBoxText;
+    ULONG        MessageBoxTextSize;
+    ULONG_PTR    SectionId;
 
-	if (!IniOpenSection(SectionName, &SectionId))
-	{
-		return;
-	}
+    if (!IniOpenSection(SectionName, &SectionId))
+    {
+        return;
+    }
 
-	//
-	// Find all the message box settings and run them
-	//
-	for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
-	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
+    //
+    // Find all the message box settings and run them
+    //
+    for (Idx=0; Idx<IniGetNumSectionItems(SectionId); Idx++)
+    {
+        IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
-		if (_stricmp(SettingName, "MessageBox") == 0)
-		{
-			// Get the real length of the MessageBox text
-			MessageBoxTextSize = IniGetSectionSettingValueSize(SectionId, Idx);
+        if (_stricmp(SettingName, "MessageBox") == 0)
+        {
+            // Get the real length of the MessageBox text
+            MessageBoxTextSize = IniGetSectionSettingValueSize(SectionId, Idx);
 
-			//if (MessageBoxTextSize > 0)
-			{
-				// Allocate enough memory to hold the text
-				MessageBoxText = MmHeapAlloc(MessageBoxTextSize);
+            //if (MessageBoxTextSize > 0)
+            {
+                // Allocate enough memory to hold the text
+                MessageBoxText = FrLdrTempAlloc(MessageBoxTextSize, TAG_UI_TEXT);
 
-				if (MessageBoxText)
-				{
-					// Get the MessageBox text
-					IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), MessageBoxText, MessageBoxTextSize);
+                if (MessageBoxText)
+                {
+                    // Get the MessageBox text
+                    IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), MessageBoxText, MessageBoxTextSize);
 
-					// Fix it up
-					UiEscapeString(MessageBoxText);
+                    // Fix it up
+                    UiEscapeString(MessageBoxText);
 
-					// Display it
-					UiMessageBox(MessageBoxText);
+                    // Display it
+                    UiMessageBox(MessageBoxText);
 
-					// Free the memory
-					MmHeapFree(MessageBoxText);
-				}
-			}
-		}
-	}
+                    // Free the memory
+                    FrLdrTempFree(MessageBoxText, TAG_UI_TEXT);
+                }
+            }
+        }
+    }
 }
 
 VOID UiEscapeString(PCHAR String)
 {
-	ULONG	Idx;
+    ULONG    Idx;
 
-	for (Idx=0; Idx<strlen(String); Idx++)
-	{
-		// Escape the new line characters
-		if (String[Idx] == '\\' && String[Idx+1] == 'n')
-		{
-			// Escape the character
-			String[Idx] = '\n';
+    for (Idx=0; Idx<strlen(String); Idx++)
+    {
+        // Escape the new line characters
+        if (String[Idx] == '\\' && String[Idx+1] == 'n')
+        {
+            // Escape the character
+            String[Idx] = '\n';
 
-			// Move the rest of the string up
-			strcpy(&String[Idx+1], &String[Idx+2]);
-		}
-	}
+            // Move the rest of the string up
+            strcpy(&String[Idx+1], &String[Idx+2]);
+        }
+    }
 }
 
 VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 {
-	if (strlen(StringText) > MaxChars)
-	{
-		strcpy(&StringText[MaxChars - 3], "...");
-	}
+    if (strlen(StringText) > MaxChars)
+    {
+        strcpy(&StringText[MaxChars - 3], "...");
+    }
 }
 
 BOOLEAN UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
+    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 }
 
 VOID UiFadeInBackdrop(VOID)
 {
-	UiVtbl.FadeInBackdrop();
+    UiVtbl.FadeInBackdrop();
 }
 
 VOID UiFadeOut(VOID)
 {
-	UiVtbl.FadeOut();
+    UiVtbl.FadeOut();
 }
 
 BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
-	return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
+    return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
 
+#else
+BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
+{
+    return FALSE;
+}
 #endif

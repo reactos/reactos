@@ -1,0 +1,11 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_TRUE  "True"
+  IDS_FALSE "False"
+  IDS_YES   "はい"
+  IDS_NO    "いいえ"
+  IDS_ON    "オン"
+  IDS_OFF   "オフ"
+}

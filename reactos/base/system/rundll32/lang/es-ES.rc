@@ -1,6 +1,7 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "El cargador de Librerias falló al cargar '%s'"
-    IDS_MissingEntry,   "Punto de entrada perdido:%s\nIn %s"
+    IDS_DllNotLoaded "El cargador de Librerias falló al cargar '%s'"
+    IDS_MissingEntry "Punto de entrada perdido:%s\nIn %s"
 END

@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           User-mode exception support for IA-32
- * FILE:              lib/rtl/i386/exception.c
+ * FILE:              lib/rtl/i386/except.c
  * PROGRAMERS:        Alex Ionescu (alex@relsoft.net)
  *                    Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
@@ -31,7 +31,7 @@ RtlGetCallersAddress(OUT PVOID *CallersAddress,
     FrameCount = RtlCaptureStackBackTrace(2, 2, &BackTrace[0],BackTraceHash);
 
     /* Only if user want it */
-    if (*CallersAddress != NULL)
+    if (CallersAddress != NULL)
     {
         /* only when first frames exist */
         if (FrameCount >= 1)
@@ -45,7 +45,7 @@ RtlGetCallersAddress(OUT PVOID *CallersAddress,
     }
 
     /* Only if user want it */
-    if (*CallersCaller != NULL)
+    if (CallersCaller != NULL)
     {
         /* only when second frames exist */
         if (FrameCount >= 2)
@@ -74,10 +74,13 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     ULONG_PTR StackLow, StackHigh;
     ULONG_PTR RegistrationFrameEnd;
 
-    /* Perform vectored exception handling (a dummy in kernel mode) */
+    /* Perform vectored exception handling for user mode */
     if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
     {
-        /* Exception handled, continue execution */
+        /* Exception handled, now call vectored continue handlers */
+        RtlCallVectoredContinueHandlers(ExceptionRecord, Context);
+
+        /* Continue execution */
         return TRUE;
     }
 
@@ -139,7 +142,7 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Handle the dispositions */
         switch (Disposition)
         {
-            /* Continue searching */
+            /* Continue execution */
             case ExceptionContinueExecution:
 
                 /* Check if it was non-continuable */
@@ -157,7 +160,11 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 }
                 else
                 {
-                    /* Return to caller */
+                    /* In user mode, call any registered vectored continue handlers */
+                    RtlCallVectoredContinueHandlers(ExceptionRecord,
+                                                    Context);
+
+                    /* Execution continues */
                     return TRUE;
                 }
 

@@ -21,20 +21,21 @@
 #ifndef __WINE_PRIVATE_MCIAVI_H
 #define __WINE_PRIVATE_MCIAVI_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
 #include <windef.h>
-//#include "winbase.h"
 #include <wingdi.h>
-//#include "winuser.h"
 #include <mmddk.h>
 #include <digitalv.h>
 #include <vfw.h>
 #include <wownt32.h>
-#include <mciavi.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 
 struct MMIOPos {
     DWORD	dwOffset;
@@ -83,7 +84,6 @@ typedef struct {
     /* data for the background mechanism */
     CRITICAL_SECTION	cs;
     HANDLE              hStopEvent;
-    HANDLE              ack_event; /* acknowledge that an async command has started */
 } WINE_MCIAVI;
 
 extern HINSTANCE MCIAVI_hInstance DECLSPEC_HIDDEN;
@@ -100,7 +100,7 @@ BOOL	MCIAVI_GetInfo(WINE_MCIAVI* wma) DECLSPEC_HIDDEN;
 DWORD	MCIAVI_OpenAudio(WINE_MCIAVI* wma, unsigned* nHdr, LPWAVEHDR* pWaveHdr) DECLSPEC_HIDDEN;
 BOOL	MCIAVI_OpenVideo(WINE_MCIAVI* wma) DECLSPEC_HIDDEN;
 void	MCIAVI_PlayAudioBlocks(WINE_MCIAVI* wma, unsigned nHdr, LPWAVEHDR waveHdr) DECLSPEC_HIDDEN;
-LRESULT MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC) DECLSPEC_HIDDEN;
+double	MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC) DECLSPEC_HIDDEN;
 
 /* mciavi.c */
 WINE_MCIAVI*	MCIAVI_mciGetOpenDev(UINT wDevID) DECLSPEC_HIDDEN;

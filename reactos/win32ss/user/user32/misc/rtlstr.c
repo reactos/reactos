@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/rtlstr.c
+ * FILE:            win32ss/user/user32/misc/rtlstr.c
  * PURPOSE:         Large Strings
  * PROGRAMMER:
  * UPDATE HISTORY:
@@ -10,10 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* FUNCTIONS *****************************************************************/
 VOID

@@ -18,27 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#define INITGUID
-
-#include <windef.h>
-#include <winbase.h>
-#include <ole2.h>
-#include <winsxs.h>
-#include <msxml2.h>
-
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
 #include "sxs_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(sxs);
+#include <oleauto.h>
+#include <msxml2.h>
+
+#include <wine/list.h>
 
 static const WCHAR cache_mutex_nameW[] =
     {'_','_','W','I','N','E','_','S','X','S','_','C','A','C','H','E','_','M','U','T','E','X','_','_',0};
@@ -73,7 +58,7 @@ static HRESULT WINAPI cache_QueryInterface(
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IAssemblyCache))
     {
-        IUnknown_AddRef( iface );
+        IAssemblyCache_AddRef( iface );
         *obj = cache;
         return S_OK;
     }

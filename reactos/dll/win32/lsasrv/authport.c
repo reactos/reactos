@@ -6,13 +6,9 @@
  * COPYRIGHT:   Copyright 2009 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
-
 #include "lsasrv.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
-
+#include <ndk/lpcfuncs.h>
 
 static LIST_ENTRY LsapLogonContextList;
 
@@ -59,7 +55,7 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
                                NULL);
 
     Status = NtOpenProcess(&ProcessHandle,
-                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
+                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE,
                            &ObjectAttributes,
                            &RequestMsg->h.ClientId);
     if (!NT_SUCCESS(Status))
@@ -95,18 +91,21 @@ LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
     HANDLE ConnectionHandle = NULL;
     BOOLEAN Accept;
     REMOTE_PORT_VIEW RemotePortView;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("(%p)\n", RequestMsg);
 
     TRACE("Logon Process Name: %s\n", RequestMsg->ConnectInfo.LogonProcessNameBuffer);
 
-    Status = LsapCheckLogonProcess(RequestMsg,
-                                   &LogonContext);
+    if (RequestMsg->ConnectInfo.CreateContext == TRUE)
+    {
+        Status = LsapCheckLogonProcess(RequestMsg,
+                                       &LogonContext);
 
-    RequestMsg->ConnectInfo.OperationalMode = 0x43218765;
+        RequestMsg->ConnectInfo.OperationalMode = 0x43218765;
 
-    RequestMsg->ConnectInfo.Status = Status;
+        RequestMsg->ConnectInfo.Status = Status;
+    }
 
     if (NT_SUCCESS(Status))
     {
@@ -132,10 +131,13 @@ LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
 
     if (Accept == TRUE)
     {
-        LogonContext->ConnectionHandle = ConnectionHandle;
+        if (LogonContext != NULL)
+        {
+            LogonContext->ConnectionHandle = ConnectionHandle;
 
-        InsertHeadList(&LsapLogonContextList,
-                       &LogonContext->Entry);
+            InsertHeadList(&LsapLogonContextList,
+                           &LogonContext->Entry);
+        }
 
         Status = NtCompleteConnectPort(ConnectionHandle);
         if (!NT_SUCCESS(Status))
@@ -163,10 +165,11 @@ AuthPortThreadRoutine(PVOID Param)
 
     for (;;)
     {
+        TRACE("Reply: %p\n", ReplyMsg);
         Status = NtReplyWaitReceivePort(AuthPortHandle,
                                         (PVOID*)&LogonContext,
-                                        &ReplyMsg->h,
-                                        &RequestMsg.h);
+                                        (PPORT_MESSAGE)ReplyMsg,
+                                        (PPORT_MESSAGE)&RequestMsg);
         if (!NT_SUCCESS(Status))
         {
             TRACE("NtReplyWaitReceivePort() failed (Status %lx)\n", Status);
@@ -208,8 +211,8 @@ AuthPortThreadRoutine(PVOID Param)
 
                         ReplyMsg = &RequestMsg;
                         RequestMsg.Status = STATUS_SUCCESS;
-                        Status = NtReplyPort(AuthPortHandle,
-                                             &ReplyMsg->h);
+                        NtReplyPort(AuthPortHandle,
+                                    &ReplyMsg->h);
 
                         LsapDeregisterLogonProcess(&RequestMsg,
                                                    LogonContext);
@@ -229,8 +232,18 @@ AuthPortThreadRoutine(PVOID Param)
                         ReplyMsg = &RequestMsg;
                         break;
 
+                    case LSASS_REQUEST_ENUM_LOGON_SESSIONS:
+                        RequestMsg.Status = LsapEnumLogonSessions(&RequestMsg);
+                        ReplyMsg = &RequestMsg;
+                        break;
+
+                    case LSASS_REQUEST_GET_LOGON_SESSION_DATA:
+                        RequestMsg.Status = LsapGetLogonSessionData(&RequestMsg);
+                        ReplyMsg = &RequestMsg;
+                        break;
+
                     default:
-                        RequestMsg.Status = STATUS_SUCCESS; /* FIXME */
+                        RequestMsg.Status = STATUS_INVALID_SYSTEM_SERVICE;
                         ReplyMsg = &RequestMsg;
                         break;
                 }

@@ -1,5 +1,9 @@
+
 #ifndef _BASETYPS_H
 #define _BASETYPS_H
+#pragma once
+
+#include <guiddef.h>
 
 #ifndef __OBJC__
 # ifdef __cplusplus
@@ -29,6 +33,7 @@
 # endif
 #endif
 
+#ifndef STDMETHODCALLTYPE
 #define STDMETHODCALLTYPE  __stdcall
 #define STDMETHODVCALLTYPE __cdecl
 #define STDAPICALLTYPE     __stdcall
@@ -41,6 +46,7 @@
 #define STDAPIV_(t)        EXTERN_C t STDAPIVCALLTYPE
 #define STDMETHODIMPV      HRESULT STDMETHODVCALLTYPE
 #define STDMETHODIMPV_(t)  t STDMETHODVCALLTYPE
+#endif /* !STDMETHODCALLTYPE */
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 # define interface struct
@@ -71,8 +77,6 @@
 # endif
 # define DECLARE_INTERFACE_(i,b) DECLARE_INTERFACE(i)
 #endif
-
-#include <guiddef.h>
 
 #ifndef _ERROR_STATUS_T_DEFINED
 #define _ERROR_STATUS_T_DEFINED

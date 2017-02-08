@@ -21,7 +21,9 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
+#include <pnp_c.h>
+
+#include "rpc_private.h"
 
 /* Registry key and value names */
 static const WCHAR Backslash[] = {'\\', 0};
@@ -553,7 +555,7 @@ CONFIGRET WINAPI CM_Connect_MachineW(
         }
     }
 
-    phMachine = (PHMACHINE)pMachine;
+    *phMachine = (PHMACHINE)pMachine;
 
     return CR_SUCCESS;
 }
@@ -681,7 +683,9 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
 
     if (ret == CR_SUCCESS)
     {
-        *pdnDevInst = pSetupStringTableAddString(StringTable, pDeviceID, 1);
+        /* If CM_CREATE_DEVINST_GENERATE_ID was passed in, PNP_CreateDevInst
+         * will return the generated device ID in szLocalDeviceID */
+        *pdnDevInst = pSetupStringTableAddString(StringTable, szLocalDeviceID, 1);
         if (*pdnDevInst == 0)
             ret = CR_NO_SUCH_DEVNODE;
     }

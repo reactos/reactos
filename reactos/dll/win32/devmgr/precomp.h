@@ -1,150 +1,80 @@
-#ifndef __DEVMGR_H
-#define __DEVMGR_H
+//#pragma once
 
-#define WIN32_NO_STATUS
+#ifndef __REACTOS__
+
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <wchar.h>
-#include <regstr.h>
+#include <Windows.h>
+#include <windowsx.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
-#include <dll/devmgr/devmgr.h>
+#include <commctrl.h>
+#include <Uxtheme.h>
+#include <Cfgmgr32.h>
+#include <devguid.h>
+#include <process.h>
+#include <dbt.h>
+#include <RegStr.h>
 
-#include "resource.h"
+#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
+#include <tchar.h>
+#include <atlbase.h>
+#include <atlstr.h>
+#include <atlcoll.h>
 
-extern HINSTANCE hDllInstance;
+#include <strsafe.h>
 
-ULONG DbgPrint(PCCH Format,...);
+#include <devmgr/devmgr.h>
 
-/* ADVPROP.C */
+#define ERR printf
+#define FIXME printf
+#define UNIMPLEMENTED
+#define WINE_DEFAULT_DEBUG_CHANNEL(t)
 
-INT_PTR
-DisplayDeviceAdvancedProperties(IN HWND hWndParent,
-                                IN LPCWSTR lpDeviceID  OPTIONAL,
-                                IN HDEVINFO DeviceInfoSet,
-                                IN PSP_DEVINFO_DATA DeviceInfoData,
-                                IN HINSTANCE hComCtl32,
-                                IN LPCWSTR lpMachineName,
-                                IN DWORD dwFlags);
-
-/* DEVPRBLM.C */
-
-BOOL
-ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
-                        IN HDEVINFO hDevInfo,
-                        IN PSP_DEVINFO_DATA DevInfoData,
-                        IN HMACHINE hMachine  OPTIONAL);
-
-/* MISC.C */
-
-
-INT
-LengthOfStrResource(IN HINSTANCE hInst,
-                    IN UINT uID);
-
-DWORD
-LoadAndFormatString(IN HINSTANCE hInstance,
-                    IN UINT uID,
-                    OUT LPWSTR *lpTarget,
-                    ...);
-
-DWORD
-LoadAndFormatStringsCat(IN HINSTANCE hInstance,
-                        IN UINT *uID,
-                        IN UINT nIDs,
-                        OUT LPWSTR *lpTarget,
-                        ...);
-
-LPARAM
-ListViewGetSelectedItemData(IN HWND hwnd);
-
-LPWSTR
-ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
-                          IN UINT uCodePage);
-
-HINSTANCE
-LoadAndInitComctl32(VOID);
+DWORD WINAPI pSetupGuidFromString(PCWSTR pString, LPGUID lpGUID);
 
 BOOL
-GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
-                            IN PSP_DEVINFO_DATA DeviceInfoData,
-                            OUT LPWSTR szBuffer,
-                            IN DWORD BufferSize);
+WINAPI
+InstallDevInst(
+IN HWND hWndParent,
+IN LPCWSTR InstanceId,
+IN BOOL bUpdate,
+OUT LPDWORD lpReboot);
 
-BOOL
-GetDeviceLocationString(IN HDEVINFO DeviceInfoSet,
-                        IN PSP_DEVINFO_DATA DeviceInfoData,
-                        IN DEVINST dnParentDevInst  OPTIONAL,
-                        OUT LPWSTR szBuffer,
-                        IN DWORD BufferSize);
+#else
 
-BOOL
-GetDeviceStatusString(IN DEVINST DevInst,
-                      IN HMACHINE hMachine,
-                      OUT LPWSTR szBuffer,
-                      IN DWORD BufferSize);
+#include <string.h>
+#include <wchar.h>
 
-BOOL
-GetDriverProviderString(IN HDEVINFO DeviceInfoSet,
-                        IN PSP_DEVINFO_DATA DeviceInfoData,
-                        OUT LPWSTR szBuffer,
-                        IN DWORD BufferSize);
+#include <tchar.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <wincon.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <strsafe.h>
+#include <process.h>
+#include <windowsx.h>
+#include <strsafe.h>
+#include <regstr.h>
+#include <newdevp.h>
+#include <dbt.h>
 
-BOOL
-GetDriverVersionString(IN HDEVINFO DeviceInfoSet,
-                       IN PSP_DEVINFO_DATA DeviceInfoData,
-                       OUT LPWSTR szBuffer,
-                       IN DWORD BufferSize);
+#include <setupapi.h>
+#include <commctrl.h>
+#include <cfgmgr32.h>
+#include <uxtheme.h>
+#include <devguid.h>
 
-BOOL
-GetDriverDateString(IN HDEVINFO DeviceInfoSet,
-                    IN PSP_DEVINFO_DATA DeviceInfoData,
-                    OUT LPWSTR szBuffer,
-                    IN DWORD BufferSize);
+#include <atlbase.h>
+#include <atlstr.h>
+#include <atlcoll.h>
 
-BOOL
-IsDeviceHidden(IN DEVINST DevInst,
-               IN HMACHINE hMachine,
-               OUT BOOL *IsHidden);
+#include <devmgr/devmgr.h>
+#include <wine/debug.h>
 
-BOOL
-IsDriverInstalled(IN DEVINST DevInst,
-                  IN HMACHINE hMachine,
-                  OUT BOOL *Installed);
+//WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
 
-BOOL
-CanDisableDevice(IN DEVINST DevInst,
-                 IN HMACHINE hMachine,
-                 OUT BOOL *CanDisable);
-
-BOOL
-IsDeviceStarted(IN DEVINST DevInst,
-                IN HMACHINE hMachine,
-                OUT BOOL *IsStarted);
-
-BOOL
-EnableDevice(IN HDEVINFO DeviceInfoSet,
-             IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
-             IN BOOL bEnable,
-             IN DWORD HardwareProfile  OPTIONAL,
-             OUT BOOL *bNeedReboot  OPTIONAL);
-
-BOOL
-GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
-                    OUT LPWSTR szBuffer,
-                    IN DWORD BufferSize);
-
-BOOL
-GetDeviceDescriptionString(IN HDEVINFO DeviceInfoSet,
-                           IN PSP_DEVINFO_DATA DeviceInfoData,
-                           OUT LPWSTR szBuffer,
-                           IN DWORD BufferSize);
-
-BOOL
-FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
-                  IN PSP_DEVINFO_DATA DeviceInfoData,
-                  OUT PSP_DRVINFO_DATA DriverInfoData);
-
-#endif /* __DEVMGR_H */
-
-/* EOF */
+#endif

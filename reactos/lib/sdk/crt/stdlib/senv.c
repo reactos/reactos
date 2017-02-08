@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/stdlib/senv.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -109,8 +109,7 @@ int _tsearchenv_s(const _TCHAR* file, const _TCHAR* env, _TCHAR *buf, size_t cou
     {
       if (_tcslen(curPath) + 1 > count)
       {
-          MSVCRT_INVALID_PMT("buf[count] is too small");
-          *_errno() = ERANGE;
+          MSVCRT_INVALID_PMT("buf[count] is too small", ERANGE);
           return ERANGE;
       }
       _tcscpy(buf, curPath);

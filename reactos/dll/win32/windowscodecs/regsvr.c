@@ -16,34 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#define COBJMACROS
-#include <stdarg.h>
-//#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "wingdi.h"
-//#include "winuser.h"
-#include <winreg.h>
-//#include "winerror.h"
-
-#include <objbase.h>
-//#include "ocidl.h"
-//#include "wincodec.h"
-#include <wincodecsdk.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
 #include "wincodecs_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+#include <shlwapi.h>
 
 /***********************************************************************
  *		interface for self-registering
@@ -158,21 +133,6 @@ static HRESULT unregister_pixelformats(struct regsvr_pixelformat const *list);
  */
 static const WCHAR clsid_keyname[] = {
     'C', 'L', 'S', 'I', 'D', 0 };
-static const WCHAR curver_keyname[] = {
-    'C', 'u', 'r', 'V', 'e', 'r', 0 };
-static const WCHAR ips_keyname[] = {
-    'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
-    0 };
-static const WCHAR ips32_keyname[] = {
-    'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
-    '3', '2', 0 };
-static const WCHAR progid_keyname[] = {
-    'P', 'r', 'o', 'g', 'I', 'D', 0 };
-static const WCHAR viprogid_keyname[] = {
-    'V', 'e', 'r', 's', 'i', 'o', 'n', 'I', 'n', 'd', 'e', 'p',
-    'e', 'n', 'd', 'e', 'n', 't', 'P', 'r', 'o', 'g', 'I', 'D',
-    0 };
-static const char tmodel_valuename[] = "ThreadingModel";
 static const char author_valuename[] = "Author";
 static const char friendlyname_valuename[] = "FriendlyName";
 static const WCHAR vendor_valuename[] = {'V','e','n','d','o','r',0};
@@ -245,21 +205,21 @@ static HRESULT register_decoders(struct regsvr_decoder const *list)
 			      KEY_READ | KEY_WRITE, NULL, &instance_clsid_key, NULL);
 	if (res == ERROR_SUCCESS) {
 	    res = RegSetValueExW(instance_clsid_key, clsid_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    RegCloseKey(instance_clsid_key);
 	}
 	if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->author) {
 	    res = RegSetValueExA(clsid_key, author_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->author),
+                                 (const BYTE*)list->author,
 				 strlen(list->author) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->friendlyname) {
 	    res = RegSetValueExA(clsid_key, friendlyname_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->friendlyname),
+                                 (const BYTE*)list->friendlyname,
 				 strlen(list->friendlyname) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -267,34 +227,34 @@ static HRESULT register_decoders(struct regsvr_decoder const *list)
         if (list->vendor) {
             StringFromGUID2(list->vendor, buf, 39);
 	    res = RegSetValueExW(clsid_key, vendor_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->container_format) {
             StringFromGUID2(list->container_format, buf, 39);
 	    res = RegSetValueExW(clsid_key, containerformat_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->version) {
 	    res = RegSetValueExA(clsid_key, version_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->version),
+                                 (const BYTE*)list->version,
 				 strlen(list->version) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->mimetypes) {
 	    res = RegSetValueExA(clsid_key, mimetypes_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->mimetypes),
+                                 (const BYTE*)list->mimetypes,
 				 strlen(list->mimetypes) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->extensions) {
 	    res = RegSetValueExA(clsid_key, extensions_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->extensions),
+                                 (const BYTE*)list->extensions,
 				 strlen(list->extensions) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -335,10 +295,10 @@ static HRESULT register_decoders(struct regsvr_decoder const *list)
                                       KEY_READ | KEY_WRITE, NULL, &pattern_key, NULL);
                 if (res != ERROR_SUCCESS) break;
 	        res = RegSetValueExA(pattern_key, length_valuename, 0, REG_DWORD,
-				     (CONST BYTE*)(&list->patterns[i].length), 4);
+                                     (const BYTE*)&list->patterns[i].length, 4);
                 if (res == ERROR_SUCCESS)
 	            res = RegSetValueExA(pattern_key, position_valuename, 0, REG_DWORD,
-				         (CONST BYTE*)(&list->patterns[i].position), 4);
+                                         (const BYTE*)&list->patterns[i].position, 4);
                 if (res == ERROR_SUCCESS)
 	            res = RegSetValueExA(pattern_key, pattern_valuename, 0, REG_BINARY,
 				         list->patterns[i].pattern,
@@ -349,7 +309,7 @@ static HRESULT register_decoders(struct regsvr_decoder const *list)
 				         list->patterns[i].length);
                 if (res == ERROR_SUCCESS)
 	            res = RegSetValueExA(pattern_key, endofstream_valuename, 0, REG_DWORD,
-				         (CONST BYTE*)&(list->patterns[i].endofstream), 4);
+                                         (const BYTE*)&list->patterns[i].endofstream, 4);
                 RegCloseKey(pattern_key);
             }
             RegCloseKey(patterns_key);
@@ -460,21 +420,21 @@ static HRESULT register_encoders(struct regsvr_encoder const *list)
 			      KEY_READ | KEY_WRITE, NULL, &instance_clsid_key, NULL);
 	if (res == ERROR_SUCCESS) {
 	    res = RegSetValueExW(instance_clsid_key, clsid_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    RegCloseKey(instance_clsid_key);
 	}
 	if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->author) {
 	    res = RegSetValueExA(clsid_key, author_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->author),
+                                 (const BYTE*)list->author,
 				 strlen(list->author) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->friendlyname) {
 	    res = RegSetValueExA(clsid_key, friendlyname_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->friendlyname),
+                                 (const BYTE*)list->friendlyname,
 				 strlen(list->friendlyname) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -482,34 +442,34 @@ static HRESULT register_encoders(struct regsvr_encoder const *list)
         if (list->vendor) {
             StringFromGUID2(list->vendor, buf, 39);
 	    res = RegSetValueExW(clsid_key, vendor_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->container_format) {
             StringFromGUID2(list->container_format, buf, 39);
 	    res = RegSetValueExW(clsid_key, containerformat_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->version) {
 	    res = RegSetValueExA(clsid_key, version_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->version),
+                                 (const BYTE*)list->version,
 				 strlen(list->version) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->mimetypes) {
 	    res = RegSetValueExA(clsid_key, mimetypes_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->mimetypes),
+                                 (const BYTE*)list->mimetypes,
 				 strlen(list->mimetypes) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->extensions) {
 	    res = RegSetValueExA(clsid_key, extensions_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->extensions),
+                                 (const BYTE*)list->extensions,
 				 strlen(list->extensions) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -638,21 +598,21 @@ static HRESULT register_converters(struct regsvr_converter const *list)
 			      KEY_READ | KEY_WRITE, NULL, &instance_clsid_key, NULL);
 	if (res == ERROR_SUCCESS) {
 	    res = RegSetValueExW(instance_clsid_key, clsid_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    RegCloseKey(instance_clsid_key);
 	}
 	if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->author) {
 	    res = RegSetValueExA(clsid_key, author_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->author),
+                                 (const BYTE*)list->author,
 				 strlen(list->author) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->friendlyname) {
 	    res = RegSetValueExA(clsid_key, friendlyname_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->friendlyname),
+                                 (const BYTE*)list->friendlyname,
 				 strlen(list->friendlyname) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -660,13 +620,13 @@ static HRESULT register_converters(struct regsvr_converter const *list)
         if (list->vendor) {
             StringFromGUID2(list->vendor, buf, 39);
 	    res = RegSetValueExW(clsid_key, vendor_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->version) {
 	    res = RegSetValueExA(clsid_key, version_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->version),
+                                 (const BYTE*)list->version,
 				 strlen(list->version) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -795,21 +755,21 @@ static HRESULT register_metadatareaders(struct regsvr_metadatareader const *list
 			      KEY_READ | KEY_WRITE, NULL, &instance_clsid_key, NULL);
 	if (res == ERROR_SUCCESS) {
 	    res = RegSetValueExW(instance_clsid_key, clsid_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    RegCloseKey(instance_clsid_key);
 	}
 	if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->author) {
 	    res = RegSetValueExA(clsid_key, author_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->author),
+                                 (const BYTE*)list->author,
 				 strlen(list->author) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->friendlyname) {
 	    res = RegSetValueExA(clsid_key, friendlyname_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->friendlyname),
+                                 (const BYTE*)list->friendlyname,
 				 strlen(list->friendlyname) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -817,42 +777,42 @@ static HRESULT register_metadatareaders(struct regsvr_metadatareader const *list
         if (list->vendor) {
             StringFromGUID2(list->vendor, buf, 39);
 	    res = RegSetValueExW(clsid_key, vendor_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->metadata_format) {
             StringFromGUID2(list->metadata_format, buf, 39);
 	    res = RegSetValueExW(clsid_key, metadataformat_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->version) {
 	    res = RegSetValueExA(clsid_key, version_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->version),
+                                 (const BYTE*)list->version,
 				 strlen(list->version) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->specversion) {
 	    res = RegSetValueExA(clsid_key, specversion_valuename, 0, REG_SZ,
-				 (CONST BYTE*)(list->version),
+                                 (const BYTE*)list->version,
 				 strlen(list->version) + 1);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         res = RegSetValueExA(clsid_key, requiresfullstream_valuename, 0, REG_DWORD,
-			     (CONST BYTE*)(&list->requires_fullstream), 4);
+                             (const BYTE*)&list->requires_fullstream, 4);
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         res = RegSetValueExA(clsid_key, supportspadding_valuename, 0, REG_DWORD,
-			     (CONST BYTE*)(&list->supports_padding), 4);
+                             (const BYTE*)&list->supports_padding, 4);
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->requires_fixedsize) {
 	    res = RegSetValueExA(clsid_key, requiresfixedsize_valuename, 0, REG_DWORD,
-				 (CONST BYTE*)(&list->requires_fixedsize), 4);
+                                 (const BYTE*)&list->requires_fixedsize, 4);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
@@ -881,7 +841,7 @@ static HRESULT register_metadatareaders(struct regsvr_metadatareader const *list
                                           KEY_READ | KEY_WRITE, NULL, &pattern_key, NULL);
                     if (res != ERROR_SUCCESS) break;
                     res = RegSetValueExA(pattern_key, position_valuename, 0, REG_DWORD,
-                                         (CONST BYTE*)(&container->patterns[i].position), 4);
+                                         (const BYTE*)&container->patterns[i].position, 4);
                     if (res == ERROR_SUCCESS)
                         res = RegSetValueExA(pattern_key, pattern_valuename, 0, REG_BINARY,
                                              container->patterns[i].pattern,
@@ -892,7 +852,7 @@ static HRESULT register_metadatareaders(struct regsvr_metadatareader const *list
                                              container->patterns[i].length);
                     if (res == ERROR_SUCCESS && container->patterns[i].data_offset)
                         res = RegSetValueExA(pattern_key, dataoffset_valuename, 0, REG_DWORD,
-                                             (CONST BYTE*)&(container->patterns[i].data_offset), 4);
+                                             (const BYTE*)&container->patterns[i].data_offset, 4);
                     RegCloseKey(pattern_key);
                 }
 
@@ -1005,21 +965,21 @@ static HRESULT register_pixelformats(struct regsvr_pixelformat const *list)
                               KEY_READ | KEY_WRITE, NULL, &instance_clsid_key, NULL);
         if (res == ERROR_SUCCESS) {
             res = RegSetValueExW(instance_clsid_key, clsid_valuename, 0, REG_SZ,
-                                 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
             RegCloseKey(instance_clsid_key);
         }
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->author) {
             res = RegSetValueExA(clsid_key, author_valuename, 0, REG_SZ,
-                                 (CONST BYTE*)(list->author),
+                                 (const BYTE*)list->author,
                                  strlen(list->author) + 1);
             if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->friendlyname) {
             res = RegSetValueExA(clsid_key, friendlyname_valuename, 0, REG_SZ,
-                                 (CONST BYTE*)(list->friendlyname),
+                                 (const BYTE*)list->friendlyname,
                                  strlen(list->friendlyname) + 1);
             if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
@@ -1027,31 +987,31 @@ static HRESULT register_pixelformats(struct regsvr_pixelformat const *list)
         if (list->vendor) {
             StringFromGUID2(list->vendor, buf, 39);
             res = RegSetValueExW(clsid_key, vendor_valuename, 0, REG_SZ,
-                                 (CONST BYTE*)(buf), 78);
+                                 (const BYTE*)buf, 78);
             if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         if (list->version) {
             res = RegSetValueExA(clsid_key, version_valuename, 0, REG_SZ,
-                                 (CONST BYTE*)(list->version),
+                                 (const BYTE*)list->version,
                                  strlen(list->version) + 1);
             if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
 
         res = RegSetValueExA(clsid_key, bitsperpixel_valuename, 0, REG_DWORD,
-                             (CONST BYTE*)(&list->bitsperpixel), 4);
+                             (const BYTE*)&list->bitsperpixel, 4);
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         res = RegSetValueExA(clsid_key, channelcount_valuename, 0, REG_DWORD,
-                             (CONST BYTE*)(&list->channelcount), 4);
+                             (const BYTE*)&list->channelcount, 4);
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         res = RegSetValueExA(clsid_key, numericrepresentation_valuename, 0, REG_DWORD,
-                             (CONST BYTE*)(&list->numericrepresentation), 4);
+                             (const BYTE*)&list->numericrepresentation, 4);
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         res = RegSetValueExA(clsid_key, supportstransparency_valuename, 0, REG_DWORD,
-                             (CONST BYTE*)(&list->supportsalpha), 4);
+                             (const BYTE*)&list->supportsalpha, 4);
         if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
         if (list->channelmasks) {
@@ -1471,6 +1431,7 @@ static GUID const * const converter_formats[] = {
     &GUID_WICPixelFormat16bppBGR565,
     &GUID_WICPixelFormat16bppBGRA5551,
     &GUID_WICPixelFormat24bppBGR,
+    &GUID_WICPixelFormat24bppRGB,
     &GUID_WICPixelFormat32bppBGR,
     &GUID_WICPixelFormat32bppBGRA,
     &GUID_WICPixelFormat32bppPBGRA,
@@ -1518,6 +1479,21 @@ static const struct reader_containers pngtext_containers[] = {
     {
         &GUID_ContainerFormatPng,
         pngtext_metadata_pattern
+    },
+    { NULL } /* list terminator */
+};
+
+static const BYTE gAMA[] = "gAMA";
+
+static const struct metadata_pattern pnggama_metadata_pattern[] = {
+    { 4, 4, gAMA, mask_all, 4 },
+    { 0 }
+};
+
+static const struct reader_containers pnggama_containers[] = {
+    {
+        &GUID_ContainerFormatPng,
+        pnggama_metadata_pattern
     },
     { NULL } /* list terminator */
 };
@@ -1616,6 +1592,16 @@ static struct regsvr_metadatareader const metadatareader_list[] = {
         &GUID_MetadataFormatIfd,
         1, 1, 0,
         ifd_containers
+    },
+    {   &CLSID_WICPngGamaMetadataReader,
+        "The Wine Project",
+        "Chunk gAMA Reader",
+        "1.0.0.0",
+        "1.0.0.0",
+        &GUID_VendorMicrosoft,
+        &GUID_MetadataFormatChunkgAMA,
+        0, 0, 0,
+        pnggama_containers
     },
     {   &CLSID_WICPngTextMetadataReader,
         "The Wine Project",
@@ -1852,6 +1838,17 @@ static struct regsvr_pixelformat const pixelformat_list[] = {
     {   &GUID_WICPixelFormat24bppBGR,
         "The Wine Project",
         "24bpp BGR",
+        NULL, /* no version */
+        &GUID_VendorMicrosoft,
+        24, /* bitsperpixel */
+        3, /* channel count */
+        channel_masks_8bit,
+        WICPixelFormatNumericRepresentationUnsignedInteger,
+        0
+    },
+    {   &GUID_WICPixelFormat24bppRGB,
+        "The Wine Project",
+        "24bpp RGB",
         NULL, /* no version */
         &GUID_VendorMicrosoft,
         24, /* bitsperpixel */

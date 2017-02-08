@@ -11,34 +11,6 @@
 
 #include "msgina.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msgina);
-
-/*
- * @unimplemented
- */
-DWORD WINAPI
-ShellShutdownDialog(
-    HWND  hParent,
-    DWORD Unknown,
-    BOOL  bHideLogoff)
-{
-    UNREFERENCED_PARAMETER(hParent);
-    UNREFERENCED_PARAMETER(Unknown);
-    UNREFERENCED_PARAMETER(bHideLogoff);
-
-    /* Return values:
-     * 0x00: Cancelled/Help
-     * 0x01: Log off user
-     * 0x02: Shutdown
-     * 0x04: Reboot
-     * 0x10: Standby
-     * 0x40: Hibernate
-     */
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
 /*
  * @unimplemented
  */
@@ -145,3 +117,9 @@ WlxGetConsoleSwitchCredentials(
     return FALSE;
 }
 
+HRESULT WINAPI 
+ShellDimScreen (void* Unknown, HWND* hWindow)
+{
+    UNIMPLEMENTED;
+    return E_FAIL;
+}

@@ -23,11 +23,6 @@ extern "C" {
 #define _RTC_ERRTYPE_IGNORE -1
 #define _RTC_ERRTYPE_ASK -2
 
-#ifndef _WCHAR_T_DEFINED
-#define _WCHAR_T_DEFINED
-  typedef unsigned short wchar_t;
-#endif
-
   typedef int (__cdecl *_RTC_error_fn)(int,const char *,int,const char *,const char *,...);
   typedef int (__cdecl *_RTC_error_fnW)(int,const wchar_t *,int,const wchar_t *,const wchar_t *,...);
 

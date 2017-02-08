@@ -1,0 +1,88 @@
+/*
+ * FILE:       base/applications/cmdutils/help/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * AUTHOR:     Magnus Olsen, 2005
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "Această comandă nu este recunoscută de utilitarul manual.\nÎncercați ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Oferă informații de manual referitoare la comenzile ReactOS.\n\n\
+HELP [comandă]\n\n\
+  comandă - Afișează informații de manual pentru această comandă.\n"
+    IDS_HELP1 "Enumeră toate comenzile disponibile (+ descriere)\n\n\
+  help comandă\n\
+  comandă /?     Pentru mai multe informații referitoare la o anume comandă.\n\n\
+?         Enumeră toate comenzile disponibile (fără descriere).\n\
+ALIAS     Instituie, destituie sau afișează alias.\n\
+ASSOC     Modifică asocierile extensiilor de fișiere.\n\
+ATTRIB    Afișează sau modifică atributele fișierelor.\n\
+BEEP      Semnalizează utilizând difuzorul intern.\n\
+CALL      Apelează dintr-un fișier de comenzi, un alt fișier de comenzi.\n\
+CD        Afișează sau schimbă directorul curent.\n\
+CHCP      Afișează sau stabilește numărul codificării curente a paginii.\n\
+CHDIR     Afișează sau schimbă directorul curent.\n\
+CHOICE    Așteaptă alegerea unei opțiuni (din mai multe furnizate).\n\
+CLS       Curăță ecranul.\n\
+CMD       Lansează o nouă instanță a interpretorului de comenzi ReactOS.\n\
+COLOR     Stabilește culorile implicite pentru text și fundal.\n\
+COPY      Copiază unul sau mai multe fișiere dintr-un loc în altul.\n\
+DATE      Afișează sau stabilește data.\n\
+DEL       Șterge unul sau mai multe fișiere.\n\
+DELETE    Șterge unul sau mai multe fișiere.\n\
+DELAY     Impune o pauză pe o durată de timp specificată.\n\
+DIR       Enumeră conținutul unui director.\n\
+DIRS      Afișează conținutul stivei de directoare.\n\
+ECHO      Afișează mesaje în ecou sau\n\
+          activează/dezactivează această funcționalitate.\n\
+ECHOS     Afișează un mesaj în ecou fără a trece în rând nou.\n\
+ECHOERR   Afișeză un mesaj în ecou la ieșirea standard pentru erori\n\
+ECHOSERR  Afișează un mesaj în ecou la ieșirea standard pentru erori fără a\n\
+          trece în rând nou.\n\
+ERASE     Șterge unul sau mai multe fișiere.\n\
+EXIT      Ieșire din (interpretorul de comenzi) CMD.EXE\n\
+FOR       Execută o comandă pentru fiecare fișier dintr-un grup (de fișiere).\n\
+FREE      Oferă informații despre unitatea de stocare.\n\
+GOTO      Execută salturi către rânduri etichetate în interiorul unui\n\
+          fișier de comenzi.\n\
+HELP      Oferă informații referitoare la comenzile ReactOS.\n\
+HISTORY   Enumeră toate comenzile care au fost utilizate.\n\
+IF        Realizează execuții condiționate în fișierele de comenzi.\n\
+LABEL     Crează, modifică, sau șterge eticheta unei unități de stocare.\n\
+MEMORY    Afișează informații referitoare la memoria sistemului.\n\
+MD        Crează un director.\n\
+MKDIR     Crează un director.\n\
+MKLINK    Crează un obiect-legătură în sistemul de fișiere.\n\
+MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n"
+    IDS_HELP2 "PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
+PAUSE     Suspendă execuția unui fișier de comenzi și afișează un mesaj.\n\
+POPD      Restabilește valoarea precedentă a directorului curent, anterior\n\
+          stocată cu PUSHD.\n\
+PROMPT    Modifică aspectul liniei de comandă.\n\
+PUSHD     Reține calea directorului curent și o schimbă cu alta nouă.\n\
+RD        Elimină un director.\n\
+REM       Desemnează un rând de comentarii într-un fișier de comenzi.\n\
+REN       Redenumește un fișier/director sau un grup (de fișiere/directoare).\n\
+RENAME    Redenumește un fișier/director sau un grup (de fișiere/directoare).\n\
+REPLACE   Înlocuiește fișiere.\n\
+RMDIR     Elimină un director.\n\
+SCREEN    Mută cursorul și (opțional) afișează un text.\n\
+SET       Afișează, stabilește sau elimină variabile de mediu ReactOS.\n\
+SHIFT     Schimbă poziția argumentelor înlocuibile într-un fișier de comenzi.\n\
+START     Deschide o fereastră separată pentru execuția unui executabil sau\n\
+          (fișier de) comenzi.\n\
+TIME      Afișează sau stabilește data sistemului.\n\
+TIMER     Gestionează cronometre.\n\
+TITLE     Stabilește titlul pentru fereastra unei sesiuni CMD.EXE\n\
+TYPE      Afișează conținutul unui fișier text.\n\
+VER       Afișează versiunea ReactOS.\n\
+VERIFY    Verifică scrierea corectă a fișierelor pe disc.\n\
+VOL       Afișează eticheta și numărul de serie a unui volum.\n"
+END

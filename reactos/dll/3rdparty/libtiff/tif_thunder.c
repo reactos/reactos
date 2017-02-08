@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE.
  */
 
-#include "tiffiop.h"
-#include <assert.h>
+#include <precomp.h>
+
 #ifdef THUNDER_SUPPORT
 /*
  * TIFF Library.

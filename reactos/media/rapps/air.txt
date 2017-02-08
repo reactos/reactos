@@ -1,0 +1,26 @@
+[Section]
+Name = Adobe AIR
+Version = 21.0
+License = Adobe Software Licensing Agreement
+Description = The Adobe AIR runtime enables developers to package the same code into native applications and games.
+Size = 17.8 MiB
+Category = 14
+URLSite = https://get.adobe.com/air/
+URLDownload = http://airdownload.adobe.com/air/win/download/21.0/AdobeAIRInstaller.exe
+SHA1 = 8cb15281252227082cf07c320672aec671c0eaf3
+CDPath = none
+
+[Section.0407]
+Description = Mithilfe der Adobe AIR-Laufzeit können Entwickler den gleichen Code in native Anwendungen und Spiele einbinden.
+Size = 17,8 MiB
+
+[Section.0418]
+License = Acord de licențiere Adobe Software
+Description = Adobe AIR oferă programatorilor posibilitatea de a încorpora în același pachet aplicații native și jocuri.
+Size = 17,8 Mio
+
+[Section.041f]
+License = Adobe Yazılım Ruhsatlama Anlaşması
+Description = Adobe AIR yürütücüsü geliştiricilere aynı kodu özgün uygulamalara ve oyunlara paketlemeye olanak sağlar.
+Size = 17,8 MiB
+

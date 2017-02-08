@@ -1,0 +1,58 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "用户信息"
+    IDS_GROU_HEADER "组信息"
+    IDS_PRIV_HEADER "特权信息"
+    IDS_COL_USER_NAME "用户名称"
+    IDS_COL_GROUP_NAME "组名称"
+    IDS_COL_TYPE "类型"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "属性"
+    IDS_COL_PRIV_NAME "权限名称"
+    IDS_COL_DESCRIPTION "描述"
+    IDS_COL_STATE "状态"
+    IDS_TP_WELL_KNOWN_GROUP "已知组"
+    IDS_TP_ALIAS "别名"
+    IDS_TP_LABEL "标签"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "强制性组， "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "默认情况下，启用， "
+    IDS_ATTR_GROUP_ENABLED "已启用的组， "
+    IDS_ATTR_GROUP_OWNER "组的所有者， "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "启用"
+    IDS_STATE_DISABLED "已禁用"
+    IDS_ERROR_UPN "错误: 无法获取用户主体名称 (UPN) 与当前登录的用户\n不是域用户。\n"
+    IDS_ERROR_FQDN "错误: 无法获取完全限定可分辨名称 (FQDN) 与当前\n登录的用户不是域用户。\n"
+    IDS_ERROR_VALUEXPECTED "错误: 无效语法。 值的预期 '/fo'。\n输入 ""WHOAMI /?"" 以了解用法。\n"
+    IDS_ERROR_VALUENOTALLOWED "错误: 无效语法。 '%s' 值不允许为 '/fo' 选项。\n输入 ""WHOAMI /?"" 以了解用法。\n"
+    IDS_ERROR_1TIMES "错误: 无效语法。 选项不允许超过 '1' 的次数。\n输入 ""WHOAMI /?"" 以了解用法。\n"
+    IDS_ERROR_INVALIDSYNTAX "错误: 无效语法。\n输入 ""WHOAMI /?"" 以了解用法。\n"
+    IDS_ERROR_INVALIDARG "错误: 无效的参数/选项 - '%s'。\n输入 ""WHOAMI /?"" 以了解用法。\n"
+    IDS_ERROR_NH_LIST "错误: /NH 开关不能用的列表格式。\n输入 ""WHOAMI /?"" 以了解用法。\n"
+    IDS_HELP "描述:\n\
+  显示本地登录的用户的用户、 组和权限信息。\n\
+  如果不提供任何参数，显示当前的域和用户名称。\n\
+\n\
+  可用的输出格式为 '/fo' 选项是 'csv', 'list' 和 'table'.\n\
+  使用 '/nh' 要隐藏页眉。 默认情况下表中显示数据。\n\
+\n\
+语法:\n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh] \n\
+  whoami /all [/fo <格式>] [/nh] \n\
+\n\
+例子: \n\
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
+END

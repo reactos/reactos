@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/init.c
+ * FILE:            ntoskrnl/ex/handle.c
  * PURPOSE:         Generic Executive Handle Tables
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller <w3seek@reactos.com>
@@ -34,90 +34,59 @@ ExpInitializeHandleTables(VOID)
 PHANDLE_TABLE_ENTRY
 NTAPI
 ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
-                          IN EXHANDLE LookupHandle)
+                          IN EXHANDLE Handle)
 {
-    ULONG TableLevel, NextHandle;
-    ULONG_PTR i, j, k, TableBase;
-    PHANDLE_TABLE_ENTRY Entry = NULL;
-    EXHANDLE Handle = LookupHandle;
-    PUCHAR Level1, Level2, Level3;
+    ULONG TableLevel;
+    ULONG_PTR TableBase;
+    PHANDLE_TABLE_ENTRY HandleArray, Entry;
+    PVOID *PointerArray;
 
-    /* Clear the tag bits and check what the next handle is */
+    /* Clear the tag bits */
     Handle.TagBits = 0;
-    NextHandle = *(volatile ULONG*)&HandleTable->NextHandleNeedingPool;
-    if (Handle.Value >= NextHandle) return NULL;
+
+    /* Check if the handle is in the allocated range */
+    if (Handle.Value >= HandleTable->NextHandleNeedingPool)
+    {
+        return NULL;
+    }
 
     /* Get the table code */
-    TableBase = *(volatile ULONG_PTR*)&HandleTable->TableCode;
+    TableBase = HandleTable->TableCode;
 
     /* Extract the table level and actual table base */
     TableLevel = (ULONG)(TableBase & 3);
-    TableBase = TableBase - TableLevel;
+    TableBase &= ~3;
+
+    PointerArray = (PVOID*)TableBase;
+    HandleArray = (PHANDLE_TABLE_ENTRY)TableBase;
 
     /* Check what level we're running at */
     switch (TableLevel)
     {
-        /* Direct index */
-        case 0:
-
-            /* Use level 1 and just get the entry directly */
-            Level1 = (PUCHAR)TableBase;
-            Entry = (PVOID)&Level1[Handle.Value *
-                                   (sizeof(HANDLE_TABLE_ENTRY) /
-                                    SizeOfHandle(1))];
-            break;
-
-        /* Nested index into mid level */
-        case 1:
-
-            /* Get the second table and index into it */
-            Level2 = (PUCHAR)TableBase;
-            i = Handle.Value % SizeOfHandle(LOW_LEVEL_ENTRIES);
-
-            /* Substract this index, and get the next one */
-            Handle.Value -= i;
-            j = Handle.Value /
-                (SizeOfHandle(LOW_LEVEL_ENTRIES) / sizeof(PHANDLE_TABLE_ENTRY));
-
-            /* Now get the next table and get the entry from it */
-            Level1 = (PUCHAR)*(PHANDLE_TABLE_ENTRY*)&Level2[j];
-            Entry = (PVOID)&Level1[i *
-                                   (sizeof(HANDLE_TABLE_ENTRY) /
-                                    SizeOfHandle(1))];
-            break;
-
-        /* Nested index into high level */
         case 2:
 
-            /* Start with the 3rd level table */
-            Level3 = (PUCHAR)TableBase;
-            i = Handle.Value % SizeOfHandle(LOW_LEVEL_ENTRIES);
+            /* Get the mid level pointer array */
+            PointerArray = PointerArray[Handle.HighIndex];
 
-            /* Subtract this index and get the index for the next lower table */
-            Handle.Value -= i;
-            k = Handle.Value /
-                (SizeOfHandle(LOW_LEVEL_ENTRIES) / sizeof(PHANDLE_TABLE_ENTRY));
+            /* Fall through */
+        case 1:
 
-            /* Get the remaining index in the 2nd level table */
-            j = k % (MID_LEVEL_ENTRIES * sizeof(PHANDLE_TABLE_ENTRY));
+            /* Get the handle array */
+            HandleArray = PointerArray[Handle.MidIndex];
 
-            /* Get the remaining index, which is in the third table */
-            k -= j;
-            k /= MID_LEVEL_ENTRIES;
+            /* Fall through */
+        case 0:
 
-            /* Extract the table level for the handle in each table */
-            Level2 = (PUCHAR)*(PHANDLE_TABLE_ENTRY*)&Level3[k];
-            Level1 = (PUCHAR)*(PHANDLE_TABLE_ENTRY*)&Level2[j];
-
-            /* Get the handle table entry */
-            Entry = (PVOID)&Level1[i *
-                                   (sizeof(HANDLE_TABLE_ENTRY) /
-                                    SizeOfHandle(1))];
-
-        default:
+            /* Get the entry using the low index */
+            Entry = &HandleArray[Handle.LowIndex];
 
             /* All done */
             break;
+
+        default:
+
+            ASSERT(FALSE);
+            Entry = NULL;
     }
 
     /* Return the handle entry */
@@ -217,7 +186,7 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     PAGED_CODE();
 
     /* Check which level we're at */
-    if (!TableLevel)
+    if (TableLevel == 0)
     {
         /* Select the first level table base and just free it */
         Level1 = (PVOID)TableBase;
@@ -504,7 +473,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
     PAGED_CODE();
 
     /* Check how many levels we already have */
-    if (!TableLevel)
+    if (TableLevel == 0)
     {
         /* Allocate a mid level, since we only have a low level */
         Mid = ExpAllocateMidLevelTable(HandleTable, DoInit, &Low);
@@ -547,7 +516,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             Mid = ExpAllocateMidLevelTable(HandleTable, DoInit, &Low);
             if (!Mid)
             {
-                /* We failed, free the high level table as welll */
+                /* We failed, free the high level table as well */
                 ExpFreeTablePagedPool(HandleTable->QuotaProcess,
                                       High,
                                       SizeOfHandle(HIGH_LEVEL_ENTRIES));
@@ -599,6 +568,11 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             Value = InterlockedExchangePointer((PVOID*)&ThirdLevel[i][j], Low);
             ASSERT(Value == NULL);
         }
+    }
+    else
+    {
+        /* Something is really broken */
+        ASSERT(FALSE);
     }
 
     /* Update the index of the next handle */
@@ -845,23 +819,23 @@ ExpBlockOnLockedHandleEntry(IN PHANDLE_TABLE HandleTable,
                             IN PHANDLE_TABLE_ENTRY HandleTableEntry)
 {
     LONG_PTR OldValue;
-    DEFINE_WAIT_BLOCK(WaitBlock);
+    EX_PUSH_LOCK_WAIT_BLOCK WaitBlock;
 
     /* Block on the pushlock */
-    ExBlockPushLock(&HandleTable->HandleContentionEvent, WaitBlock);
+    ExBlockPushLock(&HandleTable->HandleContentionEvent, &WaitBlock);
 
     /* Get the current value and check if it's been unlocked */
     OldValue = HandleTableEntry->Value;
     if (!(OldValue) || (OldValue & EXHANDLE_TABLE_ENTRY_LOCK_BIT))
     {
         /* Unblock the pushlock and return */
-        ExfUnblockPushLock(&HandleTable->HandleContentionEvent, WaitBlock);
+        ExfUnblockPushLock(&HandleTable->HandleContentionEvent, &WaitBlock);
     }
     else
     {
         /* Wait for it to be unblocked */
         ExWaitForUnblockPushLock(&HandleTable->HandleContentionEvent,
-                                 WaitBlock);
+                                 &WaitBlock);
     }
 }
 
@@ -954,7 +928,7 @@ ExDestroyHandleTable(IN PHANDLE_TABLE HandleTable,
     /* Remove the handle from the list */
     ExRemoveHandleTable(HandleTable);
 
-    /* Check if we have a desotry callback */
+    /* Check if we have a destroy callback */
     if (DestroyHandleProcedure)
     {
         /* FIXME: */

@@ -10,17 +10,20 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
 /* Function like DosDateTimeToFileTime */
 BOOLEAN
-FsdDosDateTimeToSystemTime(PDEVICE_EXTENSION DeviceExt,
-                           USHORT DosDate,
-                           USHORT DosTime,
-                           PLARGE_INTEGER SystemTime)
+FsdDosDateTimeToSystemTime(
+    PDEVICE_EXTENSION DeviceExt,
+    USHORT DosDate,
+    USHORT DosTime,
+    PLARGE_INTEGER SystemTime)
 {
     PDOSTIME pdtime = (PDOSTIME)&DosTime;
     PDOSDATE pddate = (PDOSDATE)&DosDate;
@@ -47,10 +50,11 @@ FsdDosDateTimeToSystemTime(PDEVICE_EXTENSION DeviceExt,
 
 /* Function like FileTimeToDosDateTime */
 BOOLEAN
-FsdSystemTimeToDosDateTime(PDEVICE_EXTENSION DeviceExt,
-                           PLARGE_INTEGER SystemTime,
-                           PUSHORT pDosDate,
-                           PUSHORT pDosTime)
+FsdSystemTimeToDosDateTime(
+    PDEVICE_EXTENSION DeviceExt,
+    PLARGE_INTEGER SystemTime,
+    PUSHORT pDosDate,
+    PUSHORT pDosTime)
 {
     PDOSTIME pdtime = (PDOSTIME)pDosTime;
     PDOSDATE pddate = (PDOSDATE)pDosDate;
@@ -82,10 +86,12 @@ FsdSystemTimeToDosDateTime(PDEVICE_EXTENSION DeviceExt,
 
 #define ULONG_ROUND_UP(x)   ROUND_UP((x), (sizeof(ULONG)))
 
-static NTSTATUS
-VfatGetFileNameInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                           PFILE_NAMES_INFORMATION pInfo,
-                           ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileNameInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PFILE_NAMES_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -101,11 +107,13 @@ VfatGetFileNameInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-VfatGetFileDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                                PDEVICE_EXTENSION DeviceExt,
-                                PFILE_DIRECTORY_INFORMATION pInfo,
-                                ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileDirectoryInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_DIRECTORY_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -191,11 +199,13 @@ VfatGetFileDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-VfatGetFileFullDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                                    PDEVICE_EXTENSION DeviceExt,
-                                    PFILE_FULL_DIR_INFORMATION pInfo,
-                                    ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileFullDirectoryInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_FULL_DIR_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -262,11 +272,13 @@ VfatGetFileFullDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-VfatGetFileBothInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                           PDEVICE_EXTENSION DeviceExt,
-                           PFILE_BOTH_DIR_INFORMATION pInfo,
-                           ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileBothInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_BOTH_DIR_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -372,8 +384,10 @@ VfatGetFileBothInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-DoQuery(PVFAT_IRP_CONTEXT IrpContext)
+static
+NTSTATUS
+DoQuery(
+    PVFAT_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LONG BufferLength = 0;
@@ -405,10 +419,10 @@ DoQuery(PVFAT_IRP_CONTEXT IrpContext)
         ProbeForWrite(IrpContext->Irp->UserBuffer, BufferLength, 1);
     }
 #endif
-    Buffer = VfatGetUserBuffer(IrpContext->Irp);
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, FALSE);
 
     if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
-                                     (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         Status = VfatLockUserBuffer(IrpContext->Irp, BufferLength, IoWriteAccess);
         if (NT_SUCCESS(Status))
@@ -490,6 +504,13 @@ DoQuery(PVFAT_IRP_CONTEXT IrpContext)
     DirContext.ShortNameU.Buffer = ShortNameBuffer;
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
 
+    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        ExReleaseResourceLite(&pFcb->MainResource);
+        return STATUS_PENDING;
+    }
+
     while ((Status == STATUS_SUCCESS) && (BufferLength > 0))
     {
         Status = FindFile(IrpContext->DeviceExt,
@@ -565,17 +586,44 @@ DoQuery(PVFAT_IRP_CONTEXT IrpContext)
         IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
     }
 
+    ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
     ExReleaseResourceLite(&pFcb->MainResource);
 
     return Status;
 }
 
+NTSTATUS VfatNotifyChangeDirectory(PVFAT_IRP_CONTEXT IrpContext)
+{
+    PVCB pVcb;
+    PVFATFCB pFcb;
+    PIO_STACK_LOCATION Stack;
+    Stack = IrpContext->Stack;
+    pVcb = IrpContext->DeviceExt;
+    pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
+ 
+    FsRtlNotifyFullChangeDirectory(pVcb->NotifySync,
+                                   &(pVcb->NotifyList),
+                                   IrpContext->FileObject->FsContext2,
+                                   (PSTRING)&(pFcb->PathNameU),
+                                   BooleanFlagOn(Stack->Flags, SL_WATCH_TREE),
+                                   FALSE,
+                                   Stack->Parameters.NotifyDirectory.CompletionFilter,
+                                   IrpContext->Irp,
+                                   NULL,
+                                   NULL);
+
+    /* We won't handle IRP completion */
+    IrpContext->Flags &= ~IRPCONTEXT_COMPLETE;
+
+    return STATUS_PENDING;
+}
 
 /*
  * FUNCTION: directory control : read/write directory informations
  */
 NTSTATUS
-VfatDirectoryControl(PVFAT_IRP_CONTEXT IrpContext)
+VfatDirectoryControl(
+    PVFAT_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -588,8 +636,7 @@ VfatDirectoryControl(PVFAT_IRP_CONTEXT IrpContext)
             break;
 
         case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-            DPRINT("VFAT, dir : change\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = VfatNotifyChangeDirectory(IrpContext);
             break;
 
         default:
@@ -600,15 +647,9 @@ VfatDirectoryControl(PVFAT_IRP_CONTEXT IrpContext)
             break;
     }
 
-    if (Status == STATUS_PENDING)
+    if (Status == STATUS_PENDING && IrpContext->Flags & IRPCONTEXT_COMPLETE)
     {
-        Status = VfatQueueRequest(IrpContext);
-    }
-    else
-    {
-        IrpContext->Irp->IoStatus.Status = Status;
-        IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
-        VfatFreeIrpContext(IrpContext);
+        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     return Status;

@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE.
  */
 
-#include "tiffiop.h"
+#include <precomp.h>
+
 #ifdef PIXARLOG_SUPPORT
 
 /*
@@ -92,8 +93,6 @@
 #include "tif_predict.h"
 #include "zlib.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 
 /* Tables for converting to/from 11 bit coded values */

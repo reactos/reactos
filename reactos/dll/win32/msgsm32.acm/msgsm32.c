@@ -63,13 +63,13 @@ FUNCPTR(gsm_decode);
     if((p##f = wine_dlsym(libgsm_handle, #f, NULL, 0)) == NULL) { \
         wine_dlclose(libgsm_handle, NULL, 0); \
         libgsm_handle = NULL; \
-        return 0; \
+        return FALSE; \
     }
 
 /***********************************************************************
  *           GSM_drvLoad
  */
-static LRESULT GSM_drvLoad(void)
+static BOOL GSM_drvLoad(void)
 {
     char error[128];
 
@@ -81,12 +81,12 @@ static LRESULT GSM_drvLoad(void)
         LOAD_FUNCPTR(gsm_option);
         LOAD_FUNCPTR(gsm_encode);
         LOAD_FUNCPTR(gsm_decode);
-        return 1;
+        return TRUE;
     }
     else
     {
         ERR("Couldn't load " SONAME_LIBGSM ": %s\n", error);
-        return 0;
+        return FALSE;
     }
 }
 
@@ -119,14 +119,14 @@ static	LRESULT GSM_DriverDetails(PACMDRIVERDETAILSW add)
     add->fccComp = ACMDRIVERDETAILS_FCCCOMP_UNDEFINED;
     /* Details found from probing native msgsm32.acm */
     add->wMid = MM_MICROSOFT;
-    add->wPid = 36;
+    add->wPid = MM_MSFT_ACM_GSM610;
     add->vdwACM = 0x3320000;
     add->vdwDriver = 0x4000000;
     add->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
     add->cFormatTags = 2;
     add->cFilterTags = 0;
     add->hicon = NULL;
-    MultiByteToWideChar( CP_ACP, 0, "Wine GSM 6.10", -1,
+    MultiByteToWideChar( CP_ACP, 0, "Microsoft GSM 6.10", -1,
                          add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, "Wine GSM 6.10 libgsm codec", -1,
                          add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );
@@ -139,10 +139,10 @@ static	LRESULT GSM_DriverDetails(PACMDRIVERDETAILSW add)
 }
 
 /* Validate a WAVEFORMATEX structure */
-static DWORD GSM_FormatValidate(const WAVEFORMATEX *wfx)
+static BOOL GSM_FormatValidate(const WAVEFORMATEX *wfx)
 {
     if (wfx->nChannels != 1)
-        return 0;
+        return FALSE;
 
     switch (wfx->wFormatTag)
     {
@@ -150,54 +150,54 @@ static DWORD GSM_FormatValidate(const WAVEFORMATEX *wfx)
         if (wfx->wBitsPerSample != 16)
         {
             WARN("PCM wBitsPerSample %u\n", wfx->wBitsPerSample);
-            return 0;
+            return FALSE;
         }
         if (wfx->nBlockAlign != 2)
         {
             WARN("PCM nBlockAlign %u\n", wfx->nBlockAlign);
-            return 0;
+            return FALSE;
         }
         if (wfx->nAvgBytesPerSec != wfx->nBlockAlign * wfx->nSamplesPerSec)
         {
             WARN("PCM nAvgBytesPerSec %u/%u\n",
                  wfx->nAvgBytesPerSec,
                  wfx->nBlockAlign * wfx->nSamplesPerSec);
-            return 0;
+            return FALSE;
         }
-        return 1;
+        return TRUE;
     case WAVE_FORMAT_GSM610:
         if (wfx->cbSize < sizeof(WORD))
         {
             WARN("GSM cbSize %u\n", wfx->cbSize);
-            return 0;
+            return FALSE;
         }
         if (wfx->wBitsPerSample != 0)
         {
             WARN("GSM wBitsPerSample %u\n", wfx->wBitsPerSample);
-            return 0;
+            return FALSE;
         }
         if (wfx->nBlockAlign != 65)
         {
             WARN("GSM nBlockAlign %u\n", wfx->nBlockAlign);
-            return 0;
+            return FALSE;
         }
         if (((const GSM610WAVEFORMAT*)wfx)->wSamplesPerBlock != 320)
         {
             WARN("GSM wSamplesPerBlock %u\n",
                  ((const GSM610WAVEFORMAT*)wfx)->wSamplesPerBlock);
-            return 0;
+            return FALSE;
         }
         if (wfx->nAvgBytesPerSec != wfx->nSamplesPerSec * 65 / 320)
         {
             WARN("GSM nAvgBytesPerSec %d / %d\n",
                  wfx->nAvgBytesPerSec, wfx->nSamplesPerSec * 65 / 320);
-            return 0;
+            return FALSE;
         }
-        return 1;
+        return TRUE;
     default:
-        return 0;
+        return FALSE;
     }
-    return 0;
+    return FALSE;
 }
 
 static const DWORD gsm_rates[] = { 8000, 11025, 22050, 44100, 48000, 96000 };
@@ -223,7 +223,7 @@ static	LRESULT	GSM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
             aftd->dwFormatTagIndex = 1;
 	    break;
 	}
-	/* fall thru */
+	/* fall through */
     case ACM_FORMATTAGDETAILSF_FORMATTAG:
 	switch (aftd->dwFormatTag)
         {
@@ -512,7 +512,7 @@ static LRESULT GSM_StreamConvert(PACMDRVSTREAMINSTANCE adsi, PACMDRVSTREAMHEADER
             return ACMERR_NOTPOSSIBLE;
         }
 
-        /* The packing algorythm writes 32 bytes, then 33 bytes,
+        /* The packing algorithm writes 32 bytes, then 33 bytes,
          * and it seems to pad to align to 65 bytes always
          * adding extra data where necessary
          */
@@ -620,7 +620,7 @@ LRESULT CALLBACK GSM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
     case ACMDM_STREAM_CONVERT:
 	return GSM_StreamConvert((PACMDRVSTREAMINSTANCE)dwParam1, (PACMDRVSTREAMHEADER)dwParam2);
 #else
-    case ACMDM_STREAM_OPEN: ERR("libgsm support not compiled in!\n");
+    case ACMDM_STREAM_OPEN: WARN("libgsm support not compiled in!\n");
     case ACMDM_STREAM_CLOSE:
     case ACMDM_STREAM_SIZE:
     case ACMDM_STREAM_CONVERT:

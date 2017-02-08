@@ -25,7 +25,7 @@ typedef struct
 
 //---------------------------------------------------------------------------
 //
-//          Object Hierachy
+//          Object Hierarchy
 //       --------------------------------------------------------------------
 //       |  IRootHCDController                                              |
 //       |    IHCDController Intel USB Universal Host Controller - 3A37     |
@@ -491,6 +491,15 @@ DECLARE_INTERFACE_(IDispatchIrp, IUnknown)
 
     virtual NTSTATUS HandleDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                                          IN OUT PIRP Irp) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// HandleSystemControl
+//
+// Description: handles WMI system control requests
+
+    virtual NTSTATUS HandleSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                                         IN OUT PIRP Irp) = 0;
 };
 
 typedef IDispatchIrp *PDISPATCHIRP;
@@ -664,7 +673,7 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
 // AbortPipe
 //
-// Description: aborts all pending requsts
+// Description: aborts all pending requests
 
     virtual NTSTATUS AbortPipe(IN PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor) = 0;
 
@@ -672,7 +681,7 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
 // GetMaxPacketSize
 //
-// Description: aborts all pending requsts
+// Description: aborts all pending requests
 
     virtual UCHAR GetMaxPacketSize() = 0;
 };

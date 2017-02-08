@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Check trace components in FreeType 2 source.
-# Author: suzuki toshiya, 2009
+# Author: suzuki toshiya, 2009, 2013
 #
 # This code is explicitly into the public domain.
 

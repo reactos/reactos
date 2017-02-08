@@ -1,16 +1,8 @@
-#include <pseh/pseh2.h>
-#include <ntddk.h>
+#ifndef _WDMAUD_PCH_
+#define _WDMAUD_PCH_
+
 #include <portcls.h>
-#include <ks.h>
-#define NDEBUG
-#include <debug.h>
-#include <ksmedia.h>
-#include <mmreg.h>
 #include <mmsystem.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include "mmixer.h"
 
 #include "interface.h"
 
@@ -19,6 +11,7 @@ typedef struct
     PMDL Mdl;
     ULONG Length;
     ULONG Function;
+    PFILE_OBJECT FileObject;
 }WDMAUD_COMPLETION_CONTEXT, *PWDMAUD_COMPLETION_CONTEXT;
 
 
@@ -67,8 +60,14 @@ typedef struct
     LIST_ENTRY SysAudioDeviceList;
     HANDLE hSysAudio;
     PFILE_OBJECT FileObject;
-
     LIST_ENTRY WdmAudClientList;
+
+    ULONG SysAudioDeviceCount;
+    PIO_WORKITEM WorkItem;
+    KEVENT InitializationCompletionEvent;
+    ULONG WorkItemActive;
+
+    PDEVICE_OBJECT NextDeviceObject;
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
 typedef struct
@@ -315,3 +314,4 @@ VOID
 FreeItem(
     IN PVOID Item);
 
+#endif /* _WDMAUD_PCH_ */

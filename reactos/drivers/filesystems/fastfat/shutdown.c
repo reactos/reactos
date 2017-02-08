@@ -8,111 +8,122 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-VfatDiskShutDown(PVCB Vcb)
+static
+NTSTATUS
+VfatDiskShutDown(
+    PVCB Vcb)
 {
-   PIRP Irp;
-   KEVENT Event;
-   NTSTATUS Status;
-   IO_STATUS_BLOCK IoStatus;
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
 
-   KeInitializeEvent(&Event, NotificationEvent, FALSE);
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN, Vcb->StorageDevice,
-                                      NULL, 0, NULL, &Event, &IoStatus);
-   if (Irp)
-   {
-      Status = IoCallDriver(Vcb->StorageDevice, Irp);
-      if (Status == STATUS_PENDING)
-      {
-         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-         Status = IoStatus.Status;
-      }
-   }
-   else
-   {
-      Status = IoStatus.Status;
-   }
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN, Vcb->StorageDevice,
+                                       NULL, 0, NULL, &Event, &IoStatus);
+    if (Irp)
+    {
+        Status = IoCallDriver(Vcb->StorageDevice, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = IoStatus.Status;
+        }
+    }
+    else
+    {
+        Status = IoStatus.Status;
+    }
 
-   return Status;
+    return Status;
 }
 
-NTSTATUS NTAPI
-VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+
+NTSTATUS
+NTAPI
+VfatShutdown(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
-   NTSTATUS Status;
-   PLIST_ENTRY ListEntry;
-   PDEVICE_EXTENSION DeviceExt;
-   ULONG eocMark;
+    NTSTATUS Status;
+    PLIST_ENTRY ListEntry;
+    PDEVICE_EXTENSION DeviceExt;
+    ULONG eocMark;
 
-   DPRINT("VfatShutdown(DeviceObject %p, Irp %p)\n",DeviceObject, Irp);
+    DPRINT("VfatShutdown(DeviceObject %p, Irp %p)\n",DeviceObject, Irp);
 
-   FsRtlEnterFileSystem();
+    FsRtlEnterFileSystem();
 
-   /* FIXME: block new mount requests */
+    /* FIXME: block new mount requests */
 
-   if (DeviceObject == VfatGlobalData->DeviceObject)
-   {
-      Irp->IoStatus.Status = STATUS_SUCCESS;
-      ExAcquireResourceExclusiveLite(&VfatGlobalData->VolumeListLock, TRUE);
-      ListEntry = VfatGlobalData->VolumeListHead.Flink;
-      while (ListEntry != &VfatGlobalData->VolumeListHead)
-      {
-         DeviceExt = CONTAINING_RECORD(ListEntry, VCB, VolumeListEntry);
-         ListEntry = ListEntry->Flink;
+    if (DeviceObject == VfatGlobalData->DeviceObject)
+    {
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        ExAcquireResourceExclusiveLite(&VfatGlobalData->VolumeListLock, TRUE);
+        ListEntry = VfatGlobalData->VolumeListHead.Flink;
+        while (ListEntry != &VfatGlobalData->VolumeListHead)
+        {
+            DeviceExt = CONTAINING_RECORD(ListEntry, VCB, VolumeListEntry);
+            ListEntry = ListEntry->Flink;
 
-	 ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
-         if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
-         {
-            /* set clean shutdown bit */
-            Status = GetNextCluster(DeviceExt, 1, &eocMark);
+            ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+            if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
+            {
+                /* set clean shutdown bit */
+                Status = GetNextCluster(DeviceExt, 1, &eocMark);
+                if (NT_SUCCESS(Status))
+                {
+                    eocMark |= DeviceExt->CleanShutBitMask;
+                    if (NT_SUCCESS(WriteCluster(DeviceExt, 1, eocMark)))
+                        DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
+                }
+            }
+
+            Status = VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);
             if (NT_SUCCESS(Status))
             {
-               eocMark |= DeviceExt->CleanShutBitMask;
-               if (NT_SUCCESS(WriteCluster(DeviceExt, 1, eocMark)))
-                  DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
+                Status = VfatDiskShutDown(DeviceExt);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("VfatDiskShutDown failed, status = %x\n", Status);
+                }
             }
-         }
-         Status = VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);
-         if (NT_SUCCESS(Status))
-         {
-            Status = VfatDiskShutDown(DeviceExt);
+            else
+            {
+                DPRINT1("VfatFlushVolume failed, status = %x\n", Status);
+            }
+            ExReleaseResourceLite(&DeviceExt->DirResource);
+
+            /* FIXME: Unmount the logical volume */
+
             if (!NT_SUCCESS(Status))
-	       DPRINT1("VfatDiskShutDown failed, status = %x\n", Status);
-         }
-         else
-         {
-	    DPRINT1("VfatFlushVolume failed, status = %x\n", Status);
-	 }
-         ExReleaseResourceLite(&DeviceExt->DirResource);
+                Irp->IoStatus.Status = Status;
+        }
+        ExReleaseResourceLite(&VfatGlobalData->VolumeListLock);
 
-         /* FIXME: Unmount the logical volume */
+        /* FIXME: Free all global acquired resources */
 
-         if (!NT_SUCCESS(Status))
-            Irp->IoStatus.Status = Status;
-      }
-      ExReleaseResourceLite(&VfatGlobalData->VolumeListLock);
+        Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+    }
 
-      /* FIXME: Free all global acquired resources */
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-      Status = Irp->IoStatus.Status;
-   }
-   else
-   {
-      Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-      Status = STATUS_INVALID_DEVICE_REQUEST;
-   }
+    FsRtlExitFileSystem();
 
-   Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-   FsRtlExitFileSystem();
-
-   return(Status);
+    return Status;
 }
 
 /* EOF */

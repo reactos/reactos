@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/time.c
+ * FILE:            dll/win32/kernel32/client/time.c
  * PURPOSE:         Time conversion functions
  * PROGRAMMER:      Ariadne
  *                  DOSDATE and DOSTIME structures from Onno Hovers
@@ -62,7 +62,7 @@ FileTimeToDosDateTime(IN CONST FILETIME *lpFileTime,
                  ((TimeFields.Year - 1980) << 9);
     *lpFatTime = (TimeFields.Second >> 1) |
                  (TimeFields.Minute << 5) |
-                 (TimeFields.Hour << 16);
+                 (TimeFields.Hour << 11);
 
     return TRUE;
 }
@@ -446,6 +446,9 @@ GetTickCount(VOID)
 {
     ULARGE_INTEGER TickCount;
 
+#ifdef _WIN64
+    TickCount.QuadPart = *((volatile ULONG64*)&SharedUserData->TickCount);
+#else
     while (TRUE)
     {
         TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
@@ -456,6 +459,7 @@ GetTickCount(VOID)
 
         YieldProcessor();
     }
+#endif
 
     return (ULONG)((UInt32x32To64(TickCount.LowPart,
                                   SharedUserData->TickCountMultiplier) >> 24) +
@@ -531,7 +535,7 @@ GetSystemTimes(OUT LPFILETIME lpIdleTime OPTIONAL,
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION ProcPerfInfo;
     LARGE_INTEGER TotalUserTime, TotalKernTime, TotalIdleTime;
     SIZE_T BufferSize, ReturnLength;
-    ULONG i;
+    CCHAR i;
     NTSTATUS Status;
 
     TotalUserTime.QuadPart = TotalKernTime.QuadPart = TotalIdleTime.QuadPart = 0;

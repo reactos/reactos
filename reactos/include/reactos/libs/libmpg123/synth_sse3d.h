@@ -63,12 +63,12 @@ SYNTH_NAME:
 	decl %ecx
 	movl 20(%ebp),%esi
 	movl (%edx),%eax
-	jecxz .L01
+	jecxz 1f
 	decl %eax
 	andl %ebx,%eax
 	leal 1088(%esi),%esi
 	movl %eax,(%edx)
-	.L01:
+1:
 	leal (%esi,%eax,2),%edx
 	movl %eax,TEMP
 	incl %eax
@@ -76,11 +76,11 @@ SYNTH_NAME:
 	leal 544(%esi,%eax,2),%ecx
 	incl %ebx
 	testl $1, %eax
-	jnz .L02
+	jnz 2f
 	xchgl %edx,%ecx
 	incl TEMP
 	leal 544(%esi),%esi
-	.L02:
+2:
 	pushl 8(%ebp)
 	pushl %edx
 	pushl %ecx
@@ -95,7 +95,7 @@ SYNTH_NAME:
 	movl (%esp),%ecx /* restore, but leave value on stack */
 	shrl $1, %ecx
 	ALIGN16
-	.L03:
+3:
 	movq  (%edx),%mm0
 	movq  64(%edx),%mm4
 	pmaddwd (%esi),%mm0
@@ -138,10 +138,10 @@ SYNTH_NAME:
 	leal 128(%edx),%edx
 	leal 8(%edi),%edi
 	decl %ecx
-	jnz  .L03
+	jnz  3b
 	popl %ecx
 	andl $1, %ecx
-	jecxz .next_loop
+	jecxz 4f
 	movq  (%edx),%mm0
 	pmaddwd (%esi),%mm0
 	movq  8(%edx),%mm1
@@ -163,11 +163,11 @@ SYNTH_NAME:
 	leal 32(%esi),%esi
 	leal 64(%edx),%edx
 	leal 4(%edi),%edi
-	.next_loop:
+4:
 	subl $64,%esi
 	movl $7,%ecx
 	ALIGN16
-	.L04:
+5:
 	movq  (%edx),%mm0
 	movq  64(%edx),%mm4
 	pmaddwd (%esi),%mm0
@@ -214,7 +214,7 @@ SYNTH_NAME:
 	addl $128,%edx
 	leal 8(%edi),%edi
 	decl %ecx
-	jnz  .L04
+	jnz  5b
 	movq  (%edx),%mm0
 	pmaddwd (%esi),%mm0
 	movq  8(%edx),%mm1

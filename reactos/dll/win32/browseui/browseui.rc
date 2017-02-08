@@ -29,60 +29,47 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// REGISTRY
-//
-IDR_ADDRESSBAND          REGISTRY                "res/addressband.rgs"
-IDR_ADDRESSEDITBOX       REGISTRY                "res/addresseditbox.rgs"
-IDR_ACLMULTI             REGISTRY                "res/autocompletecontainer.rgs"
-IDR_BANDPROXY            REGISTRY                "res/bandproxy.rgs"
-IDR_BANDSITE             REGISTRY                "res/rebarbandsite.rgs"
-IDR_BANDSITEMENU         REGISTRY                "res/bandsitemenu.rgs"
-IDR_BRANDBAND            REGISTRY                "res/brandband.rgs"
-IDR_COMMONBROWSER        REGISTRY                "res/commonbrowser.rgs"
-IDR_GLOBALFOLDERSETTINGS REGISTRY                "res/globalfoldersettings.rgs"
-IDR_INTERNETTOOLBAR      REGISTRY                "res/internettoolbar.rgs"
-IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
+/* REGISTRY */
+IDR_ADDRESSBAND REGISTRY "res/addressband.rgs"
+IDR_ADDRESSEDITBOX REGISTRY "res/addresseditbox.rgs"
+IDR_ACLMULTI REGISTRY "res/autocompletecontainer.rgs"
+IDR_BANDPROXY REGISTRY "res/bandproxy.rgs"
+IDR_BANDSITE REGISTRY "res/rebarbandsite.rgs"
+IDR_BANDSITEMENU REGISTRY "res/bandsitemenu.rgs"
+IDR_BRANDBAND REGISTRY "res/brandband.rgs"
+IDR_COMMONBROWSER REGISTRY "res/commonbrowser.rgs"
+IDR_GLOBALFOLDERSETTINGS REGISTRY "res/globalfoldersettings.rgs"
+IDR_INTERNETTOOLBAR REGISTRY "res/internettoolbar.rgs"
+IDR_REGTREEOPTIONS REGISTRY "res/regtreeoptions.rgs"
+IDR_EXPLORERBAND REGISTRY "res/explorerband.rgs"
+IDR_PROGRESSDIALOG REGISTRY "res/progressdialog.rgs"
+IDR_AUTOCOMPLETE REGISTRY "res/autocomplete.rgs"
+IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
 
+#include <reactos/manifest_dll.rc>
 
 /*
  * Everything specific to any language goes
  * in one of the specific files.
  */
-//#include "lang/ca-ES.rc"
-//#include "lang/cs-CZ.rc"
-//#include "lang/da-DK.rc"
-//#include "lang/de-DE.rc"
-//#include "lang/el-GR.rc"
-//#include "lang/en-GB.rc"
-//#include "lang/fi-FI.rc"
-//#include "lang/fr-FR.rc"
-//#include "lang/he-IL.rc"
-//#include "lang/hu-HU.rc"
-//#include "lang/it-IT.rc"
-//#include "lang/ja-JP.rc"
-//#include "lang/ko-KR.rc"
-//#include "lang/nl-NL.rc"
-//#include "lang/no-NO.rc"
-//#include "lang/pt-BR.rc"
-//#include "lang/pt-PT.rc"
-//#include "lang/ru-RU.rc"
-//#include "lang/sl-SI.rc"
-//#include "lang/sk-SK.rc"
-//#include "lang/sv-SE.rc"
-//#include "lang/zh-CN.rc"
-//#include "lang/zh-TW.rc"
 
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
@@ -93,12 +80,27 @@ IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

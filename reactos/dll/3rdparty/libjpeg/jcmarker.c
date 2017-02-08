@@ -2,7 +2,7 @@
  * jcmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2012 by Guido Vollbeding.
+ * Modified 2003-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -508,8 +508,8 @@ write_marker_byte (j_compress_ptr cinfo, int val)
  * Write datastream header.
  * This consists of an SOI and optional APPn markers.
  * We recommend use of the JFIF marker, but not the Adobe marker,
- * when using YCbCr or grayscale data.  The JFIF marker should NOT
- * be used for any other JPEG colorspace.  The Adobe marker is helpful
+ * when using YCbCr or grayscale data.  The JFIF marker is also used
+ * for other standard JPEG colorspaces.  The Adobe marker is helpful
  * to distinguish RGB, CMYK, and YCCK colorspaces.
  * Note that an application can write additional header markers after
  * jpeg_start_compress returns.

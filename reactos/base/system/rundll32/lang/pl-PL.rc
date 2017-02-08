@@ -1,13 +1,14 @@
 /*
- *	 translated by xrogers (http://rogers.cyberdusk.pl/)
- * 	 xxrogers@users.sourceforge.net
- * 	 https://sourceforge.net/projects/reactospl
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by xrogers (http://rogers.cyberdusk.pl/)
+ *    xxrogers@users.sourceforge.net
+ *    https://sourceforge.net/projects/reactospl
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "Funkcja LoadLibrary nie mogła załadować '%s'"
-    IDS_MissingEntry,   "Brakujący punkt wejścia:%s\nW %s"
+    IDS_DllNotLoaded "Funkcja LoadLibrary nie mogła załadować '%s'"
+    IDS_MissingEntry "Brakujący punkt wejścia:%s\nW %s"
 END

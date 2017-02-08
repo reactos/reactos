@@ -35,3 +35,18 @@ CmpInitSecurityCache(IN PCMHIVE Hive)
         InitializeListHead(&Hive->SecurityHash[i]);
     }
 }
+
+VOID
+NTAPI
+CmpDestroySecurityCache(IN PCMHIVE Hive)
+{
+    /* FIXME: clean Hive->SecurityHash and/or Hive->SecurityCache */
+
+    /* Reset data */
+    Hive->SecurityCount = 0;
+    Hive->SecurityCacheSize = 0;
+    Hive->SecurityHitHint = -1;
+    Hive->SecurityCache = NULL;
+}
+
+/* EOF */

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            base/system/smss/smss.c
+ * FILE:            base/system/smss/smsubsys.c
  * PURPOSE:         Main SMSS Code
  * PROGRAMMERS:     Alex Ionescu
  */
@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -330,7 +331,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         {
             /* Odd failure -- but handle it anyway */
             Status = STATUS_NO_SUCH_PACKAGE;
-            DPRINT1("SMSS: SmpLoadSubSystem - SmpLocateKnownSubSysByType Failed with  Status %lx for sessionid %ld\n",
+            DPRINT1("SMSS: SmpLoadSubSystem - SmpLocateKnownSubSysByType Failed with  Status %lx for sessionid %lu\n",
                     Status,
                     MuSessionId);
             goto Quickie;
@@ -347,7 +348,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         if (!NT_SUCCESS(Status))
         {
             /* Fail since this is critical */
-            DPRINT1("SMSS: SmpLoadSubSystem - NtDuplicateObject Failed with  Status %lx for sessionid %ld\n",
+            DPRINT1("SMSS: SmpLoadSubSystem - NtDuplicateObject Failed with  Status %lx for sessionid %lu\n",
                     Status,
                     MuSessionId);
             goto Quickie;
@@ -364,7 +365,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         if (!NT_SUCCESS(Status))
         {
             /* Fail since this is critical */
-            DPRINT1("SMSS: SmpLoadSubSystem - NtDuplicateObject Failed with  Status %lx for sessionid %ld\n",
+            DPRINT1("SMSS: SmpLoadSubSystem - NtDuplicateObject Failed with  Status %lx for sessionid %lu\n",
                     Status,
                     MuSessionId);
             goto Quickie;
@@ -387,7 +388,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         {
             /* Delete the session and handle failure if the LPC call failed */
             SmpDeleteSession(CreateSession->SessionId);
-            DPRINT1("SMSS: SmpLoadSubSystem - NtRequestWaitReplyPort Failed with  Status %lx for sessionid %ld\n",
+            DPRINT1("SMSS: SmpLoadSubSystem - NtRequestWaitReplyPort Failed with  Status %lx for sessionid %lu\n",
                     Status,
                     CreateSession->SessionId);
             goto Quickie;
@@ -422,7 +423,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
         if (Status != STATUS_WAIT_0)
         {
             /* Something is wrong with the subsystem, so back out of everything */
-            DPRINT1("SMSS: SmpLoadSubSystem - Timeout waiting for subsystem connect with Status %lx for sessionid %ld\n",
+            DPRINT1("SMSS: SmpLoadSubSystem - Timeout waiting for subsystem connect with Status %lx for sessionid %lu\n",
                     Status,
                     MuSessionId);
             goto Quickie;
@@ -618,7 +619,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
         }
         if (!NT_SUCCESS(Status))
         {
-            DbgPrint("SMSS: Subsystem execute failed (%WZ)\n", &RegEntry->Value);
+            DbgPrint("SMSS: Subsystem execute failed (%wZ)\n", &RegEntry->Value);
             return Status;
         }
 
@@ -674,4 +675,3 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     /* Return status */
     return Status;
 }
-

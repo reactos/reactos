@@ -1,0 +1,24 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "ערוך"
+    IDS_MARK "סמן"
+    IDS_COPY "העתק\tEnter"
+    IDS_PASTE "הדבק"
+    IDS_SELECTALL "בחר הכל"
+    IDS_SCROLL "גלול"
+    IDS_FIND "מצא..."
+    IDS_DEFAULTS "ברירת מחדל"
+    IDS_PROPERTIES "מאפיינים"
+/*
+    IDS_SCROLLHERE "גלול לכאן"
+    IDS_SCROLLTOP "גלול למעלה"
+    IDS_SCROLLBOTTOM "גלול למטה"
+    IDS_SCROLLPAGE_UP "עמוד מעלה"
+    IDS_SCROLLPAGE_DOWN "עמוד מטה"
+    IDS_SCROLLUP "גלול מעלה"
+    IDS_SCROLLDOWN "גלול מטה"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END

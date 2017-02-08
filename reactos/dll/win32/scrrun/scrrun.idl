@@ -1,0 +1,689 @@
+/*
+ * Copyright (C) 2012 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep regtypelib
+
+import "unknwn.idl";
+import "objidl.idl";
+import "oaidl.idl";
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef CopyFile")
+cpp_quote("#undef DeleteFile")
+cpp_quote("#undef MoveFile")
+cpp_quote("#endif")
+/* this is not defined in public headers */
+cpp_quote("#define CTL_E_ENDOFFILE STD_CTL_SCODE(62)")
+cpp_quote("#define CTL_E_KEY_ALREADY_EXISTS STD_CTL_SCODE(457)")
+cpp_quote("#define CTL_E_ELEMENT_NOT_FOUND STD_CTL_SCODE(32811)")
+
+[
+  uuid(420B2830-E718-11CF-893D-00A0C9054228),
+  version(1.0)
+]
+library Scripting
+{
+    importlib("stdole2.tlb");
+
+    interface IFolder;
+
+    typedef enum CompareMethod
+    {
+        BinaryCompare,
+        TextCompare,
+        DatabaseCompare
+    } CompareMethod;
+
+    typedef enum IOMode
+    {
+        ForReading   = 1,
+        ForWriting   = 2,
+        ForAppending = 8
+    } IOMode;
+
+    typedef enum Tristate
+    {
+        TristateTrue       = -1,
+        TristateFalse      =  0,
+        TristateUseDefault = -2,
+        TristateMixed      = -2
+    } Tristate;
+
+    typedef enum FileAttribute
+    {
+        Normal = 0,
+        ReadOnly = 1,
+        Hidden = 2,
+        System = 4,
+        Volume = 8,
+        Directory = 16,
+        Archive = 32,
+        Alias = 1024,
+        Compressed = 2048
+    } FileAttribute;
+
+    typedef enum SpecialFolderConst
+    {
+        WindowsFolder,
+        SystemFolder,
+        TemporaryFolder
+    } SpecialFolderConst;
+
+    typedef enum DriveTypeConst
+    {
+        UnknownType,
+        Removable,
+        Fixed,
+        Remote,
+        CDRom,
+        RamDisk
+    } DriveTypeConst;
+
+    typedef enum StandardStreamTypes
+    {
+        StdIn,
+        StdOut,
+        StdErr
+    } StandardStreamTypes;
+
+    [
+      odl,
+      uuid(42C642C1-97E1-11CF-978F-00A02463E06F),
+      hidden,
+      dual,
+      oleautomation
+    ]
+    interface IDictionary : IDispatch
+    {
+        [id(DISPID_VALUE), propputref]
+        HRESULT Item([in] VARIANT* Key, [in] VARIANT* pRetItem);
+
+        [id(DISPID_VALUE), propput]
+        HRESULT Item([in] VARIANT* Key, [in] VARIANT* pRetItem);
+
+        [id(DISPID_VALUE), propget]
+        HRESULT Item([in] VARIANT* Key, [out, retval] VARIANT* pRetItem);
+
+        [id(0x00000001)]
+        HRESULT Add([in] VARIANT* Key, [in] VARIANT* Item);
+
+        [id(0x00000002), propget]
+        HRESULT Count([out, retval] long* pCount);
+
+        [id(0x00000003)]
+        HRESULT Exists([in] VARIANT* Key, [out, retval] VARIANT_BOOL* pExists);
+
+        [id(0x00000004)]
+        HRESULT Items([out, retval] VARIANT* pItemsArray);
+
+        [id(0x00000005), propput]
+        HRESULT Key([in] VARIANT* Key, [in] VARIANT* rhs);
+
+        [id(0x00000006)]
+        HRESULT Keys([out, retval] VARIANT* pKeysArray);
+
+        [id(0x00000007)]
+        HRESULT Remove([in] VARIANT* Key);
+
+        [id(0x00000008)]
+        HRESULT RemoveAll();
+
+        [id(0x00000009), propput]
+        HRESULT CompareMode([in] CompareMethod pcomp);
+
+        [id(0x00000009), propget]
+        HRESULT CompareMode([out, retval] CompareMethod* pcomp);
+
+        [id(DISPID_NEWENUM), restricted]
+        HRESULT _NewEnum([out, retval] IUnknown** ppunk);
+
+        [id(0x0000000a), propget, hidden]
+        HRESULT HashVal([in] VARIANT* Key, [out, retval] VARIANT* HashVal);
+    }
+
+    [
+      odl,
+      uuid(C7C3F5A0-88A3-11D0-ABCB-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IDrive : IDispatch
+    {
+        [id(DISPID_VALUE), propget]
+        HRESULT Path([out, retval] BSTR* pbstrPath);
+
+        [id(0x00002710), propget]
+        HRESULT DriveLetter([out, retval] BSTR* pbstrLetter);
+
+        [id(0x00002711), propget]
+        HRESULT ShareName([out, retval] BSTR* pbstrShareName);
+
+        [id(0x00002712), propget]
+        HRESULT DriveType([out, retval] DriveTypeConst* pdt);
+
+        [id(0x00002713), propget]
+        HRESULT RootFolder([out, retval] IFolder** ppfolder);
+
+        [id(0x00002715), propget]
+        HRESULT AvailableSpace([out, retval] VARIANT* pvarAvail);
+
+        [id(0x00002714), propget]
+        HRESULT FreeSpace([out, retval] VARIANT* pvarFree);
+
+        [id(0x00002716), propget]
+        HRESULT TotalSize([out, retval] VARIANT* pvarTotal);
+
+        [id(0x00002717), propget]
+        HRESULT VolumeName([out, retval] BSTR* pbstrName);
+
+        [id(0x00002717), propput]
+        HRESULT VolumeName([in] BSTR pbstrName);
+
+        [id(0x00002718), propget]
+        HRESULT FileSystem([out, retval] BSTR* pbstrFileSystem);
+
+        [id(0x00002719), propget]
+        HRESULT SerialNumber([out, retval] long* pulSerialNumber);
+
+        [id(0x0000271a), propget]
+        HRESULT IsReady([out, retval] VARIANT_BOOL* pfReady);
+    }
+
+    [
+      odl,
+      uuid(C7C3F5A1-88A3-11D0-ABCB-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IDriveCollection : IDispatch {
+        [id(DISPID_VALUE), propget]
+        HRESULT Item([in] VARIANT Key, [out, retval] IDrive** ppdrive);
+
+        [id(DISPID_NEWENUM), propget, restricted, hidden]
+        HRESULT _NewEnum([out, retval] IUnknown** ppenum);
+
+        [id(0x00000001), propget]
+        HRESULT Count([out, retval] long* plCount);
+    }
+
+    [
+      odl,
+      uuid(53BAD8C1-E718-11CF-893D-00A0C9054228),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface ITextStream : IDispatch
+    {
+        [id(0x00002710), propget]
+        HRESULT Line([out, retval] long* Line);
+
+        [id(0xfffffdef), propget]
+        HRESULT Column([out, retval] long* Column);
+
+        [id(0x00002712), propget]
+        HRESULT AtEndOfStream([out, retval] VARIANT_BOOL* EOS);
+
+        [id(0x00002713), propget]
+        HRESULT AtEndOfLine([out, retval] VARIANT_BOOL* EOL);
+
+        [id(0x00002714)]
+        HRESULT Read([in] long Characters, [out, retval] BSTR* Text);
+
+        [id(0x00002715)]
+        HRESULT ReadLine([out, retval] BSTR* Text);
+
+        [id(0x00002716)]
+        HRESULT ReadAll([out, retval] BSTR* Text);
+
+        [id(0x00002717)]
+        HRESULT Write([in] BSTR Text);
+
+        [id(0x00002718)]
+        HRESULT WriteLine([in, defaultvalue("")] BSTR Text);
+
+        [id(0x00002719)]
+        HRESULT WriteBlankLines([in] long Lines);
+
+        [id(0x0000271a)]
+        HRESULT Skip([in] long Characters);
+
+        [id(0x0000271b)]
+        HRESULT SkipLine();
+
+        [id(0x0000271c)]
+        HRESULT Close();
+    }
+
+    [
+      odl,
+      uuid(C7C3F5A4-88A3-11D0-ABCB-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IFile : IDispatch
+    {
+        [id(DISPID_VALUE), propget]
+        HRESULT Path([out, retval] BSTR* pbstrPath);
+
+        [id(0x000003e8), propget]
+        HRESULT Name([out, retval] BSTR* pbstrName);
+
+        [id(0x000003e8), propput]
+        HRESULT Name([in] BSTR pbstrName);
+
+        [id(0x000003ea), propget]
+        HRESULT ShortPath([out, retval] BSTR* pbstrPath);
+
+        [id(0x000003e9), propget]
+        HRESULT ShortName([out, retval] BSTR* pbstrName);
+
+        [id(0x000003ec), propget]
+        HRESULT Drive([out, retval] IDrive** ppdrive);
+
+        [id(0x000003ed), propget]
+        HRESULT ParentFolder([out, retval] IFolder** ppfolder);
+
+        [id(0x000003eb), propget]
+        HRESULT Attributes([out, retval] FileAttribute* pfa);
+
+        [id(0x000003eb), propput]
+        HRESULT Attributes([in] FileAttribute pfa);
+
+        [id(0x000003ee), propget]
+        HRESULT DateCreated([out, retval] DATE* pdate);
+
+        [id(0x000003ef), propget]
+        HRESULT DateLastModified([out, retval] DATE* pdate);
+
+        [id(0x000003f0), propget]
+        HRESULT DateLastAccessed([out, retval] DATE* pdate);
+
+        [id(0x000003f1), propget]
+        HRESULT Size([out, retval] VARIANT* pvarSize);
+
+        [id(0x000003f2), propget]
+        HRESULT Type([out, retval] BSTR* pbstrType);
+
+        [id(0x000004b0)]
+        HRESULT Delete([in, defaultvalue(0)] VARIANT_BOOL Force);
+
+        [id(0x000004b2)]
+        HRESULT Copy([in] BSTR Destination, [in, defaultvalue(-1)] VARIANT_BOOL OverWriteFiles);
+
+        [id(0x000004b4)]
+        HRESULT Move([in] BSTR Destination);
+
+        [id(0x0000044c)]
+        HRESULT OpenAsTextStream([in, defaultvalue(1)] IOMode IOMode,
+                        [in, defaultvalue(0)] Tristate Format, [out, retval] ITextStream** ppts);
+    }
+
+    [
+      odl,
+      uuid(0AB5A3D0-E5B6-11D0-ABF5-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IFileSystem : IDispatch
+    {
+        [id(0x0000271a), propget]
+        HRESULT Drives([out, retval] IDriveCollection** ppdrives);
+
+        [id(0x00002710)]
+        HRESULT BuildPath([in] BSTR Path, [in] BSTR Name, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002714)]
+        HRESULT GetDriveName([in] BSTR Path, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002715)]
+        HRESULT GetParentFolderName([in] BSTR Path, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002716)]
+        HRESULT GetFileName([in] BSTR Path, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002717)]
+        HRESULT GetBaseName([in] BSTR Path, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002718)]
+        HRESULT GetExtensionName([in] BSTR Path, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002712)]
+        HRESULT GetAbsolutePathName([in] BSTR Path, [out, retval] BSTR* pbstrResult);
+
+        [id(0x00002713)]
+        HRESULT GetTempName([out, retval] BSTR* pbstrResult);
+
+        [id(0x0000271f)]
+        HRESULT DriveExists([in] BSTR DriveSpec, [out, retval] VARIANT_BOOL* pfExists);
+
+        [id(0x00002720)]
+        HRESULT FileExists([in] BSTR FileSpec, [out, retval] VARIANT_BOOL* pfExists);
+
+        [id(0x00002721)]
+        HRESULT FolderExists([in] BSTR FolderSpec, [out, retval] VARIANT_BOOL* pfExists);
+
+        [id(0x0000271b)]
+        HRESULT GetDrive([in] BSTR DriveSpec, [out, retval] IDrive** ppdrive);
+
+        [id(0x0000271c)]
+        HRESULT GetFile([in] BSTR FilePath, [out, retval] IFile** ppfile);
+
+        [id(0x0000271d)]
+        HRESULT GetFolder([in] BSTR FolderPath, [out, retval] IFolder** ppfolder);
+
+        [id(0x0000271e)]
+        HRESULT GetSpecialFolder([in] SpecialFolderConst SpecialFolder, [out, retval] IFolder** ppfolder);
+
+        [id(0x000004b0)]
+        HRESULT DeleteFile([in] BSTR FileSpec, [in, defaultvalue(0)] VARIANT_BOOL Force);
+
+        [id(0x000004b1)]
+        HRESULT DeleteFolder([in] BSTR FolderSpec, [in, defaultvalue(0)] VARIANT_BOOL Force);
+
+        [id(0x000004b4), helpstring("Move a file"), helpcontext(0x00214bab)]
+        HRESULT MoveFile([in] BSTR Source, [in] BSTR Destination);
+
+        [id(0x000004b5)]
+        HRESULT MoveFolder([in] BSTR Source, [in] BSTR Destination);
+
+        [id(0x000004b2)]
+        HRESULT CopyFile([in] BSTR Source, [in] BSTR Destination,
+                         [in, defaultvalue(-1)] VARIANT_BOOL OverWriteFiles);
+
+        [id(0x000004b3)]
+        HRESULT CopyFolder([in] BSTR Source, [in] BSTR Destination,
+                           [in, defaultvalue(-1)] VARIANT_BOOL OverWriteFiles);
+
+        [id(0x00000460)]
+        HRESULT CreateFolder([in] BSTR Path, [out, retval] IFolder** ppfolder);
+
+        [id(0x0000044d)]
+        HRESULT CreateTextFile([in] BSTR FileName, [in, defaultvalue(-1)] VARIANT_BOOL Overwrite,
+                        [in, defaultvalue(0)] VARIANT_BOOL Unicode, [out, retval] ITextStream** ppts);
+
+        [id(0x0000044c)]
+        HRESULT OpenTextFile([in] BSTR FileName, [in, defaultvalue(1)] IOMode IOMode,
+                        [in, defaultvalue(0)] VARIANT_BOOL Create,
+                        [in, defaultvalue(0)] Tristate Format,
+                        [out, retval] ITextStream** ppts);
+    }
+
+    [
+      odl,
+      uuid(C7C3F5A5-88A3-11D0-ABCB-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IFileCollection : IDispatch
+    {
+        [id(DISPID_VALUE), propget]
+        HRESULT Item([in] VARIANT Key, [out, retval] IFile** ppfile);
+
+        [id(DISPID_NEWENUM), propget, restricted, hidden]
+        HRESULT _NewEnum([out, retval] IUnknown** ppenum);
+
+        [id(0x00000001), propget]
+        HRESULT Count([out, retval] long* plCount);
+    }
+
+    [
+      odl,
+      uuid(C7C3F5A3-88A3-11D0-ABCB-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IFolderCollection : IDispatch
+    {
+        [id(0x00000002)]
+        HRESULT Add([in] BSTR Name, [out, retval] IFolder** ppfolder);
+
+        [id(DISPID_VALUE), propget]
+        HRESULT Item([in] VARIANT Key, [out, retval] IFolder** ppfolder);
+
+        [id(DISPID_NEWENUM), propget, restricted, hidden]
+        HRESULT _NewEnum([out, retval] IUnknown** ppenum);
+
+        [id(0x00000001), propget]
+        HRESULT Count([out, retval] long* plCount);
+    }
+
+    [
+      odl,
+      uuid(C7C3F5A2-88A3-11D0-ABCB-00A0C90FFFC0),
+      hidden,
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IFolder : IDispatch
+    {
+        [id(DISPID_VALUE), propget]
+        HRESULT Path([out, retval] BSTR* pbstrPath);
+
+        [id(0x000003e8), propget]
+        HRESULT Name([out, retval] BSTR* pbstrName);
+
+        [id(0x000003e8), propput]
+        HRESULT Name([in] BSTR pbstrName);
+
+        [id(0x000003ea), propget]
+        HRESULT ShortPath([out, retval] BSTR* pbstrPath);
+
+        [id(0x000003e9), propget]
+        HRESULT ShortName([out, retval] BSTR* pbstrName);
+
+        [id(0x000003ec), propget]
+        HRESULT Drive([out, retval] IDrive** ppdrive);
+
+        [id(0x000003ed), propget]
+        HRESULT ParentFolder([out, retval] IFolder** ppfolder);
+
+        [id(0x000003eb), propget]
+        HRESULT Attributes([out, retval] FileAttribute* pfa);
+
+        [id(0x000003eb), propput]
+        HRESULT Attributes([in] FileAttribute pfa);
+
+        [id(0x000003ee), propget]
+        HRESULT DateCreated([out, retval] DATE* pdate);
+
+        [id(0x000003ef), propget]
+        HRESULT DateLastModified([out, retval] DATE* pdate);
+
+        [id(0x000003f0), propget]
+        HRESULT DateLastAccessed([out, retval] DATE* pdate);
+
+        [id(0x000003f2), propget]
+        HRESULT Type([out, retval] BSTR* pbstrType);
+
+        [id(0x000004b1)]
+        HRESULT Delete([in, defaultvalue(0)] VARIANT_BOOL Force);
+
+        [id(0x000004b3)]
+        HRESULT Copy([in] BSTR Destination, [in, defaultvalue(-1)] VARIANT_BOOL OverWriteFiles);
+
+        [id(0x000004b5)]
+        HRESULT Move([in] BSTR Destination);
+
+        [id(0x00002710), propget]
+        HRESULT IsRootFolder([out, retval] VARIANT_BOOL* pfRootFolder);
+
+        [id(0x000003f1), propget]
+        HRESULT Size([out, retval] VARIANT* pvarSize);
+
+        [id(0x00002711), propget]
+        HRESULT SubFolders([out, retval] IFolderCollection** ppfolders);
+
+        [id(0x00002712), propget]
+        HRESULT Files([out, retval] IFileCollection** ppfiles);
+
+        [id(0x0000044d)]
+        HRESULT CreateTextFile([in] BSTR FileName, [in, defaultvalue(-1)] VARIANT_BOOL Overwrite,
+                        [in, defaultvalue(0)] VARIANT_BOOL Unicode, [out, retval] ITextStream** ppts);
+    }
+
+    [
+      odl,
+      uuid(2A0B9D10-4B87-11D3-A97A-00104B365C9F),
+      dual,
+      nonextensible,
+      oleautomation
+    ]
+    interface IFileSystem3 : IFileSystem
+    {
+        [id(0x00004e20)]
+        HRESULT GetStandardStream([in] StandardStreamTypes StandardStreamType,
+                        [in, defaultvalue(0)] VARIANT_BOOL Unicode, [out, retval] ITextStream** ppts);
+
+        [id(0x00004e2a)]
+        HRESULT GetFileVersion([in] BSTR FileName, [out, retval] BSTR* FileVersion);
+    }
+
+    [
+      odl,
+      uuid(AADC65F6-CFF1-11D1-B747-00C04FC2B085),
+      dual,
+      oleautomation
+    ]
+    interface IScriptEncoder : IDispatch
+    {
+        [id(DISPID_VALUE)]
+        HRESULT EncodeScriptFile([in] BSTR szExt, [in] BSTR bstrStreamIn, [in] long cFlags,
+                        [in] BSTR bstrDefaultLang, [out, retval] BSTR* pbstrStreamOut);
+    }
+
+    [
+      uuid(EE09B103-97E0-11CF-978F-00A02463E06F),
+      version(1.0),
+      helpstring("Scripting.Dictionary"),
+      threading(apartment),
+      progid("Scripting.Dictionary")
+    ]
+    coclass Dictionary
+    {
+        [default] interface IDictionary;
+    }
+
+    [
+      uuid(0D43FE01-F093-11CF-8940-00A0C9054228),
+      version(1.0),
+      helpstring("FileSystem Object"),
+      threading(both),
+      progid("Scripting.FileSystemObject")
+    ]
+    coclass FileSystemObject
+    {
+        [default] interface IFileSystem3;
+    }
+
+    [
+      uuid(C7C3F5B1-88A3-11D0-ABCB-00A0C90FFFC0),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass Drive
+    {
+        [default] interface IDrive;
+    }
+
+    [
+      uuid(C7C3F5B2-88A3-11D0-ABCB-00A0C90FFFC0),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass Drives
+    {
+        [default] interface IDriveCollection;
+    }
+
+    [
+      uuid(C7C3F5B3-88A3-11D0-ABCB-00A0C90FFFC0),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass Folder
+    {
+        [default] interface IFolder;
+    }
+
+    [
+      uuid(C7C3F5B4-88A3-11D0-ABCB-00A0C90FFFC0),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass Folders
+    {
+        [default] interface IFolderCollection;
+    }
+
+    [
+      uuid(C7C3F5B5-88A3-11D0-ABCB-00A0C90FFFC0),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass File
+    {
+        [default] interface IFile;
+    }
+
+    [
+      uuid(C7C3F5B6-88A3-11D0-ABCB-00A0C90FFFC0),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass Files
+    {
+        [default] interface IFileCollection;
+    }
+
+    [
+      uuid(0BB02EC0-EF49-11CF-8940-00A0C9054228),
+      noncreatable,
+      version(1.0)
+    ]
+    coclass TextStream
+    {
+        [default] interface ITextStream;
+    }
+
+    [
+      uuid(32DA2B15-CFED-11D1-B747-00C04FC2B085),
+      version(1.0),
+      helpstring("Script Encoder Object"),
+      threading(apartment),
+      progid("Scripting.Encoder")
+    ]
+    coclass Encoder
+    {
+        [default] interface IScriptEncoder;
+    }
+}

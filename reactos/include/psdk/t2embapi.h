@@ -38,6 +38,8 @@
 #define E_NONE 0x0
 #endif
 
+#define E_API_NOTIMPL 0x0001L
+
 #ifndef E_CHARCODECOUNTINVALID
 #define E_CHARCODECOUNTINVALID     0x2
 #define E_CHARCODESETINVALID       0x3

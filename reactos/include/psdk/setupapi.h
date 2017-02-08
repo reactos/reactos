@@ -2,8 +2,11 @@
 #define _SETUPAPI_H_
 
 #include <commctrl.h>
+#if defined(_WIN64)
+#include <pshpack8.h>
+#else
 #include <pshpack1.h>
-
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -155,7 +158,9 @@ extern "C" {
 #define DIF_POWERMESSAGEWAKE               39
 #define DIF_ADDREMOTEPROPERTYPAGE_ADVANCED 40
 #define DIF_UPDATEDRIVER_UI                41
-#define DIF_RESERVED2                      42
+#define DIF_FINISHINSTALL_ACTION           42
+#define DIF_RESERVED2                      48
+
 #define DIGCDP_FLAG_BASIC	0x00000001
 #define DIGCDP_FLAG_ADVANCED	0x00000002
 #if (_SETUPAPI_VER >= 0x0501)
@@ -334,6 +339,7 @@ extern "C" {
 #define ERROR_DEVINSTALL_QUEUE_NONNATIVE	(APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x230)
 #define ERROR_NOT_DISABLEABLE	(APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x231)
 #define ERROR_CANT_REMOVE_DEVINST	(APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x232)
+#define ERROR_IN_WOW64	(APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x235)
 #define ERROR_INTERFACE_DEVICE_ACTIVE	ERROR_DEVICE_INTERFACE_ACTIVE
 #define ERROR_INTERFACE_DEVICE_REMOVED	ERROR_DEVICE_INTERFACE_REMOVED
 #define ERROR_NO_DEFAULT_INTERFACE_DEVICE	ERROR_NO_DEFAULT_DEVICE_INTERFACE
@@ -610,16 +616,20 @@ extern "C" {
 #define SPQ_SCAN_INFORM_USER	0x00000010
 #define SPQ_SCAN_PRUNE_COPY_QUEUE	0x00000020
 #define SPRDI_FIND_DUPS	0x00000001
-#define SPSVCINST_TAGTOFRONT	0x00000001
-#define SPSVCINST_ASSOCSERVICE	0x00000002
-#define SPSVCINST_DELETEEVENTLOGENTRY	0x00000004
-#define SPSVCINST_NOCLOBBER_DISPLAYNAME	0x00000008
-#define SPSVCINST_NOCLOBBER_STARTTYPE	0x00000010
-#define SPSVCINST_NOCLOBBER_ERRORCONTROL	0x00000020
-#define SPSVCINST_NOCLOBBER_LOADORDERGROUP	0x00000040
-#define SPSVCINST_NOCLOBBER_DEPENDENCIES	0x00000080
-#define SPSVCINST_NOCLOBBER_DESCRIPTION	0x00000100
-#define SPSVCINST_STOPSERVICE	0x00000200
+
+#define SPSVCINST_TAGTOFRONT               0x00000001
+#define SPSVCINST_ASSOCSERVICE             0x00000002
+#define SPSVCINST_DELETEEVENTLOGENTRY      0x00000004
+#define SPSVCINST_NOCLOBBER_DISPLAYNAME    0x00000008
+#define SPSVCINST_NOCLOBBER_STARTTYPE      0x00000010
+#define SPSVCINST_NOCLOBBER_ERRORCONTROL   0x00000020
+#define SPSVCINST_NOCLOBBER_LOADORDERGROUP 0x00000040
+#define SPSVCINST_NOCLOBBER_DEPENDENCIES   0x00000080
+#define SPSVCINST_NOCLOBBER_DESCRIPTION    0x00000100
+#define SPSVCINST_STOPSERVICE              0x00000200
+#define SPSVCINST_CLOBBER_SECURITY         0x00000400
+#define SPSVCINST_STARTSERVICE             0x00000800
+
 #define SPWPT_SELECTDEVICE	0x00000001
 #define SPWP_USE_DEVINFO_DATA	0x00000001
 #define SRCINFO_PATH	1
@@ -677,14 +687,47 @@ typedef struct _SP_INF_INFORMATION {
     DWORD InfCount;
     BYTE VersionData[ANYSIZE_ARRAY];
 } SP_INF_INFORMATION, *PSP_INF_INFORMATION;
-typedef struct _SP_ALTPLATFORM_INFO {
+typedef struct _SP_INF_SIGNER_INFO_A {
+  DWORD cbSize;
+  CHAR CatalogFile;
+  CHAR DigitalSigner;
+  CHAR DigitalSignerVersion;
+} SP_INF_SIGNER_INFO_A, *PSP_INF_SIGNER_INFO_A;
+typedef struct _SP_INF_SIGNER_INFO_W {
+  DWORD cbSize;
+  WCHAR CatalogFile;
+  WCHAR DigitalSigner;
+  WCHAR DigitalSignerVersion;
+} SP_INF_SIGNER_INFO_W, *PSP_INF_SIGNER_INFO_W;
+typedef struct _SP_ALTPLATFORM_INFO_V1 {
     DWORD cbSize;
     DWORD Platform;
     DWORD MajorVersion;
     DWORD MinorVersion;
     WORD  ProcessorArchitecture;
     WORD  Reserved;
-} SP_ALTPLATFORM_INFO, *PSP_ALTPLATFORM_INFO;
+} SP_ALTPLATFORM_INFO_V1, *PSP_ALTPLATFORM_INFO_V1;
+typedef struct _SP_ALTPLATFORM_INFO_V2 {
+  DWORD cbSize;
+  DWORD Platform;
+  DWORD MajorVersion;
+  DWORD MinorVersion;
+  WORD  ProcessorArchitecture;
+    union
+    {
+        WORD  Reserved;
+        WORD  Flags;
+    } DUMMYUNIONNAME;
+  DWORD FirstValidatedMajorVersion;
+  DWORD FirstValidatedMinorVersion;
+} SP_ALTPLATFORM_INFO_V2, *PSP_ALTPLATFORM_INFO_V2;
+#if _WIN32_WINNT <= 0x0500
+typedef SP_ALTPLATFORM_INFO_V1 SP_ALTPLATFORM_INFO;
+typedef PSP_ALTPLATFORM_INFO_V1 PSP_ALTPLATFORM_INFO;
+#else
+typedef SP_ALTPLATFORM_INFO_V2 SP_ALTPLATFORM_INFO;
+typedef PSP_ALTPLATFORM_INFO_V2 PSP_ALTPLATFORM_INFO;
+#endif
 typedef struct _SP_ORIGINAL_FILE_INFO_A {
     DWORD  cbSize;
     CHAR   OriginalInfName[MAX_PATH];
@@ -1126,6 +1169,8 @@ WINSETUPAPI BOOL WINAPI DelayedMove(PCWSTR, PCWSTR);
 WINSETUPAPI BOOL WINAPI DoesUserHavePrivilege(PCWSTR);
 WINSETUPAPI BOOL WINAPI FileExists(PCWSTR, PWIN32_FIND_DATAW);
 WINSETUPAPI DWORD WINAPI GetSetFileTimestamp(PCWSTR, PFILETIME, PFILETIME, PFILETIME, BOOLEAN);
+WINSETUPAPI VOID WINAPI InstallHinfSectionA(_In_ HWND, _In_ HINSTANCE, _In_ PCSTR, _In_ INT);
+WINSETUPAPI VOID WINAPI InstallHinfSectionW(_In_ HWND, _In_ HINSTANCE, _In_ PCWSTR, _In_ INT);
 WINSETUPAPI BOOL WINAPI IsUserAdmin(VOID);
 WINSETUPAPI VOID WINAPI MyFree(PVOID);
 WINSETUPAPI PVOID WINAPI MyMalloc(DWORD);
@@ -2316,6 +2361,22 @@ SetupSetSourceListW(
 WINSETUPAPI VOID WINAPI SetupTermDefaultQueueCallback(_In_ PVOID);
 WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(_In_ HSPFILELOG);
 
+WINSETUPAPI
+BOOL
+WINAPI
+SetupUninstallOEMInfA(
+  _In_ PCSTR InfFileName,
+  _In_ DWORD Flags,
+  _In_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupUninstallOEMInfW(
+  _In_ PCWSTR InfFileName,
+  _In_ DWORD Flags,
+  _In_ PVOID Reserved);
+
 WINSETUPAPI DWORD WINAPI StampFileSecurity(PCWSTR, PSECURITY_DESCRIPTOR);
 
 
@@ -2367,6 +2428,7 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 
 #ifdef UNICODE
 #define PSP_FILE_CALLBACK PSP_FILE_CALLBACK_W
+#define InstallHinfSection InstallHinfSectionW
 #define SetupAddInstallSectionToDiskSpaceList	SetupAddInstallSectionToDiskSpaceListW
 #define SetupAddSectionToDiskSpaceList	SetupAddSectionToDiskSpaceListW
 #define SetupAddToDiskSpaceList	SetupAddToDiskSpaceListW
@@ -2486,8 +2548,10 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 #define SetupSetFileQueueAlternatePlatform	SetupSetFileQueueAlternatePlatformW
 #define SetupSetPlatformPathOverride	SetupSetPlatformPathOverrideW
 #define SetupSetSourceList	SetupSetSourceListW
+#define SetupUninstallOEMInf    SetupUninstallOEMInfW
 #else
 #define PSP_FILE_CALLBACK PSP_FILE_CALLBACK_A
+#define InstallHinfSection InstallHinfSectionA
 #define SetupAddInstallSectionToDiskSpaceList	SetupAddInstallSectionToDiskSpaceListA
 #define SetupAddSectionToDiskSpaceList	SetupAddSectionToDiskSpaceListA
 #define SetupAddToDiskSpaceList	SetupAddToDiskSpaceListA
@@ -2608,6 +2672,7 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 #define SetupSetFileQueueAlternatePlatform	SetupSetFileQueueAlternatePlatformA
 #define SetupSetPlatformPathOverride	SetupSetPlatformPathOverrideA
 #define SetupSetSourceList	SetupSetSourceListA
+#define SetupUninstallOEMInf    SetupUninstallOEMInfA
 #endif	/* UNICODE */
 
 #endif /* RC_INVOKED */

@@ -21,19 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-
-#include <windef.h>
-//#include "winbase.h"
-//#include "mmsystem.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-#include <winreg.h>
 #include "winemm.h"
-#include <winternl.h>
 
-#include <wine/debug.h>
+#include <winternl.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 
@@ -548,7 +538,7 @@ BOOL WINAPI PlaySoundW(LPCWSTR pszSoundW, HMODULE hmod, DWORD fdwSound)
  */
 BOOL WINAPI sndPlaySoundA(LPCSTR pszSoundA, UINT uFlags)
 {
-    uFlags &= SND_ASYNC|SND_LOOP|SND_MEMORY|SND_NODEFAULT|SND_NOSTOP|SND_SYNC;
+    uFlags &= SND_ALIAS_ID|SND_FILENAME|SND_ASYNC|SND_LOOP|SND_MEMORY|SND_NODEFAULT|SND_NOSTOP|SND_SYNC;
     return MULTIMEDIA_PlaySound(pszSoundA, 0, uFlags, FALSE);
 }
 
@@ -557,7 +547,7 @@ BOOL WINAPI sndPlaySoundA(LPCSTR pszSoundA, UINT uFlags)
  */
 BOOL WINAPI sndPlaySoundW(LPCWSTR pszSound, UINT uFlags)
 {
-    uFlags &= SND_ASYNC|SND_LOOP|SND_MEMORY|SND_NODEFAULT|SND_NOSTOP|SND_SYNC;
+    uFlags &= SND_ALIAS_ID|SND_FILENAME|SND_ASYNC|SND_LOOP|SND_MEMORY|SND_NODEFAULT|SND_NOSTOP|SND_SYNC;
     return MULTIMEDIA_PlaySound(pszSound, 0, uFlags, TRUE);
 }
 

@@ -1,21 +1,25 @@
+#ifndef _NOTEPAD_H
+#define _NOTEPAD_H
+
 #ifndef STRSAFE_NO_DEPRECATE
 #define STRSAFE_NO_DEPRECATE
 #endif
 
-#include <assert.h>
-#include <stdio.h>
+#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 #include <winnls.h>
-#include <winreg.h>
 #include <wingdi.h>
 #include <shellapi.h>
 #include <commdlg.h>
-#include <commctrl.h>
 #include <tchar.h>
 #include <malloc.h>
-#include <strsafe.h>
 
 #include "main.h"
 #include "dialog.h"
+
+void UpdateWindowCaption(BOOL clearModifyAlert);
+
+#endif /* _NOTEPAD_H */

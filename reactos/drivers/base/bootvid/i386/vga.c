@@ -2,14 +2,14 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG ScrollRegion[4] =
+static ULONG ScrollRegion[4] =
 {
     0,
     0,
     640 - 1,
     480 - 1
 };
-UCHAR lMaskTable[8] =
+static UCHAR lMaskTable[8] =
 {
     (1 << 8) - (1 << 0),
     (1 << 7) - (1 << 0),
@@ -20,7 +20,7 @@ UCHAR lMaskTable[8] =
     (1 << 2) - (1 << 0),
     (1 << 1) - (1 << 0)
 };
-UCHAR rMaskTable[8] =
+static UCHAR rMaskTable[8] =
 {
     (1 << 7),
     (1 << 7)+ (1 << 6),
@@ -43,7 +43,7 @@ UCHAR PixelMask[8] =
     (1 << 1),
     (1 << 0),
 };
-ULONG lookup[16] =
+static ULONG lookup[16] =
 {
     0x0000,
     0x0100,
@@ -63,24 +63,24 @@ ULONG lookup[16] =
     0x1111,
 };
 
-ULONG VidTextColor = 0xF;
-ULONG curr_x = 0;
-ULONG curr_y = 0;
-BOOLEAN CarriageReturn = FALSE;
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
+ULONG curr_x = 0;
+ULONG curr_y = 0;
+static ULONG VidTextColor = 0xF;
+static BOOLEAN CarriageReturn = FALSE;
 
 #define __outpb(Port, Value) \
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + Port, (UCHAR)Value)
+    WRITE_PORT_UCHAR((PUCHAR)(VgaRegisterBase + (Port)), (UCHAR)(Value))
 
 #define __outpw(Port, Value) \
-    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + Port), (USHORT)Value)
+    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + (Port)), (USHORT)(Value))
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
+static VOID
 NTAPI
-ReadWriteMode(UCHAR Mode)
+ReadWriteMode(IN UCHAR Mode)
 {
     UCHAR Value;
 
@@ -94,9 +94,8 @@ ReadWriteMode(UCHAR Mode)
     __outpb(0x3CF, Mode | Value);
 }
 
-
-VOID
 FORCEINLINE
+VOID
 SetPixel(IN ULONG Left,
          IN ULONG Top,
          IN UCHAR Color)
@@ -104,7 +103,7 @@ SetPixel(IN ULONG Left,
     PUCHAR PixelPosition;
 
     /* Calculate the pixel position. */
-    PixelPosition = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80);
+    PixelPosition = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
 
     /* Select the bitmask register and write the mask */
     __outpw(0x3CE, (PixelMask[Left & 7] << 8) | 8);
@@ -114,6 +113,14 @@ SetPixel(IN ULONG Left,
                          READ_REGISTER_UCHAR(PixelPosition) & Color);
 }
 
+#define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor)       \
+do {                                                        \
+    /* Select the bitmask register and write the mask */    \
+    __outpw(0x3CE, ((_PixelMask) << 8) | 8);                \
+    /* Set the new color */                                 \
+    WRITE_REGISTER_UCHAR((_PixelPtr), (UCHAR)(_TextColor)); \
+} while (0);
+
 #ifdef CHAR_GEN_UPSIDE_DOWN
 # define GetFontPtr(_Char) &FontData[_Char * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1;
 # define FONT_PTR_DELTA (-1)
@@ -122,20 +129,13 @@ SetPixel(IN ULONG Left,
 # define FONT_PTR_DELTA (1)
 #endif
 
-#define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor) \
-    /* Select the bitmask register and write the mask */ \
-    __outpw(0x3CE, (_PixelMask << 8) | 8); \
-\
-    /* Set the new color */ \
-    WRITE_REGISTER_UCHAR(_PixelPtr, (UCHAR)_TextColor);\
-
-VOID
+static VOID
 NTAPI
-DisplayCharacter(CHAR Character,
-                 ULONG Left,
-                 ULONG Top,
-                 ULONG TextColor,
-                 ULONG BackColor)
+DisplayCharacter(IN CHAR Character,
+                 IN ULONG Left,
+                 IN ULONG Top,
+                 IN ULONG TextColor,
+                 IN ULONG BackColor)
 {
     PUCHAR FontChar, PixelPtr;
     ULONG Height;
@@ -155,7 +155,7 @@ DisplayCharacter(CHAR Character,
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80);
+    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
 
     /* Loop all pixel rows */
     Height = BOOTCHAR_HEIGHT;
@@ -174,7 +174,7 @@ DisplayCharacter(CHAR Character,
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80) + 1;
+        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80) + 1);
 
         /* Loop all pixel rows */
         Height = BOOTCHAR_HEIGHT;
@@ -198,7 +198,7 @@ DisplayCharacter(CHAR Character,
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80);
+    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
 
     /* Loop all pixel rows */
     Height = BOOTCHAR_HEIGHT;
@@ -217,7 +217,7 @@ DisplayCharacter(CHAR Character,
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80) + 1;
+        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80) + 1);
 
         /* Loop all pixel rows */
         Height = BOOTCHAR_HEIGHT;
@@ -230,13 +230,13 @@ DisplayCharacter(CHAR Character,
     }
 }
 
-VOID
+static VOID
 NTAPI
-DisplayStringXY(PUCHAR String,
-                ULONG Left,
-                ULONG Top,
-                ULONG TextColor,
-                ULONG BackColor)
+DisplayStringXY(IN PUCHAR String,
+                IN ULONG Left,
+                IN ULONG Top,
+                IN ULONG TextColor,
+                IN ULONG BackColor)
 {
     /* Loop every character */
     while (*String)
@@ -250,7 +250,7 @@ DisplayStringXY(PUCHAR String,
     }
 }
 
-VOID
+static VOID
 NTAPI
 SetPaletteEntryRGB(IN ULONG Id,
                    IN ULONG Rgb)
@@ -266,7 +266,7 @@ SetPaletteEntryRGB(IN ULONG Id,
     __outpb(0x3C9, Colors[0] >> 2);
 }
 
-VOID
+static VOID
 NTAPI
 InitPaletteWithTable(IN PULONG Table,
                      IN ULONG Count)
@@ -282,7 +282,7 @@ InitPaletteWithTable(IN PULONG Table,
     }
 }
 
-VOID
+static VOID
 NTAPI
 SetPaletteEntry(IN ULONG Id,
                 IN ULONG PaletteEntry)
@@ -300,18 +300,18 @@ VOID
 NTAPI
 InitializePalette(VOID)
 {
-    ULONG PaletteEntry[16] = {0,
-                              0x20,
-                              0x2000,
-                              0x2020,
+    ULONG PaletteEntry[16] = {0x000000,
+                              0x000020,
+                              0x002000,
+                              0x002020,
                               0x200000,
                               0x200020,
                               0x202000,
                               0x202020,
                               0x303030,
-                              0x3F,
-                              0x3F00,
-                              0x3F3F,
+                              0x00003F,
+                              0x003F00,
+                              0x003F3F,
                               0x3F0000,
                               0x3F003F,
                               0x3F3F00,
@@ -322,9 +322,9 @@ InitializePalette(VOID)
     for (i = 0; i < 16; i++) SetPaletteEntry(i, PaletteEntry[i]);
 }
 
-VOID
+static VOID
 NTAPI
-VgaScroll(ULONG Scroll)
+VgaScroll(IN ULONG Scroll)
 {
     ULONG Top, RowSize;
     PUCHAR OldPosition, NewPosition;
@@ -341,11 +341,11 @@ VgaScroll(ULONG Scroll)
     RowSize = (ScrollRegion[2] - ScrollRegion[0] + 1) / 8;
 
     /* Calculate the position in memory for the row */
-    OldPosition = (PUCHAR)VgaBase + (ScrollRegion[1] + Scroll) * 80 + ScrollRegion[0] / 8;
-    NewPosition = (PUCHAR)VgaBase + ScrollRegion[1] * 80 + ScrollRegion[0] / 8;
+    OldPosition = (PUCHAR)(VgaBase + (ScrollRegion[1] + Scroll) * 80 + ScrollRegion[0] / 8);
+    NewPosition = (PUCHAR)(VgaBase + ScrollRegion[1] * 80 + ScrollRegion[0] / 8);
 
     /* Start loop */
-    for(Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
+    for (Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
         __movsb(NewPosition, OldPosition, RowSize);
@@ -353,7 +353,7 @@ VgaScroll(ULONG Scroll)
         ULONG i;
 
         /* Scroll the row */
-        for(i = 0; i < RowSize; ++i)
+        for (i = 0; i < RowSize; ++i)
             WRITE_REGISTER_UCHAR(NewPosition + i, READ_REGISTER_UCHAR(OldPosition + i));
 #endif
         OldPosition += 80;
@@ -361,7 +361,7 @@ VgaScroll(ULONG Scroll)
     }
 }
 
-VOID
+static VOID
 NTAPI
 PreserveRow(IN ULONG CurrentTop,
             IN ULONG TopDelta,
@@ -383,36 +383,35 @@ PreserveRow(IN ULONG CurrentTop,
     if (Direction)
     {
         /* Calculate the position in memory for the row */
-        Position1 = (PUCHAR)VgaBase + CurrentTop * 80;
-        Position2 = (PUCHAR)VgaBase + 0x9600;
+        Position1 = (PUCHAR)(VgaBase + CurrentTop * 80);
+        Position2 = (PUCHAR)(VgaBase + 0x9600);
     }
     else
     {
         /* Calculate the position in memory for the row */
-        Position1 = (PUCHAR)VgaBase + 0x9600;
-        Position2 = (PUCHAR)VgaBase + CurrentTop * 80;
+        Position1 = (PUCHAR)(VgaBase + 0x9600);
+        Position2 = (PUCHAR)(VgaBase + CurrentTop * 80);
     }
 
-    /* Set the count and make sure it's above 0 */
+    /* Set the count and loop every pixel */
     Count = TopDelta * 80;
 
 #if defined(_M_IX86) || defined(_M_AMD64)
     __movsb(Position1, Position2, Count);
 #else
-    /* Loop every pixel */
     while (Count--)
     {
         /* Write the data back on the other position */
         WRITE_REGISTER_UCHAR(Position1, READ_REGISTER_UCHAR(Position2));
 
         /* Increase both positions */
-        Position2++;
         Position1++;
+        Position2++;
     }
 #endif
 }
 
-VOID
+static VOID
 NTAPI
 BitBlt(IN ULONG Left,
        IN ULONG Top,
@@ -479,7 +478,7 @@ BitBlt(IN ULONG Left,
     } while (dy < Bottom);
 }
 
-VOID
+static VOID
 NTAPI
 RleBitBlt(IN ULONG Left,
           IN ULONG Top,
@@ -577,22 +576,24 @@ RleBitBlt(IN ULONG Left,
         {
             /* Case 0 */
             case 0:
-
+            {
                 /* Set new x value, decrease distance and restart */
                 x = Left;
                 YDelta--;
                 Buffer++;
                 continue;
+            }
 
             /* Case 1 */
             case 1:
-
+            {
                 /* Done */
                 return;
+            }
 
             /* Case 2 */
             case 2:
-
+            {
                 /* Set new x value, decrease distance and restart */
                 Buffer++;
                 x += *Buffer;
@@ -600,12 +601,14 @@ RleBitBlt(IN ULONG Left,
                 YDelta -= *Buffer;
                 Buffer++;
                 continue;
+            }
 
             /* Other values */
             default:
-
+            {
                 Buffer++;
                 break;
+            }
         }
 
         /* Check if we've gone past the edge */
@@ -684,7 +687,7 @@ RleBitBlt(IN ULONG Left,
  */
 ULONG
 NTAPI
-VidSetTextColor(ULONG Color)
+VidSetTextColor(IN ULONG Color)
 {
     ULONG OldColor;
 
@@ -699,16 +702,18 @@ VidSetTextColor(ULONG Color)
  */
 VOID
 NTAPI
-VidDisplayStringXY(PUCHAR String,
-                   ULONG Left,
-                   ULONG Top,
-                   BOOLEAN Transparent)
+VidDisplayStringXY(IN PUCHAR String,
+                   IN ULONG Left,
+                   IN ULONG Top,
+                   IN BOOLEAN Transparent)
 {
     ULONG BackColor;
 
-    /* If the caller wanted transparent, then send the special value (16), else */
-    /* use our default and call the helper routine. */
-    BackColor = (Transparent) ? 16 : 14;
+    /*
+     * If the caller wanted transparent, then send the special value (16),
+     * else use our default and call the helper routine.
+     */
+    BackColor = Transparent ? 16 : 14;
     DisplayStringXY(String, Left, Top, 12, BackColor);
 }
 
@@ -717,24 +722,24 @@ VidDisplayStringXY(PUCHAR String,
  */
 VOID
 NTAPI
-VidSetScrollRegion(ULONG x1,
-                   ULONG y1,
-                   ULONG x2,
-                   ULONG y2)
+VidSetScrollRegion(IN ULONG Left,
+                   IN ULONG Top,
+                   IN ULONG Right,
+                   IN ULONG Bottom)
 {
     /* Assert alignment */
-    ASSERT((x1 & 0x7) == 0);
-    ASSERT((x2 & 0x7) == 7);
+    ASSERT((Left  & 0x7) == 0);
+    ASSERT((Right & 0x7) == 7);
 
     /* Set Scroll Region */
-    ScrollRegion[0] = x1;
-    ScrollRegion[1] = y1;
-    ScrollRegion[2] = x2;
-    ScrollRegion[3] = y2;
+    ScrollRegion[0] = Left;
+    ScrollRegion[1] = Top;
+    ScrollRegion[2] = Right;
+    ScrollRegion[3] = Bottom;
 
     /* Set current X and Y */
-    curr_x = x1;
-    curr_y = y1;
+    curr_x = Left;
+    curr_y = Top;
 }
 
 /*
@@ -764,7 +769,7 @@ VidBufferToScreenBlt(IN PUCHAR Buffer,
                      IN ULONG Delta)
 {
     /* Make sure we have a width and height */
-    if (!(Width) || !(Height)) return;
+    if (!Width || !Height) return;
 
     /* Call the helper function */
     BitBlt(Left, Top, Width, Height, Buffer, 4, Delta);
@@ -775,7 +780,7 @@ VidBufferToScreenBlt(IN PUCHAR Buffer,
  */
 VOID
 NTAPI
-VidDisplayString(PUCHAR String)
+VidDisplayString(IN PUCHAR String)
 {
     ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
@@ -859,9 +864,9 @@ VidDisplayString(PUCHAR String)
  */
 VOID
 NTAPI
-VidBitBlt(PUCHAR Buffer,
-          ULONG Left,
-          ULONG Top)
+VidBitBlt(IN PUCHAR Buffer,
+          IN ULONG Left,
+          IN ULONG Top)
 {
     PBITMAPINFOHEADER BitmapInfoHeader;
     LONG Delta;
@@ -878,15 +883,17 @@ VidBitBlt(PUCHAR Buffer,
     /* Make sure we can support this bitmap */
     ASSERT((BitmapInfoHeader->biBitCount * BitmapInfoHeader->biPlanes) <= 4);
 
-    /* Calculate the delta and align it on 32-bytes, then calculate the actual */
-    /* start of the bitmap data. */
+    /*
+     * Calculate the delta and align it on 32-bytes, then calculate
+     * the actual start of the bitmap data.
+     */
     Delta = (BitmapInfoHeader->biBitCount * BitmapInfoHeader->biWidth) + 31;
     Delta >>= 3;
     Delta &= ~3;
     BitmapOffset = Buffer + sizeof(BITMAPINFOHEADER) + 16 * sizeof(ULONG);
 
     /* Check the compression of the bitmap */
-    if (BitmapInfoHeader->biCompression == 2)
+    if (BitmapInfoHeader->biCompression == BI_RLE4)
     {
         /* Make sure we have a width and a height */
         if ((BitmapInfoHeader->biWidth) && (BitmapInfoHeader->biHeight))
@@ -910,7 +917,7 @@ VidBitBlt(PUCHAR Buffer,
         else
         {
             /* Update buffer offset */
-            BitmapOffset += ((BitmapInfoHeader->biHeight -1) * Delta);
+            BitmapOffset += ((BitmapInfoHeader->biHeight - 1) * Delta);
             Delta *= -1;
         }
 
@@ -934,12 +941,12 @@ VidBitBlt(PUCHAR Buffer,
  */
 VOID
 NTAPI
-VidScreenToBufferBlt(PUCHAR Buffer,
-                     ULONG Left,
-                     ULONG Top,
-                     ULONG Width,
-                     ULONG Height,
-                     ULONG Delta)
+VidScreenToBufferBlt(IN PUCHAR Buffer,
+                     IN ULONG Left,
+                     IN ULONG Top,
+                     IN ULONG Width,
+                     IN ULONG Height,
+                     IN ULONG Delta)
 {
     ULONG Plane;
     ULONG XDistance;
@@ -974,7 +981,7 @@ VidScreenToBufferBlt(PUCHAR Buffer,
     do
     {
         /* Set the current pixel position and reset buffer loop variable */
-        PixelPosition = (PUCHAR)VgaBase + PixelOffset;
+        PixelPosition = (PUCHAR)(VgaBase + PixelOffset);
         i = Buffer;
 
         /* Set Mode 0 */
@@ -1073,7 +1080,7 @@ VidSolidColorFill(IN ULONG Left,
     __outpw(0x3CE, 7);
 
     /* Calculate pixel position for the read */
-    Offset = VgaBase + (Top * 80) + (PUCHAR)(ULONG_PTR)LeftOffset;
+    Offset = (PUCHAR)(VgaBase + (Top * 80) + LeftOffset);
 
     /* Select the bitmask register and write the mask */
     __outpw(0x3CE, (USHORT)lMask);
@@ -1097,7 +1104,7 @@ VidSolidColorFill(IN ULONG Left,
     if (Distance)
     {
         /* Calculate new pixel position */
-        Offset = VgaBase + (Top * 80) + (PUCHAR)(ULONG_PTR)RightOffset;
+        Offset = (PUCHAR)(VgaBase + (Top * 80) + RightOffset);
         Distance--;
 
         /* Select the bitmask register and write the mask */
@@ -1123,7 +1130,7 @@ VidSolidColorFill(IN ULONG Left,
         if (Distance)
         {
             /* Calculate new pixel position */
-            Offset = VgaBase + (Top * 80) + (PUCHAR)(ULONG_PTR)(LeftOffset + 1);
+            Offset = (PUCHAR)(VgaBase + (Top * 80) + LeftOffset + 1);
 
             /* Set the bitmask to 0xFF for all 4 planes */
             __outpw(0x3CE, 0xFF08);
@@ -1152,4 +1159,3 @@ VidSolidColorFill(IN ULONG Left,
         }
     }
 }
-

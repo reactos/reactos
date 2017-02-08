@@ -11,7 +11,6 @@
 
 const GUID KSMEDIUMSETID_Standard = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-
 NTSTATUS
 NTAPI
 SwDispatchPower(
@@ -111,7 +110,7 @@ SwDispatchPnp(
     Status = KsServiceBusEnumPnpRequest(DeviceObject, Irp);
 
     /* check if the request was for a pdo */
-    if (!ChildDevice)
+    if (ChildDevice)
     {
         if (Status != STATUS_NOT_SUPPORTED)
         {
@@ -145,9 +144,9 @@ SwDispatchPnp(
     if (!NT_SUCCESS(Status))
     {
         /* failed to get pnp object */
-        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return Status;
+        return STATUS_NOT_SUPPORTED;
     }
 
     /* sanity check */
@@ -426,7 +425,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = SwDispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = SwDispatchSystemControl;
 
-    DPRINT("SWENUM loaded\n");
+    DPRINT1("SWENUM loaded\n");
     return STATUS_SUCCESS;
 }
 

@@ -1,0 +1,139 @@
+/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Persediaan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Selamat datang ke Pendeta Persediaan ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Anda tidak boleh memasang ReactOS terus dari CD ini lagi! Sila mula semula komputer anda dari CD ini untuk memasang ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Klik Selesai untuk keluar persediaan.", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Persediaan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Pasang ReactOS", IDC_INSTALL, 7, 7, 277, 10
+    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "Membaiki atau mengemaskini ReactOS yang dipasang", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Klik Seterusnya untuk memasang peranti.", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Persediaan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Komputer:", IDC_STATIC, 20, 15, 80, 10
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
+    LTEXT "Paparan:", IDC_STATIC, 20, 35, 80, 10
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    LTEXT "Papan Kekunci:", IDC_STATIC, 20, 55, 80, 10
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
+    LTEXT "Klik di sebelah persediaan peranti pemasangan tersebut.", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Persediaan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "Men&cipta", IDC_PARTCREATE, 7, 122, 50, 15
+    PUSHBUTTON "Hapus(&D)", IDC_PARTDELETE, 63, 122, 50, 15
+    PUSHBUTTON "Pemacu(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "Opsyen l&anjutan...", IDC_PARTMOREOPTS, 230, 122, 80, 15
+    LTEXT "Klik Seterusnya untuk menyemak ringkasan.", IDC_STATIC, 10, 180, 277, 20
+END
+
+IDD_PARTITION DIALOGEX 0, 0, 145, 90
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "Membuat Partition"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
+    CONTROL "Cipta dan format partition", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    LTEXT "Saiz:", IDC_STATIC, 13, 24, 27, 9
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
+    LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
+    LTEXT "Sistem fail:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
+    PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Batal(&C)", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "Seting lanjutan Partition"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Folder pemasangan", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
+    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
+    CONTROL "Boot loader pemasangan", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "Memasang boot loader pada cakera keras (MBR dan VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "Memasang boot loader pada cakera keras (VBR sahaja)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "Tiada pemasangan boot loader", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "Batal(&C)", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Persediaan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Klik Seterusnya untuk memulakan proses pemasangan.", IDC_STATIC, 7, 180, 303, 20
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Persediaan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Memasang fail...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+END
+
+IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Melengkapkan persediaan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Anda telah berjaya melengkapkan tahap pertama persediaan ReactOS.", IDC_STATIC, 20, 50, 277, 10
+    LTEXT "Apabila anda klik Selesai, komputer akan dimulakan semula.", IDC_STATIC, 20, 80, 277, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+    LTEXT "Jika ada CD ke dalam pemacu, mengeluarkannya. Kemudian, untuk memulakan semula komputer anda, klik selesai.", IDC_STATIC, 10, 180, 297, 20
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TYPETITLE "Selamat datang ke persediaan ReactOS"
+    IDS_TYPESUBTITLE "Pilih jenis persediaan."
+    IDS_DEVICETITLE "Sediakan peranti asas"
+    IDS_DEVICESUBTITLE "Setkan seting paparan dan papan kekunci."
+    IDS_DRIVETITLE "Sediakan folder pemasangan partition dan sistem"
+    IDS_DRIVESUBTITLE "Menyediakan pemasangan partition, folder sistem dan boot loader."
+    IDS_PROCESSTITLE "Persediaan partition, salinan fail dan sistem persediaan"
+    IDS_PROCESSSUBTITLE "Cipta dan format partition, menyalin fail, memasang dan sediakan boot loader"
+    IDS_RESTARTTITLE "Tahap pertama Persediaan selesai"
+    IDS_RESTARTSUBTITLE "Tahap pertama persediaan telah selesai, mula semula untuk meneruskan peringkat kedua"
+    IDS_SUMMARYTITLE "Ringkasan pemasangan"
+    IDS_SUMMARYSUBTITLE "Senarai pemasangan sifat-sifat untuk menyemak sebelum digunakan untuk pemasangan peranti"
+    IDS_ABORTSETUP "ReactOS tidak benar-benar dipasang pada komputer anda. Jika anda berhenti persediaan sekarang, anda akan perlu untuk menjalankan persediaan untuk memasang ReactOS lagi. Benar-benar berhenti?"
+    IDS_ABORTSETUP2 "Henti paksa pemasangan?"
+    IDS_NO_TXTSETUP_SIF "Persediaan tidak dapat mencari 'txtsetup.sif'\nPersediaan tidak dapat meneruskan"
+    IDS_CAPTION "ReactOS Persediaan"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Name"
+    IDS_PARTITION_SIZE "Size"
+    IDS_PARTITION_TYPE "Type"
+END

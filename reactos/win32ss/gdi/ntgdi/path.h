@@ -44,8 +44,6 @@ typedef struct _EPATHOBJ
 
 #define  PATH_AllocPath() ((PPATH) GDIOBJ_AllocObj(GDIObjType_PATH_TYPE))
 #define  PATH_AllocPathWithHandle() ((PPATH) GDIOBJ_AllocObjWithHandle (GDI_OBJECT_TYPE_PATH, sizeof(PATH)))
-#define  PATH_FreePath(pPath)  GDIOBJ_FreeObj((POBJ)pPath, GDIObjType_PATH_TYPE)
-#define  PATH_FreeExtPathByHandle(hPath) GDIOBJ_FreeObjByHandle((HGDIOBJ) hPath, GDI_OBJECT_TYPE_PATH)
 #define  PATH_LockPath(hPath) ((PPATH)GDIOBJ_ShareLockObj((HGDIOBJ)hPath, GDI_OBJECT_TYPE_PATH))
 #define  PATH_UnlockPath(pPath) GDIOBJ_vDereferenceObject((POBJ)pPath)
 
@@ -67,7 +65,7 @@ BOOL FASTCALL PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UI
 BOOL FASTCALL PATH_PolyPolyline( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylines);
 BOOL FASTCALL PATH_Rectangle (PDC dc, INT x1, INT y1, INT x2, INT y2);
 BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height);
-BOOL FASTCALL PATH_PathToRegion (PPATH pPath, INT nPolyFillMode, HRGN *pHrgn);
+BOOL FASTCALL PATH_PathToRegion (PPATH pPath, INT nPolyFillMode, PREGION Rgn);
 BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECTL *lprc,LPCWSTR str,UINT count,const INT *dx);
 
 BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);

@@ -10,9 +10,6 @@
 
 #include "lsasrv.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
-
-
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -122,6 +119,17 @@ LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
 }
 
 
+VOID
+NTAPI
+LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr)
+{
+    if (Ptr != NULL)
+    {
+        midl_user_free(Ptr);
+    }
+}
+
+
 NTSTATUS WINAPI
 LsapInitLsa(VOID)
 {
@@ -134,8 +142,19 @@ LsapInitLsa(VOID)
     /* Initialize the well known SIDs */
     LsapInitSids();
 
+    /* Initialize the SRM server */
+    Status = LsapRmInitializeServer();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapRmInitializeServer() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     /* Initialize the LSA database */
     LsapInitDatabase();
+
+    /* Initialize logon sessions */
+    LsapInitLogonSessions();
 
     /* Initialize registered authentication packages */
     Status = LsapInitAuthPackages();

@@ -80,8 +80,8 @@ typedef struct _LFONT
 #define LFONT_ShareUnlockFont(plfnt) GDIOBJ_vDereferenceObject((POBJ)plfnt)
 #define LFONT_UnlockFont(plfnt) GDIOBJ_vUnlockObject((POBJ)plfnt)
 
-PTEXTOBJ
 FORCEINLINE
+PTEXTOBJ
 TEXTOBJ_LockText(HFONT hfont)
 {
     PLFONT plfnt = LFONT_ShareLockFont(hfont);
@@ -93,8 +93,8 @@ TEXTOBJ_LockText(HFONT hfont)
     return plfnt;
 }
 
-VOID
 FORCEINLINE
+VOID
 TEXTOBJ_UnlockText(PLFONT plfnt)
 {
     ExReleasePushLockExclusive(&plfnt->lock);
@@ -130,7 +130,9 @@ BOOL NTAPI GreExtTextOutW(IN HDC,IN INT,IN INT,IN UINT,IN OPTIONAL RECTL*,
 DWORD FASTCALL IntGetCharDimensions(HDC, PTEXTMETRICW, PDWORD);
 BOOL FASTCALL GreGetTextExtentW(HDC,LPWSTR,INT,LPSIZE,UINT);
 BOOL FASTCALL GreGetTextExtentExW(HDC,LPWSTR,ULONG,ULONG,PULONG,PULONG,LPSIZE,FLONG);
-DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
+BOOL FASTCALL GreTextOutW(HDC,int,int,LPCWSTR,int);
+HFONT FASTCALL GreCreateFontIndirectW( LOGFONTW * );
+BOOL WINAPI GreGetTextMetricsW( _In_  HDC hdc, _Out_ LPTEXTMETRICW lptm);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

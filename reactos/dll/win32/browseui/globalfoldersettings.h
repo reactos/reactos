@@ -21,7 +21,7 @@
 #pragma once
 
 class CGlobalFolderSettings :
-    public CComCoClass<CGlobalFolderSettings, &CLSID_ACLMulti>,
+    public CComCoClass<CGlobalFolderSettings, &CLSID_GlobalFolderSettings>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IGlobalFolderSettings
 {

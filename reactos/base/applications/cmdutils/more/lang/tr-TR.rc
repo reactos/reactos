@@ -1,0 +1,16 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Görüntülükte veriyi sayfa sayfa görüntüler.\n\n\
+  MORE < [Sürücü:][Yol]Kütük adı\n\
+  Komut | MORE \n\
+  MORE [Sürücü:][Yol]Kütük adı\n\n\
+  [Sürücü:][Yol]Kütük adı    İçeriği görüntülenecek bir kütük.\n\
+  Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\
+  İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir düğmeye basabilirsiniz.\n"
+    IDS_CONTINUE " -- Sürdür (%100) -- "
+    IDS_FILE_ACCESS "%s kütüğüne erişilemiyor."
+END

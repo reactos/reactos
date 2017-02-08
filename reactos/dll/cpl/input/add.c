@@ -1,6 +1,6 @@
 /*
  * PROJECT:         input.dll
- * FILE:            dll/win32/input/add.c
+ * FILE:            dll/cpl/input/add.c
  * PURPOSE:         input.dll
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck
@@ -8,7 +8,6 @@
  *      06-09-2007  Created
  */
 
-#include "resource.h"
 #include "input.h"
 
 static HWND hLangList;
@@ -222,7 +221,7 @@ LanguagesEnumProc(LPTSTR lpLanguage)
 
     Lcid = _tcstoul(lpLanguage, NULL, 16);
 
-    GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, Lang, sizeof(Lang));
+    GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, Lang, sizeof(Lang) / sizeof(Lang[0]));
     Index = (INT)SendMessage(hLangList, CB_ADDSTRING,
                              0, (LPARAM)Lang);
 

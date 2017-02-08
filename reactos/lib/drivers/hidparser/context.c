@@ -8,8 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-
 #include "parser.h"
+
+#define NDEBUG
+#include <debug.h>
 
 typedef struct
 {
@@ -206,9 +208,9 @@ HidParser_BuildCollectionContext(
     //
     ASSERT(CollectionSize + sizeof(HID_COLLECTION_CONTEXT) == ContextSize);
 
-    DPRINT1("CollectionContext %p\n", CollectionContext);
-    DPRINT1("CollectionContext RawData %p\n", CollectionContext->RawData);
-    DPRINT1("CollectionContext Size %lu\n", CollectionContext->Size);
+    DPRINT("CollectionContext %p\n", CollectionContext);
+    DPRINT("CollectionContext RawData %p\n", CollectionContext->RawData);
+    DPRINT("CollectionContext Size %lu\n", CollectionContext->Size);
 
     //
     // done

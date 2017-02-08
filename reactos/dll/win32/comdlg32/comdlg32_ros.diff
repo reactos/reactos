@@ -1,71 +1,76 @@
-Index: filedlg.c
-===================================================================
---- filedlg.c	(Revision 56893)
-+++ filedlg.c	(Arbeitskopie)
-@@ -260,6 +260,8 @@
-     HRSRC hRes;
-     HANDLE hDlgTmpl = 0;
-     HRESULT hr;
-+    DWORD dwSize;
-+    LPDLGTEMPLATE hDialogTemplate;
+diff -pudN e:\wine\dlls\comdlg32/cdlg32.c e:\reactos\dll\win32\comdlg32/cdlg32.c
+--- e:\wine\dlls\comdlg32/cdlg32.c	2015-02-21 17:13:08.621542200 +0100
++++ e:\reactos\dll\win32\comdlg32/cdlg32.c	2015-07-21 09:48:05.584922500 +0100
+@@ -174,6 +157,8 @@ DWORD WINAPI CommDlgExtendedError(void)
+ 	  return 0; /* we never set an error, so there isn't one */
+ }
  
-     /* test for missing functionality */
-     if (fodInfos->ofnInfos->Flags & UNIMPLEMENTED_FLAGS)
-@@ -276,12 +278,17 @@
-         return FALSE;
-     }
-     if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hRes )) ||
-+        !(dwSize = SizeofResource(COMDLG32_hInstance, hRes )) ||
-+        !(hDialogTemplate = malloc(dwSize)) ||
-         !(template = LockResource( hDlgTmpl )))
-     {
-         COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
-         return FALSE;
-     }
- 
-+    /* Copy the read only resource */
-+    memcpy(hDialogTemplate, template, dwSize);
++#ifndef __REACTOS__ /* Win 7 */
 +
-     /* msdn: explorer style dialogs permit sizing by default.
-      * The OFN_ENABLESIZING flag is only needed when a hook or
-      * custom tmeplate is provided */
-@@ -291,12 +298,12 @@
+ /*************************************************************************
+  * Implement the CommDlg32 class factory
+  *
+@@ -283,7 +268,11 @@ HRESULT WINAPI DllGetClassObject(REFCLSI
+  */
+ HRESULT WINAPI DllRegisterServer(void)
+ {
++#ifdef __REACTOS__
++    return E_FAIL; // FIXME: __wine_register_resources(COMDLG32_hInstance);
++#else
+     return __wine_register_resources(COMDLG32_hInstance);
++#endif
+ }
  
-     if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
-     {
--        ((LPDLGTEMPLATEW)template)->style |= WS_SIZEBOX;
-+        hDialogTemplate->style |= WS_SIZEBOX;
-         fodInfos->sizedlg.cx = fodInfos->sizedlg.cy = 0;
-         fodInfos->initial_size.x = fodInfos->initial_size.y = 0;
-     }
-     else
--        ((LPDLGTEMPLATEW)template)->style &= ~WS_SIZEBOX;
-+        hDialogTemplate->style &= ~WS_SIZEBOX;
- 
- 
-     /* old style hook messages */
-@@ -313,19 +320,21 @@
- 
-     if (fodInfos->unicode)
-       lRes = DialogBoxIndirectParamW(COMDLG32_hInstance,
--                                     template,
-+                                     hDialogTemplate,
-                                      fodInfos->ofnInfos->hwndOwner,
-                                      FileOpenDlgProc95,
-                                      (LPARAM) fodInfos);
-     else
-       lRes = DialogBoxIndirectParamA(COMDLG32_hInstance,
--                                     template,
-+                                     hDialogTemplate,
-                                      fodInfos->ofnInfos->hwndOwner,
-                                      FileOpenDlgProc95,
-                                      (LPARAM) fodInfos);
--    if (SUCCEEDED(hr)) 
-+    if (SUCCEEDED(hr))
-         OleUninitialize();
- 
-+    free(hDialogTemplate);
+ /***********************************************************************
+@@ -291,5 +280,11 @@ HRESULT WINAPI DllRegisterServer(void)
+  */
+ HRESULT WINAPI DllUnregisterServer(void)
+ {
++#ifdef __REACTOS__
++    return E_FAIL; // FIXME: __wine_unregister_resources(COMDLG32_hInstance);
++#else
+     return __wine_unregister_resources(COMDLG32_hInstance);
++#endif
+ }
 +
-     /* Unable to create the dialog */
-     if( lRes == -1)
-         return FALSE;
++#endif /* Win 7 */
+
+diff -pudN e:\wine\dlls\comdlg32/comdlg32.spec e:\reactos\dll\win32\comdlg32/comdlg32.spec
+--- e:\wine\dlls\comdlg32/comdlg32.spec	2015-02-21 17:13:08.621542200 +0100
++++ e:\reactos\dll\win32\comdlg32/comdlg32.spec	2012-02-15 22:32:22.456422900 +0100
+@@ -3,9 +3,9 @@
+ @ stdcall ChooseFontA(ptr)
+ @ stdcall ChooseFontW(ptr)
+ @ stdcall CommDlgExtendedError()
+-@ stdcall -private DllGetClassObject(ptr ptr ptr)
+-@ stdcall -private DllRegisterServer()
+-@ stdcall -private DllUnregisterServer()
++;@ stdcall -private DllGetClassObject(ptr ptr ptr) ; Win 7
++;@ stdcall -private DllRegisterServer() ; Win 7
++;@ stdcall -private DllUnregisterServer() ; Win 7
+ @ stdcall FindTextA(ptr)
+ @ stdcall FindTextW(ptr)
+ @ stdcall GetFileTitleA(str ptr long)
+diff -pudN e:\wine\dlls\comdlg32/itemdlg.c e:\reactos\dll\win32\comdlg32/itemdlg.c
+--- e:\wine\dlls\comdlg32/itemdlg.c	2015-04-05 20:44:56.807083800 +0100
++++ e:\reactos\dll\win32\comdlg32/itemdlg.c	2015-07-21 09:56:34.329021000 +0100
+@@ -18,10 +18,13 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
++#ifndef __REACTOS__ /* Win 7 */
++
+ #include <stdarg.h>
+ 
+ #define COBJMACROS
+ #define NONAMELESSUNION
++#define NONAMELESSSTRUCT
+ 
+ #include "windef.h"
+ #include "winbase.h"
+@@ -3847,3 +3850,5 @@ HRESULT FileSaveDialog_Constructor(IUnkn
+ {
+     return FileDialog_constructor(pUnkOuter, riid, ppv, ITEMDLG_TYPE_SAVE);
+ }
++
++#endif /* Win 7 */

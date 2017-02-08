@@ -16,7 +16,6 @@
 
 #include "usrmgr.h"
 
-
 typedef struct _USER_DATA
 {
     HMENU hPopupMenu;
@@ -32,13 +31,13 @@ CheckPasswords(HWND hwndDlg,
                INT nIdDlgItem1,
                INT nIdDlgItem2)
 {
-    TCHAR szPassword1[256];
-    TCHAR szPassword2[256];
+    TCHAR szPassword1[PWLEN];
+    TCHAR szPassword2[PWLEN];
     UINT uLen1;
     UINT uLen2;
 
-    uLen1 = GetDlgItemText(hwndDlg, nIdDlgItem1, szPassword1, 256);
-    uLen2 = GetDlgItemText(hwndDlg, nIdDlgItem2, szPassword2, 256);
+    uLen1 = GetDlgItemText(hwndDlg, nIdDlgItem1, szPassword1, PWLEN);
+    uLen2 = GetDlgItemText(hwndDlg, nIdDlgItem2, szPassword2, PWLEN);
 
     /* Check the passwords */
     if (uLen1 != uLen2 || _tcscmp(szPassword1, szPassword2) != 0)
@@ -50,7 +49,6 @@ CheckPasswords(HWND hwndDlg,
         return FALSE;
     }
 
-
     return TRUE;
 }
 
@@ -61,11 +59,18 @@ ChangePasswordDlgProc(HWND hwndDlg,
                       WPARAM wParam,
                       LPARAM lParam)
 {
+    PUSER_INFO_1003 userInfo;
+    INT nLength;
+
     UNREFERENCED_PARAMETER(wParam);
+
+    userInfo = (PUSER_INFO_1003)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            userInfo = (PUSER_INFO_1003)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
             break;
 
         case WM_COMMAND:
@@ -73,11 +78,22 @@ ChangePasswordDlgProc(HWND hwndDlg,
             {
                 case IDOK:
                     if (CheckPasswords(hwndDlg, IDC_EDIT_PASSWORD1, IDC_EDIT_PASSWORD2))
-                        EndDialog(hwndDlg, 0);
+                    {
+
+                        /* Store the password */
+                        nLength = SendDlgItemMessage(hwndDlg, IDC_EDIT_PASSWORD1, WM_GETTEXTLENGTH, 0, 0);
+                        if (nLength > 0)
+                        {
+                            userInfo->usri1003_password = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+                            GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD1, userInfo->usri1003_password, nLength + 1);
+                        }
+
+                        EndDialog(hwndDlg, IDOK);
+                    }
                     break;
 
                 case IDCANCEL:
-                    EndDialog(hwndDlg, 0);
+                    EndDialog(hwndDlg, IDCANCEL);
                     break;
             }
             break;
@@ -87,6 +103,52 @@ ChangePasswordDlgProc(HWND hwndDlg,
     }
 
     return TRUE;
+}
+
+
+static VOID
+UserChangePassword(HWND hwndDlg)
+{
+    TCHAR szUserName[UNLEN];
+    USER_INFO_1003 user;
+    INT nItem;
+    HWND hwndLV;
+    NET_API_STATUS status;
+
+    ZeroMemory(&user, sizeof(USER_INFO_1003));
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem == -1)
+        return;
+
+    /* Get the new user name */
+    ListView_GetItemText(hwndLV,
+                         nItem, 0,
+                         szUserName,
+                         UNLEN);
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_CHANGE_PASSWORD),
+                       hwndDlg,
+                       ChangePasswordDlgProc,
+                       (LPARAM)&user) == IDOK)
+    {
+        status = NetUserSetInfo(NULL,
+                                szUserName,
+                                1003,
+                                (LPBYTE)&user,
+                                NULL);
+        if (status != NERR_Success)
+        {
+            TCHAR szText[256];
+            wsprintf(szText, TEXT("Error: %u"), status);
+            MessageBox(NULL, szText, TEXT("NetUserSetInfo"), MB_ICONERROR | MB_OK);
+        }
+    }
+
+    if (user.usri1003_password)
+        HeapFree(GetProcessHeap(), 0, user.usri1003_password);
 }
 
 
@@ -347,11 +409,7 @@ UserDelete(HWND hwndDlg)
         return FALSE;
 
     /* Delete the user */
-#if 0
     status = NetUserDel(NULL, szUserName);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
@@ -411,7 +469,6 @@ UpdateUsersList(HWND hwndListView)
     LV_ITEM lvi;
     INT iItem;
 
-
     for (;;)
     {
         netStatus = NetUserEnum(NULL, 20, FILTER_NORMAL_ACCOUNT,
@@ -445,7 +502,6 @@ UpdateUsersList(HWND hwndListView)
         if (netStatus != ERROR_MORE_DATA)
             break;
     }
-
 }
 
 
@@ -457,7 +513,7 @@ OnInitDialog(HWND hwndDlg)
     HICON hIcon;
 
     /* Create the image list */
-    hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 5, 5);
+    hImgList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 5, 5);
     hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_USER), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     ImageList_AddIcon(hImgList, hIcon);
     hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_LOCKED_USER), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
@@ -496,7 +552,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldUserName[UNLEN];
     TCHAR szNewUserName[UNLEN];
-    //USER_INFO_0 useri0;
+    USER_INFO_0 useri0;
     NET_API_STATUS status;
 
     /* Leave, if there is no valid listview item */
@@ -525,13 +581,9 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
         return FALSE;
 
     /* Change the user name */
-    //useri0.usri0_name = szNewUserName;
+    useri0.usri0_name = szNewUserName;
 
-#if 0
     status = NetUserSetInfo(NULL, szOldUserName, 0, (LPBYTE)&useri0, NULL);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
@@ -663,11 +715,7 @@ UsersPageProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDM_USER_CHANGE_PASSWORD:
-                    DialogBoxParam(hApplet,
-                                   MAKEINTRESOURCE(IDD_CHANGE_PASSWORD),
-                                   hwndDlg,
-                                   ChangePasswordDlgProc,
-                                   (LPARAM)NULL);
+                    UserChangePassword(hwndDlg);
                     break;
 
                 case IDM_USER_RENAME:
@@ -675,14 +723,17 @@ UsersPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_USER_NEW:
+                case IDC_USERS_ADD:
                     UserNew(hwndDlg);
                     break;
 
                 case IDM_USER_DELETE:
+                case IDC_USERS_REMOVE:
                     UserDelete(hwndDlg);
                     break;
 
                 case IDM_USER_PROPERTIES:
+                case IDC_USERS_PROPERTIES:
                     if (UserProperties(hwndDlg))
                     {
                         UpdateUserProperties(hwndDlg);

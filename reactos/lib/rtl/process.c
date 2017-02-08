@@ -42,7 +42,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to read image file from disk\n");
+        DPRINT1("Failed to read image file from disk, Status = 0x%08X\n", Status);
         return Status;
     }
 
@@ -56,7 +56,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
                              hFile);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create section for image file\n");
+        DPRINT1("Failed to create section for image file, Status = 0x%08X\n", Status);
     }
 
     ZwClose(hFile);
@@ -357,7 +357,7 @@ RtlEncodeSystemPointer(IN PVOID Pointer)
  *   http://www.geoffchappell.com/studies/windows/win32/ntdll/api/rtl/peb/setprocessiscritical.htm
  */
 NTSTATUS
-NTAPI
+__cdecl
 RtlSetProcessIsCritical(IN BOOLEAN NewValue,
                         OUT PBOOLEAN OldValue OPTIONAL,
                         IN BOOLEAN NeedBreaks)

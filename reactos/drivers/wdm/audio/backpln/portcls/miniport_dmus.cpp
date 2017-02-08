@@ -7,8 +7,13 @@
  *
  */
 
-
 #include "private.hpp"
+
+#ifndef YDEBUG
+#define NDEBUG
+#endif
+
+#include <debug.h>
 
 //  + for absolute / - for relative
 
@@ -118,7 +123,7 @@ public:
     }
 
     CMiniportDMusUART(IUnknown * Unknown){}
-    ~CMiniportDMusUART();
+    virtual ~CMiniportDMusUART();
 
     /*************************************************************************
      * IMiniport methods
@@ -242,7 +247,7 @@ public:
         return m_Ref;
     }
 
-    ~CMiniportDMusUARTStream();
+    virtual ~CMiniportDMusUARTStream();
 
     STDMETHODIMP_(NTSTATUS) Init
     (

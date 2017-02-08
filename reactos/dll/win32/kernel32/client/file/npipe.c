@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 Kernel Library
- * FILE:            lib/kernel32/file/npipe.c
+ * FILE:            dll/win32/kernel32/client/file/npipe.c
  * PURPOSE:         Named Pipe Functions
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  *                  Ariadne ( ariadne@xs4all.nl)
@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(kernel32file);
-
-//#define USING_PROPER_NPFS_WAIT_SEMANTICS
 
 /* GLOBALS ********************************************************************/
 
@@ -105,7 +103,7 @@ CreatePipe(PHANDLE hReadPipe,
 
     /* Now try opening it for write access */
     Status = NtOpenFile(&WritePipeHandle,
-                        FILE_GENERIC_WRITE | SYNCHRONIZE,
+                        FILE_GENERIC_WRITE,
                         &ObjectAttributes,
                         &StatusBlock,
                         FILE_SHARE_READ,
@@ -150,7 +148,6 @@ CreateNamedPipeA(LPCSTR lpName,
                                           nDefaultTimeOut,
                                           lpSecurityAttributes);
 }
-
 
 /*
  * @implemented
@@ -290,7 +287,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     if (nDefaultTimeOut)
     {
         /* Convert the time to NT format */
-        DefaultTimeOut.QuadPart = UInt32x32To64(nDefaultTimeOut, -10000);
+        DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000LL;
     }
     else
     {
@@ -339,7 +336,6 @@ CreateNamedPipeW(LPCWSTR lpName,
     return PipeHandle;
 }
 
-
 /*
  * @implemented
  */
@@ -364,17 +360,6 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
     return r;
 }
 
-
-/*
- * When NPFS will work properly, use this code instead. It is compatible with
- * Microsoft's NPFS.SYS. The main difference is that:
- *      - This code actually respects the timeout instead of ignoring it!
- *      - This code validates and creates the proper names for both UNC and local pipes
- *      - On NT, you open the *root* pipe directory (either \DosDevices\Pipe or
- *        \DosDevices\Unc\Server\Pipe) and then send the pipe to wait on in the
- *        FILE_PIPE_WAIT_FOR_BUFFER structure.
- */
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
 /*
  * @implemented
  */
@@ -397,7 +382,11 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 
     /* Start by making a unicode string of the name */
     TRACE("Sent path: %S\n", lpNamedPipeName);
-    RtlCreateUnicodeString(&NamedPipeName, lpNamedPipeName);
+    if (!RtlCreateUnicodeString(&NamedPipeName, lpNamedPipeName))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
     NameLength = NamedPipeName.Length / sizeof(WCHAR);
 
     /* All slashes must become backslashes */
@@ -416,17 +405,25 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Make sure it's a valid prefix */
         RtlInitUnicodeString(&PipePrefix, L"\\\\.\\pipe\\");
-        RtlPrefixString((PANSI_STRING)&PipePrefix, (PANSI_STRING)&NewName, TRUE);
+        if (!RtlPrefixUnicodeString(&PipePrefix, &NewName, TRUE))
+        {
+            /* The name is invalid */
+            WARN("Invalid name!\n");
+            RtlFreeUnicodeString(&NamedPipeName);
+            BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
+            return FALSE;
+        }
 
         /* Move past it */
-        NewName.Buffer += 9;
-        NewName.Length -= 9 * sizeof(WCHAR);
+        NewName.Buffer += PipePrefix.Length / sizeof(WCHAR);
+        NewName.Length -= PipePrefix.Length;
+        NewName.MaximumLength -= PipePrefix.Length;
 
         /* Initialize the Dos Devices name */
         TRACE("NewName: %wZ\n", &NewName);
         RtlInitUnicodeString(&DevicePath, L"\\DosDevices\\pipe\\");
     }
-    else if (Type == RtlPathTypeRootLocalDevice)
+    else if (Type == RtlPathTypeUncAbsolute)
     {
         /* The path is \\server\\pipe\name; find the pipename itself */
         p = &NewName.Buffer[2];
@@ -442,15 +439,16 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         } while (*p);
 
         /* Now make sure the full name contains "pipe\" */
-        if ((*p) && !(_wcsnicmp(p + 1, L"pipe\\", sizeof("pipe\\"))))
+        if ((*p) && !(_wcsnicmp(p + 1, L"pipe\\", sizeof("pipe\\") - sizeof(ANSI_NULL))))
         {
             /* Get to the pipe name itself now */
-            p += sizeof("pipe\\") - 1;
+            p += sizeof("pipe\\") - sizeof(ANSI_NULL);
         }
         else
         {
             /* The name is invalid */
             WARN("Invalid name!\n");
+            RtlFreeUnicodeString(&NamedPipeName);
             BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
             return FALSE;
         }
@@ -460,6 +458,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     else
     {
         WARN("Invalid path type\n");
+        RtlFreeUnicodeString(&NamedPipeName);
         BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
         return FALSE;
     }
@@ -470,6 +469,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
     if (WaitPipeInfo == NULL)
     {
+        RtlFreeUnicodeString(&NamedPipeName);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -493,9 +493,9 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Fail; couldn't open */
         WARN("Status: %lx\n", Status);
-        BaseSetLastNTError(Status);
-        RtlFreeUnicodeString(&NamedPipeName);
         RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
+        RtlFreeUnicodeString(&NamedPipeName);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -517,7 +517,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         else
         {
             /* Convert to NT format */
-            WaitPipeInfo->Timeout.QuadPart = UInt32x32To64(-10000, nTimeOut);
+            WaitPipeInfo->Timeout.QuadPart = nTimeOut * -10000LL;
         }
 
         /* In both cases, we do have a timeout */
@@ -552,103 +552,13 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Failure to wait on the pipe */
         WARN("Status: %lx\n", Status);
-        BaseSetLastNTError (Status);
+        BaseSetLastNTError(Status);
         return FALSE;
      }
 
     /* Success */
     return TRUE;
 }
-#else
-/*
- * @implemented
- */
-BOOL
-WINAPI
-WaitNamedPipeW(LPCWSTR lpNamedPipeName,
-               DWORD nTimeOut)
-{
-    UNICODE_STRING NamedPipeName;
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    FILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
-    HANDLE FileHandle;
-    IO_STATUS_BLOCK Iosb;
-
-    if (RtlDosPathNameToNtPathName_U(lpNamedPipeName,
-                                     &NamedPipeName,
-                                     NULL,
-                                     NULL) == FALSE)
-    {
-        return FALSE;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &NamedPipeName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenFile(&FileHandle,
-                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &Iosb,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        RtlFreeUnicodeString(&NamedPipeName);
-        return FALSE;
-    }
-
-    /* Check what timeout we got */
-    if (nTimeOut == NMPWAIT_WAIT_FOREVER)
-    {
-        /* Don't use a timeout */
-        WaitPipe.TimeoutSpecified = FALSE;
-    }
-    else
-    {
-        /* Check if default */
-        if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
-        {
-            /* Set it to 0 */
-            WaitPipe.Timeout.LowPart = 0;
-            WaitPipe.Timeout.HighPart = 0;
-        }
-        else
-        {
-            /* Convert to NT format */
-            WaitPipe.Timeout.QuadPart = UInt32x32To64(-10000, nTimeOut);
-        }
-
-        /* In both cases, we do have a timeout */
-        WaitPipe.TimeoutSpecified = TRUE;
-    }
-
-    Status = NtFsControlFile(FileHandle,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &Iosb,
-                             FSCTL_PIPE_WAIT,
-                             &WaitPipe,
-                             sizeof(WaitPipe),
-                             NULL,
-                             0);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        RtlFreeUnicodeString(&NamedPipeName);
-        return FALSE;
-    }
-
-    RtlFreeUnicodeString(&NamedPipeName);
-    return TRUE;
-}
-#endif
-
 
 /*
  * @implemented
@@ -789,8 +699,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
         if (lpCollectDataTimeout)
         {
             /* Convert it to Quad */
-            RemoteSettings.CollectDataTime.QuadPart =
-                -(LONGLONG)UInt32x32To64(10000, *lpCollectDataTimeout);
+            RemoteSettings.CollectDataTime.QuadPart = *lpCollectDataTimeout * -10000LL;
         }
 
         /* Tell the driver to change them */
@@ -1305,7 +1214,6 @@ TransactNamedPipe(IN HANDLE hNamedPipe,
     }
     else
     {
-#if 0 /* We don't implement FSCTL_PIPE_TRANSCEIVE yet */
         IO_STATUS_BLOCK Iosb;
 
         Status = NtFsControlFile(hNamedPipe,
@@ -1339,34 +1247,6 @@ TransactNamedPipe(IN HANDLE hNamedPipe,
             BaseSetLastNTError(Status);
             return FALSE;
         }
-#else /* Workaround while FSCTL_PIPE_TRANSCEIVE not available */
-        DWORD nActualBytes;
-
-        while (0 != nInBufferSize &&
-               WriteFile(hNamedPipe, lpInBuffer, nInBufferSize, &nActualBytes,
-                         NULL))
-        {
-             lpInBuffer = (LPVOID)((char *) lpInBuffer + nActualBytes);
-             nInBufferSize -= nActualBytes;
-        }
-
-        if (0 != nInBufferSize)
-        {
-             /* Must have dropped out of the while 'cause WriteFile failed */
-             return FALSE;
-        }
-
-        if (!ReadFile(hNamedPipe, lpOutBuffer, nOutBufferSize, &nActualBytes,
-                      NULL))
-        {
-             return FALSE;
-        }
-
-        if (NULL != lpBytesRead)
-        {
-            *lpBytesRead = nActualBytes;
-        }
-#endif
     }
 
     return TRUE;

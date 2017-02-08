@@ -22,150 +22,194 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
+static void destroy_undo_item( struct undo_item *undo )
+{
+    switch( undo->type )
+    {
+    case undo_insert_run:
+        heap_free( undo->u.insert_run.str );
+        ME_ReleaseStyle( undo->u.insert_run.style );
+        break;
+    case undo_split_para:
+        ME_DestroyString( undo->u.split_para.eol_str );
+        break;
+    default:
+        break;
+    }
+
+    heap_free( undo );
+}
+
+static void empty_redo_stack(ME_TextEditor *editor)
+{
+    struct undo_item *cursor, *cursor2;
+    LIST_FOR_EACH_ENTRY_SAFE( cursor, cursor2, &editor->redo_stack, struct undo_item, entry )
+    {
+        list_remove( &cursor->entry );
+        destroy_undo_item( cursor );
+    }
+}
+
 void ME_EmptyUndoStack(ME_TextEditor *editor)
 {
-  ME_DisplayItem *p, *pNext;
-  
+  struct undo_item *cursor, *cursor2;
   if (editor->nUndoMode == umIgnore)
     return;
   
   TRACE("Emptying undo stack\n");
 
-  p = editor->pUndoStack;
-  editor->pUndoStack = editor->pUndoStackBottom = NULL;
   editor->nUndoStackSize = 0;
-  while(p) {
-    pNext = p->next;
-    ME_DestroyDisplayItem(p);    
-    p = pNext;
-  } 
-  p = editor->pRedoStack;
-  editor->pRedoStack = NULL;
-  while(p) {
-    pNext = p->next;
-    ME_DestroyDisplayItem(p);    
-    p = pNext;
-  } 
+
+  LIST_FOR_EACH_ENTRY_SAFE( cursor, cursor2, &editor->undo_stack, struct undo_item, entry )
+  {
+      list_remove( &cursor->entry );
+      destroy_undo_item( cursor );
+  }
+
+  empty_redo_stack( editor );
 }
 
-ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi) {
-  if (editor->nUndoMode == umIgnore)
-    return NULL;
-  else if (editor->nUndoLimit == 0)
-    return NULL;
-  else
-  {
-    ME_DisplayItem *pItem = ALLOC_OBJ(ME_UndoItem);
-    switch(type)
-    {
-    case diUndoPotentialEndTransaction:
-        /* only should be added for manually typed chars, not undos or redos */
-        assert(editor->nUndoMode == umAddToUndo);
-        /* intentional fall-through to next case */
-    case diUndoEndTransaction:
-      break;
-    case diUndoSetParagraphFormat:
-      assert(pdi);
-      pItem->member.para = pdi->member.para;
-      pItem->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
-      *pItem->member.para.pFmt = *pdi->member.para.pFmt;
-      break;
-    case diUndoInsertRun:
-      assert(pdi);
-      pItem->member.run = pdi->member.run;
-      pItem->member.run.strText = ME_StrDup(pItem->member.run.strText);
-      ME_AddRefStyle(pItem->member.run.style);
-      if (pdi->member.run.ole_obj)
-      {
-        pItem->member.run.ole_obj = ALLOC_OBJ(*pItem->member.run.ole_obj);
-        ME_CopyReObject(pItem->member.run.ole_obj, pdi->member.run.ole_obj);
-      }
-      else pItem->member.run.ole_obj = NULL;
-      break;
-    case diUndoSetCharFormat:
-      break;
-    case diUndoDeleteRun:
-    case diUndoJoinParagraphs:
-      break;
-    case diUndoSplitParagraph:
-    {
-      ME_DisplayItem *prev_para = pdi->member.para.prev_para;
-      assert(pdi->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
-      pItem->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
-      pItem->member.para.pFmt->cbSize = sizeof(PARAFORMAT2);
-      pItem->member.para.pFmt->dwMask = 0;
-      *pItem->member.para.pFmt = *pdi->member.para.pFmt;
-      pItem->member.para.border = pdi->member.para.border;
-      pItem->member.para.nFlags = prev_para->member.para.nFlags & ~MEPF_CELL;
-      pItem->member.para.pCell = NULL;
-      break;
-    }
-    default:
-      assert(0 == "AddUndoItem, unsupported item type");
-      return NULL;
-    }
-    pItem->type = type;
-    pItem->prev = NULL;
+static struct undo_item *add_undo( ME_TextEditor *editor, enum undo_type type )
+{
+    struct undo_item *undo, *item;
+    struct list *head;
+
+    if (editor->nUndoMode == umIgnore) return NULL;
+    if (editor->nUndoLimit == 0) return NULL;
+
+    undo = heap_alloc( sizeof(*undo) );
+    if (!undo) return NULL;
+    undo->type = type;
+
     if (editor->nUndoMode == umAddToUndo || editor->nUndoMode == umAddBackToUndo)
     {
-      if (editor->pUndoStack
-          && editor->pUndoStack->type == diUndoPotentialEndTransaction)
-      {
-          editor->pUndoStack->type = diUndoEndTransaction;
-      }
-      if (editor->nUndoMode == umAddToUndo)
-        TRACE("Pushing id=%s to undo stack, deleting redo stack\n", ME_GetDITypeName(type));
-      else
-        TRACE("Pushing id=%s to undo stack\n", ME_GetDITypeName(type));
 
-      pItem->next = editor->pUndoStack;
-      if (type == diUndoEndTransaction || type == diUndoPotentialEndTransaction)
-        editor->nUndoStackSize++;
-      if (editor->pUndoStack)
-        editor->pUndoStack->prev = pItem;
-      else
-        editor->pUndoStackBottom = pItem;
-      editor->pUndoStack = pItem;
-      
-      if (editor->nUndoStackSize > editor->nUndoLimit)
-      { /* remove oldest undo from stack */
-        ME_DisplayItem *p = editor->pUndoStackBottom;
-        while (p->type !=diUndoEndTransaction)
-          p = p->prev; /*find new stack bottom */
-        editor->pUndoStackBottom = p->prev;
-          editor->pUndoStackBottom->next = NULL;
-        do
+        head = list_head( &editor->undo_stack );
+        if (head)
         {
-          ME_DisplayItem *pp = p->next;
-          ME_DestroyDisplayItem(p);
-          p = pp;
-        } while (p);
-        editor->nUndoStackSize--;
-      }
-      /* any new operation (not redo) clears the redo stack */
-      if (editor->nUndoMode == umAddToUndo) {
-        ME_DisplayItem *p = editor->pRedoStack;
-        while(p)
-        {
-          ME_DisplayItem *pp = p->next;
-          ME_DestroyDisplayItem(p);
-          p = pp;
+            item = LIST_ENTRY( head, struct undo_item, entry );
+            if (item->type == undo_potential_end_transaction)
+                item->type = undo_end_transaction;
         }
-        editor->pRedoStack = NULL;
-      }
+
+        if (editor->nUndoMode == umAddToUndo)
+            TRACE("Pushing id=%d to undo stack, deleting redo stack\n", type);
+        else
+            TRACE("Pushing id=%d to undo stack\n", type);
+
+        list_add_head( &editor->undo_stack, &undo->entry );
+
+        if (type == undo_end_transaction || type == undo_potential_end_transaction)
+            editor->nUndoStackSize++;
+
+        if (editor->nUndoStackSize > editor->nUndoLimit)
+        {
+            struct undo_item *cursor2;
+            /* remove oldest undo from stack */
+            LIST_FOR_EACH_ENTRY_SAFE_REV( item, cursor2, &editor->undo_stack, struct undo_item, entry )
+            {
+                BOOL done = (item->type == undo_end_transaction);
+                list_remove( &item->entry );
+                destroy_undo_item( item );
+                if (done) break;
+            }
+            editor->nUndoStackSize--;
+        }
+
+        /* any new operation (not redo) clears the redo stack */
+        if (editor->nUndoMode == umAddToUndo) empty_redo_stack( editor );
     }
     else if (editor->nUndoMode == umAddToRedo)
     {
-      TRACE("Pushing id=%s to redo stack\n", ME_GetDITypeName(type));
-      pItem->next = editor->pRedoStack;
-      if (editor->pRedoStack)
-        editor->pRedoStack->prev = pItem;
-      editor->pRedoStack = pItem;
+        TRACE("Pushing id=%d to redo stack\n", type);
+        list_add_head( &editor->redo_stack, &undo->entry );
     }
-    else
-      assert(0);
-    return (ME_UndoItem *)pItem;
-  }
+
+    return undo;
+}
+
+BOOL add_undo_insert_run( ME_TextEditor *editor, int pos, const WCHAR *str, int len, int flags, ME_Style *style )
+{
+    struct undo_item *undo = add_undo( editor, undo_insert_run );
+    if (!undo) return FALSE;
+
+    undo->u.insert_run.str = heap_alloc( (len + 1) * sizeof(WCHAR) );
+    if (!undo->u.insert_run.str)
+    {
+        ME_EmptyUndoStack( editor );
+        return FALSE;
+    }
+    memcpy( undo->u.insert_run.str, str, len * sizeof(WCHAR) );
+    undo->u.insert_run.str[len] = 0;
+    undo->u.insert_run.pos = pos;
+    undo->u.insert_run.len = len;
+    undo->u.insert_run.flags = flags;
+    undo->u.insert_run.style = style;
+    ME_AddRefStyle( style );
+    return TRUE;
+}
+
+BOOL add_undo_set_para_fmt( ME_TextEditor *editor, const ME_Paragraph *para )
+{
+    struct undo_item *undo = add_undo( editor, undo_set_para_fmt );
+    if (!undo) return FALSE;
+
+    undo->u.set_para_fmt.pos = para->nCharOfs;
+    undo->u.set_para_fmt.fmt = *para->pFmt;
+    undo->u.set_para_fmt.border = para->border;
+
+    return TRUE;
+}
+
+BOOL add_undo_set_char_fmt( ME_TextEditor *editor, int pos, int len, const CHARFORMAT2W *fmt )
+{
+    struct undo_item *undo = add_undo( editor, undo_set_char_fmt );
+    if (!undo) return FALSE;
+
+    undo->u.set_char_fmt.pos = pos;
+    undo->u.set_char_fmt.len = len;
+    undo->u.set_char_fmt.fmt = *fmt;
+
+    return TRUE;
+}
+
+BOOL add_undo_join_paras( ME_TextEditor *editor, int pos )
+{
+    struct undo_item *undo = add_undo( editor, undo_join_paras );
+    if (!undo) return FALSE;
+
+    undo->u.join_paras.pos = pos;
+    return TRUE;
+}
+
+BOOL add_undo_split_para( ME_TextEditor *editor, const ME_Paragraph *para, ME_String *eol_str, const ME_Cell *cell )
+{
+    struct undo_item *undo = add_undo( editor, undo_split_para );
+    if (!undo) return FALSE;
+
+    undo->u.split_para.pos = para->nCharOfs - eol_str->nLen;
+    undo->u.split_para.eol_str = eol_str;
+    undo->u.split_para.fmt = *para->pFmt;
+    undo->u.split_para.border = para->border;
+    undo->u.split_para.flags = para->prev_para->member.para.nFlags & ~MEPF_CELL;
+
+    if (cell)
+    {
+        undo->u.split_para.cell_border = cell->border;
+        undo->u.split_para.cell_right_boundary = cell->nRightBoundary;
+    }
+    return TRUE;
+}
+
+BOOL add_undo_delete_run( ME_TextEditor *editor, int pos, int len )
+{
+    struct undo_item *undo = add_undo( editor, undo_delete_run );
+    if (!undo) return FALSE;
+
+    undo->u.delete_run.pos = pos;
+    undo->u.delete_run.len = len;
+
+    return TRUE;
 }
 
 /**
@@ -180,29 +224,31 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_Disp
  * This can also be used to conclude a coalescing transaction (used for grouping
  * typed characters).
  */
-void ME_CommitUndo(ME_TextEditor *editor) {
+void ME_CommitUndo(ME_TextEditor *editor)
+{
+  struct undo_item *item;
+  struct list *head;
+
   if (editor->nUndoMode == umIgnore)
     return;
   
   assert(editor->nUndoMode == umAddToUndo);
   
   /* no transactions, no need to commit */
-  if (!editor->pUndoStack)
-    return;
+  head = list_head( &editor->undo_stack );
+  if (!head) return;
 
   /* no need to commit empty transactions */
-  if (editor->pUndoStack->type == diUndoEndTransaction)
-    return;
-    
-  if (editor->pUndoStack->type == diUndoPotentialEndTransaction)
+  item = LIST_ENTRY( head, struct undo_item, entry );
+  if (item->type == undo_end_transaction) return;
+
+  if (item->type == undo_potential_end_transaction)
   {
-      /* Previous transaction was as a result of characters typed,
-       * so the end of this transaction is confirmed. */
-      editor->pUndoStack->type = diUndoEndTransaction;
+      item->type = undo_end_transaction;
       return;
   }
 
-  ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
+  add_undo( editor, undo_end_transaction );
 }
 
 /**
@@ -218,21 +264,23 @@ void ME_CommitUndo(ME_TextEditor *editor) {
  */
 void ME_ContinueCoalescingTransaction(ME_TextEditor *editor)
 {
-  ME_DisplayItem* p;
+  struct undo_item *item;
+  struct list *head;
 
   if (editor->nUndoMode == umIgnore)
     return;
 
   assert(editor->nUndoMode == umAddToUndo);
 
-  p = editor->pUndoStack;
+  head = list_head( &editor->undo_stack );
+  if (!head) return;
 
-  if (p && p->type == diUndoPotentialEndTransaction) {
-    assert(p->next); /* EndTransactions shouldn't be at bottom of undo stack */
-    editor->pUndoStack = p->next;
-    editor->pUndoStack->prev = NULL;
+  item = LIST_ENTRY( head, struct undo_item, entry );
+  if (item->type == undo_potential_end_transaction)
+  {
+    list_remove( &item->entry );
     editor->nUndoStackSize--;
-    ME_DestroyDisplayItem(p);
+    destroy_undo_item( item );
   }
 }
 
@@ -252,92 +300,92 @@ void ME_ContinueCoalescingTransaction(ME_TextEditor *editor)
  */
 void ME_CommitCoalescingUndo(ME_TextEditor *editor)
 {
+  struct undo_item *item;
+  struct list *head;
+
   if (editor->nUndoMode == umIgnore)
     return;
 
   assert(editor->nUndoMode == umAddToUndo);
 
-  /* no transactions, no need to commit */
-  if (!editor->pUndoStack)
-    return;
+  head = list_head( &editor->undo_stack );
+  if (!head) return;
 
   /* no need to commit empty transactions */
-  if (editor->pUndoStack->type == diUndoEndTransaction)
-    return;
-  if (editor->pUndoStack->type == diUndoPotentialEndTransaction)
-    return;
+  item = LIST_ENTRY( head, struct undo_item, entry );
+  if (item->type == undo_end_transaction ||
+      item->type == undo_potential_end_transaction)
+      return;
 
-  ME_AddUndoItem(editor, diUndoPotentialEndTransaction, NULL);
+  add_undo( editor, undo_potential_end_transaction );
 }
 
-static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
+static void ME_PlayUndoItem(ME_TextEditor *editor, struct undo_item *undo)
 {
-  ME_UndoItem *pUItem = (ME_UndoItem *)pItem;
 
   if (editor->nUndoMode == umIgnore)
     return;
-  TRACE("Playing undo/redo item, id=%s\n", ME_GetDITypeName(pItem->type));
+  TRACE("Playing undo/redo item, id=%d\n", undo->type);
 
-  switch(pItem->type)
+  switch(undo->type)
   {
-  case diUndoPotentialEndTransaction:
-  case diUndoEndTransaction:
+  case undo_potential_end_transaction:
+  case undo_end_transaction:
     assert(0);
-  case diUndoSetParagraphFormat:
+  case undo_set_para_fmt:
   {
     ME_Cursor tmp;
     ME_DisplayItem *para;
-    ME_CursorFromCharOfs(editor, pItem->member.para.nCharOfs, &tmp);
+    ME_CursorFromCharOfs(editor, undo->u.set_para_fmt.pos, &tmp);
     para = ME_FindItemBack(tmp.pRun, diParagraph);
-    ME_AddUndoItem(editor, diUndoSetParagraphFormat, para);
-    *para->member.para.pFmt = *pItem->member.para.pFmt;
-    para->member.para.border = pItem->member.para.border;
+    add_undo_set_para_fmt( editor, &para->member.para );
+    *para->member.para.pFmt = undo->u.set_para_fmt.fmt;
+    para->member.para.border = undo->u.set_para_fmt.border;
+    para->member.para.nFlags |= MEPF_REWRAP;
     break;
   }
-  case diUndoSetCharFormat:
+  case undo_set_char_fmt:
   {
     ME_Cursor start, end;
-    ME_CursorFromCharOfs(editor, pUItem->nStart, &start);
+    ME_CursorFromCharOfs(editor, undo->u.set_char_fmt.pos, &start);
     end = start;
-    ME_MoveCursorChars(editor, &end, pUItem->nLen);
-    ME_SetCharFormat(editor, &start, &end, &pItem->member.ustyle->fmt);
+    ME_MoveCursorChars(editor, &end, undo->u.set_char_fmt.len);
+    ME_SetCharFormat(editor, &start, &end, &undo->u.set_char_fmt.fmt);
     break;
   }
-  case diUndoInsertRun:
+  case undo_insert_run:
   {
     ME_Cursor tmp;
-    ME_CursorFromCharOfs(editor, pItem->member.run.nCharOfs, &tmp);
-    ME_InsertRunAtCursor(editor, &tmp, pItem->member.run.style,
-                         pItem->member.run.strText->szData,
-                         pItem->member.run.strText->nLen,
-                         pItem->member.run.nFlags);
+    ME_CursorFromCharOfs(editor, undo->u.insert_run.pos, &tmp);
+    ME_InsertRunAtCursor(editor, &tmp, undo->u.insert_run.style,
+                         undo->u.insert_run.str,
+                         undo->u.insert_run.len,
+                         undo->u.insert_run.flags);
     break;
   }
-  case diUndoDeleteRun:
+  case undo_delete_run:
   {
     ME_Cursor tmp;
-    ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
-    ME_InternalDeleteText(editor, &tmp, pUItem->nLen, TRUE);
+    ME_CursorFromCharOfs(editor, undo->u.delete_run.pos, &tmp);
+    ME_InternalDeleteText(editor, &tmp, undo->u.delete_run.len, TRUE);
     break;
   }
-  case diUndoJoinParagraphs:
+  case undo_join_paras:
   {
     ME_Cursor tmp;
-    ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
-    /* the only thing that's needed is paragraph offset, so no need to split runs */
+    ME_CursorFromCharOfs(editor, undo->u.join_paras.pos, &tmp);
     ME_JoinParagraphs(editor, tmp.pPara, TRUE);
     break;
   }
-  case diUndoSplitParagraph:
+  case undo_split_para:
   {
     ME_Cursor tmp;
     ME_DisplayItem *this_para, *new_para;
     BOOL bFixRowStart;
-    int paraFlags = pItem->member.para.nFlags & (MEPF_ROWSTART|MEPF_CELL|MEPF_ROWEND);
-    ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
+    int paraFlags = undo->u.split_para.flags & (MEPF_ROWSTART|MEPF_CELL|MEPF_ROWEND);
+    ME_CursorFromCharOfs(editor, undo->u.split_para.pos, &tmp);
     if (tmp.nOffset)
       ME_SplitRunSimple(editor, &tmp);
-    assert(pUItem->eol_str);
     this_para = tmp.pPara;
     bFixRowStart = this_para->member.para.nFlags & MEPF_ROWSTART;
     if (bFixRowStart)
@@ -347,58 +395,54 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
       this_para->member.para.nFlags &= ~MEPF_ROWSTART;
     }
     new_para = ME_SplitParagraph(editor, tmp.pRun, tmp.pRun->member.run.style,
-                                 pUItem->eol_str, paraFlags);
+                                 undo->u.split_para.eol_str->szData, undo->u.split_para.eol_str->nLen, paraFlags);
     if (bFixRowStart)
       new_para->member.para.nFlags |= MEPF_ROWSTART;
-    assert(pItem->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
-    *new_para->member.para.pFmt = *pItem->member.para.pFmt;
-    new_para->member.para.border = pItem->member.para.border;
-    if (pItem->member.para.pCell)
+    *new_para->member.para.pFmt = undo->u.split_para.fmt;
+    new_para->member.para.border = undo->u.split_para.border;
+    if (paraFlags)
     {
-      ME_DisplayItem *pItemCell, *pCell;
-      pItemCell = pItem->member.para.pCell;
-      pCell = new_para->member.para.pCell;
-      pCell->member.cell.nRightBoundary = pItemCell->member.cell.nRightBoundary;
-      pCell->member.cell.border = pItemCell->member.cell.border;
+      ME_DisplayItem *pCell = new_para->member.para.pCell;
+      pCell->member.cell.nRightBoundary = undo->u.split_para.cell_right_boundary;
+      pCell->member.cell.border = undo->u.split_para.cell_border;
     }
     break;
   }
-  default:
-    assert(0 == "PlayUndoItem, unexpected type");
   }
 }
 
-BOOL ME_Undo(ME_TextEditor *editor) {
-  ME_DisplayItem *p;
+BOOL ME_Undo(ME_TextEditor *editor)
+{
   ME_UndoMode nMode = editor->nUndoMode;
-  
-  if (editor->nUndoMode == umIgnore)
-    return FALSE;
+  struct list *head;
+  struct undo_item *undo, *cursor2;
+
+  if (editor->nUndoMode == umIgnore) return FALSE;
   assert(nMode == umAddToUndo || nMode == umIgnore);
-  
-  /* no undo items ? */
-  if (!editor->pUndoStack)
-    return FALSE;
-    
+
+  head = list_head( &editor->undo_stack );
+  if (!head) return FALSE;
+
   /* watch out for uncommitted transactions ! */
-  assert(editor->pUndoStack->type == diUndoEndTransaction
-        || editor->pUndoStack->type == diUndoPotentialEndTransaction);
-  
+  undo = LIST_ENTRY( head, struct undo_item, entry );
+  assert(undo->type == undo_end_transaction
+        || undo->type == undo_potential_end_transaction);
+
   editor->nUndoMode = umAddToRedo;
-  p = editor->pUndoStack->next;
-  ME_DestroyDisplayItem(editor->pUndoStack);
-  editor->pUndoStack = p;
-  do {
-    p->prev = NULL;
-    ME_PlayUndoItem(editor, p);
-    editor->pUndoStack = p->next;
-    ME_DestroyDisplayItem(p);
-    p = editor->pUndoStack;
-  } while(p && p->type != diUndoEndTransaction);
-  if (p)
-    p->prev = NULL;
+
+  list_remove( &undo->entry );
+  destroy_undo_item( undo );
+
+  LIST_FOR_EACH_ENTRY_SAFE( undo, cursor2, &editor->undo_stack, struct undo_item, entry )
+  {
+      if (undo->type == undo_end_transaction) break;
+      ME_PlayUndoItem( editor, undo );
+      list_remove( &undo->entry );
+      destroy_undo_item( undo );
+  }
+
   ME_MoveCursorFromTableRowStartParagraph(editor);
-  ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
+  add_undo( editor, undo_end_transaction );
   ME_CheckTablesForCorruption(editor);
   editor->nUndoStackSize--;
   editor->nUndoMode = nMode;
@@ -406,36 +450,36 @@ BOOL ME_Undo(ME_TextEditor *editor) {
   return TRUE;
 }
 
-BOOL ME_Redo(ME_TextEditor *editor) {
-  ME_DisplayItem *p;
+BOOL ME_Redo(ME_TextEditor *editor)
+{
   ME_UndoMode nMode = editor->nUndoMode;
-  
+  struct list *head;
+  struct undo_item *undo, *cursor2;
+
   assert(nMode == umAddToUndo || nMode == umIgnore);
   
-  if (editor->nUndoMode == umIgnore)
-    return FALSE;
-  /* no redo items ? */
-  if (!editor->pRedoStack)
-    return FALSE;
-    
+  if (editor->nUndoMode == umIgnore) return FALSE;
+
+  head = list_head( &editor->redo_stack );
+  if (!head) return FALSE;
+
   /* watch out for uncommitted transactions ! */
-  assert(editor->pRedoStack->type == diUndoEndTransaction);
-  
+  undo = LIST_ENTRY( head, struct undo_item, entry );
+  assert( undo->type == undo_end_transaction );
+
   editor->nUndoMode = umAddBackToUndo;
-  p = editor->pRedoStack->next;
-  ME_DestroyDisplayItem(editor->pRedoStack);
-  editor->pRedoStack = p;
-  do {
-    p->prev = NULL;
-    ME_PlayUndoItem(editor, p);
-    editor->pRedoStack = p->next;
-    ME_DestroyDisplayItem(p);
-    p = editor->pRedoStack;
-  } while(p && p->type != diUndoEndTransaction);
-  if (p)
-    p->prev = NULL;
+  list_remove( &undo->entry );
+  destroy_undo_item( undo );
+
+  LIST_FOR_EACH_ENTRY_SAFE( undo, cursor2, &editor->redo_stack, struct undo_item, entry )
+  {
+      if (undo->type == undo_end_transaction) break;
+      ME_PlayUndoItem( editor, undo );
+      list_remove( &undo->entry );
+      destroy_undo_item( undo );
+  }
   ME_MoveCursorFromTableRowStartParagraph(editor);
-  ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
+  add_undo( editor, undo_end_transaction );
   ME_CheckTablesForCorruption(editor);
   editor->nUndoMode = nMode;
   ME_UpdateRepaint(editor, FALSE);

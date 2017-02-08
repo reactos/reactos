@@ -20,7 +20,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Internal Objects
- * FILE:              subsystem/win32/win32k/eng/objects.h
+ * FILE:              win32ss/gdi/eng/engobjects.h
  * PROGRAMER:         Jason Filby
  * REVISION HISTORY:
  *                 21/8/1999: Created
@@ -40,9 +40,14 @@
 ---------------------------------------------------------------------------*/
 
 /* EXtended CLip and Window Region Object */
+#ifdef __cplusplus
+typedef struct _XCLIPOBJ : _WNDOBJ
+{
+#else
 typedef struct _XCLIPOBJ
 {
   WNDOBJ;
+#endif
   PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
   RECTL   rclClipRgn;
   PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */
@@ -68,12 +73,24 @@ typedef struct _XCLIPOBJ
   }
  */
 typedef struct _CLIPGDI {
-  CLIPOBJ ClipObj;
-  ULONG EnumPos;
-  ULONG EnumOrder;
-  ULONG EnumMax;
-  ENUMRECTS EnumRects;
+    union
+    {
+        CLIPOBJ ClipObj;
+        WNDOBJ WndObj;
+    };
+    /* WNDOBJ part */
+    HWND              Hwnd;
+    WNDOBJCHANGEPROC  ChangeProc;
+    FLONG             Flags;
+    int               PixelFormat;
+    /* CLIPOBJ part */
+    ULONG EnumPos;
+    ULONG EnumOrder;
+    ULONG EnumMax;
+    ULONG RectCount;
+    RECTL* Rects;
 } CLIPGDI, *PCLIPGDI;
+C_ASSERT(FIELD_OFFSET(CLIPGDI, ClipObj) == FIELD_OFFSET(CLIPGDI, WndObj.coClient));
 
 // HACK, until we use the original structure
 #define XCLIPOBJ CLIPGDI
@@ -111,15 +128,6 @@ typedef struct _FONTGDI {
 typedef struct _PATHGDI {
   PATHOBJ PathObj;
 } PATHGDI;
-
-typedef struct _WNDGDI {
-  WNDOBJ            WndObj;
-  HWND              Hwnd;
-  CLIPOBJ           *ClientClipObj;
-  WNDOBJCHANGEPROC  ChangeProc;
-  FLONG             Flags;
-  int               PixelFormat;
-} WNDGDI, *PWNDGDI;
 
 typedef struct _XFORMGDI {
   ULONG Dummy;

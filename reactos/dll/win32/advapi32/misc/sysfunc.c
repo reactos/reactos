@@ -12,6 +12,11 @@
  */
 
 #include <advapi32.h>
+#include <ntsecapi.h>
+#include <ksecioctl.h>
+#include <md4.h>
+#include <md5.h>
+#include <rc4.h>
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
@@ -477,7 +482,7 @@ SystemFunction029(INT a, INT b)
  *  FALSE if blocks are different
  */
 BOOL
-WINAPI SystemFunction030(PVOID b1, PVOID b2)
+WINAPI SystemFunction030(LPCVOID b1, LPCVOID b2)
 {
 	return !memcmp(b1, b2, 0x10);
 }
@@ -500,12 +505,12 @@ WINAPI SystemFunction030(PVOID b1, PVOID b2)
  *  see http://web.it.kth.se/~rom/ntsec.html#crypto-strongavail
  */
 NTSTATUS
-WINAPI SystemFunction032(struct ustring *data, struct ustring *key)
+WINAPI SystemFunction032(struct ustring *data, const struct ustring *key)
 {
-    arc4_info a4i;
+    RC4_CONTEXT a4i;
 
-    arc4_init(&a4i, key->Buffer, key->Length);
-    arc4_ProcessString(&a4i, data->Buffer, data->Length);
+    rc4_init(&a4i, key->Buffer, key->Length);
+    rc4_crypt(&a4i, data->Buffer, data->Length);
 
     return STATUS_SUCCESS;
 }
@@ -540,15 +545,19 @@ SystemFunction034(INT a, INT b)
 }
 
 
-/**********************************************************************
+/******************************************************************************
+ * SystemFunction035   (ADVAPI32.@)
  *
- * @unimplemented
+ * Described here:
+http://disc.server.com/discussion.cgi?disc=148775;article=942;title=Coding%2FASM%2FSystem
+ *
+ * NOTES
+ *  Stub, always return TRUE.
  */
-BOOL
-WINAPI
-SystemFunction035(LPCSTR lpszDllFilePath)
+BOOL WINAPI SystemFunction035(LPCSTR lpszDllFilePath)
 {
-	return TRUE;
+    //FIXME("%s: stub\n", debugstr_a(lpszDllFilePath));
+    return TRUE;
 }
 
 /******************************************************************************
@@ -600,12 +609,99 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
         do
         {
             /* Get each byte from the pseudo random number and store it in the buffer */
-            *pBuffer = (BYTE)(uPseudoRandom >> 8 * (dwLen % 4) & 0xFF);
+            *pBuffer = (BYTE)(uPseudoRandom >> 8 * (dwLen % 3) & 0xFF);
             ++pBuffer;
-        } while(--dwLen % 4);
+        } while(--dwLen % 3);
     } while(dwLen);
 
     return TRUE;
+}
+
+HANDLE KsecDeviceHandle;
+
+static
+NTSTATUS
+KsecOpenDevice()
+{
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KsecDD");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE DeviceHandle;
+    NTSTATUS Status;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DeviceName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&DeviceHandle,
+                        FILE_READ_DATA | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    if (InterlockedCompareExchangePointer(&KsecDeviceHandle, DeviceHandle, NULL) != NULL)
+    {
+        NtClose(DeviceHandle);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+CloseKsecDdHandle(VOID)
+{
+    /* Check if we already opened a handle to ksecdd */
+    if (KsecDeviceHandle != NULL)
+    {
+        /* Close it */
+        CloseHandle(KsecDeviceHandle);
+        KsecDeviceHandle = NULL;
+    }
+}
+
+static
+NTSTATUS
+KsecDeviceIoControl(
+    ULONG IoControlCode,
+    PVOID InputBuffer,
+    SIZE_T InputBufferLength,
+    PVOID OutputBuffer,
+    SIZE_T OutputBufferLength)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    /* Check if we already have a handle */
+    if (KsecDeviceHandle == NULL)
+    {
+        /* Try to open the device */
+        Status = KsecOpenDevice();
+        if (!NT_SUCCESS(Status))
+        {
+            //ERR("Failed to open handle to KsecDd driver!\n");
+            return Status;
+        }
+    }
+
+    /* Call the driver */
+    Status = NtDeviceIoControlFile(KsecDeviceHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IoControlCode,
+                                   InputBuffer,
+                                   InputBufferLength,
+                                   OutputBuffer,
+                                   OutputBufferLength);
+
+    return Status;
 }
 
 /*
@@ -616,33 +712,103 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
 /******************************************************************************
  * SystemFunction040   (ADVAPI32.@)
  *
- * PARAMS:
- *   memory : pointer to memory to encrypt
- *   length : length of region to encrypt, in bytes. must be multiple of RTL_ENCRYPT_MEMORY_SIZE
- *   flags  : RTL_ENCRYPT_OPTION_SAME_PROCESS | RTL_ENCRYPT_OPTION_CROSS_PROCESS, | RTL_ENCRYPT_OPTION_SAME_LOGON
- *            control whether other processes are able to decrypt the memory. The same value must be given
- *            when decrypting the memory.
+ * MSDN documents this function as RtlEncryptMemory and declares it in ntsecapi.h.
+ *
+ * PARAMS
+ *  memory [I/O] Pointer to memory to encrypt.
+ *  length [I] Length of region to encrypt in bytes.
+ *  flags  [I] Control whether other processes are able to decrypt the memory.
+ *    RTL_ENCRYPT_OPTION_SAME_PROCESS
+ *    RTL_ENCRYPT_OPTION_CROSS_PROCESS
+ *    RTL_ENCRYPT_OPTION_SAME_LOGON
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS
+ *  Failure: NTSTATUS error code
+ *
+ * NOTES
+ *  length must be a multiple of RTL_ENCRYPT_MEMORY_SIZE.
+ *  If flags are specified when encrypting, the same flag value must be given
+ *  when decrypting the memory.
  */
-NTSTATUS WINAPI SystemFunction040(PVOID memory, ULONG length, ULONG flags)  /* RtlEncryptMemory */
+NTSTATUS
+WINAPI
+SystemFunction040(
+    _Inout_ PVOID Memory,
+    _In_ ULONG MemoryLength,
+    _In_ ULONG OptionFlags)
 {
-	//FIXME("(%p, %lx, %lx): stub [RtlEncryptMemory]\n", memory, length, flags);
-	return STATUS_SUCCESS;
+    ULONG IoControlCode;
+
+    if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_PROCESS)
+    {
+        IoControlCode = IOCTL_KSEC_ENCRYPT_SAME_PROCESS;
+    }
+    else if (OptionFlags == RTL_ENCRYPT_OPTION_CROSS_PROCESS)
+    {
+        IoControlCode = IOCTL_KSEC_ENCRYPT_CROSS_PROCESS;
+    }
+    else if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_LOGON)
+    {
+        IoControlCode = IOCTL_KSEC_ENCRYPT_SAME_LOGON;
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+	return KsecDeviceIoControl(IoControlCode, Memory, MemoryLength, Memory, MemoryLength);
 }
 
 /******************************************************************************
  * SystemFunction041  (ADVAPI32.@)
  *
- * PARAMS:
- *   memory : pointer to memory to decrypt
- *   length : length of region to decrypt, in bytes. must be multiple of RTL_ENCRYPT_MEMORY_SIZE
- *   flags  : RTL_ENCRYPT_OPTION_SAME_PROCESS | RTL_ENCRYPT_OPTION_CROSS_PROCESS, | RTL_ENCRYPT_OPTION_SAME_LOGON
- *            control whether other processes are able to decrypt the memory. The same value must be given
- *            when encrypting the memory.
+ * MSDN documents this function as RtlDecryptMemory and declares it in ntsecapi.h.
+ *
+ * PARAMS
+ *  memory [I/O] Pointer to memory to decrypt.
+ *  length [I] Length of region to decrypt in bytes.
+ *  flags  [I] Control whether other processes are able to decrypt the memory.
+ *    RTL_ENCRYPT_OPTION_SAME_PROCESS
+ *    RTL_ENCRYPT_OPTION_CROSS_PROCESS
+ *    RTL_ENCRYPT_OPTION_SAME_LOGON
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS
+ *  Failure: NTSTATUS error code
+ *
+ * NOTES
+ *  length must be a multiple of RTL_ENCRYPT_MEMORY_SIZE.
+ *  If flags are specified when encrypting, the same flag value must be given
+ *  when decrypting the memory.
  */
-NTSTATUS WINAPI SystemFunction041(PVOID memory, ULONG length, ULONG flags)  /* RtlDecryptMemory */
+NTSTATUS
+WINAPI
+SystemFunction041(
+    _Inout_ PVOID Memory,
+    _In_ ULONG MemoryLength,
+    _In_ ULONG OptionFlags)
 {
-	//FIXME("(%p, %lx, %lx): stub [RtlDecryptMemory]\n", memory, length, flags);
-	return STATUS_SUCCESS;
+    ULONG IoControlCode;
+
+    if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_PROCESS)
+    {
+        IoControlCode = IOCTL_KSEC_DECRYPT_SAME_PROCESS;
+    }
+    else if (OptionFlags == RTL_ENCRYPT_OPTION_CROSS_PROCESS)
+    {
+        IoControlCode = IOCTL_KSEC_DECRYPT_CROSS_PROCESS;
+    }
+    else if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_LOGON)
+    {
+        IoControlCode = IOCTL_KSEC_DECRYPT_SAME_LOGON;
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+	return KsecDeviceIoControl(IoControlCode, Memory, MemoryLength, Memory, MemoryLength);
 }
 
 /* EOF */

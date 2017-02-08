@@ -18,33 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <config.h>
-//#include "wine/port.h"
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-#include <windef.h>
-#include <winbase.h>
-//#include "winnls.h"
-//#include "winerror.h"
-#include <wine/unicode.h>
 #include <wininet.h>
-#include <winreg.h>
-#include <winternl.h>
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
 #include <intshcut.h>
-#include <wine/debug.h>
 
 HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
 BOOL    WINAPI MLFreeLibrary(HMODULE);
 HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
-
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static inline WCHAR *heap_strdupAtoW(const char *str)
 {
@@ -669,6 +650,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     DWORD i, len, res1, res2, process_case = 0;
     LPWSTR work, preliminary, mbase, mrelative;
     static const WCHAR myfilestr[] = {'f','i','l','e',':','/','/','/','\0'};
+    static const WCHAR fragquerystr[] = {'#','?',0};
     HRESULT ret;
 
     TRACE("(base %s, Relative %s, Combine size %d, flags %08x)\n",
@@ -691,11 +673,11 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     /* Canonicalize the base input prior to looking for the scheme */
     myflags = dwFlags & (URL_DONT_SIMPLIFY | URL_UNESCAPE);
     len = INTERNET_MAX_URL_LENGTH;
-    ret = UrlCanonicalizeW(pszBase, mbase, &len, myflags);
+    UrlCanonicalizeW(pszBase, mbase, &len, myflags);
 
     /* Canonicalize the relative input prior to looking for the scheme */
     len = INTERNET_MAX_URL_LENGTH;
-    ret = UrlCanonicalizeW(pszRelative, mrelative, &len, myflags);
+    UrlCanonicalizeW(pszRelative, mrelative, &len, myflags);
 
     /* See if the base has a scheme */
     res1 = ParseURLW(mbase, &base);
@@ -740,17 +722,19 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
             }
         }
 
-        /* If there is a '#' and the characters immediately preceding it are
-         * ".htm[l]", then begin looking for the last leaf starting from
-         * the '#'. Otherwise the '#' is not meaningful and just start
-         * looking from the end. */
-        if ((work = strchrW(base.pszSuffix + sizeloc, '#'))) {
+        /* If there is a '?', then the remaining part can only contain a
+         * query string or fragment, so start looking for the last leaf
+         * from the '?'. Otherwise, if there is a '#' and the characters
+         * immediately preceding it are ".htm[l]", then begin looking for
+         * the last leaf starting from the '#'. Otherwise the '#' is not
+         * meaningful and just start looking from the end. */
+        if ((work = strpbrkW(base.pszSuffix + sizeloc, fragquerystr))) {
             const WCHAR htmlW[] = {'.','h','t','m','l',0};
             const int len_htmlW = 5;
             const WCHAR htmW[] = {'.','h','t','m',0};
             const int len_htmW = 4;
 
-            if (base.nScheme == URL_SCHEME_HTTP || base.nScheme == URL_SCHEME_HTTPS)
+            if (*work == '?' || base.nScheme == URL_SCHEME_HTTP || base.nScheme == URL_SCHEME_HTTPS)
                 manual_search = TRUE;
             else if (work - base.pszSuffix > len_htmW) {
                 work -= len_htmW;
@@ -915,7 +899,10 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	work = preliminary + base.cchProtocol+1+base.cchSuffix - 1;
         if (*work++ != '/')
             *(work++) = '/';
-	strcpyW(work, relative.pszSuffix);
+        if (relative.pszSuffix[0] == '.' && relative.pszSuffix[1] == 0)
+            *work = 0;
+        else
+            strcpyW(work, relative.pszSuffix);
 	break;
 
     default:
@@ -959,6 +946,8 @@ HRESULT WINAPI UrlEscapeA(
 
     if(!RtlCreateUnicodeStringFromAsciiz(&urlW, pszUrl))
         return E_INVALIDARG;
+    if(dwFlags & URL_ESCAPE_AS_UTF8)
+        return E_NOTIMPL;
     if((ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags)) == E_POINTER) {
         escapedW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
         ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags);
@@ -987,57 +976,46 @@ HRESULT WINAPI UrlEscapeA(
 #define WINE_URL_STOP_ON_HASH     0x20
 #define WINE_URL_STOP_ON_QUESTION 0x40
 
-static inline BOOL URL_NeedEscapeW(WCHAR ch, DWORD dwFlags, DWORD int_flags)
+static inline BOOL URL_NeedEscapeW(WCHAR ch, DWORD flags, DWORD int_flags)
 {
+    if (flags & URL_ESCAPE_SPACES_ONLY)
+        return ch == ' ';
+
+    if ((flags & URL_ESCAPE_PERCENT) && (ch == '%'))
+	return TRUE;
+
+    if ((flags & URL_ESCAPE_AS_UTF8) && (ch >= 0x80))
+	return TRUE;
+
+    if (ch <= 31 || (ch >= 127 && ch <= 255) )
+	return TRUE;
 
     if (isalnumW(ch))
         return FALSE;
 
-    if(dwFlags & URL_ESCAPE_SPACES_ONLY) {
-        if(ch == ' ')
-	    return TRUE;
-	else
-	    return FALSE;
-    }
-
-    if ((dwFlags & URL_ESCAPE_PERCENT) && (ch == '%'))
-	return TRUE;
-
-    if (ch <= 31 || ch >= 127)
-	return TRUE;
-
-    else {
-        switch (ch) {
-	case ' ':
-	case '<':
-	case '>':
-	case '\"':
-	case '{':
-	case '}':
-	case '|':
-	case '\\':
-	case '^':
-	case ']':
-	case '[':
-	case '`':
-	case '&':
-	    return TRUE;
-
-	case '/':
-            if (int_flags & WINE_URL_ESCAPE_SLASH) return TRUE;
-            return FALSE;
-
-	case '?':
-	    if (int_flags & WINE_URL_ESCAPE_QUESTION) return TRUE;
-            return FALSE;
-
-        case '#':
-            if (int_flags & WINE_URL_ESCAPE_HASH) return TRUE;
-            return FALSE;
-
-	default:
-	    return FALSE;
-	}
+    switch (ch) {
+    case ' ':
+    case '<':
+    case '>':
+    case '\"':
+    case '{':
+    case '}':
+    case '|':
+    case '\\':
+    case '^':
+    case ']':
+    case '[':
+    case '`':
+    case '&':
+        return TRUE;
+    case '/':
+        return !!(int_flags & WINE_URL_ESCAPE_SLASH);
+    case '?':
+        return !!(int_flags & WINE_URL_ESCAPE_QUESTION);
+    case '#':
+        return !!(int_flags & WINE_URL_ESCAPE_HASH);
+    default:
+        return FALSE;
     }
 }
 
@@ -1084,8 +1062,8 @@ HRESULT WINAPI UrlEscapeW(
     LPCWSTR src;
     DWORD needed = 0, ret;
     BOOL stop_escaping = FALSE;
-    WCHAR next[5], *dst, *dst_ptr;
-    INT len;
+    WCHAR next[12], *dst, *dst_ptr;
+    INT i, len;
     PARSEDURLW parsed_url;
     DWORD int_flags;
     DWORD slashes = 0;
@@ -1100,7 +1078,8 @@ HRESULT WINAPI UrlEscapeW(
     if(dwFlags & ~(URL_ESCAPE_SPACES_ONLY |
 		   URL_ESCAPE_SEGMENT_ONLY |
 		   URL_DONT_ESCAPE_EXTRA_INFO |
-		   URL_ESCAPE_PERCENT))
+		   URL_ESCAPE_PERCENT |
+		   URL_ESCAPE_AS_UTF8))
         FIXME("Unimplemented flags: %08x\n", dwFlags);
 
     dst_ptr = dst = HeapAlloc(GetProcessHeap(), 0, *pcchEscaped*sizeof(WCHAR));
@@ -1203,10 +1182,39 @@ HRESULT WINAPI UrlEscapeW(
             if(cur == '\\' && (int_flags & WINE_URL_BASH_AS_SLASH) && !stop_escaping) cur = '/';
 
             if(URL_NeedEscapeW(cur, dwFlags, int_flags) && stop_escaping == FALSE) {
-                next[0] = '%';
-                next[1] = hexDigits[(cur >> 4) & 0xf];
-                next[2] = hexDigits[cur & 0xf];
-                len = 3;
+                if(dwFlags & URL_ESCAPE_AS_UTF8) {
+                    char utf[16];
+
+                    if ((cur >= 0xd800 && cur <= 0xdfff) &&
+                        (src[1] >= 0xdc00 && src[1] <= 0xdfff))
+                    {
+                        len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, src, 2,
+                                                   utf, sizeof(utf), NULL, NULL );
+                        src++;
+                    }
+                    else
+                        len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, &cur, 1,
+                                                   utf, sizeof(utf), NULL, NULL );
+
+                    if (!len) {
+                        utf[0] = 0xef;
+                        utf[1] = 0xbf;
+                        utf[2] = 0xbd;
+                        len = 3;
+                    }
+
+                    for(i = 0; i < len; i++) {
+                        next[i*3+0] = '%';
+                        next[i*3+1] = hexDigits[(utf[i] >> 4) & 0xf];
+                        next[i*3+2] = hexDigits[utf[i] & 0xf];
+                    }
+                    len *= 3;
+                } else {
+                    next[0] = '%';
+                    next[1] = hexDigits[(cur >> 4) & 0xf];
+                    next[2] = hexDigits[cur & 0xf];
+                    len = 3;
+                }
             } else {
                 next[0] = cur;
                 len = 1;

@@ -11,6 +11,9 @@
 
 #include "usbccgp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 NTAPI
 FDO_QueryCapabilitiesCompletionRoutine(
@@ -97,7 +100,7 @@ FDO_QueryCapabilities(
 
 NTSTATUS
 FDO_DeviceRelations(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     ULONG DeviceCount = 0;
@@ -238,7 +241,7 @@ FDO_CreateChildPdo(
 
 NTSTATUS
 FDO_StartDevice(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     NTSTATUS Status;
@@ -536,8 +539,8 @@ FDO_HandleResetCyclePort(
             ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
             /* Complete request with status success */
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            ListIrp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(ListIrp, IO_NO_INCREMENT);
         }
 
         /* Status success */
@@ -565,7 +568,7 @@ FDO_HandleInternalDeviceControl(
     /* Get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT || 
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_RESET_PORT ||
         IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_CYCLE_PORT)
     {
         /* Handle reset / cycle ports */
@@ -586,12 +589,33 @@ FDO_HandleInternalDeviceControl(
 }
 
 NTSTATUS
+FDO_HandleSystemControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    /* Get device extension */
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    /* Forward and forget request */
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
+}
+
+NTSTATUS
 FDO_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    /* Get device extension */
+    FDODeviceExtension = DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     /* Get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -600,8 +624,14 @@ FDO_Dispatch(
     {
         case IRP_MJ_PNP:
             return FDO_HandlePnp(DeviceObject, Irp);
-         case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+        case IRP_MJ_INTERNAL_DEVICE_CONTROL:
             return FDO_HandleInternalDeviceControl(DeviceObject, Irp);
+        case IRP_MJ_POWER:
+            PoStartNextPowerIrp(Irp);
+            IoSkipCurrentIrpStackLocation(Irp);
+            return PoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
+        case IRP_MJ_SYSTEM_CONTROL:
+            return FDO_HandleSystemControl(DeviceObject, Irp);
         default:
             DPRINT1("FDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
             ASSERT(FALSE);

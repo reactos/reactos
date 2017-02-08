@@ -11,6 +11,15 @@
 
 #include "mmsys.h"
 
+#include <winsvc.h>
+#include <shlwapi.h>
+#include <debug.h>
+
+#include <swenum.h>
+#include <newdev.h>
+#include <initguid.h>
+#include <devguid.h>
+
 typedef enum
 {
     HWPD_STANDARDLIST = 0,
@@ -80,6 +89,14 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
                            UINT uNumberOfGuids,
                            HWPAGE_DISPLAYMODE DisplayMode);
 
+typedef BOOL (WINAPI *UpdateDriverForPlugAndPlayDevicesProto)(IN OPTIONAL HWND hwndParent,
+                                                              IN LPCTSTR HardwareId,
+                                                              IN LPCTSTR FullInfPath,
+                                                              IN DWORD InstallFlags,
+                                                              OUT OPTIONAL PBOOL bRebootRequired
+                                                         );
+
+#define UPDATEDRIVERFORPLUGANDPLAYDEVICES "UpdateDriverForPlugAndPlayDevicesW"
 #define NUM_APPLETS    (1)
 
 
@@ -321,6 +338,124 @@ InstallSystemSoundScheme()
     RegCloseKey(hKey);
 }
 
+BOOL
+IsSoftwareBusPnpEnumeratorInstalled()
+{
+    HDEVINFO hDevInfo;
+    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
+    GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
+    PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData;
+
+    hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL,  DIGCF_DEVICEINTERFACE| DIGCF_PRESENT);
+    if (!hDevInfo)
+    {
+        // failed
+        return FALSE;
+    }
+
+    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+    if (!SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &SWBusGuid, 0, &DeviceInterfaceData))
+    {
+        // failed
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return FALSE;
+    }
+
+    DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W));
+    if (!DeviceInterfaceDetailData)
+    {
+        // failed
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return FALSE;
+    }
+
+    DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
+    if (!SetupDiGetDeviceInterfaceDetailW(hDevInfo,  &DeviceInterfaceData, DeviceInterfaceDetailData,MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W), NULL, NULL))
+    {
+        // failed
+        HeapFree(GetProcessHeap(), 0, DeviceInterfaceDetailData);
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return FALSE;
+    }
+    HeapFree(GetProcessHeap(), 0, DeviceInterfaceDetailData);
+    SetupDiDestroyDeviceInfoList(hDevInfo);
+    return TRUE;
+}
+
+DWORD
+InstallSoftwareBusPnpEnumerator(LPWSTR InfPath, LPCWSTR HardwareIdList)
+{
+    HDEVINFO DeviceInfoSet = INVALID_HANDLE_VALUE;
+    SP_DEVINFO_DATA DeviceInfoData;
+    GUID ClassGUID;
+    TCHAR ClassName[50];
+    int Result = 0;
+    HMODULE hModule = NULL;
+    UpdateDriverForPlugAndPlayDevicesProto UpdateProc;
+    BOOL reboot = FALSE;
+    DWORD flags = 0;
+
+    if (!SetupDiGetINFClass(InfPath,&ClassGUID,ClassName,sizeof(ClassName)/sizeof(ClassName[0]),0))
+    {
+        return -1;
+    }
+
+    DeviceInfoSet = SetupDiCreateDeviceInfoList(&ClassGUID,0);
+    if(DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        return -1;
+    }
+
+    DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+    if (!SetupDiCreateDeviceInfo(DeviceInfoSet, ClassName, &ClassGUID, NULL, 0, DICD_GENERATE_ID, &DeviceInfoData))
+    {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        return -1;
+    }
+
+    if(!SetupDiSetDeviceRegistryProperty(DeviceInfoSet, &DeviceInfoData, SPDRP_HARDWAREID, (LPBYTE)HardwareIdList, (lstrlen(HardwareIdList)+1+1)*sizeof(TCHAR)))
+    {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        return -1;
+    }
+
+    if (!SetupDiCallClassInstaller(DIF_REGISTERDEVICE, DeviceInfoSet, &DeviceInfoData))
+    {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        return -1;
+    }
+
+    if(GetFileAttributes(InfPath)==(DWORD)(-1)) {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        return -1;
+    }
+
+    flags |= INSTALLFLAG_FORCE;
+    hModule = LoadLibraryW(L"newdev.dll");
+    if(!hModule) {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        return -1;
+    }
+
+    UpdateProc = (UpdateDriverForPlugAndPlayDevicesProto)GetProcAddress(hModule,UPDATEDRIVERFORPLUGANDPLAYDEVICES);
+    if(!UpdateProc)
+    {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        FreeLibrary(hModule);
+        return -1;
+    }
+
+    if(!UpdateProc(NULL, HardwareIdList, InfPath, flags, &reboot))
+    {
+        SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+        FreeLibrary(hModule);
+        return -1;
+    }
+
+    FreeLibrary(hModule);
+    SetupDiDestroyDeviceInfoList(DeviceInfoSet);
+    return Result;
+}
 
 DWORD
 MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
@@ -394,7 +529,23 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     SetupTermDefaultQueueCallback(Context);
     SetupCloseInfFile(hInf);
 
+    if (!IsSoftwareBusPnpEnumeratorInstalled())
+    {
+        Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
+        if (!Length || Length >= MAX_PATH - 14)
+        {
+            return ERROR_GEN_FAILURE;
+        }
 
+        pBuffer = PathAddBackslashW(szBuffer);
+        if (!pBuffer)
+        {
+            return ERROR_GEN_FAILURE;
+        }
+
+        wcscpy(pBuffer, L"inf\\machine.inf");
+        InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM\0");
+    }
 
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!hSCManager)

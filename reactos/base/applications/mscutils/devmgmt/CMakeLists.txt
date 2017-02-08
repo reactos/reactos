@@ -1,14 +1,7 @@
 
-list(APPEND SOURCE
-    about.c
-    devmgmt.c
-    enumdevices.c
-    mainwnd.c
-    misc.c
-    devmgmt.rc)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/dll/devmgr)
 
-add_executable(devmgmt ${SOURCE})
+add_executable(devmgmt devmgmt.c devmgmt.rc)
 set_module_type(devmgmt win32gui UNICODE)
-add_importlibs(devmgmt setupapi gdi32 user32 comctl32 advapi32 devmgr msvcrt kernel32)
-add_pch(devmgmt precomp.h)
+add_importlibs(devmgmt devmgr msvcrt kernel32)
 add_cd_file(TARGET devmgmt DESTINATION reactos/system32 FOR all)

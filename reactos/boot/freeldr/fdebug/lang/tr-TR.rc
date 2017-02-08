@@ -1,190 +1,85 @@
-/////////////////////////////////////////////////////////////////////////////
-// Turkish resources
+/* TRANSLATORS: 2005 un.real; 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDC_FDEBUG MENU DISCARDABLE
+/* Menu */
+IDC_FDEBUG MENU
 BEGIN
-    POPUP "&Dosya"
+    POPUP "&KÃ¼tÃ¼k"
     BEGIN
-        MENUITEM "&Baðlan", IDM_FILE_CONNECT
-        MENUITEM "Baðlantýyý &Kes", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&BaÄŸlan", IDM_FILE_CONNECT
+        MENUITEM "B&aÄŸlantÄ±yÄ± Kes", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&GÃ¶rÃ¼ntÃ¼yÃ¼ Sil", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Yakalamayý Baþlat", IDM_FILE_STARTCAPTURE
-        MENUITEM "Yakalamayý &Durdur", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&YakalamayÄ± BaÅŸlat", IDM_FILE_STARTCAPTURE
+        MENUITEM "Ya&kalamayÄ± Durdur", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Bölgesel &Yanký", IDM_FILE_LOCALECHO
+        MENUITEM "B&Ã¶lgelik YankÄ±", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "&Çýkýþ", IDM_EXIT
+        MENUITEM "&Ã‡Ä±kÄ±ÅŸ", IDM_EXIT
     END
-    POPUP "&Yardým"
+    POPUP "&YardÄ±m"
     BEGIN
-        MENUITEM "&Hakkýnda ...", IDM_ABOUT
+        MENUITEM "&Ãœzerine...", IDM_ABOUT
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE
+/* Accelerators */
+IDC_FDEBUG ACCELERATORS
 BEGIN
-    63,            IDM_ABOUT,              ASCII,  ALT // "?"
-    47,            IDM_ABOUT,              ASCII,  ALT // "/"
+    63, IDM_ABOUT, ASCII, ALT // "?"
+    47, IDM_ABOUT, ASCII, ALT // "/"
 END
 
+/* Dialogs */
 
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-2 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""resource.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-1 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "resource.h\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE
-BEGIN
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 252
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 203
-    END
-
-    IDD_CONNECTION, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 189
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 93
-    END
-
-    IDD_CAPTURE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 244
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "FreeLoader Debugger Hakkýnda"
+CAPTION "FreeLoader YanlÄ±ÅŸlÄ±k AyÄ±klayÄ±cÄ± Ãœzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "Tamam",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+    CONTROL "FreeLoader YanlÄ±ÅŸlÄ±k AyÄ±klayÄ±cÄ± - SÃ¼rÃ¼m 1.0\nTelif HakkÄ±: 2003\nBrian Palmer(brianp@reactos.org) ile.", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    DEFPUSHBUTTON "Tamam", IDOK, 183, 189, 44, 14, WS_GROUP
+    ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
+    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
-IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
+IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Baðlantý Seçenekleri"
+CAPTION "BaÄŸlantÄ± SeÃ§enekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "COM Port deðerini giriniz(örnek COM1):",IDC_STATIC,7,7,108,8
-    EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Baudrate deðerini giriniz (e.g. 115200):",IDC_STATIC,7,38,114,8
-    EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Tamam",IDOK,45,79,50,14
-    PUSHBUTTON      "Ýptal",IDCANCEL,100,79,50,14
+    LTEXT "COM giriÅŸini giriniz (Ã–rnek: COM1): ", IDC_STATIC, 7, 7, 108, 8
+    EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
+    LTEXT "Baud hÄ±zÄ±nÄ± giriniz (Ã–rnek: 115200): ", IDC_STATIC, 7, 38, 114, 8
+    EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Tamam", IDOK, 45, 79, 50, 14
+    PUSHBUTTON "Ä°ptal", IDCANCEL, 100, 79, 50, 14
 END
 
-IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
+IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dosya Yakalama"
+CAPTION "Yakalama KÃ¼tÃ¼ÄŸÃ¼"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Yakalanacak Dosya Adý:",IDC_STATIC,7,17,62,8
-    EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Gözat",IDC_BROWSE,194,26,50,14
-    DEFPUSHBUTTON   "Tamam",IDOK,139,74,50,14
-    PUSHBUTTON      "Ýptal",IDCANCEL,194,74,50,14
+    LTEXT "Yakalama KÃ¼tÃ¼ÄŸÃ¼ AdÄ±:", IDC_STATIC, 7, 17, 62, 8
+    EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&GÃ¶z At", IDC_BROWSE, 194, 26, 50, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 139, 74, 50, 14
+    PUSHBUTTON "Ä°ptal", IDCANCEL, 194, 74, 50, 14
 END
 
+/* String Tables */
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "fdebug"
-    IDS_HELLO               "Merhaba Dünya!"
-    IDC_FDEBUG              "FDEBUG"
+    IDS_APP_TITLE "FreeLoader YanlÄ±ÅŸlÄ±k AyÄ±klayÄ±cÄ±"
+    IDS_HELLO "Merhaba DÃ¼nyÃ¢!"
+    IDC_FDEBUG "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_LICENSE             "Bu program özgür bir yazýlýmdýr; Özgür Yazýlým Vakfý'nýn (Free Software Foundation) yayýnladýðý GNU Genel Kamu Lisansý'nýn 2. versiyonu yada (dilerseniz) herhangi bir sonraki versiyonunun kurallarýna uyarak daðýtabilir ve deðiþtirebilirsiniz.\r\n\r\nBu program faydalý olacaðý umularak daðýtýlmaktadýr, fakat HÝÇBÝR GARANTÝ VERÝLMEZ; ve TÝCARÝ YADA DÝÐER AMAÇLARA UYGUNLUÐU hakkýnda açýktan yada imalý bir bildirim yapýlmaz.  Ayrýntýlar için lütfen GNU Genel Kamu Lisansý'ný (General Public License) inceleyiniz.\r\n\r\nBu programla birlikte GNU Genel Kamu Lisansý'nýn da bir kopyasýnýn size verilmiþ olmasý gerekir; aksi söz konusu ise, Özgür Yazýlým Vakfý'na yazýnýz: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Ã–NEMLÄ°: AÅŸaÄŸÄ±daki metin, Ã¶zgÃ¼n metnin resmÃ® olmayan Ã§evirisidir. Ã‡eviri metniyle Ã¶zgÃ¼n metin arasÄ±nda ayrÄ±m olabilir. Ã–zgÃ¼n metin, Ã§eviri metninin altÄ±ndadÄ±r.\r\n\r\n***\r\n\r\nBu izlence Ã¶zgÃ¼r yazÄ±lÄ±mdÄ±r; bunu, Ã–zgÃ¼r YazÄ±lÄ±m VakfÄ±'nÄ±n yayÄ±mladÄ±ÄŸÄ± GNU UmÃ»mÃ® Kamu RuhsatÄ±'nÄ±n, 2. sÃ¼rÃ¼mÃ¼nÃ¼n ya da daha sonraki bir sÃ¼rÃ¼mÃ¼nÃ¼n (OrasÄ± size baÄŸlÄ±.) ÅŸartlarÄ± altÄ±nda yeniden daÄŸÄ±tabilir veyÃ¢ deÄŸiÅŸtirebilirsiniz.\r\n\r\nBu izlence, kullanÄ±ÅŸlÄ± olabileceÄŸi beklentisiyle daÄŸÄ±tÄ±lmÄ±ÅŸtÄ±r ancak bu izlencenin HÄ°Ã‡BÄ°R GÃœVENCESÄ° YOKTUR, SATILABÄ°LÄ°RLÄ°ÄžÄ°N ve BELÄ°RLÄ° BÄ°R AMACA UYGUNLUÄžUN demek istenilen gÃ¼vencesi bile. Daha Ã§ok bilgi iÃ§in GNU UmÃ»mÃ® Kamu RuhsatÄ±'na bakÄ±nÄ±z.\r\n\r\nBu izlenceyle birlikte GNU UmÃ»mÃ® Kamu RuhsatÄ±'nÄ±n bir kopyasÄ±nÄ± almÄ±ÅŸ olmalÄ±sÄ±nÄ±z, eÄŸer yoksa Ã–zgÃ¼r YazÄ±lÄ±m VakfÄ± AÅž'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazÄ±nÄ±z.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
-
-#endif    // Turkish resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

@@ -21,12 +21,27 @@
 #ifndef __WINE_FUSION_PRIVATE__
 #define __WINE_FUSION_PRIVATE__
 
-//#include <stdarg.h>
+#include <stdarg.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
+#include <winbase.h>
 #include <winver.h>
+#include <objbase.h>
+#include <fusion.h>
+#include <corerror.h>
+
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
 #include <pshpack1.h>
 

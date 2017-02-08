@@ -1095,7 +1095,7 @@ xmlRelaxNGAddStates(xmlRelaxNGValidCtxtPtr ctxt,
 {
     int i;
 
-    if (state == NULL) {
+    if (state == NULL || states == NULL) {
         return (-1);
     }
     if (states->nbState >= states->maxState) {
@@ -2595,11 +2595,8 @@ xmlRelaxNGSchemaTypeCompare(void *data ATTRIBUTE_UNUSED,
     }
     ret = xmlSchemaValPredefTypeNode(typ, value2, &res2, ctxt2);
     if (ret != 0) {
-	if ((comp1 == NULL) && (res1 != NULL))
+	if (res1 != (xmlSchemaValPtr) comp1)
 	    xmlSchemaFreeValue(res1);
-        return (-1);
-    }
-    if (res1 == NULL) {
         return (-1);
     }
     ret = xmlSchemaCompareValues(res1, res2);
@@ -3822,7 +3819,11 @@ xmlRelaxNGCompareNameClasses(xmlRelaxNGDefinePtr def1,
             return (0);
         return (1);
     } else if (def1->type == XML_RELAXNG_EXCEPT) {
-        TODO ret = 0;
+        ret = xmlRelaxNGCompareNameClasses(def1->content, def2);
+	if (ret == 0)
+	    ret = 1;
+	else if (ret == 1)
+	    ret = 0;
     } else {
         TODO ret = 0;
     }
@@ -6603,7 +6604,7 @@ xmlRelaxNGParseGrammar(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr nodes)
     }
 
     /*
-     * Apply 4.17 mergingd rules to defines and starts
+     * Apply 4.17 merging rules to defines and starts
      */
     xmlRelaxNGCombineStart(ctxt, ret);
     if (ret->defs != NULL) {
@@ -6655,12 +6656,17 @@ xmlRelaxNGParseDocument(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node)
     ctxt->define = NULL;
     if (IS_RELAXNG(node, "grammar")) {
         schema->topgrammar = xmlRelaxNGParseGrammar(ctxt, node->children);
+        if (schema->topgrammar == NULL) {
+            xmlRelaxNGFree(schema);
+            return (NULL);
+        }
     } else {
         xmlRelaxNGGrammarPtr tmp, ret;
 
         schema->topgrammar = ret = xmlRelaxNGNewGrammar(ctxt);
         if (schema->topgrammar == NULL) {
-            return (schema);
+            xmlRelaxNGFree(schema);
+            return (NULL);
         }
         /*
          * Link the new grammar in the tree
@@ -7317,7 +7323,7 @@ xmlRelaxNGCleanupTree(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr root)
                     }
                 }
                 /*
-                 * Thisd is not an else since "include" is transformed
+                 * This is not an else since "include" is transformed
                  * into a div
                  */
                 if (xmlStrEqual(cur->name, BAD_CAST "div")) {
@@ -7346,13 +7352,13 @@ xmlRelaxNGCleanupTree(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr root)
                     if (ns != NULL)
                         xmlFree(ns);
 		    /*
-		     * Since we are about to delete cur, if it's nsDef is non-NULL we
+		     * Since we are about to delete cur, if its nsDef is non-NULL we
 		     * need to preserve it (it contains the ns definitions for the
 		     * children we just moved).  We'll just stick it on to the end
 		     * of cur->parent's list, since it's never going to be re-serialized
 		     * (bug 143738).
 		     */
-		    if (cur->nsDef != NULL) {
+		    if ((cur->nsDef != NULL) && (cur->parent != NULL)) {
 			xmlNsPtr parDef = (xmlNsPtr)&cur->parent->nsDef;
 			while (parDef->next != NULL)
 			    parDef = parDef->next;
@@ -7370,7 +7376,8 @@ xmlRelaxNGCleanupTree(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr root)
         else if ((cur->type == XML_TEXT_NODE) ||
                  (cur->type == XML_CDATA_SECTION_NODE)) {
             if (IS_BLANK_NODE(cur)) {
-                if (cur->parent->type == XML_ELEMENT_NODE) {
+                if ((cur->parent != NULL) &&
+		    (cur->parent->type == XML_ELEMENT_NODE)) {
                     if ((!xmlStrEqual(cur->parent->name, BAD_CAST "value"))
                         &&
                         (!xmlStrEqual
@@ -8347,7 +8354,7 @@ xmlRelaxNGValidatePushElement(xmlRelaxNGValidCtxtPtr ctxt,
  * xmlRelaxNGValidatePushCData:
  * @ctxt:  the RelaxNG validation context
  * @data:  some character data read
- * @len:  the lenght of the data
+ * @len:  the length of the data
  *
  * check the CData parsed for validation in the current stack
  *
@@ -9050,6 +9057,19 @@ xmlRelaxNGAttributeMatch(xmlRelaxNGValidCtxtPtr ctxt,
                 return (ret);
             list = list->next;
         }
+    } else if (define->type == XML_RELAXNG_CHOICE) {
+        xmlRelaxNGDefinePtr list;
+
+        list = define->nameClass;
+        while (list != NULL) {
+            ret = xmlRelaxNGAttributeMatch(ctxt, list, prop);
+            if (ret == 1)
+                return (1);
+            if (ret < 0)
+                return (ret);
+            list = list->next;
+        }
+        return (0);
     } else {
     TODO}
     return (1);
@@ -9409,6 +9429,10 @@ xmlRelaxNGValidateInterleave(xmlRelaxNGValidCtxtPtr ctxt,
     oldstate = ctxt->state;
     for (i = 0; i < nbgroups; i++) {
         ctxt->state = xmlRelaxNGCopyValidState(ctxt, oldstate);
+	if (ctxt->state == NULL) {
+	    ret = -1;
+	    break;
+	}
         group = partitions->groups[i];
         if (lasts[i] != NULL) {
             last = lasts[i]->next;
@@ -9839,7 +9863,7 @@ xmlRelaxNGValidateState(xmlRelaxNGValidCtxtPtr ctxt,
     ctxt->depth++;
     switch (define->type) {
         case XML_RELAXNG_EMPTY:
-            node = xmlRelaxNGSkipIgnored(ctxt, node);
+            xmlRelaxNGSkipIgnored(ctxt, node);
             ret = 0;
             break;
         case XML_RELAXNG_NOT_ALLOWED:

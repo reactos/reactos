@@ -16,7 +16,7 @@
 
 NTSTATUS
 NTAPI
-CmpInitializeHive(OUT PCMHIVE *RegistryHive,
+CmpInitializeHive(OUT PCMHIVE *CmHive,
                   IN ULONG OperationType,
                   IN ULONG HiveFlags,
                   IN ULONG FileType,
@@ -28,14 +28,13 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
                   IN ULONG CheckFlags)
 {
     PCMHIVE Hive;
-    FILE_STANDARD_INFORMATION FileInformation;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_FS_SIZE_INFORMATION FileSizeInformation;
     NTSTATUS Status;
     ULONG Cluster;
 
     /* Assume failure */
-    *RegistryHive = NULL;
+    *CmHive = NULL;
 
     /*
      * The following are invalid:
@@ -84,7 +83,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     }
 
     /* Allocate the hive */
-    Hive = ExAllocatePoolWithTag(NonPagedPool, sizeof(CMHIVE), TAG_CM);
+    Hive = ExAllocatePoolWithTag(NonPagedPool, sizeof(CMHIVE), TAG_CMHIVE);
     if (!Hive) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Setup null fields */
@@ -115,23 +114,23 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     /* Allocate the view log */
     Hive->ViewLock = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(KGUARDED_MUTEX),
-                                           TAG_CM);
+                                           TAG_CMHIVE);
     if (!Hive->ViewLock)
     {
         /* Cleanup allocation and fail */
-        ExFreePoolWithTag(Hive, TAG_CM);
+        ExFreePoolWithTag(Hive, TAG_CMHIVE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Allocate the flush lock */
     Hive->FlusherLock = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(ERESOURCE),
-                                              TAG_CM);
+                                              TAG_CMHIVE);
     if (!Hive->FlusherLock)
     {
         /* Cleanup allocations and fail */
-        ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
-        ExFreePoolWithTag(Hive, TAG_CM);
+        ExFreePoolWithTag(Hive->ViewLock, TAG_CMHIVE);
+        ExFreePoolWithTag(Hive, TAG_CMHIVE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -169,26 +168,11 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     Hive->Flags = 0;
     Hive->FlushCount = 0;
 
-    /* Set flags */
-    Hive->Flags = HiveFlags;
-
-    /* Check if this is a primary */
-    if (Primary)
-    {
-        /* Check how large the file is */
-        ZwQueryInformationFile(Primary,
-                               &IoStatusBlock,
-                               &FileInformation,
-                               sizeof(FileInformation),
-                               FileStandardInformation);
-        Cluster = FileInformation.EndOfFile.LowPart;
-    }
-
     /* Initialize it */
     Status = HvInitialize(&Hive->Hive,
                           OperationType,
-                          FileType,
                           HiveFlags,
+                          FileType,
                           HiveData,
                           CmpAllocate,
                           CmpFree,
@@ -197,13 +181,14 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
                           CmpFileRead,
                           CmpFileFlush,
                           Cluster,
-                          (PUNICODE_STRING)FileName);
+                          FileName);
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup allocations and fail */
-        ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
-        ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
-        ExFreePoolWithTag(Hive, TAG_CM);
+        ExDeleteResourceLite(Hive->FlusherLock);
+        ExFreePoolWithTag(Hive->FlusherLock, TAG_CMHIVE);
+        ExFreePoolWithTag(Hive->ViewLock, TAG_CMHIVE);
+        ExFreePoolWithTag(Hive, TAG_CMHIVE);
         return Status;
     }
 
@@ -214,12 +199,14 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
         (OperationType == HINIT_MAPFILE))
     {
         /* Verify integrity */
-        if (CmCheckRegistry((PCMHIVE)Hive, TRUE))
+        ULONG CheckStatus = CmCheckRegistry(Hive, CheckFlags);
+        if (CheckStatus != 0)
         {
             /* Cleanup allocations and fail */
-            ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
-            ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
-            ExFreePoolWithTag(Hive, TAG_CM);
+            ExDeleteResourceLite(Hive->FlusherLock);
+            ExFreePoolWithTag(Hive->FlusherLock, TAG_CMHIVE);
+            ExFreePoolWithTag(Hive->ViewLock, TAG_CMHIVE);
+            ExFreePoolWithTag(Hive, TAG_CMHIVE);
             return STATUS_REGISTRY_CORRUPT;
         }
     }
@@ -234,7 +221,38 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     ExReleasePushLock(&CmpHiveListHeadLock);
 
     /* Return the hive and success */
-    *RegistryHive = (PCMHIVE)Hive;
+    *CmHive = Hive;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CmpDestroyHive(IN PCMHIVE CmHive)
+{
+    /* Remove the hive from the list */
+    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
+    RemoveEntryList(&CmHive->HiveList);
+    ExReleasePushLock(&CmpHiveListHeadLock);
+
+    /* Delete the flusher lock */
+    ExDeleteResourceLite(CmHive->FlusherLock);
+    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CMHIVE);
+
+    /* Delete the view lock */
+    ExFreePoolWithTag(CmHive->ViewLock, TAG_CMHIVE);
+
+    /* Destroy the security descriptor cache */
+    CmpDestroySecurityCache(CmHive);
+
+    /* Destroy the view list */
+    CmpDestroyHiveViewList(CmHive);
+
+    /* Free the hive storage */
+    HvFree(&CmHive->Hive);
+
+    /* Free the hive */
+    CmpFree(CmHive, TAG_CM);
+
     return STATUS_SUCCESS;
 }
 
@@ -359,7 +377,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     if (!NT_SUCCESS(Status))
     {
         /* Close handles and free buffers */
-        if (NameBuffer) ExFreePool(NameBuffer);
+        if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
         ObDereferenceObject(Event);
         ZwClose(EventHandle);
         DPRINT1("ZwCreateFile failed : %lx.\n", Status);
@@ -397,7 +415,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         if (!NT_SUCCESS(Status))
         {
             /* Close handles and free buffers */
-            if (NameBuffer) ExFreePool(NameBuffer);
+            if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
             ObDereferenceObject(Event);
             ZwClose(EventHandle);
             ZwClose(*Primary);
@@ -461,7 +479,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         if (!NT_SUCCESS(Status))
         {
             /* Close handles and free buffers */
-            if (NameBuffer) ExFreePool(NameBuffer);
+            if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
             ObDereferenceObject(Event);
             ZwClose(EventHandle);
             return Status;
@@ -471,7 +489,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         if (FsSizeInformation.BytesPerSector > HBLOCK_SIZE)
         {
             /* Close handles and free buffers */
-            if (NameBuffer) ExFreePool(NameBuffer);
+            if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
             ObDereferenceObject(Event);
             ZwClose(EventHandle);
             return STATUS_CANNOT_LOAD_REGISTRY_FILE;
@@ -596,8 +614,24 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     }
 
     /* We're done, close handles and free buffers */
-    if (NameBuffer) ExFreePool(NameBuffer);
+    if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
     ObDereferenceObject(Event);
     ZwClose(EventHandle);
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+CmpCloseHiveFiles(IN PCMHIVE Hive)
+{
+    ULONG i;
+
+    for (i = 0; i < HFILE_TYPE_MAX; i++)
+    {
+        if (Hive->FileHandles[i] != NULL)
+        {
+            ZwClose(Hive->FileHandles[i]);
+            Hive->FileHandles[i] = NULL;
+        }
+    }
 }

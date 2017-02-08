@@ -18,14 +18,13 @@
 
 #include <windef.h>
 #include <winuser.h>
-#include <commctrl.h>
 
 #include "resource.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-ID_AXINSTALL_WARNING_DLG DIALOG  0, 0, 260, 115
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+ID_AXINSTALL_WARNING_DLG DIALOGEX  0, 0, 260, 115
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Security Warning"
 FONT 8, "MS Shell Dlg"
 {
@@ -53,7 +52,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: urlmon.rgs */
 1 WINE_REGISTRY urlmon.rgs
 
-2 WINE_REGISTRY urlmon_urlmon.rgs
+2 WINE_REGISTRY "urlmon_urlmon.rgs"
 
 /* @makedep: urlmon.inf */
 REGINST REGINST urlmon.inf

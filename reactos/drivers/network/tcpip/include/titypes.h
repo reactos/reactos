@@ -13,6 +13,7 @@
  */
 #define ReferenceObject(Object)                            \
 {                                                          \
+    ASSERT((Object)->RefCount);                            \
     InterlockedIncrement(&((Object)->RefCount));           \
 }
 
@@ -22,6 +23,7 @@
  */
 #define DereferenceObject(Object)                           \
 {                                                           \
+    ASSERT((Object)->RefCount);                             \
     if (InterlockedDecrement(&((Object)->RefCount)) == 0)   \
         (((Object)->Free)(Object));                         \
 }
@@ -279,6 +281,7 @@ typedef struct _CONNECTION_ENDPOINT {
     BOOLEAN SendShutdown;
     BOOLEAN ReceiveShutdown;
     NTSTATUS ReceiveShutdownStatus;
+    BOOLEAN Closing;
 
     struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;

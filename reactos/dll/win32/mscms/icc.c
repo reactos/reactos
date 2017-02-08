@@ -31,75 +31,90 @@
 
 //#include "mscms_priv.h"
 
-#ifdef HAVE_LCMS
+#ifdef HAVE_LCMS2
 
-static inline void MSCMS_adjust_endianness32( ULONG *ptr )
+static inline void adjust_endianness32( ULONG *ptr )
 {
 #ifndef WORDS_BIGENDIAN
     *ptr = RtlUlongByteSwap(*ptr);
 #endif
 }
 
-void MSCMS_get_profile_header( const icProfile *iccprofile, PROFILEHEADER *header )
+void get_profile_header( const struct profile *profile, PROFILEHEADER *header )
 {
     unsigned int i;
 
-    memcpy( header, iccprofile, sizeof(PROFILEHEADER) );
+    memcpy( header, profile->data, sizeof(PROFILEHEADER) );
 
     /* ICC format is big-endian, swap bytes if necessary */
     for (i = 0; i < sizeof(PROFILEHEADER) / sizeof(ULONG); i++)
-        MSCMS_adjust_endianness32( (ULONG *)header + i );
+        adjust_endianness32( (ULONG *)header + i );
 }
 
-void MSCMS_set_profile_header( icProfile *iccprofile, const PROFILEHEADER *header )
+void set_profile_header( const struct profile *profile, const PROFILEHEADER *header )
 {
     unsigned int i;
-    icHeader *iccheader = (icHeader *)iccprofile;
 
-    memcpy( iccheader, header, sizeof(icHeader) );
+    memcpy( profile->data, header, sizeof(PROFILEHEADER) );
 
     /* ICC format is big-endian, swap bytes if necessary */
-    for (i = 0; i < sizeof(icHeader) / sizeof(ULONG); i++)
-        MSCMS_adjust_endianness32( (ULONG *)iccheader + i );
+    for (i = 0; i < sizeof(PROFILEHEADER) / sizeof(ULONG); i++)
+        adjust_endianness32( (ULONG *)profile->data + i );
 }
 
-DWORD MSCMS_get_tag_count( const icProfile *iccprofile )
+static BOOL get_adjusted_tag( const struct profile *profile, TAGTYPE type, cmsTagEntry *tag )
 {
-    ULONG count = iccprofile->count;
+    DWORD i, num_tags = *(DWORD *)(profile->data + sizeof(cmsICCHeader));
+    cmsTagEntry *entry;
+    ULONG sig;
 
-    MSCMS_adjust_endianness32( &count );
-    return count;
+    adjust_endianness32( &num_tags );
+    for (i = 0; i < num_tags; i++)
+    {
+        entry = (cmsTagEntry *)(profile->data + sizeof(cmsICCHeader) + sizeof(DWORD) + i * sizeof(*tag));
+        sig = entry->sig;
+        adjust_endianness32( &sig );
+        if (sig == type)
+        {
+            tag->sig    = sig;
+            tag->offset = entry->offset;
+            tag->size   = entry->size;
+            adjust_endianness32( &tag->offset );
+            adjust_endianness32( &tag->size );
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
-void MSCMS_get_tag_by_index( icProfile *iccprofile, DWORD index, icTag *tag )
+BOOL get_tag_data( const struct profile *profile, TAGTYPE type, DWORD offset, void *buffer, DWORD *len )
 {
-    icTag *tmp = (icTag *)((char *)iccprofile->data + index * sizeof(icTag));
+    cmsTagEntry tag;
 
-    tag->sig = tmp->sig;
-    tag->offset = tmp->offset;
-    tag->size = tmp->size;
+    if (!get_adjusted_tag( profile, type, &tag )) return FALSE;
 
-    MSCMS_adjust_endianness32( &tag->sig );
-    MSCMS_adjust_endianness32( &tag->offset );
-    MSCMS_adjust_endianness32( &tag->size );
+    if (!buffer) offset = 0;
+    if (offset > tag.size) return FALSE;
+    if (*len < tag.size - offset || !buffer)
+    {
+        *len = tag.size - offset;
+        return FALSE;
+    }
+    memcpy( buffer, profile->data + tag.offset + offset, tag.size - offset );
+    *len = tag.size - offset;
+    return TRUE;
 }
 
-void MSCMS_get_tag_data( const icProfile *iccprofile, const icTag *tag, DWORD offset, void *buffer )
+BOOL set_tag_data( const struct profile *profile, TAGTYPE type, DWORD offset, const void *buffer, DWORD *len )
 {
-    memcpy( buffer, (const char *)iccprofile + tag->offset + offset, tag->size - offset );
+    cmsTagEntry tag;
+
+    if (!get_adjusted_tag( profile, type, &tag )) return FALSE;
+
+    if (offset > tag.size) return FALSE;
+    *len = min( tag.size - offset, *len );
+    memcpy( profile->data + tag.offset + offset, buffer, *len );
+    return TRUE;
 }
 
-void MSCMS_set_tag_data( icProfile *iccprofile, const icTag *tag, DWORD offset, const void *buffer )
-{
-    memcpy( (char *)iccprofile + tag->offset + offset, buffer, tag->size - offset );
-}
-
-DWORD MSCMS_get_profile_size( const icProfile *iccprofile )
-{
-    DWORD size = ((const icHeader *)iccprofile)->size;
-
-    MSCMS_adjust_endianness32( &size );
-    return size;
-}
-
-#endif /* HAVE_LCMS */
+#endif /* HAVE_LCMS2 */

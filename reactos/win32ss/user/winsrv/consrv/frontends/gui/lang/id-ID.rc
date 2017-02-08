@@ -1,0 +1,30 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Edit"
+    IDS_MARK "Tandai"
+    IDS_COPY "Copy\tEnter"
+    IDS_PASTE "Paste"
+    IDS_SELECTALL "Pilih Semua"
+    IDS_SCROLL "Gulung"
+    IDS_FIND "Cari..."
+    IDS_DEFAULTS "Standar"
+    IDS_PROPERTIES "Properti"
+/*
+    IDS_SCROLLHERE "Gulung ke Sini"
+    IDS_SCROLLTOP "Gulung ke Atas"
+    IDS_SCROLLBOTTOM "Gulung ke Bawah"
+    IDS_SCROLLPAGE_UP "Halaman Naik"
+    IDS_SCROLLPAGE_DOWN "Halaman Turun"
+    IDS_SCROLLUP "Gulung Naik"
+    IDS_SCROLLDOWN "Gulung Turun"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
+END

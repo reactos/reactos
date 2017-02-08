@@ -1,24 +1,51 @@
 #pragma once
 
-INT  NTAPI MouseSafetyOnDrawStart(PPDEVOBJ ppdev, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);
-INT  NTAPI MouseSafetyOnDrawEnd(PPDEVOBJ ppdev);
+_Requires_lock_held_(*ppdev->hsemDevLock)
+BOOL
+NTAPI
+MouseSafetyOnDrawStart(
+    _Inout_ PPDEVOBJ ppdev,
+    _In_ LONG HazardX1,
+    _In_ LONG HazardY1,
+    _In_ LONG HazardX2,
+    _In_ LONG HazardY2);
+
+_Requires_lock_held_(*ppdev->hsemDevLock)
+BOOL
+NTAPI
+MouseSafetyOnDrawEnd(
+    _Inout_ PPDEVOBJ ppdev);
+
+ULONG
+NTAPI
+IntEngSetPointerShape(
+    _In_ SURFOBJ *pso,
+    _In_opt_ SURFOBJ *psoMask,
+    _In_opt_ SURFOBJ *psoColor,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ LONG xHot,
+    _In_ LONG yHot,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ RECTL *prcl,
+    _In_ FLONG fl);
 
 ULONG
 NTAPI
 GreSetPointerShape(
-    HDC hdc,
-    HBITMAP hbmMask,
-    HBITMAP hbmColor,
-    LONG xHot,
-    LONG yHot,
-    LONG x,
-    LONG y,
-    FLONG fl);
+    _In_ HDC hdc,
+    _In_opt_ HBITMAP hbmMask,
+    _In_opt_ HBITMAP hbmColor,
+    _In_ LONG xHot,
+    _In_ LONG yHot,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ FLONG fl);
 
 VOID
 NTAPI
 GreMovePointer(
-    HDC hdc,
-    LONG x,
-    LONG y);
+    _In_ HDC hdc,
+    _In_ LONG x,
+    _In_ LONG y);
 

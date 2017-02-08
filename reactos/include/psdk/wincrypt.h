@@ -21,6 +21,8 @@
 #ifndef __WINE_WINCRYPT_H
 #define __WINE_WINCRYPT_H
 
+#include <specstrings.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1096,20 +1098,33 @@ typedef struct _CERT_SYSTEM_STORE_RELOCATE_PARA {
     } DUMMYUNIONNAME2;
 } CERT_SYSTEM_STORE_RELOCATE_PARA, *PCERT_SYSTEM_STORE_RELOCATE_PARA;
 
-typedef BOOL (WINAPI *PFN_CERT_ENUM_SYSTEM_STORE_LOCATION)(
- LPCWSTR pwszStoreLocation, DWORD dwFlags, void *pvReserved, void *pvArg);
+typedef BOOL
+(WINAPI *PFN_CERT_ENUM_SYSTEM_STORE_LOCATION)(
+  _In_ LPCWSTR pwszStoreLocation,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved,
+  _Inout_opt_ void *pvArg);
 
-typedef BOOL (WINAPI *PFN_CERT_ENUM_SYSTEM_STORE)(const void *pvSystemStore,
- DWORD dwFlags, PCERT_SYSTEM_STORE_INFO pStoreInfo, void *pvReserved,
- void *pvArg);
+typedef BOOL
+(WINAPI *PFN_CERT_ENUM_SYSTEM_STORE)(
+  _In_ const void *pvSystemStore,
+  _In_ DWORD dwFlags,
+  _In_ PCERT_SYSTEM_STORE_INFO pStoreInfo,
+  _Reserved_ void *pvReserved,
+  _Inout_opt_ void *pvArg);
 
-typedef BOOL (WINAPI *PFN_CERT_ENUM_PHYSICAL_STORE)(const void *pvSystemStore,
- DWORD dwFlags, LPCWSTR pwszStoreName, PCERT_PHYSICAL_STORE_INFO pStoreInfo,
- void *pvReserved, void *pvArg);
+typedef BOOL
+(WINAPI *PFN_CERT_ENUM_PHYSICAL_STORE)(
+  _In_ const void *pvSystemStore,
+  _In_ DWORD dwFlags,
+  _In_ LPCWSTR pwszStoreName,
+  _In_ PCERT_PHYSICAL_STORE_INFO pStoreInfo,
+  _Reserved_ void *pvReserved,
+  _Inout_opt_ void *pvArg);
 
 /* Encode/decode object */
-typedef LPVOID (__WINE_ALLOC_SIZE(1) WINAPI *PFN_CRYPT_ALLOC)(size_t cbsize);
-typedef VOID   (WINAPI *PFN_CRYPT_FREE)(LPVOID pv);
+typedef LPVOID (__WINE_ALLOC_SIZE(1) WINAPI *PFN_CRYPT_ALLOC)(_In_ size_t cbsize);
+typedef VOID(WINAPI *PFN_CRYPT_FREE)(_In_ LPVOID pv);
 
 typedef struct _CRYPT_ENCODE_PARA {
     DWORD           cbSize;
@@ -1132,58 +1147,114 @@ typedef struct _CERT_STORE_PROV_INFO {
     HCRYPTOIDFUNCADDR hStoreProvFuncAddr2;
 } CERT_STORE_PROV_INFO, *PCERT_STORE_PROV_INFO;
 
-typedef BOOL (WINAPI *PFN_CERT_DLL_OPEN_STORE_PROV_FUNC)(
- LPCSTR lpszStoreProvider, DWORD dwEncodingType, HCRYPTPROV_LEGACY hCryptProv,
- DWORD dwFlags, const void *pvPara, HCERTSTORE hCertStore,
- PCERT_STORE_PROV_INFO pStoreProvInfo);
+typedef BOOL
+(WINAPI *PFN_CERT_DLL_OPEN_STORE_PROV_FUNC)(
+  _In_ LPCSTR lpszStoreProvider,
+  _In_ DWORD dwEncodingType,
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvPara,
+  _In_ HCERTSTORE hCertStore,
+  _Inout_ PCERT_STORE_PROV_INFO pStoreProvInfo);
 
-typedef void (WINAPI *PFN_CERT_STORE_PROV_CLOSE)(HCERTSTOREPROV hStoreProv,
- DWORD dwFlags);
+typedef void
+(WINAPI *PFN_CERT_STORE_PROV_CLOSE)(
+  _Inout_opt_ HCERTSTOREPROV hStoreProv,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_READ_CERT)(HCERTSTOREPROV hStoreProv,
- PCCERT_CONTEXT pStoreCertContext, DWORD dwFlags,
- PCCERT_CONTEXT *ppProvCertContext);
+typedef
+_Success_(return != 0)
+BOOL
+(WINAPI *PFN_CERT_STORE_PROV_READ_CERT)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_CONTEXT pStoreCertContext,
+  _In_ DWORD dwFlags,
+  _Outptr_ PCCERT_CONTEXT *ppProvCertContext);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_WRITE_CERT)(HCERTSTOREPROV hStoreProv,
- PCCERT_CONTEXT pCertContext, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_WRITE_CERT)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_DELETE_CERT)(
- HCERTSTOREPROV hStoreProv, PCCERT_CONTEXT pCertContext, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_DELETE_CERT)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CERT_PROPERTY)(
- HCERTSTOREPROV hStoreProv, PCCERT_CONTEXT pCertContext, DWORD dwPropId,
- DWORD dwFlags, const void *pvData);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_SET_CERT_PROPERTY)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_READ_CRL)(HCERTSTOREPROV hStoreProv,
- PCCRL_CONTEXT pStoreCrlContext, DWORD dwFlags,
- PCCRL_CONTEXT *ppProvCrlContext);
+typedef
+_Success_(return != 0)
+BOOL
+(WINAPI *PFN_CERT_STORE_PROV_READ_CRL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCRL_CONTEXT pStoreCrlContext,
+  _In_ DWORD dwFlags,
+  _Outptr_ PCCRL_CONTEXT *ppProvCrlContext);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_WRITE_CRL)(HCERTSTOREPROV hStoreProv,
- PCCRL_CONTEXT pCrlContext, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_WRITE_CRL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_DELETE_CRL)(HCERTSTOREPROV hStoreProv,
- PCCRL_CONTEXT pCrlContext, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_DELETE_CRL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CRL_PROPERTY)(
- HCERTSTOREPROV hStoreProv, PCCRL_CONTEXT pCrlContext, DWORD dwPropId,
- DWORD dwFlags, const void *pvData);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_SET_CRL_PROPERTY)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_READ_CTL)(HCERTSTOREPROV hStoreProv,
- PCCTL_CONTEXT pStoreCtlContext, DWORD dwFlags,
- PCCTL_CONTEXT *ppProvCtlContext);
+typedef
+_Success_(return != 0)
+BOOL
+(WINAPI *PFN_CERT_STORE_PROV_READ_CTL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCTL_CONTEXT pStoreCtlContext,
+  _In_ DWORD dwFlags,
+  _Outptr_ PCCTL_CONTEXT *ppProvCtlContext);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_WRITE_CTL)(HCERTSTOREPROV hStoreProv,
- PCCTL_CONTEXT pCtlContext, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_WRITE_CTL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_DELETE_CTL)(
- HCERTSTOREPROV hStoreProv, PCCTL_CONTEXT pCtlContext, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_DELETE_CTL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CTL_PROPERTY)(
- HCERTSTOREPROV hStoreProv, PCCTL_CONTEXT pCtlContext, DWORD dwPropId,
- DWORD dwFlags, const void *pvData);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_SET_CTL_PROPERTY)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_CONTROL)(HCERTSTOREPROV hStoreProv,
- DWORD dwFlags, DWORD dwCtrlType, void const *pvCtrlPara);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_CONTROL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwCtrlType,
+  _In_opt_ void const *pvCtrlPara);
 
 typedef struct _CERT_STORE_PROV_FIND_INFO {
     DWORD       cbSize;
@@ -1195,36 +1266,79 @@ typedef struct _CERT_STORE_PROV_FIND_INFO {
 typedef const CERT_STORE_PROV_FIND_INFO CCERT_STORE_PROV_FIND_INFO,
  *PCCERT_STORE_PROV_FIND_INFO;
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_FIND_CERT)(HCERTSTOREPROV hStoreProv,
- PCCERT_STORE_PROV_FIND_INFO pFindInfo, PCCERT_CONTEXT pPrevCertContext,
- DWORD dwFlags, void **ppvStoreProvFindInfo, PCCERT_CONTEXT *ppProvCertContext);
+typedef
+_Success_(return != 0)
+BOOL
+(WINAPI *PFN_CERT_STORE_PROV_FIND_CERT)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_STORE_PROV_FIND_INFO pFindInfo,
+  _In_ PCCERT_CONTEXT pPrevCertContext,
+  _In_ DWORD dwFlags,
+  _Inout_ void **ppvStoreProvFindInfo,
+  _Outptr_ PCCERT_CONTEXT *ppProvCertContext);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_FREE_FIND_CERT)(
- HCERTSTOREPROV hStoreProv, PCCERT_CONTEXT pCertContext,
- void *pvStoreProvFindInfo, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_FREE_FIND_CERT)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ void *pvStoreProvFindInfo,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_GET_CERT_PROPERTY)(
- HCERTSTOREPROV hStoreProv, PCCERT_CONTEXT pCertContext, DWORD dwPropId,
- DWORD dwFlags, void *pvData, DWORD *pcbData);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_GET_CERT_PROPERTY)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_FIND_CRL)(HCERTSTOREPROV hStoreProv,
- PCCERT_STORE_PROV_FIND_INFO pFindInfo, PCCRL_CONTEXT pPrevCrlContext,
- DWORD dwFlags, void **ppvStoreProvFindInfo, PCCRL_CONTEXT *ppProvCrlContext);
+typedef
+_Success_(return != 0)
+BOOL
+(WINAPI *PFN_CERT_STORE_PROV_FIND_CRL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_STORE_PROV_FIND_INFO pFindInfo,
+  _In_ PCCRL_CONTEXT pPrevCrlContext,
+  _In_ DWORD dwFlags,
+  _Inout_ void **ppvStoreProvFindInfo,
+  _Outptr_ PCCRL_CONTEXT *ppProvCrlContext);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_FREE_FIND_CRL)(
- HCERTSTOREPROV hStoreProv, PCCRL_CONTEXT pCrlContext,
- void *pvStoreProvFindInfo, DWORD dwFlags);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_FREE_FIND_CRL)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ void *pvStoreProvFindInfo,
+  _In_ DWORD dwFlags);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_GET_CRL_PROPERTY)(
- HCERTSTOREPROV hStoreProv, PCCRL_CONTEXT pCrlContext, DWORD dwPropId,
- DWORD dwFlags, void *pvData, DWORD *pcbData);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_GET_CRL_PROPERTY)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_FIND_CTL)(HCERTSTOREPROV hStoreProv,
- PCCTL_CONTEXT pCtlContext, void *pvStoreProvFindInfo, DWORD dwFlags);
+typedef
+_Success_(return != 0)
+BOOL
+(WINAPI *PFN_CERT_STORE_PROV_FIND_CTL)(
+  _In_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCERT_STORE_PROV_FIND_INFO pFindInfo,
+  _In_ PCCTL_CONTEXT pPrevCtlContext,
+  _In_ DWORD dwFlags,
+  _Inout_ void **ppvStoreProvFindInfo,
+  _Outptr_ PCCTL_CONTEXT *ppProvCtlContext);
 
-typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_GET_CTL_PROPERTY)(
- HCERTSTOREPROV hStoreProv, PCCTL_CONTEXT pCtlContext, DWORD dwPropId,
- DWORD dwFlags, void *pvData);
+typedef BOOL
+(WINAPI *PFN_CERT_STORE_PROV_GET_CTL_PROPERTY)(
+  _Inout_ HCERTSTOREPROV hStoreProv,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
 typedef struct _CERT_CREATE_CONTEXT_PARA {
     DWORD          cbSize;
@@ -1237,10 +1351,17 @@ typedef struct _CRYPT_OID_FUNC_ENTRY {
     void  *pvFuncAddr;
 } CRYPT_OID_FUNC_ENTRY, *PCRYPT_OID_FUNC_ENTRY;
 
-typedef BOOL (WINAPI *PFN_CRYPT_ENUM_OID_FUNC)(DWORD dwEncodingType,
- LPCSTR pszFuncName, LPCSTR pszOID, DWORD cValue, const DWORD rgdwValueType[],
- LPCWSTR const rgpwszValueName[], const BYTE * const rgpbValueData[],
- const DWORD rgcbValueData[], void *pvArg);
+typedef BOOL
+(WINAPI *PFN_CRYPT_ENUM_OID_FUNC)(
+  _In_ DWORD dwEncodingType,
+  _In_ LPCSTR pszFuncName,
+  _In_ LPCSTR pszOID,
+  _In_ DWORD cValue,
+  _In_reads_(cValue) const DWORD rgdwValueType[],
+  _In_reads_(cValue) LPCWSTR const rgpwszValueName[],
+  _In_reads_(cValue) const BYTE * const rgpbValueData[],
+  _In_reads_(cValue) const DWORD rgcbValueData[],
+  _Inout_opt_ void *pvArg);
 
 #define CRYPT_MATCH_ANY_ENCODING_TYPE 0xffffffff
 
@@ -1258,8 +1379,10 @@ typedef struct _CRYPT_OID_INFO {
 } CRYPT_OID_INFO, *PCRYPT_OID_INFO;
 typedef const CRYPT_OID_INFO CCRYPT_OID_INFO, *PCCRYPT_OID_INFO;
 
-typedef BOOL (WINAPI *PFN_CRYPT_ENUM_OID_INFO)(PCCRYPT_OID_INFO pInfo,
- void *pvArg);
+typedef BOOL
+(WINAPI *PFN_CRYPT_ENUM_OID_INFO)(
+  _In_ PCCRYPT_OID_INFO pInfo,
+  _Inout_opt_ void *pvArg);
 
 typedef struct _CRYPT_SIGN_MESSAGE_PARA {
     DWORD                      cbSize;
@@ -1288,8 +1411,12 @@ typedef struct _CRYPT_SIGN_MESSAGE_PARA {
 #define CRYPT_MESSAGE_KEYID_SIGNER_FLAG             0x00000004
 #define CRYPT_MESSAGE_SILENT_KEYSET_FLAG            0x00000008
 
-typedef PCCERT_CONTEXT (WINAPI *PFN_CRYPT_GET_SIGNER_CERTIFICATE)(void *pvArg,
- DWORD dwCertEncodingType, PCERT_INFO pSignerId, HCERTSTORE hMsgCertStore);
+typedef PCCERT_CONTEXT
+(WINAPI *PFN_CRYPT_GET_SIGNER_CERTIFICATE)(
+  _Inout_opt_ void *pvGetArg,
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_INFO pSignerId,
+  _In_ HCERTSTORE hMsgCertStore);
 
 typedef struct _CRYPT_VERIFY_MESSAGE_PARA {
     DWORD                            cbSize;
@@ -1373,24 +1500,30 @@ typedef struct _CRYPT_URL_INFO {
 
 typedef HANDLE HCRYPTASYNC, *PHCRYPTASYNC;
 
-typedef void (WINAPI *PFN_CRYPT_ASYNC_PARAM_FREE_FUNC)(LPSTR pszParamOid,
- LPVOID pvParam);
+typedef void
+(WINAPI *PFN_CRYPT_ASYNC_PARAM_FREE_FUNC)(
+  _In_ LPSTR pszParamOid,
+  _In_ LPVOID pvParam);
 
 #define CRYPT_PARAM_ASYNC_RETRIEVAL_COMPLETION ((LPCSTR)1)
 #define CRYPT_PARAM_CANCEL_ASYNC_RETRIEVAL     ((LPCSTR)2)
 
-typedef void (WINAPI *PFN_CRYPT_ASYNC_RETRIEVAL_COMPLETION_FUNC)(
- void *pvCompletion, DWORD dwCompletionCode, LPCSTR pszURL, LPSTR pszObjectOid,
- void *pvObject);
+typedef void
+(WINAPI *PFN_CRYPT_ASYNC_RETRIEVAL_COMPLETION_FUNC)(
+  _Inout_opt_ void *pvCompletion,
+  _In_ DWORD dwCompletionCode,
+  _In_ LPCSTR pszURL,
+  _In_opt_ LPSTR pszObjectOid,
+  _In_ void *pvObject);
 
-typedef struct _CRYPT_ASYNC_RETRIEVAL_COMPLETION
-{
-    PFN_CRYPT_ASYNC_RETRIEVAL_COMPLETION_FUNC pfnCompletion;
-    void                                     *pvCompletion;
+typedef struct _CRYPT_ASYNC_RETRIEVAL_COMPLETION {
+  __callback PFN_CRYPT_ASYNC_RETRIEVAL_COMPLETION_FUNC pfnCompletion;
+  _Inout_opt_ void *pvCompletion;
 } CRYPT_ASYNC_RETRIEVAL_COMPLETION, *PCRYPT_ASYNC_RETRIEVAL_COMPLETION;
 
-typedef BOOL (WINAPI *PFN_CANCEL_ASYNC_RETRIEVAL_FUNC)(
- HCRYPTASYNC hAsyncRetrieve);
+typedef BOOL
+(WINAPI *PFN_CANCEL_ASYNC_RETRIEVAL_FUNC)(
+  _In_opt_ HCRYPTASYNC hAsyncRetrieve);
 
 typedef struct _CRYPT_BLOB_ARRAY
 {
@@ -1429,8 +1562,11 @@ typedef struct _CRYPT_RETRIEVE_AUX_INFO {
     DWORD     dwMaxUrlRetrievalByteCount;
 } CRYPT_RETRIEVE_AUX_INFO, *PCRYPT_RETRIEVE_AUX_INFO;
 
-typedef void (WINAPI *PFN_FREE_ENCODED_OBJECT_FUNC)(LPCSTR pszObjectOid,
- PCRYPT_BLOB_ARRAY pObject, void *pvFreeContext);
+typedef void
+(WINAPI *PFN_FREE_ENCODED_OBJECT_FUNC)(
+  _In_opt_ LPCSTR pszObjectOid,
+  _Inout_ PCRYPT_BLOB_ARRAY pObject,
+  _Inout_opt_ void *pvFreeContext);
 
 #define SCHEME_OID_RETRIEVE_ENCODED_OBJECT_FUNC \
  "SchemeDllRetrieveEncodedObject"
@@ -1478,7 +1614,10 @@ BOOL WINAPI ContextDllCreateObjectContext(LPCSTR pszObjectOid,
 #define CRYPT_CHECK_FRESHNESS_TIME_VALIDITY 0x00000400
 #define CRYPT_ACCUMULATIVE_TIMEOUT          0x00000800
 
-typedef BOOL (WINAPI *PFN_CRYPT_CANCEL_RETRIEVAL)(DWORD dwFlags, void *pvArg);
+typedef BOOL
+(WINAPI *PFN_CRYPT_CANCEL_RETRIEVAL)(
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvArg);
 
 typedef struct _CERT_CRL_CONTEXT_PAIR
 {
@@ -1549,6 +1688,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_TYPE_STREAM                 (4 << 9)
 #define ALG_TYPE_DH                     (5 << 9)
 #define ALG_TYPE_SECURECHANNEL          (6 << 9)
+#define ALG_TYPE_DH_EPHEM               (7 << 9) /* FIXME: find the real TYPE name */
 
 /* SIDs */
 #define ALG_SID_ANY                     (0)
@@ -1562,6 +1702,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_DSS_ANY                 0
 #define ALG_SID_DSS_PKCS                1
 #define ALG_SID_DSS_DMS                 2
+#define ALG_SID_ECDSA                   3
 
 /* DES SIDs */
 #define ALG_SID_DES                     1
@@ -1578,11 +1719,16 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_AES_192                15
 #define ALG_SID_AES_256                16
 #define ALG_SID_AES                    17
-/* Diffie-Hellmans SIDs */
+/* Fortezza */
+#define ALG_SID_SKIPJACK               10
+#define ALG_SID_TEK                    11
+/* Diffie-Hellman SIDs */
 #define ALG_SID_DH_SANDF                1
 #define ALG_SID_DH_EPHEM                2
 #define ALG_SID_AGREED_KEY_ANY          3
 #define ALG_SID_KEA                     4
+#define ALG_SID_ECDH                    5
+#define ALG_SID_ECDH_EPHEM              6 /* FIXME: find the real SID name */
 /* RC2 SIDs */
 #define ALG_SID_RC4                     1
 #define ALG_SID_RC2                     2
@@ -1613,6 +1759,8 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define ALG_SID_SCHANNEL_ENC_KEY        7
 #define ALG_SID_EXAMPLE                80
 
+#define ALG_SID_ECMQV                   1
+
 /* Algorithm Definitions */
 #define CALG_MD2                  (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_MD2)
 #define CALG_MD4                  (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_MD4)
@@ -1632,11 +1780,18 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_NO_SIGN              (ALG_CLASS_SIGNATURE    | ALG_TYPE_ANY           | ALG_SID_ANY)
 #define CALG_DH_SF                (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_SANDF)
 #define CALG_DH_EPHEM             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_DH_EPHEM)
+#define CALG_AGREEDKEY_ANY        (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_AGREED_KEY_ANY)
+#define CALG_KEA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_KEA)
+#define CALG_HUGHES_MD5           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_ANY           | ALG_SID_MD5)
 #define CALG_RSA_KEYX             (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_RSA           | ALG_SID_RSA_ANY)
+#define CALG_ECDH                 (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH            | ALG_SID_ECDH)
+#define CALG_ECDH_EPHEM           (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_DH_EPHEM      | ALG_SID_ECDH_EPHEM) /* FIXME: find the original TYPE and SID names */
+#define CALG_ECMQV                (ALG_CLASS_KEY_EXCHANGE | ALG_TYPE_ANY           | ALG_SID_ECMQV)
 #define CALG_DES                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_DES)
 #define CALG_RC2                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_RC2)
 #define CALG_3DES                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES)
 #define CALG_3DES_112             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES_112)
+#define CALG_DESX                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_DESX)
 #define CALG_AES_128              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_128)
 #define CALG_AES_192              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_192)
 #define CALG_AES_256              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_256)
@@ -1644,6 +1799,9 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_RC4                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC4)
 #define CALG_SEAL                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_SEAL)
 #define CALG_RC5                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC5)
+#define CALG_SKIPJACK             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_SKIPJACK)
+#define CALG_TEK                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_TEK)
+#define CALG_CYLINK_MEK           (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_CYLINK_MEK)
 #define CALG_SSL3_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL3_MASTER)
 #define CALG_SCHANNEL_MASTER_HASH (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MASTER_HASH)
 #define CALG_SCHANNEL_MAC_KEY     (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MAC_KEY)
@@ -1651,8 +1809,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 #define CALG_PCT1_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_PCT1_MASTER)
 #define CALG_SSL2_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL2_MASTER)
 #define CALG_TLS1_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_TLS1_MASTER)
-
-
+#define CALG_ECDSA                (ALG_CLASS_SIGNATURE    | ALG_TYPE_DSS           | ALG_SID_ECDSA)
 /* Protocol Flags */
 #define CRYPT_FLAG_PCT1    0x0001
 #define CRYPT_FLAG_SSL2    0x0002
@@ -1819,6 +1976,22 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 };
 #endif
 #define MS_ENH_RSA_AES_PROV                            WINELIB_NAME_AW(MS_ENH_RSA_AES_PROV_)
+
+#define MS_ENH_RSA_AES_PROV_XP_A    "Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
+#if defined(__GNUC__)
+# define MS_ENH_RSA_AES_PROV_XP_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',\
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',' ',\
+        '(','P','r','o','t','o','t','y','p','e',')',0 }
+#elif defined(_MSC_VER)
+# define MS_ENH_RSA_AES_PROV_XP_W   L"Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
+#else
+static const WCHAR MS_ENH_RSA_AES_PROV_XP_W[] = { 'M','i','c','r','o','s','o','f','t',' ',
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',' ',
+        '(','P','r','o','t','o','t','y','p','e',')',0 };
+#endif
+#define MS_ENH_RSA_AES_PROV_XP                   WINELIB_NAME_AW(MS_ENH_RSA_AES_PROV_XP_)
 
 /* Key Specs*/
 #define AT_KEYEXCHANGE          1
@@ -3405,8 +3578,12 @@ typedef struct _CERT_CHAIN_ENGINE_CONFIG
 
 /* message-related definitions */
 
-typedef BOOL (WINAPI *PFN_CMSG_STREAM_OUTPUT)(const void *pvArg, BYTE *pbData,
- DWORD cbData, BOOL fFinal);
+typedef BOOL
+(WINAPI *PFN_CMSG_STREAM_OUTPUT)(
+  _In_opt_ const void *pvArg,
+  _In_reads_bytes_opt_(cbData) BYTE *pbData,
+  _In_ DWORD cbData,
+  _In_ BOOL fFinal);
 
 #define CMSG_INDEFINITE_LENGTH 0xffffffff
 
@@ -3808,8 +3985,8 @@ typedef struct _CMSG_CMS_RECIPIENT_INFO {
 #define CMSG_KEY_AGREE_VERSION          CMSG_ENVELOPED_RECIPIENT_V3
 #define CMSG_MAIL_LIST_VERSION          CMSG_ENVELOPED_RECIPIENT_V4
 
-typedef void * (WINAPI *PFN_CMSG_ALLOC)(size_t cb);
-typedef void   (WINAPI *PFN_CMSG_FREE)(void *pv);
+typedef void * (WINAPI *PFN_CMSG_ALLOC)(_In_ size_t cb);
+typedef void (WINAPI *PFN_CMSG_FREE)(_Inout_ void *pv);
 
 typedef struct _CMSG_CONTENT_ENCRYPT_INFO {
     DWORD                       cbSize;
@@ -3841,20 +4018,27 @@ typedef struct _CMSG_CTRL_KEY_TRANS_DECRYPT_PARA {
     DWORD                          dwRecipientIndex;
 } CMSG_CTRL_KEY_TRANS_DECRYPT_PARA, *PCMSG_CTRL_KEY_TRANS_DECRYPT_PARA;
 
-typedef BOOL (WINAPI *PFN_CMSG_GEN_CONTENT_ENCRYPT_KEY)(
- PCMSG_CONTENT_ENCRYPT_INFO pContentEncryptInfo, DWORD dwFlags,
- void *pvReserved);
+typedef BOOL
+(WINAPI *PFN_CMSG_GEN_CONTENT_ENCRYPT_KEY)(
+  _Inout_ PCMSG_CONTENT_ENCRYPT_INFO pContentEncryptInfo,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
 
-typedef BOOL (WINAPI *PFN_CMSG_EXPORT_KEY_TRANS)(
- PCMSG_CONTENT_ENCRYPT_INFO pContentEncryptInfo,
- PCMSG_KEY_TRANS_RECIPIENT_ENCODE_INFO pKeyTransEncodeInfo,
- PCMSG_KEY_TRANS_ENCRYPT_INFO pKeyTransEncryptInfo,
- DWORD dwFlags, void *pvReserved);
+typedef BOOL
+(WINAPI *PFN_CMSG_EXPORT_KEY_TRANS)(
+  _In_ PCMSG_CONTENT_ENCRYPT_INFO pContentEncryptInfo,
+  _In_ PCMSG_KEY_TRANS_RECIPIENT_ENCODE_INFO pKeyTransEncodeInfo,
+  _Inout_ PCMSG_KEY_TRANS_ENCRYPT_INFO pKeyTransEncryptInfo,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
 
-typedef BOOL (WINAPI *PFN_CMSG_IMPORT_KEY_TRANS)(
- PCRYPT_ALGORITHM_IDENTIFIER pContentEncryptionAlgorithm,
- PCMSG_CTRL_KEY_TRANS_DECRYPT_PARA pKeyTransDecryptPara, DWORD dwFlags,
- void *pvReserved, HCRYPTKEY *phContentEncryptKey);
+typedef BOOL
+(WINAPI *PFN_CMSG_IMPORT_KEY_TRANS)(
+  _In_ PCRYPT_ALGORITHM_IDENTIFIER pContentEncryptionAlgorithm,
+  _In_ PCMSG_CTRL_KEY_TRANS_DECRYPT_PARA pKeyTransDecryptPara,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved,
+  _Out_ HCRYPTKEY *phContentEncryptKey);
 
 /* CryptMsgGetAndVerifySigner flags */
 #define CMSG_TRUSTED_SIGNER_FLAG   0x1
@@ -3877,491 +4061,1480 @@ typedef BOOL (WINAPI *PFN_CMSG_IMPORT_KEY_TRANS)(
 #define EXPORT_PRIVATE_KEYS                   0x00000004
 #define PKCS12_EXPORT_RESERVED_MASK           0xffff0000
 
+#define CRYPT_USERDATA 0x00000001
+
 /* function declarations */
 /* advapi32.dll */
-WINADVAPI BOOL WINAPI CryptAcquireContextA(HCRYPTPROV *, LPCSTR, LPCSTR, DWORD, DWORD);
-WINADVAPI BOOL WINAPI CryptAcquireContextW (HCRYPTPROV *, LPCWSTR, LPCWSTR, DWORD, DWORD);
-#define               CryptAcquireContext WINELIB_NAME_AW(CryptAcquireContext)
-WINADVAPI BOOL WINAPI CryptGenRandom (HCRYPTPROV, DWORD, BYTE *);
-WINADVAPI BOOL WINAPI CryptContextAddRef (HCRYPTPROV, DWORD *, DWORD);
-WINADVAPI BOOL WINAPI CryptCreateHash (HCRYPTPROV, ALG_ID, HCRYPTKEY, DWORD, HCRYPTHASH *);
-WINADVAPI BOOL WINAPI CryptDecrypt (HCRYPTKEY, HCRYPTHASH, BOOL, DWORD, BYTE *, DWORD *);
-WINADVAPI BOOL WINAPI CryptDeriveKey (HCRYPTPROV, ALG_ID, HCRYPTHASH, DWORD, HCRYPTKEY *);
-WINADVAPI BOOL WINAPI CryptDestroyHash (HCRYPTHASH);
-WINADVAPI BOOL WINAPI CryptDestroyKey (HCRYPTKEY);
-WINADVAPI BOOL WINAPI CryptDuplicateKey (HCRYPTKEY, DWORD *, DWORD, HCRYPTKEY *);
-WINADVAPI BOOL WINAPI CryptDuplicateHash (HCRYPTHASH, DWORD *, DWORD, HCRYPTHASH *);
-WINADVAPI BOOL WINAPI CryptEncrypt (HCRYPTKEY, HCRYPTHASH, BOOL, DWORD, BYTE *, DWORD *, DWORD);
-WINADVAPI BOOL WINAPI CryptEnumProvidersA (DWORD, DWORD *, DWORD, DWORD *, LPSTR, DWORD *);
-WINADVAPI BOOL WINAPI CryptEnumProvidersW (DWORD, DWORD *, DWORD, DWORD *, LPWSTR, DWORD *);
-#define               CryptEnumProviders WINELIB_NAME_AW(CryptEnumProviders)
-WINADVAPI BOOL WINAPI CryptEnumProviderTypesA (DWORD, DWORD *, DWORD, DWORD *, LPSTR, DWORD *);
-WINADVAPI BOOL WINAPI CryptEnumProviderTypesW (DWORD, DWORD *, DWORD, DWORD *, LPWSTR, DWORD *);
-#define               CryptEnumProviderTypes WINELIB_NAME_AW(CryptEnumProviderTypes)
-WINADVAPI BOOL WINAPI CryptExportKey (HCRYPTKEY, HCRYPTKEY, DWORD, DWORD, BYTE *, DWORD *);
-WINADVAPI BOOL WINAPI CryptGenKey (HCRYPTPROV, ALG_ID, DWORD, HCRYPTKEY *);
-WINADVAPI BOOL WINAPI CryptGetKeyParam (HCRYPTKEY, DWORD, BYTE *, DWORD *, DWORD);
-WINADVAPI BOOL WINAPI CryptGetHashParam (HCRYPTHASH, DWORD, BYTE *, DWORD *, DWORD);
-WINADVAPI BOOL WINAPI CryptGetProvParam (HCRYPTPROV, DWORD, BYTE *, DWORD *, DWORD);
-WINADVAPI BOOL WINAPI CryptGetDefaultProviderA (DWORD, DWORD *, DWORD, LPSTR, DWORD *);
-WINADVAPI BOOL WINAPI CryptGetDefaultProviderW (DWORD, DWORD *, DWORD, LPWSTR, DWORD *);
-#define               CryptGetDefaultProvider WINELIB_NAME_AW(CryptGetDefaultProvider)
-WINADVAPI BOOL WINAPI CryptGetUserKey (HCRYPTPROV, DWORD, HCRYPTKEY *);
-WINADVAPI BOOL WINAPI CryptHashData (HCRYPTHASH, CONST BYTE *, DWORD, DWORD);
-WINADVAPI BOOL WINAPI CryptHashSessionKey (HCRYPTHASH, HCRYPTKEY, DWORD);
-WINADVAPI BOOL WINAPI CryptImportKey (HCRYPTPROV, CONST BYTE *, DWORD, HCRYPTKEY, DWORD, HCRYPTKEY *);
+WINADVAPI
+BOOL
+WINAPI
+CryptAcquireContextA(
+  _Out_ HCRYPTPROV *,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD,
+  _In_ DWORD);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptAcquireContextW(
+  _Out_ HCRYPTPROV *,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD,
+  _In_ DWORD);
+
+#define CryptAcquireContext WINELIB_NAME_AW(CryptAcquireContext)
+
+WINADVAPI
+BOOL
+WINAPI
+CryptGenRandom(
+  _In_ HCRYPTPROV hProv,
+  _In_ DWORD dwLen,
+  _Inout_updates_bytes_(dwLen) BYTE *pbBuffer);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptContextAddRef(
+  _In_ HCRYPTPROV,
+  _Reserved_ DWORD *,
+  _In_ DWORD);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptCreateHash(
+  _In_ HCRYPTPROV,
+  _In_ ALG_ID,
+  _In_ HCRYPTKEY,
+  _In_ DWORD,
+  _Out_ HCRYPTHASH *);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptDecrypt(
+  _In_ HCRYPTKEY hKey,
+  _In_ HCRYPTHASH hHash,
+  _In_ BOOL Final,
+  _In_ DWORD dwFlags,
+  _Inout_updates_bytes_to_(*pdwDataLen, *pdwDataLen) BYTE *pbData,
+  _Inout_ DWORD *pdwDataLen);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptDeriveKey(
+  _In_ HCRYPTPROV,
+  _In_ ALG_ID,
+  _In_ HCRYPTHASH,
+  _In_ DWORD,
+  _Out_ HCRYPTKEY *);
+
+WINADVAPI BOOL WINAPI CryptDestroyHash(_In_ HCRYPTHASH);
+WINADVAPI BOOL WINAPI CryptDestroyKey(_In_ HCRYPTKEY);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptDuplicateKey(
+  _In_ HCRYPTKEY,
+  _Reserved_ DWORD *,
+  _In_ DWORD,
+  _Out_ HCRYPTKEY *);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptDuplicateHash(
+  _In_ HCRYPTHASH,
+  _Reserved_ DWORD *,
+  _In_ DWORD,
+  _Out_ HCRYPTHASH *);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptEncrypt(
+  _In_ HCRYPTKEY hKey,
+  _In_ HCRYPTHASH hHash,
+  _In_ BOOL Final,
+  _In_ DWORD dwFlags,
+  _Inout_updates_bytes_to_opt_(dwBufLen, *pdwDataLen) BYTE *pbData,
+  _Inout_ DWORD *pdwDataLen,
+  _In_ DWORD dwBufLen);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptEnumProvidersA(
+  _In_ DWORD dwIndex,
+  _Reserved_ DWORD *pdwReserved,
+  _In_ DWORD dwFlags,
+  _Out_ DWORD *pdwProvType,
+  _Out_writes_bytes_to_opt_(*pcbProvName, *pcbProvName) LPSTR szProvName,
+  _Inout_ DWORD *pcbProvName);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptEnumProvidersW(
+  _In_ DWORD dwIndex,
+  _Reserved_ DWORD *pdwReserved,
+  _In_ DWORD dwFlags,
+  _Out_ DWORD *pdwProvType,
+  _Out_writes_bytes_to_opt_(*pcbProvName, *pcbProvName) LPWSTR szProvName,
+  _Inout_ DWORD *pcbProvName);
+
+#define CryptEnumProviders WINELIB_NAME_AW(CryptEnumProviders)
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptEnumProviderTypesA(
+  _In_ DWORD dwIndex,
+  _Reserved_ DWORD *pdwReserved,
+  _In_ DWORD dwFlags,
+  _Out_ DWORD *pdwProvType,
+  _Out_writes_bytes_to_opt_(*pcbTypeName, *pcbTypeName) LPSTR szTypeName,
+  _Inout_ DWORD *pcbTypeName);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptEnumProviderTypesW(
+  _In_ DWORD dwIndex,
+  _Reserved_ DWORD *pdwReserved,
+  _In_ DWORD dwFlags,
+  _Out_ DWORD *pdwProvType,
+  _Out_writes_bytes_to_opt_(*pcbTypeName, *pcbTypeName) LPWSTR szTypeName,
+  _Inout_ DWORD *pcbTypeName);
+
+#define CryptEnumProviderTypes WINELIB_NAME_AW(CryptEnumProviderTypes)
+
+WINADVAPI
+BOOL
+WINAPI
+CryptExportKey(
+  _In_ HCRYPTKEY hKey,
+  _In_ HCRYPTKEY hExpKey,
+  _In_ DWORD dwBlobType,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pdwDataLen, *pdwDataLen) BYTE *pbData,
+  _Inout_ DWORD *pdwDataLen);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptGenKey(
+  _In_ HCRYPTPROV,
+  _In_ ALG_ID,
+  _In_ DWORD,
+  _Out_ HCRYPTKEY *);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptGetKeyParam(
+  _In_ HCRYPTKEY hKey,
+  _In_ DWORD dwParam,
+  _Out_writes_bytes_to_opt_(*pdwDataLen, *pdwDataLen) BYTE *pbData,
+  _Inout_ DWORD *pdwDataLen,
+  _In_ DWORD dwFlags);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptGetHashParam(
+  _In_ HCRYPTHASH hHash,
+  _In_ DWORD dwParam,
+  _Out_writes_bytes_to_opt_(*pdwDataLen, *pdwDataLen) BYTE *pbData,
+  _Inout_ DWORD *pdwDataLen,
+  _In_ DWORD dwFlags);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptGetProvParam(
+  _In_ HCRYPTPROV hProv,
+  _In_ DWORD dwParam,
+  _Out_writes_bytes_to_opt_(*pdwDataLen, *pdwDataLen) BYTE *pbData,
+  _Inout_ DWORD *pdwDataLen,
+  _In_ DWORD dwFlags);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptGetDefaultProviderA(
+  _In_ DWORD dwProvType,
+  _Reserved_ DWORD *pdwReserved,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbProvName, *pcbProvName) LPSTR pszProvName,
+  _Inout_ DWORD *pcbProvName);
+
+_Success_(return != 0)
+WINADVAPI
+BOOL
+WINAPI
+CryptGetDefaultProviderW(
+  _In_ DWORD dwProvType,
+  _Reserved_ DWORD *pdwReserved,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbProvName, *pcbProvName) LPWSTR pszProvName,
+  _Inout_ DWORD *pcbProvName);
+
+#define CryptGetDefaultProvider WINELIB_NAME_AW(CryptGetDefaultProvider)
+
+WINADVAPI BOOL WINAPI CryptGetUserKey(_In_ HCRYPTPROV, _In_ DWORD, _Out_ HCRYPTKEY *);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptHashData(
+  _In_ HCRYPTHASH hHash,
+  _In_reads_bytes_(dwDataLen) CONST BYTE *pbData,
+  _In_ DWORD dwDataLen,
+  _In_ DWORD dwFlags);
+
+WINADVAPI BOOL WINAPI CryptHashSessionKey(_In_ HCRYPTHASH, _In_ HCRYPTKEY, _In_ DWORD);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptImportKey(
+  _In_ HCRYPTPROV hProv,
+  _In_reads_bytes_(dwDataLen) CONST BYTE *pbData,
+  _In_ DWORD dwDataLen,
+  _In_ HCRYPTKEY hPubKey,
+  _In_ DWORD dwFlags,
+  _Out_ HCRYPTKEY *phKey);
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, DWORD);
+WINADVAPI BOOL WINAPI CryptReleaseContext(_In_ HCRYPTPROV, _In_ DWORD);
 #else
-WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, ULONG_PTR);
+WINADVAPI BOOL WINAPI CryptReleaseContext(_In_ HCRYPTPROV, _In_ ULONG_PTR);
 #endif
-WINADVAPI BOOL WINAPI CryptSetHashParam (HCRYPTHASH, DWORD, CONST BYTE *, DWORD);
-WINADVAPI BOOL WINAPI CryptSetKeyParam (HCRYPTKEY, DWORD, CONST BYTE *, DWORD);
-WINADVAPI BOOL WINAPI CryptSetProviderA (LPCSTR, DWORD);
-WINADVAPI BOOL WINAPI CryptSetProviderW (LPCWSTR, DWORD);
-#define               CryptSetProvider WINELIB_NAME_AW(CryptSetProvider)
-WINADVAPI BOOL WINAPI CryptSetProviderExA (LPCSTR, DWORD, DWORD *, DWORD);
-WINADVAPI BOOL WINAPI CryptSetProviderExW (LPCWSTR, DWORD, DWORD *, DWORD);
-#define               CryptSetProviderEx WINELIB_NAME_AW(CryptSetProviderEx)
-WINADVAPI BOOL WINAPI CryptSetProvParam (HCRYPTPROV, DWORD, CONST BYTE *, DWORD);
-WINADVAPI BOOL WINAPI CryptSignHashA (HCRYPTHASH, DWORD, LPCSTR, DWORD, BYTE *, DWORD *);
-WINADVAPI BOOL WINAPI CryptSignHashW (HCRYPTHASH, DWORD, LPCWSTR, DWORD, BYTE *, DWORD *);
-#define               CryptSignHash WINELIB_NAME_AW(CryptSignHash)
-WINADVAPI BOOL WINAPI CryptVerifySignatureA (HCRYPTHASH, CONST BYTE *, DWORD, HCRYPTKEY, LPCSTR, DWORD);
-WINADVAPI BOOL WINAPI CryptVerifySignatureW (HCRYPTHASH, CONST BYTE *, DWORD, HCRYPTKEY, LPCWSTR, DWORD);
-#define               CryptVerifySignature WINELIB_NAME_AW(CryptVerifySignature)
+
+WINADVAPI
+BOOL
+WINAPI
+CryptSetHashParam(
+  _In_ HCRYPTHASH,
+  _In_ DWORD,
+  _In_ CONST BYTE *,
+  _In_ DWORD);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptSetKeyParam(
+  _In_ HCRYPTKEY,
+  _In_ DWORD,
+  _In_ CONST BYTE *,
+  _In_ DWORD);
+
+WINADVAPI BOOL WINAPI CryptSetProviderA(_In_ LPCSTR, _In_ DWORD);
+WINADVAPI BOOL WINAPI CryptSetProviderW(_In_ LPCWSTR, _In_ DWORD);
+
+#define CryptSetProvider WINELIB_NAME_AW(CryptSetProvider)
+
+WINADVAPI
+BOOL
+WINAPI
+CryptSetProviderExA(
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _Reserved_ DWORD *,
+  _In_ DWORD);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptSetProviderExW(
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _Reserved_ DWORD *,
+  _In_ DWORD);
+
+#define CryptSetProviderEx WINELIB_NAME_AW(CryptSetProviderEx)
+
+WINADVAPI BOOL WINAPI CryptSetProvParam(_In_ HCRYPTPROV, _In_ DWORD, _In_ CONST BYTE *, _In_ DWORD);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptSignHashA(
+  _In_ HCRYPTHASH hHash,
+  _In_ DWORD dwKeySpec,
+  _In_opt_ LPCSTR szDescription,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pdwSigLen, *pdwSigLen) BYTE *pbSignature,
+  _Inout_ DWORD *pdwSigLen);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptSignHashW(
+  _In_ HCRYPTHASH hHash,
+  _In_ DWORD dwKeySpec,
+  _In_opt_ LPCWSTR szDescription,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pdwSigLen, *pdwSigLen) BYTE *pbSignature,
+  _Inout_ DWORD *pdwSigLen);
+
+#define CryptSignHash WINELIB_NAME_AW(CryptSignHash)
+
+WINADVAPI
+BOOL
+WINAPI
+CryptVerifySignatureA(
+  _In_ HCRYPTHASH hHash,
+  _In_reads_bytes_(dwSigLen) CONST BYTE *pbSignature,
+  _In_ DWORD dwSigLen,
+  _In_ HCRYPTKEY hPubKey,
+  _In_opt_ LPCSTR szDescription,
+  _In_ DWORD dwFlags);
+
+WINADVAPI
+BOOL
+WINAPI
+CryptVerifySignatureW(
+  _In_ HCRYPTHASH hHash,
+  _In_reads_bytes_(dwSigLen) CONST BYTE *pbSignature,
+  _In_ DWORD dwSigLen,
+  _In_ HCRYPTKEY hPubKey,
+  _In_opt_ LPCWSTR szDescription,
+  _In_ DWORD dwFlags);
+
+#define CryptVerifySignature WINELIB_NAME_AW(CryptVerifySignature)
 
 /* crypt32.dll functions */
-LPVOID WINAPI CryptMemAlloc(ULONG cbSize) __WINE_ALLOC_SIZE(1);
-LPVOID WINAPI CryptMemRealloc(LPVOID pv, ULONG cbSize) __WINE_ALLOC_SIZE(2);
-VOID   WINAPI CryptMemFree(LPVOID pv);
+LPVOID WINAPI CryptMemAlloc(_In_ ULONG cbSize) __WINE_ALLOC_SIZE(1);
+LPVOID WINAPI CryptMemRealloc(_In_opt_ LPVOID pv, _In_ ULONG cbSize) __WINE_ALLOC_SIZE(2);
+VOID   WINAPI CryptMemFree(_In_opt_ LPVOID pv);
 
-BOOL WINAPI CryptBinaryToStringA(const BYTE *pbBinary,
- DWORD cbBinary, DWORD dwFlags, LPSTR pszString, DWORD *pcchString);
-BOOL WINAPI CryptBinaryToStringW(const BYTE *pbBinary,
- DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString);
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptBinaryToStringA(
+  _In_reads_bytes_(cbBinary) const BYTE *pbBinary,
+  _In_ DWORD cbBinary,
+  _In_ DWORD dwFlags,
+  _Out_writes_to_opt_(*pcchString, *pcchString) LPSTR pszString,
+  _Inout_ DWORD *pcchString);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptBinaryToStringW(
+  _In_reads_bytes_(cbBinary) const BYTE *pbBinary,
+  _In_ DWORD cbBinary,
+  _In_ DWORD dwFlags,
+  _Out_writes_to_opt_(*pcchString, *pcchString) LPWSTR pszString,
+  _Inout_ DWORD *pcchString);
+
 #define CryptBinaryToString WINELIB_NAME_AW(CryptBinaryToString)
 
-BOOL WINAPI CryptStringToBinaryA(LPCSTR pszString,
- DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
- DWORD *pdwSkip, DWORD *pdwFlags);
-BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
- DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
- DWORD *pdwSkip, DWORD *pdwFlags);
+BOOL
+WINAPI
+CryptStringToBinaryA(
+  _In_reads_(cchString) LPCSTR pszString,
+  _In_ DWORD cchString,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbBinary, *pcbBinary) BYTE *pbBinary,
+  _Inout_ DWORD  *pcbBinary,
+  _Out_opt_ DWORD *pdwSkip,
+  _Out_opt_ DWORD *pdwFlags);
+
+BOOL
+WINAPI
+CryptStringToBinaryW(
+  _In_reads_(cchString) LPCWSTR pszString,
+  _In_ DWORD cchString,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbBinary, *pcbBinary) BYTE *pbBinary,
+  _Inout_ DWORD  *pcbBinary,
+  _Out_opt_ DWORD *pdwSkip,
+  _Out_opt_ DWORD *pdwFlags);
+
 #define CryptStringToBinary WINELIB_NAME_AW(CryptStringToBinary)
 
-BOOL WINAPI CryptCreateAsyncHandle(DWORD dwFlags, PHCRYPTASYNC phAsync);
-BOOL WINAPI CryptSetAsyncParam(HCRYPTASYNC hAsync, LPSTR pszParamOid,
- LPVOID pvParam, PFN_CRYPT_ASYNC_PARAM_FREE_FUNC pfnFree);
-BOOL WINAPI CryptGetAsyncParam(HCRYPTASYNC hAsync, LPSTR pszParamOid,
- LPVOID *ppvParam, PFN_CRYPT_ASYNC_PARAM_FREE_FUNC *ppfnFree);
-BOOL WINAPI CryptCloseAsyncHandle(HCRYPTASYNC hAsync);
+BOOL
+WINAPI
+CryptCreateAsyncHandle(
+  _In_ DWORD dwFlags,
+  _Out_ PHCRYPTASYNC phAsync);
 
-BOOL WINAPI CryptRegisterDefaultOIDFunction(DWORD,LPCSTR,DWORD,LPCWSTR);
-BOOL WINAPI CryptRegisterOIDFunction(DWORD,LPCSTR,LPCSTR,LPCWSTR,LPCSTR);
-BOOL WINAPI CryptGetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
-                                     LPCSTR pszOID, LPCWSTR szValueName, DWORD *pdwValueType,
-                                     BYTE *pbValueData, DWORD *pcbValueData);
-BOOL WINAPI CryptSetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
-                                     LPCSTR pszOID, LPCWSTR pwszValueName, DWORD dwValueType,
-                                     const BYTE *pbValueData, DWORD cbValueData);
-BOOL WINAPI CryptUnregisterDefaultOIDFunction(DWORD,LPCSTR,LPCWSTR);
-BOOL WINAPI CryptUnregisterOIDFunction(DWORD,LPCSTR,LPCSTR);
-BOOL WINAPI CryptEnumOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
- LPCSTR pszOID, DWORD dwFlags, void *pvArg,
- PFN_CRYPT_ENUM_OID_FUNC pfnEnumOIDFunc);
-HCRYPTOIDFUNCSET WINAPI CryptInitOIDFunctionSet(LPCSTR,DWORD);
-BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
- DWORD dwEncodingType, LPWSTR pwszDllList, DWORD *pcchDllList);
-BOOL WINAPI CryptGetDefaultOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
- DWORD dwEncodingType, LPCWSTR pwszDll, DWORD dwFlags, void **ppvFuncAddr,
- HCRYPTOIDFUNCADDR *phFuncAddr);
-BOOL WINAPI CryptGetOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
- DWORD dwEncodingType, LPCSTR pszOID, DWORD dwFlags, void **ppvFuncAddr,
- HCRYPTOIDFUNCADDR *phFuncAddr);
-BOOL WINAPI CryptFreeOIDFunctionAddress(HCRYPTOIDFUNCADDR hFuncAddr,
- DWORD dwFlags);
-BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
- DWORD dwEncodingType, LPCSTR pszFuncName, DWORD cFuncEntry,
- const CRYPT_OID_FUNC_ENTRY rgFuncEntry[], DWORD dwFlags);
-BOOL WINAPI CryptInstallDefaultContext(HCRYPTPROV hCryptProv,
- DWORD dwDefaultType, const void *pvDefaultPara, DWORD dwFlags,
- void *pvReserved, HCRYPTDEFAULTCONTEXT *phDefaultContext);
-BOOL WINAPI CryptUninstallDefaultContext(HCRYPTDEFAULTCONTEXT hDefaultContext,
- DWORD dwFlags, void *pvReserved);
+BOOL
+WINAPI
+CryptSetAsyncParam(
+  _In_ HCRYPTASYNC hAsync,
+  _In_ LPSTR pszParamOid,
+  _In_opt_ LPVOID pvParam,
+  __callback PFN_CRYPT_ASYNC_PARAM_FREE_FUNC pfnFree);
 
-BOOL WINAPI CryptEnumOIDInfo(DWORD dwGroupId, DWORD dwFlags, void *pvArg,
- PFN_CRYPT_ENUM_OID_INFO pfnEnumOIDInfo);
-PCCRYPT_OID_INFO WINAPI CryptFindOIDInfo(DWORD dwKeyType, void *pvKey,
- DWORD dwGroupId);
-BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO pInfo, DWORD dwFlags);
-BOOL WINAPI CryptUnregisterOIDInfo(PCCRYPT_OID_INFO pInfo);
+BOOL
+WINAPI
+CryptGetAsyncParam(
+  _In_ HCRYPTASYNC hAsync,
+  _In_ LPSTR pszParamOid,
+  _Outptr_opt_result_maybenull_ LPVOID* ppvParam,
+  _Outptr_opt_result_maybenull_ __callback PFN_CRYPT_ASYNC_PARAM_FREE_FUNC* ppfnFree);
 
-LPCWSTR WINAPI CryptFindLocalizedName(LPCWSTR pwszCryptName);
+BOOL
+WINAPI
+CryptRegisterDefaultOIDFunction(
+  _In_ DWORD,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_ LPCWSTR);
 
-LPCSTR WINAPI CertAlgIdToOID(DWORD dwAlgId);
-DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId);
+BOOL
+WINAPI
+CryptRegisterOIDFunction(
+  _In_ DWORD,
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCSTR);
+
+BOOL
+WINAPI
+CryptGetOIDFunctionValue(
+  _In_ DWORD dwEncodingType,
+  _In_ LPCSTR pszFuncName,
+  _In_ LPCSTR pszOID,
+  _In_opt_ LPCWSTR pwszValueName,
+  _Out_opt_ DWORD *pdwValueType,
+  _Out_writes_bytes_to_opt_(*pcbValueData, *pcbValueData) BYTE *pbValueData,
+  _Inout_opt_ DWORD *pcbValueData);
+
+BOOL
+WINAPI
+CryptSetOIDFunctionValue(
+  _In_ DWORD dwEncodingType,
+  _In_ LPCSTR pszFuncName,
+  _In_ LPCSTR pszOID,
+  _In_opt_ LPCWSTR pwszValueName,
+  _In_ DWORD dwValueType,
+  _In_reads_bytes_opt_(cbValueData) const BYTE *pbValueData,
+  _In_ DWORD cbValueData);
+
+BOOL WINAPI CryptUnregisterDefaultOIDFunction(_In_ DWORD, _In_ LPCSTR, _In_ LPCWSTR);
+BOOL WINAPI CryptUnregisterOIDFunction(_In_ DWORD, _In_ LPCSTR, _In_ LPCSTR);
+
+BOOL
+WINAPI
+CryptEnumOIDFunction(
+  _In_ DWORD dwEncodingType,
+  _In_opt_ LPCSTR pszFuncName,
+  _In_opt_ LPCSTR pszOID,
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvArg,
+  __callback PFN_CRYPT_ENUM_OID_FUNC pfnEnumOIDFunc);
+
+HCRYPTOIDFUNCSET WINAPI CryptInitOIDFunctionSet(_In_ LPCSTR, _In_ DWORD);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptGetDefaultOIDDllList(
+  _In_ HCRYPTOIDFUNCSET hFuncSet,
+  _In_ DWORD dwEncodingType,
+  _Out_writes_to_opt_(*pcchDllList, *pcchDllList) _Post_ _NullNull_terminated_ WCHAR *pwszDllList,
+  _Inout_ DWORD *pcchDllList);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptGetDefaultOIDFunctionAddress(
+  _In_ HCRYPTOIDFUNCSET hFuncSet,
+  _In_ DWORD dwEncodingType,
+  _In_opt_ LPCWSTR pwszDll,
+  _In_ DWORD dwFlags,
+  _Outptr_ void **ppvFuncAddr,
+  _Inout_ HCRYPTOIDFUNCADDR *phFuncAddr);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptGetOIDFunctionAddress(
+  _In_ HCRYPTOIDFUNCSET hFuncSet,
+  _In_ DWORD dwEncodingType,
+  _In_ LPCSTR pszOID,
+  _In_ DWORD dwFlags,
+  _Outptr_ void **ppvFuncAddr,
+  _Out_ HCRYPTOIDFUNCADDR *phFuncAddr);
+
+BOOL
+WINAPI
+CryptFreeOIDFunctionAddress(
+  _In_ HCRYPTOIDFUNCADDR hFuncAddr,
+  _In_ DWORD dwFlags);
+
+BOOL
+WINAPI
+CryptInstallOIDFunctionAddress(
+  _In_opt_ HMODULE hModule,
+  _In_ DWORD dwEncodingType,
+  _In_ LPCSTR pszFuncName,
+  _In_ DWORD cFuncEntry,
+  _In_reads_(cFuncEntry) const CRYPT_OID_FUNC_ENTRY rgFuncEntry[],
+  _In_ DWORD dwFlags);
+
+BOOL
+WINAPI
+CryptInstallDefaultContext(
+  _In_ HCRYPTPROV hCryptProv,
+  _In_ DWORD dwDefaultType,
+  _In_opt_ const void *pvDefaultPara,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved,
+  _Out_ HCRYPTDEFAULTCONTEXT *phDefaultContext);
+
+BOOL
+WINAPI
+CryptUninstallDefaultContext(
+  _In_opt_ HCRYPTDEFAULTCONTEXT hDefaultContext,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
+
+BOOL
+WINAPI
+CryptEnumOIDInfo(
+  _In_ DWORD dwGroupId,
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvArg,
+  __callback PFN_CRYPT_ENUM_OID_INFO pfnEnumOIDInfo);
+
+PCCRYPT_OID_INFO
+WINAPI
+CryptFindOIDInfo(
+  _In_ DWORD dwKeyType,
+  _In_ void *pvKey,
+  _In_ DWORD dwGroupId);
+
+BOOL WINAPI CryptRegisterOIDInfo(_In_ PCCRYPT_OID_INFO pInfo, _In_ DWORD dwFlags);
+BOOL WINAPI CryptUnregisterOIDInfo(_In_ PCCRYPT_OID_INFO pInfo);
+
+LPCWSTR WINAPI CryptFindLocalizedName(_In_ LPCWSTR pwszCryptName);
+
+LPCSTR WINAPI CertAlgIdToOID(_In_ DWORD dwAlgId);
+DWORD WINAPI CertOIDToAlgId(_In_ LPCSTR pszObjId);
 
 /* cert store functions */
-HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider, DWORD dwEncodingType,
- HCRYPTPROV_LEGACY hCryptProv, DWORD dwFlags, const void *pvPara);
+_Must_inspect_result_
+HCERTSTORE
+WINAPI
+CertOpenStore(
+  _In_ LPCSTR lpszStoreProvider,
+  _In_ DWORD dwEncodingType,
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvPara);
 
-HCERTSTORE WINAPI CertOpenSystemStoreA(HCRYPTPROV_LEGACY hProv,
- LPCSTR szSubSystemProtocol);
-HCERTSTORE WINAPI CertOpenSystemStoreW(HCRYPTPROV_LEGACY hProv,
- LPCWSTR szSubSystemProtocol);
+HCERTSTORE
+WINAPI
+CertOpenSystemStoreA(
+  _In_opt_ HCRYPTPROV_LEGACY hProv,
+  _In_ LPCSTR szSubsystemProtocol);
+
+HCERTSTORE
+WINAPI
+CertOpenSystemStoreW(
+  _In_opt_ HCRYPTPROV_LEGACY hProv,
+  _In_ LPCWSTR szSubSystemProtocol);
+
 #define CertOpenSystemStore WINELIB_NAME_AW(CertOpenSystemStore)
 
-PCCERT_CONTEXT WINAPI CertEnumCertificatesInStore(HCERTSTORE hCertStore,
- PCCERT_CONTEXT pPrev);
+PCCERT_CONTEXT
+WINAPI
+CertEnumCertificatesInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_opt_ PCCERT_CONTEXT pPrev);
 
-PCCRL_CONTEXT WINAPI CertEnumCRLsInStore(HCERTSTORE hCertStore,
- PCCRL_CONTEXT pPrev);
+PCCRL_CONTEXT
+WINAPI
+CertEnumCRLsInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_opt_ PCCRL_CONTEXT pPrevCrlContext);
 
-PCCTL_CONTEXT WINAPI CertEnumCTLsInStore(HCERTSTORE hCertStore,
- PCCTL_CONTEXT pPrev);
+PCCTL_CONTEXT
+WINAPI
+CertEnumCTLsInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_opt_ PCCTL_CONTEXT pPrevCtlContext);
 
-BOOL WINAPI CertEnumSystemStoreLocation(DWORD dwFlags, void *pvArg,
- PFN_CERT_ENUM_SYSTEM_STORE_LOCATION pfnEnum);
+BOOL
+WINAPI
+CertEnumSystemStoreLocation(
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvArg,
+  __callback PFN_CERT_ENUM_SYSTEM_STORE_LOCATION pfnEnum);
 
-BOOL WINAPI CertEnumSystemStore(DWORD dwFlags, void *pvSystemStoreLocationPara,
- void *pvArg, PFN_CERT_ENUM_SYSTEM_STORE pfnEnum);
+BOOL
+WINAPI
+CertEnumSystemStore(
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvSystemStoreLocationPara,
+  _Inout_opt_ void *pvArg,
+  __callback PFN_CERT_ENUM_SYSTEM_STORE pfnEnum);
 
-BOOL WINAPI CertEnumPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
- void *pvArg, PFN_CERT_ENUM_PHYSICAL_STORE pfnEnum);
+BOOL
+WINAPI
+CertEnumPhysicalStore(
+  _In_ const void *pvSystemStore,
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvArg,
+  __callback PFN_CERT_ENUM_PHYSICAL_STORE pfnEnum);
 
-BOOL WINAPI CertRegisterPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
- LPCWSTR pwszStoreName, PCERT_PHYSICAL_STORE_INFO pStoreInfo, void *pvReserved);
+BOOL
+WINAPI
+CertRegisterPhysicalStore(
+  _In_ const void *pvSystemStore,
+  _In_ DWORD dwFlags,
+  _In_ LPCWSTR pwszStoreName,
+  _In_ PCERT_PHYSICAL_STORE_INFO pStoreInfo,
+  _Reserved_ void *pvReserved);
 
-BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
-             DWORD dwSaveAs, DWORD dwSaveTo, void* pvSaveToPara, DWORD dwFlags);
+BOOL
+WINAPI
+CertSaveStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwEncodingType,
+  _In_ DWORD dwSaveAs,
+  _In_ DWORD dwSaveTo,
+  _Inout_ void *pvSaveToPara,
+  _In_ DWORD dwFlags);
 
-BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore,
- HCERTSTORE hSiblingStore, DWORD dwUpdateFlags, DWORD dwPriority);
+BOOL
+WINAPI
+CertAddStoreToCollection(
+  _In_ HCERTSTORE hCollectionStore,
+  _In_opt_ HCERTSTORE hSiblingStore,
+  _In_ DWORD dwUpdateFlags,
+  _In_ DWORD dwPriority);
 
-void WINAPI CertRemoveStoreFromCollection(HCERTSTORE hCollectionStore,
- HCERTSTORE hSiblingStore);
+void
+WINAPI
+CertRemoveStoreFromCollection(
+  _In_ HCERTSTORE hCollectionStore,
+  _In_ HCERTSTORE hSiblingStore);
 
-BOOL WINAPI CertCreateCertificateChainEngine(PCERT_CHAIN_ENGINE_CONFIG pConfig,
- HCERTCHAINENGINE *phChainEngine);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertCreateCertificateChainEngine(
+  _In_ PCERT_CHAIN_ENGINE_CONFIG pConfig,
+  _Out_ HCERTCHAINENGINE *phChainEngine);
 
-BOOL WINAPI CertResyncCertificateChainEngine(HCERTCHAINENGINE hChainEngine);
+BOOL WINAPI CertResyncCertificateChainEngine(_In_opt_ HCERTCHAINENGINE hChainEngine);
 
-VOID WINAPI CertFreeCertificateChainEngine(HCERTCHAINENGINE hChainEngine);
+VOID WINAPI CertFreeCertificateChainEngine(_In_opt_ HCERTCHAINENGINE hChainEngine);
 
-BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
- PCCERT_CONTEXT pCertContext, LPFILETIME pTime, HCERTSTORE hAdditionalStore,
- PCERT_CHAIN_PARA pChainPara, DWORD dwFlags, LPVOID pvReserved,
- PCCERT_CHAIN_CONTEXT *ppChainContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertGetCertificateChain(
+  _In_opt_ HCERTCHAINENGINE hChainEngine,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_opt_ LPFILETIME pTime,
+  _In_opt_ HCERTSTORE hAdditionalStore,
+  _In_ PCERT_CHAIN_PARA pChainPara,
+  _In_ DWORD dwFlags,
+  _Reserved_ LPVOID pvReserved,
+  _Out_ PCCERT_CHAIN_CONTEXT* ppChainContext);
 
-PCCERT_CHAIN_CONTEXT WINAPI CertDuplicateCertificateChain(
- PCCERT_CHAIN_CONTEXT pChainContext);
+PCCERT_CHAIN_CONTEXT
+WINAPI
+CertDuplicateCertificateChain(
+  _In_ PCCERT_CHAIN_CONTEXT pChainContext);
 
-VOID WINAPI CertFreeCertificateChain(PCCERT_CHAIN_CONTEXT pChainContext);
+VOID WINAPI CertFreeCertificateChain(_In_ PCCERT_CHAIN_CONTEXT pChainContext);
 
-PCCERT_CHAIN_CONTEXT WINAPI CertFindChainInStore(HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType,
- const void *pvFindPara, PCCERT_CHAIN_CONTEXT pPrevChainContext);
+PCCERT_CHAIN_CONTEXT
+WINAPI
+CertFindChainInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwCertEncodingType,
+  _In_ DWORD dwFindFlags,
+  _In_ DWORD dwFindType,
+  _In_opt_ const void *pvFindPara,
+  _In_opt_ PCCERT_CHAIN_CONTEXT pPrevChainContext);
 
-BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
- PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
- PCERT_CHAIN_POLICY_STATUS pPolicyStatus);
+BOOL
+WINAPI
+CertVerifyCertificateChainPolicy(
+  _In_ LPCSTR pszPolicyOID,
+  _In_ PCCERT_CHAIN_CONTEXT pChainContext,
+  _In_ PCERT_CHAIN_POLICY_PARA pPolicyPara,
+  _Inout_ PCERT_CHAIN_POLICY_STATUS pPolicyStatus);
 
-DWORD WINAPI CertEnumCertificateContextProperties(PCCERT_CONTEXT pCertContext,
- DWORD dwPropId);
+DWORD
+WINAPI
+CertEnumCertificateContextProperties(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwPropId);
 
-BOOL WINAPI CertGetCertificateContextProperty(PCCERT_CONTEXT pCertContext,
- DWORD dwPropId, void *pvData, DWORD *pcbData);
+BOOL
+WINAPI
+CertGetCertificateContextProperty(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwPropId,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-BOOL WINAPI CertSetCertificateContextProperty(PCCERT_CONTEXT pCertContext,
- DWORD dwPropId, DWORD dwFlags, const void *pvData);
+BOOL
+WINAPI
+CertSetCertificateContextProperty(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-DWORD WINAPI CertEnumCRLContextProperties(PCCRL_CONTEXT pCRLContext,
- DWORD dwPropId);
+DWORD
+WINAPI
+CertEnumCRLContextProperties(
+  _In_ PCCRL_CONTEXT pCRLContext,
+  _In_ DWORD dwPropId);
 
-BOOL WINAPI CertGetCRLContextProperty(PCCRL_CONTEXT pCRLContext,
- DWORD dwPropId, void *pvData, DWORD *pcbData);
+BOOL
+WINAPI
+CertGetCRLContextProperty(
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwPropId,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-BOOL WINAPI CertSetCRLContextProperty(PCCRL_CONTEXT pCRLContext,
- DWORD dwPropId, DWORD dwFlags, const void *pvData);
+BOOL
+WINAPI
+CertSetCRLContextProperty(
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-DWORD WINAPI CertEnumCTLContextProperties(PCCTL_CONTEXT pCTLContext,
- DWORD dwPropId);
+DWORD
+WINAPI
+CertEnumCTLContextProperties(
+  _In_ PCCTL_CONTEXT pCTLContext,
+  _In_ DWORD dwPropId);
 
-BOOL WINAPI CertEnumSubjectInSortedCTL(PCCTL_CONTEXT pCTLContext,
- void **ppvNextSubject, PCRYPT_DER_BLOB pSubjectIdentifier,
- PCRYPT_DER_BLOB pEncodedAttributes);
+BOOL
+WINAPI
+CertEnumSubjectInSortedCTL(
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _Inout_ void **ppvNextSubject,
+  _Out_opt_ PCRYPT_DER_BLOB pSubjectIdentifier,
+  _Out_opt_ PCRYPT_DER_BLOB pEncodedAttributes);
 
-BOOL WINAPI CertGetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
- DWORD dwPropId, void *pvData, DWORD *pcbData);
+BOOL
+WINAPI
+CertGetCTLContextProperty(
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwPropId,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-BOOL WINAPI CertSetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
- DWORD dwPropId, DWORD dwFlags, const void *pvData);
+BOOL
+WINAPI
+CertSetCTLContextProperty(
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-BOOL WINAPI CertGetStoreProperty(HCERTSTORE hCertStore, DWORD dwPropId,
- void *pvData, DWORD *pcbData);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertGetStoreProperty(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwPropId,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-BOOL WINAPI CertSetStoreProperty(HCERTSTORE hCertStore, DWORD dwPropId,
- DWORD dwFlags, const void *pvData);
+BOOL
+WINAPI
+CertSetStoreProperty(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwPropId,
+  _In_ DWORD dwFlags,
+  _In_opt_ const void *pvData);
 
-BOOL WINAPI CertControlStore(HCERTSTORE hCertStore, DWORD dwFlags,
- DWORD dwCtrlType, void const *pvCtrlPara);
+BOOL
+WINAPI
+CertControlStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwCtrlType,
+  _In_opt_ void const *pvCtrlPara);
 
-HCERTSTORE WINAPI CertDuplicateStore(HCERTSTORE hCertStore);
+HCERTSTORE WINAPI CertDuplicateStore(_In_ HCERTSTORE hCertStore);
 
-BOOL WINAPI CertCloseStore( HCERTSTORE hCertStore, DWORD dwFlags );
+BOOL WINAPI CertCloseStore(_In_opt_ HCERTSTORE hCertStore, _In_ DWORD dwFlags);
 
-BOOL WINAPI CertFreeCertificateContext( PCCERT_CONTEXT pCertContext );
+BOOL WINAPI CertFreeCertificateContext(_In_opt_ PCCERT_CONTEXT pCertContext);
 
-BOOL WINAPI CertFreeCRLContext( PCCRL_CONTEXT pCrlContext );
+BOOL WINAPI CertFreeCRLContext(_In_opt_ PCCRL_CONTEXT pCrlContext);
 
-BOOL WINAPI CertFreeCTLContext( PCCTL_CONTEXT pCtlContext );
+BOOL WINAPI CertFreeCTLContext(_In_opt_ PCCTL_CONTEXT pCtlContext);
 
-BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore,
- PCCERT_CONTEXT pCertContext, DWORD dwAddDisposition,
- PCCERT_CONTEXT *ppStoreContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddCertificateContextToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCERT_CONTEXT *ppStoreContext);
 
-BOOL WINAPI CertAddCRLContextToStore( HCERTSTORE hCertStore,
- PCCRL_CONTEXT pCrlContext, DWORD dwAddDisposition,
- PCCRL_CONTEXT *ppStoreContext );
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddCRLContextToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCRL_CONTEXT *ppStoreContext);
 
-BOOL WINAPI CertAddCTLContextToStore( HCERTSTORE hCertStore,
- PCCTL_CONTEXT pCtlContext, DWORD dwAddDisposition,
- PCCTL_CONTEXT *ppStoreContext );
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddCTLContextToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCTL_CONTEXT *ppStoreContext);
 
-BOOL WINAPI CertAddCertificateLinkToStore(HCERTSTORE hCertStore,
- PCCERT_CONTEXT pCertContext, DWORD dwAddDisposition,
- PCCERT_CONTEXT *ppStoreContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddCertificateLinkToStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCERT_CONTEXT *ppStoreContext);
 
-BOOL WINAPI CertAddCRLLinkToStore(HCERTSTORE hCertStore,
- PCCRL_CONTEXT pCrlContext, DWORD dwAddDisposition,
- PCCRL_CONTEXT *ppStoreContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddCRLLinkToStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCRL_CONTEXT *ppStoreContext);
 
-BOOL WINAPI CertAddCTLLinkToStore(HCERTSTORE hCertStore,
- PCCTL_CONTEXT pCtlContext, DWORD dwAddDisposition,
- PCCTL_CONTEXT *ppStoreContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddCTLLinkToStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCTL_CONTEXT *ppStoreContext);
 
-BOOL WINAPI CertAddEncodedCertificateToStore(HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, const BYTE *pbCertEncoded, DWORD cbCertEncoded,
- DWORD dwAddDisposition, PCCERT_CONTEXT *ppCertContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddEncodedCertificateToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbCertEncoded) const BYTE *pbCertEncoded,
+  _In_ DWORD cbCertEncoded,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCERT_CONTEXT *ppCertContext);
 
-BOOL WINAPI CertAddEncodedCertificateToSystemStoreA(LPCSTR pszCertStoreName,
- const BYTE *pbCertEncoded, DWORD cbCertEncoded);
-BOOL WINAPI CertAddEncodedCertificateToSystemStoreW(LPCWSTR pszCertStoreName,
- const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+BOOL
+WINAPI
+CertAddEncodedCertificateToSystemStoreA(
+  _In_ LPCSTR szCertStoreName,
+  _In_reads_bytes_(cbCertEncoded) const BYTE *pbCertEncoded,
+  _In_ DWORD cbCertEncoded);
+
+BOOL
+WINAPI
+CertAddEncodedCertificateToSystemStoreW(
+  _In_ LPCWSTR szCertStoreName,
+  _In_reads_bytes_(cbCertEncoded) const BYTE *pbCertEncoded,
+  _In_ DWORD cbCertEncoded);
+
 #define CertAddEncodedCertificateToSystemStore \
  WINELIB_NAME_AW(CertAddEncodedCertificateToSystemStore)
 
-BOOL WINAPI CertAddEncodedCRLToStore(HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, const BYTE *pbCrlEncoded, DWORD cbCrlEncoded,
- DWORD dwAddDisposition, PCCRL_CONTEXT *ppCrlContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddEncodedCRLToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbCrlEncoded) const BYTE *pbCrlEncoded,
+  _In_ DWORD cbCrlEncoded,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCRL_CONTEXT *ppCrlContext);
 
-BOOL WINAPI CertAddEncodedCTLToStore(HCERTSTORE hCertStore,
- DWORD dwMsgAndCertEncodingType, const BYTE *pbCtlEncoded, DWORD cbCtlEncoded,
- DWORD dwAddDisposition, PCCTL_CONTEXT *ppCtlContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddEncodedCTLToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_ DWORD dwMsgAndCertEncodingType,
+  _In_reads_bytes_(cbCtlEncoded) const BYTE *pbCtlEncoded,
+  _In_ DWORD cbCtlEncoded,
+  _In_ DWORD dwAddDisposition,
+  _Outptr_opt_ PCCTL_CONTEXT *ppCtlContext);
 
-BOOL WINAPI CertAddSerializedElementToStore(HCERTSTORE hCertStore,
- const BYTE *pbElement, DWORD cbElement, DWORD dwAddDisposition, DWORD dwFlags,
- DWORD dwContextTypeFlags, DWORD *pdwContentType, const void **ppvContext);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertAddSerializedElementToStore(
+  _In_opt_ HCERTSTORE hCertStore,
+  _In_reads_bytes_(cbElement) const BYTE *pbElement,
+  _In_ DWORD cbElement,
+  _In_ DWORD dwAddDisposition,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwContextTypeFlags,
+  _Out_opt_ DWORD *pdwContextType,
+  _Outptr_opt_ const void **ppvContext);
 
-BOOL WINAPI CertCompareCertificate(DWORD dwCertEncodingType,
- PCERT_INFO pCertId1, PCERT_INFO pCertId2);
-BOOL WINAPI CertCompareCertificateName(DWORD dwCertEncodingType,
- PCERT_NAME_BLOB pCertName1, PCERT_NAME_BLOB pCertName2);
-BOOL WINAPI CertCompareIntegerBlob(PCRYPT_INTEGER_BLOB pInt1,
- PCRYPT_INTEGER_BLOB pInt2);
-BOOL WINAPI CertComparePublicKeyInfo(DWORD dwCertEncodingType,
- PCERT_PUBLIC_KEY_INFO pPublicKey1, PCERT_PUBLIC_KEY_INFO pPublicKey2);
-DWORD WINAPI CertGetPublicKeyLength(DWORD dwCertEncodingType,
- PCERT_PUBLIC_KEY_INFO pPublicKey);
+BOOL
+WINAPI
+CertCompareCertificate(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_INFO pCertId1,
+  _In_ PCERT_INFO pCertId2);
 
-const void * WINAPI CertCreateContext(DWORD dwContextType, DWORD dwEncodingType,
- const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
- PCERT_CREATE_CONTEXT_PARA pCreatePara);
+BOOL
+WINAPI
+CertCompareCertificateName(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_NAME_BLOB pCertName1,
+  _In_ PCERT_NAME_BLOB pCertName2);
 
-PCCERT_CONTEXT WINAPI CertCreateCertificateContext(DWORD dwCertEncodingType,
- const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+BOOL
+WINAPI
+CertCompareIntegerBlob(
+  _In_ PCRYPT_INTEGER_BLOB pInt1,
+  _In_ PCRYPT_INTEGER_BLOB pInt2);
 
-PCCRL_CONTEXT WINAPI CertCreateCRLContext( DWORD dwCertEncodingType,
-  const BYTE* pbCrlEncoded, DWORD cbCrlEncoded);
+BOOL
+WINAPI
+CertComparePublicKeyInfo(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_PUBLIC_KEY_INFO pPublicKey1,
+  _In_ PCERT_PUBLIC_KEY_INFO pPublicKey2);
 
-PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
- const BYTE *pbCtlEncoded, DWORD cbCtlEncoded);
+DWORD
+WINAPI
+CertGetPublicKeyLength(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_PUBLIC_KEY_INFO pPublicKey);
 
-PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hProv,
- PCERT_NAME_BLOB pSubjectIssuerBlob, DWORD dwFlags,
- PCRYPT_KEY_PROV_INFO pKeyProvInfo,
- PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm, PSYSTEMTIME pStartTime,
- PSYSTEMTIME pEndTime, PCERT_EXTENSIONS pExtensions);
+const void *
+WINAPI
+CertCreateContext(
+  _In_ DWORD dwContextType,
+  _In_ DWORD dwEncodingType,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _In_ DWORD dwFlags,
+  _In_opt_ PCERT_CREATE_CONTEXT_PARA pCreatePara);
 
-BOOL WINAPI CertDeleteCertificateFromStore(PCCERT_CONTEXT pCertContext);
+PCCERT_CONTEXT
+WINAPI
+CertCreateCertificateContext(
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbCertEncoded) const BYTE *pbCertEncoded,
+  _In_ DWORD cbCertEncoded);
 
-BOOL WINAPI CertDeleteCRLFromStore(PCCRL_CONTEXT pCrlContext);
+PCCRL_CONTEXT
+WINAPI
+CertCreateCRLContext(
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbCrlEncoded) const BYTE *pbCrlEncoded,
+  _In_ DWORD cbCrlEncoded);
 
-BOOL WINAPI CertDeleteCTLFromStore(PCCTL_CONTEXT pCtlContext);
+PCCTL_CONTEXT
+WINAPI
+CertCreateCTLContext(
+  _In_ DWORD dwMsgAndCertEncodingType,
+  _In_reads_bytes_(cbCtlEncoded) const BYTE *pbCtlEncoded,
+  _In_ DWORD cbCtlEncoded);
 
-PCCERT_CONTEXT WINAPI CertDuplicateCertificateContext(
- PCCERT_CONTEXT pCertContext);
+PCCERT_CONTEXT
+WINAPI
+CertCreateSelfSignCertificate(
+  _In_opt_ HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hProv,
+  _In_ PCERT_NAME_BLOB pSubjectIssuerBlob,
+  _In_ DWORD dwFlags,
+  _In_opt_ PCRYPT_KEY_PROV_INFO pKeyProvInfo,
+  _In_opt_ PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm,
+  _In_opt_ PSYSTEMTIME pStartTime,
+  _In_opt_ PSYSTEMTIME pEndTime,
+  _In_opt_ PCERT_EXTENSIONS pExtensions);
 
-PCCRL_CONTEXT WINAPI CertDuplicateCRLContext(PCCRL_CONTEXT pCrlContext);
+BOOL WINAPI CertDeleteCertificateFromStore(_In_ PCCERT_CONTEXT pCertContext);
 
-PCCTL_CONTEXT WINAPI CertDuplicateCTLContext(PCCTL_CONTEXT pCtlContext);
+BOOL WINAPI CertDeleteCRLFromStore(_In_ PCCRL_CONTEXT pCrlContext);
 
-PCCERT_CONTEXT WINAPI CertFindCertificateInStore( HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType,
- const void *pvFindPara, PCCERT_CONTEXT pPrevCertContext );
+BOOL WINAPI CertDeleteCTLFromStore(_In_ PCCTL_CONTEXT pCtlContext);
 
-PCCRL_CONTEXT WINAPI CertFindCRLInStore(HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType,
- const void *pvFindPara, PCCRL_CONTEXT pPrevCrlContext);
+PCCERT_CONTEXT
+WINAPI
+CertDuplicateCertificateContext(
+  _In_opt_ PCCERT_CONTEXT pCertContext);
 
-PCCTL_CONTEXT WINAPI CertFindCTLInStore(HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType,
- const void *pvFindPara, PCCTL_CONTEXT pPrevCtlContext);
+PCCRL_CONTEXT WINAPI CertDuplicateCRLContext(_In_opt_ PCCRL_CONTEXT pCrlContext);
 
-PCCERT_CONTEXT WINAPI CertGetIssuerCertificateFromStore(HCERTSTORE hCertStore,
- PCCERT_CONTEXT pSubjectContext, PCCERT_CONTEXT pPrevIssuerContext,
- DWORD *pdwFlags);
+PCCTL_CONTEXT WINAPI CertDuplicateCTLContext(_In_opt_ PCCTL_CONTEXT pCtlContext);
 
-PCCERT_CONTEXT WINAPI CertGetSubjectCertificateFromStore(HCERTSTORE hCertStore,
- DWORD dwCertEncodingType, PCERT_INFO pCertId);
+PCCERT_CONTEXT
+WINAPI
+CertFindCertificateInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwCertEncodingType,
+  _In_ DWORD dwFindFlags,
+  _In_ DWORD dwFindType,
+  _In_opt_ const void *pvFindPara,
+  _In_opt_ PCCERT_CONTEXT pPrevCertContext);
 
-PCCRL_CONTEXT WINAPI CertGetCRLFromStore(HCERTSTORE hCertStore,
- PCCERT_CONTEXT pIssuerContext, PCCRL_CONTEXT pPrevCrlContext, DWORD *pdwFlags);
+PCCRL_CONTEXT
+WINAPI
+CertFindCRLInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwCertEncodingType,
+  _In_ DWORD dwFindFlags,
+  _In_ DWORD dwFindType,
+  _In_opt_ const void *pvFindPara,
+  _In_opt_ PCCRL_CONTEXT pPrevCrlContext);
 
-BOOL WINAPI CertSerializeCertificateStoreElement(PCCERT_CONTEXT pCertContext,
- DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+PCCTL_CONTEXT
+WINAPI
+CertFindCTLInStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwMsgAndCertEncodingType,
+  _In_ DWORD dwFindFlags,
+  _In_ DWORD dwFindType,
+  _In_opt_ const void *pvFindPara,
+  _In_opt_ PCCTL_CONTEXT pPrevCtlContext);
 
-BOOL WINAPI CertSerializeCRLStoreElement(PCCRL_CONTEXT pCrlContext,
- DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+PCCERT_CONTEXT
+WINAPI
+CertGetIssuerCertificateFromStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ PCCERT_CONTEXT pSubjectContext,
+  _In_opt_ PCCERT_CONTEXT pPrevIssuerContext,
+  _Inout_ DWORD *pdwFlags);
 
-BOOL WINAPI CertSerializeCTLStoreElement(PCCTL_CONTEXT pCtlContext,
- DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+PCCERT_CONTEXT
+WINAPI
+CertGetSubjectCertificateFromStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_INFO pCertId);
 
-BOOL WINAPI CertGetIntendedKeyUsage(DWORD dwCertEncodingType,
- PCERT_INFO pCertInfo, BYTE *pbKeyUsage, DWORD cbKeyUsage);
+PCCRL_CONTEXT
+WINAPI
+CertGetCRLFromStore(
+  _In_ HCERTSTORE hCertStore,
+  _In_opt_ PCCERT_CONTEXT pIssuerContext,
+  _In_opt_ PCCRL_CONTEXT pPrevCrlContext,
+  _Inout_ DWORD *pdwFlags);
 
-BOOL WINAPI CertGetEnhancedKeyUsage(PCCERT_CONTEXT pCertContext, DWORD dwFlags,
- PCERT_ENHKEY_USAGE pUsage, DWORD *pcbUsage);
-BOOL WINAPI CertSetEnhancedKeyUsage(PCCERT_CONTEXT pCertContext,
- PCERT_ENHKEY_USAGE pUsage);
-BOOL WINAPI CertAddEnhancedKeyUsageIdentifier(PCCERT_CONTEXT pCertContext,
- LPCSTR pszUsageIdentifier);
-BOOL WINAPI CertRemoveEnhancedKeyUsageIdentifier(PCCERT_CONTEXT pCertContext,
- LPCSTR pszUsageIdentifier);
-BOOL WINAPI CertGetValidUsages(DWORD cCerts, PCCERT_CONTEXT *rghCerts,
- int *cNumOIDs, LPSTR *rghOIDs, DWORD *pcbOIDs);
+BOOL
+WINAPI
+CertSerializeCertificateStoreElement(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbElement, *pcbElement) BYTE *pbElement,
+  _Inout_ DWORD *pcbElement);
 
-BOOL WINAPI CryptEncodeObject(DWORD dwCertEncodingType, LPCSTR lpszStructType,
- const void *pvStructInfo, BYTE *pbEncoded, DWORD *pcbEncoded);
-BOOL WINAPI CryptEncodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType,
- const void *pvStructInfo, DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara,
- void *pvEncoded, DWORD *pcbEncoded);
+BOOL
+WINAPI
+CertSerializeCRLStoreElement(
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbElement, *pcbElement) BYTE *pbElement,
+  _Inout_ DWORD *pcbElement);
 
-BOOL WINAPI CryptDecodeObject(DWORD dwCertEncodingType, LPCSTR lpszStructType,
- const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags, void *pvStructInfo,
- DWORD *pcbStructInfo);
-BOOL WINAPI CryptDecodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType,
- const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
- PCRYPT_DECODE_PARA pDecodePara, void *pvStructInfo, DWORD *pcbStructInfo);
+BOOL
+WINAPI
+CertSerializeCTLStoreElement(
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbElement, *pcbElement) BYTE *pbElement,
+  _Inout_ DWORD *pcbElement);
 
-BOOL WINAPI CryptFormatObject(DWORD dwCertEncodingType, DWORD dwFormatType,
- DWORD dwFormatStrType, void *pFormatStruct, LPCSTR lpszStructType,
- const BYTE *pbEncoded, DWORD cbEncoded, void *pbFormat, DWORD *pcbFormat);
+BOOL
+WINAPI
+CertGetIntendedKeyUsage(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_INFO pCertInfo,
+  _Out_writes_bytes_all_(cbKeyUsage) BYTE *pbKeyUsage,
+  _In_ DWORD cbKeyUsage);
 
-BOOL WINAPI CryptHashCertificate(HCRYPTPROV_LEGACY hCryptProv, ALG_ID Algid,
- DWORD dwFlags, const BYTE *pbEncoded, DWORD cbEncoded, BYTE *pbComputedHash,
- DWORD *pcbComputedHash);
+BOOL
+WINAPI
+CertGetEnhancedKeyUsage(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbUsage, *pcbUsage) PCERT_ENHKEY_USAGE pUsage,
+  _Inout_ DWORD *pcbUsage);
 
-BOOL WINAPI CryptHashPublicKeyInfo(HCRYPTPROV_LEGACY hCryptProv, ALG_ID Algid,
- DWORD dwFlags, DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo,
- BYTE *pbComputedHash, DWORD *pcbComputedHash);
+BOOL
+WINAPI
+CertSetEnhancedKeyUsage(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_opt_ PCERT_ENHKEY_USAGE pUsage);
 
-BOOL WINAPI CryptHashToBeSigned(HCRYPTPROV_LEGACY hCryptProv, DWORD dwCertEncodingType,
- const BYTE *pbEncoded, DWORD cbEncoded, BYTE *pbComputedHash,
- DWORD *pcbComputedHash);
+BOOL
+WINAPI
+CertAddEnhancedKeyUsageIdentifier(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ LPCSTR pszUsageIdentifier);
 
-BOOL WINAPI CryptQueryObject(DWORD dwObjectType, const void* pvObject,
- DWORD dwExpectedContentTypeFlags, DWORD dwExpectedFormatTypeFlags,
- DWORD dwFlags, DWORD* pdwMsgAndCertEncodingType, DWORD* pdwContentType,
- DWORD* pdwFormatType, HCERTSTORE* phCertStore, HCRYPTMSG* phMsg,
- const void** ppvContext);
+BOOL
+WINAPI
+CertRemoveEnhancedKeyUsageIdentifier(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ LPCSTR pszUsageIdentifier);
 
-BOOL WINAPI CryptSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProv, DWORD dwKeySpec,
- DWORD dwCertEncodingType, const BYTE *pbEncodedToBeSigned,
- DWORD cbEncodedToBeSigned, PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm,
- const void *pvHashAuxInfo, BYTE *pbSignature, DWORD *pcbSignature);
+_Success_(return != 0)
+BOOL
+WINAPI
+CertGetValidUsages(
+  _In_ DWORD cCerts,
+  _In_reads_(cCerts) PCCERT_CONTEXT *rghCerts,
+  _Out_ int *cNumOIDs,
+  _Out_writes_bytes_to_opt_(*pcbOIDs, *pcbOIDs) LPSTR *rghOIDs,
+  _Inout_ DWORD *pcbOIDs);
 
-BOOL WINAPI CryptSignAndEncodeCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProv,
- DWORD dwKeySpec, DWORD dwCertEncodingType, LPCSTR lpszStructType,
- const void *pvStructInfo, PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm,
- const void *pvHashAuxInfo, BYTE *pbEncoded, DWORD *pcbEncoded);
+BOOL
+WINAPI
+CryptEncodeObject(
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCSTR lpszStructType,
+  _In_ const void *pvStructInfo,
+  _Out_writes_bytes_to_opt_(*pcbEncoded, *pcbEncoded) BYTE *pbEncoded,
+  _Inout_ DWORD *pcbEncoded);
 
-BOOL WINAPI CryptVerifyCertificateSignature(HCRYPTPROV_LEGACY hCryptProv,
- DWORD dwCertEncodingType, const BYTE *pbEncoded, DWORD cbEncoded,
- PCERT_PUBLIC_KEY_INFO pPublicKey);
+BOOL
+WINAPI
+CryptEncodeObjectEx(
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCSTR lpszStructType,
+  _In_ const void *pvStructInfo,
+  _In_ DWORD dwFlags,
+  _In_opt_ PCRYPT_ENCODE_PARA pEncodePara,
+  _Out_opt_ void *pvEncoded,
+  _Inout_ DWORD *pcbEncoded);
 
-BOOL WINAPI CryptVerifyCertificateSignatureEx(HCRYPTPROV_LEGACY hCryptProv,
- DWORD dwCertEncodingType, DWORD dwSubjectType, void *pvSubject,
- DWORD dwIssuerType, void *pvIssuer, DWORD dwFlags, void *pvReserved);
+BOOL
+WINAPI
+CryptDecodeObject(
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCSTR lpszStructType,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbStructInfo, *pcbStructInfo) void *pvStructInfo,
+  _Inout_ DWORD *pcbStructInfo);
 
-PCRYPT_ATTRIBUTE WINAPI CertFindAttribute(LPCSTR pszObjId, DWORD cAttr,
- CRYPT_ATTRIBUTE rgAttr[]);
-PCERT_EXTENSION WINAPI CertFindExtension(LPCSTR pszObjId, DWORD cExtensions,
- CERT_EXTENSION rgExtensions[]);
-PCERT_RDN_ATTR WINAPI CertFindRDNAttr(LPCSTR pszObjId, PCERT_NAME_INFO pName);
+BOOL
+WINAPI
+CryptDecodeObjectEx(
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCSTR lpszStructType,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _In_ DWORD dwFlags,
+  _In_opt_ PCRYPT_DECODE_PARA pDecodePara,
+  _Out_opt_ void *pvStructInfo,
+  _Inout_ DWORD *pcbStructInfo);
 
-BOOL WINAPI CertFindSubjectInSortedCTL(PCRYPT_DATA_BLOB pSubjectIdentifier,
- PCCTL_CONTEXT pCtlContext, DWORD dwFlags, void *pvReserved,
- PCRYPT_DER_BLOB pEncodedAttributes);
+BOOL
+WINAPI
+CryptFormatObject(
+  _In_ DWORD dwCertEncodingType,
+  _In_ DWORD dwFormatType,
+  _In_ DWORD dwFormatStrType,
+  _In_opt_ void *pFormatStruct,
+  _In_opt_ LPCSTR lpszStructType,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _At_((WCHAR *) pbFormat, _Out_writes_bytes_to_opt_(*pcbFormat, *pcbFormat)) void *pbFormat,
+  _Inout_ DWORD *pcbFormat);
 
-BOOL WINAPI CertIsRDNAttrsInCertificateName(DWORD dwCertEncodingType,
- DWORD dwFlags, PCERT_NAME_BLOB pCertName, PCERT_RDN pRDN);
+BOOL
+WINAPI
+CryptHashCertificate(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ ALG_ID Algid,
+  _In_ DWORD dwFlags,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_ DWORD *pcbComputedHash);
 
-BOOL WINAPI CertIsValidCRLForCertificate(PCCERT_CONTEXT pCert,
- PCCRL_CONTEXT pCrl, DWORD dwFlags, void *pvReserved);
-BOOL WINAPI CertFindCertificateInCRL(PCCERT_CONTEXT pCert,
- PCCRL_CONTEXT pCrlContext, DWORD dwFlags, void *pvReserved,
- PCRL_ENTRY *ppCrlEntry);
-BOOL WINAPI CertVerifyCRLRevocation(DWORD dwCertEncodingType,
- PCERT_INFO pCertId, DWORD cCrlInfo, PCRL_INFO rgpCrlInfo[]);
+BOOL
+WINAPI
+CryptHashPublicKeyInfo(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ ALG_ID Algid,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_PUBLIC_KEY_INFO pInfo,
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_ DWORD *pcbComputedHash);
 
-BOOL WINAPI CertVerifySubjectCertificateContext(PCCERT_CONTEXT pSubject,
- PCCERT_CONTEXT pIssuer, DWORD *pdwFlags);
+BOOL
+WINAPI
+CryptHashToBeSigned(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_ DWORD *pcbComputedHash);
 
-LONG WINAPI CertVerifyCRLTimeValidity(LPFILETIME pTimeToVerify,
- PCRL_INFO pCrlInfo);
-LONG WINAPI CertVerifyTimeValidity(LPFILETIME pTimeToVerify,
- PCERT_INFO pCertInfo);
-BOOL WINAPI CertVerifyValidityNesting(PCERT_INFO pSubjectInfo,
- PCERT_INFO pIssuerInfo);
+BOOL
+WINAPI
+CryptQueryObject(
+  _In_ DWORD dwObjectType,
+  _In_ const void *pvObject,
+  _In_ DWORD dwExpectedContentTypeFlags,
+  _In_ DWORD dwExpectedFormatTypeFlags,
+  _In_ DWORD dwFlags,
+  _Out_opt_ DWORD *pdwMsgAndCertEncodingType,
+  _Out_opt_ DWORD *pdwContentType,
+  _Out_opt_ DWORD *pdwFormatType,
+  _Out_opt_ HCERTSTORE *phCertStore,
+  _Out_opt_ HCRYPTMSG *phMsg,
+  _Outptr_opt_result_maybenull_ const void **ppvContext);
 
-BOOL WINAPI CertVerifyCTLUsage(DWORD dwEncodingType, DWORD dwSubjectType,
- void *pvSubject, PCTL_USAGE pSubjectUsage, DWORD dwFlags,
- PCTL_VERIFY_USAGE_PARA pVerifyUsagePara,
- PCTL_VERIFY_USAGE_STATUS pVerifyUsageStatus);
+BOOL
+WINAPI
+CryptSignCertificate(
+  _In_opt_ HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProvOrNCryptKey,
+  _In_opt_ DWORD dwKeySpec,
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbEncodedToBeSigned) const BYTE *pbEncodedToBeSigned,
+  _In_ DWORD cbEncodedToBeSigned,
+  _In_ PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm,
+  _In_opt_ const void *pvHashAuxInfo,
+  _Out_writes_bytes_to_opt_(*pcbSignature, *pcbSignature) BYTE *pbSignature,
+  _Inout_ DWORD *pcbSignature);
 
-BOOL WINAPI CertVerifyRevocation(DWORD dwEncodingType, DWORD dwRevType,
- DWORD cContext, PVOID rgpvContext[], DWORD dwFlags,
- PCERT_REVOCATION_PARA pRevPara, PCERT_REVOCATION_STATUS pRevStatus);
+BOOL
+WINAPI
+CryptSignAndEncodeCertificate(
+  _In_opt_ HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProvOrNCryptKey,
+  _In_opt_ DWORD dwKeySpec,
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCSTR lpszStructType,
+  _In_ const void *pvStructInfo,
+  _In_ PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm,
+  _In_opt_ const void *pvHashAuxInfo,
+  _Out_writes_bytes_to_opt_(*pcbEncoded, *pcbEncoded) BYTE *pbEncoded,
+  _Inout_ DWORD *pcbEncoded);
 
-BOOL WINAPI CryptExportPublicKeyInfo(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProv, DWORD dwKeySpec,
- DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD *pcbInfo);
-BOOL WINAPI CryptExportPublicKeyInfoEx(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProv, DWORD dwKeySpec,
- DWORD dwCertEncodingType, LPSTR pszPublicKeyObjId, DWORD dwFlags,
- void *pvAuxInfo, PCERT_PUBLIC_KEY_INFO pInfo, DWORD *pcbInfo);
-BOOL WINAPI CryptImportPublicKeyInfo(HCRYPTPROV hCryptProv,
- DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, HCRYPTKEY *phKey);
-BOOL WINAPI CryptImportPublicKeyInfoEx(HCRYPTPROV hCryptProv,
- DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, ALG_ID aiKeyAlg,
- DWORD dwFlags, void *pvAuxInfo, HCRYPTKEY *phKey);
+_Must_inspect_result_
+BOOL
+WINAPI
+CryptVerifyCertificateSignature(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwCertEncodingType,
+  _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _In_ PCERT_PUBLIC_KEY_INFO pPublicKey);
 
-BOOL WINAPI CryptAcquireCertificatePrivateKey(PCCERT_CONTEXT pCert,
- DWORD dwFlags, void *pvReserved, HCRYPTPROV_OR_NCRYPT_KEY_HANDLE *phCryptProv, DWORD *pdwKeySpec,
- BOOL *pfCallerFreeProv);
+_Must_inspect_result_
+BOOL
+WINAPI
+CryptVerifyCertificateSignatureEx(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwCertEncodingType,
+  _In_ DWORD dwSubjectType,
+  _In_ void *pvSubject,
+  _In_ DWORD dwIssuerType,
+  _In_opt_ void *pvIssuer,
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvExtra);
 
-BOOL WINAPI CryptFindCertificateKeyProvInfo(PCCERT_CONTEXT pCert,
- DWORD dwFlags, void *pvReserved);
+PCRYPT_ATTRIBUTE
+WINAPI
+CertFindAttribute(
+  _In_ LPCSTR pszObjId,
+  _In_ DWORD cAttr,
+  _In_reads_(cAttr) CRYPT_ATTRIBUTE rgAttr[]);
+
+PCERT_EXTENSION
+WINAPI
+CertFindExtension(
+  _In_ LPCSTR pszObjId,
+  _In_ DWORD cExtensions,
+  _In_reads_(cExtensions) CERT_EXTENSION rgExtensions[]);
+
+PCERT_RDN_ATTR
+WINAPI
+CertFindRDNAttr(
+  _In_ LPCSTR pszObjId,
+  _In_ PCERT_NAME_INFO pName);
+
+BOOL
+WINAPI
+CertFindSubjectInSortedCTL(
+  _In_ PCRYPT_DATA_BLOB pSubjectIdentifier,
+  _In_ PCCTL_CONTEXT pCtlContext,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved,
+  _Out_opt_ PCRYPT_DER_BLOB pEncodedAttributes);
+
+BOOL
+WINAPI
+CertIsRDNAttrsInCertificateName(
+  _In_ DWORD dwCertEncodingType,
+  _In_ DWORD dwFlags,
+  _In_ PCERT_NAME_BLOB pCertName,
+  _In_ PCERT_RDN pRDN);
+
+BOOL
+WINAPI
+CertIsValidCRLForCertificate(
+  _In_ PCCERT_CONTEXT pCert,
+  _In_ PCCRL_CONTEXT pCrl,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
+
+BOOL
+WINAPI
+CertFindCertificateInCRL(
+  _In_ PCCERT_CONTEXT pCert,
+  _In_ PCCRL_CONTEXT pCrlContext,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved,
+  _Outptr_result_maybenull_ PCRL_ENTRY *ppCrlEntry);
+
+BOOL
+WINAPI
+CertVerifyCRLRevocation(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_INFO pCertId,
+  _In_ DWORD cCrlInfo,
+  _In_reads_(cCrlInfo) PCRL_INFO rgpCrlInfo[]);
+
+BOOL
+WINAPI
+CertVerifySubjectCertificateContext(
+  _In_ PCCERT_CONTEXT pSubject,
+  _In_opt_ PCCERT_CONTEXT pIssuer,
+  _Inout_ DWORD *pdwFlags);
+
+LONG
+WINAPI
+CertVerifyCRLTimeValidity(
+  _In_opt_ LPFILETIME pTimeToVerify,
+  _In_ PCRL_INFO pCrlInfo);
+
+LONG
+WINAPI
+CertVerifyTimeValidity(
+  _In_opt_ LPFILETIME pTimeToVerify,
+  _In_ PCERT_INFO pCertInfo);
+
+BOOL
+WINAPI
+CertVerifyValidityNesting(
+  _In_ PCERT_INFO pSubjectInfo,
+  _In_ PCERT_INFO pIssuerInfo);
+
+BOOL
+WINAPI
+CertVerifyCTLUsage(
+  _In_ DWORD dwEncodingType,
+  _In_ DWORD dwSubjectType,
+  _In_ void *pvSubject,
+  _In_ PCTL_USAGE pSubjectUsage,
+  _In_ DWORD dwFlags,
+  _In_opt_ PCTL_VERIFY_USAGE_PARA pVerifyUsagePara,
+  _Inout_ PCTL_VERIFY_USAGE_STATUS pVerifyUsageStatus);
+
+BOOL
+WINAPI
+CertVerifyRevocation(
+  _In_ DWORD dwEncodingType,
+  _In_ DWORD dwRevType,
+  _In_ DWORD cContext,
+  _In_reads_(cContext) PVOID rgpvContext[],
+  _In_ DWORD dwFlags,
+  _In_opt_ PCERT_REVOCATION_PARA pRevPara,
+  _Inout_ PCERT_REVOCATION_STATUS pRevStatus);
+
+BOOL
+WINAPI
+CryptExportPublicKeyInfo(
+  _In_ HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProvOrNCryptKey,
+  _In_opt_ DWORD dwKeySpec,
+  _In_ DWORD dwCertEncodingType,
+  _Out_writes_bytes_to_opt_(*pcbInfo, *pcbInfo) PCERT_PUBLIC_KEY_INFO pInfo,
+  _Inout_ DWORD *pcbInfo);
+
+BOOL
+WINAPI
+CryptExportPublicKeyInfoEx(
+  _In_ HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProvOrNCryptKey,
+  _In_opt_ DWORD dwKeySpec,
+  _In_ DWORD dwCertEncodingType,
+  _In_opt_ LPSTR pszPublicKeyObjId,
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvAuxInfo,
+  _Out_writes_bytes_to_opt_(*pcbInfo, *pcbInfo) PCERT_PUBLIC_KEY_INFO pInfo,
+  _Inout_ DWORD *pcbInfo);
+
+BOOL
+WINAPI
+CryptImportPublicKeyInfo(
+  _In_ HCRYPTPROV hCryptProv,
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_PUBLIC_KEY_INFO pInfo,
+  _Out_ HCRYPTKEY *phKey);
+
+BOOL
+WINAPI
+CryptImportPublicKeyInfoEx(
+  _In_ HCRYPTPROV hCryptProv,
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_PUBLIC_KEY_INFO pInfo,
+  _In_ ALG_ID aiKeyAlg,
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvAuxInfo,
+  _Out_ HCRYPTKEY *phKey);
+
+BOOL
+WINAPI
+CryptAcquireCertificatePrivateKey(
+  _In_ PCCERT_CONTEXT pCert,
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvParameters,
+  _Out_ HCRYPTPROV_OR_NCRYPT_KEY_HANDLE *phCryptProvOrNCryptKey,
+  _Out_opt_ DWORD *pdwKeySpec,
+  _Out_opt_ BOOL *pfCallerFreeProvOrNCryptKey);
+
+BOOL
+WINAPI
+CryptFindCertificateKeyProvInfo(
+  _In_ PCCERT_CONTEXT pCert,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
 
 BOOL WINAPI CryptProtectData( DATA_BLOB* pDataIn, LPCWSTR szDataDescr,
  DATA_BLOB* pOptionalEntropy, PVOID pvReserved,
@@ -4371,198 +5544,523 @@ BOOL WINAPI CryptUnprotectData( DATA_BLOB* pDataIn, LPWSTR* ppszDataDescr,
  DATA_BLOB* pOptionalEntropy, PVOID pvReserved,
  CRYPTPROTECT_PROMPTSTRUCT* pPromptStruct, DWORD dwFlags, DATA_BLOB* pDataOut );
 
-DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT pCertContext, DWORD dwType,
- DWORD dwFlags, void *pvTypePara, LPSTR pszNameString, DWORD cchNameString);
-DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
- DWORD dwFlags, void *pvTypePara, LPWSTR pszNameString, DWORD cchNameString);
+DWORD
+WINAPI
+CertGetNameStringA(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwType,
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvTypePara,
+  _Out_writes_to_opt_(cchNameString, return) LPSTR pszNameString,
+  _In_ DWORD cchNameString);
+
+DWORD
+WINAPI
+CertGetNameStringW(
+  _In_ PCCERT_CONTEXT pCertContext,
+  _In_ DWORD dwType,
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvTypePara,
+  _Out_writes_to_opt_(cchNameString, return) LPWSTR pszNameString,
+  _In_ DWORD cchNameString);
+
 #define CertGetNameString WINELIB_NAME_AW(CertGetNameString)
 
-DWORD WINAPI CertRDNValueToStrA(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
- LPSTR psz, DWORD csz);
-DWORD WINAPI CertRDNValueToStrW(DWORD dwValueType, PCERT_RDN_VALUE_BLOB pValue,
- LPWSTR psz, DWORD csz);
+DWORD
+WINAPI
+CertRDNValueToStrA(
+  _In_ DWORD dwValueType,
+  _In_ PCERT_RDN_VALUE_BLOB pValue,
+  _Out_writes_to_opt_(csz, return) LPSTR psz,
+  _In_ DWORD csz);
+
+DWORD
+WINAPI
+CertRDNValueToStrW(
+  _In_ DWORD dwValueType,
+  _In_ PCERT_RDN_VALUE_BLOB pValue,
+  _Out_writes_to_opt_(csz, return) LPWSTR psz,
+  _In_ DWORD csz);
+
 #define CertRDNValueToStr WINELIB_NAME_AW(CertRDNValueToStr)
 
-DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
- DWORD dwStrType, LPSTR psz, DWORD csz);
-DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
- DWORD dwStrType, LPWSTR psz, DWORD csz);
+DWORD
+WINAPI
+CertNameToStrA(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_NAME_BLOB pName,
+  _In_ DWORD dwStrType,
+  _Out_writes_to_opt_(csz, return) LPSTR psz,
+  _In_ DWORD csz);
+
+DWORD
+WINAPI
+CertNameToStrW(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_NAME_BLOB pName,
+  _In_ DWORD dwStrType,
+  _Out_writes_to_opt_(csz, return) LPWSTR psz,
+  _In_ DWORD csz);
+
 #define CertNameToStr WINELIB_NAME_AW(CertNameToStr)
 
-BOOL WINAPI CertStrToNameA(DWORD dwCertEncodingType, LPCSTR pszX500,
- DWORD dwStrType, void *pvReserved, BYTE *pbEncoded, DWORD *pcbEncoded,
- LPCSTR *ppszError);
-BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
- DWORD dwStrType, void *pvReserved, BYTE *pbEncoded, DWORD *pcbEncoded,
- LPCWSTR *ppszError);
+BOOL
+WINAPI
+CertStrToNameA(
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCSTR pszX500,
+  _In_ DWORD dwStrType,
+  _Reserved_ void *pvReserved,
+  _Out_writes_bytes_to_opt_(*pcbEncoded, *pcbEncoded) BYTE *pbEncoded,
+  _Inout_ DWORD *pcbEncoded,
+  _Outptr_opt_result_maybenull_ LPCSTR *ppszError);
+
+BOOL
+WINAPI
+CertStrToNameW(
+  _In_ DWORD dwCertEncodingType,
+  _In_ LPCWSTR pszX500,
+  _In_ DWORD dwStrType,
+  _Reserved_ void *pvReserved,
+  _Out_writes_bytes_to_opt_(*pcbEncoded, *pcbEncoded) BYTE *pbEncoded,
+  _Inout_ DWORD *pcbEncoded,
+  _Outptr_opt_result_maybenull_ LPCWSTR *ppszError);
+
 #define CertStrToName WINELIB_NAME_AW(CertStrToName)
 
-DWORD WINAPI CryptMsgCalculateEncodedLength(DWORD dwMsgEncodingType,
- DWORD dwFlags, DWORD dwMsgType, const void *pvMsgEncodeInfo,
- LPSTR pszInnerContentObjID, DWORD cbData);
+DWORD
+WINAPI
+CryptMsgCalculateEncodedLength(
+  _In_ DWORD dwMsgEncodingType,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwMsgType,
+  _In_ void const *pvMsgEncodeInfo,
+  _In_opt_ LPSTR pszInnerContentObjID,
+  _In_ DWORD cbData);
 
-BOOL WINAPI CryptMsgClose(HCRYPTMSG hCryptMsg);
+BOOL WINAPI CryptMsgClose(_In_opt_ HCRYPTMSG hCryptMsg);
 
-BOOL WINAPI CryptMsgControl(HCRYPTMSG hCryptMsg, DWORD dwFlags,
- DWORD dwCtrlType, const void *pvCtrlPara);
+BOOL
+WINAPI
+CryptMsgControl(
+  _In_ HCRYPTMSG hCryptMsg,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwCtrlType,
+  _In_opt_ void const *pvCtrlPara);
 
-BOOL WINAPI CryptMsgCountersign(HCRYPTMSG hCryptMsg, DWORD dwIndex,
- DWORD dwCountersigners, PCMSG_SIGNER_ENCODE_INFO rgCountersigners);
+BOOL
+WINAPI
+CryptMsgCountersign(
+  _In_ HCRYPTMSG hCryptMsg,
+  _In_ DWORD dwIndex,
+  _In_ DWORD cCountersigners,
+  _In_reads_(cCountersigners) PCMSG_SIGNER_ENCODE_INFO rgCountersigners);
 
-BOOL WINAPI CryptMsgCountersignEncoded(DWORD dwEncodingType, PBYTE pbSignerInfo,
- DWORD cbSignerInfo, DWORD cCountersigners,
- PCMSG_SIGNER_ENCODE_INFO rgCountersigners, PBYTE pbCountersignature,
- PDWORD pcbCountersignature);
+BOOL
+WINAPI
+CryptMsgCountersignEncoded(
+  _In_ DWORD dwEncodingType,
+  _In_reads_bytes_(cbSignerInfo) PBYTE pbSignerInfo,
+  _In_ DWORD cbSignerInfo,
+  _In_ DWORD cCountersigners,
+  _In_reads_(cCountersigners) PCMSG_SIGNER_ENCODE_INFO rgCountersigners,
+  _Out_writes_bytes_to_opt_(*pcbCountersignature, *pcbCountersignature) PBYTE pbCountersignature,
+  _Inout_ PDWORD pcbCountersignature);
 
-HCRYPTMSG WINAPI CryptMsgDuplicate(HCRYPTMSG hCryptMsg);
+HCRYPTMSG WINAPI CryptMsgDuplicate(_In_opt_ HCRYPTMSG hCryptMsg);
 
-BOOL WINAPI CryptMsgEncodeAndSignCTL(DWORD dwMsgEncodingType,
- PCTL_INFO pCtlInfo, PCMSG_SIGNED_ENCODE_INFO pSignInfo, DWORD dwFlags,
- BYTE *pbEncoded, DWORD *pcbEncoded);
+BOOL
+WINAPI
+CryptMsgEncodeAndSignCTL(
+  _In_ DWORD dwMsgEncodingType,
+  _In_ PCTL_INFO pCtlInfo,
+  _In_ PCMSG_SIGNED_ENCODE_INFO pSignInfo,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbEncoded, *pcbEncoded) BYTE *pbEncoded,
+  _Inout_ DWORD *pcbEncoded);
 
-BOOL WINAPI CryptMsgGetAndVerifySigner(HCRYPTMSG hCryptMsg, DWORD cSignerStore,
- HCERTSTORE *rghSignerStore, DWORD dwFlags, PCCERT_CONTEXT *ppSigner,
- DWORD *pdwSignerIndex);
+_Success_(return == 0)
+BOOL
+WINAPI
+CryptMsgGetAndVerifySigner(
+  _In_ HCRYPTMSG hCryptMsg,
+  _In_ DWORD cSignerStore,
+  _In_reads_opt_(cSignerStore) HCERTSTORE *rghSignerStore,
+  _In_ DWORD dwFlags,
+  _Outptr_opt_ PCCERT_CONTEXT *ppSigner,
+  _Inout_opt_ DWORD *pdwSignerIndex);
 
-BOOL WINAPI CryptMsgGetParam(HCRYPTMSG hCryptMsg, DWORD dwParamType,
- DWORD dwIndex, void *pvData, DWORD *pcbData);
+BOOL
+WINAPI
+CryptMsgGetParam(
+  _In_ HCRYPTMSG hCryptMsg,
+  _In_ DWORD dwParamType,
+  _In_ DWORD dwIndex,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) void *pvData,
+  _Inout_ DWORD *pcbData);
 
-HCRYPTMSG WINAPI CryptMsgOpenToDecode(DWORD dwMsgEncodingType, DWORD dwFlags,
- DWORD dwMsgType, HCRYPTPROV_LEGACY hCryptProv, PCERT_INFO pRecipientInfo,
- PCMSG_STREAM_INFO pStreamInfo);
+HCRYPTMSG
+WINAPI
+CryptMsgOpenToDecode(
+  _In_ DWORD dwMsgEncodingType,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwMsgType,
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _Reserved_ PCERT_INFO pRecipientInfo,
+  _In_opt_ PCMSG_STREAM_INFO pStreamInfo);
 
-HCRYPTMSG WINAPI CryptMsgOpenToEncode(DWORD dwMsgEncodingType, DWORD dwFlags,
- DWORD dwMsgType, const void *pvMsgEncodeInfo, LPSTR pszInnerContentObjID,
- PCMSG_STREAM_INFO pStreamInfo);
+HCRYPTMSG
+WINAPI
+CryptMsgOpenToEncode(
+  _In_ DWORD dwMsgEncodingType,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwMsgType,
+  _In_ void const *pvMsgEncodeInfo,
+  _In_opt_ LPSTR pszInnerContentObjID,
+  _In_opt_ PCMSG_STREAM_INFO pStreamInfo);
 
-BOOL WINAPI CryptMsgSignCTL(DWORD dwMsgEncodingType, BYTE *pbCtlContent,
- DWORD cbCtlContent, PCMSG_SIGNED_ENCODE_INFO pSignInfo, DWORD dwFlags,
- BYTE *pbEncoded, DWORD *pcbEncoded);
+BOOL
+WINAPI
+CryptMsgSignCTL(
+  _In_ DWORD dwMsgEncodingType,
+  _In_reads_bytes_(cbCtlContent) BYTE *pbCtlContent,
+  _In_ DWORD cbCtlContent,
+  _In_ PCMSG_SIGNED_ENCODE_INFO pSignInfo,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbEncoded, *pcbEncoded) BYTE *pbEncoded,
+  _Inout_ DWORD *pcbEncoded);
 
-BOOL WINAPI CryptMsgUpdate(HCRYPTMSG hCryptMsg, const BYTE *pbData,
- DWORD cbData, BOOL fFinal);
+BOOL
+WINAPI
+CryptMsgUpdate(
+  _In_ HCRYPTMSG hCryptMsg,
+  _In_reads_bytes_opt_(cbData) const BYTE *pbData,
+  _In_ DWORD cbData,
+  _In_ BOOL fFinal);
 
-BOOL WINAPI CryptMsgVerifyCountersignatureEncoded(HCRYPTPROV_LEGACY hCryptProv,
- DWORD dwEncodingType, PBYTE pbSignerInfo, DWORD cbSignerInfo,
- PBYTE pbSignerInfoCountersignature, DWORD cbSignerInfoCountersignature,
- PCERT_INFO pciCountersigner);
+BOOL
+WINAPI
+CryptMsgVerifyCountersignatureEncoded(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwEncodingType,
+  _In_reads_bytes_(cbSignerInfo) PBYTE pbSignerInfo,
+  _In_ DWORD cbSignerInfo,
+  _In_reads_bytes_(cbSignerInfoCountersignature) PBYTE pbSignerInfoCountersignature,
+  _In_ DWORD cbSignerInfoCountersignature,
+  _In_ PCERT_INFO pciCountersigner);
 
-BOOL WINAPI CryptMsgVerifyCountersignatureEncodedEx(HCRYPTPROV_LEGACY hCryptProv,
- DWORD dwEncodingType, PBYTE pbSignerInfo, DWORD cbSignerInfo,
- PBYTE pbSignerInfoCountersignature, DWORD cbSignerInfoCountersignature,
- DWORD dwSignerType, void *pvSigner, DWORD dwFlags, void *pvReserved);
+BOOL
+WINAPI
+CryptMsgVerifyCountersignatureEncodedEx(
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwEncodingType,
+  _In_reads_bytes_(cbSignerInfo) PBYTE pbSignerInfo,
+  _In_ DWORD cbSignerInfo,
+  _In_reads_bytes_(cbSignerInfoCountersignature) PBYTE pbSignerInfoCountersignature,
+  _In_ DWORD cbSignerInfoCountersignature,
+  _In_ DWORD dwSignerType,
+  _In_ void *pvSigner,
+  _In_ DWORD dwFlags,
+  _Inout_opt_ void *pvExtra);
 
-BOOL WINAPI CryptSignMessage(PCRYPT_SIGN_MESSAGE_PARA pSignPara,
- BOOL fDetachedSignature, DWORD cToBeSigned, const BYTE *rgpbToBeSigned[],
- DWORD rgcbToBeSigned[], BYTE *pbSignedBlob, DWORD *pcbSignedBlob);
-BOOL WINAPI CryptSignMessageWithKey(PCRYPT_KEY_SIGN_MESSAGE_PARA pSignPara,
- const BYTE *pbToBeSigned, DWORD cbToBeSigned, BYTE *pbSignedBlob,
- DWORD *pcbSignedBlob);
+BOOL
+WINAPI
+CryptSignMessage(
+  _In_ PCRYPT_SIGN_MESSAGE_PARA pSignPara,
+  _In_ BOOL fDetachedSignature,
+  _In_ DWORD cToBeSigned,
+  _In_reads_opt_(cToBeSigned) const BYTE *rgpbToBeSigned[],
+  _In_reads_(cToBeSigned) DWORD rgcbToBeSigned[],
+  _Out_writes_bytes_to_opt_(*pcbSignedBlob, *pcbSignedBlob) BYTE *pbSignedBlob,
+  _Inout_ DWORD *pcbSignedBlob);
 
-BOOL WINAPI CryptVerifyMessageSignature(PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
- DWORD dwSignerIndex, const BYTE* pbSignedBlob, DWORD cbSignedBlob,
- BYTE* pbDecoded, DWORD* pcbDecoded, PCCERT_CONTEXT* ppSignerCert);
-BOOL WINAPI CryptVerifyMessageSignatureWithKey(
- PCRYPT_KEY_VERIFY_MESSAGE_PARA pVerifyPara,
- PCERT_PUBLIC_KEY_INFO pPublicKeyInfo, const BYTE *pbSignedBlob,
- DWORD cbSignedBlob, BYTE *pbDecoded, DWORD *pcbDecoded);
+BOOL
+WINAPI
+CryptSignMessageWithKey(
+  _In_ PCRYPT_KEY_SIGN_MESSAGE_PARA pSignPara,
+  _In_reads_bytes_(cbToBeSigned) const BYTE *pbToBeSigned,
+  _In_ DWORD cbToBeSigned,
+  _Out_writes_bytes_to_opt_(*pcbSignedBlob, *pcbSignedBlob) BYTE *pbSignedBlob,
+  _Inout_ DWORD *pcbSignedBlob);
 
-BOOL WINAPI CryptVerifyDetachedMessageSignature(
- PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara, DWORD dwSignerIndex,
- const BYTE *pbDetachedSignBlob, DWORD cbDetachedSignBlob, DWORD cToBeSigned,
- const BYTE *rgpbToBeSigned[], DWORD rgcbToBeSigned[],
- PCCERT_CONTEXT *ppSignerCert);
-LONG WINAPI CryptGetMessageSignerCount(DWORD dwMsgEncodingType,
- const BYTE *pbSignedBlob, DWORD cbSignedBlob);
+BOOL
+WINAPI
+CryptVerifyMessageSignature(
+  _In_ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
+  _In_ DWORD dwSignerIndex,
+  _In_reads_bytes_(cbSignedBlob) const BYTE *pbSignedBlob,
+  _In_ DWORD cbSignedBlob,
+  _Out_writes_bytes_to_opt_(*pcbDecoded, *pcbDecoded) BYTE *pbDecoded,
+  _Inout_opt_ DWORD *pcbDecoded,
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppSignerCert);
 
-BOOL WINAPI CryptEncryptMessage(PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara,
- DWORD cRecipientCert, PCCERT_CONTEXT rgpRecipientCert[],
- const BYTE *pbToBeEncrypted, DWORD cbToBeEncrypted, BYTE *pbEncryptedBlob,
- DWORD *pcbEncryptedBlob);
-BOOL WINAPI CryptDecryptMessage(PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
- const BYTE *pbEncryptedBlob, DWORD cbEncryptedBlob, BYTE *pbDecrypted,
- DWORD *pcbDecrypted, PCCERT_CONTEXT *ppXchgCert);
+BOOL
+WINAPI
+CryptVerifyMessageSignatureWithKey(
+  _In_ PCRYPT_KEY_VERIFY_MESSAGE_PARA pVerifyPara,
+  _In_opt_ PCERT_PUBLIC_KEY_INFO pPublicKeyInfo,
+  _In_reads_bytes_(cbSignedBlob) const BYTE *pbSignedBlob,
+  _In_ DWORD cbSignedBlob,
+  _Out_writes_bytes_to_opt_(*pcbDecoded, *pcbDecoded) BYTE *pbDecoded,
+  _Inout_opt_ DWORD *pcbDecoded);
 
-BOOL WINAPI CryptSignAndEncryptMessage(PCRYPT_SIGN_MESSAGE_PARA pSignPara,
- PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara, DWORD cRecipientCert,
- PCCERT_CONTEXT rgpRecipientCert[], const BYTE *pbToBeSignedAndEncrypted,
- DWORD cbToBeSignedAndEncrypted, BYTE *pbSignedAndEncryptedBlob,
- DWORD *pcbSignedAndEncryptedBlob);
-BOOL WINAPI CryptDecryptAndVerifyMessageSignature(
- PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
- PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara, DWORD dwSignerIndex,
- const BYTE *pbEncryptedBlob, DWORD cbEncryptedBlob, BYTE *pbDecrypted,
- DWORD *pcbDecrypted, PCCERT_CONTEXT *ppXchgCert, PCCERT_CONTEXT *ppSignerCert);
+BOOL
+WINAPI
+CryptVerifyDetachedMessageSignature(
+  _In_ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
+  _In_ DWORD dwSignerIndex,
+  _In_reads_bytes_(cbDetachedSignBlob) const BYTE *pbDetachedSignBlob,
+  _In_ DWORD cbDetachedSignBlob,
+  _In_ DWORD cToBeSigned,
+  _In_reads_(cToBeSigned) const BYTE *rgpbToBeSigned[],
+  _In_reads_(cToBeSigned) DWORD rgcbToBeSigned[],
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppSignerCert);
 
-HCERTSTORE WINAPI CryptGetMessageCertificates(DWORD dwMsgAndCertEncodingType,
- HCRYPTPROV_LEGACY hCryptProv, DWORD dwFlags, const BYTE *pbSignedBlob,
- DWORD cbSignedBlob);
+LONG
+WINAPI
+CryptGetMessageSignerCount(
+  _In_ DWORD dwMsgEncodingType,
+  _In_reads_bytes_(cbSignedBlob) const BYTE *pbSignedBlob,
+  _In_ DWORD cbSignedBlob);
 
-BOOL WINAPI CryptDecodeMessage(DWORD dwMsgTypeFlags,
- PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
- PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara, DWORD dwSignerIndex,
- const BYTE *pbEncodedBlob, DWORD cbEncodedBlob, DWORD dwPrevInnerContentType,
- DWORD *pdwMsgType, DWORD *pdwInnerContentType, BYTE *pbDecoded,
- DWORD *pcbDecoded, PCCERT_CONTEXT *ppXchgCert, PCCERT_CONTEXT *ppSignerCert);
+BOOL
+WINAPI
+CryptEncryptMessage(
+  _In_ PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara,
+  _In_ DWORD cRecipientCert,
+  _In_reads_(cRecipientCert) PCCERT_CONTEXT rgpRecipientCert[],
+  _In_reads_bytes_opt_(cbToBeEncrypted) const BYTE *pbToBeEncrypted,
+  _In_ DWORD cbToBeEncrypted,
+  _Out_writes_bytes_to_opt_(*pcbEncryptedBlob, *pcbEncryptedBlob) BYTE *pbEncryptedBlob,
+  _Inout_ DWORD *pcbEncryptedBlob);
 
-BOOL WINAPI CryptHashMessage(PCRYPT_HASH_MESSAGE_PARA pHashPara,
- BOOL fDetachedHash, DWORD cToBeHashed, const BYTE *rgpbToBeHashed[],
- DWORD rgcbToBeHashed[], BYTE *pbHashedBlob, DWORD *pcbHashedBlob,
- BYTE *pbComputedHash, DWORD *pcbComputedHash);
-BOOL WINAPI CryptVerifyMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
- BYTE *pbHashedBlob, DWORD cbHashedBlob, BYTE *pbToBeHashed,
- DWORD *pcbToBeHashed, BYTE *pbComputedHash, DWORD *pcbComputedHash);
-BOOL WINAPI CryptVerifyDetachedMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
- BYTE *pbDetachedHashBlob, DWORD cbDetachedHashBlob, DWORD cToBeHashed,
- const BYTE *rgpbToBeHashed[], DWORD rgcbToBeHashed[], BYTE *pbComputedHash,
- DWORD *pcbComputedHash);
+BOOL
+WINAPI
+CryptDecryptMessage(
+  _In_ PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
+  _In_reads_bytes_(cbEncryptedBlob) const BYTE *pbEncryptedBlob,
+  _In_ DWORD cbEncryptedBlob,
+  _Out_writes_bytes_to_opt_(*pcbDecrypted, *pcbDecrypted) BYTE *pbDecrypted,
+  _Inout_opt_ DWORD *pcbDecrypted,
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppXchgCert);
+
+BOOL
+WINAPI
+CryptSignAndEncryptMessage(
+  _In_ PCRYPT_SIGN_MESSAGE_PARA pSignPara,
+  _In_ PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara,
+  _In_ DWORD cRecipientCert,
+  _In_reads_(cRecipientCert) PCCERT_CONTEXT rgpRecipientCert[],
+  _In_reads_bytes_(cbToBeSignedAndEncrypted) const BYTE *pbToBeSignedAndEncrypted,
+  _In_ DWORD cbToBeSignedAndEncrypted,
+  _Out_writes_bytes_to_opt_(*pcbSignedAndEncryptedBlob, *pcbSignedAndEncryptedBlob) BYTE *pbSignedAndEncryptedBlob,
+  _Inout_ DWORD *pcbSignedAndEncryptedBlob);
+
+BOOL
+WINAPI
+CryptDecryptAndVerifyMessageSignature(
+  _In_ PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
+  _In_ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
+  _In_ DWORD dwSignerIndex,
+  _In_reads_bytes_(cbEncryptedBlob) const BYTE *pbEncryptedBlob,
+  _In_ DWORD cbEncryptedBlob,
+  _Out_writes_bytes_to_opt_(*pcbDecrypted, *pcbDecrypted) BYTE *pbDecrypted,
+  _Inout_opt_ DWORD *pcbDecrypted,
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppXchgCert,
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppSignerCert);
+
+HCERTSTORE
+WINAPI
+CryptGetMessageCertificates(
+  _In_ DWORD dwMsgAndCertEncodingType,
+  _In_opt_ HCRYPTPROV_LEGACY hCryptProv,
+  _In_ DWORD dwFlags,
+  _In_reads_bytes_(cbSignedBlob) const BYTE *pbSignedBlob,
+  _In_ DWORD cbSignedBlob);
+
+BOOL
+WINAPI
+CryptDecodeMessage(
+  _In_ DWORD dwMsgTypeFlags,
+  _In_opt_ PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
+  _In_opt_ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
+  _In_ DWORD dwSignerIndex,
+  _In_reads_bytes_(cbEncodedBlob) const BYTE *pbEncodedBlob,
+  _In_ DWORD cbEncodedBlob,
+  _In_ DWORD dwPrevInnerContentType,
+  _Out_opt_ DWORD *pdwMsgType,
+  _Out_opt_ DWORD *pdwInnerContentType,
+  _Out_writes_bytes_to_opt_(*pcbDecoded, *pcbDecoded) BYTE *pbDecoded,
+  _Inout_opt_ DWORD *pcbDecoded,
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppXchgCert,
+  _Outptr_opt_result_maybenull_ PCCERT_CONTEXT *ppSignerCert);
+
+BOOL
+WINAPI
+CryptHashMessage(
+  _In_ PCRYPT_HASH_MESSAGE_PARA pHashPara,
+  _In_ BOOL fDetachedHash,
+  _In_ DWORD cToBeHashed,
+  _In_reads_(cToBeHashed) const BYTE *rgpbToBeHashed[],
+  _In_reads_(cToBeHashed) DWORD rgcbToBeHashed[],
+  _Out_writes_bytes_to_opt_(*pcbHashedBlob, *pcbHashedBlob) BYTE *pbHashedBlob,
+  _Inout_opt_ DWORD *pcbHashedBlob,
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_opt_ DWORD *pcbComputedHash);
+
+BOOL
+WINAPI
+CryptVerifyMessageHash(
+  _In_ PCRYPT_HASH_MESSAGE_PARA pHashPara,
+  _In_reads_bytes_(cbHashedBlob) BYTE *pbHashedBlob,
+  _In_ DWORD cbHashedBlob,
+  _Out_writes_bytes_to_opt_(*pcbToBeHashed, *pcbToBeHashed) BYTE *pbToBeHashed,
+  _Inout_opt_ DWORD *pcbToBeHashed,
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_opt_ DWORD *pcbComputedHash);
+
+BOOL
+WINAPI
+CryptVerifyDetachedMessageHash(
+  _In_ PCRYPT_HASH_MESSAGE_PARA pHashPara,
+  _In_reads_bytes_(cbDetachedHashBlob) BYTE *pbDetachedHashBlob,
+  _In_ DWORD cbDetachedHashBlob,
+  _In_ DWORD cToBeHashed,
+  _In_reads_(cToBeHashed) const BYTE *rgpbToBeHashed[],
+  _In_reads_(cToBeHashed) DWORD rgcbToBeHashed[],
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_opt_ DWORD *pcbComputedHash);
 
 /* PFX functions */
-HCERTSTORE WINAPI PFXImportCertStore(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
- DWORD dwFlags);
-BOOL WINAPI PFXIsPFXBlob(CRYPT_DATA_BLOB *pPFX);
-BOOL WINAPI PFXVerifyPassword(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
- DWORD dwFlags);
-BOOL WINAPI PFXExportCertStoreEx(HCERTSTORE hStore, CRYPT_DATA_BLOB *pPFX,
- LPCWSTR szPassword, void *pvReserved, DWORD dwFlags);
-BOOL WINAPI PFXExportCertStore(HCERTSTORE hStore, CRYPT_DATA_BLOB *pPFX,
- LPCWSTR szPassword, DWORD dwFlags);
+HCERTSTORE
+WINAPI
+PFXImportCertStore(
+  _In_ CRYPT_DATA_BLOB *pPFX,
+  _In_ LPCWSTR szPassword,
+  _In_ DWORD dwFlags);
+
+BOOL WINAPI PFXIsPFXBlob(_In_ CRYPT_DATA_BLOB *pPFX);
+
+BOOL
+WINAPI
+PFXVerifyPassword(
+  _In_ CRYPT_DATA_BLOB *pPFX,
+  _In_ LPCWSTR szPassword,
+  _In_ DWORD dwFlags);
+
+BOOL
+WINAPI
+PFXExportCertStoreEx(
+  _In_ HCERTSTORE hStore,
+  _Inout_ CRYPT_DATA_BLOB* pPFX,
+  _In_ LPCWSTR szPassword,
+  _In_ void* pvPara,
+  _In_ DWORD dwFlags);
+
+BOOL
+WINAPI
+PFXExportCertStore(
+  _In_ HCERTSTORE hStore,
+  _Inout_ CRYPT_DATA_BLOB* pPFX,
+  _In_ LPCWSTR szPassword,
+  _In_ DWORD dwFlags);
+
 BOOL WINAPI PFXVerifyPassword(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
  DWORD dwFlags);
 
 /* cryptnet.dll functions */
-BOOL WINAPI CryptCancelAsyncRetrieval(HCRYPTASYNC hAsyncRetrieval);
+BOOL WINAPI CryptCancelAsyncRetrieval(_In_opt_ HCRYPTASYNC hAsyncRetrieval);
 
-BOOL WINAPI CryptGetObjectUrl(LPCSTR pszUrlOid, LPVOID pvPara, DWORD dwFlags,
- PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray, PCRYPT_URL_INFO pUrlInfo,
- DWORD *pcbUrlInfo, LPVOID pvReserved);
+BOOL
+WINAPI
+CryptGetObjectUrl(
+  _In_ LPCSTR pszUrlOid,
+  _In_ LPVOID pvPara,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_to_opt_(*pcbUrlArray, *pcbUrlArray) PCRYPT_URL_ARRAY pUrlArray,
+  _Inout_ DWORD* pcbUrlArray,
+  _Out_writes_bytes_to_opt_(*pcbUrlInfo, *pcbUrlInfo) PCRYPT_URL_INFO pUrlInfo,
+  _Inout_opt_ DWORD* pcbUrlInfo,
+  _Reserved_ LPVOID pvReserved);
 
-BOOL WINAPI CryptGetTimeValidObject(LPCSTR pszTimeValidOid, void *pvPara,
- PCCERT_CONTEXT pIssuer, LPFILETIME pftValidFor, DWORD dwFlags, DWORD dwTimeout,
- void **ppvObject, PCRYPT_CREDENTIALS pCredentials, void *pvReserved);
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptGetTimeValidObject(
+  _In_ LPCSTR pszTimeValidOid,
+  _In_ void *pvPara,
+  _In_ PCCERT_CONTEXT pIssuer,
+  _In_opt_ LPFILETIME pftValidFor,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwTimeout,
+  _Outptr_opt_ void **ppvObject,
+  _In_opt_ PCRYPT_CREDENTIALS pCredentials,
+  _Inout_opt_ void *pvReserved);
 
-BOOL WINAPI CryptFlushTimeValidObject(LPCSTR pszFlushTimeValidOid, void *pvPara,
- PCCERT_CONTEXT pIssuer, DWORD dwFlags, void *pvReserved);
+BOOL
+WINAPI
+CryptFlushTimeValidObject(
+  _In_ LPCSTR pszFlushTimeValidOid,
+  _In_ void *pvPara,
+  _In_ PCCERT_CONTEXT pIssuer,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
 
-BOOL WINAPI CryptInstallCancelRetrieval(PFN_CRYPT_CANCEL_RETRIEVAL pfnCancel,
- const void *pvArg, DWORD dwFlags, void *pvReserved);
+BOOL
+WINAPI
+CryptInstallCancelRetrieval(
+  __callback PFN_CRYPT_CANCEL_RETRIEVAL pfnCancel,
+  _In_opt_ const void *pvArg,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
 
-BOOL WINAPI CryptUninstallCancelRetrieval(DWORD dwFlags, void *pvReserved);
+BOOL
+WINAPI
+CryptUninstallCancelRetrieval(
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved);
 
-BOOL WINAPI CryptRetrieveObjectByUrlA(LPCSTR pszURL, LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, DWORD dwTimeout, LPVOID *ppvObject,
- HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
- PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
-BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
- DWORD dwRetrievalFlags, DWORD dwTimeout, LPVOID *ppvObject,
- HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
- PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptRetrieveObjectByUrlA(
+  _In_ LPCSTR pszUrl,
+  _In_opt_ LPCSTR pszObjectOid,
+  _In_ DWORD dwRetrievalFlags,
+  _In_ DWORD dwTimeout,
+  _Outptr_ LPVOID* ppvObject,
+  _In_opt_ HCRYPTASYNC hAsyncRetrieve,
+  _In_opt_ PCRYPT_CREDENTIALS pCredentials,
+  _In_opt_ LPVOID pvVerify,
+  _Inout_opt_ PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+CryptRetrieveObjectByUrlW(
+  _In_ LPCWSTR pszUrl,
+  _In_opt_ LPCSTR pszObjectOid,
+  _In_ DWORD dwRetrievalFlags,
+  _In_ DWORD dwTimeout,
+  _Outptr_ LPVOID* ppvObject,
+  _In_opt_ HCRYPTASYNC hAsyncRetrieve,
+  _In_opt_ PCRYPT_CREDENTIALS pCredentials,
+  _In_opt_ LPVOID pvVerify,
+  _Inout_opt_ PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
+
 #define CryptRetrieveObjectByUrl WINELIB_NAME_AW(CryptRetrieveObjectByUrl)
 
 /* Not found in crypt32.dll but in softpub.dll */
-HRESULT WINAPI FindCertsByIssuer(PCERT_CHAIN pCertChains, DWORD *pcbCertChains,
- DWORD *pcCertChains, BYTE* pbEncodedIssuerName, DWORD cbEncodedIssuerName,
- LPCWSTR pwszPurpose, DWORD dwKeySpec);
+HRESULT
+WINAPI
+FindCertsByIssuer(
+  _Out_writes_bytes_to_opt_(*pcbCertChains, *pcbCertChains) PCERT_CHAIN pCertChains,
+  _Inout_ DWORD *pcbCertChains,
+  _Out_ DWORD *pcCertChains,
+  _In_reads_bytes_opt_(cbEncodedIssuerName) BYTE* pbEncodedIssuerName,
+  _In_ DWORD cbEncodedIssuerName,
+  _In_opt_ LPCWSTR pwszPurpose,
+  _In_ DWORD dwKeySpec);
 
 #ifdef _MSC_VER
 #pragma warning(pop)

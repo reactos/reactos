@@ -8,16 +8,7 @@
 
 #include "diskpart.h"
 
-BOOL add_main(INT argc, WCHAR **argv)
+BOOL add_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-/*
- * help_add():
- * Shows the description and explains each argument type of the add command
- */
-VOID help_add(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_ADD);
 }

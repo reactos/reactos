@@ -1,3 +1,4 @@
+
 list(APPEND FONT_FILES
     DejaVuSans-Bold.ttf
     DejaVuSans-BoldOblique.ttf
@@ -42,15 +43,45 @@ list(APPEND FONT_FILES
     LiberationSans-BoldItalic.ttf
     LiberationSans-Italic.ttf
     LiberationSans-Regular.ttf
+    LiberationSansNarrow-Bold.ttf
+    LiberationSansNarrow-BoldItalic.ttf
+    LiberationSansNarrow-Italic.ttf
+    LiberationSansNarrow-Regular.ttf
     LiberationSerif-Bold.ttf
     LiberationSerif-BoldItalic.ttf
     LiberationSerif-Italic.ttf
     LiberationSerif-Regular.ttf
     Marlett.ttf
+    OpenSans-Bold.ttf
+    OpenSans-BoldItalic.ttf
+    OpenSans-CondBold.ttf
+    OpenSans-CondLight.ttf
+    OpenSans-CondLightItalic.ttf
+    OpenSans-ExtraBold.ttf
+    OpenSans-ExtraBoldItalic.ttf
+    OpenSans-Italic.ttf
+    OpenSans-Light.ttf
+    OpenSans-LightItalic.ttf
+    OpenSans-Regular.ttf
+    OpenSans-Semibold.ttf
+    OpenSans-SemiboldItalic.ttf
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
-)
+    Ubuntu-B.ttf
+    Ubuntu-BI.ttf
+    Ubuntu-C.ttf
+    Ubuntu-L.ttf
+    Ubuntu-LI.ttf
+    Ubuntu-M.ttf
+    Ubuntu-MI.ttf
+    UbuntuMono-B.ttf
+    UbuntuMono-BI.ttf
+    UbuntuMono-R.ttf
+    UbuntuMono-RI.ttf
+    Ubuntu-R.ttf
+    Ubuntu-RI.ttf
+    UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts FOR all)

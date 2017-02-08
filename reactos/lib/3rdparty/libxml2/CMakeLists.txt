@@ -1,5 +1,8 @@
 
-include_directories(include)
+include_directories(
+    include
+    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
 add_definitions(
     -D__MINGW32__
@@ -10,6 +13,7 @@ add_definitions(
     -D_WINDOWS
     -DWIN32
     -DHAVE_CONFIG_H
+    -DICONV_CONST=const
     -D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
@@ -55,13 +59,19 @@ list(APPEND SOURCE
     xmlwriter.c
     xpath.c
     xpointer.c
-    xmlstring.c)
+    xmlstring.c
+    libxml.h)
 
 add_library(libxml2 ${SOURCE})
 target_link_libraries(libxml2 oldnames)
+add_pch(libxml2 libxml.h SOURCE)
 add_dependencies(libxml2 psdk)
 
-if(NOT MSVC)
-    add_target_compile_flags(libxml2 "-Wno-format -Wno-pointer-sign")
-    allow_warnings(libxml2)
+if(MSVC)
+    # Formal parameter different from declaration
+    add_target_compile_flags(libxml2 "/wd4101")
+    # Local variable initialized but not referenced
+    replace_compile_flags("/we4189" " ")
+else()
+    add_target_compile_flags(libxml2 "-w")
 endif()

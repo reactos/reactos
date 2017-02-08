@@ -8,7 +8,7 @@ Wine uses ansi functions
 GetNetworkParams --
      -- Make workable interface for _res
         -- Wine based on real _res
-	-- Reactos based on my enumerator funcs
+	-- ReactOS based on my enumerator funcs
 
 -- Done -- Prints route info on windows
 ROUTE PRINT:

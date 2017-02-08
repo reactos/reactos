@@ -18,24 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-
-//#include "windef.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "fdi.h"
 #include "msipriv.h"
-#include <winuser.h>
-#include <winreg.h>
-#include <shlwapi.h>
-//#include "objidl.h"
-#include <wine/unicode.h>
+
+#include <fdi.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -58,8 +43,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
 {
-    WCHAR volume_name[MAX_PATH + 1];
-    WCHAR root[MAX_PATH + 1];
+    WCHAR volume_name[MAX_PATH + 1], root[MAX_PATH + 1];
+    const WCHAR *p;
+    int len, len2;
 
     strcpyW(root, source_root);
     PathStripToRootW(root);
@@ -70,7 +56,13 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
         WARN("failed to get volume information for %s (%u)\n", debugstr_w(root), GetLastError());
         return FALSE;
     }
-    return !strcmpiW( mi->volume_label, volume_name );
+
+    len = strlenW( volume_name );
+    len2 = strlenW( mi->volume_label );
+    if (len2 > len) return FALSE;
+    p = volume_name + len - len2;
+
+    return !strcmpiW( mi->volume_label, p );
 }
 
 static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
@@ -141,7 +133,6 @@ static void CDECL cabinet_free(void *pv)
 
 static INT_PTR CDECL cabinet_open(char *pszFile, int oflag, int pmode)
 {
-    HANDLE handle;
     DWORD dwAccess = 0;
     DWORD dwShareMode = 0;
     DWORD dwCreateDisposition = OPEN_EXISTING;
@@ -167,12 +158,8 @@ static INT_PTR CDECL cabinet_open(char *pszFile, int oflag, int pmode)
     else if (oflag & _O_CREAT)
         dwCreateDisposition = CREATE_ALWAYS;
 
-    handle = CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
-                         dwCreateDisposition, 0, NULL);
-    if (handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    return (INT_PTR)handle;
+    return (INT_PTR)CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
+                                dwCreateDisposition, 0, NULL);
 }
 
 static UINT CDECL cabinet_read(INT_PTR hf, void *pv, UINT cb)
@@ -222,31 +209,39 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
 {
     MSICABINETSTREAM *cab;
     IStream *stream;
-    WCHAR *encoded;
-    HRESULT hr;
 
-    cab = msi_get_cabinet_stream( package_disk.package, package_disk.id );
-    if (!cab)
+    if (!(cab = msi_get_cabinet_stream( package_disk.package, package_disk.id )))
     {
         WARN("failed to get cabinet stream\n");
-        return 0;
+        return -1;
     }
-    if (!cab->stream[0] || !(encoded = encode_streamname( FALSE, cab->stream + 1 )))
+    if (cab->storage == package_disk.package->db->storage)
     {
-        WARN("failed to encode stream name\n");
-        return 0;
+        UINT r = msi_get_stream( package_disk.package->db, cab->stream + 1, &stream );
+        if (r != ERROR_SUCCESS)
+        {
+            WARN("failed to get stream %u\n", r);
+            return -1;
+        }
     }
-    if (msi_clone_open_stream( package_disk.package->db, cab->storage, encoded, &stream ) != ERROR_SUCCESS)
+    else /* patch storage */
     {
+        HRESULT hr;
+        WCHAR *encoded;
+
+        if (!(encoded = encode_streamname( FALSE, cab->stream + 1 )))
+        {
+            WARN("failed to encode stream name\n");
+            return -1;
+        }
         hr = IStorage_OpenStream( cab->storage, encoded, NULL, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &stream );
+        msi_free( encoded );
         if (FAILED(hr))
         {
             WARN("failed to open stream 0x%08x\n", hr);
-            msi_free( encoded );
-            return 0;
+            return -1;
         }
     }
-    msi_free( encoded );
     return (INT_PTR)stream;
 }
 
@@ -307,9 +302,6 @@ static UINT CDECL msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     mi->cabinet = strdupW(MSI_RecordGetString(row, 4));
     mi->volume_label = strdupW(MSI_RecordGetString(row, 5));
 
-    if (!mi->first_volume)
-        mi->first_volume = strdupW(mi->volume_label);
-
     msiobj_release(&row->hdr);
     return ERROR_SUCCESS;
 }
@@ -362,8 +354,29 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
 
     if (strcmpiW( mi->cabinet, cab ))
     {
-        ERR("Continuous cabinet does not match the next cabinet in the Media table\n");
-        goto done;
+        char *next_cab;
+        ULONG length;
+
+        WARN("Continuous cabinet %s does not match the next cabinet %s in the media table => use latter one\n", debugstr_w(cab), debugstr_w(mi->cabinet));
+
+        /* Use cabinet name from the media table */
+        next_cab = strdupWtoA(mi->cabinet);
+        /* Modify path to cabinet file with full filename (psz3 points to a 256 bytes buffer that can be modified contrary to psz1 and psz2) */
+        length = strlen(pfdin->psz3) + 1 + strlen(next_cab) + 1;
+        if (length > 256)
+        {
+            WARN("Cannot update next cabinet filename with a string size %u > 256\n", length);
+            msi_free(next_cab);
+            goto done;
+        }
+        else
+        {
+            strcat(pfdin->psz3, "\\");
+            strcat(pfdin->psz3, next_cab);
+        }
+        /* Path psz3 and cabinet psz1 are concatenated by FDI so just reset psz1 */
+        *pfdin->psz1 = 0;
+        msi_free(next_cab);
     }
 
     if (!(cabinet_file = get_cabinet_filename(mi)))
@@ -452,7 +465,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
         {
             TRACE("removing read-only attribute on %s\n", debugstr_w(path));
             SetFileAttributesW( path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
-            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs2, NULL);
+            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
 
             if (handle != INVALID_HANDLE_VALUE) goto done;
             err = GetLastError();
@@ -661,7 +674,6 @@ void msi_free_media_info(MSIMEDIAINFO *mi)
     msi_free(mi->disk_prompt);
     msi_free(mi->cabinet);
     msi_free(mi->volume_label);
-    msi_free(mi->first_volume);
     msi_free(mi);
 }
 
@@ -706,9 +718,6 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
     msi_free(mi->volume_label);
     mi->volume_label = strdupW(MSI_RecordGetString(row, 5));
     msiobj_release(&row->hdr);
-
-    if (!mi->first_volume)
-        mi->first_volume = strdupW(mi->volume_label);
 
     msi_set_sourcedir_props(package, FALSE);
     source_dir = msi_dup_property(package->db, szSourceDir);
@@ -879,7 +888,7 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
         }
     }
     /* check volume matches, change media if not */
-    if (mi->volume_label && mi->disk_id > 1 && strcmpW( mi->first_volume, mi->volume_label ))
+    if (mi->volume_label && mi->disk_id > 1)
     {
         WCHAR *source = msi_dup_property( package->db, szSourceDir );
         BOOL match = source_matches_volume( mi, source );

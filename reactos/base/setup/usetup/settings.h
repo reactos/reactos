@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/settings.h
+ * FILE:            base/setup/usetup/settings.h
  * PURPOSE:         Device settings support functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -27,42 +27,55 @@
 #pragma once
 
 PGENERIC_LIST
-CreateComputerTypeList(HINF InfFile);
+CreateComputerTypeList(
+    HINF InfFile);
 
 PGENERIC_LIST
-CreateDisplayDriverList(HINF InfFile);
+CreateDisplayDriverList(
+    HINF InfFile);
 
 BOOLEAN
-ProcessComputerFiles(HINF InfFile,
-		       PGENERIC_LIST List,
-		       PWCHAR* AdditionalSectionName);
+ProcessComputerFiles(
+    HINF InfFile,
+    PGENERIC_LIST List,
+    PWCHAR *AdditionalSectionName);
 
 BOOLEAN
-ProcessDisplayRegistry(HINF InfFile,
-		       PGENERIC_LIST List);
+ProcessDisplayRegistry(
+    HINF InfFile,
+    PGENERIC_LIST List);
 
 PGENERIC_LIST
-CreateKeyboardDriverList(HINF InfFile);
+CreateKeyboardDriverList(
+    HINF InfFile);
 
 PGENERIC_LIST
-CreateKeyboardLayoutList(HINF InfFile, WCHAR *DefaultKBLayout);
+CreateKeyboardLayoutList(
+    HINF InfFile,
+    WCHAR *DefaultKBLayout);
 
-PGENERIC_LIST 
-CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage);
+PGENERIC_LIST
+CreateLanguageList(
+    HINF InfFile,
+    WCHAR *DefaultLanguage);
 
 ULONG
 GetDefaultLanguageIndex(VOID);
 
 BOOLEAN
-ProcessLocaleRegistry(PGENERIC_LIST List);
+ProcessLocaleRegistry(
+    PGENERIC_LIST List);
 
 BOOLEAN
-ProcessKeyboardLayoutRegistry(PGENERIC_LIST List);
+ProcessKeyboardLayoutRegistry(
+    PGENERIC_LIST List);
 
 BOOLEAN
-ProcessKeyboardLayoutFiles(PGENERIC_LIST List);
+ProcessKeyboardLayoutFiles(
+    PGENERIC_LIST List);
 
 BOOLEAN
-SetGeoID(PWCHAR Id);
+SetGeoID(
+    PWCHAR Id);
 
 /* EOF */

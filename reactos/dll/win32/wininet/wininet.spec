@@ -31,6 +31,7 @@
 @ stdcall DeleteUrlCacheEntryA(str)
 @ stdcall DeleteUrlCacheEntryW(wstr)
 @ stdcall DeleteUrlCacheGroup(int64 long ptr)
+@ stdcall DeleteWpadCacheForNetworks(long)
 @ stdcall DetectAutoProxyUrl(str long long)
 @ stdcall -private DllInstall(long wstr)
 @ stdcall FindCloseUrlCache(long)
@@ -157,6 +158,9 @@
 @ stdcall InternetGetLastResponseInfoW(ptr ptr ptr)
 @ stdcall InternetGetPerSiteCookieDecisionA(str ptr)
 @ stdcall InternetGetPerSiteCookieDecisionW(wstr ptr)
+@ stdcall InternetGetSecurityInfoByURL(str ptr ptr) InternetGetSecurityInfoByURLA
+@ stdcall InternetGetSecurityInfoByURLA(str ptr ptr)
+@ stdcall InternetGetSecurityInfoByURLW(wstr ptr ptr)
 @ stdcall InternetGoOnline(str long long) InternetGoOnlineA
 @ stdcall InternetGoOnlineA(str long long)
 @ stdcall InternetGoOnlineW(wstr long long)
@@ -211,8 +215,8 @@
 @ stdcall IsHostInProxyBypassList(long str long)
 @ stdcall IsUrlCacheEntryExpiredA(str long ptr)
 @ stdcall IsUrlCacheEntryExpiredW(wstr long ptr)
-@ stub LoadUrlCacheContent
-@ stub ParseX509EncodedCertificateForListBoxEntry
+@ stdcall LoadUrlCacheContent()
+@ stdcall ParseX509EncodedCertificateForListBoxEntry(ptr long str ptr)
 @ stdcall PrivacyGetZonePreferenceW(long long ptr ptr ptr)
 @ stdcall PrivacySetZonePreferenceW(long long long wstr)
 @ stdcall ReadUrlCacheEntryStream(ptr long ptr ptr long)

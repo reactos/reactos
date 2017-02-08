@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/synch/wait.c
+ * FILE:            dll/win32/kernel32/client/synch.c
  * PURPOSE:         Wrappers for the NT Wait Implementation
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -426,6 +426,7 @@ CancelWaitableTimer(IN HANDLE hTimer)
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
                  IN LONG lInitialCount,
                  IN LONG lMaximumCount,
@@ -439,6 +440,7 @@ CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
                  IN LONG lInitialCount,
                  IN LONG lMaximumCount,
@@ -456,6 +458,7 @@ CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 OpenSemaphoreA(IN DWORD dwDesiredAccess,
                IN BOOL bInheritHandle,
                IN LPCSTR lpName)
@@ -468,6 +471,7 @@ OpenSemaphoreA(IN DWORD dwDesiredAccess,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 OpenSemaphoreW(IN DWORD dwDesiredAccess,
                IN BOOL bInheritHandle,
                IN LPCWSTR lpName)
@@ -480,6 +484,7 @@ OpenSemaphoreW(IN DWORD dwDesiredAccess,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReleaseSemaphore(IN HANDLE hSemaphore,
                  IN LONG lReleaseCount,
                  IN LPLONG lpPreviousCount)
@@ -500,6 +505,7 @@ ReleaseSemaphore(IN HANDLE hSemaphore,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
              IN BOOL bInitialOwner,
              IN LPCSTR lpName  OPTIONAL)
@@ -512,6 +518,7 @@ CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
              IN BOOL bInitialOwner,
              IN LPCWSTR lpName  OPTIONAL)
@@ -527,6 +534,7 @@ CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 OpenMutexA(IN DWORD dwDesiredAccess,
            IN BOOL bInheritHandle,
            IN LPCSTR lpName)
@@ -539,6 +547,7 @@ OpenMutexA(IN DWORD dwDesiredAccess,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 OpenMutexW(IN DWORD dwDesiredAccess,
            IN BOOL bInheritHandle,
            IN LPCWSTR lpName)
@@ -551,6 +560,7 @@ OpenMutexW(IN DWORD dwDesiredAccess,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ReleaseMutex(IN HANDLE hMutex)
 {
     NTSTATUS Status;
@@ -569,6 +579,7 @@ ReleaseMutex(IN HANDLE hMutex)
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
              IN BOOL bManualReset,
              IN BOOL bInitialState,
@@ -582,6 +593,7 @@ CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
              IN BOOL bManualReset,
              IN BOOL bInitialState,
@@ -590,7 +602,7 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
     CreateNtObjectFromWin32Api(Event, Event, EVENT,
                                lpEventAttributes,
                                lpName,
-                               bManualReset ? NotificationTimer : SynchronizationTimer,
+                               bManualReset ? NotificationEvent : SynchronizationEvent,
                                bInitialState);
 }
 
@@ -599,6 +611,7 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 OpenEventA(IN DWORD dwDesiredAccess,
            IN BOOL bInheritHandle,
            IN LPCSTR lpName)
@@ -611,6 +624,7 @@ OpenEventA(IN DWORD dwDesiredAccess,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 OpenEventW(IN DWORD dwDesiredAccess,
            IN BOOL bInheritHandle,
            IN LPCWSTR lpName)
@@ -623,6 +637,7 @@ OpenEventW(IN DWORD dwDesiredAccess,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 PulseEvent(IN HANDLE hEvent)
 {
     NTSTATUS Status;
@@ -641,6 +656,7 @@ PulseEvent(IN HANDLE hEvent)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ResetEvent(IN HANDLE hEvent)
 {
     NTSTATUS Status;
@@ -659,6 +675,7 @@ ResetEvent(IN HANDLE hEvent)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetEvent(IN HANDLE hEvent)
 {
     NTSTATUS Status;
@@ -715,6 +732,7 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
  */
 VOID
 WINAPI
+DECLSPEC_HOTPATCH
 Sleep(IN DWORD dwMilliseconds)
 {
     /* Call the new API */

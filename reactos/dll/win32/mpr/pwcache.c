@@ -19,18 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
+#include "precomp.h"
 
-//#include <stdarg.h>
 #include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winnetwk.h>
-#include <winreg.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
 static const char mpr_key[] = "Software\\Wine\\Wine\\Mpr\\";
 
@@ -262,7 +253,6 @@ UINT WINAPI WNetEnumCachedPasswords(
 
     sprintf(prefix, "X-%02X-", nType );
 
-    i = 0;
     for( i=0;  ; i++ )
     {
         val_sz  = sizeof val;
@@ -301,15 +291,16 @@ UINT WINAPI WNetEnumCachedPasswords(
             continue;
 
         /* read the value data */
-        size = sizeof *entry - sizeof entry->abResource[0] + val_sz + data_sz;
-        entry = HeapAlloc( GetProcessHeap(), 0, sizeof *entry + val_sz + data_sz );
+        size = offsetof( PASSWORD_CACHE_ENTRY, abResource[val_sz + data_sz] );
+        entry = HeapAlloc( GetProcessHeap(), 0, size );
         memcpy( entry->abResource, val, val_sz );
         entry->cbEntry = size;
         entry->cbResource = val_sz;
         entry->cbPassword = data_sz;
         entry->iEntry = i;
         entry->nType = nType;
-        r = RegEnumValueA( hkey, i, NULL, &val_sz, NULL, &type, 
+        size = sizeof val;
+        r = RegEnumValueA( hkey, i, val, &size, NULL, &type,
                            &entry->abResource[val_sz], &data_sz );
         if( r == ERROR_SUCCESS )
             enumPasswordProc( entry, param );

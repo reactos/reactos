@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 ddraw/ddraw/GetCaps.c
+ * FILE:                 dll/directx/ddraw/Ddraw/GetCaps.c
  * PURPOSE:              IDirectDraw7 Implementation
  * PROGRAMMER:           Magnus Olsen
  *
@@ -101,7 +101,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
-                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCAPS_DX3));
+                        memcpy(myCaps, CoreCaps, sizeof(DDCAPS_DX3));
                     }
 
                     myCaps->dwVidMemFree = dwFree;
@@ -126,7 +126,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
-                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
+                        memcpy(myCaps, CoreCaps, sizeof(DDCORECAPS));
                     }
 
                     myCaps->dwVidMemFree = dwFree;
@@ -152,7 +152,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
-                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
+                        memcpy(myCaps, CoreCaps, sizeof(DDCORECAPS));
                     }
 
                     myCaps->dwVidMemFree = dwFree;
@@ -208,7 +208,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
-                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCAPS_DX3));
+                        memcpy(myCaps, CoreCaps, sizeof(DDCAPS_DX3));
                     }
 
                     myCaps->dwVidMemFree = dwFree;
@@ -233,7 +233,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
-                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
+                        memcpy(myCaps, CoreCaps, sizeof(DDCORECAPS));
                     }
 
                     myCaps->dwVidMemFree = dwFree;
@@ -259,7 +259,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
-                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
+                        memcpy(myCaps, CoreCaps, sizeof(DDCORECAPS));
                     }
 
                     myCaps->dwVidMemFree = dwFree;

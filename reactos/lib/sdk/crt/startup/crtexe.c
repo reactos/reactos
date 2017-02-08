@@ -39,7 +39,7 @@ extern char *** __MINGW_IMP_SYMBOL(__initenv);
 /* This symbol is defined by ld.  */
 extern IMAGE_DOS_HEADER __ImageBase;
 
-extern void _fpreset (void);
+extern void __cdecl _fpreset (void);
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')
 
@@ -147,11 +147,11 @@ pre_cpp_init (void)
 #endif
 }
 
-static int __tmainCRTStartup (void);
+static int __cdecl __tmainCRTStartup (void);
 
-int WinMainCRTStartup (void);
+int __cdecl WinMainCRTStartup (void);
 
-int WinMainCRTStartup (void)
+int __cdecl WinMainCRTStartup (void)
 {
   int ret = 255;
 #ifdef __SEH__
@@ -173,13 +173,13 @@ int WinMainCRTStartup (void)
   return ret;
 }
 
-int mainCRTStartup (void);
+int __cdecl mainCRTStartup (void);
 
 #ifdef _WIN64
 int __mingw_init_ehandler (void);
 #endif
 
-int mainCRTStartup (void)
+int __cdecl mainCRTStartup (void)
 {
   int ret = 255;
 #ifdef __SEH__
@@ -202,7 +202,8 @@ int mainCRTStartup (void)
 }
 
 static
-__declspec(noinline) int
+__declspec(noinline)
+int __cdecl
 __tmainCRTStartup (void)
 {
   _TCHAR *lpszCommandLine = NULL;
@@ -410,7 +411,7 @@ static void duplicate_ppstrings (int ac, char ***av)
 #else
 #define __UNUSED_PARAM_1	__UNUSED_PARAM
 #endif
-static void
+static void __cdecl
 __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
 				 const wchar_t * __UNUSED_PARAM_1(function),
 				 const wchar_t * __UNUSED_PARAM_1(file),

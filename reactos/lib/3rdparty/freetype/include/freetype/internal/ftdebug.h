@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component (specification).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2006, 2007, 2008, 2009 by             */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,8 +21,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTDEBUG_H__
-#define __FTDEBUG_H__
+#ifndef FTDEBUG_H_
+#define FTDEBUG_H_
 
 
 #include <ft2build.h>
@@ -140,7 +140,7 @@ FT_BEGIN_HEADER
   /*    This function may be useful if you want to control FreeType 2's    */
   /*    debug level in your application.                                   */
   /*                                                                       */
-  FT_BASE( const char * )
+  FT_BASE( const char* )
   FT_Trace_Get_Name( FT_Int  idx );
 
 
@@ -185,7 +185,8 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define the FT_ASSERT macro.                                           */
+  /* Define the FT_ASSERT and FT_THROW macros.  The call to `FT_Throw'     */
+  /* makes it possible to easily set a breakpoint at this function.        */
   /*                                                                       */
   /*************************************************************************/
 
@@ -199,9 +200,17 @@ FT_BEGIN_HEADER
                         __LINE__, __FILE__ );                       \
           } while ( 0 )
 
+#define FT_THROW( e )                                   \
+          ( FT_Throw( FT_ERR_CAT( FT_ERR_PREFIX, e ),   \
+                      __LINE__,                         \
+                      __FILE__ )                      | \
+            FT_ERR_CAT( FT_ERR_PREFIX, e )            )
+
 #else /* !FT_DEBUG_LEVEL_ERROR */
 
 #define FT_ASSERT( condition )  do { } while ( 0 )
+
+#define FT_THROW( e )  FT_ERR_CAT( FT_ERR_PREFIX, e )
 
 #endif /* !FT_DEBUG_LEVEL_ERROR */
 
@@ -226,25 +235,21 @@ FT_BEGIN_HEADER
   FT_Panic( const char*  fmt,
             ... );
 
+  /* report file name and line number of an error */
+  FT_BASE( int )
+  FT_Throw( FT_Error     error,
+            int          line,
+            const char*  file );
+
 #endif /* FT_DEBUG_LEVEL_ERROR */
 
 
   FT_BASE( void )
   ft_debug_init( void );
 
-
-#if defined( _MSC_VER )      /* Visual C++ (and Intel C++) */
-
-  /* We disable the warning `conditional expression is constant' here */
-  /* in order to compile cleanly with the maximum level of warnings.  */
-#pragma warning( disable : 4127 )
-
-#endif /* _MSC_VER */
-
-
 FT_END_HEADER
 
-#endif /* __FTDEBUG_H__ */
+#endif /* FTDEBUG_H_ */
 
 
 /* END */

@@ -181,12 +181,13 @@ static void usershell(void) {
 	/*
 	 * start interpreting the command
 	 */
-        if (!strcmp(command, "exit"))
+	if (!strcmp(command, "exit") ||
+	    !strcmp(command, "quit") ||
+	    !strcmp(command, "bye")) {
+	    free(cmdline);
 	    break;
-        if (!strcmp(command, "quit"))
-	    break;
-        if (!strcmp(command, "bye"))
-	    break;
+	}
+
 	if (!strcmp(command, "public")) {
 	    if (nbargs != 1) {
 		printf("public requires 1 arguments\n");

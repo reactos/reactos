@@ -18,23 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-//#include "wine/port.h"
-#include <wine/debug.h>
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-
-#ifdef HAVE_LDAP_H
-#include <ldap.h>
-#endif
-
 #include "winldap_private.h"
-//#include "wldap32.h"
 
 #ifdef HAVE_LDAP
 /* Should eventually be determined by the algorithm documented on MSDN. */
@@ -114,17 +98,16 @@ oom:
 }
 
 /* Determine if a URL starts with a known LDAP scheme */
-static int has_ldap_scheme( char *url )
+static BOOL has_ldap_scheme( char *url )
 {
-    if (!strncasecmp( url, "ldap://", 7 ) || 
-        !strncasecmp( url, "ldaps://", 8 ) ||
-        !strncasecmp( url, "ldapi://", 8 ) ||
-        !strncasecmp( url, "cldap://", 8 )) return 1;
-    return 0;
+    return !strncasecmp( url, "ldap://", 7 )  ||
+           !strncasecmp( url, "ldaps://", 8 ) ||
+           !strncasecmp( url, "ldapi://", 8 ) ||
+           !strncasecmp( url, "cldap://", 8 );
 }
 
 /* Flatten an array of hostnames into a space separated string of URLs.
- * Prepend a given scheme and append a given portnumber to each hostname
+ * Prepend a given scheme and append a given port number to each hostname
  * if necessary.
  */
 static char *join_hostnames( const char *scheme, char **hostnames, ULONG portnumber )
@@ -206,8 +189,6 @@ static char *urlify_hostnames( const char *scheme, char *hostnames, ULONG port )
 }
 #endif
 
-WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
-
 /***********************************************************************
  *      cldap_openA     (WLDAP32.@)
  *
@@ -244,7 +225,7 @@ exit:
  *
  * PARAMS
  *  hostname   [I] Name of the host to connect to.
- *  portnumber [I] Portnumber to use.
+ *  portnumber [I] Port number to use.
  *
  * RETURNS
  *  Success: Pointer to an LDAP context.
@@ -254,8 +235,8 @@ exit:
  *  The hostname string can be a space separated string of hostnames,
  *  in which case the LDAP runtime will try to connect to the hosts
  *  in order, until a connection can be made. A hostname may have a
- *  trailing portnumber (separated from the hostname by a ':'), which 
- *  will take precedence over the portnumber supplied as a parameter
+ *  trailing port number (separated from the hostname by a ':'), which
+ *  will take precedence over the port number supplied as a parameter
  *  to this function.
  */
 WLDAP32_LDAP * CDECL cldap_openW( PWCHAR hostname, ULONG portnumber )
@@ -321,7 +302,7 @@ ULONG CDECL ldap_connect( WLDAP32_LDAP *ld, struct l_timeval *timeout )
  *
  * See ldap_initW.
  */
-WLDAP32_LDAP *  CDECL ldap_initA( PCHAR hostname, ULONG portnumber )
+WLDAP32_LDAP *  CDECL ldap_initA( const PCHAR hostname, ULONG portnumber )
 {
 #ifdef HAVE_LDAP
     WLDAP32_LDAP *ld = NULL;
@@ -352,7 +333,7 @@ exit:
  *
  * PARAMS
  *  hostname   [I] Name of the host to connect to.
- *  portnumber [I] Portnumber to use.
+ *  portnumber [I] Port number to use.
  *
  * RETURNS
  *  Success: Pointer to an LDAP context.
@@ -362,12 +343,12 @@ exit:
  *  The hostname string can be a space separated string of hostnames,
  *  in which case the LDAP runtime will try to connect to the hosts
  *  in order, until a connection can be made. A hostname may have a
- *  trailing portnumber (separated from the hostname by a ':'), which 
- *  will take precedence over the portnumber supplied as a parameter
+ *  trailing port number (separated from the hostname by a ':'), which
+ *  will take precedence over the port number supplied as a parameter
  *  to this function. The connection will not be made until the first
  *  LDAP function that needs it is called.
  */
-WLDAP32_LDAP * CDECL ldap_initW( PWCHAR hostname, ULONG portnumber )
+WLDAP32_LDAP * CDECL ldap_initW( const PWCHAR hostname, ULONG portnumber )
 {
 #ifdef HAVE_LDAP
     LDAP *ld = NULL;
@@ -435,7 +416,7 @@ exit:
  *
  * PARAMS
  *  hostname   [I] Name of the host to connect to.
- *  portnumber [I] Portnumber to use.
+ *  portnumber [I] Port number to use.
  *
  * RETURNS
  *  Success: Pointer to an LDAP context.
@@ -445,8 +426,8 @@ exit:
  *  The hostname string can be a space separated string of hostnames,
  *  in which case the LDAP runtime will try to connect to the hosts
  *  in order, until a connection can be made. A hostname may have a
- *  trailing portnumber (separated from the hostname by a ':'), which 
- *  will take precedence over the portnumber supplied as a parameter
+ *  trailing port number (separated from the hostname by a ':'), which
+ *  will take precedence over the port number supplied as a parameter
  *  to this function.
  */
 WLDAP32_LDAP * CDECL ldap_openW( PWCHAR hostname, ULONG portnumber )
@@ -516,7 +497,7 @@ WLDAP32_LDAP * CDECL ldap_sslinitA( PCHAR hostname, ULONG portnumber, int secure
  *
  * PARAMS
  *  hostname   [I] Name of the host to connect to.
- *  portnumber [I] Portnumber to use.
+ *  portnumber [I] Port number to use.
  *  secure     [I] Ask the server to create an SSL connection.
  *
  * RETURNS
@@ -527,8 +508,8 @@ WLDAP32_LDAP * CDECL ldap_sslinitA( PCHAR hostname, ULONG portnumber, int secure
  *  The hostname string can be a space separated string of hostnames,
  *  in which case the LDAP runtime will try to connect to the hosts
  *  in order, until a connection can be made. A hostname may have a
- *  trailing portnumber (separated from the hostname by a ':'), which 
- *  will take precedence over the portnumber supplied as a parameter
+ *  trailing port number (separated from the hostname by a ':'), which
+ *  will take precedence over the port number supplied as a parameter
  *  to this function. The connection will not be made until the first
  *  LDAP function that needs it is called.
  */

@@ -1,4 +1,5 @@
 
+add_subdirectory(btrfs)
 add_subdirectory(cdfs)
 add_subdirectory(ext2)
 add_subdirectory(fastfat)
@@ -8,3 +9,5 @@ add_subdirectory(msfs)
 add_subdirectory(mup)
 add_subdirectory(npfs)
 add_subdirectory(ntfs)
+#add_subdirectory(reiserfs)
+add_subdirectory(udfs)

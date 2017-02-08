@@ -19,12 +19,21 @@
 #ifndef __WINE_MSVIDEO_PRIVATE_H
 #define __WINE_MSVIDEO_PRIVATE_H
 
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
-#include <winuser.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <wingdi.h>
+#include <vfw.h>
+
+#include <wine/debug.h>
 
 #define ICM_CHOOSE_COMPRESSOR 1
-#define IDC_COMP_LIST 880
-#define IDS_FULLFRAMES 901
 
 /* HIC struct (same layout as Win95 one) */
 typedef struct tagWINE_HIC {
@@ -44,18 +53,6 @@ typedef struct tagWINE_HIC {
     struct tagWINE_HIC* next;
 } WINE_HIC;
 
-
-#define IDC_CONFIGURE 882
-#define IDC_ABOUT 883
-
-#define IDC_QUALITY_SCROLL 884
-#define IDC_QUALITY_TXT 886
-
-#define IDC_KEYFRAME_CHECKBOX 887
-#define IDC_KEYFRAME  888
-#define IDC_KEYFRAME_FRAMES 889
-#define IDC_DATARATE_CHECKBOX 894
-#define IDC_DATARATE  895
-#define IDC_DATARATE_KB 896
+extern HMODULE MSVFW32_hModule DECLSPEC_HIDDEN;
 
 #endif  /* __WINE_MSVIDEO_PRIVATE_H */

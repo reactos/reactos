@@ -36,31 +36,14 @@
  *   PropertyStorage_ReadFromStream
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-#include <assert.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-//#include "winuser.h"
-#include <wine/unicode.h>
-#include <wine/debug.h>
-#include "dictionary.h"
+#include "precomp.h"
 #include "storage32.h"
-#include "enumx.h"
-#include <oleauto.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
+
+#ifdef _MSC_VER
+#define __ASM_STDCALL_FUNC(name,args,code)
+#endif
 
 static inline StorageImpl *impl_from_IPropertySetStorage( IPropertySetStorage *iface )
 {
@@ -1040,7 +1023,7 @@ static HRESULT PropertyStorage_ReadDictionary(PropertyStorage_impl *This,
 #define __thiscall_wrapper __cdecl
 #endif
 
-static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *userdata, ULONG size)
+static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *this, ULONG size)
 {
     return CoTaskMemAlloc(size);
 }
@@ -1049,7 +1032,7 @@ static void* __thiscall_wrapper Allocate_CoTaskMemAlloc(void *userdata, ULONG si
  * end of the buffer.
  */
 static HRESULT PropertyStorage_ReadProperty(PROPVARIANT *prop, const BYTE *data,
-    UINT codepage, void* (__thiscall_wrapper *allocate)(void *userdata, ULONG size), void *allocate_data)
+    UINT codepage, void* (__thiscall_wrapper *allocate)(void *this, ULONG size), void *allocate_data)
 {
     HRESULT hr = S_OK;
 
@@ -1392,8 +1375,8 @@ static HRESULT PropertyStorage_ReadFromStream(PropertyStorage_impl *This)
         goto end;
     }
     /* wackiness alert: if the format ID is FMTID_DocSummaryInformation, there
-     * follow not one, but two sections.  The first is the standard properties
-     * for the document summary information, and the second is user-defined
+     * follows not one, but two sections.  The first contains the standard properties
+     * for the document summary information, and the second consists of user-defined
      * properties.  This is the only case in which multiple sections are
      * allowed.
      * Reading the second stream isn't implemented yet.
@@ -2763,7 +2746,7 @@ BOOLEAN WINAPI StgConvertPropertyToVariant(const SERIALIZEDPROPERTYVALUE* prop,
         PropVariantInit(pvar);
     }
 
-    return 0;
+    return FALSE;
 }
 
 SERIALIZEDPROPERTYVALUE* WINAPI StgConvertVariantToProperty(const PROPVARIANT *pvar,

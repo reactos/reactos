@@ -49,8 +49,43 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
     PLPCP_PORT_OBJECT Port;
+    HANDLE Handle;
+    PUNICODE_STRING ObjectName;
+    BOOLEAN NoName;
     PAGED_CODE();
     LPCTRACE(LPC_CREATE_DEBUG, "Name: %wZ\n", ObjectAttributes->ObjectName);
+
+    /* Check if the call comes from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe the PortHandle */
+            ProbeForWriteHandle(PortHandle);
+
+            /* Probe the ObjectAttributes */
+            ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
+
+            /* Get the object name and probe the unicode string */
+            ObjectName = ObjectAttributes->ObjectName;
+            ProbeForRead(ObjectName, sizeof(UNICODE_STRING), 1);
+
+            /* Check if we have no name */
+            NoName = (ObjectName->Buffer == NULL) || (ObjectName->Length == 0);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* Check if we have no name */
+        NoName = (ObjectAttributes->ObjectName->Buffer == NULL) ||
+                 (ObjectAttributes->ObjectName->Length == 0);
+    }
 
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
@@ -72,7 +107,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     InitializeListHead(&Port->LpcReplyChainHead);
 
     /* Check if we don't have a name */
-    if (!ObjectAttributes->ObjectName->Buffer)
+    if (NoName)
     {
         /* Set up for an unconnected port */
         Port->Flags = LPCP_UNCONNECTED_PORT;
@@ -140,10 +175,24 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
                             PORT_ALL_ACCESS,
                             0,
                             NULL,
-                            PortHandle);
+                            &Handle);
+    if (NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            /* Write back the handle, pointer was already probed */
+            *PortHandle = Handle;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ObCloseHandle(Handle, UserMode);
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
 
     /* Return success or the error */
-    LPCTRACE(LPC_CREATE_DEBUG, "Port: %p. Handle: %lx\n", Port, *PortHandle);
+    LPCTRACE(LPC_CREATE_DEBUG, "Port: %p. Handle: %p\n", Port, Handle);
     return Status;
 }
 

@@ -8,8 +8,12 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
-#define NDEBUG
 #include "precomp.h"
+
+#include <winioctl.h>
+#include <ntddsnd.h>
+
+#include <mmebuddy_debug.h>
 
 /*
     Convenience routine for getting the path of a device and opening it.

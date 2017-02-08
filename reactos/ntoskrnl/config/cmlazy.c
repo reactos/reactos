@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmapi.c
+ * FILE:            ntoskrnl/config/cmlazy.c
  * PURPOSE:         Configuration Manager - Internal Registry APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -23,7 +23,7 @@ BOOLEAN CmpLazyFlushPending;
 BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpHoldLazyFlush = TRUE;
 ULONG CmpLazyFlushIntervalInSeconds = 5;
-ULONG CmpLazyFlushHiveCount = 7;
+static ULONG CmpLazyFlushHiveCount = 7;
 ULONG CmpLazyFlushCount = 1;
 LONG CmpFlushStarveWriters;
 
@@ -31,9 +31,9 @@ LONG CmpFlushStarveWriters;
 
 BOOLEAN
 NTAPI
-CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
-                   OUT PBOOLEAN Error,
-                   OUT PULONG DirtyCount)
+CmpDoFlushNextHive(_In_  BOOLEAN ForceFlush,
+                   _Out_ PBOOLEAN Error,
+                   _Out_ PULONG DirtyCount)
 {
     NTSTATUS Status;
     PLIST_ENTRY NextEntry;
@@ -51,13 +51,10 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
     /* Make sure we have to flush at least one hive */
     if (!HiveCount) HiveCount = 1;
 
-    /* Don't force flush */
-    CmpForceForceFlush = FALSE;
-
     /* Acquire the list lock and loop */
     ExAcquirePushLockShared(&CmpHiveListHeadLock);
     NextEntry = CmpHiveListHead.Flink;
-    while (NextEntry != &CmpHiveListHead)
+    while ((NextEntry != &CmpHiveListHead) && HiveCount)
     {
         /* Get the hive and check if we should flush it */
         CmHive = CONTAINING_RECORD(NextEntry, CMHIVE, HiveList);
@@ -67,25 +64,33 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
             /* Great sucess! */
             Result = TRUE;
 
-            /* Ignore clean or volatile hves */
-            if (!(CmHive->Hive.DirtyCount) ||
+            /* One less to flush */
+            HiveCount--;
+
+            /* Ignore clean or volatile hives */
+            if ((!CmHive->Hive.DirtyCount && !ForceFlush) ||
                 (CmHive->Hive.HiveFlags & HIVE_VOLATILE))
             {
                 /* Don't do anything but do update the count */
                 CmHive->FlushCount = CmpLazyFlushCount;
+                DPRINT("Hive %wZ is clean.\n", &CmHive->FileFullPath);
             }
             else
             {
                 /* Do the sync */
-                DPRINT1("Flushing: %wZ\n", CmHive->FileFullPath);
-                DPRINT1("Handle: %lx\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
+                DPRINT("Flushing: %wZ\n", &CmHive->FileFullPath);
+                DPRINT("Handle: %p\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
                 Status = HvSyncHive(&CmHive->Hive);
                 if(!NT_SUCCESS(Status))
                 {
                     /* Let them know we failed */
+                    DPRINT1("Failed to flush %wZ on handle %p (status 0x%08lx)\n",
+                        &CmHive->FileFullPath,  CmHive->FileHandles[HFILE_TYPE_PRIMARY], Status);
                     *Error = TRUE;
                     Result = FALSE;
+                    break;
                 }
+                CmHive->FlushCount = CmpLazyFlushCount;
             }
         }
         else if ((CmHive->Hive.DirtyCount) &&
@@ -95,6 +100,7 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
             /* Use another lazy flusher for this hive */
             ASSERT(CmHive->FlushCount == CmpLazyFlushCount);
             *DirtyCount += CmHive->Hive.DirtyCount;
+            DPRINT("CmHive %wZ already uptodate.\n", &CmHive->FileFullPath);
         }
 
         /* Try the next one */
@@ -139,6 +145,7 @@ CmpLazyFlushDpcRoutine(IN PKDPC Dpc,
                        IN PVOID SystemArgument2)
 {
     /* Check if we should queue the lazy flush worker */
+    DPRINT("Flush pending: %s, Holding lazy flush: %s.\n", CmpLazyFlushPending ? "yes" : "no", CmpHoldLazyFlush ? "yes" : "no");
     if ((!CmpLazyFlushPending) && (!CmpHoldLazyFlush))
     {
         CmpLazyFlushPending = TRUE;
@@ -173,20 +180,27 @@ CmpLazyFlushWorker(IN PVOID Parameter)
     PAGED_CODE();
 
     /* Don't do anything if lazy flushing isn't enabled yet */
-    if (CmpHoldLazyFlush) return;
+    if (CmpHoldLazyFlush)
+    {
+        DPRINT1("Lazy flush held. Bye bye.\n");
+        CmpLazyFlushPending = FALSE;
+        return;
+    }
 
     /* Check if we are forcing a flush */
     ForceFlush = CmpForceForceFlush;
     if (ForceFlush)
     {
+        DPRINT("Forcing flush.\n");
         /* Lock the registry exclusively */
         CmpLockRegistryExclusive();
     }
     else
     {
-        /* Do a normal lock */
-        CmpLockRegistry();
+        DPRINT("Not forcing flush.\n");
+        /* Starve writers before locking */
         InterlockedIncrement(&CmpFlushStarveWriters);
+        CmpLockRegistry();
     }
 
     /* Flush the next hive */
@@ -198,14 +212,21 @@ CmpLazyFlushWorker(IN PVOID Parameter)
     }
 
     /* Check if we have starved writers */
-    if (!ForceFlush) InterlockedDecrement(&CmpFlushStarveWriters);
+    if (!ForceFlush)
+        InterlockedDecrement(&CmpFlushStarveWriters);
 
     /* Not pending anymore, release the registry lock */
     CmpLazyFlushPending = FALSE;
     CmpUnlockRegistry();
 
-    /* Check if we need to flush another hive */
-    if ((MoreWork) || (DirtyCount)) CmpLazyFlush();
+    DPRINT("Lazy flush done. More work to be done: %s. Entries still dirty: %u.\n",
+        MoreWork ? "Yes" : "No", DirtyCount);
+
+    if (MoreWork)
+    {
+        /* Relaunch the flush timer, so the remaining hives get flushed */
+        CmpLazyFlush();
+    }
 }
 
 VOID

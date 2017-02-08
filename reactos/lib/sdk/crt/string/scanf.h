@@ -26,7 +26,7 @@
 #ifdef WIDE_SCANF
 #define _CHAR_ wchar_t
 #define _EOF_ WEOF
-#define _EOF_RET WEOF
+#define _EOF_RET (short)WEOF
 #define _ISSPACE_(c) iswspace(c)
 #define _ISDIGIT_(c) iswdigit(c)
 #define _WIDE2SUPPORTED_(c) c /* No conversion needed (wide to wide) */
@@ -37,8 +37,8 @@
 #define _CHAR_ char
 #define _EOF_ EOF
 #define _EOF_RET EOF
-#define _ISSPACE_(c) isspace((unsigned char)(c))
-#define _ISDIGIT_(c) isdigit((unsigned char)(c))
+#define _ISSPACE_(c) isspace(c)
+#define _ISDIGIT_(c) isdigit(c)
 #define _WIDE2SUPPORTED_(c) c /* FIXME: convert wide char to char */
 #define _CHAR2SUPPORTED_(c) c /* No conversion needed (char to char) */
 #define _CHAR2DIGIT_(c, base) char2digit((c), (base))
@@ -48,32 +48,89 @@
 #ifdef CONSOLE
 #define _GETC_(file) (consumed++, _getch())
 #define _UNGETC_(nch, file) do { _ungetch(nch); consumed--; } while(0)
-#define _FUNCTION_ int vcscanf(const char *format, va_list ap)
+#define _LOCK_FILE_(file) _lock_file(stdin)
+#define _UNLOCK_FILE_(file) _unlock_file(stdin)
+#ifdef WIDE_SCANF
+#ifdef SECURE
+#define _FUNCTION_ static int vcwscanf_s_l(const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vcwscanf_l(const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
+#else  /* WIDE_SCANF */
+#ifdef SECURE
+#define _FUNCTION_ static int vcscanf_s_l(const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vcscanf_l(const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
+#endif /* WIDE_SCANF */
 #else
 #ifdef STRING
 #undef _EOF_
 #define _EOF_ 0
+#ifdef STRING_LEN
+#define _GETC_(file) (consumed==length ? '\0' : (consumed++, *file++))
+#define _UNGETC_(nch, file) do { file--; consumed--; } while(0)
+#define _LOCK_FILE_(file) do {} while(0)
+#define _UNLOCK_FILE_(file) do {} while(0)
+#ifdef WIDE_SCANF
+#ifdef SECURE
+#define _FUNCTION_ static int vsnwscanf_s_l(const wchar_t *file, size_t length, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vsnwscanf_l(const wchar_t *file, size_t length, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
+#else /* WIDE_SCANF */
+#ifdef SECURE
+#define _FUNCTION_ static int vsnscanf_s_l(const char *file, size_t length, const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vsnscanf_l(const char *file, size_t length, const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
+#endif /* WIDE_SCANF */
+#else /* STRING_LEN */
 #define _GETC_(file) (consumed++, *file++)
 #define _UNGETC_(nch, file) do { file--; consumed--; } while(0)
+#define _LOCK_FILE_(file) do {} while(0)
+#define _UNLOCK_FILE_(file) do {} while(0)
 #ifdef WIDE_SCANF
-#define _FUNCTION_ int vswscanf(const wchar_t *file, const wchar_t *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vswscanf_s_l(const wchar_t *file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vswscanf_l(const wchar_t *file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #else /* WIDE_SCANF */
-#define _FUNCTION_ int vsscanf(const char *file, const char *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vsscanf_s_l(const char *file, const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vsscanf_l(const char *file, const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #endif /* WIDE_SCANF */
+#endif /* STRING_LEN */
 #else /* STRING */
 #ifdef WIDE_SCANF
 #define _GETC_(file) (consumed++, fgetwc(file))
 #define _UNGETC_(nch, file) do { ungetwc(nch, file); consumed--; } while(0)
-#define _FUNCTION_ int vfwscanf(FILE* file, const wchar_t *format, va_list ap)
+#define _LOCK_FILE_(file) _lock_file(file)
+#define _UNLOCK_FILE_(file) _unlock_file(file)
+#ifdef SECURE
+#define _FUNCTION_ static int vfwscanf_s_l(FILE* file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vfwscanf_l(FILE* file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #else /* WIDE_SCANF */
 #define _GETC_(file) (consumed++, fgetc(file))
 #define _UNGETC_(nch, file) do { ungetc(nch, file); consumed--; } while(0)
-#define _FUNCTION_ int vfscanf(FILE* file, const char *format, va_list ap)
+#define _LOCK_FILE_(file) _lock_file(file)
+#define _UNLOCK_FILE_(file) _unlock_file(file)
+#ifdef SECURE
+#define _FUNCTION_ static int vfscanf_s_l(FILE* file, const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vfscanf_l(FILE* file, const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #endif /* WIDE_SCANF */
 #endif /* STRING */
 #endif /* CONSOLE */
 
 _FUNCTION_ {
+    pthreadlocinfo locinfo;
     int rd = 0, consumed = 0;
     int nch;
     if (!*format) return 0;
@@ -82,14 +139,24 @@ _FUNCTION_ {
     TRACE("(%s):\n", debugstr_a(format));
 #else /* CONSOLE */
 #ifdef STRING
-    TRACE("%s (%s)\n", file, debugstr_a(format));
+    TRACE("%s (%s)\n", debugstr_a(file), debugstr_a(format));
 #else /* STRING */
     TRACE("%p (%s)\n", file, debugstr_a(format));
 #endif /* STRING */
 #endif /* CONSOLE */
 #endif /* WIDE_SCANF */
+    _LOCK_FILE_(file);
+
     nch = _GETC_(file);
-    if (nch == _EOF_) return _EOF_RET;
+    if (nch == _EOF_) {
+        _UNLOCK_FILE_(file);
+        return _EOF_RET;
+    }
+
+    if(!locale)
+        locinfo = get_locinfo();
+    else
+        locinfo = locale->locinfo;
 
     while (*format) {
 	/* a whitespace character in the format string causes scanf to read,
@@ -131,8 +198,14 @@ _FUNCTION_ {
 	    /* read prefix (if any) */
 	    while (!prefix_finished) {
 		switch(*format) {
-		case 'h': h_prefix = 1; break;
-		case 'l': l_prefix = 1; break;
+		case 'h': h_prefix++; break;
+		case 'l':
+                    if(*(format+1) == 'l') {
+                        I64_prefix = 1;
+                        format++;
+                    }
+                    l_prefix = 1;
+                    break;
 		case 'w': w_prefix = 1; break;
 		case 'L': L_prefix = 1; break;
 		case 'I':
@@ -170,7 +243,7 @@ _FUNCTION_ {
 		base = 0;
 	    number: {
 		    /* read an integer */
-		    __int64 cur = 0;
+		    ULONGLONG cur = 0;
 		    int negative = 0;
 		    int seendigit=0;
                     /* skip initial whitespace */
@@ -224,92 +297,147 @@ _FUNCTION_ {
 		    if (!seendigit) break; /* not a valid number */
                     st = 1;
                     if (!suppress) {
-#define _SET_NUMBER_(type) *va_arg(ap, type*) = (type)(negative ? -cur : cur)
+#define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -(LONGLONG)cur : cur
 			if (I64_prefix) _SET_NUMBER_(LONGLONG);
 			else if (l_prefix) _SET_NUMBER_(LONG);
-			else if (h_prefix) _SET_NUMBER_(short int);
+			else if (h_prefix == 1) _SET_NUMBER_(short int);
 			else _SET_NUMBER_(int);
 		    }
                 }
                 break;
-	    case 'e':
-	    case 'E':
-	    case 'f':
-	    case 'g':
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'g':
             case 'G': { /* read a float */
-                    long double cur = 0;
-		    int negative = 0;
+                    //long double cur = 1, expcnt = 10;
+                    ULONGLONG d, hlp;
+                    int exp = 0, negative = 0;
+                    //unsigned fpcontrol;
+                    //BOOL negexp;
+
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
-		    /* get sign. */
+
+                    /* get sign. */
                     if (nch == '-' || nch == '+') {
-			negative = (nch=='-');
-			if (width>0) width--;
-			if (width==0) break;
+                        negative = (nch=='-');
+                        if (width>0) width--;
+                        if (width==0) break;
                         nch = _GETC_(file);
                     }
-		    /* get first digit. */
-		    if ('.' != nch) {
-		      if (!_ISDIGIT_(nch)) break;
-		      cur = (nch - '0');
-		      nch = _GETC_(file);
-		      if (width>0) width--;
-		      /* read until no more digits */
-		      while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-                        cur = cur*10 + (nch - '0');
+
+                    /* get first digit. */
+                    if (*locinfo->lconv->decimal_point != nch) {
+                        if (!_ISDIGIT_(nch)) break;
+                        d = nch - '0';
                         nch = _GETC_(file);
-			if (width>0) width--;
-		      }
-		    } else {
-		      cur = 0; /* MaxPayneDemo Fix: .8 -> 0.8 */
-		    }
-		    /* handle decimals */
-                    if (width!=0 && nch == '.') {
-                        long double dec = 1;
-                        nch = _GETC_(file);
-			if (width>0) width--;
+                        if (width>0) width--;
+                        /* read until no more digits */
                         while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-                            dec /= 10;
-                            cur += dec * (nch - '0');
+                            hlp = d*10 + nch - '0';
                             nch = _GETC_(file);
-			    if (width>0) width--;
+                            if (width>0) width--;
+                            if(d > (ULONGLONG)-1/10 || hlp<d) {
+                                exp++;
+                                break;
+                            }
+                            else
+                                d = hlp;
+                        }
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            exp++;
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                        }
+                    } else {
+                        d = 0; /* Fix: .8 -> 0.8 */
+                    }
+
+                    /* handle decimals */
+                    if (width!=0 && nch == *locinfo->lconv->decimal_point) {
+                        nch = _GETC_(file);
+                        if (width>0) width--;
+
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            hlp = d*10 + nch - '0';
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                            if(d > (ULONGLONG)-1/10 || hlp<d)
+                                break;
+
+                            d = hlp;
+                            exp--;
+                        }
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            nch = _GETC_(file);
+                            if (width>0) width--;
                         }
                     }
-		    /* handle exponent */
-		    if (width!=0 && (nch == 'e' || nch == 'E')) {
-			int exponent = 0, negexp = 0;
-			float expcnt;
+
+                    /* handle exponent */
+                    if (width!=0 && (nch == 'e' || nch == 'E')) {
+                        int sign = 1, e = 0;
+
                         nch = _GETC_(file);
-			if (width>0) width--;
-			/* possible sign on the exponent */
-			if (width!=0 && (nch=='+' || nch=='-')) {
-			    negexp = (nch=='-');
+                        if (width>0) width--;
+                        if (width!=0 && (nch=='+' || nch=='-')) {
+                            if(nch == '-')
+                                sign = -1;
                             nch = _GETC_(file);
-			    if (width>0) width--;
-			}
-			/* exponent digits */
-			while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-			    exponent *= 10;
-			    exponent += (nch - '0');
-                            nch = _GETC_(file);
-			    if (width>0) width--;
+                            if (width>0) width--;
                         }
-			/* update 'cur' with this exponent. */
-			expcnt =  negexp ? 0.1f : 10.0f;
-			while (exponent!=0) {
-			    if (exponent&1)
-				cur*=expcnt;
-			    exponent/=2;
-			    expcnt=expcnt*expcnt;
-			}
-		    }
+
+                        /* exponent digits */
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            if(e > INT_MAX/10 || (e = e*10 + nch - '0')<0)
+                                e = INT_MAX;
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                        }
+                        e *= sign;
+
+                        if(exp<0 && e<0 && e+exp>0) exp = INT_MIN;
+                        else if(exp>0 && e>0 && e+exp<0) exp = INT_MAX;
+                        else exp += e;
+                    }
+
+#ifdef __REACTOS__
+                    /* ReactOS: don't inline float processing (kernel/freeldr don't like that! */
+                    _internal_handle_float(negative, exp, suppress, d, l_prefix || L_prefix, &ap);
+                    st = 1;
+#else
+#ifdef _M_ARM
+                    DbgBreakPoint();
+#else
+                    fpcontrol = _control87(0, 0);
+                    _control87(MSVCRT__EM_DENORMAL|MSVCRT__EM_INVALID|MSVCRT__EM_ZERODIVIDE
+                            |MSVCRT__EM_OVERFLOW|MSVCRT__EM_UNDERFLOW|MSVCRT__EM_INEXACT, 0xffffffff);
+#endif
+                    negexp = (exp < 0);
+                    if(negexp)
+                        exp = -exp;
+                    /* update 'cur' with this exponent. */
+                    while(exp) {
+                        if(exp & 1)
+                            cur *= expcnt;
+                        exp /= 2;
+                        expcnt = expcnt*expcnt;
+                    }
+                    cur = (negexp ? d/cur : d*cur);
+#ifdef _M_ARM
+                    DbgBreakPoint();
+#else
+                    _control87(fpcontrol, 0xffffffff);
+#endif
                     st = 1;
                     if (!suppress) {
-			if (L_prefix) _SET_NUMBER_(long double);
-			else if (l_prefix) _SET_NUMBER_(double);
-			else _SET_NUMBER_(float);
-		    }
+                        if (L_prefix) _SET_NUMBER_(double);
+                        else if (l_prefix) _SET_NUMBER_(double);
+                        else _SET_NUMBER_(float);
+                    }
+#endif /* __REACTOS__ */
                 }
                 break;
 		/* According to msdn,
@@ -336,34 +464,62 @@ _FUNCTION_ {
 #endif /* WIDE_SCANF */
 	    charstring: { /* read a word into a char */
 		    char *sptr = suppress ? NULL : va_arg(ap, char*);
+                    char *sptr_beg = sptr;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
                     /* read until whitespace */
                     while (width!=0 && (nch!=_EOF_) && !_ISSPACE_(nch)) {
-                        if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *sptr++ = _CHAR2SUPPORTED_(nch);
+                            if(size>1) size--;
+                            else {
+                                _UNLOCK_FILE_(file);
+                                *sptr_beg = 0;
+                                return rd;
+                            }
+                        }
 			st++;
                         nch = _GETC_(file);
 			if (width>0) width--;
                     }
                     /* terminate */
-                    if (!suppress) *sptr = 0;
+                    if (st && !suppress) *sptr = 0;
                 }
                 break;
 	    widecharstring: { /* read a word into a wchar_t* */
 		    wchar_t *sptr = suppress ? NULL : va_arg(ap, wchar_t*);
+                    wchar_t *sptr_beg = sptr;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
                     /* read until whitespace */
                     while (width!=0 && (nch!=_EOF_) && !_ISSPACE_(nch)) {
-                        if (!suppress) *sptr++ = _WIDE2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *sptr++ = _WIDE2SUPPORTED_(nch);
+                            if(size>1) size--;
+                            else {
+                                _UNLOCK_FILE_(file);
+                                *sptr_beg = 0;
+                                return rd;
+                            }
+                        }
 			st++;
                         nch = _GETC_(file);
 			if (width>0) width--;
                     }
                     /* terminate */
-                    if (!suppress) *sptr = 0;
+                    if (st && !suppress) *sptr = 0;
                 }
                 break;
             /* 'c' and 'C work analogously to 's' and 'S' as described
@@ -386,10 +542,24 @@ _FUNCTION_ {
 #endif /* WIDE_SCANF */
 	  character: { /* read single character into char */
                     char *str = suppress ? NULL : va_arg(ap, char*);
+                    char *pstr = str;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned)/sizeof(char);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     if (width == -1) width = 1;
-                    while ((width != 0) && (nch != _EOF_))
+                    while (width && (nch != _EOF_))
                     {
-                        if (!suppress) *str++ = _CHAR2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *str++ = _CHAR2SUPPORTED_(nch);
+                            if(size) size--;
+                            else {
+                                _UNLOCK_FILE_(file);
+                                *pstr = 0;
+                                return rd;
+                            }
+                        }
                         st++;
                         width--;
                         nch = _GETC_(file);
@@ -398,10 +568,24 @@ _FUNCTION_ {
 		break;
 	  widecharacter: { /* read single character into a wchar_t */
                     wchar_t *str = suppress ? NULL : va_arg(ap, wchar_t*);
+                    wchar_t *pstr = str;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned)/sizeof(wchar_t);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     if (width == -1) width = 1;
-                    while ((width != 0) && (nch != _EOF_))
+                    while (width && (nch != _EOF_))
                     {
-                        if (!suppress) *str++ = _WIDE2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *str++ = _WIDE2SUPPORTED_(nch);
+                            if(size) size--;
+                            else {
+                                _UNLOCK_FILE_(file);
+                                *pstr = 0;
+                                return rd;
+                            }
+                        }
                         st++;
                         width--;
                         nch = _GETC_(file);
@@ -434,14 +618,15 @@ _FUNCTION_ {
 		    RTL_BITMAP bitMask;
                     ULONG *Mask;
 		    int invert = 0; /* Set if we are NOT to find the chars */
-
-            /* Init our bitmap */
-#ifdef _LIBCNT_
-            Mask = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned)/sizeof(_CHAR_);
 #else
-            Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+                    unsigned size = UINT_MAX;
 #endif
-            RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
+
+		    /* Init our bitmap */
+		    Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+		    RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
 
 		    /* Read the format */
 		    format++;
@@ -482,14 +667,16 @@ _FUNCTION_ {
                         st++;
                         nch = _GETC_(file);
                         if (width>0) width--;
+                        if(size>1) size--;
+                        else {
+                            _UNLOCK_FILE_(file);
+                            *str = 0;
+                            return rd;
+                        }
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;
-#ifdef _LIBCNT_
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Mask);
-#else
-            HeapFree(GetProcessHeap(), 0, Mask);
-#endif
+		    HeapFree(GetProcessHeap(), 0, Mask);
                 }
                 break;
             default:
@@ -525,7 +712,9 @@ _FUNCTION_ {
     if (nch!=_EOF_) {
 	_UNGETC_(nch, file);
     }
+
     TRACE("returning %d\n", rd);
+    _UNLOCK_FILE_(file);
     return rd;
 }
 
@@ -539,5 +728,7 @@ _FUNCTION_ {
 #undef _CHAR2DIGIT_
 #undef _GETC_
 #undef _UNGETC_
+#undef _LOCK_FILE_
+#undef _UNLOCK_FILE_
 #undef _FUNCTION_
 #undef _BITMAPSIZE_

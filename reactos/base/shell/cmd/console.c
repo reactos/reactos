@@ -7,13 +7,13 @@
  *    20-Jan-1999 (Eric Kohl)
  *        started
  *
- *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc
+ *    03-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
+ *        Remove all hardcoded strings in En.rc
  *
- *    01-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
+ *    01-Jul-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Added ConPrintfPaging and ConOutPrintfPaging
  *
- *    02-Feb-2007 (Paolo Devoti) <devotip at gmail.com>)
+ *    02-Feb-2007 (Paolo Devoti <devotip at gmail.com>)
  *        Fixed ConPrintfPaging
  */
 
@@ -26,443 +26,535 @@ UINT InputCodePage;
 UINT OutputCodePage;
 
 
-VOID ConInDisable (VOID)
+BOOL IsConsoleHandle(HANDLE hHandle)
 {
-	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
-	DWORD dwMode;
+    DWORD dwMode;
 
-	GetConsoleMode (hInput, &dwMode);
-	dwMode &= ~ENABLE_PROCESSED_INPUT;
-	SetConsoleMode (hInput, dwMode);
+    /* Check whether the handle may be that of a console... */
+    if ((GetFileType(hHandle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR)
+        return FALSE;
+
+    /*
+     * It may be. Perform another test... The idea comes from the
+     * MSDN description of the WriteConsole API:
+     *
+     * "WriteConsole fails if it is used with a standard handle
+     *  that is redirected to a file. If an application processes
+     *  multilingual output that can be redirected, determine whether
+     *  the output handle is a console handle (one method is to call
+     *  the GetConsoleMode function and check whether it succeeds).
+     *  If the handle is a console handle, call WriteConsole. If the
+     *  handle is not a console handle, the output is redirected and
+     *  you should call WriteFile to perform the I/O."
+     */
+    return GetConsoleMode(hHandle, &dwMode);
+}
+
+VOID ConInDisable(VOID)
+{
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD dwMode;
+
+    GetConsoleMode(hInput, &dwMode);
+    dwMode &= ~ENABLE_PROCESSED_INPUT;
+    SetConsoleMode(hInput, dwMode);
 }
 
 
-VOID ConInEnable (VOID)
+VOID ConInEnable(VOID)
 {
-	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
-	DWORD dwMode;
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD dwMode;
 
-	GetConsoleMode (hInput, &dwMode);
-	dwMode |= ENABLE_PROCESSED_INPUT;
-	SetConsoleMode (hInput, dwMode);
+    GetConsoleMode(hInput, &dwMode);
+    dwMode |= ENABLE_PROCESSED_INPUT;
+    SetConsoleMode(hInput, dwMode);
 }
 
 
 VOID ConInFlush (VOID)
 {
-	FlushConsoleInputBuffer (GetStdHandle (STD_INPUT_HANDLE));
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
 
 
-VOID ConInKey (PINPUT_RECORD lpBuffer)
+VOID ConInKey(PINPUT_RECORD lpBuffer)
 {
-	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
-	DWORD  dwRead;
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD  dwRead;
 
-	if (hInput == INVALID_HANDLE_VALUE)
-		WARN ("Invalid input handle!!!\n");
+    if (hInput == INVALID_HANDLE_VALUE)
+        WARN ("Invalid input handle!!!\n");
 
-	do
-	{
-		ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
-		if ((lpBuffer->EventType == KEY_EVENT) &&
-			(lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
-			break;
-	}
-	while (TRUE);
+    do
+    {
+        ReadConsoleInput(hInput, lpBuffer, 1, &dwRead);
+        if ((lpBuffer->EventType == KEY_EVENT) &&
+            (lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
+            break;
+    }
+    while (TRUE);
 }
 
 
-VOID ConInString (LPTSTR lpInput, DWORD dwLength)
+VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 {
-	DWORD dwOldMode;
-	DWORD dwRead = 0;
-	HANDLE hFile;
+    DWORD dwOldMode;
+    DWORD dwRead = 0;
+    HANDLE hFile;
 
-	LPTSTR p;
-	PCHAR pBuf;
+    LPTSTR p;
+    PCHAR pBuf;
 
 #ifdef _UNICODE
-	pBuf = (PCHAR)cmd_alloc(dwLength - 1);
+    pBuf = (PCHAR)cmd_alloc(dwLength - 1);
 #else
-	pBuf = lpInput;
+    pBuf = lpInput;
 #endif
-	ZeroMemory (lpInput, dwLength * sizeof(TCHAR));
-	hFile = GetStdHandle (STD_INPUT_HANDLE);
-	GetConsoleMode (hFile, &dwOldMode);
+    ZeroMemory(lpInput, dwLength * sizeof(TCHAR));
+    hFile = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hFile, &dwOldMode);
 
-	SetConsoleMode (hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
-	ReadFile (hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
+    ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
 #ifdef _UNICODE
-	MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
-	cmd_free(pBuf);
+    MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
+    cmd_free(pBuf);
 #endif
-	for (p = lpInput; *p; p++)
-	{
-		if (*p == _T('\x0d'))
-		{
-			*p = _T('\0');
-			break;
-		}
-	}
+    for (p = lpInput; *p; p++)
+    {
+        if (*p == _T('\x0d'))
+        {
+            *p = _T('\0');
+            break;
+        }
+    }
 
-	SetConsoleMode (hFile, dwOldMode);
+    SetConsoleMode(hFile, dwOldMode);
 }
 
 static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 {
-	DWORD dwWritten;
-	HANDLE hOutput = GetStdHandle(nStdHandle);
+    DWORD dwNumBytes = 0;
+    HANDLE hOutput = GetStdHandle(nStdHandle);
+    PVOID p;
 
-	if (WriteConsole(hOutput, str, len, &dwWritten, NULL))
-		return;
+    /* If we don't write anything, just return */
+    if (!str || len == 0)
+        return;
 
-	/* We're writing to a file or pipe instead of the console. Convert the
-	 * string from TCHARs to the desired output format, if the two differ */
-	if (bUnicodeOutput)
-	{
+    /* Check whether we are writing to a console and if so, write to it */
+    if (IsConsoleHandle(hOutput))
+    {
+        WriteConsole(hOutput, str, len, &dwNumBytes, NULL);
+        return;
+    }
+
+    /* We're writing to a file or pipe instead of the console. Convert the
+     * string from TCHARs to the desired output format, if the two differ */
+    if (bUnicodeOutput)
+    {
 #ifndef _UNICODE
-		WCHAR *buffer = cmd_alloc(len * sizeof(WCHAR));
-		if (!buffer)
-		{
-			error_out_of_memory();
-			return;
-		}
-		len = MultiByteToWideChar(OutputCodePage, 0, str, len, buffer, len);
-		str = (PVOID)buffer;
+        WCHAR *buffer = cmd_alloc(len * sizeof(WCHAR));
+        if (!buffer)
+        {
+            error_out_of_memory();
+            return;
+        }
+        len = (DWORD)MultiByteToWideChar(OutputCodePage, 0, str, (INT)len, buffer, (INT)len);
+        str = (PVOID)buffer;
 #endif
-		WriteFile(hOutput, str, len * sizeof(WCHAR), &dwWritten, NULL);
+        /*
+         * Find any newline character in the buffer,
+         * write the part BEFORE the newline, then write
+         * a carriage-return + newline, and then write
+         * the remaining part of the buffer.
+         *
+         * This fixes output in files and serial console.
+         */
+        while (len > 0)
+        {
+            /* Loop until we find a \r or \n character */
+            // FIXME: What about the pair \r\n ?
+            p = str;
+            while (len > 0 && *(PWCHAR)p != L'\r' && *(PWCHAR)p != L'\n')
+            {
+                /* Advance one character */
+                p = (PVOID)((PWCHAR)p + 1);
+                len--;
+            }
+
+            /* Write everything up to \r or \n */
+            dwNumBytes = ((PWCHAR)p - (PWCHAR)str) * sizeof(WCHAR);
+            WriteFile(hOutput, str, dwNumBytes, &dwNumBytes, NULL);
+
+            /* If we hit \r or \n ... */
+            if (len > 0 && (*(PWCHAR)p == L'\r' || *(PWCHAR)p == L'\n'))
+            {
+                /* ... send a carriage-return + newline sequence and skip \r or \n */
+                WriteFile(hOutput, L"\r\n", 2 * sizeof(WCHAR), &dwNumBytes, NULL);
+                str = (PVOID)((PWCHAR)p + 1);
+                len--;
+            }
+        }
+
 #ifndef _UNICODE
-		cmd_free(buffer);
+        cmd_free(buffer);
 #endif
-	}
-	else
-	{
+    }
+    else
+    {
 #ifdef _UNICODE
-		CHAR *buffer = cmd_alloc(len * MB_LEN_MAX * sizeof(CHAR));
-		if (!buffer)
-		{
-			error_out_of_memory();
-			return;
-		}
-		len = WideCharToMultiByte(OutputCodePage, 0, str, len, buffer, len * MB_LEN_MAX, NULL, NULL);
-		str = (PVOID)buffer;
+        CHAR *buffer = cmd_alloc(len * MB_LEN_MAX * sizeof(CHAR));
+        if (!buffer)
+        {
+            error_out_of_memory();
+            return;
+        }
+        len = WideCharToMultiByte(OutputCodePage, 0, str, len, buffer, len * MB_LEN_MAX, NULL, NULL);
+        str = (PVOID)buffer;
 #endif
-		WriteFile(hOutput, str, len, &dwWritten, NULL);
+        /*
+         * Find any newline character in the buffer,
+         * write the part BEFORE the newline, then write
+         * a carriage-return + newline, and then write
+         * the remaining part of the buffer.
+         *
+         * This fixes output in files and serial console.
+         */
+        while (len > 0)
+        {
+            /* Loop until we find a \r or \n character */
+            // FIXME: What about the pair \r\n ?
+            p = str;
+            while (len > 0 && *(PCHAR)p != '\r' && *(PCHAR)p != '\n')
+            {
+                /* Advance one character */
+                p = (PVOID)((PCHAR)p + 1);
+                len--;
+            }
+
+            /* Write everything up to \r or \n */
+            dwNumBytes = ((PCHAR)p - (PCHAR)str) * sizeof(CHAR);
+            WriteFile(hOutput, str, dwNumBytes, &dwNumBytes, NULL);
+
+            /* If we hit \r or \n ... */
+            if (len > 0 && (*(PCHAR)p == '\r' || *(PCHAR)p == '\n'))
+            {
+                /* ... send a carriage-return + newline sequence and skip \r or \n */
+                WriteFile(hOutput, "\r\n", 2, &dwNumBytes, NULL);
+                str = (PVOID)((PCHAR)p + 1);
+                len--;
+            }
+        }
+
 #ifdef _UNICODE
-		cmd_free(buffer);
+        cmd_free(buffer);
 #endif
-	}
+    }
 }
 
-VOID ConOutChar (TCHAR c)
+VOID ConOutChar(TCHAR c)
 {
-	ConWrite(&c, 1, STD_OUTPUT_HANDLE);
+    ConWrite(&c, 1, STD_OUTPUT_HANDLE);
 }
 
 VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 {
-	ConWrite(szText, _tcslen(szText), nStdHandle);
+    ConWrite(szText, (DWORD)_tcslen(szText), nStdHandle);
 }
 
 VOID ConOutResPaging(BOOL NewPage, UINT resID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintfPaging(NewPage, szMsg);
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConOutPrintfPaging(NewPage, szMsg);
 }
 
-VOID ConOutResPuts (UINT resID)
+VOID ConOutResPuts(UINT resID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
-
-	ConPuts(szMsg, STD_OUTPUT_HANDLE);
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConPuts(szMsg, STD_OUTPUT_HANDLE);
 }
 
-VOID ConOutPuts (LPTSTR szText)
+VOID ConOutPuts(LPTSTR szText)
 {
-	ConPuts(szText, STD_OUTPUT_HANDLE);
+    ConPuts(szText, STD_OUTPUT_HANDLE);
 }
 
 
 VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
-	TCHAR szOut[OUTPUT_BUFFER_SIZE];
-	ConWrite(szOut, _vstprintf(szOut, szFormat, arg_ptr), nStdHandle);
+    TCHAR szOut[OUTPUT_BUFFER_SIZE];
+    DWORD len;
+
+    len = (DWORD)_vstprintf(szOut, szFormat, arg_ptr);
+    ConWrite(szOut, len, nStdHandle);
 }
 
 INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
-	INT len;
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	TCHAR szOut[OUTPUT_BUFFER_SIZE];
-	DWORD dwWritten;
-	HANDLE hOutput = GetStdHandle(nStdHandle);
+    INT len;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    TCHAR szOut[OUTPUT_BUFFER_SIZE];
+    DWORD dwWritten;
+    HANDLE hOutput = GetStdHandle(nStdHandle);
 
-	/* used to count number of lines since last pause */
-	static int LineCount = 0;
+    /* used to count number of lines since last pause */
+    static int LineCount = 0;
 
-	/* used to see how big the screen is */
-	int ScreenLines = 0;
+    /* used to see how big the screen is */
+    int ScreenLines = 0;
 
-	/* chars since start of line */
-	int CharSL;
+    /* chars since start of line */
+    int CharSL;
 
-	int from = 0, i = 0;
+    int from = 0, i = 0;
 
-	if(NewPage == TRUE)
-		LineCount = 0;
+    if (NewPage == TRUE)
+        LineCount = 0;
 
-	/* rest LineCount and return if no string have been given */
-	if (szFormat == NULL)
-		return 0;
+    /* rest LineCount and return if no string have been given */
+    if (szFormat == NULL)
+        return 0;
 
+    /* Get the size of the visual screen that can be printed too */
+    if (!IsConsoleHandle(hOutput) || !GetConsoleScreenBufferInfo(hOutput, &csbi))
+    {
+        /* We assume it's a file handle */
+        ConPrintf(szFormat, arg_ptr, nStdHandle);
+        return 0;
+    }
+    /* Subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt() */
+    ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
+    CharSL = csbi.dwCursorPosition.X;
 
-	//get the size of the visual screen that can be printed too
-	if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
-	{
-		// we assuming its a file handle
-		ConPrintf(szFormat, arg_ptr, nStdHandle);
-		return 0;
-	}
-	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
-	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
-	CharSL = csbi.dwCursorPosition.X;
+    /* Make sure they didn't make the screen to small */
+    if (ScreenLines < 4)
+    {
+        ConPrintf(szFormat, arg_ptr, nStdHandle);
+        return 0;
+    }
 
-	//make sure they didnt make the screen to small
-	if(ScreenLines<4)
-	{
-		ConPrintf(szFormat, arg_ptr, nStdHandle);
-		return 0;
-	}
+    len = _vstprintf(szOut, szFormat, arg_ptr);
 
-	len = _vstprintf (szOut, szFormat, arg_ptr);
+    while (i < len)
+    {
+        /* Search until the end of a line is reached */
+        if (szOut[i++] != _T('\n') && ++CharSL < csbi.dwSize.X)
+            continue;
 
-	while (i < len)
-	{
-		// Search until the end of a line is reached
-		if (szOut[i++] != _T('\n') && ++CharSL < csbi.dwSize.X)
-			continue;
+        LineCount++;
+        CharSL=0;
 
-		LineCount++;
-		CharSL=0;
+        if (LineCount >= ScreenLines)
+        {
+            WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
+            from = i;
 
-		if(LineCount >= ScreenLines)
-		{
-			WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
-			from = i;
+            if (PagePrompt() != PROMPT_YES)
+            {
+                return 1;
+            }
+            /* Reset the number of lines being printed */
+            LineCount = 0;
+        }
+    }
 
-			if(PagePrompt() != PROMPT_YES)
-			{
-				return 1;
-			}
-			//reset the number of lines being printed
-			LineCount = 0;
-		}
-	}
+    WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
 
-	WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
-
-	return 0;
+    return 0;
 }
 
-VOID ConErrFormatMessage (DWORD MessageId, ...)
+VOID ConErrFormatMessage(DWORD MessageId, ...)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	DWORD ret;
-	LPTSTR text;
-	va_list arg_ptr;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    DWORD ret;
+    LPTSTR text;
+    va_list arg_ptr;
 
-	va_start (arg_ptr, MessageId);
-	ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	       NULL,
-	       MessageId,
-	       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-	       (LPTSTR) &text,
-	       0,
-	       &arg_ptr);
+    va_start(arg_ptr, MessageId);
+    ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                        NULL,
+                        MessageId,
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                        (LPTSTR) &text,
+                        0,
+                        &arg_ptr);
 
-	va_end (arg_ptr);
-	if(ret > 0)
-	{
-		ConErrPuts (text);
-		LocalFree(text);
-	}
-	else
-	{
-		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
-	}
+    va_end(arg_ptr);
+    if (ret > 0)
+    {
+        ConErrPuts(text);
+        LocalFree(text);
+    }
+    else
+    {
+        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
+        ConErrPrintf(szMsg);
+    }
 }
 
-VOID ConOutFormatMessage (DWORD MessageId, ...)
+VOID ConOutFormatMessage(DWORD MessageId, ...)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	DWORD ret;
-	LPTSTR text;
-	va_list arg_ptr;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    DWORD ret;
+    LPTSTR text;
+    va_list arg_ptr;
 
-	va_start (arg_ptr, MessageId);
-	ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	       NULL,
-	       MessageId,
-	       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-	       (LPTSTR) &text,
-	       0,
-	       &arg_ptr);
+    va_start(arg_ptr, MessageId);
+    ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                        NULL,
+                        MessageId,
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                        (LPTSTR) &text,
+                        0,
+                        &arg_ptr);
 
-	va_end (arg_ptr);
-	if(ret > 0)
-	{
-		ConErrPuts (text);
-		LocalFree(text);
-	}
-	else
-	{
-		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
-	}
+    va_end(arg_ptr);
+    if (ret > 0)
+    {
+        ConErrPuts(text);
+        LocalFree(text);
+    }
+    else
+    {
+        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
+        ConErrPrintf(szMsg);
+    }
 }
 
-VOID ConOutResPrintf (UINT resID, ...)
+VOID ConOutResPrintf(UINT resID, ...)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	va_list arg_ptr;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    va_list arg_ptr;
 
-	va_start (arg_ptr, resID);
-	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
-	ConPrintf(szMsg, arg_ptr, STD_OUTPUT_HANDLE);
-	va_end (arg_ptr);
+    va_start(arg_ptr, resID);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConPrintf(szMsg, arg_ptr, STD_OUTPUT_HANDLE);
+    va_end(arg_ptr);
 }
 
-VOID ConOutPrintf (LPTSTR szFormat, ...)
+VOID ConOutPrintf(LPTSTR szFormat, ...)
 {
-	va_list arg_ptr;
+    va_list arg_ptr;
 
-	va_start (arg_ptr, szFormat);
-	ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
-	va_end (arg_ptr);
+    va_start(arg_ptr, szFormat);
+    ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+    va_end(arg_ptr);
 }
 
-INT ConOutPrintfPaging (BOOL NewPage, LPTSTR szFormat, ...)
+INT ConOutPrintfPaging(BOOL NewPage, LPTSTR szFormat, ...)
 {
-	INT iReturn;
-	va_list arg_ptr;
+    INT iReturn;
+    va_list arg_ptr;
 
-	va_start (arg_ptr, szFormat);
-	iReturn = ConPrintfPaging(NewPage, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
-	va_end (arg_ptr);
-	return iReturn;
+    va_start(arg_ptr, szFormat);
+    iReturn = ConPrintfPaging(NewPage, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+    va_end(arg_ptr);
+    return iReturn;
 }
 
-VOID ConErrChar (TCHAR c)
+VOID ConErrChar(TCHAR c)
 {
-	ConWrite(&c, 1, STD_ERROR_HANDLE);
-}
-
-
-VOID ConErrResPuts (UINT resID)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
-	ConPuts(szMsg, STD_ERROR_HANDLE);
-}
-
-VOID ConErrPuts (LPTSTR szText)
-{
-	ConPuts(szText, STD_ERROR_HANDLE);
+    ConWrite(&c, 1, STD_ERROR_HANDLE);
 }
 
 
-VOID ConErrResPrintf (UINT resID, ...)
+VOID ConErrResPuts(UINT resID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	va_list arg_ptr;
-
-	va_start (arg_ptr, resID);
-	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
-	ConPrintf(szMsg, arg_ptr, STD_ERROR_HANDLE);
-	va_end (arg_ptr);
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConPuts(szMsg, STD_ERROR_HANDLE);
 }
 
-VOID ConErrPrintf (LPTSTR szFormat, ...)
+VOID ConErrPuts(LPTSTR szText)
 {
-	va_list arg_ptr;
-
-	va_start (arg_ptr, szFormat);
-	ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
-	va_end (arg_ptr);
-}
-
-VOID SetCursorXY (SHORT x, SHORT y)
-{
-	COORD coPos;
-
-	coPos.X = x;
-	coPos.Y = y;
-	SetConsoleCursorPosition (GetStdHandle (STD_OUTPUT_HANDLE), coPos);
+    ConPuts(szText, STD_ERROR_HANDLE);
 }
 
 
-VOID GetCursorXY (PSHORT x, PSHORT y)
+VOID ConErrResPrintf(UINT resID, ...)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    va_list arg_ptr;
 
-	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    va_start(arg_ptr, resID);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConPrintf(szMsg, arg_ptr, STD_ERROR_HANDLE);
+    va_end(arg_ptr);
+}
 
-	*x = csbi.dwCursorPosition.X;
-	*y = csbi.dwCursorPosition.Y;
+VOID ConErrPrintf(LPTSTR szFormat, ...)
+{
+    va_list arg_ptr;
+
+    va_start(arg_ptr, szFormat);
+    ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
+    va_end(arg_ptr);
 }
 
 
-SHORT GetCursorX (VOID)
+VOID SetCursorXY(SHORT x, SHORT y)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD coPos;
 
-	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-
-	return csbi.dwCursorPosition.X;
+    coPos.X = x;
+    coPos.Y = y;
+    SetConsoleCursorPosition(GetStdHandle (STD_OUTPUT_HANDLE), coPos);
 }
 
-
-SHORT GetCursorY (VOID)
+VOID GetCursorXY(PSHORT x, PSHORT y)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
 
-	return csbi.dwCursorPosition.Y;
+    *x = csbi.dwCursorPosition.X;
+    *y = csbi.dwCursorPosition.Y;
 }
 
-
-VOID GetScreenSize (PSHORT maxx, PSHORT maxy)
+SHORT GetCursorX(VOID)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
-	{
-		csbi.dwSize.X = 80;
-		csbi.dwSize.Y = 25;
-	}
-
-	if (maxx)
-		*maxx = csbi.dwSize.X;
-	if (maxy)
-		*maxy = csbi.dwSize.Y;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    return csbi.dwCursorPosition.X;
 }
 
-
-VOID SetCursorType (BOOL bInsert, BOOL bVisible)
+SHORT GetCursorY(VOID)
 {
-	CONSOLE_CURSOR_INFO cci;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	cci.dwSize = bInsert ? 10 : 99;
-	cci.bVisible = bVisible;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    return csbi.dwCursorPosition.Y;
+}
 
-	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
+VOID SetCursorType(BOOL bInsert, BOOL bVisible)
+{
+    CONSOLE_CURSOR_INFO cci;
+
+    cci.dwSize = bInsert ? 10 : 99;
+    cci.bVisible = bVisible;
+
+    SetConsoleCursorInfo(GetStdHandle (STD_OUTPUT_HANDLE), &cci);
+}
+
+VOID GetScreenSize(PSHORT maxx, PSHORT maxy)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+    {
+        csbi.dwSize.X = 80;
+        csbi.dwSize.Y = 25;
+    }
+
+    if (maxx) *maxx = csbi.dwSize.X;
+    if (maxy) *maxy = csbi.dwSize.Y;
 }
 
 /* EOF */

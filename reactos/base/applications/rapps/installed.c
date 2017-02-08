@@ -23,7 +23,7 @@ GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString)
         return TRUE;
     }
 
-    wcscpy(lpString, L"---");
+    (VOID)StringCchCopyW(lpString, MAX_PATH, L"---");
 
     return FALSE;
 }
@@ -279,10 +279,22 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                         ((EnumType == ENUM_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
                         ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
                     {
-                        if (!lpEnumProc(ItemIndex, pszDisplayName, Info))
+                        if (!lpEnumProc(ItemIndex, pszDisplayName, &Info))
                             break;
                     }
+                    else
+                    {
+                        RegCloseKey(Info.hSubKey);
+                    }
                 }
+                else
+                {
+                    RegCloseKey(Info.hSubKey);
+                }
+            }
+            else
+            {
+                RegCloseKey(Info.hSubKey);
             }
         }
 

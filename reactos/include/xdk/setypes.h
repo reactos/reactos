@@ -1,32 +1,33 @@
 /******************************************************************************
  *                            Security Manager Types                          *
  ******************************************************************************/
-$if (_WDMDDK_)
+$if (_WDMDDK_ || _WINNT_)
 
 /* Simple types */
 typedef PVOID PSECURITY_DESCRIPTOR;
-typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
-typedef ULONG ACCESS_MASK, *PACCESS_MASK;
+typedef $ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
+typedef $ULONG ACCESS_MASK, *PACCESS_MASK;
+
 typedef PVOID PACCESS_TOKEN;
 typedef PVOID PSID;
 
-#define DELETE                           0x00010000L
-#define READ_CONTROL                     0x00020000L
-#define WRITE_DAC                        0x00040000L
-#define WRITE_OWNER                      0x00080000L
-#define SYNCHRONIZE                      0x00100000L
-#define STANDARD_RIGHTS_REQUIRED         0x000F0000L
-#define STANDARD_RIGHTS_READ             READ_CONTROL
-#define STANDARD_RIGHTS_WRITE            READ_CONTROL
-#define STANDARD_RIGHTS_EXECUTE          READ_CONTROL
-#define STANDARD_RIGHTS_ALL              0x001F0000L
-#define SPECIFIC_RIGHTS_ALL              0x0000FFFFL
-#define ACCESS_SYSTEM_SECURITY           0x01000000L
-#define MAXIMUM_ALLOWED                  0x02000000L
-#define GENERIC_READ                     0x80000000L
-#define GENERIC_WRITE                    0x40000000L
-#define GENERIC_EXECUTE                  0x20000000L
-#define GENERIC_ALL                      0x10000000L
+#define DELETE                   0x00010000L
+#define READ_CONTROL             0x00020000L
+#define WRITE_DAC                0x00040000L
+#define WRITE_OWNER              0x00080000L
+#define SYNCHRONIZE              0x00100000L
+#define STANDARD_RIGHTS_REQUIRED 0x000F0000L
+#define STANDARD_RIGHTS_READ     READ_CONTROL
+#define STANDARD_RIGHTS_WRITE    READ_CONTROL
+#define STANDARD_RIGHTS_EXECUTE  READ_CONTROL
+#define STANDARD_RIGHTS_ALL      0x001F0000L
+#define SPECIFIC_RIGHTS_ALL      0x0000FFFFL
+#define ACCESS_SYSTEM_SECURITY   0x01000000L
+#define MAXIMUM_ALLOWED          0x02000000L
+#define GENERIC_READ             0x80000000L
+#define GENERIC_WRITE            0x40000000L
+#define GENERIC_EXECUTE          0x20000000L
+#define GENERIC_ALL              0x10000000L
 
 typedef struct _GENERIC_MAPPING {
   ACCESS_MASK GenericRead;
@@ -35,22 +36,22 @@ typedef struct _GENERIC_MAPPING {
   ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
 
-#define ACL_REVISION                      2
-#define ACL_REVISION_DS                   4
+#define ACL_REVISION    2
+#define ACL_REVISION_DS 4
 
-#define ACL_REVISION1                     1
-#define ACL_REVISION2                     2
-#define ACL_REVISION3                     3
-#define ACL_REVISION4                     4
-#define MIN_ACL_REVISION                  ACL_REVISION2
-#define MAX_ACL_REVISION                  ACL_REVISION4
+#define ACL_REVISION1    1
+#define ACL_REVISION2    2
+#define ACL_REVISION3    3
+#define ACL_REVISION4    4
+#define MIN_ACL_REVISION ACL_REVISION2
+#define MAX_ACL_REVISION ACL_REVISION4
 
 typedef struct _ACL {
-  UCHAR AclRevision;
-  UCHAR Sbz1;
-  USHORT AclSize;
-  USHORT AceCount;
-  USHORT Sbz2;
+  $UCHAR AclRevision;
+  $UCHAR Sbz1;
+  $USHORT AclSize;
+  $USHORT AceCount;
+  $USHORT Sbz2;
 } ACL, *PACL;
 
 /* Current security descriptor revision value */
@@ -71,7 +72,7 @@ typedef struct _ACL {
 #include <pshpack4.h>
 typedef struct _LUID_AND_ATTRIBUTES {
   LUID Luid;
-  ULONG Attributes;
+  $ULONG Attributes;
 } LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
 #include <poppack.h>
 
@@ -82,10 +83,10 @@ typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
 #define PRIVILEGE_SET_ALL_NECESSARY (1)
 
 typedef struct _PRIVILEGE_SET {
-  ULONG PrivilegeCount;
-  ULONG Control;
+  $ULONG PrivilegeCount;
+  $ULONG Control;
   LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
-} PRIVILEGE_SET,*PPRIVILEGE_SET;
+} PRIVILEGE_SET, *PPRIVILEGE_SET;
 
 typedef enum _SECURITY_IMPERSONATION_LEVEL {
   SecurityAnonymous,
@@ -96,7 +97,7 @@ typedef enum _SECURITY_IMPERSONATION_LEVEL {
 
 #define SECURITY_MAX_IMPERSONATION_LEVEL SecurityDelegation
 #define SECURITY_MIN_IMPERSONATION_LEVEL SecurityAnonymous
-#define DEFAULT_IMPERSONATION_LEVEL SecurityImpersonation
+#define DEFAULT_IMPERSONATION_LEVEL      SecurityImpersonation
 #define VALID_IMPERSONATION_LEVEL(Level) (((Level) >= SECURITY_MIN_IMPERSONATION_LEVEL) && ((Level) <= SECURITY_MAX_IMPERSONATION_LEVEL))
 
 #define SECURITY_DYNAMIC_TRACKING (TRUE)
@@ -105,7 +106,7 @@ typedef enum _SECURITY_IMPERSONATION_LEVEL {
 typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE, *PSECURITY_CONTEXT_TRACKING_MODE;
 
 typedef struct _SECURITY_QUALITY_OF_SERVICE {
-  ULONG Length;
+  $ULONG Length;
   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
   SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
   BOOLEAN EffectiveOnly;
@@ -118,16 +119,20 @@ typedef struct _SE_IMPERSONATION_STATE {
   SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
 
-#define OWNER_SECURITY_INFORMATION       (0x00000001L)
-#define GROUP_SECURITY_INFORMATION       (0x00000002L)
-#define DACL_SECURITY_INFORMATION        (0x00000004L)
-#define SACL_SECURITY_INFORMATION        (0x00000008L)
-#define LABEL_SECURITY_INFORMATION       (0x00000010L)
 
-#define PROTECTED_DACL_SECURITY_INFORMATION     (0x80000000L)
-#define PROTECTED_SACL_SECURITY_INFORMATION     (0x40000000L)
-#define UNPROTECTED_DACL_SECURITY_INFORMATION   (0x20000000L)
-#define UNPROTECTED_SACL_SECURITY_INFORMATION   (0x10000000L)
+#define OWNER_SECURITY_INFORMATION (0x00000001L)
+#define GROUP_SECURITY_INFORMATION (0x00000002L)
+#define DACL_SECURITY_INFORMATION  (0x00000004L)
+#define SACL_SECURITY_INFORMATION  (0x00000008L)
+#define LABEL_SECURITY_INFORMATION (0x00000010L)
+
+#define PROTECTED_DACL_SECURITY_INFORMATION   (0x80000000L)
+#define PROTECTED_SACL_SECURITY_INFORMATION   (0x40000000L)
+#define UNPROTECTED_DACL_SECURITY_INFORMATION (0x20000000L)
+#define UNPROTECTED_SACL_SECURITY_INFORMATION (0x10000000L)
+
+$endif (_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
 
 typedef enum _SECURITY_OPERATION_CODE {
   SetSecurityDescriptor,
@@ -307,6 +312,9 @@ $endif (_WDMDDK_)
 $if (_NTDDK_)
 #define SE_UNSOLICITED_INPUT_PRIVILEGE    6
 
+$endif (_NTDDK_)
+$if (_NTDDK_ || _WINNT_)
+
 typedef enum _WELL_KNOWN_SID_TYPE {
   WinNullSid = 0,
   WinWorldSid = 1,
@@ -392,25 +400,27 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinConsoleLogonSid = 81,
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
-$endif (_NTDDK_)
-$if (_NTIFS_)
+
+$endif (_NTDDK_ || _WINNT_)
+$if (_NTIFS_ || _WINNT_)
+
 #ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
 #define SID_IDENTIFIER_AUTHORITY_DEFINED
 typedef struct _SID_IDENTIFIER_AUTHORITY {
-  UCHAR Value[6];
+  $UCHAR Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
 #endif
 
 #ifndef SID_DEFINED
 #define SID_DEFINED
 typedef struct _SID {
-  UCHAR Revision;
-  UCHAR SubAuthorityCount;
+  $UCHAR Revision;
+  $UCHAR SubAuthorityCount;
   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
 #ifdef MIDL_PASS
-  [size_is(SubAuthorityCount)] ULONG SubAuthority[*];
+  [size_is(SubAuthorityCount)] $ULONG SubAuthority[*];
 #else
-  ULONG SubAuthority[ANYSIZE_ARRAY];
+  $ULONG SubAuthority[ANYSIZE_ARRAY];
 #endif
 } SID, *PISID;
 #endif
@@ -420,7 +430,7 @@ typedef struct _SID {
 #define SID_RECOMMENDED_SUB_AUTHORITIES 1
 
 #ifndef MIDL_PASS
-#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof(ULONG) + (SID_MAX_SUB_AUTHORITIES * sizeof(ULONG)))
+#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof($ULONG) + (SID_MAX_SUB_AUTHORITIES * sizeof($ULONG)))
 #endif
 
 typedef enum _SID_NAME_USE {
@@ -442,7 +452,7 @@ typedef struct _SID_AND_ATTRIBUTES {
 #else
   PSID Sid;
 #endif
-  ULONG Attributes;
+  $ULONG Attributes;
 } SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
 typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
@@ -451,7 +461,7 @@ typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
 typedef ULONG_PTR SID_HASH_ENTRY, *PSID_HASH_ENTRY;
 
 typedef struct _SID_AND_ATTRIBUTES_HASH {
-  ULONG SidCount;
+  $ULONG SidCount;
   PSID_AND_ATTRIBUTES SidAttr;
   SID_HASH_ENTRY Hash[SID_HASH_SIZE];
 } SID_AND_ATTRIBUTES_HASH, *PSID_AND_ATTRIBUTES_HASH;
@@ -459,89 +469,99 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 /* Universal well-known SIDs */
 
 #define SECURITY_NULL_SID_AUTHORITY         {0,0,0,0,0,0}
+
+/* S-1-1 */
 #define SECURITY_WORLD_SID_AUTHORITY        {0,0,0,0,0,1}
+
+/* S-1-2 */
 #define SECURITY_LOCAL_SID_AUTHORITY        {0,0,0,0,0,2}
+
+/* S-1-3 */
 #define SECURITY_CREATOR_SID_AUTHORITY      {0,0,0,0,0,3}
+
+/* S-1-4 */
 #define SECURITY_NON_UNIQUE_AUTHORITY       {0,0,0,0,0,4}
+
 #define SECURITY_RESOURCE_MANAGER_AUTHORITY {0,0,0,0,0,9}
 
-#define SECURITY_NULL_RID                 (0x00000000L)
-#define SECURITY_WORLD_RID                (0x00000000L)
-#define SECURITY_LOCAL_RID                (0x00000000L)
-#define SECURITY_LOCAL_LOGON_RID          (0x00000001L)
+#define SECURITY_NULL_RID                   (0x00000000L)
+#define SECURITY_WORLD_RID                  (0x00000000L)
+#define SECURITY_LOCAL_RID                  (0x00000000L)
+#define SECURITY_LOCAL_LOGON_RID            (0x00000001L)
 
-#define SECURITY_CREATOR_OWNER_RID        (0x00000000L)
-#define SECURITY_CREATOR_GROUP_RID        (0x00000001L)
-#define SECURITY_CREATOR_OWNER_SERVER_RID (0x00000002L)
-#define SECURITY_CREATOR_GROUP_SERVER_RID (0x00000003L)
-#define SECURITY_CREATOR_OWNER_RIGHTS_RID (0x00000004L)
+#define SECURITY_CREATOR_OWNER_RID          (0x00000000L)
+#define SECURITY_CREATOR_GROUP_RID          (0x00000001L)
+#define SECURITY_CREATOR_OWNER_SERVER_RID   (0x00000002L)
+#define SECURITY_CREATOR_GROUP_SERVER_RID   (0x00000003L)
+#define SECURITY_CREATOR_OWNER_RIGHTS_RID   (0x00000004L)
 
 /* NT well-known SIDs */
 
-#define SECURITY_NT_AUTHORITY           {0,0,0,0,0,5}
+/* S-1-5 */
+#define SECURITY_NT_AUTHORITY               {0,0,0,0,0,5}
 
-#define SECURITY_DIALUP_RID             (0x00000001L)
-#define SECURITY_NETWORK_RID            (0x00000002L)
-#define SECURITY_BATCH_RID              (0x00000003L)
-#define SECURITY_INTERACTIVE_RID        (0x00000004L)
-#define SECURITY_LOGON_IDS_RID          (0x00000005L)
-#define SECURITY_LOGON_IDS_RID_COUNT    (3L)
-#define SECURITY_SERVICE_RID            (0x00000006L)
-#define SECURITY_ANONYMOUS_LOGON_RID    (0x00000007L)
-#define SECURITY_PROXY_RID              (0x00000008L)
-#define SECURITY_ENTERPRISE_CONTROLLERS_RID (0x00000009L)
-#define SECURITY_SERVER_LOGON_RID       SECURITY_ENTERPRISE_CONTROLLERS_RID
-#define SECURITY_PRINCIPAL_SELF_RID     (0x0000000AL)
-#define SECURITY_AUTHENTICATED_USER_RID (0x0000000BL)
-#define SECURITY_RESTRICTED_CODE_RID    (0x0000000CL)
-#define SECURITY_TERMINAL_SERVER_RID    (0x0000000DL)
-#define SECURITY_REMOTE_LOGON_RID       (0x0000000EL)
-#define SECURITY_THIS_ORGANIZATION_RID  (0x0000000FL)
-#define SECURITY_IUSER_RID              (0x00000011L)
-#define SECURITY_LOCAL_SYSTEM_RID       (0x00000012L)
-#define SECURITY_LOCAL_SERVICE_RID      (0x00000013L)
-#define SECURITY_NETWORK_SERVICE_RID    (0x00000014L)
-#define SECURITY_NT_NON_UNIQUE          (0x00000015L)
-#define SECURITY_NT_NON_UNIQUE_SUB_AUTH_COUNT  (3L)
+#define SECURITY_DIALUP_RID                          (0x00000001L)
+#define SECURITY_NETWORK_RID                         (0x00000002L)
+#define SECURITY_BATCH_RID                           (0x00000003L)
+#define SECURITY_INTERACTIVE_RID                     (0x00000004L)
+#define SECURITY_LOGON_IDS_RID                       (0x00000005L)
+#define SECURITY_LOGON_IDS_RID_COUNT                 (3L)
+#define SECURITY_SERVICE_RID                         (0x00000006L)
+#define SECURITY_ANONYMOUS_LOGON_RID                 (0x00000007L)
+#define SECURITY_PROXY_RID                           (0x00000008L)
+#define SECURITY_ENTERPRISE_CONTROLLERS_RID          (0x00000009L)
+#define SECURITY_SERVER_LOGON_RID                    SECURITY_ENTERPRISE_CONTROLLERS_RID
+#define SECURITY_PRINCIPAL_SELF_RID                  (0x0000000AL)
+#define SECURITY_AUTHENTICATED_USER_RID              (0x0000000BL)
+#define SECURITY_RESTRICTED_CODE_RID                 (0x0000000CL)
+#define SECURITY_TERMINAL_SERVER_RID                 (0x0000000DL)
+#define SECURITY_REMOTE_LOGON_RID                    (0x0000000EL)
+#define SECURITY_THIS_ORGANIZATION_RID               (0x0000000FL)
+#define SECURITY_IUSER_RID                           (0x00000011L)
+#define SECURITY_LOCAL_SYSTEM_RID                    (0x00000012L)
+#define SECURITY_LOCAL_SERVICE_RID                   (0x00000013L)
+#define SECURITY_NETWORK_SERVICE_RID                 (0x00000014L)
+#define SECURITY_NT_NON_UNIQUE                       (0x00000015L)
+#define SECURITY_NT_NON_UNIQUE_SUB_AUTH_COUNT        (3L)
 #define SECURITY_ENTERPRISE_READONLY_CONTROLLERS_RID (0x00000016L)
 
-#define SECURITY_BUILTIN_DOMAIN_RID     (0x00000020L)
+#define SECURITY_BUILTIN_DOMAIN_RID        (0x00000020L)
 #define SECURITY_WRITE_RESTRICTED_CODE_RID (0x00000021L)
 
 
-#define SECURITY_PACKAGE_BASE_RID       (0x00000040L)
-#define SECURITY_PACKAGE_RID_COUNT      (2L)
-#define SECURITY_PACKAGE_NTLM_RID       (0x0000000AL)
-#define SECURITY_PACKAGE_SCHANNEL_RID   (0x0000000EL)
-#define SECURITY_PACKAGE_DIGEST_RID     (0x00000015L)
+#define SECURITY_PACKAGE_BASE_RID     (0x00000040L)
+#define SECURITY_PACKAGE_RID_COUNT    (2L)
+#define SECURITY_PACKAGE_NTLM_RID     (0x0000000AL)
+#define SECURITY_PACKAGE_SCHANNEL_RID (0x0000000EL)
+#define SECURITY_PACKAGE_DIGEST_RID   (0x00000015L)
 
-#define SECURITY_CRED_TYPE_BASE_RID             (0x00000041L)
-#define SECURITY_CRED_TYPE_RID_COUNT            (2L)
-#define SECURITY_CRED_TYPE_THIS_ORG_CERT_RID    (0x00000001L)
+#define SECURITY_CRED_TYPE_BASE_RID          (0x00000041L)
+#define SECURITY_CRED_TYPE_RID_COUNT         (2L)
+#define SECURITY_CRED_TYPE_THIS_ORG_CERT_RID (0x00000001L)
 
-#define SECURITY_MIN_BASE_RID		(0x00000050L)
-#define SECURITY_SERVICE_ID_BASE_RID    (0x00000050L)
-#define SECURITY_SERVICE_ID_RID_COUNT   (6L)
-#define SECURITY_RESERVED_ID_BASE_RID   (0x00000051L)
-#define SECURITY_APPPOOL_ID_BASE_RID    (0x00000052L)
-#define SECURITY_APPPOOL_ID_RID_COUNT   (6L)
-#define SECURITY_VIRTUALSERVER_ID_BASE_RID    (0x00000053L)
-#define SECURITY_VIRTUALSERVER_ID_RID_COUNT   (6L)
-#define SECURITY_USERMODEDRIVERHOST_ID_BASE_RID  (0x00000054L)
-#define SECURITY_USERMODEDRIVERHOST_ID_RID_COUNT (6L)
+#define SECURITY_MIN_BASE_RID                               (0x00000050L)
+#define SECURITY_SERVICE_ID_BASE_RID                        (0x00000050L)
+#define SECURITY_SERVICE_ID_RID_COUNT                       (6L)
+#define SECURITY_RESERVED_ID_BASE_RID                       (0x00000051L)
+#define SECURITY_APPPOOL_ID_BASE_RID                        (0x00000052L)
+#define SECURITY_APPPOOL_ID_RID_COUNT                       (6L)
+#define SECURITY_VIRTUALSERVER_ID_BASE_RID                  (0x00000053L)
+#define SECURITY_VIRTUALSERVER_ID_RID_COUNT                 (6L)
+#define SECURITY_USERMODEDRIVERHOST_ID_BASE_RID             (0x00000054L)
+#define SECURITY_USERMODEDRIVERHOST_ID_RID_COUNT            (6L)
 #define SECURITY_CLOUD_INFRASTRUCTURE_SERVICES_ID_BASE_RID  (0x00000055L)
 #define SECURITY_CLOUD_INFRASTRUCTURE_SERVICES_ID_RID_COUNT (6L)
-#define SECURITY_WMIHOST_ID_BASE_RID  (0x00000056L)
-#define SECURITY_WMIHOST_ID_RID_COUNT (6L)
-#define SECURITY_TASK_ID_BASE_RID                 (0x00000057L)
-#define SECURITY_NFS_ID_BASE_RID        (0x00000058L)
-#define SECURITY_COM_ID_BASE_RID        (0x00000059L)
-#define SECURITY_VIRTUALACCOUNT_ID_RID_COUNT   (6L)
+#define SECURITY_WMIHOST_ID_BASE_RID                        (0x00000056L)
+#define SECURITY_WMIHOST_ID_RID_COUNT                       (6L)
+#define SECURITY_TASK_ID_BASE_RID                           (0x00000057L)
+#define SECURITY_NFS_ID_BASE_RID                            (0x00000058L)
+#define SECURITY_COM_ID_BASE_RID                            (0x00000059L)
+#define SECURITY_VIRTUALACCOUNT_ID_RID_COUNT                (6L)
 
-#define SECURITY_MAX_BASE_RID		(0x0000006FL)
+#define SECURITY_MAX_BASE_RID (0x0000006FL)
 
-#define SECURITY_MAX_ALWAYS_FILTERED    (0x000003E7L)
-#define SECURITY_MIN_NEVER_FILTERED     (0x000003E8L)
+#define SECURITY_MAX_ALWAYS_FILTERED (0x000003E7L)
+#define SECURITY_MIN_NEVER_FILTERED  (0x000003E8L)
 
 #define SECURITY_OTHER_ORGANIZATION_RID (0x000003E8L)
 
@@ -551,15 +571,15 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 
 #define DOMAIN_GROUP_RID_ENTERPRISE_READONLY_DOMAIN_CONTROLLERS (0x000001F2L)
 
-#define FOREST_USER_RID_MAX            (0x000001F3L)
+#define FOREST_USER_RID_MAX (0x000001F3L)
 
 /* Well-known users */
 
-#define DOMAIN_USER_RID_ADMIN          (0x000001F4L)
-#define DOMAIN_USER_RID_GUEST          (0x000001F5L)
-#define DOMAIN_USER_RID_KRBTGT         (0x000001F6L)
+#define DOMAIN_USER_RID_ADMIN  (0x000001F4L)
+#define DOMAIN_USER_RID_GUEST  (0x000001F5L)
+#define DOMAIN_USER_RID_KRBTGT (0x000001F6L)
 
-#define DOMAIN_USER_RID_MAX            (0x000003E7L)
+#define DOMAIN_USER_RID_MAX (0x000003E7L)
 
 /* Well-known groups */
 
@@ -576,15 +596,15 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 
 /* Well-known aliases */
 
-#define DOMAIN_ALIAS_RID_ADMINS                         (0x00000220L)
-#define DOMAIN_ALIAS_RID_USERS                          (0x00000221L)
-#define DOMAIN_ALIAS_RID_GUESTS                         (0x00000222L)
-#define DOMAIN_ALIAS_RID_POWER_USERS                    (0x00000223L)
+#define DOMAIN_ALIAS_RID_ADMINS      (0x00000220L)
+#define DOMAIN_ALIAS_RID_USERS       (0x00000221L)
+#define DOMAIN_ALIAS_RID_GUESTS      (0x00000222L)
+#define DOMAIN_ALIAS_RID_POWER_USERS (0x00000223L)
 
-#define DOMAIN_ALIAS_RID_ACCOUNT_OPS                    (0x00000224L)
-#define DOMAIN_ALIAS_RID_SYSTEM_OPS                     (0x00000225L)
-#define DOMAIN_ALIAS_RID_PRINT_OPS                      (0x00000226L)
-#define DOMAIN_ALIAS_RID_BACKUP_OPS                     (0x00000227L)
+#define DOMAIN_ALIAS_RID_ACCOUNT_OPS (0x00000224L)
+#define DOMAIN_ALIAS_RID_SYSTEM_OPS  (0x00000225L)
+#define DOMAIN_ALIAS_RID_PRINT_OPS   (0x00000226L)
+#define DOMAIN_ALIAS_RID_BACKUP_OPS  (0x00000227L)
 
 #define DOMAIN_ALIAS_RID_REPLICATOR                     (0x00000228L)
 #define DOMAIN_ALIAS_RID_RAS_SERVERS                    (0x00000229L)
@@ -593,11 +613,12 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 #define DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS      (0x0000022CL)
 #define DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS (0x0000022DL)
 
-#define DOMAIN_ALIAS_RID_MONITORING_USERS               (0x0000022EL)
-#define DOMAIN_ALIAS_RID_LOGGING_USERS                  (0x0000022FL)
-#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS            (0x00000230L)
-#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS             (0x00000231L)
-#define DOMAIN_ALIAS_RID_DCOM_USERS                     (0x00000232L)
+#define DOMAIN_ALIAS_RID_MONITORING_USERS    (0x0000022EL)
+#define DOMAIN_ALIAS_RID_LOGGING_USERS       (0x0000022FL)
+#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS (0x00000230L)
+#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS  (0x00000231L)
+#define DOMAIN_ALIAS_RID_DCOM_USERS          (0x00000232L)
+
 #define DOMAIN_ALIAS_RID_IUSERS                         (0x00000238L)
 #define DOMAIN_ALIAS_RID_CRYPTO_OPERATORS               (0x00000239L)
 #define DOMAIN_ALIAS_RID_CACHEABLE_PRINCIPALS_GROUP     (0x0000023BL)
@@ -605,37 +626,36 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 #define DOMAIN_ALIAS_RID_EVENT_LOG_READERS_GROUP        (0x0000023DL)
 #define DOMAIN_ALIAS_RID_CERTSVC_DCOM_ACCESS_GROUP      (0x0000023EL)
 
-#define SECURITY_MANDATORY_LABEL_AUTHORITY          {0,0,0,0,0,16}
-#define SECURITY_MANDATORY_UNTRUSTED_RID            (0x00000000L)
-#define SECURITY_MANDATORY_LOW_RID                  (0x00001000L)
-#define SECURITY_MANDATORY_MEDIUM_RID               (0x00002000L)
-#define SECURITY_MANDATORY_HIGH_RID                 (0x00003000L)
-#define SECURITY_MANDATORY_SYSTEM_RID               (0x00004000L)
-#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID    (0x00005000L)
+#define SECURITY_MANDATORY_LABEL_AUTHORITY       {0,0,0,0,0,16}
+#define SECURITY_MANDATORY_UNTRUSTED_RID         (0x00000000L)
+#define SECURITY_MANDATORY_LOW_RID               (0x00001000L)
+#define SECURITY_MANDATORY_MEDIUM_RID            (0x00002000L)
+#define SECURITY_MANDATORY_HIGH_RID              (0x00003000L)
+#define SECURITY_MANDATORY_SYSTEM_RID            (0x00004000L)
+#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID (0x00005000L)
 
 /* SECURITY_MANDATORY_MAXIMUM_USER_RID is the highest RID that
    can be set by a usermode caller.*/
 
-#define SECURITY_MANDATORY_MAXIMUM_USER_RID   SECURITY_MANDATORY_SYSTEM_RID
+#define SECURITY_MANDATORY_MAXIMUM_USER_RID SECURITY_MANDATORY_SYSTEM_RID
 
 #define MANDATORY_LEVEL_TO_MANDATORY_RID(IL) (IL * 0x1000)
 
 /* Allocate the System Luid.  The first 1000 LUIDs are reserved.
    Use #999 here (0x3e7 = 999) */
 
-#define SYSTEM_LUID                     {0x3e7, 0x0}
-#define ANONYMOUS_LOGON_LUID            {0x3e6, 0x0}
-#define LOCALSERVICE_LUID               {0x3e5, 0x0}
-#define NETWORKSERVICE_LUID             {0x3e4, 0x0}
-#define IUSER_LUID                      {0x3e3, 0x0}
+#define SYSTEM_LUID          {0x3e7, 0x0}
+#define ANONYMOUS_LOGON_LUID {0x3e6, 0x0}
+#define LOCALSERVICE_LUID    {0x3e5, 0x0}
+#define NETWORKSERVICE_LUID  {0x3e4, 0x0}
+#define IUSER_LUID           {0x3e3, 0x0}
 
 typedef struct _ACE_HEADER {
-  UCHAR AceType;
-  UCHAR AceFlags;
-  USHORT AceSize;
+  $UCHAR AceType;
+  $UCHAR AceFlags;
+  $USHORT AceSize;
 } ACE_HEADER, *PACE_HEADER;
 
-/* also in winnt.h */
 #define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
 #define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
 #define ACCESS_DENIED_ACE_TYPE                  (0x1)
@@ -666,87 +686,87 @@ typedef struct _ACE_HEADER {
 /* The following are the inherit flags that go into the AceFlags field
    of an Ace header. */
 
-#define OBJECT_INHERIT_ACE                (0x1)
-#define CONTAINER_INHERIT_ACE             (0x2)
-#define NO_PROPAGATE_INHERIT_ACE          (0x4)
-#define INHERIT_ONLY_ACE                  (0x8)
-#define INHERITED_ACE                     (0x10)
-#define VALID_INHERIT_FLAGS               (0x1F)
+#define OBJECT_INHERIT_ACE       (0x1)
+#define CONTAINER_INHERIT_ACE    (0x2)
+#define NO_PROPAGATE_INHERIT_ACE (0x4)
+#define INHERIT_ONLY_ACE         (0x8)
+#define INHERITED_ACE            (0x10)
+#define VALID_INHERIT_FLAGS      (0x1F)
 
-#define SUCCESSFUL_ACCESS_ACE_FLAG        (0x40)
-#define FAILED_ACCESS_ACE_FLAG            (0x80)
+#define SUCCESSFUL_ACCESS_ACE_FLAG (0x40)
+#define FAILED_ACCESS_ACE_FLAG     (0x80)
 
 typedef struct _ACCESS_ALLOWED_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
-  ULONG SidStart;
+  $ULONG SidStart;
 } ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
 
 typedef struct _ACCESS_DENIED_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
-  ULONG SidStart;
+  $ULONG SidStart;
 } ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
 
 typedef struct _SYSTEM_AUDIT_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
-  ULONG SidStart;
+  $ULONG SidStart;
 } SYSTEM_AUDIT_ACE, *PSYSTEM_AUDIT_ACE;
 
 typedef struct _SYSTEM_ALARM_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
-  ULONG SidStart;
+  $ULONG SidStart;
 } SYSTEM_ALARM_ACE, *PSYSTEM_ALARM_ACE;
 
 typedef struct _SYSTEM_MANDATORY_LABEL_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
-  ULONG SidStart;
+  $ULONG SidStart;
 } SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
 
-#define SYSTEM_MANDATORY_LABEL_NO_WRITE_UP         0x1
-#define SYSTEM_MANDATORY_LABEL_NO_READ_UP          0x2
-#define SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP       0x4
-#define SYSTEM_MANDATORY_LABEL_VALID_MASK (SYSTEM_MANDATORY_LABEL_NO_WRITE_UP   | \
-                                           SYSTEM_MANDATORY_LABEL_NO_READ_UP    | \
-                                           SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP)
+#define SYSTEM_MANDATORY_LABEL_NO_WRITE_UP   0x1
+#define SYSTEM_MANDATORY_LABEL_NO_READ_UP    0x2
+#define SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP 0x4
+#define SYSTEM_MANDATORY_LABEL_VALID_MASK    (SYSTEM_MANDATORY_LABEL_NO_WRITE_UP | \
+                                              SYSTEM_MANDATORY_LABEL_NO_READ_UP  | \
+                                              SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP)
 
-#define SECURITY_DESCRIPTOR_MIN_LENGTH   (sizeof(SECURITY_DESCRIPTOR))
+#define SECURITY_DESCRIPTOR_MIN_LENGTH (sizeof(SECURITY_DESCRIPTOR))
 
-typedef USHORT SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
+typedef $USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
-#define SE_OWNER_DEFAULTED              0x0001
-#define SE_GROUP_DEFAULTED              0x0002
-#define SE_DACL_PRESENT                 0x0004
-#define SE_DACL_DEFAULTED               0x0008
-#define SE_SACL_PRESENT                 0x0010
-#define SE_SACL_DEFAULTED               0x0020
-#define SE_DACL_UNTRUSTED               0x0040
-#define SE_SERVER_SECURITY              0x0080
-#define SE_DACL_AUTO_INHERIT_REQ        0x0100
-#define SE_SACL_AUTO_INHERIT_REQ        0x0200
-#define SE_DACL_AUTO_INHERITED          0x0400
-#define SE_SACL_AUTO_INHERITED          0x0800
-#define SE_DACL_PROTECTED               0x1000
-#define SE_SACL_PROTECTED               0x2000
-#define SE_RM_CONTROL_VALID             0x4000
-#define SE_SELF_RELATIVE                0x8000
+#define SE_OWNER_DEFAULTED       0x0001
+#define SE_GROUP_DEFAULTED       0x0002
+#define SE_DACL_PRESENT          0x0004
+#define SE_DACL_DEFAULTED        0x0008
+#define SE_SACL_PRESENT          0x0010
+#define SE_SACL_DEFAULTED        0x0020
+#define SE_DACL_UNTRUSTED        0x0040
+#define SE_SERVER_SECURITY       0x0080
+#define SE_DACL_AUTO_INHERIT_REQ 0x0100
+#define SE_SACL_AUTO_INHERIT_REQ 0x0200
+#define SE_DACL_AUTO_INHERITED   0x0400
+#define SE_SACL_AUTO_INHERITED   0x0800
+#define SE_DACL_PROTECTED        0x1000
+#define SE_SACL_PROTECTED        0x2000
+#define SE_RM_CONTROL_VALID      0x4000
+#define SE_SELF_RELATIVE         0x8000
 
 typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
-  UCHAR Revision;
-  UCHAR Sbz1;
+  $UCHAR Revision;
+  $UCHAR Sbz1;
   SECURITY_DESCRIPTOR_CONTROL Control;
-  ULONG Owner;
-  ULONG Group;
-  ULONG Sacl;
-  ULONG Dacl;
+  $ULONG Owner;
+  $ULONG Group;
+  $ULONG Sacl;
+  $ULONG Dacl;
 } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 
 typedef struct _SECURITY_DESCRIPTOR {
-  UCHAR Revision;
-  UCHAR Sbz1;
+  $UCHAR Revision;
+  $UCHAR Sbz1;
   SECURITY_DESCRIPTOR_CONTROL Control;
   PSID Owner;
   PSID Group;
@@ -755,8 +775,8 @@ typedef struct _SECURITY_DESCRIPTOR {
 } SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
 
 typedef struct _OBJECT_TYPE_LIST {
-  USHORT Level;
-  USHORT Sbz;
+  $USHORT Level;
+  $USHORT Sbz;
   GUID *ObjectType;
 } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
@@ -796,114 +816,72 @@ typedef enum _ACCESS_REASON_TYPE {
   AccessReasonNoGrant = 0x00800000
 } ACCESS_REASON_TYPE;
 
-typedef ULONG ACCESS_REASON;
+typedef $ULONG ACCESS_REASON;
 
 typedef struct _ACCESS_REASONS {
   ACCESS_REASON Data[32];
 } ACCESS_REASONS, *PACCESS_REASONS;
 
-#define SE_SECURITY_DESCRIPTOR_FLAG_NO_OWNER_ACE    0x00000001
-#define SE_SECURITY_DESCRIPTOR_FLAG_NO_LABEL_ACE    0x00000002
-#define SE_SECURITY_DESCRIPTOR_VALID_FLAGS          0x00000003
+#define SE_SECURITY_DESCRIPTOR_FLAG_NO_OWNER_ACE 0x00000001
+#define SE_SECURITY_DESCRIPTOR_FLAG_NO_LABEL_ACE 0x00000002
+#define SE_SECURITY_DESCRIPTOR_VALID_FLAGS       0x00000003
 
 typedef struct _SE_SECURITY_DESCRIPTOR {
-  ULONG Size;
-  ULONG Flags;
+  $ULONG Size;
+  $ULONG Flags;
   PSECURITY_DESCRIPTOR SecurityDescriptor;
 } SE_SECURITY_DESCRIPTOR, *PSE_SECURITY_DESCRIPTOR;
 
 typedef struct _SE_ACCESS_REQUEST {
-  ULONG Size;
+  $ULONG Size;
   PSE_SECURITY_DESCRIPTOR SeSecurityDescriptor;
   ACCESS_MASK DesiredAccess;
   ACCESS_MASK PreviouslyGrantedAccess;
   PSID PrincipalSelfSid;
   PGENERIC_MAPPING GenericMapping;
-  ULONG ObjectTypeListCount;
+  $ULONG ObjectTypeListCount;
   POBJECT_TYPE_LIST ObjectTypeList;
 } SE_ACCESS_REQUEST, *PSE_ACCESS_REQUEST;
 
-typedef struct _SE_ACCESS_REPLY {
-  ULONG Size;
-  ULONG ResultListCount;
-  PACCESS_MASK GrantedAccess;
-  PNTSTATUS AccessStatus;
-  PACCESS_REASONS AccessReason;
-  PPRIVILEGE_SET* Privileges;
-} SE_ACCESS_REPLY, *PSE_ACCESS_REPLY;
+#define TOKEN_ASSIGN_PRIMARY    (0x0001)
+#define TOKEN_DUPLICATE         (0x0002)
+#define TOKEN_IMPERSONATE       (0x0004)
+#define TOKEN_QUERY             (0x0008)
+#define TOKEN_QUERY_SOURCE      (0x0010)
+#define TOKEN_ADJUST_PRIVILEGES (0x0020)
+#define TOKEN_ADJUST_GROUPS     (0x0040)
+#define TOKEN_ADJUST_DEFAULT    (0x0080)
+#define TOKEN_ADJUST_SESSIONID  (0x0100)
 
-typedef enum _SE_AUDIT_OPERATION {
-  AuditPrivilegeObject,
-  AuditPrivilegeService,
-  AuditAccessCheck,
-  AuditOpenObject,
-  AuditOpenObjectWithTransaction,
-  AuditCloseObject,
-  AuditDeleteObject,
-  AuditOpenObjectForDelete,
-  AuditOpenObjectForDeleteWithTransaction,
-  AuditCloseNonObject,
-  AuditOpenNonObject,
-  AuditObjectReference,
-  AuditHandleCreation,
-} SE_AUDIT_OPERATION, *PSE_AUDIT_OPERATION;
-
-typedef struct _SE_AUDIT_INFO {
-  ULONG Size;
-  AUDIT_EVENT_TYPE AuditType;
-  SE_AUDIT_OPERATION AuditOperation;
-  ULONG AuditFlags;
-  UNICODE_STRING SubsystemName;
-  UNICODE_STRING ObjectTypeName;
-  UNICODE_STRING ObjectName;
-  PVOID HandleId;
-  GUID* TransactionId;
-  LUID* OperationId;
-  BOOLEAN ObjectCreation;
-  BOOLEAN GenerateOnClose;
-} SE_AUDIT_INFO, *PSE_AUDIT_INFO;
-
-#define TOKEN_ASSIGN_PRIMARY            (0x0001)
-#define TOKEN_DUPLICATE                 (0x0002)
-#define TOKEN_IMPERSONATE               (0x0004)
-#define TOKEN_QUERY                     (0x0008)
-#define TOKEN_QUERY_SOURCE              (0x0010)
-#define TOKEN_ADJUST_PRIVILEGES         (0x0020)
-#define TOKEN_ADJUST_GROUPS             (0x0040)
-#define TOKEN_ADJUST_DEFAULT            (0x0080)
-#define TOKEN_ADJUST_SESSIONID          (0x0100)
-
-#define TOKEN_ALL_ACCESS_P (STANDARD_RIGHTS_REQUIRED  |\
-                            TOKEN_ASSIGN_PRIMARY      |\
-                            TOKEN_DUPLICATE           |\
-                            TOKEN_IMPERSONATE         |\
-                            TOKEN_QUERY               |\
-                            TOKEN_QUERY_SOURCE        |\
-                            TOKEN_ADJUST_PRIVILEGES   |\
-                            TOKEN_ADJUST_GROUPS       |\
-                            TOKEN_ADJUST_DEFAULT )
+#define TOKEN_ALL_ACCESS_P (STANDARD_RIGHTS_REQUIRED |\
+                            TOKEN_ASSIGN_PRIMARY     |\
+                            TOKEN_DUPLICATE          |\
+                            TOKEN_IMPERSONATE        |\
+                            TOKEN_QUERY              |\
+                            TOKEN_QUERY_SOURCE       |\
+                            TOKEN_ADJUST_PRIVILEGES  |\
+                            TOKEN_ADJUST_GROUPS      |\
+                            TOKEN_ADJUST_DEFAULT)
 
 #if ((defined(_WIN32_WINNT) && (_WIN32_WINNT > 0x0400)) || (!defined(_WIN32_WINNT)))
-#define TOKEN_ALL_ACCESS  (TOKEN_ALL_ACCESS_P |\
-                           TOKEN_ADJUST_SESSIONID )
+#define TOKEN_ALL_ACCESS (TOKEN_ALL_ACCESS_P | TOKEN_ADJUST_SESSIONID)
 #else
-#define TOKEN_ALL_ACCESS  (TOKEN_ALL_ACCESS_P)
+#define TOKEN_ALL_ACCESS (TOKEN_ALL_ACCESS_P)
 #endif
 
-#define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
-                          TOKEN_QUERY)
+#define TOKEN_READ (STANDARD_RIGHTS_READ | TOKEN_QUERY)
 
-#define TOKEN_WRITE      (STANDARD_RIGHTS_WRITE    |\
-                          TOKEN_ADJUST_PRIVILEGES  |\
-                          TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT)
+#define TOKEN_WRITE (STANDARD_RIGHTS_WRITE   |\
+                     TOKEN_ADJUST_PRIVILEGES |\
+                     TOKEN_ADJUST_GROUPS     |\
+                     TOKEN_ADJUST_DEFAULT)
 
-#define TOKEN_EXECUTE    (STANDARD_RIGHTS_EXECUTE)
+#define TOKEN_EXECUTE (STANDARD_RIGHTS_EXECUTE)
 
 typedef enum _TOKEN_TYPE {
   TokenPrimary = 1,
   TokenImpersonation
-} TOKEN_TYPE,*PTOKEN_TYPE;
+} TOKEN_TYPE, *PTOKEN_TYPE;
 
 typedef enum _TOKEN_INFORMATION_CLASS {
   TokenUser = 1,
@@ -942,40 +920,40 @@ typedef struct _TOKEN_USER {
 } TOKEN_USER, *PTOKEN_USER;
 
 typedef struct _TOKEN_GROUPS {
-  ULONG GroupCount;
+  $ULONG GroupCount;
 #ifdef MIDL_PASS
   [size_is(GroupCount)] SID_AND_ATTRIBUTES Groups[*];
 #else
   SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
 #endif
-} TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
+} TOKEN_GROUPS, *PTOKEN_GROUPS, *LPTOKEN_GROUPS;
 
 typedef struct _TOKEN_PRIVILEGES {
-  ULONG PrivilegeCount;
+  $ULONG PrivilegeCount;
   LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
-} TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
+} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES, *LPTOKEN_PRIVILEGES;
 
 typedef struct _TOKEN_OWNER {
   PSID Owner;
-} TOKEN_OWNER,*PTOKEN_OWNER;
+} TOKEN_OWNER, *PTOKEN_OWNER;
 
 typedef struct _TOKEN_PRIMARY_GROUP {
   PSID PrimaryGroup;
-} TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
+} TOKEN_PRIMARY_GROUP, *PTOKEN_PRIMARY_GROUP;
 
 typedef struct _TOKEN_DEFAULT_DACL {
   PACL DefaultDacl;
-} TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
+} TOKEN_DEFAULT_DACL, *PTOKEN_DEFAULT_DACL;
 
 typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
-  ULONG SidCount;
-  ULONG SidLength;
+  $ULONG SidCount;
+  $ULONG SidLength;
   PSID_AND_ATTRIBUTES Sids;
-  ULONG RestrictedSidCount;
-  ULONG RestrictedSidLength;
+  $ULONG RestrictedSidCount;
+  $ULONG RestrictedSidLength;
   PSID_AND_ATTRIBUTES RestrictedSids;
-  ULONG PrivilegeCount;
-  ULONG PrivilegeLength;
+  $ULONG PrivilegeCount;
+  $ULONG PrivilegeLength;
   PLUID_AND_ATTRIBUTES Privileges;
   LUID AuthenticationId;
 } TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
@@ -985,7 +963,7 @@ typedef struct _TOKEN_LINKED_TOKEN {
 } TOKEN_LINKED_TOKEN, *PTOKEN_LINKED_TOKEN;
 
 typedef struct _TOKEN_ELEVATION {
-  ULONG TokenIsElevated;
+  $ULONG TokenIsElevated;
 } TOKEN_ELEVATION, *PTOKEN_ELEVATION;
 
 typedef struct _TOKEN_MANDATORY_LABEL {
@@ -996,28 +974,13 @@ typedef struct _TOKEN_MANDATORY_LABEL {
 #define TOKEN_MANDATORY_POLICY_NO_WRITE_UP     0x1
 #define TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN 0x2
 
-#define TOKEN_MANDATORY_POLICY_VALID_MASK    (TOKEN_MANDATORY_POLICY_NO_WRITE_UP | \
-                                              TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN)
+#define TOKEN_MANDATORY_POLICY_VALID_MASK (TOKEN_MANDATORY_POLICY_NO_WRITE_UP | \
+                                           TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN)
 
-typedef struct _TOKEN_MANDATORY_POLICY {
-  ULONG Policy;
-} TOKEN_MANDATORY_POLICY, *PTOKEN_MANDATORY_POLICY;
-
-typedef struct _TOKEN_ACCESS_INFORMATION {
-  PSID_AND_ATTRIBUTES_HASH SidHash;
-  PSID_AND_ATTRIBUTES_HASH RestrictedSidHash;
-  PTOKEN_PRIVILEGES Privileges;
-  LUID AuthenticationId;
-  TOKEN_TYPE TokenType;
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-  TOKEN_MANDATORY_POLICY MandatoryPolicy;
-  ULONG Flags;
-} TOKEN_ACCESS_INFORMATION, *PTOKEN_ACCESS_INFORMATION;
-
-#define POLICY_AUDIT_SUBCATEGORY_COUNT (53)
+#define POLICY_AUDIT_SUBCATEGORY_COUNT (56)
 
 typedef struct _TOKEN_AUDIT_POLICY {
-  UCHAR PerUserPolicy[((POLICY_AUDIT_SUBCATEGORY_COUNT) >> 1) + 1];
+  $UCHAR PerUserPolicy[((POLICY_AUDIT_SUBCATEGORY_COUNT) >> 1) + 1];
 } TOKEN_AUDIT_POLICY, *PTOKEN_AUDIT_POLICY;
 
 #define TOKEN_SOURCE_LENGTH 8
@@ -1025,27 +988,29 @@ typedef struct _TOKEN_AUDIT_POLICY {
 typedef struct _TOKEN_SOURCE {
   CHAR SourceName[TOKEN_SOURCE_LENGTH];
   LUID SourceIdentifier;
-} TOKEN_SOURCE,*PTOKEN_SOURCE;
+} TOKEN_SOURCE, *PTOKEN_SOURCE;
 
+#include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
   LUID TokenId;
   LUID AuthenticationId;
   LARGE_INTEGER ExpirationTime;
   TOKEN_TYPE TokenType;
   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-  ULONG DynamicCharged;
-  ULONG DynamicAvailable;
-  ULONG GroupCount;
-  ULONG PrivilegeCount;
+  $ULONG DynamicCharged;
+  $ULONG DynamicAvailable;
+  $ULONG GroupCount;
+  $ULONG PrivilegeCount;
   LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+#include <poppack.h>
 
 typedef struct _TOKEN_CONTROL {
   LUID TokenId;
   LUID AuthenticationId;
   LUID ModifiedId;
   TOKEN_SOURCE TokenSource;
-} TOKEN_CONTROL,*PTOKEN_CONTROL;
+} TOKEN_CONTROL, *PTOKEN_CONTROL;
 
 typedef struct _TOKEN_ORIGIN {
   LUID OriginatingLogonSession;
@@ -1060,6 +1025,64 @@ typedef enum _MANDATORY_LEVEL {
   MandatoryLevelSecureProcess,
   MandatoryLevelCount
 } MANDATORY_LEVEL, *PMANDATORY_LEVEL;
+
+$endif(_NTIFS_ || _WINNT_)
+$if(_NTIFS_)
+
+typedef struct _SE_ACCESS_REPLY {
+  $ULONG Size;
+  $ULONG ResultListCount;
+  PACCESS_MASK GrantedAccess;
+  PNTSTATUS AccessStatus;
+  PACCESS_REASONS AccessReason;
+  PPRIVILEGE_SET* Privileges;
+} SE_ACCESS_REPLY, *PSE_ACCESS_REPLY;
+
+typedef enum _SE_AUDIT_OPERATION {
+  AuditPrivilegeObject,
+  AuditPrivilegeService,
+  AuditAccessCheck,
+  AuditOpenObject,
+  AuditOpenObjectWithTransaction,
+  AuditCloseObject,
+  AuditDeleteObject,
+  AuditOpenObjectForDelete,
+  AuditOpenObjectForDeleteWithTransaction,
+  AuditCloseNonObject,
+  AuditOpenNonObject,
+  AuditObjectReference,
+  AuditHandleCreation,
+} SE_AUDIT_OPERATION, *PSE_AUDIT_OPERATION;
+
+typedef struct _SE_AUDIT_INFO {
+  ULONG Size;
+  AUDIT_EVENT_TYPE AuditType;
+  SE_AUDIT_OPERATION AuditOperation;
+  ULONG AuditFlags;
+  UNICODE_STRING SubsystemName;
+  UNICODE_STRING ObjectTypeName;
+  UNICODE_STRING ObjectName;
+  PVOID HandleId;
+  GUID* TransactionId;
+  LUID* OperationId;
+  BOOLEAN ObjectCreation;
+  BOOLEAN GenerateOnClose;
+} SE_AUDIT_INFO, *PSE_AUDIT_INFO;
+
+typedef struct _TOKEN_MANDATORY_POLICY {
+  $ULONG Policy;
+} TOKEN_MANDATORY_POLICY, *PTOKEN_MANDATORY_POLICY;
+
+typedef struct _TOKEN_ACCESS_INFORMATION {
+  PSID_AND_ATTRIBUTES_HASH SidHash;
+  PSID_AND_ATTRIBUTES_HASH RestrictedSidHash;
+  PTOKEN_PRIVILEGES Privileges;
+  LUID AuthenticationId;
+  TOKEN_TYPE TokenType;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  TOKEN_MANDATORY_POLICY MandatoryPolicy;
+  $ULONG Flags;
+} TOKEN_ACCESS_INFORMATION, *PTOKEN_ACCESS_INFORMATION;
 
 #define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x0001
 #define TOKEN_HAS_BACKUP_PRIVILEGE      0x0002

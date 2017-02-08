@@ -19,18 +19,7 @@
  *
  */
 
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <uxtheme.h>
-#include <vssym32.h>
 #include "comctl32.h"
-#include <wine/debug.h>
 
 /* Draw themed border */
 static void nc_paint (HTHEME theme, HWND hwnd, HRGN region)
@@ -119,6 +108,8 @@ LRESULT CALLBACK THEMING_EditSubclassProc (HWND hwnd, UINT msg,
         break;
 
     case WM_ENABLE:
+    case WM_KILLFOCUS:
+    case WM_SETFOCUS:
         theme = GetWindowTheme( hwnd );
         if (theme) RedrawWindow (hwnd, NULL, NULL, 
             RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);

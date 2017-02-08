@@ -19,10 +19,6 @@
 
 #include "urlmon_main.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
-
 static inline HRESULT report_progress(Protocol *protocol, ULONG status_code, LPCWSTR status_text)
 {
     return IInternetProtocolSink_ReportProgress(protocol->protocol_sink, status_code, status_text);
@@ -78,7 +74,7 @@ static HRESULT start_downloading(Protocol *protocol)
     if(FAILED(hres)) {
         protocol_close_connection(protocol);
         report_result(protocol, hres);
-        return S_OK;
+        return hres;
     }
 
     if(protocol->bindf & BINDF_NEEDFILE) {
@@ -302,6 +298,12 @@ HINTERNET get_internet_session(IInternetBindInfo *bind_info)
     return internet_session;
 }
 
+void update_user_agent(WCHAR *user_agent)
+{
+    if(internet_session)
+        InternetSetOptionW(internet_session, INTERNET_OPTION_USER_AGENT, user_agent, strlenW(user_agent));
+}
+
 HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, IUri *uri,
         IInternetProtocolSink *protocol_sink, IInternetBindInfo *bind_info)
 {
@@ -516,6 +518,7 @@ HRESULT protocol_abort(Protocol *protocol, HRESULT reason)
     if(!protocol->protocol_sink)
         return S_OK;
 
+    /* NOTE: IE10 returns S_OK here */
     if(protocol->flags & FLAG_RESULT_REPORTED)
         return INET_E_RESULT_DISPATCHED;
 

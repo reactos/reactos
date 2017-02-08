@@ -6,7 +6,13 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
+
+/* SEH support with PSEH */
+#include <pseh/pseh2.h>
+
+#define NDEBUG
+#include <debug.h>
 
 const GUID KSPROPTYPESETID_General = {0x97E99BA0L, 0xBDEA, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
@@ -277,8 +283,16 @@ KspPropertyHandler(
             KSPROPERTY_ITEM_IRP_STORAGE(Irp) = PropertyItem;
         }
 
-        /* call property handler */
-        Status = PropertyHandler(Irp, Property, (OutputBufferLength > 0 ? Irp->AssociatedIrp.SystemBuffer : NULL));
+        _SEH2_TRY
+        {
+            /* call property handler */
+            Status = PropertyHandler(Irp, Property, (OutputBufferLength > 0 ? Irp->AssociatedIrp.SystemBuffer : NULL));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
 
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
@@ -286,7 +300,7 @@ KspPropertyHandler(
             if (Allocator)
             {
                 /* allocate the requested amount */
-                Status = Allocator(Irp, Irp->IoStatus.Information, FALSE);
+                Status = Allocator(Irp, (ULONG)Irp->IoStatus.Information, FALSE);
 
                 /* check if the block was allocated */
                 if (!NT_SUCCESS(Status))
@@ -294,9 +308,16 @@ KspPropertyHandler(
                     /* no memory */
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
-
-                /* re-call property handler */
-                Status = PropertyHandler(Irp, Property, Irp->AssociatedIrp.SystemBuffer);
+                _SEH2_TRY
+                {
+                    /* re-call property handler */
+                    Status = PropertyHandler(Irp, Property, Irp->AssociatedIrp.SystemBuffer);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status =  _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
             }
         }
     }
@@ -343,15 +364,16 @@ KsPropertyHandler(
 /*
     @implemented
 */
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsPropertyHandlerWithAllocator(
-    IN  PIRP Irp,
-    IN  ULONG PropertySetsCount,
-    IN  PKSPROPERTY_SET PropertySet,
-    IN  PFNKSALLOCATOR Allocator OPTIONAL,
-    IN  ULONG PropertyItemSize OPTIONAL)
+    _In_ PIRP Irp,
+    _In_ ULONG PropertySetsCount,
+    _In_reads_(PropertySetsCount) const KSPROPERTY_SET* PropertySet,
+    _In_opt_ PFNKSALLOCATOR Allocator,
+    _In_opt_ ULONG PropertyItemSize)
 {
     return KspPropertyHandler(Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize);
 }

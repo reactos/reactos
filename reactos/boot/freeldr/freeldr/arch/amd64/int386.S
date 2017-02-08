@@ -34,18 +34,18 @@ Int386:
     mov qword ptr [r11 + 16], rdx
     mov qword ptr [r11 + 24], r8
 
-	/* Save non-volatile registers */
-	push rbx
-	push rbp
-	push rsi
-	push rdi
+    /* Save non-volatile registers */
+    push rbx
+    push rbp
+    push rsi
+    push rdi
 
     /* Alloc stack space for home registers */
-	sub rsp, 40
+    sub rsp, 40
     //.ENDPROLOG
 
 int386_2:
-	/* Copy the int vector to shared memory */
+    /* Copy the int vector to shared memory */
     mov dword ptr [BSS_IntVector], ecx
 
     /* Copy input registers */

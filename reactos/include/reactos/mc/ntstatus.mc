@@ -1585,12 +1585,52 @@ Language=English
 Indicates two revision levels are incompatible.
 
 .
+MessageId=0x5a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_OWNER
+Language=English
+The specified owner is not valid for this object.
+
+.
+MessageId=0x5b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_PRIMARY_GROUP
+Language=English
+The specified primary group is not valid for this object.
+
+.
 MessageId=0x5c
 Severity=Error
 Facility=System
 SymbolicName=STATUS_NO_IMPERSONATION_TOKEN 
 Language=English
 An attempt has been made to operate on an impersonation token by a thread that is not currently impersonating a client.
+
+.
+MessageId=0x5d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_CANT_DISABLE_MANDATORY
+Language=English
+The specified group cannot be disabled because it is marked as mandatory.
+
+.
+MessageId=0x5e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_NO_LOGON_SERVERS
+Language=English
+The logon failed because no valid logon servers were found.
+
+.
+MessageId=0x5f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_NO_SUCH_LOGON_SESSION
+Language=English
+The specified logon session does not exist.
 
 .
 MessageId=0x60
@@ -1675,12 +1715,52 @@ Indicates the requested operation would disable or delete the last remaining adm
 This is not allowed to prevent creating a situation in which the system cannot be administrated.
 
 .
+MessageId=0x6a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_WRONG_PASSWORD 
+Language=English
+The specified current password is not correct.
+
+.
+MessageId=0x6b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ILL_FORMED_PASSWORD
+Language=English
+The new password contains invalid characters.
+
+.
 MessageId=0x6c
 Severity=Error
 Facility=System
 SymbolicName=STATUS_PASSWORD_RESTRICTION 
 Language=English
 When trying to update a password, this status indicates that some password update rule has been violated. For example, the password may not meet length criteria.
+
+.
+MessageId=0x6d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_LOGON_FAILURE
+Language=English
+Logon failed because the specified user name or password is incorrect.
+
+.
+MessageId=0x6e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ACCOUNT_RESTRICTION
+Language=English
+The specified information is valid but an account restriction prevented logon.
+
+.
+MessageId=0x6f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_LOGON_HOURS
+Language=English
+The attempted logon is not allowed at this time.
 
 .
 MessageId=0x70
@@ -1790,6 +1870,30 @@ An attempt was made to reference a token that doesn't exist.
 This is typically done by referencing the token associated with a thread when the thread is not impersonating a client.
 
 .
+MessageId=0x7d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_BAD_INHERITANCE_ACL
+Language=English
+The inherited access control list could not be created.
+
+.
+MessageId=0x7e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_RANGE_NOT_LOCKED
+Language=English
+Attempt to unlock a file range that is not locked.
+
+.
+MessageId=0x7f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DISK_FULL
+Language=English
+The disk is full. Delete files and free up disk space to continue the operation.
+
+.
 MessageId=0x80
 Severity=Error
 Facility=System
@@ -1870,6 +1974,22 @@ Language=English
 Indicates the specified image file did not contain a resource section.
 
 .
+MessageId=0x8a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_RESOURCE_TYPE_NOT_FOUND 
+Language=English
+A resource of the specified type could not be found in the image file.
+
+.
+MessageId=0x8b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_RESOURCE_NAME_NOT_FOUND 
+Language=English
+A resource with the specified name could not be found in the image file.
+
+.
 MessageId=0x8c
 Severity=Error
 Facility=System
@@ -1877,6 +1997,33 @@ SymbolicName=STATUS_ARRAY_BOUNDS_EXCEEDED
 Language=English
 {EXCEPTION}
 Array bounds exceeded.
+
+.
+MessageId=0x8d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FLOAT_DENORMAL_OPERAND
+Language=English
+{EXCEPTION}
+Floating-point denormal operand.
+
+.
+MessageId=0x8e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FLOAT_DIVIDE_BY_ZERO
+Language=English
+{EXCEPTION}
+Floating-point division by zero.
+
+.
+MessageId=0x8f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FLOAT_INEXACT_RESULT
+Language=English
+{EXCEPTION}
+Floating-point inexact result.
 
 .
 MessageId=0x90
@@ -1976,12 +2123,70 @@ Language=English
 Insufficient system resources exist to complete this API.
 
 .
+MessageId=0x9b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DFS_EXIT_PATH_FOUND
+Language=English
+The specified file cannot be opened because it is a DFS exit path file.
+
+.
 MessageId=0x9c
 Severity=Error
 Facility=System
 SymbolicName=STATUS_DEVICE_DATA_ERROR 
 Language=English
 STATUS_DEVICE_DATA_ERROR
+
+.
+MessageId=0x9d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DEVICE_NOT_CONNECTED
+Language=English
+The specified device is not connected.
+
+.
+MessageId=0x9f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_FREE_VM_NOT_AT_BASE
+Language=English
+The specified memory could not be freed because it is not at the start of the allocation.
+
+.
+MessageId=0xa0
+Severity=Error
+Facility=System
+SymbolicName=STATUS_MEMORY_NOT_ALLOCATED
+Language=English
+The specified memory could not be freed because it was not allocated.
+
+.
+MessageId=0xa1
+Severity=Error
+Facility=System
+SymbolicName=STATUS_WORKING_SET_QUOTA
+Language=English
+The process working set quota was exceeded
+
+.
+MessageId=0xa2
+Severity=Error
+Facility=System
+SymbolicName=STATUS_MEDIA_WRITE_PROTECTED
+Language=English
+{Write Protect Error}
+The media in volume %hs cannot be written to because it is write-protected.
+
+.
+MessageId=0xa3
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DEVICE_NOT_READY
+Language=English
+{Device Not Ready}
+The device %hs is not ready.
 
 .
 MessageId=0xc0
@@ -4251,12 +4456,167 @@ The smartcard certificate used for authentication was not trusted.  Please
 contact your system administrator.
 
 .
+MessageId=0x38d
+Severity=Error
+Facility=System
+SymbolicName=STATUS_SMARTCARD_CERT_EXPIRED 
+Language=English
+The smartcard certificate used for authentication has expired.  Please
+contact your system administrator.
+
+.
+MessageId=0x38e
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DRIVER_FAILED_PRIOR_UNLOAD 
+Language=English
+The driver could not be installed because a previous version is still loaded.
+
+.
+MessageId=0x38f
+Severity=Error
+Facility=System
+SymbolicName=STATUS_SMARTCARD_SILENT_CONTEXT 
+Language=English
+The smartcard operation requires user interaction but the context was acquired as silent.
+
+.
+MessageId=0x401
+Severity=Error
+Facility=System
+SymbolicName=STATUS_PER_USER_TRUST_QUOTA_EXCEEDED 
+Language=English
+The quota for delegated trust creation was exceeded for the current user.
+
+.
+MessageId=0x402
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ALL_USER_TRUST_QUOTA_EXCEEDED 
+Language=English
+The overall quota for delegated trust creation was exceeded.
+
+.
+MessageId=0x403
+Severity=Error
+Facility=System
+SymbolicName=STATUS_USER_DELETE_TRUST_QUOTA_EXCEEDED 
+Language=English
+The quota for delegated trust deletion was exceeded for the current user.
+
+.
+MessageId=0x404
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DS_NAME_NOT_UNIQUE 
+Language=English
+The specified Directory Services name already exists.
+
+.
+MessageId=0x405
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DS_DUPLICATE_ID_FOUND 
+Language=English
+The requested object could not be retrieved because the specified identifier is not unique.
+
+.
+MessageId=0x406
+Severity=Error
+Facility=System
+SymbolicName=STATUS_DS_GROUP_CONVERSION_ERROR 
+Language=English
+The Directory Services group cannot be converted.
+
+.
+MessageId=0x407
+Severity=Error
+Facility=System
+SymbolicName=STATUS_VOLSNAP_PREPARE_HIBERNATE 
+Language=English
+{Volume Shadow Copy Service}
+The volume %hs is busy because it is being prepared for hibernation.
+
+.
+MessageId=0x408
+Severity=Error
+Facility=System
+SymbolicName=STATUS_USER2USER_REQUIRED 
+Language=English
+The Kerberos User to User protocol is required.
+
+.
+MessageId=0x409
+Severity=Error
+Facility=System
+SymbolicName=STATUS_STACK_BUFFER_OVERRUN 
+Language=English
+An out-of-bounds access to a stack buffer was detected.  This indicates an
+error in the application that could be exploited by a malicious user.
+
+.
+MessageId=0x40a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_NO_S4U_PROT_SUPPORT 
+Language=English
+The domain controller does not support the Kerberos Service for User protocol.
+
+.
 MessageId=0x9898
 Severity=Error
 Facility=System
 SymbolicName=STATUS_WOW_ASSERTION 
 Language=English
 WOW Assertion Error.
+
+.
+MessageId=0xa000
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_SIGNATURE
+Language=English
+The cryptographic signature is invalid.
+
+.
+MessageId=0xa001
+Severity=Error
+Facility=System
+SymbolicName=STATUS_HMAC_NOT_SUPPORTED
+Language=English
+Keyed-hash message authentication code (HMAC) is not supported.
+
+.
+MessageId=0xa010
+Severity=Error
+Facility=System
+SymbolicName=STATUS_IPSEC_QUEUE_OVERFLOW
+Language=English
+An overflow of the IPSec queue was encountered.
+
+.
+MessageId=0xa011
+Severity=Error
+Facility=System
+SymbolicName=STATUS_ND_QUEUE_OVERFLOW
+Language=English
+An overflow of the Neighbor Discovery (NDP) queue was encountered.
+
+.
+MessageId=0xa012
+Severity=Error
+Facility=System
+SymbolicName=STATUS_HOPLIMIT_EXCEEDED
+Language=English
+An ICMP "Time Exceeded" error message was received.
+
+.
+MessageId=0xa013
+Severity=Error
+Facility=System
+SymbolicName=STATUS_PROTOCOL_NOT_SUPPORTED
+Language=English
+The protocol is not installed.
 
 .
 MessageId=0x1

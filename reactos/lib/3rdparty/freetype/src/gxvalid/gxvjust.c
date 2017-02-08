@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT just table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,       */
+/*  Copyright 2005-2016 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,7 +42,7 @@
 
   /*
    * referred `just' table format specification:
-   * http://developer.apple.com/fonts/TTRefMan/RM06/Chap6just.html
+   * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6just.html
    * last updated 2000.
    * ----------------------------------------------
    * [JUST HEADER]: GXV_JUST_HEADER_SIZE
@@ -65,40 +66,69 @@
 #define  GXV_JUST_DATA( a )  GXV_TABLE_DATA( just, a )
 
 
+  /* GX just table does not define their subset of GID */
+  static void
+  gxv_just_check_max_gid( FT_UShort         gid,
+                          const FT_String*  msg_tag,
+                          GXV_Validator     gxvalid )
+  {
+    if ( gid < gxvalid->face->num_glyphs )
+      return;
+
+    GXV_TRACE(( "just table includes too large %s"
+                " GID=%d > %d (in maxp)\n",
+                msg_tag, gid, gxvalid->face->num_glyphs ));
+    GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
+  }
+
+
   static void
   gxv_just_wdp_entry_validate( FT_Bytes       table,
                                FT_Bytes       limit,
-                               GXV_Validator  valid )
+                               GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
     FT_ULong   justClass;
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_Fixed   beforeGrowLimit;
     FT_Fixed   beforeShrinkGrowLimit;
     FT_Fixed   afterGrowLimit;
     FT_Fixed   afterShrinkGrowLimit;
     FT_UShort  growFlags;
     FT_UShort  shrinkFlags;
+#endif
 
 
     GXV_LIMIT_CHECK( 4 + 4 + 4 + 4 + 4 + 2 + 2 );
     justClass             = FT_NEXT_ULONG( p );
+#ifndef GXV_LOAD_UNUSED_VARS
+    p += 4 + 4 + 4 + 4 + 2 + 2;
+#else
     beforeGrowLimit       = FT_NEXT_ULONG( p );
     beforeShrinkGrowLimit = FT_NEXT_ULONG( p );
     afterGrowLimit        = FT_NEXT_ULONG( p );
     afterShrinkGrowLimit  = FT_NEXT_ULONG( p );
     growFlags             = FT_NEXT_USHORT( p );
     shrinkFlags           = FT_NEXT_USHORT( p );
+#endif
 
-    /* TODO: decode flags for human readability */
+    /* According to Apple spec, only 7bits in justClass is used */
+    if ( ( justClass & 0xFFFFFF80UL ) != 0 )
+    {
+      GXV_TRACE(( "just table includes non-zero value"
+                  " in unused justClass higher bits"
+                  " of WidthDeltaPair" ));
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
+    }
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
   }
 
 
   static void
   gxv_just_wdc_entry_validate( FT_Bytes       table,
                                FT_Bytes       limit,
-                               GXV_Validator  valid )
+                               GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
     FT_ULong  count, i;
@@ -109,18 +139,18 @@
     for ( i = 0; i < count; i++ )
     {
       GXV_TRACE(( "validating wdc pair %d/%d\n", i + 1, count ));
-      gxv_just_wdp_entry_validate( p, limit, valid );
-      p += valid->subtable_length;
+      gxv_just_wdp_entry_validate( p, limit, gxvalid );
+      p += gxvalid->subtable_length;
     }
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
   }
 
 
   static void
   gxv_just_widthDeltaClusters_validate( FT_Bytes       table,
                                         FT_Bytes       limit,
-                                        GXV_Validator  valid )
+                                        GXV_Validator  gxvalid )
   {
     FT_Bytes  p         = table ;
     FT_Bytes  wdc_end   = table + GXV_JUST_DATA( wdc_offset_max );
@@ -134,11 +164,11 @@
 
     for ( i = 0; p <= wdc_end; i++ )
     {
-      gxv_just_wdc_entry_validate( p, limit, valid );
-      p += valid->subtable_length;
+      gxv_just_wdc_entry_validate( p, limit, gxvalid );
+      p += gxvalid->subtable_length;
     }
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
 
     GXV_EXIT;
   }
@@ -147,24 +177,36 @@
   static void
   gxv_just_actSubrecord_type0_validate( FT_Bytes       table,
                                         FT_Bytes       limit,
-                                        GXV_Validator  valid )
+                                        GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
 
     FT_Fixed   lowerLimit;
     FT_Fixed   upperLimit;
-
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_UShort  order;
+#endif
     FT_UShort  decomposedCount;
 
     FT_UInt    i;
 
 
     GXV_LIMIT_CHECK( 4 + 4 + 2 + 2 );
-    lowerLimit      = FT_NEXT_ULONG( p );
-    upperLimit      = FT_NEXT_ULONG( p );
+    lowerLimit      = FT_NEXT_LONG( p );
+    upperLimit      = FT_NEXT_LONG( p );
+#ifdef GXV_LOAD_UNUSED_VARS
     order           = FT_NEXT_USHORT( p );
+#else
+    p += 2;
+#endif
     decomposedCount = FT_NEXT_USHORT( p );
+
+    if ( lowerLimit >= upperLimit )
+    {
+      GXV_TRACE(( "just table includes invalid range spec:"
+                  " lowerLimit(%d) > upperLimit(%d)\n"     ));
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
+    }
 
     for ( i = 0; i < decomposedCount; i++ )
     {
@@ -173,16 +215,17 @@
 
       GXV_LIMIT_CHECK( 2 );
       glyphs = FT_NEXT_USHORT( p );
+      gxv_just_check_max_gid( glyphs, "type0:glyphs", gxvalid );
     }
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
   }
 
 
   static void
   gxv_just_actSubrecord_type1_validate( FT_Bytes       table,
                                         FT_Bytes       limit,
-                                        GXV_Validator  valid )
+                                        GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
     FT_UShort  addGlyph;
@@ -191,34 +234,47 @@
     GXV_LIMIT_CHECK( 2 );
     addGlyph = FT_NEXT_USHORT( p );
 
-    valid->subtable_length = p - table;
+    gxv_just_check_max_gid( addGlyph, "type1:addGlyph", gxvalid );
+
+    gxvalid->subtable_length = (FT_ULong)( p - table );
   }
 
 
   static void
   gxv_just_actSubrecord_type2_validate( FT_Bytes       table,
                                         FT_Bytes       limit,
-                                        GXV_Validator  valid )
+                                        GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
-    FT_Fixed   substThreshhold; /* Apple misspelled "Threshhold" */
+#ifdef GXV_LOAD_UNUSED_VARS
+    FT_Fixed      substThreshhold; /* Apple misspelled "Threshhold" */
+#endif
     FT_UShort  addGlyph;
     FT_UShort  substGlyph;
 
 
     GXV_LIMIT_CHECK( 4 + 2 + 2 );
+#ifdef GXV_LOAD_UNUSED_VARS
     substThreshhold = FT_NEXT_ULONG( p );
+#else
+    p += 4;
+#endif
     addGlyph        = FT_NEXT_USHORT( p );
     substGlyph      = FT_NEXT_USHORT( p );
 
-    valid->subtable_length = p - table;
+    if ( addGlyph != 0xFFFF )
+      gxv_just_check_max_gid( addGlyph, "type2:addGlyph", gxvalid );
+
+    gxv_just_check_max_gid( substGlyph, "type2:substGlyph", gxvalid );
+
+    gxvalid->subtable_length = (FT_ULong)( p - table );
   }
 
 
   static void
   gxv_just_actSubrecord_type4_validate( FT_Bytes       table,
                                         FT_Bytes       limit,
-                                        GXV_Validator  valid )
+                                        GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
     FT_ULong  variantsAxis;
@@ -229,18 +285,33 @@
 
     GXV_LIMIT_CHECK( 4 + 4 + 4 + 4 );
     variantsAxis   = FT_NEXT_ULONG( p );
-    minimumLimit   = FT_NEXT_ULONG( p );
-    noStretchValue = FT_NEXT_ULONG( p );
-    maximumLimit   = FT_NEXT_ULONG( p );
+    minimumLimit   = FT_NEXT_LONG( p );
+    noStretchValue = FT_NEXT_LONG( p );
+    maximumLimit   = FT_NEXT_LONG( p );
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
+
+    if ( variantsAxis != 0x64756374L ) /* 'duct' */
+      GXV_TRACE(( "variantsAxis 0x%08x is non default value",
+                   variantsAxis ));
+
+    if ( minimumLimit > noStretchValue )
+      GXV_TRACE(( "type4:minimumLimit 0x%08x > noStretchValue 0x%08x\n",
+                  minimumLimit, noStretchValue ));
+    else if ( noStretchValue > maximumLimit )
+      GXV_TRACE(( "type4:noStretchValue 0x%08x > maximumLimit 0x%08x\n",
+                  noStretchValue, maximumLimit ));
+    else if ( !IS_PARANOID_VALIDATION )
+      return;
+
+    FT_INVALID_DATA;
   }
 
 
   static void
   gxv_just_actSubrecord_type5_validate( FT_Bytes       table,
                                         FT_Bytes       limit,
-                                        GXV_Validator  valid )
+                                        GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
     FT_UShort  flags;
@@ -251,7 +322,12 @@
     flags = FT_NEXT_USHORT( p );
     glyph = FT_NEXT_USHORT( p );
 
-    valid->subtable_length = p - table;
+    if ( flags )
+      GXV_TRACE(( "type5: nonzero value 0x%04x in unused flags\n",
+                   flags ));
+    gxv_just_check_max_gid( glyph, "type5:glyph", gxvalid );
+
+    gxvalid->subtable_length = (FT_ULong)( p - table );
   }
 
 
@@ -259,7 +335,7 @@
   static void
   gxv_just_actSubrecord_validate( FT_Bytes       table,
                                   FT_Bytes       limit,
-                                  GXV_Validator  valid )
+                                  GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
     FT_UShort  actionClass;
@@ -274,22 +350,26 @@
     actionType   = FT_NEXT_USHORT( p );
     actionLength = FT_NEXT_ULONG( p );
 
+    /* actionClass is related with justClass using 7bit only */
+    if ( ( actionClass & 0xFF80 ) != 0 )
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
+
     if ( actionType == 0 )
-      gxv_just_actSubrecord_type0_validate( p, limit, valid );
+      gxv_just_actSubrecord_type0_validate( p, limit, gxvalid );
     else if ( actionType == 1 )
-      gxv_just_actSubrecord_type1_validate( p, limit, valid );
+      gxv_just_actSubrecord_type1_validate( p, limit, gxvalid );
     else if ( actionType == 2 )
-      gxv_just_actSubrecord_type2_validate( p, limit, valid );
+      gxv_just_actSubrecord_type2_validate( p, limit, gxvalid );
     else if ( actionType == 3 )
       ;                         /* Stretch glyph action: no actionData */
     else if ( actionType == 4 )
-      gxv_just_actSubrecord_type4_validate( p, limit, valid );
+      gxv_just_actSubrecord_type4_validate( p, limit, gxvalid );
     else if ( actionType == 5 )
-      gxv_just_actSubrecord_type5_validate( p, limit, valid );
+      gxv_just_actSubrecord_type5_validate( p, limit, gxvalid );
     else
       FT_INVALID_DATA;
 
-    valid->subtable_length = actionLength;
+    gxvalid->subtable_length = actionLength;
 
     GXV_EXIT;
   }
@@ -298,7 +378,7 @@
   static void
   gxv_just_pcActionRecord_validate( FT_Bytes       table,
                                     FT_Bytes       limit,
-                                    GXV_Validator  valid )
+                                    GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
     FT_ULong  actionCount;
@@ -311,11 +391,11 @@
 
     for ( i = 0; i < actionCount; i++ )
     {
-      gxv_just_actSubrecord_validate( p, limit, valid );
-      p += valid->subtable_length;
+      gxv_just_actSubrecord_validate( p, limit, gxvalid );
+      p += gxvalid->subtable_length;
     }
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
 
     GXV_EXIT;
   }
@@ -324,7 +404,7 @@
   static void
   gxv_just_pcTable_LookupValue_entry_validate( FT_UShort            glyph,
                                                GXV_LookupValueCPtr  value_p,
-                                               GXV_Validator        valid )
+                                               GXV_Validator        gxvalid )
   {
     FT_UNUSED( glyph );
 
@@ -338,19 +418,19 @@
   static void
   gxv_just_pcLookupTable_validate( FT_Bytes       table,
                                    FT_Bytes       limit,
-                                   GXV_Validator  valid )
+                                   GXV_Validator  gxvalid )
   {
-    FT_Bytes p = table;
+    FT_Bytes  p = table;
 
 
     GXV_NAME_ENTER( "just pcLookupTable" );
     GXV_JUST_DATA( pc_offset_max ) = 0x0000;
     GXV_JUST_DATA( pc_offset_min ) = 0xFFFFU;
 
-    valid->lookupval_sign = GXV_LOOKUPVALUE_UNSIGNED;
-    valid->lookupval_func = gxv_just_pcTable_LookupValue_entry_validate;
+    gxvalid->lookupval_sign = GXV_LOOKUPVALUE_UNSIGNED;
+    gxvalid->lookupval_func = gxv_just_pcTable_LookupValue_entry_validate;
 
-    gxv_LookupTable_validate( p, limit, valid );
+    gxv_LookupTable_validate( p, limit, gxvalid );
 
     /* subtable_length is set by gxv_LookupTable_validate() */
 
@@ -361,20 +441,20 @@
   static void
   gxv_just_postcompTable_validate( FT_Bytes       table,
                                    FT_Bytes       limit,
-                                   GXV_Validator  valid )
+                                   GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
 
 
     GXV_NAME_ENTER( "just postcompTable" );
 
-    gxv_just_pcLookupTable_validate( p, limit, valid );
-    p += valid->subtable_length;
+    gxv_just_pcLookupTable_validate( p, limit, gxvalid );
+    p += gxvalid->subtable_length;
 
-    gxv_just_pcActionRecord_validate( p, limit, valid );
-    p += valid->subtable_length;
+    gxv_just_pcActionRecord_validate( p, limit, gxvalid );
+    p += gxvalid->subtable_length;
 
-    valid->subtable_length = p - table;
+    gxvalid->subtable_length = (FT_ULong)( p - table );
 
     GXV_EXIT;
   }
@@ -387,33 +467,37 @@
     GXV_StateTable_GlyphOffsetCPtr  glyphOffset_p,
     FT_Bytes                        table,
     FT_Bytes                        limit,
-    GXV_Validator                   valid )
+    GXV_Validator                   gxvalid )
   {
+#ifdef GXV_LOAD_UNUSED_VARS
+    /* TODO: validate markClass & currentClass */
     FT_UShort  setMark;
     FT_UShort  dontAdvance;
     FT_UShort  markClass;
     FT_UShort  currentClass;
+#endif
 
     FT_UNUSED( state );
     FT_UNUSED( glyphOffset_p );
     FT_UNUSED( table );
     FT_UNUSED( limit );
-    FT_UNUSED( valid );
+    FT_UNUSED( gxvalid );
 
-
+#ifndef GXV_LOAD_UNUSED_VARS
+    FT_UNUSED( flags );
+#else
     setMark      = (FT_UShort)( ( flags >> 15 ) & 1    );
     dontAdvance  = (FT_UShort)( ( flags >> 14 ) & 1    );
     markClass    = (FT_UShort)( ( flags >> 7  ) & 0x7F );
     currentClass = (FT_UShort)(   flags         & 0x7F );
-
-    /* TODO: validate markClass & currentClass */
+#endif
   }
 
 
   static void
   gxv_just_justClassTable_validate ( FT_Bytes       table,
                                      FT_Bytes       limit,
-                                     GXV_Validator  valid )
+                                     GXV_Validator  gxvalid )
   {
     FT_Bytes   p = table;
     FT_UShort  length;
@@ -428,18 +512,24 @@
     coverage        = FT_NEXT_USHORT( p );
     subFeatureFlags = FT_NEXT_ULONG( p );
 
-    GXV_TRACE(( "  justClassTable: coverage = 0x%04x (%s)",
-                coverage,
-                ( 0x4000 & coverage ) == 0 ? "ascending" : "descending" ));
+    GXV_TRACE(( "  justClassTable: coverage = 0x%04x (%s) ", coverage ));
+    if ( ( coverage & 0x4000 ) == 0  )
+      GXV_TRACE(( "ascending\n" ));
+    else
+      GXV_TRACE(( "descending\n" ));
 
-    valid->statetable.optdata               = NULL;
-    valid->statetable.optdata_load_func     = NULL;
-    valid->statetable.subtable_setup_func   = NULL;
-    valid->statetable.entry_glyphoffset_fmt = GXV_GLYPHOFFSET_NONE;
-    valid->statetable.entry_validate_func   =
+    if ( subFeatureFlags )
+      GXV_TRACE(( "  justClassTable: nonzero value (0x%08x)"
+                  " in unused subFeatureFlags\n", subFeatureFlags ));
+
+    gxvalid->statetable.optdata               = NULL;
+    gxvalid->statetable.optdata_load_func     = NULL;
+    gxvalid->statetable.subtable_setup_func   = NULL;
+    gxvalid->statetable.entry_glyphoffset_fmt = GXV_GLYPHOFFSET_NONE;
+    gxvalid->statetable.entry_validate_func   =
       gxv_just_classTable_entry_validate;
 
-    gxv_StateTable_validate( p, table + length, valid );
+    gxv_StateTable_validate( p, table + length, gxvalid );
 
     /* subtable_length is set by gxv_LookupTable_validate() */
 
@@ -450,7 +540,7 @@
   static void
   gxv_just_wdcTable_LookupValue_validate( FT_UShort            glyph,
                                           GXV_LookupValueCPtr  value_p,
-                                          GXV_Validator        valid )
+                                          GXV_Validator        gxvalid )
   {
     FT_UNUSED( glyph );
 
@@ -464,7 +554,7 @@
   static void
   gxv_just_justData_lookuptable_validate( FT_Bytes       table,
                                           FT_Bytes       limit,
-                                          GXV_Validator  valid )
+                                          GXV_Validator  gxvalid )
   {
     FT_Bytes  p = table;
 
@@ -472,10 +562,10 @@
     GXV_JUST_DATA( wdc_offset_max ) = 0x0000;
     GXV_JUST_DATA( wdc_offset_min ) = 0xFFFFU;
 
-    valid->lookupval_sign = GXV_LOOKUPVALUE_UNSIGNED;
-    valid->lookupval_func = gxv_just_wdcTable_LookupValue_validate;
+    gxvalid->lookupval_sign = GXV_LOOKUPVALUE_UNSIGNED;
+    gxvalid->lookupval_func = gxv_just_wdcTable_LookupValue_validate;
 
-    gxv_LookupTable_validate( p, limit, valid );
+    gxv_LookupTable_validate( p, limit, gxvalid );
 
     /* subtable_length is set by gxv_LookupTable_validate() */
 
@@ -489,7 +579,7 @@
   static void
   gxv_just_justData_validate( FT_Bytes       table,
                               FT_Bytes       limit,
-                              GXV_Validator  valid )
+                              GXV_Validator  gxvalid )
   {
     /*
      * following 3 offsets are measured from the start of `just'
@@ -515,36 +605,36 @@
     GXV_TRACE(( " (wdcTableOffset = 0x%04x)\n", wdcTableOffset ));
     GXV_TRACE(( " (pcTableOffset = 0x%04x)\n", pcTableOffset ));
 
-    gxv_just_justData_lookuptable_validate( p, limit, valid );
-    gxv_odtect_add_range( p, valid->subtable_length,
+    gxv_just_justData_lookuptable_validate( p, limit, gxvalid );
+    gxv_odtect_add_range( p, gxvalid->subtable_length,
                           "just_LookupTable", odtect );
 
     if ( wdcTableOffset )
     {
       gxv_just_widthDeltaClusters_validate(
-        valid->root->base + wdcTableOffset, limit, valid );
-      gxv_odtect_add_range( valid->root->base + wdcTableOffset,
-                            valid->subtable_length, "just_wdcTable", odtect );
+        gxvalid->root->base + wdcTableOffset, limit, gxvalid );
+      gxv_odtect_add_range( gxvalid->root->base + wdcTableOffset,
+                            gxvalid->subtable_length, "just_wdcTable", odtect );
     }
 
     if ( pcTableOffset )
     {
-      gxv_just_postcompTable_validate( valid->root->base + pcTableOffset,
-                                       limit, valid );
-      gxv_odtect_add_range( valid->root->base + pcTableOffset,
-                            valid->subtable_length, "just_pcTable", odtect );
+      gxv_just_postcompTable_validate( gxvalid->root->base + pcTableOffset,
+                                       limit, gxvalid );
+      gxv_odtect_add_range( gxvalid->root->base + pcTableOffset,
+                            gxvalid->subtable_length, "just_pcTable", odtect );
     }
 
     if ( justClassTableOffset )
     {
       gxv_just_justClassTable_validate(
-        valid->root->base + justClassTableOffset, limit, valid );
-      gxv_odtect_add_range( valid->root->base + justClassTableOffset,
-                            valid->subtable_length, "just_justClassTable",
+        gxvalid->root->base + justClassTableOffset, limit, gxvalid );
+      gxv_odtect_add_range( gxvalid->root->base + justClassTableOffset,
+                            gxvalid->subtable_length, "just_justClassTable",
                             odtect );
     }
 
-    gxv_odtect_validate( odtect, valid );
+    gxv_odtect_validate( odtect, gxvalid );
 
     GXV_EXIT;
   }
@@ -557,10 +647,9 @@
   {
     FT_Bytes           p     = table;
     FT_Bytes           limit = 0;
-    FT_Offset          table_size;
 
-    GXV_ValidatorRec   validrec;
-    GXV_Validator      valid = &validrec;
+    GXV_ValidatorRec   gxvalidrec;
+    GXV_Validator      gxvalid = &gxvalidrec;
     GXV_just_DataRec   justrec;
     GXV_just_Data      just = &justrec;
 
@@ -574,22 +663,22 @@
 
     GXV_ODTECT_INIT( odtect );
 
-    valid->root       = ftvalid;
-    valid->table_data = just;
-    valid->face       = face;
+    gxvalid->root       = ftvalid;
+    gxvalid->table_data = just;
+    gxvalid->face       = face;
 
     FT_TRACE3(( "validating `just' table\n" ));
     GXV_INIT;
 
-    limit      = valid->root->limit;
-    table_size = limit - table;
+    limit      = gxvalid->root->limit;
 
     GXV_LIMIT_CHECK( 4 + 2 + 2 + 2 );
     version     = FT_NEXT_ULONG( p );
     format      = FT_NEXT_USHORT( p );
     horizOffset = FT_NEXT_USHORT( p );
     vertOffset  = FT_NEXT_USHORT( p );
-    gxv_odtect_add_range( table, p - table, "just header", odtect );
+    gxv_odtect_add_range( table, (FT_ULong)( p - table ),
+                          "just header", odtect );
 
 
     /* Version 1.0 (always:2000) */
@@ -609,19 +698,19 @@
     /* validate justData */
     if ( 0 < horizOffset )
     {
-      gxv_just_justData_validate( table + horizOffset, limit, valid );
-      gxv_odtect_add_range( table + horizOffset, valid->subtable_length,
+      gxv_just_justData_validate( table + horizOffset, limit, gxvalid );
+      gxv_odtect_add_range( table + horizOffset, gxvalid->subtable_length,
                             "horizJustData", odtect );
     }
 
     if ( 0 < vertOffset )
     {
-      gxv_just_justData_validate( table + vertOffset, limit, valid );
-      gxv_odtect_add_range( table + vertOffset, valid->subtable_length,
+      gxv_just_justData_validate( table + vertOffset, limit, gxvalid );
+      gxv_odtect_add_range( table + vertOffset, gxvalid->subtable_length,
                             "vertJustData", odtect );
     }
 
-    gxv_odtect_validate( odtect, valid );
+    gxv_odtect_validate( odtect, gxvalid );
 
     FT_TRACE4(( "\n" ));
   }

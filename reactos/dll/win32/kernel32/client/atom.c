@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/atom.c
+ * FILE:            dll/win32/kernel32/client/atom.c
  * PURPOSE:         Atom functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

@@ -17,24 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-//#include "msi.h"
-//#include "msiquery.h"
-//#include "msidefs.h"
-//#include "winver.h"
-#include <shlwapi.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
 #include "msipriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -454,6 +437,19 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
     /* bail out if the registry key is empty */
     if (sz == 0)
         goto end;
+
+    /* expand if needed */
+    if (regType == REG_EXPAND_SZ)
+    {
+        sz = ExpandEnvironmentStringsW((LPCWSTR)value, NULL, 0);
+        if (sz)
+        {
+            LPWSTR buf = msi_alloc(sz * sizeof(WCHAR));
+            ExpandEnvironmentStringsW((LPCWSTR)value, buf, sz);
+            msi_free(value);
+            value = (LPBYTE)buf;
+        }
+    }
 
     if ((regType == REG_SZ || regType == REG_EXPAND_SZ) &&
         (ptr = strchrW((LPWSTR)value, '"')) && (end = strchrW(++ptr, '"')))

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <ntddk.h>
-#include <ks.h>
-
 typedef struct
 {
     KoCreateObjectHandler CreateObjectHandler;

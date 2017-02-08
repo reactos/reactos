@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/dib16bpp.c
+ * FILE:            win32ss/gdi/dib/dib16bpp.c
  * PURPOSE:         Device Independant Bitmap functions, 16bpp
  * PROGRAMMERS:     Jason Filby
  *                  Thomas Bluemel
@@ -521,6 +521,199 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
     DestBits = (ULONG*)((ULONG_PTR)DestBits + wd);
   }
+
+  return TRUE;
+}
+
+typedef union
+{
+  ULONG ul;
+  struct
+  {
+    UCHAR red;
+    UCHAR green;
+    UCHAR blue;
+    UCHAR alpha;
+  } col;
+} NICEPIXEL32;
+
+typedef union
+{
+  USHORT us;
+  struct
+  {
+    USHORT blue  :5;
+    USHORT green :6;
+    USHORT red   :5;
+  } col;
+} NICEPIXEL16_565;
+
+typedef union
+{
+  USHORT us;
+  struct
+  {
+    USHORT blue  :5;
+    USHORT green :5;
+    USHORT red   :5;
+    USHORT xxxx  :1;
+  } col;
+} NICEPIXEL16_555;
+
+static __inline UCHAR
+Clamp6(ULONG val)
+{
+   return (val > 63) ? 63 : (UCHAR)val;
+}
+
+static __inline UCHAR
+Clamp5(ULONG val)
+{
+   return (val > 31) ? 31 : (UCHAR)val;
+}
+
+BOOLEAN
+DIB_16BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
+                     RECTL* SourceRect, CLIPOBJ* ClipRegion,
+                     XLATEOBJ* ColorTranslation, BLENDOBJ* BlendObj)
+{
+  INT DstX, DstY, SrcX, SrcY;
+  BLENDFUNCTION BlendFunc;
+  NICEPIXEL32 SrcPixel32;
+  UCHAR Alpha;
+  EXLATEOBJ* pexlo;
+  EXLATEOBJ exloSrcRGB;
+
+  DPRINT("DIB_16BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+    SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
+    DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+  BlendFunc = BlendObj->BlendFunction;
+  if (BlendFunc.BlendOp != AC_SRC_OVER)
+  {
+    DPRINT1("BlendOp != AC_SRC_OVER\n");
+    return FALSE;
+  }
+  if (BlendFunc.BlendFlags != 0)
+  {
+    DPRINT1("BlendFlags != 0\n");
+    return FALSE;
+  }
+  if ((BlendFunc.AlphaFormat & ~AC_SRC_ALPHA) != 0)
+  {
+    DPRINT1("Unsupported AlphaFormat (0x%x)\n", BlendFunc.AlphaFormat);
+    return FALSE;
+  }
+  if ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0 &&
+          (BitsPerFormat(Source->iBitmapFormat) != 32))
+  {
+    DPRINT1("Source bitmap must be 32bpp when AC_SRC_ALPHA is set\n");
+    return FALSE;
+  }
+
+  if (!ColorTranslation)
+  {
+    DPRINT1("ColorTranslation must not be NULL!\n");
+    return FALSE;
+  }
+
+  pexlo = CONTAINING_RECORD(ColorTranslation, EXLATEOBJ, xlo);
+  EXLATEOBJ_vInitialize(&exloSrcRGB, pexlo->ppalSrc, &gpalRGB, 0, 0, 0);
+
+  if (pexlo->ppalDst->flFlags & PAL_RGB16_555)
+  {
+      NICEPIXEL16_555 DstPixel16;
+
+      SrcY = SourceRect->top;
+      DstY = DestRect->top;
+      while ( DstY < DestRect->bottom )
+      {
+        SrcX = SourceRect->left;
+        DstX = DestRect->left;
+        while(DstX < DestRect->right)
+        {
+          SrcPixel32.ul = DIB_GetSource(Source, SrcX, SrcY, &exloSrcRGB.xlo);
+          SrcPixel32.col.red = (SrcPixel32.col.red * BlendFunc.SourceConstantAlpha) / 255;
+          SrcPixel32.col.green = (SrcPixel32.col.green * BlendFunc.SourceConstantAlpha) / 255;
+          SrcPixel32.col.blue = (SrcPixel32.col.blue * BlendFunc.SourceConstantAlpha) / 255;
+
+          Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
+               (SrcPixel32.col.alpha * BlendFunc.SourceConstantAlpha) / 255 :
+               BlendFunc.SourceConstantAlpha;
+
+          Alpha >>= 3;
+
+          DstPixel16.us = DIB_16BPP_GetPixel(Dest, DstX, DstY) & 0xFFFF;
+          /* Perform bit loss */
+          SrcPixel32.col.red >>= 3;
+          SrcPixel32.col.green >>= 3;
+          SrcPixel32.col.blue >>= 3;
+
+          /* Do the blend in the right bit depth */
+          DstPixel16.col.red = Clamp5((DstPixel16.col.red * (31 - Alpha)) / 31 + SrcPixel32.col.red);
+          DstPixel16.col.green = Clamp5((DstPixel16.col.green * (31 - Alpha)) / 31 + SrcPixel32.col.green);
+          DstPixel16.col.blue = Clamp5((DstPixel16.col.blue * (31 - Alpha)) / 31 + SrcPixel32.col.blue);
+
+          DIB_16BPP_PutPixel(Dest, DstX, DstY, DstPixel16.us);
+
+          DstX++;
+          SrcX = SourceRect->left + ((DstX-DestRect->left)*(SourceRect->right - SourceRect->left))
+                                                /(DestRect->right-DestRect->left);
+        }
+        DstY++;
+        SrcY = SourceRect->top + ((DstY-DestRect->top)*(SourceRect->bottom - SourceRect->top))
+                                                /(DestRect->bottom-DestRect->top);
+      }
+  }
+  else
+  {
+      NICEPIXEL16_565 DstPixel16;
+      UCHAR Alpha6, Alpha5;
+
+      SrcY = SourceRect->top;
+      DstY = DestRect->top;
+      while ( DstY < DestRect->bottom )
+      {
+        SrcX = SourceRect->left;
+        DstX = DestRect->left;
+        while(DstX < DestRect->right)
+        {
+          SrcPixel32.ul = DIB_GetSource(Source, SrcX, SrcY, &exloSrcRGB.xlo);
+          SrcPixel32.col.red = (SrcPixel32.col.red * BlendFunc.SourceConstantAlpha) / 255;
+          SrcPixel32.col.green = (SrcPixel32.col.green * BlendFunc.SourceConstantAlpha) / 255;
+          SrcPixel32.col.blue = (SrcPixel32.col.blue * BlendFunc.SourceConstantAlpha) / 255;
+
+          Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
+               (SrcPixel32.col.alpha * BlendFunc.SourceConstantAlpha) / 255 :
+               BlendFunc.SourceConstantAlpha;
+
+          Alpha6 = Alpha >> 2;
+          Alpha5 = Alpha >> 3;
+
+          DstPixel16.us = DIB_16BPP_GetPixel(Dest, DstX, DstY) & 0xFFFF;
+          /* Perform bit loss */
+          SrcPixel32.col.red >>= 3;
+          SrcPixel32.col.green >>= 2;
+          SrcPixel32.col.blue >>= 3;
+
+          /* Do the blend in the right bit depth */
+          DstPixel16.col.red = Clamp5((DstPixel16.col.red * (31 - Alpha5)) / 31 + SrcPixel32.col.red);
+          DstPixel16.col.green = Clamp6((DstPixel16.col.green * (63 - Alpha6)) / 63 + SrcPixel32.col.green);
+          DstPixel16.col.blue = Clamp5((DstPixel16.col.blue * (31 - Alpha5)) / 31 + SrcPixel32.col.blue);
+
+          DIB_16BPP_PutPixel(Dest, DstX, DstY, DstPixel16.us);
+
+          DstX++;
+          SrcX = SourceRect->left + ((DstX-DestRect->left)*(SourceRect->right - SourceRect->left))
+                                                /(DestRect->right-DestRect->left);
+        }
+        DstY++;
+        SrcY = SourceRect->top + ((DstY-DestRect->top)*(SourceRect->bottom - SourceRect->top))
+                                                /(DestRect->bottom-DestRect->top);
+      }
+  }
+
+  EXLATEOBJ_vCleanup(&exloSrcRGB);
 
   return TRUE;
 }

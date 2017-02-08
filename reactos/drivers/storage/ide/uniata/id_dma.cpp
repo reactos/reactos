@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2012 Alexander A. Telyatnikov (Alter)
+Copyright (c) 2002-2015 Alexander A. Telyatnikov (Alter)
 
 Module Name:
     id_dma.cpp
@@ -105,6 +105,7 @@ AtapiVirtToPhysAddr_(
     ULONG addr;
 
     ph_addr = MmGetPhysicalAddress(data);
+    KdPrint3((PRINT_PREFIX "AtapiVirtToPhysAddr_: %x -> %8.8x:%8.8x\n", data, ph_addr.HighPart, ph_addr.LowPart));
     if(!ph_addru && ph_addr.HighPart) {
         // do so until we add 64bit address support
         // or some workaround
@@ -253,11 +254,12 @@ AtapiDmaSetup(
     BOOLEAN use_AHCI = (deviceExtension->HwFlags & UNIATA_AHCI) ? TRUE : FALSE;
     ULONG orig_count = count;
     ULONG max_entries = use_AHCI ? ATA_AHCI_DMA_ENTRIES : ATA_DMA_ENTRIES;
-    //ULONG max_frag = use_AHCI ? (0x3fffff+1) : (4096); // DEBUG, replace 4096 for procer chipset-specific value
+    //ULONG max_frag = use_AHCI ? (0x3fffff+1) : (4096); // DEBUG, replace 4096 for proper chipset-specific value
     ULONG max_frag = deviceExtension->DmaSegmentLength;
     ULONG seg_align = deviceExtension->DmaSegmentAlignmentMask;
 
     if(AtaReq->dma_entries) {
+        AtaReq->Flags |= REQ_FLAG_DMA_OPERATION;
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: already setup, %d entries\n", AtaReq->dma_entries));
         return TRUE;
     }
@@ -296,7 +298,7 @@ AtapiDmaSetup(
         KdPrint2((PRINT_PREFIX "  get Phys(PRD=%x)\n", &(AtaReq->dma_tab) ));
         dma_base = AtapiVirtToPhysAddr(HwDeviceExtension, NULL, (PUCHAR)&(AtaReq->dma_tab) /*chan->dma_tab*/, &i, &dma_baseu);
     }
-    if(dma_baseu) {
+    if(dma_baseu && i) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: SRB built-in PRD above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
         if(!deviceExtension->Host64) {
             dma_base = chan->DB_PRD_PhAddr;
@@ -312,8 +314,8 @@ AtapiDmaSetup(
 
     KdPrint2((PRINT_PREFIX "  get Phys(data[0]=%x)\n", data ));
     dma_base = AtapiVirtToPhysAddr(HwDeviceExtension, Srb, data, &dma_count, &dma_baseu);
-    if(dma_baseu) {
-        KdPrint2((PRINT_PREFIX "AtapiDmaSetup: 1st block of buffer above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
+    if(dma_baseu && dma_count) {
+        KdPrint2((PRINT_PREFIX "AtapiDmaSetup: 1st block of buffer above 4Gb: %8.8x%8.8x cnt=%x\n", dma_baseu, dma_base, dma_count));
         if(!deviceExtension->Host64) {
 retry_DB_IO:
             use_DB_IO = TRUE;
@@ -378,8 +380,8 @@ retry_DB_IO:
         }
         KdPrint2((PRINT_PREFIX "  get Phys(data[n=%d]=%x)\n", i, data ));
         dma_base = AtapiVirtToPhysAddr(HwDeviceExtension, Srb, data, &dma_count, &dma_baseu);
-        if(dma_baseu) {
-            KdPrint2((PRINT_PREFIX "AtapiDmaSetup: block of buffer above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
+        if(dma_baseu && dma_count) {
+            KdPrint2((PRINT_PREFIX "AtapiDmaSetup: block of buffer above 4Gb: %8.8x%8.8x, cnt=%x\n", dma_baseu, dma_base, dma_count));
             if(!deviceExtension->Host64) {
                 if(use_DB_IO) {
                     KdPrint2((PRINT_PREFIX "AtapiDmaSetup: *ERROR* special buffer above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
@@ -537,31 +539,22 @@ AtapiDmaDBSync(
     return TRUE;
 } // end AtapiDmaDBSync()
 
-VOID
+BOOLEAN
 NTAPI
-AtapiDmaStart(
+AtapiDmaDBPreSync(
     IN PVOID HwDeviceExtension,
-    IN ULONG DeviceNumber,
-    IN ULONG lChannel,          // logical channel,
-    IN PSCSI_REQUEST_BLOCK Srb
+    PHW_CHANNEL chan,
+    PSCSI_REQUEST_BLOCK Srb
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    //PIDE_BUSMASTER_REGISTERS BaseIoAddressBM = deviceExtension->BaseIoAddressBM[lChannel];
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
-    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
-
-    ULONG VendorID =  deviceExtension->DevID        & 0xffff;
-    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
-
-    KdPrint2((PRINT_PREFIX "AtapiDmaStart: %s on %#x:%#x\n",
-        (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "read" : "write",
-        lChannel, DeviceNumber ));
 
     if(!AtaReq->ata.dma_base) {
-        KdPrint2((PRINT_PREFIX "AtapiDmaStart: *** !AtaReq->ata.dma_base\n"));
-        return;
+        KdPrint2((PRINT_PREFIX "AtapiDmaDBPreSync: *** !AtaReq->ata.dma_base\n"));
+        return FALSE;
     }
+//    GetStatus(chan, statusByte2);
     if(AtaReq->Flags & REQ_FLAG_DMA_DBUF_PRD) {
         KdPrint2((PRINT_PREFIX "  DBUF_PRD\n"));
         ASSERT(FALSE);
@@ -578,7 +571,56 @@ AtapiDmaStart(
         RtlCopyMemory(chan->DB_IO, AtaReq->DataBuffer,
                               Srb->DataTransferLength);
     }
+    return TRUE;
+} // end AtapiDmaDBPreSync()
 
+VOID
+NTAPI
+AtapiDmaStart(
+    IN PVOID HwDeviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG lChannel,          // logical channel,
+    IN PSCSI_REQUEST_BLOCK Srb
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    //PIDE_BUSMASTER_REGISTERS BaseIoAddressBM = deviceExtension->BaseIoAddressBM[lChannel];
+    PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+
+    ULONG VendorID =  deviceExtension->DevID        & 0xffff;
+    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+//    UCHAR statusByte2;
+/*
+    GetStatus(chan, statusByte2);
+    KdPrint2((PRINT_PREFIX "AtapiDmaStart: %s on %#x:%#x\n",
+        (Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? "read" : "write",
+        lChannel, DeviceNumber ));
+*/
+    if(!AtaReq->ata.dma_base) {
+        KdPrint2((PRINT_PREFIX "AtapiDmaStart: *** !AtaReq->ata.dma_base\n"));
+        return;
+    }
+
+/*
+//    GetStatus(chan, statusByte2);
+    if(AtaReq->Flags & REQ_FLAG_DMA_DBUF_PRD) {
+        KdPrint2((PRINT_PREFIX "  DBUF_PRD\n"));
+        ASSERT(FALSE);
+        if(deviceExtension->HwFlags & UNIATA_AHCI) {
+            RtlCopyMemory(chan->DB_PRD, AtaReq->ahci.ahci_cmd_ptr, sizeof(AtaReq->ahci_cmd0));
+        } else {
+            RtlCopyMemory(chan->DB_PRD, &(AtaReq->dma_tab), sizeof(AtaReq->dma_tab));
+        }
+    }
+    if(!(Srb->SrbFlags & SRB_FLAGS_DATA_IN) &&
+       (AtaReq->Flags & REQ_FLAG_DMA_DBUF)) {
+        KdPrint2((PRINT_PREFIX "  DBUF (Write)\n"));
+        ASSERT(FALSE);
+        RtlCopyMemory(chan->DB_IO, AtaReq->DataBuffer,
+                              Srb->DataTransferLength);
+    }
+*/
     // set flag
     chan->ChannelCtrlFlags |= CTRFLAGS_DMA_ACTIVE;
 
@@ -586,10 +628,8 @@ AtapiDmaStart(
     case ATA_PROMISE_ID:
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
+
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) |
-                          (Channel ? 0x08 : 0x02));
                 AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       ((Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? 0x05000000 : 0x06000000) | (Srb->DataTransferLength >> 1)
                       );
@@ -658,10 +698,12 @@ AtapiDmaDone(
     case ATA_PROMISE_ID:
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
+/*
+            AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                  AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                      ~(Channel ? 0x08 : 0x02));
+*/
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
-                          ~(Channel ? 0x08 : 0x02));
                 AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       0
                       );
@@ -790,6 +832,9 @@ limit_pio:
         KdPrint2((PRINT_PREFIX
                     "AtapiDmaReinit: restore IO mode on Device %d\n", LunExt->Lun));
         AtapiDmaInit__(deviceExtension, LunExt);
+    } else {
+        KdPrint2((PRINT_PREFIX
+                    "AtapiDmaReinit: LimitedTransferMode == TransferMode = %x (%x)\n", LunExt->TransferMode, LunExt->DeviceFlags));
     }
 
 exit:
@@ -1012,6 +1057,7 @@ AtapiDmaInit(
         /****************/
 
         KdPrint2((PRINT_PREFIX "SATA Generic\n"));
+
         if((udmamode >= 5) || (ChipFlags & UNIATA_AHCI) || ((udmamode >= 0) && (chan->MaxTransferMode >= ATA_SA150))) {
             /* some drives report UDMA6, some UDMA5 */
             /* ATAPI may not have SataCapabilities set in IDENTIFY DATA */
@@ -1234,29 +1280,85 @@ set_new_acard:
         /*********/
         /* Cyrix */
         /*********/
-        ULONG cyr_piotiming[] =
-            { 0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010 };
-        ULONG cyr_wdmatiming[] = { 0x00077771, 0x00012121, 0x00002020 };
-        ULONG cyr_udmatiming[] = { 0x00921250, 0x00911140, 0x00911030 };
-        ULONG mode_reg = 0x24+(dev << 3);
-
+dma_cs55xx:
         if(apiomode >= 4)
             apiomode = 4;
-        for(i=udmamode; i>=0; i--) {
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
+
+        if(ChipType == CYRIX_3x) {
+            ULONG cyr_piotiming[] =
+                { 0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010 };
+            ULONG cyr_wdmatiming[] = { 0x00077771, 0x00012121, 0x00002020 };
+            ULONG cyr_udmatiming[] = { 0x00921250, 0x00911140, 0x00911030 };
+            ULONG mode_reg = 0x24+(dev << 3);
+
+            for(i=udmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
+                    AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
+                    return;
+                }
+            }
+            for(i=wdmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                    AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
+                    return;
+                }
+            }
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
+                AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
                 return;
             }
-        }
-        for(i=wdmamode; i>=0; i--) {
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
+        } else
+        if(ChipType == CYRIX_OLD) {
+            UCHAR cyr_piotiming_old[] =
+                { 11, 6, 3, 2, 1 };
+            UCHAR timing;
+
+            for(i=wdmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                    return;
+                }
+            }
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
+                timing = (6-apiomode) | (cyr_piotiming_old[i]);
+                /* Channel command timing */
+                SetPciConfig1(0x62+Channel, timing);
+                /* Read command timing */
+                SetPciConfig1(0x64+Channel*4+dev, timing);
+                /* Write command timing */
+                SetPciConfig1(0x66+Channel*4+dev, timing);
                 return;
             }
-        }
-        if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-            AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
-            return;
+        } else
+        if(ChipType == CYRIX_35) {
+/*
+            USHORT c35_pio_timings[5] = {
+                0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131
+            };
+            USHORT c35_pio_cmd_timings[5] = {
+                0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
+            };
+            ULONG c35_udma_timings[5] = {
+            	0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061
+            };
+            ULONG c35_mwdma_timings[3] = {
+            	0x7F0FFFF3, 0x7F035352, 0x7F024241
+            };
+            ULONG mode_reg = 0x24+(dev << 3);
+*/
+            /* No MSR support yet, do not touch any regs */
+            for(i=udmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
+                    return;
+                }
+            }
+            for(i=wdmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                    return;
+                }
+            }
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
+                return;
+            }
         }
         return;
 
@@ -1265,33 +1367,37 @@ set_new_acard:
         /************/
         /* National */
         /************/
-        ULONG nat_piotiming[] =
-           { 0x9172d132, 0x21717121, 0x00803020, 0x20102010, 0x00100010,
-              0x00803020, 0x20102010, 0x00100010,
-              0x00100010, 0x00100010, 0x00100010 };
-        ULONG nat_dmatiming[] = { 0x80077771, 0x80012121, 0x80002020 };
-        ULONG nat_udmatiming[] = { 0x80921250, 0x80911140, 0x80911030 };
+        if(!ChipType) {
+            ULONG nat_piotiming[] =
+               { 0x9172d132, 0x21717121, 0x00803020, 0x20102010, 0x00100010,
+                  0x00803020, 0x20102010, 0x00100010,
+                  0x00100010, 0x00100010, 0x00100010 };
+            ULONG nat_dmatiming[] = { 0x80077771, 0x80012121, 0x80002020 };
+            ULONG nat_udmatiming[] = { 0x80921250, 0x80911140, 0x80911030 };
 
-        if(apiomode >= 4)
-            apiomode = 4;
-        for(i=udmamode; i>=0; i--) {
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
-                SetPciConfig4(0x44 + (dev * 8), nat_udmatiming[i]);
-                SetPciConfig4(0x40 + (dev * 8), nat_piotiming[i+8]);
+            if(apiomode >= 4)
+                apiomode = 4;
+            for(i=udmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
+                    SetPciConfig4(0x44 + (dev * 8), nat_udmatiming[i]);
+                    SetPciConfig4(0x40 + (dev * 8), nat_piotiming[i+8]);
+                    return;
+                }
+            }
+            for(i=wdmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                    SetPciConfig4(0x44 + (dev * 8), nat_dmatiming[i]);
+                    SetPciConfig4(0x40 + (dev * 8), nat_piotiming[i+5]);
+                    return;
+                }
+            }
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
+                ChangePciConfig4(0x44 + (dev * 8), a | 0x80000000);
+                SetPciConfig4(0x40 + (dev * 8), nat_piotiming[apiomode]);
                 return;
             }
-        }
-        for(i=wdmamode; i>=0; i--) {
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                SetPciConfig4(0x44 + (dev * 8), nat_dmatiming[i]);
-                SetPciConfig4(0x40 + (dev * 8), nat_piotiming[i+5]);
-                return;
-            }
-        }
-        if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-            ChangePciConfig4(0x44 + (dev * 8), a | 0x80000000);
-            SetPciConfig4(0x40 + (dev * 8), nat_piotiming[apiomode]);
-            return;
+        } else {
+            goto dma_cs55xx;
         }
         /* Use GENERIC PIO */
         break; }
@@ -1373,6 +1479,7 @@ set_new_acard:
         /* Intel */
         /*********/
 
+        KdPrint2((PRINT_PREFIX "Intel %d\n", Channel));
         BOOLEAN udma_ok = FALSE;
         ULONG  idx = 0;
         ULONG  reg40;
@@ -1389,6 +1496,7 @@ set_new_acard:
         UCHAR  intel_utimings[] = { 0x00, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02 };
 
         if(deviceExtension->DevID == ATA_I82371FB) {
+            KdPrint2((PRINT_PREFIX "  I82371FB\n"));
             if (wdmamode >= 2 && apiomode >= 4) {
                 ULONG word40;
 
@@ -1411,6 +1519,7 @@ set_new_acard:
 
         if(deviceExtension->DevID == ATA_ISCH) {
             ULONG tim;
+            KdPrint2((PRINT_PREFIX "  ISCH\n"));
             GetPciConfig4(0x80 + dev*4, tim);
 
             for(i=udmamode; i>=0; i--) {
@@ -1452,9 +1561,9 @@ set_new_acard:
         }
 
         GetPciConfig2(0x48, reg48);
-        if(!(ChipFlags & ICH4_FIX)) {
+//        if(!(ChipFlags & ICH4_FIX)) {
             GetPciConfig2(0x4a, reg4a);
-        }
+//        }
         GetPciConfig2(0x54, reg54);
 //        if(udmamode >= 0) {
             // enable the write buffer to be used in a split (ping/pong) manner.
@@ -1471,7 +1580,7 @@ set_new_acard:
 
         	/* Set UDMA reference clock (33 MHz or more). */
                 SetPciConfig1(0x48, reg48 | (0x0001 << dev));
-                if(!(ChipFlags & ICH4_FIX)) {
+//                if(!(ChipFlags & ICH4_FIX)) {
                     if(deviceExtension->MaxTransferMode == ATA_UDMA3) {
                         // Special case (undocumented overclock !) for PIIX4e
                         SetPciConfig2(0x4a, (reg4a | (0x03 << (dev<<2)) ) );
@@ -1479,24 +1588,22 @@ set_new_acard:
                         SetPciConfig2(0x4a, (reg4a & ~(0x03 << (dev<<2))) |
                                                       (((USHORT)(intel_utimings[i])) << (dev<<2) )  );
                     }
-                }
+//                }
         	/* Set UDMA reference clock (66 MHz or more). */
+                reg54 &= ~(0x1001 << dev);
                 if(i > 2) {
                     reg54 |= (0x1 << dev);
-                } else {
-                    reg54 &= ~(0x1 << dev);
                 }
         	/* Set UDMA reference clock (133 MHz). */
                 if(i >= 5) {
                     reg54 |= (0x1000 << dev);
-                } else {
-                    reg54 &= ~(0x1000 << dev);
                 }
                 SetPciConfig2(0x54, reg54);
 
                 udma_ok = TRUE;
                 idx = i+8;
                 if(ChipFlags & ICH4_FIX) {
+                    KdPrint2((PRINT_PREFIX "  ICH4_FIX udma\n"));
                     return;
                 }
                 break;
@@ -1514,6 +1621,7 @@ set_new_acard:
                     udma_ok = TRUE;
                     idx = i+5;
                     if(ChipFlags & ICH4_FIX) {
+                        KdPrint2((PRINT_PREFIX "  ICH4_FIX wdma\n"));
                         return;
                     }
                     break;
@@ -1530,17 +1638,19 @@ set_new_acard:
         GetPciConfig1(0x44, reg44);
 
 	/* Allow PIO/WDMA timing controls. */
+	reg40 &= ~0x00ff00ff;
+	reg40 |= 0x40774077;
+
         mask40 = 0x000000ff;
 	/* Set PIO/WDMA timings. */
         if(!(DeviceNumber & 1)) {
-            mask40 |= 0x00003300;
+            mask40 = 0x00003300;
             new40 = ((USHORT)(intel_timings[idx]) << 8);
         } else {
             mask44 = 0x0f;
             new44 = ((intel_timings[idx] & 0x30) >> 2) |
                      (intel_timings[idx] & 0x03);
         }
-        new40 |= 0x00004077;
 
         if (Channel) {
             mask40 <<= 16;
@@ -1549,15 +1659,19 @@ set_new_acard:
             new44 <<= 4;
         }
 
+        KdPrint2((PRINT_PREFIX "  0x40 %x/%x, 0x44 %x/%x\n", mask40, new40, mask44, new44));
         SetPciConfig4(0x40, (reg40 & ~mask40) | new40);
         SetPciConfig1(0x44, (reg44 & ~mask44) | new44);
 
         return;
         break; }
-    case ATA_PROMISE_ID:
+    case ATA_PROMISE_ID: {
         /***********/
         /* Promise */
         /***********/
+
+	UCHAR sel66 = Channel ? 0x08: 0x02;
+
         if(ChipType < PRTX) {
             if (isAtapi) {
                 udmamode =
@@ -1565,28 +1679,39 @@ set_new_acard:
             }
         }
         for(i=udmamode; i>=0; i--) {
+
+            if(ChipType == PRNEW) {
+              if(i>2) {
+                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) |
+                          sel66);
+              } else {
+                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                          ~sel66);
+              }
+            }
+
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
                 promise_timing(deviceExtension, dev, (UCHAR)(ATA_UDMA + i));       // ???
                 return;
             }
         }
-
+        if(ChipType == PRNEW) {
+          AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+              AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                  ~sel66);
+        }
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
                 promise_timing(deviceExtension, dev, (UCHAR)(ATA_WDMA0+i));
                 return;
             }
         }
-        /* try generic DMA, use hpt_timing() */
-        if (wdmamode >= 0 && apiomode >= 4) {
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_DMA)) {
-                return;
-            }
-        }
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
         promise_timing(deviceExtension, dev, ATA_PIO0 + apiomode);
         return;
-        break;
+        break; }
     case ATA_ATI_ID:
 
         KdPrint2((PRINT_PREFIX "ATI\n"));
@@ -2179,13 +2304,21 @@ promise_timing(
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
 
-    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
     //ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
 
-    ULONG timing = 0;
+    ULONG port = 0x60 + (dev<<2);
 
     if(mode == ATA_PIO5)
         mode = ATA_PIO4;
+
+    if(mode < ATA_PIO0)
+        mode = ATA_PIO0;
+
+#if 0
+// **** FreeBSD code ****
+
+    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+    ULONG timing = 0;
 
     switch(ChipType) {
     case PROLD:
@@ -2227,7 +2360,80 @@ promise_timing(
     default:
         return;
     }
-    SetPciConfig4(0x60 + (dev<<2), timing);
+    if(!timing) {
+        return;
+    }
+    SetPciConfig4(port, timing);
+
+#else
+// **** Linux code ****
+
+    UCHAR r_bp, r_cp, r_ap;
+    ULONG i;
+
+    static UCHAR udma_timing[6][2] = {
+    	{ 0x60, 0x03 },	/* 33 Mhz Clock */
+    	{ 0x40, 0x02 },
+    	{ 0x20, 0x01 },
+    	{ 0x40, 0x02 },	/* 66 Mhz Clock */
+    	{ 0x20, 0x01 },
+    	{ 0x20, 0x01 }
+    };
+    static UCHAR mdma_timing[3][2] = {
+    	{ 0xe0, 0x0f },
+    	{ 0x60, 0x04 },
+    	{ 0x60, 0x03 },
+    };
+    static USHORT pio_timing[5] = {
+    	0x0913, 0x050C , 0x0308, 0x0206, 0x0104
+    };
+
+    if(mode > ATA_UDMA5) {
+        return;
+    }
+
+    if(mode > ATA_WDMA0) {
+
+        GetPciConfig1(port+1, r_bp);
+        GetPciConfig1(port+2, r_cp);
+
+        r_bp &= ~0xE0;
+        r_cp &= ~0x0F;
+
+        if(mode >= ATA_UDMA0) {
+            i = mode - ATA_UDMA0;
+            r_bp |= udma_timing[i][0];
+            r_cp |= udma_timing[i][1];
+
+        } else {
+            i = mode - ATA_WDMA0;
+            r_bp |= mdma_timing[i][0];
+            r_cp |= mdma_timing[i][1];
+        } 
+        SetPciConfig1(port+1, r_bp);
+        SetPciConfig1(port+2, r_cp);
+    } else
+    if(mode <= ATA_PIO5) {
+        GetPciConfig1(port+0, r_ap);
+        GetPciConfig1(port+1, r_bp);
+
+        i = mode - ATA_PIO0;
+	r_ap &= ~0x3F;	/* Preserve ERRDY_EN, SYNC_IN */
+	r_bp &= ~0x1F;
+	r_ap |= (UCHAR)(pio_timing[i] >> 8);
+	r_bp |= (UCHAR)(pio_timing[i] & 0xFF);
+
+//	if (ata_pio_need_iordy(adev))
+		r_ap |= 0x20;	/* IORDY enable */
+//	if (adev->class == ATA_DEV_ATA)
+//		r_ap |= 0x10;	/* FIFO enable */
+
+        SetPciConfig1(port+0, r_ap);
+        SetPciConfig1(port+1, r_bp);
+    }
+
+#endif
+
 } // end promise_timing()
 
 

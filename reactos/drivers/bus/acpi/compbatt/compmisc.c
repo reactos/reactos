@@ -14,7 +14,7 @@
 
 NTSTATUS
 NTAPI
-BatteryIoctl(IN ULONG IoControlCode, 
+BatteryIoctl(IN ULONG IoControlCode,
              IN PDEVICE_OBJECT DeviceObject,
              IN PVOID InputBuffer,
              IN ULONG InputBufferLength,
@@ -50,11 +50,11 @@ BatteryIoctl(IN ULONG IoControlCode,
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             Status = IoStatusBlock.Status;
         }
-        
+
         /* Print failure */
         if (!(NT_SUCCESS(Status)) && (CompBattDebug & 8))
             DbgPrint("BatteryIoctl: Irp failed - %x\n", Status);
-        
+
         /* Done */
         if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING BatteryIoctl\n");
     }
@@ -64,7 +64,7 @@ BatteryIoctl(IN ULONG IoControlCode,
         if (CompBattDebug & 8) DbgPrint("BatteryIoctl: couldn't create Irp\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -82,7 +82,7 @@ CompBattGetDeviceObjectPointer(IN PUNICODE_STRING DeviceName,
     PFILE_OBJECT LocalFileObject;
     HANDLE DeviceHandle;
     PAGED_CODE();
-    
+
     /* Open a file object handle to the device */
     InitializeObjectAttributes(&ObjectAttributes, DeviceName, 0, NULL, NULL);
     Status = ZwCreateFile(&DeviceHandle,
@@ -101,7 +101,7 @@ CompBattGetDeviceObjectPointer(IN PUNICODE_STRING DeviceName,
         /* Reference the file object */
         Status = ObReferenceObjectByHandle(DeviceHandle,
                                            0,
-                                           IoFileObjectType,
+                                           *IoFileObjectType,
                                            KernelMode,
                                            (PVOID)&LocalFileObject,
                                            NULL);
@@ -111,11 +111,11 @@ CompBattGetDeviceObjectPointer(IN PUNICODE_STRING DeviceName,
             *FileObject = LocalFileObject;
             *DeviceObject = IoGetRelatedDeviceObject(LocalFileObject);
         }
-      
+
         /* Close the handle */
         ZwClose(DeviceHandle);
     }
-    
+
     /* Return status */
     return Status;
 }

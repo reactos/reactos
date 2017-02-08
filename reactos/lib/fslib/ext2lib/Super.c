@@ -47,7 +47,7 @@ void ext2_print_super(PEXT2_SUPER_BLOCK pExt2Sb)
     DPRINT("     Creator OS: %lu\n", pExt2Sb->s_creator_os);
     DPRINT("     Revision Level: %lu\n", pExt2Sb->s_rev_level);
     DPRINT("     Reserved Block Default UID: %u\n", pExt2Sb->s_def_resuid);
-    DPRINT("     Reserved Block Default GID: %u\n", pExt2Sb->s_def_resgid); 
+    DPRINT("     Reserved Block Default GID: %u\n", pExt2Sb->s_def_resgid);
     DPRINT("     uuid = ");
     for (i=0; i < 16; i++)
         DbgPrint("%x ", pExt2Sb->s_uuid[i]);
@@ -75,13 +75,13 @@ bool ext2_initialize_sb(PEXT2_FILESYS Ext2Sys)
 {
     int frags_per_block = 0;
     ULONG overhead      = 0;
-    int rem             = 0;
+    ULONG rem           = 0;
     ULONG   i = 0;
     ULONG   group_block = 0;
     ULONG   numblocks = 0;
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
     LARGE_INTEGER   SysTime;
-    
+
     NtQuerySystemTime(&SysTime);
 
     Ext2Sys->blocksize = EXT2_BLOCK_SIZE(pExt2Sb);
@@ -201,14 +201,14 @@ retry:
      * XXX Not all block groups need the descriptor blocks, but
      * being clever is tricky...
      */
-    overhead = (int) (3 + Ext2Sys->desc_blocks + Ext2Sys->inode_blocks_per_group);
+    overhead = (3 + Ext2Sys->desc_blocks + Ext2Sys->inode_blocks_per_group);
 
     /*
      * See if the last group is big enough to support the
      * necessary data structures.  If not, we need to get rid of
      * it.
      */
-    rem = (int) ((pExt2Sb->s_blocks_count - pExt2Sb->s_first_data_block) %
+    rem = ((pExt2Sb->s_blocks_count - pExt2Sb->s_first_data_block) %
              pExt2Sb->s_blocks_per_group);
 
     if ((Ext2Sys->group_desc_count == 1) && rem && (rem < overhead))
@@ -279,14 +279,14 @@ retry:
 
             numblocks -= 1 + Ext2Sys->desc_blocks;
         }
-        
+
         numblocks -= 2 + Ext2Sys->inode_blocks_per_group;
-        
+
         pExt2Sb->s_free_blocks_count += numblocks;
         Ext2Sys->group_desc[i].bg_free_blocks_count = (__u16)numblocks;
         Ext2Sys->group_desc[i].bg_free_inodes_count = (__u16)pExt2Sb->s_inodes_per_group;
         Ext2Sys->group_desc[i].bg_used_dirs_count = 0;
-        
+
         group_block += pExt2Sb->s_blocks_per_group;
     }
 

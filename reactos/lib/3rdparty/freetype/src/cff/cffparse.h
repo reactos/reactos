@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (specification)                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __CFF_PARSE_H__
-#define __CFF_PARSE_H__
+#ifndef CFFPARSE_H_
+#define CFFPARSE_H_
 
 
 #include <ft2build.h>
@@ -90,13 +90,17 @@ FT_BEGIN_HEADER
     FT_UInt           array_max;
     FT_UInt           count_offset;
 
+#ifdef FT_DEBUG_LEVEL_TRACE
+    const char*       id;
+#endif
+
   } CFF_Field_Handler;
 
 
 FT_END_HEADER
 
 
-#endif /* __CFF_PARSE_H__ */
+#endif /* CFFPARSE_H_ */
 
 
 /* END */

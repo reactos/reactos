@@ -1,0 +1,21 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Numri i parametrave jo i sakte - %s\n"
+    IDS_INVALID_PARAMETER "Numri i parametrave jo i sakte - %s\n"
+    IDS_INVALID_PARAMETER2 "Parameter i gabuar - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Drive tashme i SUBSTed\n"
+    IDS_FAILED_WITH_ERRORCODE "Deshtoj me error kode 0x%x: %s\n"
+    IDS_USAGE "Perputh rrugen e driverit me germën.\n\n\
+SUBST [drive1: [drive2:]path]\n\
+SUBST drive1: /D\n\n\
+  drive1:        Përcakton një drive virtual për të cilën ju doni të caktojë një rrugë.\n\
+  [drive2:]path  Përcakton një drive fizik dhe rrugen qe doni te percaktoni\nnje driveri virtual.\n\
+  /D             Fshin një zëvendesus (virtual) drive.\n\n\
+Shkruaj SUBST pa parametra per te shfaqur një liste e drivera virtual aktual.\n"
+END

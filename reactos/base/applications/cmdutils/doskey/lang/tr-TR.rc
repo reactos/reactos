@@ -1,0 +1,26 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Komut yatacı düzenleme ayarlarını, geçmişi ve makroları yönetir.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=boyut]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=kütük] [makro adı=[metin]]\n\
+\n\
+  /INSERT             Ekleme kipini etkinleştirir.\n\
+  /OVERSTRIKE         Ekleme kipini edilginleştirir.\n\
+  /EXENAME=exe adı    İlgili geçmişi ve makroları görüntülemek ya da değiştirmek\n\
+                      için izlencenin adını ayarlar. Ön tanımlı cmd.exe'dir.\n\
+  /HISTORY            Komut geçmişini görüntüler.\n\
+  /LISTSIZE=boyut     Geçmiş arabelleği başına komut sayısını ayarlar.\n\
+  /REINSTALL          Komut geçmişini siler.\n\
+  /MACROS             Makro tanımlarını görüntüler.\n\
+  /MACROS:exe adı     Belirli bir izlence için makro tanımlarını görüntüler.\n\
+  /MACROS:ALL         Tüm izlenceler için makro tanımlarını görüntüler.\n\
+  /MACROFILE=kütük    Bir kütükten makro tanımlarını yükler.\n\
+  makro adı           Oluşturmak için bir makro adını belirtir.\n\
+  metin               Makro için yerine geçme metnini belirtir.\n"
+    IDS_INVALID_MACRO_DEF "Geçersiz makro tanımı: %s\n"
+END

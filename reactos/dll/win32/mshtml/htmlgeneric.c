@@ -16,88 +16,74 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
     HTMLElement element;
 
-    const IHTMLGenericElementVtbl *lpHTMLGenericElementVtbl;
+    IHTMLGenericElement IHTMLGenericElement_iface;
 } HTMLGenericElement;
 
-#define HTMLGENERIC(x)  (&(x)->lpHTMLGenericElementVtbl)
-
-#define HTMLGENERIC_THIS(iface) DEFINE_THIS(HTMLGenericElement, HTMLGenericElement, iface)
+static inline HTMLGenericElement *impl_from_IHTMLGenericElement(IHTMLGenericElement *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLGenericElement, IHTMLGenericElement_iface);
+}
 
 static HRESULT WINAPI HTMLGenericElement_QueryInterface(IHTMLGenericElement *iface, REFIID riid, void **ppv)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
 
-    return IHTMLDOMNode_QueryInterface(HTMLDOMNODE(&This->element.node), riid, ppv);
+    return IHTMLDOMNode_QueryInterface(&This->element.node.IHTMLDOMNode_iface, riid, ppv);
 }
 
 static ULONG WINAPI HTMLGenericElement_AddRef(IHTMLGenericElement *iface)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
 
-    return IHTMLDOMNode_AddRef(HTMLDOMNODE(&This->element.node));
+    return IHTMLDOMNode_AddRef(&This->element.node.IHTMLDOMNode_iface);
 }
 
 static ULONG WINAPI HTMLGenericElement_Release(IHTMLGenericElement *iface)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
 
-    return IHTMLDOMNode_Release(HTMLDOMNODE(&This->element.node));
+    return IHTMLDOMNode_Release(&This->element.node.IHTMLDOMNode_iface);
 }
 
 static HRESULT WINAPI HTMLGenericElement_GetTypeInfoCount(IHTMLGenericElement *iface, UINT *pctinfo)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLGenericElement_GetTypeInfo(IHTMLGenericElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
+    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
+            ppTInfo);
 }
 
 static HRESULT WINAPI HTMLGenericElement_GetIDsOfNames(IHTMLGenericElement *iface, REFIID riid,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
+    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
+            cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLGenericElement_Invoke(IHTMLGenericElement *iface, DISPID dispIdMember,
         REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
-    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
-            pVarResult, pExcepInfo, puArgErr);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
+    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLGenericElement_get_recordset(IHTMLGenericElement *iface, IDispatch **p)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
@@ -105,7 +91,7 @@ static HRESULT WINAPI HTMLGenericElement_get_recordset(IHTMLGenericElement *ifac
 static HRESULT WINAPI HTMLGenericElement_namedRecordset(IHTMLGenericElement *iface,
         BSTR dataMember, VARIANT *hierarchy, IDispatch **ppRecordset)
 {
-    HTMLGenericElement *This = HTMLGENERIC_THIS(iface);
+    HTMLGenericElement *This = impl_from_IHTMLGenericElement(iface);
     FIXME("(%p)->(%s %p %p)\n", This, debugstr_w(dataMember), hierarchy, ppRecordset);
     return E_NOTIMPL;
 }
@@ -122,17 +108,20 @@ static const IHTMLGenericElementVtbl HTMLGenericElementVtbl = {
     HTMLGenericElement_namedRecordset
 };
 
-#define HTMLGENERIC_NODE_THIS(iface) DEFINE_THIS2(HTMLGenericElement, element.node, iface)
+static inline HTMLGenericElement *impl_from_HTMLDOMNode(HTMLDOMNode *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLGenericElement, element.node);
+}
 
 static HRESULT HTMLGenericElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 {
-    HTMLGenericElement *This = HTMLGENERIC_NODE_THIS(iface);
+    HTMLGenericElement *This = impl_from_HTMLDOMNode(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IHTMLGenericElement, riid)) {
         TRACE("(%p)->(IID_IHTMLGenericElement %p)\n", This, ppv);
-        *ppv = HTMLGENERIC(This);
+        *ppv = &This->IHTMLGenericElement_iface;
     }else {
         return HTMLElement_QI(&This->element.node, riid, ppv);
     }
@@ -143,16 +132,18 @@ static HRESULT HTMLGenericElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv
 
 static void HTMLGenericElement_destructor(HTMLDOMNode *iface)
 {
-    HTMLGenericElement *This = HTMLGENERIC_NODE_THIS(iface);
+    HTMLGenericElement *This = impl_from_HTMLDOMNode(iface);
 
     HTMLElement_destructor(&This->element.node);
 }
 
-#undef HTMLGENERIC_NODE_THIS
-
 static const NodeImplVtbl HTMLGenericElementImplVtbl = {
     HTMLGenericElement_QI,
-    HTMLGenericElement_destructor
+    HTMLGenericElement_destructor,
+    HTMLElement_cpc,
+    HTMLElement_clone,
+    HTMLElement_handle_event,
+    HTMLElement_get_attr_col
 };
 
 static const tid_t HTMLGenericElement_iface_tids[] = {
@@ -168,16 +159,19 @@ static dispex_static_data_t HTMLGenericElement_dispex = {
     HTMLGenericElement_iface_tids
 };
 
-HTMLElement *HTMLGenericElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
+HRESULT HTMLGenericElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
 {
     HTMLGenericElement *ret;
 
     ret = heap_alloc_zero(sizeof(HTMLGenericElement));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
-    ret->lpHTMLGenericElementVtbl = &HTMLGenericElementVtbl;
+    ret->IHTMLGenericElement_iface.lpVtbl = &HTMLGenericElementVtbl;
     ret->element.node.vtbl = &HTMLGenericElementImplVtbl;
 
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLGenericElement_dispex);
 
-    return &ret->element;
+    *elem = &ret->element;
+    return S_OK;
 }

@@ -20,26 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-//#include <string.h>
-#include <assert.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "objbase.h"
-#include <ole2.h>
-//#include "winerror.h"
-//#include "wine/unicode.h"
-
-#include "compobj_private.h"
-
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -111,7 +92,8 @@ static inline HRESULT get_facbuf_for_iid(REFIID riid, IPSFactoryBuffer **facbuf)
     HRESULT       hr;
     CLSID         clsid;
 
-    if ((hr = CoGetPSClsid(riid, &clsid)))
+    hr = CoGetPSClsid(riid, &clsid);
+    if (hr != S_OK)
         return hr;
     return CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER | WINE_CLSCTX_DONT_HOST,
         NULL, &IID_IPSFactoryBuffer, (LPVOID*)facbuf);
@@ -124,9 +106,7 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
     struct stub_manager *manager;
     struct ifstub       *ifstub;
     BOOL                 tablemarshal;
-    IRpcStubBuffer      *stub = NULL;
     HRESULT              hr;
-    IUnknown            *iobject = NULL; /* object of type riid */
 
     hr = apartment_getoxid(apt, &stdobjref->oxid);
     if (hr != S_OK)
@@ -136,78 +116,57 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
     if (hr != S_OK)
         return hr;
 
-    hr = IUnknown_QueryInterface(object, riid, (void **)&iobject);
-    if (hr != S_OK)
-    {
-        ERR("object doesn't expose interface %s, failing with error 0x%08x\n",
-            debugstr_guid(riid), hr);
-        return E_NOINTERFACE;
-    }
-  
-    /* IUnknown doesn't require a stub buffer, because it never goes out on
-     * the wire */
-    if (!IsEqualIID(riid, &IID_IUnknown))
-    {
-        IPSFactoryBuffer *psfb;
-
-        hr = get_facbuf_for_iid(riid, &psfb);
-        if (hr != S_OK)
-        {
-            ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
-            IUnknown_Release(iobject);
-            return hr;
-        }
-    
-        hr = IPSFactoryBuffer_CreateStub(psfb, riid, iobject, &stub);
-        IPSFactoryBuffer_Release(psfb);
-        if (hr != S_OK)
-        {
-            ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s with error 0x%08x\n",
-                debugstr_guid(riid), hr);
-            IUnknown_Release(iobject);
-            return hr;
-        }
-    }
+    if (!(manager = get_stub_manager_from_object(apt, object, TRUE)))
+        return E_OUTOFMEMORY;
 
     stdobjref->flags = SORF_NULL;
     if (mshlflags & MSHLFLAGS_TABLEWEAK)
         stdobjref->flags |= SORFP_TABLEWEAK;
     if (mshlflags & MSHLFLAGS_NOPING)
         stdobjref->flags |= SORF_NOPING;
-
-    if ((manager = get_stub_manager_from_object(apt, object)))
-        TRACE("registering new ifstub on pre-existing manager\n");
-    else
-    {
-        TRACE("constructing new stub manager\n");
-
-        manager = new_stub_manager(apt, object);
-        if (!manager)
-        {
-            if (stub) IRpcStubBuffer_Release(stub);
-            IUnknown_Release(iobject);
-            return E_OUTOFMEMORY;
-        }
-    }
     stdobjref->oid = manager->oid;
 
     tablemarshal = ((mshlflags & MSHLFLAGS_TABLESTRONG) || (mshlflags & MSHLFLAGS_TABLEWEAK));
 
     /* make sure ifstub that we are creating is unique */
     ifstub = stub_manager_find_ifstub(manager, riid, mshlflags);
-    if (!ifstub)
-        ifstub = stub_manager_new_ifstub(manager, stub, iobject, riid, dest_context, dest_context_data, mshlflags);
+    if (!ifstub) {
+        IRpcStubBuffer *stub = NULL;
 
-    if (stub) IRpcStubBuffer_Release(stub);
-    IUnknown_Release(iobject);
+        /* IUnknown doesn't require a stub buffer, because it never goes out on
+         * the wire */
+        if (!IsEqualIID(riid, &IID_IUnknown))
+        {
+            IPSFactoryBuffer *psfb;
 
-    if (!ifstub)
-    {
-        stub_manager_int_release(manager);
-        /* destroy the stub manager if it has no ifstubs by releasing
-         * zero external references */
-        stub_manager_ext_release(manager, 0, FALSE, TRUE);
-        return E_OUTOFMEMORY;
+            hr = get_facbuf_for_iid(riid, &psfb);
+            if (hr == S_OK) {
+                hr = IPSFactoryBuffer_CreateStub(psfb, riid, manager->object, &stub);
+                IPSFactoryBuffer_Release(psfb);
+                if (hr != S_OK)
+                    ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s with error 0x%08x\n",
+                        debugstr_guid(riid), hr);
+            }else {
+                ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
+                hr = E_NOINTERFACE;
+            }
+
+        }
+
+        if (hr == S_OK) {
+            ifstub = stub_manager_new_ifstub(manager, stub, riid, dest_context, dest_context_data, mshlflags);
+            if (!ifstub)
+                hr = E_OUTOFMEMORY;
+        }
+        if (stub) IRpcStubBuffer_Release(stub);
+
+        if (hr != S_OK) {
+            stub_manager_int_release(manager);
+            /* destroy the stub manager if it has no ifstubs by releasing
+             * zero external references */
+            stub_manager_ext_release(manager, 0, FALSE, TRUE);
+            return hr;
+        }
     }
 
     if (!tablemarshal)
@@ -807,11 +766,12 @@ static HRESULT proxy_manager_construct(
 
 static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX dest_context, void *dest_context_data)
 {
-    MSHCTX old_dest_context = This->dest_context;
+    MSHCTX old_dest_context;
     MSHCTX new_dest_context;
 
     do
     {
+        old_dest_context = This->dest_context;
         new_dest_context = old_dest_context;
         /* "stronger" values overwrite "weaker" values. stronger values are
          * ones that disable more optimisations */
@@ -855,7 +815,7 @@ static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX 
 
         if (old_dest_context == new_dest_context) break;
 
-        old_dest_context = InterlockedCompareExchange((PLONG)&This->dest_context, new_dest_context, old_dest_context);
+        new_dest_context = InterlockedCompareExchange((PLONG)&This->dest_context, new_dest_context, old_dest_context);
     } while (new_dest_context != old_dest_context);
 
     if (dest_context_data)
@@ -1046,8 +1006,11 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
         IRemUnknown_AddRef(*remunk);
     }
     else if (!This->parent)
+    {
         /* disconnected - we can't create IRemUnknown */
+        *remunk = NULL;
         hr = S_FALSE;
+    }
     else
     {
         STDOBJREF stdobjref;
@@ -1169,14 +1132,16 @@ HRESULT apartment_disconnectproxies(struct apartment *apt)
 /********************** StdMarshal implementation ****************************/
 typedef struct _StdMarshalImpl
 {
-    const IMarshalVtbl	*lpvtbl;
-    LONG		ref;
-
-    IID			iid;
-    DWORD		dwDestContext;
-    LPVOID		pvDestContext;
-    DWORD		mshlflags;
+    IMarshal IMarshal_iface;
+    LONG     ref;
+    DWORD    dest_context;
+    void    *dest_context_data;
 } StdMarshalImpl;
+
+static inline StdMarshalImpl *impl_from_StdMarshal(IMarshal *iface)
+{
+    return CONTAINING_RECORD(iface, StdMarshalImpl, IMarshal_iface);
+}
 
 static HRESULT WINAPI 
 StdMarshalImpl_QueryInterface(IMarshal *iface, REFIID riid, void **ppv)
@@ -1193,16 +1158,16 @@ StdMarshalImpl_QueryInterface(IMarshal *iface, REFIID riid, void **ppv)
 }
 
 static ULONG WINAPI
-StdMarshalImpl_AddRef(LPMARSHAL iface)
+StdMarshalImpl_AddRef(IMarshal *iface)
 {
-    StdMarshalImpl *This = (StdMarshalImpl *)iface;
+    StdMarshalImpl *This = impl_from_StdMarshal(iface);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI
-StdMarshalImpl_Release(LPMARSHAL iface)
+StdMarshalImpl_Release(IMarshal *iface)
 {
-    StdMarshalImpl *This = (StdMarshalImpl *)iface;
+    StdMarshalImpl *This = impl_from_StdMarshal(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (!ref) HeapFree(GetProcessHeap(),0,This);
@@ -1211,7 +1176,7 @@ StdMarshalImpl_Release(LPMARSHAL iface)
 
 static HRESULT WINAPI
 StdMarshalImpl_GetUnmarshalClass(
-    LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
+    IMarshal *iface, REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags, CLSID* pCid)
 {
     *pCid = CLSID_DfMarshal;
@@ -1220,7 +1185,7 @@ StdMarshalImpl_GetUnmarshalClass(
 
 static HRESULT WINAPI
 StdMarshalImpl_GetMarshalSizeMax(
-    LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
+    IMarshal *iface, REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags, DWORD* pSize)
 {
     *pSize = sizeof(STDOBJREF);
@@ -1229,7 +1194,7 @@ StdMarshalImpl_GetMarshalSizeMax(
 
 static HRESULT WINAPI
 StdMarshalImpl_MarshalInterface(
-    LPMARSHAL iface, IStream *pStm,REFIID riid, void* pv, DWORD dest_context,
+    IMarshal *iface, IStream *pStm,REFIID riid, void* pv, DWORD dest_context,
     void* dest_context_data, DWORD mshlflags)
 {
     STDOBJREF             stdobjref;
@@ -1331,9 +1296,9 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
 }
 
 static HRESULT WINAPI
-StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv)
+StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, void **ppv)
 {
-    StdMarshalImpl *This = (StdMarshalImpl *)iface;
+    StdMarshalImpl *This = impl_from_StdMarshal(iface);
     struct stub_manager *stubmgr = NULL;
     STDOBJREF stdobjref;
     ULONG res;
@@ -1399,8 +1364,8 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
             wine_dbgstr_longlong(stdobjref.oxid));
 
     if (hres == S_OK)
-        hres = unmarshal_object(&stdobjref, apt, This->dwDestContext,
-                                This->pvDestContext, riid,
+        hres = unmarshal_object(&stdobjref, apt, This->dest_context,
+                                This->dest_context_data, riid,
                                 stubmgr ? &stubmgr->oxid_info : NULL, ppv);
 
     if (stubmgr) stub_manager_int_release(stubmgr);
@@ -1413,7 +1378,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
 }
 
 static HRESULT WINAPI
-StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
+StdMarshalImpl_ReleaseMarshalData(IMarshal *iface, IStream *pStm)
 {
     STDOBJREF            stdobjref;
     ULONG                res;
@@ -1440,6 +1405,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
 
     if (!(stubmgr = get_stub_manager(apt, stdobjref.oid)))
     {
+        apartment_release(apt);
         ERR("could not map object ID to stub manager, oxid=%s, oid=%s\n",
             wine_dbgstr_longlong(stdobjref.oxid), wine_dbgstr_longlong(stdobjref.oid));
         return RPC_E_INVALID_OBJREF;
@@ -1454,13 +1420,13 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
 }
 
 static HRESULT WINAPI
-StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved)
+StdMarshalImpl_DisconnectObject(IMarshal *iface, DWORD dwReserved)
 {
     FIXME("(), stub!\n");
     return S_OK;
 }
 
-static const IMarshalVtbl VT_StdMarshal =
+static const IMarshalVtbl StdMarshalVtbl =
 {
     StdMarshalImpl_QueryInterface,
     StdMarshalImpl_AddRef,
@@ -1473,15 +1439,24 @@ static const IMarshalVtbl VT_StdMarshal =
     StdMarshalImpl_DisconnectObject
 };
 
-static HRESULT StdMarshalImpl_Construct(REFIID riid, void** ppvObject)
+static HRESULT StdMarshalImpl_Construct(REFIID riid, DWORD dest_context, void *dest_context_data, void** ppvObject)
 {
-    StdMarshalImpl * pStdMarshal = 
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(StdMarshalImpl));
+    HRESULT hr;
+
+    StdMarshalImpl *pStdMarshal = HeapAlloc(GetProcessHeap(), 0, sizeof(StdMarshalImpl));
     if (!pStdMarshal)
         return E_OUTOFMEMORY;
-    pStdMarshal->lpvtbl = &VT_StdMarshal;
+
+    pStdMarshal->IMarshal_iface.lpVtbl = &StdMarshalVtbl;
     pStdMarshal->ref = 0;
-    return IMarshal_QueryInterface((IMarshal*)pStdMarshal, riid, ppvObject);
+    pStdMarshal->dest_context = dest_context;
+    pStdMarshal->dest_context_data = dest_context_data;
+
+    hr = IMarshal_QueryInterface(&pStdMarshal->IMarshal_iface, riid, ppvObject);
+    if (FAILED(hr))
+        HeapFree(GetProcessHeap(), 0, pStdMarshal);
+
+    return hr;
 }
 
 /***********************************************************************
@@ -1511,8 +1486,6 @@ HRESULT WINAPI CoGetStandardMarshal(REFIID riid, IUnknown *pUnk,
                                     DWORD dwDestContext, LPVOID pvDestContext,
                                     DWORD mshlflags, LPMARSHAL *ppMarshal)
 {
-    StdMarshalImpl *dm;
-
     if (pUnk == NULL)
     {
         FIXME("(%s,NULL,%x,%p,%x,%p), unimplemented yet.\n",
@@ -1521,17 +1494,8 @@ HRESULT WINAPI CoGetStandardMarshal(REFIID riid, IUnknown *pUnk,
     }
     TRACE("(%s,%p,%x,%p,%x,%p)\n",
         debugstr_guid(riid),pUnk,dwDestContext,pvDestContext,mshlflags,ppMarshal);
-    *ppMarshal = HeapAlloc(GetProcessHeap(),0,sizeof(StdMarshalImpl));
-    dm = (StdMarshalImpl*) *ppMarshal;
-    if (!dm) return E_FAIL;
-    dm->lpvtbl		= &VT_StdMarshal;
-    dm->ref		= 1;
 
-    dm->iid		= *riid;
-    dm->dwDestContext	= dwDestContext;
-    dm->pvDestContext	= pvDestContext;
-    dm->mshlflags	= mshlflags;
-    return S_OK;
+    return StdMarshalImpl_Construct(&IID_IMarshal, dwDestContext, pvDestContext, (void**)ppMarshal);
 }
 
 /***********************************************************************
@@ -1588,7 +1552,7 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     if (objref.flags & OBJREF_STANDARD)
     {
         TRACE("Using standard unmarshaling\n");
-        hr = StdMarshalImpl_Construct(&IID_IMarshal, (LPVOID*)marshal);
+        hr = StdMarshalImpl_Construct(&IID_IMarshal, 0, NULL, (LPVOID*)marshal);
     }
     else if (objref.flags & OBJREF_CUSTOM)
     {
@@ -1730,7 +1694,7 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
     OBJREF objref;
     LPMARSHAL pMarshal;
 
-    TRACE("(%p, %s, %p, %x, %p,", pStream, debugstr_guid(riid), pUnk,
+    TRACE("(%p, %s, %p, %x, %p, ", pStream, debugstr_guid(riid), pUnk,
         dwDestContext, pvDestContext);
     dump_MSHLFLAGS(mshlFlags);
     TRACE(")\n");
@@ -2025,7 +1989,7 @@ static HRESULT WINAPI StdMarshalCF_CreateInstance(LPCLASSFACTORY iface,
     LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
 {
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IMarshal))
-        return StdMarshalImpl_Construct(riid, ppv);
+        return StdMarshalImpl_Construct(riid, 0, NULL, ppv);
 
     FIXME("(%s), not supported.\n",debugstr_guid(riid));
     return E_NOINTERFACE;

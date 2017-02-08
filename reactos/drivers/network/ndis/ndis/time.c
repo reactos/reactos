@@ -359,4 +359,3 @@ NdisSetTimerEx(
 }
 
 /* EOF */
-

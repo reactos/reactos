@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/bootlog.c
+ * FILE:            ntoskrnl/io/iomgr/bootlog.c
  * PURPOSE:         Boot log file support
  *
  * PROGRAMMERS:     Eric Kohl
@@ -168,7 +168,7 @@ IopWriteLogFile(PWSTR LogText)
                                NULL);
 
     Status = ZwCreateFile(&FileHandle,
-                          FILE_APPEND_DATA,
+                          FILE_APPEND_DATA | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,

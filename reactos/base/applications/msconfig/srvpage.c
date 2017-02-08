@@ -1,13 +1,16 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/srvpage.c
+ * FILE:        base/applications/msconfig/srvpage.c
  * PURPOSE:     Services page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *
  */
 
 #include "precomp.h"
+
+#include <winsvc.h>
+#include <winver.h>
 
 HWND hServicesPage;
 HWND hServicesListCtrl;
@@ -96,7 +99,7 @@ GetServices ( void )
     ENUM_SERVICE_STATUS_PROCESS *pServiceStatus = NULL;
 
     ScHandle = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
-    if (ScHandle != INVALID_HANDLE_VALUE)
+    if (ScHandle != NULL)
     {
         if (EnumServicesStatusEx(ScHandle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (LPBYTE)pServiceStatus, 0, &BytesNeeded, &NumServices, &ResumeHandle, 0) == 0)
         {
@@ -104,19 +107,24 @@ GetServices ( void )
             if (GetLastError() == ERROR_MORE_DATA)
             {
                 /* reserve memory for service info array */
-                pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                pServiceStatus = HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                 if (!pServiceStatus)
+                {
+                    CloseServiceHandle(ScHandle);
                     return;
+                }
 
                 /* fill array with service info */
                 if (EnumServicesStatusEx(ScHandle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (LPBYTE)pServiceStatus, BytesNeeded, &BytesNeeded, &NumServices, &ResumeHandle, 0) == 0)
                 {
                     HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                    CloseServiceHandle(ScHandle);
                     return;
                 }
             }
             else /* exit on failure */
             {
+                CloseServiceHandle(ScHandle);
                 return;
             }
         }
@@ -124,7 +132,11 @@ GetServices ( void )
         if (NumServices)
         {
             if (!pServiceStatus)
+            {
+                CloseServiceHandle(ScHandle);
                 return;
+            }
+
             for (Index = 0; Index < NumServices; Index++)
             {
                 memset(&item, 0, sizeof(LV_ITEM));
@@ -142,16 +154,21 @@ GetServices ( void )
 
                 BytesNeeded = 0;
                 hService = OpenService(ScHandle, pServiceStatus[Index].lpServiceName, SC_MANAGER_CONNECT);
-                if (hService != INVALID_HANDLE_VALUE)
+                if (hService != NULL)
                 {
                     /* check if service is required by the system*/
                     if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)NULL, 0, &BytesNeeded))
                     {
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
-                            pServiceFailureActions = (LPSERVICE_FAILURE_ACTIONS) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                            pServiceFailureActions = HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceFailureActions == NULL)
+                            {
+                                HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                                CloseServiceHandle(hService);
+                                CloseServiceHandle(ScHandle);
                                 return;
+                            }
 
                             if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, BytesNeeded, &BytesNeeded))
                             {
@@ -170,19 +187,16 @@ GetServices ( void )
                             return;
                         }
                     }
-                    if (pServiceFailureActions->cActions)
-                    {
-                        if (pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
-                        {
-                            LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
-                            item.pszText = szStatus;
-                            item.iSubItem = 1;
-                            SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                        }
-                    }
 
                     if (pServiceFailureActions != NULL)
                     {
+                        if (pServiceFailureActions->cActions && pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
+                        {
+                                LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
+                                item.pszText = szStatus;
+                                item.iSubItem = 1;
+                                SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                        }
                         HeapFree(GetProcessHeap(), 0, pServiceFailureActions);
                         pServiceFailureActions = NULL;
                     }
@@ -193,7 +207,7 @@ GetServices ( void )
                     {
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
-                            pServiceConfig = (LPQUERY_SERVICE_CONFIG) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                            pServiceConfig = HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceConfig == NULL)
                             {
                                 HeapFree(GetProcessHeap(), 0, pServiceStatus);
@@ -235,7 +249,7 @@ GetServices ( void )
                     dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
                     if (dwLen)
                     {
-                        lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
+                        lpData = HeapAlloc(GetProcessHeap(), 0, dwLen);
                         if (lpData == NULL)
                         {
                             HeapFree(GetProcessHeap(), 0, pServiceStatus);

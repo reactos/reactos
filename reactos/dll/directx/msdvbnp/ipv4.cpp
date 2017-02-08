@@ -4,7 +4,7 @@
  * FILE:            dll/directx/msdvbnp/ipv4.cpp
  * PURPOSE:         IBDA_IPV4Filter interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

@@ -301,7 +301,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
             KeAcquireSpinLockAtDpcLevel(&TimerThread->ActiveTimerListLock);
 
             /* Remove it */
-            RemoveEntryList(&TimerThread->ActiveTimerListHead);
+            RemoveEntryList(&Timer->ActiveTimerListEntry);
             Timer->ApcAssociated = FALSE;
 
             /* Unlock the list */
@@ -659,7 +659,7 @@ NtSetTimer(IN HANDLE TimerHandle,
             KeAcquireSpinLockAtDpcLevel(&TimerThread->ActiveTimerListLock);
 
             /* Remove it */
-            RemoveEntryList(&TimerThread->ActiveTimerListHead);
+            RemoveEntryList(&Timer->ActiveTimerListEntry);
             Timer->ApcAssociated = FALSE;
 
             /* Unlock the list */

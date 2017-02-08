@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/i386/cmhardwr.c
+ * FILE:            ntoskrnl/config/powerpc/cmhardwr.c
  * PURPOSE:         Configuration Manager - Hardware-Specific Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -546,7 +546,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Free the configuration data */
-        ExFreePool(CmpConfigurationData);
+        ExFreePoolWithTag(CmpConfigurationData, TAG_CM);
     }
 
     /* Open physical memory */
@@ -824,10 +824,10 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     ZwClose(SectionHandle);
 
     /* Free the BIOS version string buffer */
-    if (BiosVersion) ExFreePool(BiosVersion);
+    if (BiosVersion) ExFreePoolWithTag(BiosVersion, TAG_CM);
 
 Quickie:
-    /* Close the procesor handle */
+    /* Close the processor handle */
     NtClose(KeyHandle);
     return STATUS_SUCCESS;
 }

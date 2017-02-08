@@ -54,16 +54,23 @@ typedef struct
 } MUI_LANGUAGE;
 
 BOOLEAN
-IsLanguageAvailable(PWCHAR LanguageId);
+IsLanguageAvailable(
+    PWCHAR LanguageId);
 
 VOID
-MUIDisplayPage (ULONG PageNumber);
+MUIDisplayPage(
+    ULONG PageNumber);
 
 VOID
-MUIClearPage (ULONG PageNumber);
+MUIClearPage(
+    ULONG PageNumber);
 
 VOID
-MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
+MUIDisplayError(
+    ULONG ErrorNum,
+    PINPUT_RECORD Ir,
+    ULONG WaitEvent,
+    ...);
 
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID);
@@ -75,7 +82,8 @@ const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID);
 
 BOOLEAN
-AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts);
+AddKbLayoutsToRegistry(
+    IN const MUI_LAYOUTS *MuiLayouts);
 
 BOOLEAN
 AddCodePage(VOID);
@@ -87,24 +95,32 @@ VOID
 SetConsoleCodePage(VOID);
 
 LPSTR
-MUIGetString(ULONG Number);
+MUIGetString(
+    ULONG Number);
 
 #define STRING_PLEASEWAIT                1
 #define STRING_INSTALLCREATEPARTITION    2
+#define STRING_INSTALLCREATELOGICAL           60
 #define STRING_INSTALLDELETEPARTITION    3
+#define STRING_DELETEPARTITION                59
 #define STRING_PARTITIONSIZE             4
 #define STRING_CHOOSENEWPARTITION        5
+#define STRING_CHOOSE_NEW_EXTENDED_PARTITION  57
+#define STRING_CHOOSE_NEW_LOGICAL_PARTITION   61
 #define STRING_HDDSIZE                   6
 #define STRING_CREATEPARTITION           7
 #define STRING_PARTFORMAT                8
 #define STRING_NONFORMATTEDPART          9
+#define STRING_NONFORMATTEDSYSTEMPART         62
+#define STRING_NONFORMATTEDOTHERPART          63
 #define STRING_INSTALLONPART             10
 #define STRING_CHECKINGPART              11
-#define STRING_QUITCONTINUE              12
-#define STRING_REBOOTCOMPUTER            13
-#define STRING_TXTSETUPFAILED            14
-#define STRING_COPYING                   15
-#define STRING_SETUPCOPYINGFILES         16
+#define STRING_CONTINUE                  12
+#define STRING_QUITCONTINUE              13
+#define STRING_REBOOTCOMPUTER            14
+#define STRING_TXTSETUPFAILED            15
+#define STRING_COPYING                   16
+#define STRING_SETUPCOPYINGFILES         17
 #define STRING_REGHIVEUPDATE             20
 #define STRING_IMPORTFILE                21
 #define STRING_DISPLAYETTINGSUPDATE      22
@@ -136,6 +152,7 @@ MUIGetString(ULONG Number);
 #define STRING_UNPSPACE                  48
 #define STRING_MAXSIZE                   49
 #define STRING_UNFORMATTED               50
+#define STRING_EXTENDED_PARTITION             58
 #define STRING_FORMATUNUSED              51
 #define STRING_FORMATUNKNOWN             52
 #define STRING_KB                        53

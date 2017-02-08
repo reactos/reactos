@@ -18,8 +18,13 @@ list(APPEND SOURCE
     src/reply.c
     src/setup.c
     src/transmit.c
-    src/types.c)
+    src/types.c
+    src/internal.h)
 
 add_library(adns ${SOURCE})
 add_dependencies(adns psdk)
-allow_warnings(adns)
+add_pch(adns src/internal.h SOURCE)
+
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(adns "-Wno-unused-but-set-variable")
+endif()

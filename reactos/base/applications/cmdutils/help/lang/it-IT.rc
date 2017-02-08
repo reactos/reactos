@@ -1,0 +1,69 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Elenco di tutti i comandi disponibili (+ descrizione)\n\n\
+  help comando\n\
+  comando /?   Per i dettagli su uno specifico comando\n\n\
+?        Elenco di tutti i comandi disponibili.\n\
+ALIAS    Imposta, toglie o visualizza gli alias.\n\
+ASSOC    Modifica le associazioni per le estensioni dei file.\n\
+ATTRIB   Visualizza o modifica gli attributi dei file.\n\
+BEEP     Segnale acustico.\n\
+CALL     Chiama un batch da un'altro.\n\
+CD       Visualizza il nome o modifica la cartella corrente.\n\
+CHCP     Visualizza o imposta il numero della tabella dei codici.\n\
+CHOICE   Aspetta che l'utente scelga una tra le opzioni disponibili.\n\
+CLS      Cancella lo schermo.\n\
+CMD      Esegue un altro interprete dei comandi.\n\
+COLOR    Imposta i colori della console.\n\
+COPY     Copia uno o più file in un'altra destinazione.\n\
+DATE     Visualizza o modifica la data.\n\
+DELETE   Cancella uno o più file.\n\
+DIR      Visualizza un elenco di file e sottocartelle in una cartella.\n\
+ECHO     Visualizza messaggi o abilita e disabilita la visualizzazione dei comandi.\n\
+ERASE    Cancella uno o più file.\n\
+EXIT     Esce dall'interprete dei comandi.\n\
+FOR      Esegue un comando per ognuno dei file indicati.\n\
+FREE     Spazio libero.\n\
+GOTO     Salta a una etichetta durante l'esecuzione di un batch.\n\
+HELP     Fornisce informazioni sui comandi di ReactOS.\n\
+HISTORY  Elenco degli ultimi comandi usati\n\
+IF       Esegue elaborazioni condizionali in un batch.\n\
+LABEL    Crea, modifica, o cancella l'etichetta di un disco.\n\
+MD       Crea una cartella.\n\
+MKDIR    Crea una cartella.\n\
+MKLINK   Crea un oggetto di collegamento nel filesystem.\n\
+MOVE     Muove uno o più file da una cartella a un'altra\n\
+PATH     Visualizza o imposta i percorsi di ricerca per gli eseguibili.\n\
+PAUSE    Ferma l'esecuzione di un batch e visualizza un messaggio.\n\
+POPD     Ripristina il valore precedente della cartella corrente salvato da\n\
+         PUSHD.\n\
+PROMPT   Cambia il messaggio di pronto per i comandi.\n\
+PUSHD    Salva la cartella corrente e poi la cambia.\n\
+RD       Rimuove una cartella.\n\
+REM      Commenti in un batch.\n\
+REN      Rinomina uno più file.\n\
+RENAME   Rinomina uno più file.\n\
+RMDIR    Rimuove una cartella.\n\
+SCREEN   Sposta il cursore e visualizza un testo.\n\
+SET      Visualizza, modifica, o cancella le variabili di ambiente.\n\
+SHIFT    Scorre la posizione dei parametri nei batch.\n"
+    IDS_HELP2 "START    Apre una finestra separata ed esegue uno specifico comando.\n\
+TIME     Visualizza o modifica l'ora di sistema.\n\
+TIMER    Permette l'uso di cronometri.\n\
+TITLE    Imposta il titolo della finestra per una sessione di CMD.EXE.\n\
+TYPE     Visualizza il contenuto di un file di testo.\n\
+VER      Visualizza la versione di ReactOS.\n\
+VERIFY   Richiede che ReactOS verifichi che i file siano scritti correttamente\n\
+         su disco.\n\
+VOL      Visualizza l'etichetta del volume e il numero di serie del disco.\n"
+END

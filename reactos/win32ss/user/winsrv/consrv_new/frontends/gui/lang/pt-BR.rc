@@ -1,0 +1,26 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Editar"
+    IDS_MARK "Marcar"
+    IDS_COPY "Copiar\tEnter"
+    IDS_PASTE "Colar"
+    IDS_SELECTALL "Selecionar Tudo"
+    IDS_SCROLL "Rolar"
+    IDS_FIND "Procurar..."
+    IDS_DEFAULTS "Padrões"
+    IDS_PROPERTIES "Propriedades"
+/*
+    IDS_SCROLLHERE "Rolar aqui"
+    IDS_SCROLLTOP "Rolar até o topo"
+    IDS_SCROLLBOTTOM "Rolar até o fim"
+    IDS_SCROLLPAGE_UP "Page up"
+    IDS_SCROLLPAGE_DOWN "Page down"
+    IDS_SCROLLUP "Scroll up"
+    IDS_SCROLLDOWN "Scroll down"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END

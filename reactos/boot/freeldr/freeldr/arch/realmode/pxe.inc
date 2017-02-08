@@ -17,17 +17,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
 PxeCallApi:
 
-	mov ax, word ptr ds:[BSS_PxeBufferSegment]
-	push ax
-	mov ax, word ptr ds:[BSS_PxeBufferOffset]
-	push ax
-	mov ax, word ptr ds:[BSS_PxeFunction]
-	push ax
-	call dword ptr ds:[BSS_PxeEntryPoint]
-	add esp, 6
-	mov word ptr ds:[BSS_PxeResult], ax
+    mov ax, word ptr ds:[BSS_PxeBufferSegment]
+    push ax
+    mov ax, word ptr ds:[BSS_PxeBufferOffset]
+    push ax
+    mov ax, word ptr ds:[BSS_PxeFunction]
+    push ax
+    call dword ptr ds:[BSS_PxeEntryPoint]
+    add esp, 6
+    mov word ptr ds:[BSS_PxeResult], ax
 
     ret

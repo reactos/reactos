@@ -47,6 +47,8 @@ extern "C" {
 #define SHUTDOWN_RESTART                0x00000004
 #define SHUTDOWN_RESTARTAPPS            0x00000080
 
+#define MAX_SHUTDOWN_TIMEOUT (10*365*24*60*60)
+
 #define RRF_RT_REG_NONE         (1 << 0)
 #define RRF_RT_REG_SZ           (1 << 1)
 #define RRF_RT_REG_EXPAND_SZ    (1 << 2)

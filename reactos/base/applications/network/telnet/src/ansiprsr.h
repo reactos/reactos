@@ -1,12 +1,5 @@
 #pragma once
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <ctype.h>
-//#include <string.h>
-#include "tnconfig.h"
-#include "tparser.h"
-
 // added this color table to make things go faster (Paul Branann 5/8/98)
 enum Colors {BLACK=0, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE};
 extern const int ANSIColors[];

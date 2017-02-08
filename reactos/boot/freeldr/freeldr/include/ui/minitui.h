@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FreeLoader
- * FILE:            freeldr/include/ui/minitui.h
+ * FILE:            boot/freeldr/freeldr/include/ui/minitui.h
  * PURPOSE:         Mini Text UI interface header
  * PROGRAMMERS:     Hervé Poussineau
  */

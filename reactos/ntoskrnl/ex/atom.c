@@ -78,7 +78,7 @@ ExpGetGlobalAtomTable(VOID)
  *        Pointer to RTL_ATOM
  *
  * @return STATUS_SUCCESS in case of success, proper error code
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None
  *
@@ -198,7 +198,7 @@ NtAddAtom(IN PWSTR AtomName,
  *        Atom identifier
  *
  * @return STATUS_SUCCESS in case of success, proper error code
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None
  *
@@ -235,7 +235,7 @@ NtDeleteAtom(IN RTL_ATOM Atom)
  *        Pointer to RTL_ATOM
  *
  * @return STATUS_SUCCESS in case of success, proper error code
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None
  *
@@ -360,7 +360,7 @@ NtFindAtom(IN PWSTR AtomName,
  *        buffer size
  *
  * @return STATUS_SUCCESS in case of success, proper error code
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None
  *

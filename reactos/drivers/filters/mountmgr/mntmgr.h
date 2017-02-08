@@ -2,27 +2,18 @@
 #define _MNTMGR_H_
 
 #include <ntifs.h>
-#include <ntddk.h>
 #include <mountdev.h>
 #include <ntddvol.h>
-#include <wdmguid.h>
-#include <ioevent.h>
-#include <psfuncs.h>
 #include <ntdddisk.h>
-#include <ntddvol.h>
+#include <wdmguid.h>
+#include <ndk/psfuncs.h>
+#include <ntdddisk.h>
 
-/* Enter FIXME */
-#ifdef IsEqualGUID
-#undef IsEqualGUID
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
-
-#define IsEqualGUID(rguid1, rguid2) (!RtlCompareMemory(rguid1, rguid2, sizeof(GUID)))
-
-#define FILE_READ_PROPERTIES  0x00000008
-#define FILE_WRITE_PROPERTIES 0x00000010
-
-#define GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER 0x80000000
-/* Leave FIXME */
 
 typedef struct _DEVICE_EXTENSION
 {
@@ -64,7 +55,7 @@ typedef struct _DEVICE_INFORMATION
     UNICODE_STRING DeviceName;              // 0x2C
     BOOLEAN KeepLinks;                      // 0x34
     UCHAR SuggestedDriveLetter;             // 0x35
-    BOOLEAN Volume;                         // 0x36
+    BOOLEAN ManuallyRegistered;             // 0x36
     BOOLEAN Removable;                      // 0x37
     BOOLEAN LetterAssigned;                 // 0x38
     BOOLEAN NeedsReconcile;                 // 0x39
@@ -99,7 +90,7 @@ typedef struct _UNIQUE_ID_REPLICATE
 typedef struct _DATABASE_ENTRY
 {
     ULONG EntrySize;                // 0x00
-    ULONG DatabaseOffset;           // 0x04
+    ULONG EntryReferences;          // 0x04
     USHORT SymbolicNameOffset;      // 0x08
     USHORT SymbolicNameLength;      // 0x0A
     USHORT UniqueIdOffset;          // 0x0C
@@ -113,6 +104,12 @@ typedef struct _ASSOCIATED_DEVICE_ENTRY
     UNICODE_STRING String;                            // 0x0C
 } ASSOCIATED_DEVICE_ENTRY, *PASSOCIATED_DEVICE_ENTRY; // 0x14
 
+typedef struct _DEVICE_INFORMATION_ENTRY
+{
+    LIST_ENTRY DeviceInformationEntry;                  // 0x00
+    PDEVICE_INFORMATION DeviceInformation;              // 0x08
+} DEVICE_INFORMATION_ENTRY, *PDEVICE_INFORMATION_ENTRY; // 0x0C
+
 typedef struct _ONLINE_NOTIFICATION_WORK_ITEM
 {
     WORK_QUEUE_ITEM;                                              // 0x00
@@ -120,14 +117,19 @@ typedef struct _ONLINE_NOTIFICATION_WORK_ITEM
     UNICODE_STRING SymbolicName;                                  // 0x14
 } ONLINE_NOTIFICATION_WORK_ITEM, *PONLINE_NOTIFICATION_WORK_ITEM; // 0x1C
 
+typedef struct _RECONCILE_WORK_ITEM_CONTEXT
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PDEVICE_INFORMATION DeviceInformation;
+} RECONCILE_WORK_ITEM_CONTEXT, *PRECONCILE_WORK_ITEM_CONTEXT;
+
 typedef struct _RECONCILE_WORK_ITEM
 {
     LIST_ENTRY WorkerQueueListEntry;            // 0x00
     PIO_WORKITEM WorkItem;                      // 0x08
     PWORKER_THREAD_ROUTINE WorkerRoutine;       // 0x0C
     PVOID Context;                              // 0x10
-    PDEVICE_EXTENSION DeviceExtension;          // 0x14
-    PDEVICE_INFORMATION DeviceInformation;      // 0x18
+    RECONCILE_WORK_ITEM_CONTEXT;                // 0x14
 } RECONCILE_WORK_ITEM, *PRECONCILE_WORK_ITEM;   // 0x1C
 
 typedef struct _MIGRATE_WORK_ITEM
@@ -231,6 +233,12 @@ HasDriveLetter(
     IN PDEVICE_INFORMATION DeviceInformation
 );
 
+INIT_SECTION
+BOOLEAN
+MountmgrReadNoAutoMount(
+    IN PUNICODE_STRING RegistryPath
+);
+
 /* database.c */
 
 extern PWSTR DatabasePath;
@@ -287,6 +295,48 @@ QueryVolumeName(
     IN PUNICODE_STRING FileName OPTIONAL,
     OUT PUNICODE_STRING SymbolicName,
     OUT PUNICODE_STRING VolumeName
+);
+
+HANDLE
+OpenRemoteDatabase(
+    IN PDEVICE_INFORMATION DeviceInformation,
+    IN BOOLEAN MigrateDatabase
+);
+
+PDATABASE_ENTRY
+GetRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN LONG StartingOffset 
+);
+
+NTSTATUS
+WriteRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN LONG Offset,
+    IN PDATABASE_ENTRY Entry
+);
+
+NTSTATUS
+CloseRemoteDatabase(
+    IN HANDLE Database
+);
+
+NTSTATUS
+AddRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN PDATABASE_ENTRY Entry
+);
+
+NTSTATUS
+DeleteRemoteDatabaseEntry(
+    IN HANDLE Database,
+    IN LONG StartingOffset
+);
+
+VOID
+NTAPI
+ReconcileThisDatabaseWithMasterWorker(
+    IN PVOID Parameter
 );
 
 /* device.c */
@@ -357,6 +407,18 @@ CreateNoDriveLetterEntry(
 BOOLEAN
 HasNoDriveLetterEntry(
     IN PMOUNTDEV_UNIQUE_ID UniqueId
+);
+
+VOID
+UpdateReplicatedUniqueIds(
+    IN PDEVICE_INFORMATION DeviceInformation,
+    IN PDATABASE_ENTRY DatabaseEntry 
+);
+
+BOOLEAN
+IsUniqueIdPresent(
+    IN PDEVICE_EXTENSION DeviceExtension,
+    IN PDATABASE_ENTRY DatabaseEntry 
 );
 
 /* point.c */
@@ -447,6 +509,12 @@ DeleteSymbolicLinkNameFromMemory(
     IN PDEVICE_EXTENSION DeviceExtension,
     IN PUNICODE_STRING SymbolicLink,
     IN BOOLEAN MarkOffline
+);
+
+NTSTATUS
+MountMgrQuerySymbolicLink(
+    IN PUNICODE_STRING SymbolicName,
+    IN OUT PUNICODE_STRING LinkTarget
 );
 
 #endif /* _MNTMGR_H_ */

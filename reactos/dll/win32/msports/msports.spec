@@ -6,7 +6,7 @@
 @ stdcall ComDBReleasePort(ptr long)
 @ stdcall ComDBResizeDatabase(ptr long)
 @ stdcall LibMain(ptr long ptr) DllMain
-@ stub ParallelPortPropPageProvider
+@ stdcall ParallelPortPropPageProvider(ptr ptr long)
 @ stdcall PortsClassInstaller(long ptr ptr)
 @ stub SerialDisplayAdvancedSettings
 @ stdcall SerialPortPropPageProvider(ptr ptr long)

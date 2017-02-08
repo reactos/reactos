@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/video/miniport/vmx_svga/precomp.h
+ * FILE:            win32ss/drivers/miniport/vmx_svga/precomp.h
  * PURPOSE:         VMWARE SVGA-II Driver Header
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

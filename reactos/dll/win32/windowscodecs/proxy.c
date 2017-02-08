@@ -18,28 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-//#include "wincodec.h"
-#include <wincodecsdk.h>
-
 #include "wincodecs_private.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+HRESULT WINAPI IPropertyBag2_Write_Proxy(IPropertyBag2 *iface,
+    ULONG cProperties, PROPBAG2 *ppropbag, VARIANT *pvarValue)
+{
+    return IPropertyBag2_Write(iface, cProperties, ppropbag, pvarValue);
+}
 
 HRESULT WINAPI IWICBitmapClipper_Initialize_Proxy_W(IWICBitmapClipper *iface,
     IWICBitmapSource *pISource, const WICRect *prc)
@@ -223,6 +208,9 @@ HRESULT WINAPI IWICBitmapFrameEncode_SetThumbnail_Proxy_W(IWICBitmapFrameEncode 
 HRESULT WINAPI IWICBitmapFrameEncode_WriteSource_Proxy_W(IWICBitmapFrameEncode *iface,
     IWICBitmapSource *pIBitmapSource, WICRect *prc)
 {
+    if (prc && (prc->Width <= 0 || prc->Height <= 0))
+        prc = NULL;
+
     return IWICBitmapFrameEncode_WriteSource(iface, pIBitmapSource, prc);
 }
 
@@ -635,5 +623,45 @@ HRESULT WINAPI WICCreateImagingFactory_Proxy(UINT SDKVersion, IWICImagingFactory
 {
     TRACE("%x, %p\n", SDKVersion, ppIImagingFactory);
 
-    return ComponentFactory_CreateInstance(NULL, &IID_IWICImagingFactory, (void**)ppIImagingFactory);
+    return ComponentFactory_CreateInstance(&IID_IWICImagingFactory, (void**)ppIImagingFactory);
+}
+
+HRESULT WINAPI WICSetEncoderFormat_Proxy(IWICBitmapSource *pSourceIn,
+    IWICPalette *pIPalette, IWICBitmapFrameEncode *pIFrameEncode,
+    IWICBitmapSource **ppSourceOut)
+{
+    HRESULT hr;
+    WICPixelFormatGUID pixelformat, framepixelformat;
+
+    TRACE("%p,%p,%p,%p\n", pSourceIn, pIPalette, pIFrameEncode, ppSourceOut);
+
+    if (pIPalette) FIXME("ignoring palette\n");
+
+    if (!pSourceIn || !pIFrameEncode || !ppSourceOut)
+        return E_INVALIDARG;
+
+    *ppSourceOut = NULL;
+
+    hr = IWICBitmapSource_GetPixelFormat(pSourceIn, &pixelformat);
+
+    if (SUCCEEDED(hr))
+    {
+        framepixelformat = pixelformat;
+        hr = IWICBitmapFrameEncode_SetPixelFormat(pIFrameEncode, &framepixelformat);
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        if (IsEqualGUID(&pixelformat, &framepixelformat))
+        {
+            *ppSourceOut = pSourceIn;
+            IWICBitmapSource_AddRef(pSourceIn);
+        }
+        else
+        {
+            hr = WICConvertBitmapSource(&framepixelformat, pSourceIn, ppSourceOut);
+        }
+    }
+
+    return hr;
 }

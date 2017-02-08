@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Video initialization and display settings
- * FILE:             subsystems/win32/win32k/ntuser/display.c
+ * FILE:             win32ss/user/ntuser/display.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -75,8 +75,8 @@ InitDisplayDriver(
     DEVMODEW dmDefault;
     DWORD dwVga;
 
-    ERR("InitDisplayDriver(%S, %S);\n",
-            pwszDeviceName, pwszRegKey);
+    TRACE("InitDisplayDriver(%S, %S);\n",
+          pwszDeviceName, pwszRegKey);
 
     /* Open the driver's registry key */
     Status = RegOpenKey(pwszRegKey, &hkey);
@@ -152,7 +152,7 @@ InitDisplayDriver(
 
 NTSTATUS
 NTAPI
-InitVideo()
+InitVideo(VOID)
 {
     ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
     WCHAR awcDeviceName[20];
@@ -197,7 +197,7 @@ InitVideo()
     if (NT_SUCCESS(Status))
     {
         iVGACompatible = _wtoi(&awcDeviceName[13]);
-        ERR("VGA adapter = %ld\n", iVGACompatible);
+        ERR("VGA adapter = %lu\n", iVGACompatible);
     }
 
     /* Get the maximum mumber of adapters */
@@ -206,7 +206,7 @@ InitVideo()
         ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
     }
 
-    TRACE("Found %ld devices\n", ulMaxObjectNumber + 1);
+    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
 
     /* Loop through all adapters */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
@@ -350,8 +350,8 @@ NtUserEnumDisplayDevices(
     DISPLAY_DEVICEW dispdev;
     NTSTATUS Status;
 
-    TRACE("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
-           pustrDevice, iDevNum);
+    TRACE("Enter NtUserEnumDisplayDevices(%wZ, %lu)\n",
+          pustrDevice, iDevNum);
 
     dispdev.cb = sizeof(dispdev);
 
@@ -463,8 +463,8 @@ UserEnumDisplaySettings(
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
 
-    TRACE("Enter UserEnumDisplaySettings('%wZ', %ld)\n",
-            pustrDevice, iModeNum);
+    TRACE("Enter UserEnumDisplaySettings('%wZ', %lu)\n",
+          pustrDevice, iModeNum);
 
     /* Ask GDI for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
@@ -568,8 +568,8 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    TRACE("Enter NtUserEnumDisplaySettings(%wZ, %ld, %p, 0x%lx)\n",
-            pustrDevice, iModeNum, lpDevMode, dwFlags);
+    TRACE("Enter NtUserEnumDisplaySettings(%wZ, %lu, %p, 0x%lx)\n",
+          pustrDevice, iModeNum, lpDevMode, dwFlags);
 
     if (pustrDevice)
     {
@@ -602,6 +602,7 @@ NtUserEnumDisplaySettings(
         /* Get the registry settings */
         Status = UserEnumRegistryDisplaySettings(pustrDevice, &dmReg);
         pdm = &dmReg;
+        pdm->dmSize = sizeof(DEVMODEW);
     }
     else if (iModeNum == ENUM_CURRENT_SETTINGS)
     {
@@ -654,7 +655,6 @@ APIENTRY
 UserChangeDisplaySettings(
    PUNICODE_STRING pustrDevice,
    LPDEVMODEW pdm,
-   HWND hwnd,
    DWORD flags,
    LPVOID lParam)
 {
@@ -761,7 +761,8 @@ UserChangeDisplaySettings(
         ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
 
         /* Restore mouse pointer, no hooks called */
-        UserSetCursor(pvOldCursor, TRUE);
+        pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
+        ASSERT(pvOldCursor == NULL);
 
         /* Check for failure */
         if (!ulResult)
@@ -813,7 +814,6 @@ APIENTRY
 NtUserChangeDisplaySettings(
     PUNICODE_STRING pustrDevice,
     LPDEVMODEW lpDevMode,
-    HWND hwnd,
     DWORD dwflags,
     LPVOID lParam)
 {
@@ -823,8 +823,7 @@ NtUserChangeDisplaySettings(
     LONG lRet;
 
     /* Check arguments */
-    if ((dwflags != CDS_VIDEOPARAMETERS && lParam != NULL) ||
-        (hwnd != NULL))
+    if ((dwflags != CDS_VIDEOPARAMETERS) && (lParam != NULL))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return DISP_CHANGE_BADPARAM;
@@ -903,7 +902,7 @@ NtUserChangeDisplaySettings(
     UserEnterExclusive();
 
     /* Call internal function */
-    lRet = UserChangeDisplaySettings(pustrDevice, lpDevMode, hwnd, dwflags, NULL);
+    lRet = UserChangeDisplaySettings(pustrDevice, lpDevMode, dwflags, NULL);
 
     /* Release lock */
     UserLeave();

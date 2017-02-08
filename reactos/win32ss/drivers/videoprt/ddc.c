@@ -21,6 +21,9 @@
 
 #include "videoprt.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define DDC_EEPROM_ADDRESS  0xA0
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -222,4 +225,3 @@ VideoPortDDCMonitorHelper(
    INFO_(VIDEOPRT, "VideoPortDDCMonitorHelper() - SUCCESS!\n");
    return TRUE;
 }
-

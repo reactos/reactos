@@ -1,0 +1,23 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_UsageMessage "%s\n\nPërdorimi: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Q'rregjistro serverin\n\
+/s -	Qetesi; mos shfaq mesazhe ne kuti\n\
+/c -	Mesazhi ne konsol\n\
+/i -	Thirr DllInstall kalim opsional [cmdline]; kur perdoret me /u therret dll q'instalo\n\
+/n -	Mos thirr DllRegisterServer; ky opsion duhet te perdoret me/i"
+    IDS_NoDllSpecified "Emer jo i specifikuar DLL'je."
+    IDS_InvalidFlag "Flamur i panjohur: %s"
+    IDS_SwitchN_NoI "Flamur i panjohur: /n duhet te perdoret me prapashtesen /i"
+    IDS_DllNotLoaded "LoadLibrary('%s') deshtoj.\nGetLastError kthen 0x%08x."
+    IDS_MissingEntry "%s u ngarkua, por %s pika e hyrjes nuk u gjend.\n\n\
+%s nuk mund te eksportohet, ose nje version i korruptuar i %s mund te jete ne memorie. Konsidero perdorimin e PView per ta gjetur dhe fshire."
+    IDS_FailureMessage "%s në %s deshtoj.\nKodi i kthimit ishte: 0x%08x"
+    IDS_SuccessMessage "%s në %s me sukses."
+END

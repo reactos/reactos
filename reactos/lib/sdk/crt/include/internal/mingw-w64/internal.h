@@ -21,7 +21,7 @@ extern "C" {
 #ifdef __REACTOS__
 #include "malloc.h"
 struct _exception;
-__declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *));
+__declspec(dllimport) void __cdecl __setusermatherr(int (__cdecl *)(struct _exception *));
 #define __mingw_fprintf fprintf
 #define __mingw_vfprintf vfprintf
 #endif

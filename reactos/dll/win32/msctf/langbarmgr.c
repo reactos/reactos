@@ -18,21 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <wine/debug.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <shlwapi.h>
-
-#include <msctf.h>
-//#include "msctf_internal.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msctf);
+#include "msctf_internal.h"
 
 typedef struct tagLangBarMgr {
     ITfLangBarMgr ITfLangBarMgr_iface;
@@ -60,12 +46,12 @@ static HRESULT WINAPI LangBarMgr_QueryInterface(ITfLangBarMgr *iface, REFIID iid
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfLangBarMgr))
     {
-        *ppvOut = This;
+        *ppvOut = &This->ITfLangBarMgr_iface;
     }
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfLangBarMgr_AddRef(iface);
         return S_OK;
     }
 
@@ -196,7 +182,7 @@ HRESULT LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     This->ITfLangBarMgr_iface.lpVtbl = &LangBarMgr_LangBarMgrVtbl;
     This->refCount = 1;
 
-    TRACE("returning %p\n", This);
-    *ppOut = (IUnknown *)This;
+    *ppOut = (IUnknown *)&This->ITfLangBarMgr_iface;
+    TRACE("returning %p\n", *ppOut);
     return S_OK;
 }

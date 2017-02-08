@@ -3,7 +3,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
- * FILE:             drivers/directx/dxg/main.c
+ * FILE:             win32ss/reactx/dxg/historic.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       15/10-2007   Magnus Olsen
@@ -59,7 +59,7 @@ DxDxgGenericThunk(ULONG_PTR ulIndex,
 * @name DxDdIoctl
 * @implemented
 *
-* The function DxDdIoctl is the ioctl call to diffent DirectX functions 
+* The function DxDdIoctl is the ioctl call to different DirectX functions 
 *
 * @param ULONG ulIoctl
 * The ioctl code that we want call to

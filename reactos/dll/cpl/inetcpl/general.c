@@ -19,28 +19,17 @@
  *
  */
 
-#define NONAMELESSUNION
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-//#include <winuser.h>
-#include <wininet.h>
-#include <winreg.h>
-#include <shlwapi.h>
-//#include <prsht.h>
-
 #include "inetcpl.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
+#include <wininet.h>
+#include <shlobj.h>
 
 static const WCHAR about_blank[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
+#ifdef __REACTOS__
+static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','r','e','a','c','t','o','s','.','o','r','g',0};
+#else
+static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
+#endif
 static const WCHAR start_page[] = {'S','t','a','r','t',' ','P','a','g','e',0};
 static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
                                     'M','i','c','r','o','s','o','f','t','\\',
@@ -49,12 +38,9 @@ static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
 
 /* list of unimplemented buttons */
 static DWORD disabled_general_buttons[] = {IDC_HOME_CURRENT,
-                                           IDC_HOME_DEFAULT,
                                            IDC_HISTORY_SETTINGS,
                                            0};
-static DWORD disabled_delhist_buttons[] = {IDC_DELETE_COOKIES,
-                                           IDC_DELETE_HISTORY,
-                                           IDC_DELETE_FORM_DATA,
+static DWORD disabled_delhist_buttons[] = {IDC_DELETE_FORM_DATA,
                                            IDC_DELETE_PASSWORDS,
                                            0};
 
@@ -69,8 +55,25 @@ static INT_PTR delhist_on_command(HWND hdlg, WPARAM wparam)
     switch (wparam)
     {
         case MAKEWPARAM(IDOK, BN_CLICKED):
-            if (!FreeUrlCacheSpaceW(NULL, 100, FCS_PERCENT_CACHE_SPACE))
-                break;   /* Don't close the dialog. */
+            if (IsDlgButtonChecked(hdlg, IDC_DELETE_TEMP_FILES))
+                FreeUrlCacheSpaceW(NULL, 100, 0);
+
+            if (IsDlgButtonChecked(hdlg, IDC_DELETE_COOKIES))
+            {
+                WCHAR pathW[MAX_PATH];
+
+                if(SHGetSpecialFolderPathW(NULL, pathW, CSIDL_COOKIES, TRUE))
+                    FreeUrlCacheSpaceW(pathW, 100, 0);
+            }
+
+            if (IsDlgButtonChecked(hdlg, IDC_DELETE_HISTORY))
+            {
+                WCHAR pathW[MAX_PATH];
+
+                if(SHGetSpecialFolderPathW(NULL, pathW, CSIDL_HISTORY, TRUE))
+                    FreeUrlCacheSpaceW(pathW, 100, 0);
+            }
+
             EndDialog(hdlg, IDOK);
             return TRUE;
 
@@ -176,6 +179,10 @@ static INT_PTR general_on_command(HWND hwnd, WPARAM wparam)
 
         case MAKEWPARAM(IDC_HOME_BLANK, BN_CLICKED):
             SetDlgItemTextW(hwnd, IDC_HOME_EDIT, about_blank);
+            break;
+
+        case MAKEWPARAM(IDC_HOME_DEFAULT, BN_CLICKED):
+            SetDlgItemTextW(hwnd, IDC_HOME_EDIT, default_home);
             break;
 
         case MAKEWPARAM(IDC_HISTORY_DELETE, BN_CLICKED):

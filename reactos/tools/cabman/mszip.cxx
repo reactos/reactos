@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/mszip.cpp
+ * FILE:        tools/cabman/mszip.cxx
  * PURPOSE:     CAB codec for MSZIP compressed data
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>
@@ -79,7 +79,7 @@ ULONG CMSZipCodec::Compress(void* OutputBuffer,
 
     /* WindowBits is passed < 0 to tell that there is no zlib header */
     Status = deflateInit2(&ZStream,
-                          Z_BEST_COMPRESSION,
+                          Z_DEFAULT_COMPRESSION,
                           Z_DEFLATED,
                           -MAX_WBITS,
                           8, /* memLevel */

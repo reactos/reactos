@@ -1,54 +1,81 @@
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ses Kaydedicisi Hakkında"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ses Kaydedicisi Üzerine"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "Ses Kaydedicisi: Sürüm 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
-    LTEXT           "Tekif Hakkı - 2009",IDC_STATIC,55,25,114,8
-    DEFPUSHBUTTON   "Tamam",IDOK,139,54,50,14,WS_GROUP
+    ICON IDI_SNDREC32, -1, 19, 14, 21, 20
+    LTEXT "Ses Kaydedicisi: Sürüm 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Tekif Hakkı - 2009", IDC_STATIC, 56, 25, 114, 8
+    DEFPUSHBUTTON "Tamam", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni",                    ID_NEW
-        MENUITEM "&Aç...",                   ID_FILE_OPEN
-        MENUITEM "&Kaydet",                  ID_FILE_SAVE, GRAYED
-        MENUITEM "Ay&rı Kaydet...",          ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Yeni", ID_FILE_NEW
+        MENUITEM "&Aç...", ID_FILE_OPEN
+        MENUITEM "&Sakla", ID_FILE_SAVE, GRAYED
+        MENUITEM "Ay&rı Sakla...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Y&eniden Yükle...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Husûsiyetler", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış",                   ID_EXIT
+        MENUITEM "&Çıkış", ID_FILE_EXIT
     END
-    MENUITEM "Yapılacak",                    0
-    MENUITEM "Yapılacak_2",                  0
+    POPUP "&Düzen"
+    BEGIN
+        MENUITEM "&Çoğalt", ID_EDIT_COPY
+        MENUITEM "&Ekleyerek Yapıştır", ID_EDIT_PASTE, GRAYED
+        MENUITEM "&Karıştırarak Yapıştır", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "K&ütük Ekle...", ID_EDIT_INSERTFILE
+        MENUITEM "Kü&tükle Karıştır...", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Şimdiki Konumun Öncesini Sil",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Ş&imdiki Konumun Sonrasını Sil",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Ses Husûsiyetleri", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "&Etkiler"
+    BEGIN
+        MENUITEM "&Sesi %25 Arttır", ID_EFFECTS_INCVOL
+        MENUITEM "S&esi Düşür", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "&Hızı %100 Arttır", ID_EFFECTS_INCSPD
+        MENUITEM "H&ızı Düşür", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "&Yankı Ekle", ID_EFFECTS_ECHO
+        MENUITEM "&Evir", ID_EFFECTS_REVERSE
+    END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında",                ID__ABOUT
+        MENUITEM "&Üzerine...", ID_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Ses Kaydedicisi"
-    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+    IDS_APP_TITLE "Ses Kaydedicisi"
+    IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STRPOS              "Konum: %.2f s"
-    IDS_STRDUR              "Uzunluk: %.2f s"
-    IDS_STRBUF              "Ara Bellek: %.2f KB"
-    IDS_STRFMT              "%.1f kHz, %u bitlik"
-    IDS_STRMONO             "Tek Yollu"
-    IDS_STRSTEREO           "Çift Yollu"
-    IDS_STRCHAN             "%s"
+    IDS_STRPOS "Konum: %.2f s"
+    IDS_STRDUR "Uzunluk: %.2f s"
+    IDS_STRBUF "Ara Bellek: %.2f KB"
+    IDS_STRFMT "%.1f kHz, %u bitlik"
+    IDS_STRMONO "Tek Yollu"
+    IDS_STRSTEREO "Çok Yollu"
+    IDS_STRCHAN "%s"
 END

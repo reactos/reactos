@@ -10,10 +10,19 @@
 
 #include "srv.h"
 
+#include <ndk/mmfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
 /* DATA ***********************************************************************/
+
+PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
+PVOID CsrSrvSharedSectionHeap = NULL;
+PVOID CsrSrvSharedSectionBase = NULL;
+PVOID *CsrSrvSharedStaticServerData = NULL;
+ULONG CsrSrvSharedSectionSize = 0;
+HANDLE CsrSrvSharedSection = NULL;
 
 PCSR_API_ROUTINE CsrServerApiDispatchTable[CsrpMaxApiNumber] =
 {
@@ -33,6 +42,11 @@ BOOLEAN CsrServerApiServerValidTable[CsrpMaxApiNumber] =
     TRUE
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR CsrServerApiNameTable[CsrpMaxApiNumber] =
 {
     "ClientConnect",
@@ -41,13 +55,7 @@ PCHAR CsrServerApiNameTable[CsrpMaxApiNumber] =
     "IdentifyAlertableThread",
     "SetPriorityClass"
 };
-
-PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
-PVOID CsrSrvSharedSectionHeap = NULL;
-PVOID CsrSrvSharedSectionBase = NULL;
-PVOID *CsrSrvSharedStaticServerData = NULL;
-ULONG CsrSrvSharedSectionSize = 0;
-HANDLE CsrSrvSharedSection = NULL;
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -69,11 +77,13 @@ HANDLE CsrSrvSharedSection = NULL;
 CSR_SERVER_DLL_INIT(CsrServerDllInitialization)
 {
     /* Setup the DLL Object */
-    LoadedServerDll->ApiBase = 0;
+    LoadedServerDll->ApiBase = CSRSRV_FIRST_API_NUMBER;
     LoadedServerDll->HighestApiSupported = CsrpMaxApiNumber;
     LoadedServerDll->DispatchTable = CsrServerApiDispatchTable;
     LoadedServerDll->ValidTable = CsrServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = CsrServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
@@ -167,8 +177,8 @@ CsrLoadServerDll(IN PCHAR DllString,
 
     /* Set up the Object */
     ServerDll->Length = Size;
+    ServerDll->SizeOfProcessData = 0;
     ServerDll->SharedSection = CsrSrvSharedSectionHeap; // Send to the server dll our shared heap pointer.
-    ServerDll->Event = CsrInitializationEvent;
     ServerDll->Name.Length = DllName.Length;
     ServerDll->Name.MaximumLength = DllName.MaximumLength;
     ServerDll->Name.Buffer = (PCHAR)(ServerDll + 1);
@@ -444,7 +454,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
 NTSTATUS
 NTAPI
 CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
-                          OUT PCSR_CONNECTION_INFO ConnectInfo)
+                          OUT PCSR_API_CONNECTINFO ConnectInfo)
 {
     NTSTATUS Status;
     ULONG ViewSize = 0;
@@ -469,7 +479,7 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
     /* Write the values in the Connection Info structure */
     ConnectInfo->SharedSectionBase = CsrSrvSharedSectionBase;
     ConnectInfo->SharedSectionHeap = CsrSrvSharedSectionHeap;
-    ConnectInfo->SharedSectionData = CsrSrvSharedStaticServerData;
+    ConnectInfo->SharedStaticServerData = CsrSrvSharedStaticServerData;
 
     /* Return success */
     return STATUS_SUCCESS;

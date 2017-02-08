@@ -10,10 +10,10 @@ set(OARCH "pentium" CACHE STRING
 set(TUNE "i686" CACHE STRING
 "Which CPU ReactOS should be optimized for.")
 
-set(OPTIMIZE "1" CACHE STRING
+set(OPTIMIZE "4" CACHE STRING
 "What level of optimization to use.
- 0 = off
- 1 = Default option, optimize for size (-Os) with some additional options
+ 0 = Off
+ 1 = Optimize for size (-Os) with some additional options
  2 = Optimize for size (-Os)
  3 = Optimize debugging experience (-Og)
  4 = Optimize (-O1)
@@ -59,27 +59,26 @@ set(_ELF_ FALSE CACHE BOOL
 Do not enable unless you know what you're doing.")
 
 set(NSWPAT FALSE CACHE BOOL
-"Whether to compile apps/libs with features covered software patents or not.
+"Whether to build apps/libs with features covered by software patents.
 If you live in a country where software patents are valid/apply, don't
 enable this (except they/you purchased a license from the patent owner).
-This settings is disabled (0) by default.")
+This setting is disabled by default.")
 
 set(BUILD_MP TRUE CACHE BOOL
-"Whether to compile the multi processor versions for ntoskrnl and hal.")
+"Whether to build the multiprocessor versions of NTOSKRNL and HAL.")
 
 set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
-"Whether to create a graphml dependency of dlls.")
+"Whether to create a GraphML dependency graph of DLLs.")
 
 if(MSVC)
-
 set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
 set(_VS_ANALYZE_ FALSE CACHE BOOL
 "Whether to enable static analysis while compiling.")
-
 else()
-
-set(USE_PSEH3 FALSE CACHE BOOL
-"Whether to use the new PSEH3 library (requires GCC 4.5 and newer).")
-
+set(STACK_PROTECTOR FALSE CACHE BOOL
+"Whether to enbable the GCC stack checker while compiling")
 endif()
+
+set(USE_DUMMY_PSEH FALSE CACHE BOOL
+"Whether to disable PSEH support.")

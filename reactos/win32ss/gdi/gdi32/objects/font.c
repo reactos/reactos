@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/gdi32/object/font.c
+ * FILE:            win32ss/gdi/gdi32/objects/font.c
  * PURPOSE:
  * PROGRAMMER:
  *
@@ -9,8 +9,20 @@
 
 #include <precomp.h>
 
+#include <math.h>
+#include <strsafe.h>
+
 #define NDEBUG
 #include <debug.h>
+
+/* Rounds a floating point number to integer. The world-to-viewport
+ * transformation process is done in floating point internally. This function
+ * is then used to round these coordinates to integer values.
+ */
+static __inline INT GDI_ROUND(FLOAT val)
+{
+   return (int)floor(val + 0.5);
+}
 
 /*
  *  For TranslateCharsetInfo
@@ -195,7 +207,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
     int FontFamilyCount;
     int FontFamilySize;
     PFONTFAMILYINFO Info;
-    int Ret = 0;
+    int Ret = 1;
     int i;
     ENUMLOGFONTEXA EnumLogFontExA;
     NEWTEXTMETRICEXA NewTextMetricExA;
@@ -205,7 +217,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
                            INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO));
     if (NULL == Info)
     {
-        return 0;
+        return 1;
     }
 
     if (!LogFont)
@@ -220,7 +232,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
     if (FontFamilyCount < 0)
     {
         RtlFreeHeap(GetProcessHeap(), 0, Info);
-        return 0;
+        return 1;
     }
     if (INITIAL_FAMILY_COUNT < FontFamilyCount)
     {
@@ -230,13 +242,13 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
                                FontFamilyCount * sizeof(FONTFAMILYINFO));
         if (NULL == Info)
         {
-            return 0;
+            return 1;
         }
         FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, FontFamilySize);
         if (FontFamilyCount < 0 || FontFamilySize < FontFamilyCount)
         {
             RtlFreeHeap(GetProcessHeap(), 0, Info);
-            return 0;
+            return 1;
         }
     }
 
@@ -448,9 +460,6 @@ GetCharacterPlacementW(
     if(lpResults->lpOutString)
         lstrcpynW( lpResults->lpOutString, lpString, nSet );
 
-    if(lpResults->lpGlyphs)
-        lstrcpynW( lpResults->lpGlyphs, lpString, nSet );
-
     if(lpResults->lpOrder)
     {
         for(i = 0; i < nSet; i++)
@@ -483,8 +492,8 @@ GetCharacterPlacementW(
                 lpResults->lpCaretPos[i] = (pos += size.cx);
     }
 
-    /*if(lpResults->lpGlyphs)
-      NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);*/
+    if (lpResults->lpGlyphs)
+        NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);
 
     if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
         ret = MAKELONG(size.cx, size.cy);
@@ -1028,6 +1037,25 @@ GetGlyphOutlineW(
     return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetGlyphOutlineWow(
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3,
+    DWORD	a4,
+    DWORD	a5,
+    DWORD	a6
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
 
 /*
  * @implemented
@@ -1082,7 +1110,7 @@ GetOutlineTextMetricsA(
         goto end;
     }
 
-    DPRINT("needed = %d\n", needed);
+    DPRINT("needed = %u\n", needed);
     if(needed > cbData)
     {
         /* Since the supplied buffer isn't big enough, we'll alloc one
@@ -1204,6 +1232,29 @@ end:
     return ret;
 }
 
+/* Performs a device to world transformation on the specified size (which
+ * is in integer format).
+ */
+static inline INT INTERNAL_YDSTOWS(XFORM *xForm, INT height)
+{
+    double floatHeight;
+
+    /* Perform operation with floating point */
+    floatHeight = (double)height * xForm->eM22;
+    /* Round to integers */
+    return GDI_ROUND(floatHeight);
+}
+
+/* scale width and height but don't mirror them */
+static inline INT width_to_LP( XFORM *xForm, INT width )
+{
+    return GDI_ROUND( (double)width * fabs( xForm->eM11));
+}
+
+static inline INT height_to_LP( XFORM *xForm, INT height )
+{
+    return GDI_ROUND( (double)height * fabs( xForm->eM22 ));
+}
 
 /*
  * @implemented
@@ -1217,8 +1268,146 @@ GetOutlineTextMetricsW(
 )
 {
     TMDIFF Tmd;   // Should not be zero.
+    UINT Size, AvailableSize = 0, StringSize;
+    XFORM DevToWorld;
+    OUTLINETEXTMETRICW* LocalOTM;
+    WCHAR* Str;
+    BYTE* Ptr;
 
-    return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
+    /* Get the structure */
+    Size = NtGdiGetOutlineTextMetricsInternalW(hdc, 0, NULL, &Tmd);
+    if (!Size)
+        return 0;
+    if (!lpOTM || (cbData < sizeof(*lpOTM)))
+        return Size;
+
+    LocalOTM = HeapAlloc(GetProcessHeap(), 0, Size);
+    LocalOTM->otmSize = Size;
+    Size = NtGdiGetOutlineTextMetricsInternalW(hdc, Size, LocalOTM, &Tmd);
+    if (!Size)
+    {
+        HeapFree(GetProcessHeap(), 0, LocalOTM);
+        return 0;
+    }
+
+    if (!NtGdiGetTransform(hdc, GdiDeviceSpaceToWorldSpace, &DevToWorld))
+    {
+        DPRINT1("NtGdiGetTransform failed!\n");
+        HeapFree(GetProcessHeap(), 0, LocalOTM);
+        SetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    /* Fill in DC specific data */
+    LocalOTM->otmTextMetrics.tmDigitizedAspectX = GetDeviceCaps(hdc, LOGPIXELSX);
+    LocalOTM->otmTextMetrics.tmDigitizedAspectY = GetDeviceCaps(hdc, LOGPIXELSY);
+    LocalOTM->otmTextMetrics.tmHeight = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmHeight );
+    LocalOTM->otmTextMetrics.tmAscent = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmAscent );
+    LocalOTM->otmTextMetrics.tmDescent = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmDescent );
+    LocalOTM->otmTextMetrics.tmInternalLeading = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmInternalLeading );
+    LocalOTM->otmTextMetrics.tmExternalLeading = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmExternalLeading );
+    LocalOTM->otmTextMetrics.tmAveCharWidth = width_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmAveCharWidth );
+    LocalOTM->otmTextMetrics.tmMaxCharWidth = width_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmMaxCharWidth );
+    LocalOTM->otmTextMetrics.tmOverhang = width_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmOverhang );
+    LocalOTM->otmAscent                = height_to_LP( &DevToWorld, LocalOTM->otmAscent);
+    LocalOTM->otmDescent               = height_to_LP( &DevToWorld, LocalOTM->otmDescent);
+    LocalOTM->otmLineGap               = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmLineGap));
+    LocalOTM->otmsCapEmHeight          = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmsCapEmHeight));
+    LocalOTM->otmsXHeight              = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmsXHeight));
+    LocalOTM->otmrcFontBox.top         = height_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.top);
+    LocalOTM->otmrcFontBox.bottom      = height_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.bottom);
+    LocalOTM->otmrcFontBox.left        = width_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.left);
+    LocalOTM->otmrcFontBox.right       = width_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.right);
+    LocalOTM->otmMacAscent             = height_to_LP( &DevToWorld, LocalOTM->otmMacAscent);
+    LocalOTM->otmMacDescent            = height_to_LP( &DevToWorld, LocalOTM->otmMacDescent);
+    LocalOTM->otmMacLineGap            = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmMacLineGap));
+    LocalOTM->otmptSubscriptSize.x     = width_to_LP( &DevToWorld, LocalOTM->otmptSubscriptSize.x);
+    LocalOTM->otmptSubscriptSize.y     = height_to_LP( &DevToWorld, LocalOTM->otmptSubscriptSize.y);
+    LocalOTM->otmptSubscriptOffset.x   = width_to_LP( &DevToWorld, LocalOTM->otmptSubscriptOffset.x);
+    LocalOTM->otmptSubscriptOffset.y   = height_to_LP( &DevToWorld, LocalOTM->otmptSubscriptOffset.y);
+    LocalOTM->otmptSuperscriptSize.x   = width_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptSize.x);
+    LocalOTM->otmptSuperscriptSize.y   = height_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptSize.y);
+    LocalOTM->otmptSuperscriptOffset.x = width_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptOffset.x);
+    LocalOTM->otmptSuperscriptOffset.y = height_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptOffset.y);
+    LocalOTM->otmsStrikeoutSize        = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmsStrikeoutSize));
+    LocalOTM->otmsStrikeoutPosition    = height_to_LP( &DevToWorld, LocalOTM->otmsStrikeoutPosition);
+    LocalOTM->otmsUnderscoreSize       = height_to_LP( &DevToWorld, LocalOTM->otmsUnderscoreSize);
+    LocalOTM->otmsUnderscorePosition   = height_to_LP( &DevToWorld, LocalOTM->otmsUnderscorePosition);
+
+    /* Copy what we can */
+    CopyMemory(lpOTM, LocalOTM, min(Size, cbData));
+
+    lpOTM->otmpFamilyName = NULL;
+    lpOTM->otmpFaceName = NULL;
+    lpOTM->otmpStyleName = NULL;
+    lpOTM->otmpFullName = NULL;
+
+    Size = sizeof(*lpOTM);
+    AvailableSize = cbData - Size;
+    Ptr = (BYTE*)lpOTM + sizeof(*lpOTM);
+
+    /* Fix string values up */
+    if (LocalOTM->otmpFamilyName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpFamilyName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpFamilyName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    if (LocalOTM->otmpFaceName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpFaceName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpFaceName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    if (LocalOTM->otmpStyleName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpStyleName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpStyleName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    if (LocalOTM->otmpFullName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpFullName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpFullName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    lpOTM->otmSize = Size;
+
+    HeapFree(GetProcessHeap(), 0, LocalOTM);
+
+    return Size;
 }
 
 /*
@@ -1801,7 +1990,7 @@ TranslateCharsetInfo(
         return FALSE;
     }
     if (index >= MAXTCIINDEX || FONT_tci[index].ciCharset == DEFAULT_CHARSET) return FALSE;
-    DPRINT("Index %d Charset %d CodePage %d FontSig %d\n",
+    DPRINT("Index %d Charset %u CodePage %u FontSig %lu\n",
              index,FONT_tci[index].ciCharset,FONT_tci[index].ciACP,FONT_tci[index].fs.fsCsb[0]);
     memcpy(lpCs, &FONT_tci[index], sizeof(CHARSETINFO));
     return TRUE;
@@ -1988,3 +2177,281 @@ NewEnumFontFamiliesExW(
 
     return ret;
 }
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+GdiAddFontResourceW(
+    LPCWSTR lpszFilename,
+    FLONG fl,
+    DESIGNVECTOR *pdv)
+{
+    INT Ret;
+    WCHAR lpszBuffer[MAX_PATH];
+    WCHAR lpszAbsPath[MAX_PATH];
+    UNICODE_STRING NtAbsPath;
+
+    /* FIXME: We don't support multiple files passed in lpszFilename
+     *        as L"abcxxxxx.pfm|abcxxxxx.pfb"
+     */
+
+    /* Does the file exist in CurrentDirectory or in the Absolute Path passed? */
+    GetCurrentDirectoryW(MAX_PATH, lpszBuffer);
+
+    if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
+    {
+        /* Nope. Then let's check Fonts folder */
+        GetWindowsDirectoryW(lpszBuffer, MAX_PATH);
+        StringCbCatW(lpszBuffer, sizeof(lpszBuffer), L"\\Fonts");
+
+        if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
+        {
+            DPRINT1("Font not found. The Buffer is: %ls, the FileName is: %S\n", lpszBuffer, lpszFilename);
+            return 0;
+        }
+    }
+
+    /* We found the font file so: */
+    if (!RtlDosPathNameToNtPathName_U(lpszAbsPath, &NtAbsPath, NULL, NULL))
+    {
+        DPRINT1("Can't convert Path! Path: %ls\n", lpszAbsPath);
+        return 0;
+    }
+
+    /* The Nt call expects a null-terminator included in cwc param. */
+    ASSERT(NtAbsPath.Buffer[NtAbsPath.Length / sizeof(WCHAR)] == UNICODE_NULL);
+    Ret = NtGdiAddFontResourceW(NtAbsPath.Buffer, NtAbsPath.Length / sizeof(WCHAR) + 1, 1, fl, 0, pdv);
+
+    RtlFreeUnicodeString(&NtAbsPath);
+
+    return Ret;
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+AddFontMemResourceEx(
+    PVOID pbFont,
+    DWORD cbFont,
+    PVOID pdv,
+    DWORD *pcFonts
+)
+{
+    if ( pbFont && cbFont && pcFonts)
+    {
+        return NtGdiAddFontMemResourceEx(pbFont, cbFont, NULL, 0, pcFonts);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return NULL;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+RemoveFontMemResourceEx(HANDLE fh)
+{
+    if (fh)
+    {
+        return NtGdiRemoveFontMemResourceEx(fh);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+AddFontResourceTracking(
+    LPCSTR lpString,
+    int unknown
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+RemoveFontResourceTracking(LPCSTR lpString,int unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+BOOL
+WINAPI
+CreateScalableFontResourceW(
+    DWORD fdwHidden,
+    LPCWSTR lpszFontRes,
+    LPCWSTR lpszFontFile,
+    LPCWSTR lpszCurrentPath
+)
+{
+    HANDLE f;
+
+    UNIMPLEMENTED;
+
+    /* fHidden=1 - only visible for the calling app, read-only, not
+     * enumerated with EnumFonts/EnumFontFamilies
+     * lpszCurrentPath can be NULL
+     */
+
+    /* If the output file already exists, return the ERROR_FILE_EXISTS error as specified in MSDN */
+    if ((f = CreateFileW(lpszFontRes, 0, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(f);
+        SetLastError(ERROR_FILE_EXISTS);
+        return FALSE;
+    }
+    return FALSE; /* create failed */
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+WINAPI
+GetEUDCTimeStamp(VOID)
+{
+    return NtGdiGetEudcTimeStampEx(NULL,0,TRUE);
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
+{
+    DWORD retValue = 0;
+
+    if (!lpBaseFaceName)
+    {
+        retValue = NtGdiGetEudcTimeStampEx(NULL,0,FALSE);
+    }
+    else
+    {
+        retValue = NtGdiGetEudcTimeStampEx(lpBaseFaceName, wcslen(lpBaseFaceName), FALSE);
+    }
+
+    return retValue;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+WINAPI
+GetFontAssocStatus(HDC hdc)
+{
+    ULONG retValue = 0;
+
+    if (hdc)
+    {
+        retValue = NtGdiQueryFontAssocInfo(hdc);
+    }
+
+    return retValue;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+QueryFontAssocStatus(VOID)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+WINAPI
+UnloadNetworkFonts(DWORD unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @implemented
+ *
+ */
+DWORD
+WINAPI
+GetFontData(HDC hdc,
+            DWORD dwTable,
+            DWORD dwOffset,
+            LPVOID lpvBuffer,
+            DWORD cbData)
+{
+    if (!lpvBuffer)
+    {
+        cbData = 0;
+    }
+    return NtGdiGetFontData(hdc, dwTable, dwOffset, lpvBuffer, cbData);
+}
+
+DWORD
+WINAPI
+cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD x7)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+

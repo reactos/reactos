@@ -18,25 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-//#include "wine/port.h"
-#include <wine/debug.h>
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-#include <winbase.h>
-#include <winnls.h>
-
-#ifdef HAVE_LDAP_H
-#include <ldap.h>
-#endif
-
 #include "winldap_private.h"
-#include "wldap32.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      ldap_parse_extended_resultA     (WLDAP32.@)
@@ -444,7 +426,7 @@ INT CDECL ldap_parse_vlv_controlW( WLDAP32_LDAP *ld, PLDAPControlW *control,
 
 #ifdef HAVE_LDAP_PARSE_VLV_CONTROL
     if (!(ret = ldap_parse_vlv_control( ld, controlU, &pos, &count,
-                                        context, errcode )))
+                                        (struct berval **)context, errcode )))
     {
         *targetpos = pos;
         *listcount = count;

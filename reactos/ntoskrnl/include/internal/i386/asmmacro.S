@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/include/i386/asmmacro.S
+ * FILE:            ntoskrnl/include/internal/i386/asmmacro.S
  * PURPOSE:         Assembly Macros for Spinlocks and common Trap Code
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
@@ -83,7 +83,7 @@ MACRO(KiEnterTrap, Flags)
     if (Flags AND KI_FAST_SYSTEM_CALL)
 
         /* SYSENTER requires us to build a complete ring transition trap frame */
-        FrameSize = KTRAP_FRAME_V86_ES
+        FrameSize = KTRAP_FRAME_EIP
 
         /* Fixup fs. cx is free to clobber */
         mov cx, KGDT_R0_PCR
@@ -94,6 +94,13 @@ MACRO(KiEnterTrap, Flags)
 
         /* Get a stack pointer */
         mov esp, [ecx + KTSS_ESP0]
+
+        /* Set up a fake hardware trap frame */
+        push KGDT_R3_DATA or RPL_MASK
+        push edx
+        pushfd
+        push KGDT_R3_CODE or RPL_MASK
+        push dword ptr ds:[KUSER_SHARED_SYSCALL_RET]
 
     elseif (Flags AND KI_SOFTWARE_TRAP)
 
@@ -183,7 +190,19 @@ set_sane_segs:
     mov es, ax
 
     /* Fast system calls have fs already fixed */
-    if (NOT (Flags AND KI_FAST_SYSTEM_CALL))
+    if (Flags AND KI_FAST_SYSTEM_CALL)
+
+        /* Enable interrupts and set a sane FS value */
+        or dword ptr [esp + KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+        mov dword ptr [esp + KTRAP_FRAME_FS], KGDT_R3_TEB or RPL_MASK
+
+        /* Set sane active EFLAGS */
+        push 2
+        popfd
+
+        /* Point edx to the usermode parameters */
+        add edx, 8
+    else
         /* Otherwise fix fs now */
         mov ax, KGDT_R0_PCR
         mov fs, ax
@@ -241,22 +260,25 @@ ENDM
 #define KI_EXIT_RET           HEX(080)
 #define KI_EXIT_IRET          HEX(100)
 #define KI_EDITED_FRAME       HEX(200)
+#define KI_EXIT_RET8          HEX(400)
 #define KI_RESTORE_VOLATILES  (KI_RESTORE_EAX OR KI_RESTORE_ECX_EDX)
 
 MACRO(KiTrapExitStub, Name, Flags)
+    LOCAL ret8_instruction
+    LOCAL not_nested_int
 
 PUBLIC @&Name&@4
 @&Name&@4:
 
-    if (Flags AND KI_RESTORE_EFLAGS)
-
-        /* We will pop EFlags off the stack */
-        OffsetEsp = KTRAP_FRAME_EFLAGS
-
-    elseif (Flags AND KI_EXIT_IRET)
+    if (Flags AND KI_EXIT_RET8) OR (Flags AND KI_EXIT_IRET)
 
         /* This is the IRET frame */
         OffsetEsp = KTRAP_FRAME_EIP
+
+    elseif (Flags AND KI_RESTORE_EFLAGS)
+
+        /* We will pop EFlags off the stack */
+        OffsetEsp = KTRAP_FRAME_EFLAGS
 
     else
 
@@ -335,6 +357,25 @@ PUBLIC @&Name&@4
 
     if (Flags AND KI_RESTORE_EFLAGS)
 
+        if (Flags AND KI_EXIT_RET8)
+
+            /* Check if we return from a nested interrupt, i.e. an interrupt
+               that occurred in the ret8 return path between restoring
+               EFLAGS and returning with the ret instruction. */
+            cmp dword ptr [esp], offset ret8_instruction
+            jne not_nested_int
+
+            /* This is a nested interrupt, so we have 2 IRET frames.
+               Skip the first, and go directly to the previous return address.
+               Do not pass Go. Do not collect $200 */
+            add esp, 12
+
+not_nested_int:
+            /* We are at the IRET frame, so push EFLAGS first */
+            push dword ptr [esp + 8]
+
+        endif
+
         /* Restore EFLAGS */
         popfd
 
@@ -356,6 +397,12 @@ PUBLIC @&Name&@4
 
         /* Return to kernel mode with a jmp */
         jmp edx
+
+    elseif (Flags AND KI_EXIT_RET8)
+
+        /* Return to kernel mode with a ret 8 */
+ret8_instruction:
+        ret 8
 
     elseif (Flags AND KI_EXIT_RET)
 

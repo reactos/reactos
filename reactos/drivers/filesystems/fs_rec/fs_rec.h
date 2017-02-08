@@ -7,36 +7,28 @@
  *                   Eric Kohl
  */
 
-//
-// IFS Headers
-//
-#include <ntifs.h>
-#include <ntdddisk.h>
-#include <ntddcdrm.h>
+#ifndef _FS_REC_H
+#define _FS_REC_H
 
-//
-// Tag for memory allocations
-//
+#include <ntifs.h>
+
+/* Tag for memory allocations */
 #define FSREC_TAG 'cRsF'
 
-//
-// UDFS Offsets
-//
+/* UDFS Offsets */
 #define UDFS_VRS_START_OFFSET  32768
 #define UDFS_AVDP_SECTOR       256
 
-//
-// Non-standard rounding macros
-//
+/* Non-standard rounding macros */
+#ifndef ROUND_UP
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
+#endif
 
-//
-// Conversion types and macros taken from internal ntifs headers
-//
+/* Conversion types and macros taken from internal ntifs headers */
 typedef union _UCHAR1
 {
     UCHAR Uchar[1];
@@ -82,9 +74,7 @@ typedef union _UCHAR4
     CopyUchar4(&(Bios)->LargeSectors,      &(Pbios)->LargeSectors[0]     ); \
 }
 
-//
-// Packed versions of the BPB and Boot Sector
-//
+/* Packed versions of the BPB and Boot Sector */
 typedef struct _PACKED_BIOS_PARAMETER_BLOCK
 {
     UCHAR BytesPerSector[2];
@@ -114,9 +104,7 @@ typedef struct _PACKED_BOOT_SECTOR
     UCHAR SystemId[8];
 } PACKED_BOOT_SECTOR, *PPACKED_BOOT_SECTOR;
 
-//
-// Unpacked version of the BPB
-//
+/* Unpacked version of the BPB */
 typedef struct BIOS_PARAMETER_BLOCK
 {
     USHORT BytesPerSector;
@@ -149,9 +137,7 @@ typedef struct BIOS_PARAMETER_BLOCK
     USHORT BackupBootSector;
 } BIOS_PARAMETER_BLOCK, *PBIOS_PARAMETER_BLOCK;
 
-//
-// UDFS Structures
-//
+/* UDFS Structures */
 #include <pshpack1.h>
 typedef struct _TAG
 {
@@ -179,9 +165,7 @@ typedef struct _AVDP
 } AVDP, *PAVDP;
 #include <poppack.h>
 
-//
-// Filesystem Types
-//
+/* Filesystem Types */
 typedef enum _FILE_SYSTEM_TYPE
 {
     FS_TYPE_UNUSED,
@@ -190,11 +174,10 @@ typedef enum _FILE_SYSTEM_TYPE
     FS_TYPE_CDFS,
     FS_TYPE_UDFS,
     FS_TYPE_EXT2,
+    FS_TYPE_BTRFS,
 } FILE_SYSTEM_TYPE, *PFILE_SYSTEM_TYPE;
 
-//
-// FS Recognizer State
-//
+/* FS Recognizer State */
 typedef enum _FS_REC_STATE
 {
     Pending,
@@ -202,9 +185,7 @@ typedef enum _FS_REC_STATE
     Unloading
 } FS_REC_STATE, *PFS_REC_STATE;
 
-//
-// Device extension
-//
+/* Device extension */
 typedef struct _DEVICE_EXTENSION
 {
     FS_REC_STATE State;
@@ -212,9 +193,7 @@ typedef struct _DEVICE_EXTENSION
     PDEVICE_OBJECT Alternate;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
-//
-// Prototypes
-//
+/* Prototypes */
 NTSTATUS
 NTAPI
 FsRecCdfsFsControl(
@@ -246,6 +225,13 @@ FsRecUdfsFsControl(
 NTSTATUS
 NTAPI
 FsRecExt2FsControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+FsRecBtrfsFsControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
 );
@@ -282,3 +268,5 @@ FsRecLoadFileSystem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PWCHAR DriverServiceName
 );
+
+#endif /* _FS_REC_H */

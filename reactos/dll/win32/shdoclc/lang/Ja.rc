@@ -1,0 +1,240 @@
+/*
+ * Copyright 2005-2006 Jacek Caban
+ * Copyright 2010 Akihiro Sagawa
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine インターネット エクスプローラ"
+}
+
+STRINGTABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&b&pページ" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "" /* Default */
+    {
+        MENUITEM "戻る(&B)",               IDM_GOBACKWARD
+        MENUITEM "進む(&O)",               IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "背景を保存(&S)...",      IDM_SAVEBACKGROUND
+        MENUITEM "壁紙に設定(&G)",         IDM_SETWALLPAPER
+        MENUITEM "背景をコピー(&C)",       IDM_COPYBACKGROUND
+        MENUITEM "デスクトップ項目として設定(&D)", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "すべて選択(&A)",         IDM_SELECTALL
+        MENUITEM "貼り付け(&P)",           IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "ショートカットを作成(&T)", IDM_CREATESHORTCUT
+        MENUITEM "お気に入りに追加(&F)",   IDM_ADDFAVORITES
+        MENUITEM "ソースの表示(&V)",       IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "エンコード(&E)",         IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "印刷(&I)",               IDM_PRINT
+        MENUITEM "更新(&R)",               _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "プロパティ(&P)",         IDM_PROPERTIES
+    }
+
+    POPUP "" /* Image */
+    {
+        MENUITEM "リンクを開く(&O)",         IDM_FOLLOWLINKC
+        MENUITEM "新しいウィンドウでリンクを開く(&N)", IDM_FOLLOWLINKN
+        MENUITEM "リンク先を保存(&A)...",    IDM_SAVETARGET
+        MENUITEM "リンク先を印刷(&P)",       IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "画像を表示(&H)",           IDM_SHOWPICTURE
+        MENUITEM "画像を保存(&S)...",        IDM_SAVEPICTURE
+        MENUITEM "画像をメール(&E)...",      IDM_MP_EMAILPICTURE
+        MENUITEM "画像を印刷(&I)...",        IDM_MP_PRINTPICTURE
+        MENUITEM "マイ ピクチャに移動(&G)",  IDM_MP_MYPICS
+        MENUITEM "壁紙に設定(&G)",           IDM_SETWALLPAPER
+        MENUITEM "デスクトップ項目として設定(&D)...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "切り取り(&T)",             IDM_CUT
+        MENUITEM "コピー(&C)",               IDM_COPY
+        MENUITEM "ショートカットのコピー(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼り付け(&P)",             IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "お気に入りに追加(&F)...",  IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "プロパティ(&R)",           IDM_PROPERTIES
+    }
+
+    POPUP "" /* Control */
+    {
+        MENUITEM "元に戻す(&U)", IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "切り取り(&T)", IDM_CUT
+        MENUITEM "コピー(&C)",   IDM_COPY
+        MENUITEM "貼り付け(&P)", IDM_PASTE
+        MENUITEM "削除(&D)",     IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "すべて選択(&A)", IDM_SELECTALL
+    }
+
+    POPUP "" /* Table */
+    {
+        POPUP "選択(&S)"
+        {
+            MENUITEM "セル(&C)",      IDM_CELLSELECT
+            MENUITEM "行(&R)",        IDM_ROWSELECT
+            MENUITEM "列(&C)",        IDM_COLUMNSELECT
+            MENUITEM "表(&T)",        IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "セルのプロパティ(&C)",  IDM_CELLPROPERTIES
+        MENUITEM "表のプロパティ(&T)", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "" /* 1DSite Select */
+    {
+        MENUITEM "切り取り(&T)", IDM_CUT
+        MENUITEM "コピー(&C)",  IDM_COPY
+        MENUITEM "貼り付け",    IDM_PASTE
+        MENUITEM "すべて選択(&A)", IDM_SELECTALL
+        MENUITEM "印刷(&P)",    IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* Anchor */
+    {
+        MENUITEM "開く(&O)",              IDM_FOLLOWLINKC
+        MENUITEM "新しいウィンドウで開く(&N)", IDM_FOLLOWLINKN
+        MENUITEM "リンク先を保存(&A)...", IDM_SAVETARGET
+        MENUITEM "リンク先を印刷(&P)",    IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "切り取り",              IDM_CUT
+        MENUITEM "コピー(&C)",            IDM_COPY
+        MENUITEM "ショートカットのコピー(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼り付け(&P)",          IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "お気に入りに追加(&F)...", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "プロパティ(&R)",        IDM_PROPERTIES
+    }
+
+    POPUP "" /* Context Unknown */
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* DYNSRC Image */
+    {
+        MENUITEM "リンクを開く(&O)",         IDM_FOLLOWLINKC
+        MENUITEM "新しいウィンドウでリンクを開く(&N)", IDM_FOLLOWLINKN
+        MENUITEM "リンク先を保存(&A)...",    IDM_SAVETARGET
+        MENUITEM "リンク先を印刷(&P)",       IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "画像の表示(&H)",           IDM_SHOWPICTURE
+        MENUITEM "ビデオの保存(&S)...",      IDM_SAVEPICTURE
+        MENUITEM "背景に設定(&G)",           IDM_SETWALLPAPER
+        MENUITEM "デスクトップ項目に設定(&D)...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "カット(&T)",               IDM_CUT
+        MENUITEM "コピー(&C)",               IDM_COPY
+        MENUITEM "ショートカットのコピー(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼り付け(&P)",             IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "お気に入りに追加(&F)...",  IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "再生",                     IDM_DYNSRCPLAY
+        MENUITEM "停止",                     IDM_DYNSRCSTOP
+        MENUITEM "プロパティ(&R)",           IDM_PROPERTIES
+    }
+
+    POPUP "" /* ART Image */
+    {
+        MENUITEM "リンクを開く(&O)",         IDM_FOLLOWLINKC
+        MENUITEM "新しいウィンドウでリンクを開く(&N)", IDM_FOLLOWLINKN
+        MENUITEM "リンク先を保存(&A)...",    IDM_SAVETARGET
+        MENUITEM "リンク先を印刷(&P)",       IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "画像の表示(&H)",           IDM_SHOWPICTURE
+        MENUITEM "画像を保存(&S)...",        IDM_SAVEPICTURE
+        MENUITEM "壁紙に設定(&G)",           IDM_SETWALLPAPER
+        MENUITEM "デスクトップ項目として設定(&D)...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "切り取り(&T)",             IDM_CUT
+        MENUITEM "コピー(&C)",               IDM_COPY
+        MENUITEM "ショートカットのコピー(&T)", IDM_COPYSHORTCUT
+        MENUITEM "貼り付け(&P)",             IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "お気に入りに追加(&F)...",  IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "再生",                     IDM_IMGARTPLAY
+        MENUITEM "停止",                     IDM_IMGARTSTOP
+        MENUITEM "巻き戻し",                 IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM "プロパティ(&R)",           IDM_PROPERTIES
+    }
+
+    POPUP "" /* Debug */
+    {
+        MENUITEM "タグのトレース",     IDM_TRACETAGS
+        MENUITEM "リソースの失敗",     IDM_RESOURCEFAILURES
+        MENUITEM "追跡情報のダンプ",   IDM_DUMPTRACKINGINFO
+        MENUITEM "デバッグ ブレーク",  IDM_DEBUGBREAK
+        MENUITEM "デバッグ ビュー",    IDM_DEBUGVIEW
+        MENUITEM "ツリーのダンプ",     IDM_DUMPTREE
+        MENUITEM "線のダンプ",         IDM_DUMPLINES
+        MENUITEM "表示ツリーのダンプ", IDM_DUMPDISPLAYTREE
+        MENUITEM "フォーマット キャッシュのダンプ", IDM_DUMPFORMATCACHES
+        MENUITEM "配置情報のダンプ",   IDM_DUMPLAYOUTRECTS
+        MENUITEM "メモリ モニタ",     IDM_MEMORYMONITOR
+        MENUITEM "パフォーマンス メータ", IDM_PERFORMANCEMETERS
+        MENUITEM "HTMLの保存",         IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "表示ビュー(&B)",     IDM_BROWSEMODE
+        MENUITEM "編集ビュー(&E)",     IDM_EDITMODE
+    }
+
+    POPUP "" /* Vertical Scrollbar */
+    {
+        MENUITEM "ここにスクロール",  IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "先頭",           IDM_SCROLL_TOP
+        MENUITEM "末尾",           IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "1画面分上へ",    IDM_SCROLL_PAGEUP
+        MENUITEM "1画面分下へ",    IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "上にスクロール", IDM_SCROLL_UP
+        MENUITEM "下にスクロール", IDM_SCROLL_DOWN
+    }
+
+    POPUP "" /* Horizontal Scrollbar */
+    {
+        MENUITEM "ここにスクロール", IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "左端",           IDM_SCROLL_LEFTEDGE
+        MENUITEM "右端",           IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "1ページ左へ",    IDM_SCROLL_PAGELEFT
+        MENUITEM "1ページ右へ",    IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "左へスクロール", IDM_SCROLL_LEFT
+        MENUITEM "右へスクロール", IDM_SCROLL_RIGHT
+    }
+}

@@ -14,6 +14,9 @@
 
 #include "wdmaud.h"
 
+#define NDEBUG
+#include <debug.h>
+#include <mmebuddy_debug.h>
 
 #ifndef USE_MMIXER_LIB
 #define FUNC_NAME(x) x##ByLegacy

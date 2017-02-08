@@ -1,0 +1,57 @@
+LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Cantidad invalido de parametros - Use xcopy /? para obtener ayuda\n"
+    STRING_INVPARM,  "Parametro invalido '%1' -  Use xcopy /? para obtener ayuda\n"
+    STRING_PAUSE,    "Unde <enter> para iniciar la copia\n"
+    STRING_SIMCOPY,  "%1!d! archivo(s) seran copiado(s)\n"
+    STRING_COPY,     "%1!d! archivo(s) copiado(s)\n"
+    STRING_QISDIR,   "Es '%1' un nombre de archivo o de directorio\n\
+                     en el punto de destino?\n\
+                     (F - Archivo, D - Directorio)\n"
+    STRING_SRCPROMPT,"%1? (Si|No)\n"
+    STRING_OVERWRITE,"Destruir y escribir encima %1? (Si|No|Todo)\n"
+    STRING_COPYFAIL, "La copia de '%1' a '%2' ha faillecido con r/c %3!d!\n"
+    STRING_OPENFAIL, "Impossible de abrir '%1'\n"
+    STRING_READFAIL, "Hubo un error durante la lectura de '%1'\n"
+    STRING_YES_CHAR, "S"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"A"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Copia los archivos o directorios fuentes a un destino\n\
+\n\
+Sintaxis:\n\
+XCOPY fuente [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+En la cual:\n\
+\n\
+[/I]  Asuma el directorio si el destino no existe y copia dos o\n\
+\tmas archivos\n\
+[/S]  Copia directorios y subdirectorios\n\
+[/E]  Copia directorios y subdirectorios, incluyendo las que estan vacias\n\
+[/Q]  No mostrar la lista de los nombres de los archivos durante la copia (silencioso)\n\
+[/F]  Mostrar todas las fuentes y todos los destinos durante la copia.\n\
+[/L]  Simular la operacion, mostrando los nombres de archivos que seran copiados\n\
+[/W]  Preguntar antes de iniciar la operacion de copia\n\
+[/T]  Crear una estructura de repertorios vacios pero no copia los archivos\n\
+[/Y]  No pide confirmacion cuando sobreescribe sobre los archivos\n\
+[/-Y] Pide confirmacion cuando sobreescribe los archivos\n\
+[/P]  Pregunta al usuario ante de copiar cada archivo fuente\n\
+[/N]  Copiar usando los nombres cortos\n\
+[/U]  Copia solamente los archivos que ya existent en el punto de destino\n\
+[/R]  Sobreescribir los archivos en lectura unica\n\
+[/H]  Incluir los archivos escondidos y los del systema en la copia\n\
+[/C]  Siempre continuar mismo si un error occure en la copia\n\
+[/A]  Copia solamente archivos con el attributo de archivo definido\n\
+[/M]  Copia solamente archivos con el attributo de archivo definido, supprime\n\
+\tl'attributo de archivo\n\
+[/D | /D:m-d-y] Copia los nuevos archivos or los que fueront modificado despues la fecha especificada.\n\
+\t\tSi la fecha no esta especificada, copia unicamente cuando el archivo de destino est mas viejo\n\
+\t\tque el archivo fuente\n\n"
+
+}

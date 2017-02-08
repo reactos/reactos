@@ -465,6 +465,7 @@ ULONG_PTR
 FASTCALL
 KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
 {
+    ULONG_PTR StackFrameUnaligned;
     PKV8086_STACK_FRAME StackFrame;
     PKTHREAD Thread;
     PKTRAP_FRAME PmTrapFrame;
@@ -472,10 +473,12 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
     PFX_SAVE_AREA NpxFrame;
 
     /* Get the stack frame back */
-    StackFrame = CONTAINING_RECORD(TrapFrame->Esi, KV8086_STACK_FRAME, V86Frame);
+    StackFrameUnaligned = TrapFrame->Esi;
+    StackFrame = (PKV8086_STACK_FRAME)(ROUND_UP(StackFrameUnaligned - 4, 16) + 4);
     PmTrapFrame = &StackFrame->TrapFrame;
     V86Frame = &StackFrame->V86Frame;
     NpxFrame = &StackFrame->NpxArea;
+    ASSERT((ULONG_PTR)NpxFrame % 16 == 0);
 
     /* Copy the FPU frame back */
     Thread = KeGetCurrentThread();
@@ -493,17 +496,20 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
 
     /* Enable interrupts and return a pointer to the trap frame */
     _enable();
-    return (ULONG)PmTrapFrame;
+    return StackFrameUnaligned;
 }
 
 VOID
 FASTCALL
-KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
+KiEnterV86Mode(IN ULONG_PTR StackFrameUnaligned)
 {
     PKTHREAD Thread;
+    PKV8086_STACK_FRAME StackFrame = (PKV8086_STACK_FRAME)(ROUND_UP(StackFrameUnaligned - 4, 16) + 4);
     PKTRAP_FRAME TrapFrame = &StackFrame->TrapFrame;
     PKV86_FRAME V86Frame = &StackFrame->V86Frame;
     PFX_SAVE_AREA NpxFrame = &StackFrame->NpxArea;
+
+    ASSERT((ULONG_PTR)NpxFrame % 16 == 0);
 
     /* Build fake user-mode trap frame */
     TrapFrame->SegCs = KGDT_R0_CODE | RPL_MASK;
@@ -522,7 +528,7 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     TrapFrame->Eip = (ULONG_PTR)Ki386BiosCallReturnAddress;
 
     /* Save our stack (after the frames) */
-    TrapFrame->Esi = (ULONG_PTR)V86Frame;
+    TrapFrame->Esi = StackFrameUnaligned;
     TrapFrame->Edi = (ULONG_PTR)_AddressOfReturnAddress() + 4;
 
     /* Sanitize EFlags and enable interrupts */
@@ -685,7 +691,7 @@ Ke386CallBios(IN ULONG Int,
     Context->ContextFlags = CONTEXT_FULL;
 
     /* Free VDM objects */
-    ExFreePool(PsGetCurrentProcess()->VdmObjects);
+    ExFreePoolWithTag(PsGetCurrentProcess()->VdmObjects, '  eK');
     PsGetCurrentProcess()->VdmObjects = NULL;
 
     /* Return status */

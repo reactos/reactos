@@ -19,29 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#include <wine/unicode.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <winreg.h>
-#include <winternl.h>
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+#ifdef __REACTOS__
+int WINAPI IsNetDrive(int drive);
+#else
 
 /* Get a function pointer from a DLL handle */
 #define GET_FUNC(func, module, name, fail) \
@@ -60,7 +42,25 @@ static HMODULE SHLWAPI_hshell32;
 typedef BOOL (WINAPI *fnpIsNetDrive)(int);
 static  fnpIsNetDrive pIsNetDrive;
 
+#endif /* __REACTOS__ */
+
+
 HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR,LPWSTR,DWORD);
+
+static inline WCHAR* heap_strdupAtoW(LPCSTR str)
+{
+    WCHAR *ret = NULL;
+
+    if (str)
+    {
+        DWORD len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+        ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        if (ret)
+            MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    }
+
+    return ret;
+}
 
 /*************************************************************************
  * PathAppendA    [SHLWAPI.@]
@@ -144,20 +144,21 @@ LPSTR WINAPI PathCombineA(LPSTR lpszDest, LPCSTR lpszDir, LPCSTR lpszFile)
   if (!lpszDest)
     return NULL;
   if (!lpszDir && !lpszFile)
-  {
-    lpszDest[0] = 0;
-    return NULL;
-  }
+    goto fail;
 
   if (lpszDir)
-    MultiByteToWideChar(CP_ACP,0,lpszDir,-1,szDir,MAX_PATH);
+    if (!MultiByteToWideChar(CP_ACP,0,lpszDir,-1,szDir,MAX_PATH))
+      goto fail;
+
   if (lpszFile)
-    MultiByteToWideChar(CP_ACP,0,lpszFile,-1,szFile,MAX_PATH);
+    if (!MultiByteToWideChar(CP_ACP,0,lpszFile,-1,szFile,MAX_PATH))
+      goto fail;
 
   if (PathCombineW(szDest, lpszDir ? szDir : NULL, lpszFile ? szFile : NULL))
     if (WideCharToMultiByte(CP_ACP,0,szDest,-1,lpszDest,MAX_PATH,0,0))
       return lpszDest;
 
+fail:
   lpszDest[0] = 0;
   return NULL;
 }
@@ -649,7 +650,7 @@ void WINAPI PathStripPathA(LPSTR lpszPath)
   if (lpszPath)
   {
     LPSTR lpszFileName = PathFindFileNameA(lpszPath);
-    if(lpszFileName)
+    if(lpszFileName != lpszPath)
       RtlMoveMemory(lpszPath, lpszFileName, strlen(lpszFileName)+1);
   }
 }
@@ -665,7 +666,7 @@ void WINAPI PathStripPathW(LPWSTR lpszPath)
 
   TRACE("(%s)\n", debugstr_w(lpszPath));
   lpszFileName = PathFindFileNameW(lpszPath);
-  if(lpszFileName)
+  if(lpszFileName != lpszPath)
     RtlMoveMemory(lpszPath, lpszFileName, (strlenW(lpszFileName)+1)*sizeof(WCHAR));
 }
 
@@ -2196,7 +2197,11 @@ BOOL WINAPI PathIsUNCA(LPCSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_a(lpszPath));
 
+#ifdef __REACTOS__
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+#else
+  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
+#endif
     return TRUE;
   return FALSE;
 }
@@ -2210,7 +2215,11 @@ BOOL WINAPI PathIsUNCW(LPCWSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_w(lpszPath));
 
+#ifdef __REACTOS__
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+#else
+  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
+#endif
     return TRUE;
   return FALSE;
 }
@@ -3301,6 +3310,9 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
     if (!pszUrl || !pszPath || !pcchPath || !*pcchPath)
         return E_INVALIDARG;
 
+    if (lstrlenW(pszUrl) < 5)
+        return E_INVALIDARG;
+
     if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pszUrl, 5,
                        file_colon, 5) != CSTR_EQUAL)
         return E_INVALIDARG;
@@ -3342,9 +3354,8 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
             src -= 1;
         break;
     case 2:
-        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, src, 9,
-                           localhost, 9) == CSTR_EQUAL &&
-            (src[9] == '/' || src[9] == '\\'))
+        if (lstrlenW(src) >= 10 && CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE,
+            src, 9, localhost, 9) == CSTR_EQUAL && (src[9] == '/' || src[9] == '\\'))
         {
             /* 'file://localhost/' + escaped DOS path */
             src += 10;
@@ -3366,7 +3377,7 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
             len = src - pszUrl;
             StrCpyNW(dst, pszUrl, len + 1);
             dst += len;
-            if (isalphaW(src[1]) && (src[2] == ':' || src[2] == '|'))
+            if (*src && isalphaW(src[1]) && (src[2] == ':' || src[2] == '|'))
             {
                 /* 'Forget' to add a trailing '/', just like Windows */
                 src++;
@@ -3522,7 +3533,7 @@ BOOL WINAPI PathRelativePathToW(LPWSTR lpszPath, LPCWSTR lpszFrom, DWORD dwAttrF
 
   if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szFrom);
-  if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
+  if(!(dwAttrTo & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szTo);
 
   /* Paths can only be relative if they have a common root */
@@ -3705,8 +3716,12 @@ BOOL WINAPI PathIsNetworkPathA(LPCSTR lpszPath)
   dwDriveNum = PathGetDriveNumberA(lpszPath);
   if (dwDriveNum == -1)
     return FALSE;
+#ifdef __REACTOS__
+  return IsNetDrive(dwDriveNum);
+#else
   GET_FUNC(pIsNetDrive, shell32, (LPCSTR)66, FALSE); /* ord 66 = shell32.IsNetDrive */
   return pIsNetDrive(dwDriveNum);
+#endif
 }
 
 /*************************************************************************
@@ -3727,8 +3742,12 @@ BOOL WINAPI PathIsNetworkPathW(LPCWSTR lpszPath)
   dwDriveNum = PathGetDriveNumberW(lpszPath);
   if (dwDriveNum == -1)
     return FALSE;
+#ifdef __REACTOS__
+  return IsNetDrive(dwDriveNum);
+#else
   GET_FUNC(pIsNetDrive, shell32, (LPCSTR)66, FALSE); /* ord 66 = shell32.IsNetDrive */
   return pIsNetDrive(dwDriveNum);
+#endif
 }
 
 /*************************************************************************
@@ -3858,13 +3877,13 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR lpszPath)
   WCHAR szSearch[MAX_PATH];
   DWORD dwLen;
   HANDLE hfind;
-  BOOL retVal = FALSE;
+  BOOL retVal = TRUE;
   WIN32_FIND_DATAW find_data;
 
   TRACE("(%s)\n",debugstr_w(lpszPath));
 
   if (!lpszPath || !PathIsDirectoryW(lpszPath))
-      return FALSE;
+    return FALSE;
 
   lstrcpynW(szSearch, lpszPath, MAX_PATH);
   PathAddBackslashW(szSearch);
@@ -3874,16 +3893,23 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR lpszPath)
 
   strcpyW(szSearch + dwLen, szAllFiles);
   hfind = FindFirstFileW(szSearch, &find_data);
+  if (hfind == INVALID_HANDLE_VALUE)
+    return FALSE;
 
-  if (hfind != INVALID_HANDLE_VALUE &&
-      find_data.cFileName[0] == '.' &&
-      find_data.cFileName[1] == '.')
+  do
   {
-    /* The only directory entry should be the parent */
-    if (!FindNextFileW(hfind, &find_data))
-      retVal = TRUE;
-    FindClose(hfind);
+    if (find_data.cFileName[0] == '.')
+    {
+      if (find_data.cFileName[1] == '\0') continue;
+      if (find_data.cFileName[1] == '.' && find_data.cFileName[2] == '\0') continue;
+    }
+
+    retVal = FALSE;
+    break;
   }
+  while (FindNextFileW(hfind, &find_data));
+
+  FindClose(hfind);
   return retVal;
 }
 
@@ -4044,18 +4070,61 @@ VOID WINAPI PathUndecorateW(LPWSTR lpszPath)
  * strings.
  *
  * PARAMS
- *  pszPath  [I] Buffer containing the path to unexpand.
- *  pszBuf   [O] Buffer to receive the unexpanded path.
- *  cchBuf   [I] Size of pszBuf in characters.
+ *  path    [I] Buffer containing the path to unexpand.
+ *  buffer  [O] Buffer to receive the unexpanded path.
+ *  buf_len [I] Size of pszBuf in characters.
  *
  * RETURNS
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI PathUnExpandEnvStringsA(LPCSTR pszPath, LPSTR pszBuf, UINT cchBuf)
+BOOL WINAPI PathUnExpandEnvStringsA(LPCSTR path, LPSTR buffer, UINT buf_len)
 {
-    FIXME("(%s,%s,0x%08x)\n", debugstr_a(pszPath), debugstr_a(pszBuf), cchBuf);
-    return FALSE;
+    WCHAR bufferW[MAX_PATH], *pathW;
+    DWORD len;
+    BOOL ret;
+
+    TRACE("(%s, %p, %d)\n", debugstr_a(path), buffer, buf_len);
+
+    pathW = heap_strdupAtoW(path);
+    if (!pathW) return FALSE;
+
+    ret = PathUnExpandEnvStringsW(pathW, bufferW, MAX_PATH);
+    HeapFree(GetProcessHeap(), 0, pathW);
+    if (!ret) return FALSE;
+
+    len = WideCharToMultiByte(CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL);
+    if (buf_len < len + 1) return FALSE;
+
+    WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buffer, buf_len, NULL, NULL);
+    return TRUE;
+}
+
+static const WCHAR allusersprofileW[] = {'%','A','L','L','U','S','E','R','S','P','R','O','F','I','L','E','%',0};
+static const WCHAR appdataW[] = {'%','A','P','P','D','A','T','A','%',0};
+static const WCHAR computernameW[] = {'%','C','O','M','P','U','T','E','R','N','A','M','E','%',0};
+static const WCHAR programfilesW[] = {'%','P','r','o','g','r','a','m','F','i','l','e','s','%',0};
+static const WCHAR systemrootW[] = {'%','S','y','s','t','e','m','R','o','o','t','%',0};
+static const WCHAR systemdriveW[] = {'%','S','y','s','t','e','m','D','r','i','v','e','%',0};
+static const WCHAR userprofileW[] = {'%','U','S','E','R','P','R','O','F','I','L','E','%',0};
+
+struct envvars_map
+{
+    const WCHAR *var;
+    UINT  varlen;
+    WCHAR path[MAX_PATH];
+    DWORD len;
+};
+
+static void init_envvars_map(struct envvars_map *map)
+{
+    while (map->var)
+    {
+        map->len = ExpandEnvironmentStringsW(map->var, map->path, sizeof(map->path)/sizeof(WCHAR));
+        /* exclude null from length */
+        if (map->len) map->len--;
+        map++;
+    }
 }
 
 /*************************************************************************
@@ -4063,10 +4132,51 @@ BOOL WINAPI PathUnExpandEnvStringsA(LPCSTR pszPath, LPSTR pszBuf, UINT cchBuf)
  *
  * Unicode version of PathUnExpandEnvStringsA.
  */
-BOOL WINAPI PathUnExpandEnvStringsW(LPCWSTR pszPath, LPWSTR pszBuf, UINT cchBuf)
+BOOL WINAPI PathUnExpandEnvStringsW(LPCWSTR path, LPWSTR buffer, UINT buf_len)
 {
-    FIXME("(%s,%s,0x%08x)\n", debugstr_w(pszPath), debugstr_w(pszBuf), cchBuf);
-    return FALSE;
+    static struct envvars_map null_var = {NULL, 0, {0}, 0};
+    struct envvars_map *match = &null_var, *cur;
+    struct envvars_map envvars[] = {
+        { allusersprofileW, sizeof(allusersprofileW)/sizeof(WCHAR) },
+        { appdataW,         sizeof(appdataW)/sizeof(WCHAR)         },
+        { computernameW,    sizeof(computernameW)/sizeof(WCHAR)    },
+        { programfilesW,    sizeof(programfilesW)/sizeof(WCHAR)    },
+        { systemrootW,      sizeof(systemrootW)/sizeof(WCHAR)      },
+        { systemdriveW,     sizeof(systemdriveW)/sizeof(WCHAR)     },
+        { userprofileW,     sizeof(userprofileW)/sizeof(WCHAR)     },
+        { NULL }
+    };
+    DWORD pathlen;
+    UINT  needed;
+
+    TRACE("(%s, %p, %d)\n", debugstr_w(path), buffer, buf_len);
+
+    pathlen = strlenW(path);
+    init_envvars_map(envvars);
+    cur = envvars;
+    while (cur->var)
+    {
+        /* path can't contain expanded value or value wasn't retrieved */
+        if (cur->len == 0 || cur->len > pathlen || strncmpiW(cur->path, path, cur->len))
+        {
+            cur++;
+            continue;
+        }
+
+        if (cur->len > match->len)
+            match = cur;
+        cur++;
+    }
+
+    /* 'varlen' includes NULL termination char */
+    needed = match->varlen + pathlen - match->len;
+    if (match->len == 0 || needed > buf_len) return FALSE;
+
+    strcpyW(buffer, match->var);
+    strcatW(buffer, &path[match->len]);
+    TRACE("ret %s\n", debugstr_w(buffer));
+
+    return TRUE;
 }
 
 /*************************************************************************

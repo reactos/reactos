@@ -26,11 +26,8 @@
 /* Modified for ReactOS and latest ACPICA
  * Copyright (C)2009  Samuel Serapion 
  */
-#include <ntddk.h>
-#include <acpi.h>
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
-#include "list.h"
+
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -97,7 +94,7 @@ acpi_system_add (
 		case ACPI_STATE_S4:
 			if (/*AcpiGbl_FACS->S4bios_f &&*/
 			    0 != AcpiGbl_FADT.SmiCommand) {
-				DPRINT(" S4bios");
+				DPRINT(" S4bios\n");
 				system->states[i] = 1;
 			}
 			/* no break */
@@ -397,7 +394,7 @@ acpi_suspend (
 	_enable();
 
 	/* reset firmware waking vector */
-	AcpiSetFirmwareWakingVector((ACPI_PHYSICAL_ADDRESS) 0);
+	AcpiSetFirmwareWakingVector(0, 0);
 
 	return status;
 }

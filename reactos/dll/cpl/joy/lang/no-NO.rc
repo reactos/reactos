@@ -7,14 +7,14 @@ CAPTION "Spillkontroller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "Disse innstillingene hjelper deg med å konfigurere spillkontrollerne som er innstallert på din datamaskin.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    LTEXT "Disse innstillingene hjelper deg med Ã¥ konfigurere spillkontrollerne som er innstallert pÃ¥ din datamaskin.", -1, 33, 7, 214, 20, NOT WS_GROUP
     GROUPBOX "I&nnstallerte spillkontroller", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Legg til...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Fjern", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "&Egenskaper", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "A&vansert...", IDC_ADVANCED_BUTTON, 111, 157, 65, 14
-    PUSHBUTTON "&Feilsøk...", IDC_TROUBLESHOOT_BUTTON, 180, 157, 65, 14
+    PUSHBUTTON "&FeilsÃ¸k...", IDC_TROUBLESHOOT_BUTTON, 180, 157, 65, 14
     PUSHBUTTON "OK", IDOK, 195, 185, 50, 14
 END
 
@@ -25,7 +25,7 @@ CAPTION "Legg til spillkontroller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Velg en spillkontroll fra denne listen, og så klikk på OK.  Hvis ikke spillkontrolleren dukker opp i listen, klikk på tilpass.", -1, 35, 7, 210, 33
+    LTEXT "Velg en spillkontroll fra denne listen, og sÃ¥ klikk pÃ¥ OK.  Hvis ikke spillkontrolleren dukker opp i listen, klikk pÃ¥ tilpass.", -1, 35, 7, 210, 33
     LTEXT "&Spillkontroller:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Aktiver sideror og pedaler", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP

@@ -4,7 +4,7 @@
  * FILE:            dll/directx/ksproxy/input_pin.cpp
  * PURPOSE:         InputPin of Proxy Filter
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

@@ -2,161 +2,142 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "SchÈmata nap·jenÌ"
+CAPTION "Sch√©mata nap√°jen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-  LTEXT "Vyberte nap·jecÌ schÈma, kterÈ se nejvÌce hodÌ pro tento poËÌtaË. Vöechny zmÏny nastavenÌ se uloûÌ do vybranÈho schÈmatu.",
-        -1, 37, 6, 209, 36
-  GROUPBOX "&SchÈma nap·jenÌ", -1, 6, 43, 240, 50
-  COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-  PUSHBUTTON "&Uloûit jako...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
-  PUSHBUTTON "&Odstranit", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
-  GROUPBOX "Nezn·m˝", IDC_GRPDETAIL, 6, 95, 240, 136
-  LTEXT "Pokud je poËÌtaË:",IDC_SAT, 12, 109, 60, 12
-  LTEXT "P¯ipojen",IDC_SAC, 123, 110, 45, 15
-  ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
-  LTEXT "Funguje na baterie",IDC_SDC, 195, 110, 45, 15
-  ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
-  LTEXT "Vypnout &monitor:",IDC_MONITOR, 13, 148, 84, 10
-  COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "Vypnout pevnÈ &disky:",IDC_DISK, 13, 171, 84, 10
-  COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "⁄sporn˝ &reûim:",IDC_STANDBY, 13, 191, 84, 10
-  COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "&Reûim sp·nku:",IDC_HYBERNATE, 13, 212, 84, 10
-  COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    LTEXT "Vyberte nap√°jec√≠ sch√©ma, kter√© se nejv√≠ce hod√≠ pro tento poƒç√≠taƒç. V≈°echny zmƒõny nastaven√≠ se ulo≈æ√≠ do vybran√©ho sch√©matu.", -1, 37, 6, 209, 36
+    GROUPBOX "&Sch√©ma nap√°jen√≠", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "&Ulo≈æit jako...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Odstranit", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+    GROUPBOX "Nezn√°m√Ω", IDC_GRPDETAIL, 6, 95, 240, 136
+    LTEXT "Pokud je poƒç√≠taƒç:", IDC_SAT, 12, 109, 60, 12
+    LTEXT "P≈ôipojen", IDC_SAC, 123, 110, 45, 15
+    ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
+    LTEXT "Funguje na baterie", IDC_SDC, 195, 110, 45, 15
+    ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
+    LTEXT "Vypnout &monitor:", IDC_MONITOR, 13, 148, 84, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Vypnout pevn√© &disky:", IDC_DISK, 13, 171, 84, 10
+    COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "√ösporn√Ω &re≈æim:", IDC_STANDBY, 13, 191, 84, 10
+    COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Re≈æim sp√°nku:", IDC_HYBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 252, 237
+IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Varov·nÌ"
+CAPTION "Varov√°n√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Varov·nÌ o nÌzkÈm stavu baterie",-1,10,15,235,95
-    CONTROL         "Aktivovat &varov·nÌ o nÌzkÈm stavu baterie, kdyû ˙roveÚ nabitÌ dos·hne:",IDC_ALARM1,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
-    LTEXT           "nezn·m·",IDC_ALARMVALUE1, 209, 20, 33, 10
-    LTEXT           "0%",-1, 28, 43, 15, 10
-    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
-                    TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
-    LTEXT           "100%", -1,214, 43, 25, 10
-    PUSHBUTTON      "&Akce p¯i varov·nÌ...",-1, 17, 69, 70, 14,WS_DISABLED
-    LTEXT           "Ozn·menÌ:",-1, 95, 71, 57, 10
-    LTEXT           "Nezn·mÈ",IDC_ALARMMSG1, 154, 71, 84, 10
-    LTEXT           "Akce:",-1, 95, 83, 55, 10
-    LTEXT           "Nezn·m·",IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT           "Spustit program:",-1, 95, 95, 55, 10
-    LTEXT           "Nezn·m˝",IDC_ALARMPROG1, 154, 95, 84, 10
-
-    GROUPBOX        "Varov·nÌ o kritickÈm stavu baterie",-1, 6, 120, 239, 106
-    CONTROL         "Aktivovat varov·nÌ o &kritickÈm stavu baterie, kdyû ˙roveÚ nabitÌ dos·hne:",IDC_ALARM2,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
-    LTEXT           "nezn·m·",IDC_ALARMVALUE2, 209, 133, 33, 10
-    LTEXT           "0%",-1, 28, 154, 15, 10
-    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
-                    TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
-    LTEXT           "100%",-1, 214, 154, 25, 10
-    PUSHBUTTON      "Akce &p¯i varov·nÌ...",-1, 17, 183, 70, 14, WS_DISABLED
-    LTEXT           "Ozn·menÌ:",-1, 95, 185, 50, 10
-    LTEXT           "Nezn·mÈ",IDC_ALARMMSG2, 154, 185, 84, 10
-    LTEXT           "Akce:",-1, 95, 198, 45, 10
-    LTEXT           "Nezn·m·",IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT           "Spustit program:",-1, 95, 211, 50, 10
-    LTEXT           "Nezn·m˝",IDC_ALARMPROG2, 154, 211, 84, 10
+    GROUPBOX "Varov√°n√≠ o n√≠zk√©m stavu baterie", -1, 10, 15, 235, 95
+    CONTROL "Aktivovat &varov√°n√≠ o n√≠zk√©m stavu baterie, kdy≈æ √∫rove≈à nabit√≠ dos√°hne:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    LTEXT "nezn√°m√°", IDC_ALARMVALUE1, 215, 20, 20, 10
+    LTEXT "0%", -1, 28, 43, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
+    LTEXT "100%", -1, 214, 43, 25, 10
+    PUSHBUTTON "&Akce p≈ôi varov√°n√≠...", -1, 17, 69, 70, 14, WS_DISABLED
+    LTEXT "Ozn√°men√≠:", -1, 95, 71, 57, 10
+    LTEXT "Nezn√°m√©", IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT "Akce:", -1, 95, 83, 55, 10
+    LTEXT "Nezn√°m√°", IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT "Spustit program:", -1, 95, 95, 55, 10
+    LTEXT "Nezn√°m√Ω", IDC_ALARMPROG1, 154, 95, 84, 10
+    GROUPBOX "Varov√°n√≠ o kritick√©m stavu baterie", -1, 6, 120, 239, 106
+    CONTROL "Aktivovat varov√°n√≠ o &kritick√©m stavu baterie, kdy≈æ √∫rove≈à nabit√≠ dos√°hne:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    LTEXT "nezn√°m√°", IDC_ALARMVALUE2, 215, 134, 20, 10
+    LTEXT "0%", -1, 28, 154, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
+    LTEXT "100%", -1, 214, 154, 25, 10
+    PUSHBUTTON "Akce &p≈ôi varov√°n√≠...", -1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT "Ozn√°men√≠:", -1, 95, 185, 50, 10
+    LTEXT "Nezn√°m√©", IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT "Akce:", -1, 95, 198, 45, 10
+    LTEXT "Nezn√°m√°", IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT "Spustit program:", -1, 95, 211, 50, 10
+    LTEXT "Nezn√°m√Ω", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 252, 237
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Up¯esnit"
+CAPTION "Up≈ôesnit"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_ACDC,IDI_ACDC, 7, 7, 20, 20
-    LTEXT           "Vyberte, kterÈ nastavenÌ snÌûenÈ spot¯eby chcete pouûÌt.",-1, 37, 6, 207, 20
-    GROUPBOX        "Moûnosti",-1, 6, 30, 240, 65
-    CONTROL         "Vûdy zobrazovat &ikonu na hlavnÌm panelu",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 43, 220, 10
-    CONTROL         "Dot·zat se na &heslo p¯i p¯echodu z ˙spornÈho reûimu",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 60, 220, 10
-    CONTROL         "&SnÌûit jas displeje p¯i chodu na baterie.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 78, 220, 10
-    GROUPBOX        "TlaËÌtka nap·jenÌ",-1, 6, 101, 240, 127
-    LTEXT           "&P¯i sklopenÌ displeje p¯enosnÈho poËÌtaËe:", IDC_SLIDCLOSE, 15, 115, 222, 10
-    COMBOBOX        IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "P¯i stisknutÌ tlaËÌtka &nap·jenÌ:", IDC_SPOWERBUTTON, 15, 153, 222, 10
-    COMBOBOX        IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "P¯i stisknutÌ tlaËÌtka reûimu &sp·nku:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
-    COMBOBOX        IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    LTEXT "Vyberte, kter√© nastaven√≠ sn√≠≈æen√© spot≈ôeby chcete pou≈æ√≠t.", -1, 37, 6, 207, 20
+    GROUPBOX "Mo≈ænosti", -1, 6, 30, 240, 65
+    CONTROL "V≈ædy zobrazovat &ikonu na hlavn√≠m panelu", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
+    CONTROL "Dot√°zat se na &heslo p≈ôi p≈ôechodu z √∫sporn√©ho re≈æimu", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
+    CONTROL "&Sn√≠≈æit jas displeje p≈ôi chodu na baterie.", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX "Tlaƒç√≠tka nap√°jen√≠", -1, 6, 101, 240, 127
+    LTEXT "&P≈ôi sklopen√≠ displeje p≈ôenosn√©ho poƒç√≠taƒçe:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "P≈ôi stisknut√≠ tlaƒç√≠tka &nap√°jen√≠:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "P≈ôi stisknut√≠ tlaƒç√≠tka re≈æimu &sp√°nku:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_PROPPAGEHIBERNATE DIALOGEX DISCARDABLE  0, 0, 252, 237
+IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Reûim sp·nku"
+CAPTION "Re≈æim sp√°nku"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT           "Pokud V·ö poËÌtaË p¯ejde do reûimu sp·nku, uloûÌ obsah svÈ pamÏti na pevn˝ disk a vypne se. Po opÏtovnÈm spuötÏnÌ se vr·tÌ do p˘vodnÌho stavu.",
-                    -1, 37, 6, 210, 35
-    GROUPBOX        "Reûim sp·nku",-1, 6, 41, 240, 32
-    CONTROL         "Zapnout funkci reûim &sp·nku",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 55, 210, 10
-    GROUPBOX        "MÌsto na disku pot¯ebnÈ pro reûim sp·nku",-1, 6, 80, 240, 76
-    LTEXT           "VolnÈ mÌsto:",-1, 15, 95, 140, 10
-    LTEXT           "Nezn·mÈ",IDC_FREESPACE, 160, 95, 80, 10
-    LTEXT           "Pot¯ebnÈ mÌsto na disku:",-1, 15, 115, 140, 10
-    LTEXT           "Nezn·mÈ",IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT           "Pro funkci reûim sp·nku musÌte uvolnit mÌsto na disku. ",IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    LTEXT "Pokud V√°≈° poƒç√≠taƒç p≈ôejde do re≈æimu sp√°nku, ulo≈æ√≠ obsah sv√© pamƒõti na pevn√Ω disk a vypne se. Po opƒõtovn√©m spu≈°tƒõn√≠ se vr√°t√≠ do p≈Øvodn√≠ho stavu.", -1, 37, 6, 210, 35
+    GROUPBOX "Re≈æim sp√°nku", -1, 6, 41, 240, 32
+    CONTROL "Zapnout funkci re≈æim &sp√°nku", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX "M√≠sto na disku pot≈ôebn√© pro re≈æim sp√°nku", -1, 6, 80, 240, 76
+    LTEXT "Voln√© m√≠sto:", -1, 15, 95, 140, 10
+    LTEXT "Nezn√°m√©", IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT "Pot≈ôebn√© m√≠sto na disku:", -1, 15, 115, 140, 10
+    LTEXT "Nezn√°m√©", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT "Pro funkci re≈æim sp√°nku mus√≠te uvolnit m√≠sto na disku. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME_1 "Moûnosti nap·jenÌ"
-  IDS_CPLDESCRIPTION_1 "NastavÌ moûnosti nap·jenÌ a öet¯enÌ energiÌ pro tento poËÌtaË."
-  IDS_PROCENT "%i%%"
-  IDS_SOUND "Zvuk"
-  IDS_TEXT "Text"
-  IDS_CONFIG1 "NastavenÌ pro schÈma nap·jenÌ %1"
-  IDS_CONFIG2 "PokroËil· nastavenÌ pro %1"
-
-  IDS_SIZEBYTS "%i byt˘"
-  IDS_SIZEMB "%i MB"
-
-  IDS_NOACTION "NedÏlat nic"
-
-  IDS_PowerActionNone1 "é·dn· akce"
-  IDS_PowerActionUnknown "Nezn·m˝"
-  IDS_PowerActionSleep "⁄sporn˝ reûim"
-  IDS_PowerActionHibernate "Reûim sp·nku"
-  IDS_PowerActionShutdown "Vypnout"
-  IDS_PowerActionRestart "Restartovat"
-  IDS_PowerActionShutdownOff "Vypnout a odpojit nap·jenÌ"
-  IDS_PowerActionWarmEject "Zeptat se na poûadovanou akci"
-  IDS_PowerActionNone2 "NenÌ"
-
-  IDS_TIMEOUT1 "Po 1 minutÏ"
-  IDS_TIMEOUT2 "Po 2 minut·ch"
-  IDS_TIMEOUT3 "Po 3 minut·ch"
-  IDS_TIMEOUT4 "Po 5 minut·ch"
-  IDS_TIMEOUT5 "Po 10 minut·ch"
-  IDS_TIMEOUT6 "Po 15 minut·ch"
-  IDS_TIMEOUT7 "Po 20 minut·ch"
-  IDS_TIMEOUT8 "Po 25 minut·ch"
-  IDS_TIMEOUT9 "Po 30 minut·ch"
-  IDS_TIMEOUT10 "Po 45 minut·ch"
-  IDS_TIMEOUT11 "Po 1 hodinÏ"
-  IDS_TIMEOUT12 "Po 2 hodin·ch"
-  IDS_TIMEOUT13 "Po 3 hodin·ch"
-  IDS_TIMEOUT14 "Po 4 hodin·ch"
-  IDS_TIMEOUT15 "Po 5 hodin·ch"
-  IDS_TIMEOUT16 "Nikdy"
-
-  IDS_DEL_SCHEME "Opravdu si p¯ejete smazat toto schÈma nap·jenÌ?"
-  IDS_DEL_SCHEME_TITLE "Smazat schÈma"
+    IDS_CPLNAME_1 "Mo≈ænosti nap√°jen√≠"
+    IDS_CPLDESCRIPTION_1 "Nastav√≠ mo≈ænosti nap√°jen√≠ a ≈°et≈ôen√≠ energi√≠ pro tento poƒç√≠taƒç."
+    IDS_PROCENT "%i%%"
+    IDS_SOUND "Zvuk"
+    IDS_TEXT "Text"
+    IDS_CONFIG1 "Nastaven√≠ pro sch√©ma nap√°jen√≠ %1"
+    IDS_CONFIG2 "Pokroƒçil√° nastaven√≠ pro %1"
+    IDS_SIZEBYTS "%i byt≈Ø"
+    IDS_SIZEMB "%i MB"
+    IDS_NOACTION "Nedƒõlat nic"
+    IDS_PowerActionNone1 "≈Ω√°dn√° akce"
+    IDS_PowerActionUnknown "Nezn√°m√Ω"
+    IDS_PowerActionSleep "√ösporn√Ω re≈æim"
+    IDS_PowerActionHibernate "Re≈æim sp√°nku"
+    IDS_PowerActionShutdown "Vypnout"
+    IDS_PowerActionRestart "Restartovat"
+    IDS_PowerActionShutdownOff "Vypnout a odpojit nap√°jen√≠"
+    IDS_PowerActionWarmEject "Zeptat se na po≈æadovanou akci"
+    IDS_PowerActionNone2 "Nen√≠"
+    IDS_TIMEOUT1 "Po 1 minutƒõ"
+    IDS_TIMEOUT2 "Po 2 minut√°ch"
+    IDS_TIMEOUT3 "Po 3 minut√°ch"
+    IDS_TIMEOUT4 "Po 5 minut√°ch"
+    IDS_TIMEOUT5 "Po 10 minut√°ch"
+    IDS_TIMEOUT6 "Po 15 minut√°ch"
+    IDS_TIMEOUT7 "Po 20 minut√°ch"
+    IDS_TIMEOUT8 "Po 25 minut√°ch"
+    IDS_TIMEOUT9 "Po 30 minut√°ch"
+    IDS_TIMEOUT10 "Po 45 minut√°ch"
+    IDS_TIMEOUT11 "Po 1 hodinƒõ"
+    IDS_TIMEOUT12 "Po 2 hodin√°ch"
+    IDS_TIMEOUT13 "Po 3 hodin√°ch"
+    IDS_TIMEOUT14 "Po 4 hodin√°ch"
+    IDS_TIMEOUT15 "Po 5 hodin√°ch"
+    IDS_TIMEOUT16 "Nikdy"
+    IDS_DEL_SCHEME "Opravdu si p≈ôejete smazat toto sch√©ma nap√°jen√≠?"
+    IDS_DEL_SCHEME_TITLE "Smazat sch√©ma"
 END

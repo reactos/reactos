@@ -176,20 +176,22 @@ NtNotifyChangeKey(
     _In_ BOOLEAN WatchSubtree
 );
 
+__kernel_entry
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtNotifyChangeMultipleKeys(
     _In_ HANDLE MasterKeyHandle,
-    _In_ ULONG Count,
-    _In_ POBJECT_ATTRIBUTES SlaveObjects,
-    _In_ HANDLE Event,
+    _In_opt_ ULONG Count,
+    _In_reads_opt_(Count) OBJECT_ATTRIBUTES SubordinateObjects[],
+    _In_opt_ HANDLE Event,
     _In_opt_ PIO_APC_ROUTINE ApcRoutine,
     _In_opt_ PVOID ApcContext,
     _Out_ PIO_STATUS_BLOCK IoStatusBlock,
     _In_ ULONG CompletionFilter,
     _In_ BOOLEAN WatchTree,
-    _Out_bytecap_(Length) PVOID Buffer,
-    _In_ ULONG Length,
+    _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,
+    _In_ ULONG BufferSize,
     _In_ BOOLEAN Asynchronous
 );
 
@@ -222,16 +224,17 @@ NtQueryKey(
     _Out_ PULONG ResultLength
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryMultipleValueKey(
     _In_ HANDLE KeyHandle,
-    _Inout_ PKEY_VALUE_ENTRY ValueList,
-    _In_ ULONG NumberOfValues,
-    _Out_bytecap_(*Length) PVOID Buffer,
-    _Inout_ PULONG Length,
-    _Out_ PULONG ReturnLength
+    _Inout_updates_(EntryCount) PKEY_VALUE_ENTRY ValueEntries,
+    _In_ ULONG EntryCount,
+    _Out_writes_bytes_(*BufferLength) PVOID ValueBuffer,
+    _Inout_ PULONG BufferLength,
+    _Out_opt_ PULONG RequiredBufferLength
 );
 
 NTSTATUS
@@ -270,7 +273,7 @@ NTSTATUS
 NTAPI
 NtRenameKey(
     _In_ HANDLE KeyHandle,
-    _In_ PUNICODE_STRING ReplacementName
+    _In_ PUNICODE_STRING NewName
 );
 
 NTSYSCALLAPI
@@ -317,14 +320,16 @@ NtSaveMergedKeys(
     _In_ HANDLE FileHandle
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationKey(
     _In_ HANDLE KeyHandle,
-    _In_ KEY_SET_INFORMATION_CLASS KeyInformationClass,
-    _In_ PVOID KeyInformation,
-    _In_ ULONG KeyInformationLength
+    _In_ _Strict_type_match_
+        KEY_SET_INFORMATION_CLASS KeySetInformationClass,
+    _In_reads_bytes_(KeySetInformationLength) PVOID KeySetInformation,
+    _In_ ULONG KeySetInformationLength
 );
 
 NTSYSCALLAPI

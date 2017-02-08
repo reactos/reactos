@@ -69,7 +69,7 @@ WriteToFlash(IN INT NandImageFile,
     /* Offset to NAND Page convert */
     StartPage = ImageStart / NAND_PAGE_SIZE;
     EndPage = ImageEnd / NAND_PAGE_SIZE;
-    
+
     /* Jump to NAND offset */
     if (NeedsOob) OobSize = NAND_OOB_SIZE;
     lseek(NandImageFile, StartPage * (NAND_PAGE_SIZE + OobSize), SEEK_SET);
@@ -153,7 +153,7 @@ main(ULONG argc,
      char **argv)
 {
     INT NandImageFile, RamDiskFile;
-    
+
     /* Flat NAND, no OOB */
     if (argc == 2) NeedsOob = FALSE;
 
@@ -177,7 +177,7 @@ main(ULONG argc,
 
         /* Write it */
         WriteRamDisk(RamDiskFile);
-        
+
         /* Close */
         close(RamDiskFile);
     }

@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/paint.c
+ * FILE:            win32ss/user/user32/windows/paint.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -28,10 +28,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;

@@ -415,11 +415,13 @@ NBResetNeighborTimeout(PIP_ADDRESS Address)
 }
 
 PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
-  PIP_ADDRESS Address)
+  PIP_ADDRESS Address,
+  PIP_INTERFACE Interface)
 /*
  * FUNCTION: Locates a neighbor in the neighbor cache
  * ARGUMENTS:
  *   Address = Pointer to IP address
+ *   Interface = Pointer to IP interface
  * RETURNS:
  *   Pointer to NCE, NULL if not found
  * NOTES:
@@ -430,6 +432,7 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
   PNEIGHBOR_CACHE_ENTRY NCE;
   UINT HashValue;
   KIRQL OldIrql;
+  PIP_INTERFACE FirstInterface;
 
   TI_DbgPrint(DEBUG_NCACHE, ("Called. Address (0x%X).\n", Address));
 
@@ -441,12 +444,52 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
 
   TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
-  NCE = NeighborCache[HashValue].Cache;
+  /* If there's no adapter specified, we'll look for a match on
+   * each one. */
+  if (Interface == NULL)
+  {
+      FirstInterface = GetDefaultInterface();
+      Interface = FirstInterface;
+  }
+  else
+  {
+      FirstInterface = NULL;
+  }
 
-  while ((NCE) && (!AddrIsEqual(Address, &NCE->Address)))
-    {
-      NCE = NCE->Next;
-    }
+  do
+  {
+      NCE = NeighborCache[HashValue].Cache;
+      while (NCE != NULL)
+      {
+         if (NCE->Interface == Interface &&
+             AddrIsEqual(Address, &NCE->Address))
+         {
+             break;
+         }
+ 
+         NCE = NCE->Next;
+      }
+      
+      if (NCE != NULL)
+          break;
+  }
+  while ((FirstInterface != NULL) &&
+         ((Interface = GetDefaultInterface()) != FirstInterface));
+
+  if ((NCE == NULL) && (FirstInterface != NULL))
+  {
+      /* This time we'll even match loopback NCEs */
+      NCE = NeighborCache[HashValue].Cache;
+      while (NCE != NULL)
+      {
+         if (AddrIsEqual(Address, &NCE->Address))
+         {
+             break;
+         }
+
+         NCE = NCE->Next;
+      }
+  }
 
   TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
@@ -475,7 +518,7 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
 
   TI_DbgPrint(DEBUG_NCACHE, ("Called. Interface (0x%X)  Address (0x%X).\n", Interface, Address));
 
-  NCE = NBLocateNeighbor(Address);
+  NCE = NBLocateNeighbor(Address, Interface);
   if (NCE == NULL)
     {
         TI_DbgPrint(MID_TRACE,("BCAST: %s\n", A2S(&Interface->Broadcast)));

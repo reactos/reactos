@@ -8,6 +8,9 @@
 
 #include "sysaudio.h"
 
+#define NDEBUG
+#include <debug.h>
+
 const GUID GUID_DEVICE_INTERFACE_ARRIVAL       = {0xCB3A4004L, 0x46F0, 0x11D0, {0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F}};
 const GUID GUID_DEVICE_INTERFACE_REMOVAL       = {0xCB3A4005L, 0x46F0, 0x11D0, {0xB0, 0x8F, 0x00, 0x60, 0x97, 0x13, 0x05, 0x3F}};
 const GUID KS_CATEGORY_AUDIO                   = {0x6994AD04L, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
@@ -29,7 +32,7 @@ OpenDevice(
     InitializeObjectAttributes(&ObjectAttributes, DeviceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     Status = ZwCreateFile(&NodeHandle,
-                          GENERIC_READ | GENERIC_WRITE,
+                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
@@ -47,7 +50,7 @@ OpenDevice(
         return Status;
     }
 
-    Status = ObReferenceObjectByHandle(NodeHandle, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(NodeHandle, GENERIC_READ | GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         ZwClose(NodeHandle);
@@ -92,15 +95,27 @@ InsertAudioDevice(
         goto cleanup;
     }
 
-    RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
-    RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
+    /* open device */
+    Status = OpenDevice(DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+    if (NT_SUCCESS(Status))
+    {
+        /* copy device name */
+        RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
+    }
+    else
+    {
+        /* the device name needs to be prefixed */
+        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
+        RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
 
-    Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+        /* open device */
+        Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+    }
 
-     if (!NT_SUCCESS(Status))
-     {
-         goto cleanup;
-     }
+    if (!NT_SUCCESS(Status))
+    {
+        goto cleanup;
+    }
 
     /* fetch device extension */
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
@@ -250,4 +265,3 @@ SysAudioRegisterDeviceInterfaces(
 
     return Status;
 }
-

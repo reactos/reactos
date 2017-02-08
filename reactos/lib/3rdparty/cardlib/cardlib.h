@@ -1,6 +1,15 @@
 #ifndef CARDLIB_INCLUDED
 #define CARDLIB_INCLUDED
 
+#include <stdarg.h>
+#include <stdlib.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+
 #define CARDLIBPROC __stdcall
 
 void CardBlt(HDC hdc, int x, int y, int nCardNum);
@@ -84,12 +93,13 @@ typedef int  (CARDLIBPROC *pDropZoneProc)   (int dzid, const CardStack &cards);
 
 typedef void (CARDLIBPROC *pButtonProc)		(CardButton &pButton);
 
-
-//#include "card.h"
+#include "globals.h"
+#include "card.h"
 #include "cardbutton.h"
-//#include "cardstack.h"
+#include "cardcolor.h"
+#include "cardstack.h"
 #include "cardregion.h"
-#include "cardcount.h"
+#include "dropzone.h"
 #include "cardwindow.h"
 
 #ifdef _DEBUG
@@ -97,5 +107,4 @@ typedef bool (CARDLIBPROC *pDebugClickProc) (CardRegion &stackobj);
 void CardLib_SetStackClickProc(pDebugClickProc proc);
 #endif
 
-
-#endif
+#endif /* CARDLIB_INCLUDED */

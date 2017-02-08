@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,8 +35,10 @@
 #include "cfferrs.h"
 #include "cffpic.h"
 
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_GLYPH_DICT_H
+#include FT_SERVICE_PROPERTIES_H
+#include FT_CFF_DRIVER_H
 
 
   /*************************************************************************/
@@ -61,11 +62,6 @@
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
-
-
-#undef  PAIR_TAG
-#define PAIR_TAG( left, right )  ( ( (FT_ULong)left << 16 ) | \
-                                     (FT_ULong)right        )
 
 
   /*************************************************************************/
@@ -116,17 +112,14 @@
     if ( sfnt )
       kerning->x = sfnt->get_kerning( face, left_glyph, right_glyph );
 
-    return CFF_Err_Ok;
+    return FT_Err_Ok;
   }
-
-
-#undef PAIR_TAG
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    Load_Glyph                                                         */
+  /*    cff_glyph_load                                                     */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A driver method used to load a glyph within a given glyph slot.    */
@@ -150,10 +143,10 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_CALLBACK_DEF( FT_Error )
-  Load_Glyph( FT_GlyphSlot  cffslot,        /* CFF_GlyphSlot */
-              FT_Size       cffsize,        /* CFF_Size      */
-              FT_UInt       glyph_index,
-              FT_Int32      load_flags )
+  cff_glyph_load( FT_GlyphSlot  cffslot,      /* CFF_GlyphSlot */
+                  FT_Size       cffsize,      /* CFF_Size      */
+                  FT_UInt       glyph_index,
+                  FT_Int32      load_flags )
   {
     FT_Error       error;
     CFF_GlyphSlot  slot = (CFF_GlyphSlot)cffslot;
@@ -161,7 +154,9 @@
 
 
     if ( !slot )
-      return CFF_Err_Invalid_Slot_Handle;
+      return FT_THROW( Invalid_Slot_Handle );
+
+    FT_TRACE1(( "cff_glyph_load: glyph index %d\n", glyph_index ));
 
     /* check whether we want a scaled outline or bitmap */
     if ( !size )
@@ -175,7 +170,7 @@
     {
       /* these two objects must have the same parent */
       if ( cffsize->face != cffslot->face )
-        return CFF_Err_Invalid_Face_Handle;
+        return FT_THROW( Invalid_Face_Handle );
     }
 
     /* now load the glyph outline if necessary */
@@ -196,15 +191,77 @@
                     FT_Fixed*  advances )
   {
     FT_UInt       nn;
-    FT_Error      error = CFF_Err_Ok;
+    FT_Error      error = FT_Err_Ok;
     FT_GlyphSlot  slot  = face->glyph;
 
 
+    if ( FT_IS_SFNT( face ) )
+    {
+      /* OpenType 1.7 mandates that the data from `hmtx' table be used; */
+      /* it is no longer necessary that those values are identical to   */
+      /* the values in the `CFF' table                                  */
+
+      TT_Face   ttface = (TT_Face)face;
+      FT_Short  dummy;
+
+
+      if ( flags & FT_LOAD_VERTICAL_LAYOUT )
+      {
+        /* check whether we have data from the `vmtx' table at all; */
+        /* otherwise we extract the info from the CFF glyphstrings  */
+        /* (instead of synthesizing a global value using the `OS/2' */
+        /* table)                                                   */
+        if ( !ttface->vertical_info )
+          goto Missing_Table;
+
+        for ( nn = 0; nn < count; nn++ )
+        {
+          FT_UShort  ah;
+
+
+          ( (SFNT_Service)ttface->sfnt )->get_metrics( ttface,
+                                                       1,
+                                                       start + nn,
+                                                       &dummy,
+                                                       &ah );
+
+          FT_TRACE5(( "  idx %d: advance height %d font units\n",
+                      start + nn, ah ));
+          advances[nn] = ah;
+        }
+      }
+      else
+      {
+        /* check whether we have data from the `hmtx' table at all */
+        if ( !ttface->horizontal.number_Of_HMetrics )
+          goto Missing_Table;
+
+        for ( nn = 0; nn < count; nn++ )
+        {
+          FT_UShort  aw;
+
+
+          ( (SFNT_Service)ttface->sfnt )->get_metrics( ttface,
+                                                       0,
+                                                       start + nn,
+                                                       &dummy,
+                                                       &aw );
+
+          FT_TRACE5(( "  idx %d: advance width %d font units\n",
+                      start + nn, aw ));
+          advances[nn] = aw;
+        }
+      }
+
+      return error;
+    }
+
+  Missing_Table:
     flags |= (FT_UInt32)FT_LOAD_ADVANCE_ONLY;
 
     for ( nn = 0; nn < count; nn++ )
     {
-      error = Load_Glyph( slot, face->size, start + nn, flags );
+      error = cff_glyph_load( slot, face->size, start + nn, flags );
       if ( error )
         break;
 
@@ -240,7 +297,7 @@
                  " cannot get glyph name from CFF & CEF fonts\n"
                  "                   "
                  " without the `PSNames' module\n" ));
-      error = CFF_Err_Unknown_File_Format;
+      error = FT_THROW( Missing_Module );
       goto Exit;
     }
 
@@ -253,7 +310,7 @@
     if ( gname )
       FT_STRCPYN( buffer, gname, buffer_max );
 
-    error = CFF_Err_Ok;
+    error = FT_Err_Ok;
 
   Exit:
     return error;
@@ -299,9 +356,10 @@
   }
 
 
-  FT_DEFINE_SERVICE_GLYPHDICTREC(cff_service_glyph_dict,
-    (FT_GlyphDict_GetNameFunc)  cff_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)cff_get_name_index
+  FT_DEFINE_SERVICE_GLYPHDICTREC(
+    cff_service_glyph_dict,
+    (FT_GlyphDict_GetNameFunc)  cff_get_glyph_name,      /* get_name   */
+    (FT_GlyphDict_NameIndexFunc)cff_get_name_index       /* name_index */
   )
 
 
@@ -322,13 +380,13 @@
                         PS_FontInfoRec*  afont_info )
   {
     CFF_Font  cff   = (CFF_Font)face->extra.data;
-    FT_Error  error = CFF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 
     if ( cff && cff->font_info == NULL )
     {
       CFF_FontRecDict  dict   = &cff->top_font.font_dict;
-      PS_FontInfoRec  *font_info;
+      PS_FontInfoRec  *font_info = NULL;
       FT_Memory        memory = face->root.memory;
 
 
@@ -348,7 +406,7 @@
       font_info->italic_angle        = dict->italic_angle;
       font_info->is_fixed_pitch      = dict->is_fixed_pitch;
       font_info->underline_position  = (FT_Short)dict->underline_position;
-      font_info->underline_thickness = (FT_Short)dict->underline_thickness;
+      font_info->underline_thickness = (FT_UShort)dict->underline_thickness;
 
       cff->font_info = font_info;
     }
@@ -361,11 +419,15 @@
   }
 
 
-  FT_DEFINE_SERVICE_PSINFOREC(cff_service_ps_info,
-    (PS_GetFontInfoFunc)   cff_ps_get_font_info,
-    (PS_GetFontExtraFunc)  NULL,
-    (PS_HasGlyphNamesFunc) cff_ps_has_glyph_names,
-    (PS_GetFontPrivateFunc)NULL         /* unsupported with CFF fonts */
+  FT_DEFINE_SERVICE_PSINFOREC(
+    cff_service_ps_info,
+    (PS_GetFontInfoFunc)   cff_ps_get_font_info,    /* ps_get_font_info    */
+    (PS_GetFontExtraFunc)  NULL,                    /* ps_get_font_extra   */
+    (PS_HasGlyphNamesFunc) cff_ps_has_glyph_names,  /* ps_has_glyph_names  */
+    /* unsupported with CFF fonts */
+    (PS_GetFontPrivateFunc)NULL,                    /* ps_get_font_private */
+    /* not implemented            */
+    (PS_GetFontValueFunc)  NULL                     /* ps_get_font_value   */
   )
 
 
@@ -377,15 +439,34 @@
   static const char*
   cff_get_ps_name( CFF_Face  face )
   {
-    CFF_Font  cff = (CFF_Font)face->extra.data;
+    CFF_Font      cff  = (CFF_Font)face->extra.data;
+    SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
+
+    /* following the OpenType specification 1.7, we return the name stored */
+    /* in the `name' table for a CFF wrapped into an SFNT container        */
+
+    if ( FT_IS_SFNT( FT_FACE( face ) ) && sfnt )
+    {
+      FT_Library             library     = FT_FACE_LIBRARY( face );
+      FT_Module              sfnt_module = FT_Get_Module( library, "sfnt" );
+      FT_Service_PsFontName  service     =
+        (FT_Service_PsFontName)ft_module_get_service(
+                                 sfnt_module,
+                                 FT_SERVICE_ID_POSTSCRIPT_FONT_NAME );
+
+
+      if ( service && service->get_ps_font_name )
+        return service->get_ps_font_name( FT_FACE( face ) );
+    }
 
     return (const char*)cff->font_name;
   }
 
 
-  FT_DEFINE_SERVICE_PSFONTNAMEREC(cff_service_ps_name,
-    (FT_PsName_GetFunc)cff_get_ps_name
+  FT_DEFINE_SERVICE_PSFONTNAMEREC(
+    cff_service_ps_name,
+    (FT_PsName_GetFunc)cff_get_ps_name      /* get_ps_font_name */
   )
 
 
@@ -404,16 +485,17 @@
                      TT_CMapInfo  *cmap_info )
   {
     FT_CMap   cmap  = FT_CMAP( charmap );
-    FT_Error  error = CFF_Err_Ok;
-    FT_Face    face    = FT_CMAP_FACE( cmap );
-    FT_Library library = FT_FACE_LIBRARY( face );
+    FT_Error  error = FT_Err_Ok;
+
+    FT_Face     face    = FT_CMAP_FACE( cmap );
+    FT_Library  library = FT_FACE_LIBRARY( face );
 
 
     cmap_info->language = 0;
     cmap_info->format   = 0;
 
-    if ( cmap->clazz != &FT_CFF_CMAP_ENCODING_CLASS_REC_GET &&
-         cmap->clazz != &FT_CFF_CMAP_UNICODE_CLASS_REC_GET  )
+    if ( cmap->clazz != &CFF_CMAP_ENCODING_CLASS_REC_GET &&
+         cmap->clazz != &CFF_CMAP_UNICODE_CLASS_REC_GET  )
     {
       FT_Module           sfnt    = FT_Get_Module( library, "sfnt" );
       FT_Service_TTCMaps  service =
@@ -429,8 +511,9 @@
   }
 
 
-  FT_DEFINE_SERVICE_TTCMAPSREC(cff_service_get_cmap_info,
-    (TT_CMap_Info_GetFunc)cff_get_cmap_info
+  FT_DEFINE_SERVICE_TTCMAPSREC(
+    cff_service_get_cmap_info,
+    (TT_CMap_Info_GetFunc)cff_get_cmap_info    /* get_cmap_info */
   )
 
 
@@ -444,7 +527,7 @@
                const char*  *ordering,
                FT_Int       *supplement )
   {
-    FT_Error  error = CFF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     CFF_Font  cff   = (CFF_Font)face->extra.data;
 
 
@@ -455,7 +538,7 @@
 
       if ( dict->cid_registry == 0xFFFFU )
       {
-        error = CFF_Err_Invalid_Argument;
+        error = FT_THROW( Invalid_Argument );
         goto Fail;
       }
 
@@ -466,7 +549,7 @@
                                                     dict->cid_registry );
         *registry = cff->registry;
       }
-      
+
       if ( ordering )
       {
         if ( cff->ordering == NULL )
@@ -489,7 +572,7 @@
         *supplement = (FT_Int)dict->cid_supplement;
       }
     }
-      
+
   Fail:
     return error;
   }
@@ -499,7 +582,7 @@
   cff_get_is_cid( CFF_Face  face,
                   FT_Bool  *is_cid )
   {
-    FT_Error  error = CFF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     CFF_Font  cff   = (CFF_Font)face->extra.data;
 
 
@@ -523,7 +606,7 @@
                                 FT_UInt   glyph_index,
                                 FT_UInt  *cid )
   {
-    FT_Error  error = CFF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     CFF_Font  cff;
 
 
@@ -537,13 +620,13 @@
 
       if ( dict->cid_registry == 0xFFFFU )
       {
-        error = CFF_Err_Invalid_Argument;
+        error = FT_THROW( Invalid_Argument );
         goto Fail;
       }
 
       if ( glyph_index > cff->num_glyphs )
       {
-        error = CFF_Err_Invalid_Argument;
+        error = FT_THROW( Invalid_Argument );
         goto Fail;
       }
 
@@ -558,11 +641,148 @@
   }
 
 
-  FT_DEFINE_SERVICE_CIDREC(cff_service_cid_info,
-    (FT_CID_GetRegistryOrderingSupplementFunc)cff_get_ros,
-    (FT_CID_GetIsInternallyCIDKeyedFunc)      cff_get_is_cid,
-    (FT_CID_GetCIDFromGlyphIndexFunc)         cff_get_cid_from_glyph_index
+  FT_DEFINE_SERVICE_CIDREC(
+    cff_service_cid_info,
+    (FT_CID_GetRegistryOrderingSupplementFunc)
+      cff_get_ros,                             /* get_ros                  */
+    (FT_CID_GetIsInternallyCIDKeyedFunc)
+      cff_get_is_cid,                          /* get_is_cid               */
+    (FT_CID_GetCIDFromGlyphIndexFunc)
+      cff_get_cid_from_glyph_index             /* get_cid_from_glyph_index */
   )
+
+
+  /*
+   *  PROPERTY SERVICE
+   *
+   */
+  static FT_Error
+  cff_property_set( FT_Module    module,         /* CFF_Driver */
+                    const char*  property_name,
+                    const void*  value )
+  {
+    FT_Error    error  = FT_Err_Ok;
+    CFF_Driver  driver = (CFF_Driver)module;
+
+
+    if ( !ft_strcmp( property_name, "darkening-parameters" ) )
+    {
+      FT_Int*  darken_params = (FT_Int*)value;
+
+      FT_Int  x1 = darken_params[0];
+      FT_Int  y1 = darken_params[1];
+      FT_Int  x2 = darken_params[2];
+      FT_Int  y2 = darken_params[3];
+      FT_Int  x3 = darken_params[4];
+      FT_Int  y3 = darken_params[5];
+      FT_Int  x4 = darken_params[6];
+      FT_Int  y4 = darken_params[7];
+
+
+      if ( x1 < 0   || x2 < 0   || x3 < 0   || x4 < 0   ||
+           y1 < 0   || y2 < 0   || y3 < 0   || y4 < 0   ||
+           x1 > x2  || x2 > x3  || x3 > x4              ||
+           y1 > 500 || y2 > 500 || y3 > 500 || y4 > 500 )
+        return FT_THROW( Invalid_Argument );
+
+      driver->darken_params[0] = x1;
+      driver->darken_params[1] = y1;
+      driver->darken_params[2] = x2;
+      driver->darken_params[3] = y2;
+      driver->darken_params[4] = x3;
+      driver->darken_params[5] = y3;
+      driver->darken_params[6] = x4;
+      driver->darken_params[7] = y4;
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "hinting-engine" ) )
+    {
+      FT_UInt*  hinting_engine = (FT_UInt*)value;
+
+
+#ifndef CFF_CONFIG_OPTION_OLD_ENGINE
+      if ( *hinting_engine != FT_CFF_HINTING_ADOBE )
+        error = FT_ERR( Unimplemented_Feature );
+      else
+#endif
+        driver->hinting_engine = *hinting_engine;
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "no-stem-darkening" ) )
+    {
+      FT_Bool*  no_stem_darkening = (FT_Bool*)value;
+
+
+      driver->no_stem_darkening = *no_stem_darkening;
+
+      return error;
+    }
+
+    FT_TRACE0(( "cff_property_set: missing property `%s'\n",
+                property_name ));
+    return FT_THROW( Missing_Property );
+  }
+
+
+  static FT_Error
+  cff_property_get( FT_Module    module,         /* CFF_Driver */
+                    const char*  property_name,
+                    const void*  value )
+  {
+    FT_Error    error  = FT_Err_Ok;
+    CFF_Driver  driver = (CFF_Driver)module;
+
+
+    if ( !ft_strcmp( property_name, "darkening-parameters" ) )
+    {
+      FT_Int*  darken_params = driver->darken_params;
+      FT_Int*  val           = (FT_Int*)value;
+
+
+      val[0] = darken_params[0];
+      val[1] = darken_params[1];
+      val[2] = darken_params[2];
+      val[3] = darken_params[3];
+      val[4] = darken_params[4];
+      val[5] = darken_params[5];
+      val[6] = darken_params[6];
+      val[7] = darken_params[7];
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "hinting-engine" ) )
+    {
+      FT_UInt   hinting_engine    = driver->hinting_engine;
+      FT_UInt*  val               = (FT_UInt*)value;
+
+
+      *val = hinting_engine;
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "no-stem-darkening" ) )
+    {
+      FT_Bool   no_stem_darkening = driver->no_stem_darkening;
+      FT_Bool*  val               = (FT_Bool*)value;
+
+
+      *val = no_stem_darkening;
+
+      return error;
+    }
+
+    FT_TRACE0(( "cff_property_get: missing property `%s'\n",
+                property_name ));
+    return FT_THROW( Missing_Property );
+  }
+
+
+  FT_DEFINE_SERVICE_PROPERTIESREC(
+    cff_service_properties,
+    (FT_Properties_SetFunc)cff_property_set,      /* set_property */
+    (FT_Properties_GetFunc)cff_property_get )     /* get_property */
 
 
   /*************************************************************************/
@@ -576,42 +796,64 @@
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
+
 #ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
-  FT_DEFINE_SERVICEDESCREC6(cff_services,
-    FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &FT_CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_GLYPH_DICT,           &FT_CFF_SERVICE_GLYPH_DICT_GET,
-    FT_SERVICE_ID_TT_CMAP,              &FT_CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &FT_CFF_SERVICE_CID_INFO_GET
+  FT_DEFINE_SERVICEDESCREC7(
+    cff_services,
+    FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_GLYPH_DICT,           &CFF_SERVICE_GLYPH_DICT_GET,
+    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
+    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET,
+    FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET
   )
 #else
-  FT_DEFINE_SERVICEDESCREC5(cff_services,
-    FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &FT_CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_TT_CMAP,              &FT_CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &FT_CFF_SERVICE_CID_INFO_GET
+  FT_DEFINE_SERVICEDESCREC6(
+    cff_services,
+    FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
+    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET,
+    FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET
   )
 #endif
+
 
   FT_CALLBACK_DEF( FT_Module_Interface )
   cff_get_interface( FT_Module    driver,       /* CFF_Driver */
                      const char*  module_interface )
   {
+    FT_Library           library;
     FT_Module            sfnt;
     FT_Module_Interface  result;
 
 
-    result = ft_service_list_lookup( FT_CFF_SERVICES_GET, module_interface );
-    if ( result != NULL )
-      return  result;
-
+    /* CFF_SERVICES_GET dereferences `library' in PIC mode */
+#ifdef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;
+    library = driver->library;
+    if ( !library )
+      return NULL;
+#endif
+
+    result = ft_service_list_lookup( CFF_SERVICES_GET, module_interface );
+    if ( result != NULL )
+      return result;
+
+    /* `driver' is not yet evaluated in non-PIC mode */
+#ifndef FT_CONFIG_OPTION_PIC
+    if ( !driver )
+      return NULL;
+    library = driver->library;
+    if ( !library )
+      return NULL;
+#endif
 
     /* we pass our request to the `sfnt' module */
-    sfnt = FT_Get_Module( driver->library, "sfnt" );
+    sfnt = FT_Get_Module( library, "sfnt" );
 
     return sfnt ? sfnt->clazz->get_interface( sfnt, module_interface ) : 0;
   }
@@ -625,46 +867,44 @@
 #define CFF_SIZE_SELECT 0
 #endif
 
-  FT_DEFINE_DRIVER(cff_driver_class,
-      FT_MODULE_FONT_DRIVER       |
-      FT_MODULE_DRIVER_SCALABLE   |
-      FT_MODULE_DRIVER_HAS_HINTER,
+  FT_DEFINE_DRIVER(
+    cff_driver_class,
 
-      sizeof( CFF_DriverRec ),
+      FT_MODULE_FONT_DRIVER          |
+      FT_MODULE_DRIVER_SCALABLE      |
+      FT_MODULE_DRIVER_HAS_HINTER    |
+      FT_MODULE_DRIVER_HINTS_LIGHTLY,
+
+      sizeof ( CFF_DriverRec ),
       "cff",
       0x10000L,
       0x20000L,
 
       0,   /* module-specific interface */
 
-      cff_driver_init,
-      cff_driver_done,
-      cff_get_interface,
+      cff_driver_init,          /* FT_Module_Constructor  module_init   */
+      cff_driver_done,          /* FT_Module_Destructor   module_done   */
+      cff_get_interface,        /* FT_Module_Requester    get_interface */
 
-    /* now the specific driver fields */
-    sizeof( TT_FaceRec ),
-    sizeof( CFF_SizeRec ),
-    sizeof( CFF_GlyphSlotRec ),
+    sizeof ( TT_FaceRec ),
+    sizeof ( CFF_SizeRec ),
+    sizeof ( CFF_GlyphSlotRec ),
 
-    cff_face_init,
-    cff_face_done,
-    cff_size_init,
-    cff_size_done,
-    cff_slot_init,
-    cff_slot_done,
+    cff_face_init,              /* FT_Face_InitFunc  init_face */
+    cff_face_done,              /* FT_Face_DoneFunc  done_face */
+    cff_size_init,              /* FT_Size_InitFunc  init_size */
+    cff_size_done,              /* FT_Size_DoneFunc  done_size */
+    cff_slot_init,              /* FT_Slot_InitFunc  init_slot */
+    cff_slot_done,              /* FT_Slot_DoneFunc  done_slot */
 
-    ft_stub_set_char_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
-    ft_stub_set_pixel_sizes, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    cff_glyph_load,             /* FT_Slot_LoadFunc  load_glyph */
 
-    Load_Glyph,
+    cff_get_kerning,            /* FT_Face_GetKerningFunc   get_kerning  */
+    0,                          /* FT_Face_AttachFunc       attach_file  */
+    cff_get_advances,           /* FT_Face_GetAdvancesFunc  get_advances */
 
-    cff_get_kerning,
-    0,                      /* FT_Face_AttachFunc      */
-    cff_get_advances,       /* FT_Face_GetAdvancesFunc */
-
-    cff_size_request,
-
-    CFF_SIZE_SELECT
+    cff_size_request,           /* FT_Size_RequestFunc  request_size */
+    CFF_SIZE_SELECT             /* FT_Size_SelectFunc   select_size  */
   )
 
 

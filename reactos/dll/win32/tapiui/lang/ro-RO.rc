@@ -1,8 +1,7 @@
 /* 
- * FILE:             dll/win32/tapiui/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * LAST CHANGE:      2011-12-17  changes in accelerators
+ * FILE:        dll/win32/tapiui/lang/ro-RO.rc
+ *              ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -12,15 +11,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Reguli de apel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	ICON                     201, 2000, 7, 7, 21, 20
-	LTEXT       "Următoarea listă conține locațiile specificate de dumneavoastră. Alegeți locația din care efectuați apelul.", -1, 35, 7, 210, 16
-	LTEXT       "&Locații:", -1, 7, 35, 210, 8
-	CONTROL     "",          1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
-	PUSHBUTTON  "No&uă…",    1030, 87, 155, 50, 14
-	PUSHBUTTON  "&Modificare…", 1031, 141, 155, 50, 14
-	PUSHBUTTON  "&Elimină",  1032, 195, 155, 50, 14
-	LTEXT       "Numărul de telefon va fi apelat astfel:", 1052, 7, 181, 180, 8
-	LTEXT       "",          1053, 14, 195, 224, 16
+    ICON 201, 2000, 7, 7, 21, 20
+    LTEXT "Următoarea listă conține locațiile specificate de dumneavoastră. Alegeți locația din care efectuați apelul.", -1, 35, 7, 210, 16
+    LTEXT "&Locații:", -1, 7, 35, 210, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
+    PUSHBUTTON "No&uă…", 1030, 87, 155, 50, 14
+    PUSHBUTTON "&Modificare…", 1031, 141, 155, 50, 14
+    PUSHBUTTON "&Elimină", 1032, 195, 155, 50, 14
+    LTEXT "Numărul de telefon va fi apelat astfel:", 1052, 7, 181, 180, 8
+    LTEXT "", 1053, 14, 195, 224, 16
 END
 
 102 DIALOGEX 0, 0, 252, 255
@@ -28,31 +27,31 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	ICON                     202, 2000, 7, 7, 20, 20
-	LTEXT        "N&umele locației:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
-	EDITTEXT                 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
-	LTEXT        "Specificați locația din care va fi efectuat apelul.", 2001, 7, 33, 238, 8
-	LTEXT        "Țara/&regiunea:", -1, 7, 49, 161, 8
-	COMBOBOX                 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-	LTEXT        "&Codul regiunii:", -1, 190, 49, 48, 8
-	EDITTEXT                 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
-	GROUPBOX     "Reguli de apel", 2002, 7, 80, 238, 92
-	LTEXT        "Pentru apelurile din această locație, respectă următoarele reguli:", 2003, 14, 92, 224, 8
-	LTEXT        "Formează acest cod pentru a accesa o linie l&ocală:", -1, 14, 106, 170, 8
-	EDITTEXT                 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
-	LTEXT        "Formează acest cod pentru una &interurbană:", -1, 14, 122, 170, 8
-	EDITTEXT                 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
-	LTEXT        "Prefixul pentru &apeluri interurbane:", -1, 14, 138, 170, 8
-	EDITTEXT                 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
-	LTEXT        "Prefixul pentru ap&eluri internaționale:", -1, 14, 154, 170, 8
-	EDITTEXT                 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
-	AUTOCHECKBOX "&Dezactivează așteptarea apelurilor, formând:", 1035, 14, 177, 170, 10
-	COMBOBOX                 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
-	LTEXT        "Apel prin:", -1, 14, 195, 40, 8
-	AUTORADIOBUTTON "&Ton",  1036, 58, 194, 50, 10, NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Puls", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
-	LTEXT        "Numărul de telefon va fi apelat astfel:", 1052, 7, 219, 180, 8
-	LTEXT        "",         1053, 14, 232, 224, 16
+    ICON 202, 2000, 7, 7, 20, 20
+    LTEXT "N&umele locației:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
+    LTEXT "Specificați locația din care va fi efectuat apelul.", 2001, 7, 33, 238, 8
+    LTEXT "Țara/&regiunea:", -1, 7, 49, 161, 8
+    COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "&Codul regiunii:", -1, 190, 49, 48, 8
+    EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
+    GROUPBOX "Reguli de apel", 2002, 7, 80, 238, 92
+    LTEXT "Pentru apelurile din această locație, respectă următoarele reguli:", 2003, 14, 92, 224, 8
+    LTEXT "Formea&ză acest cod pentru a accesa o linie locală:", -1, 14, 106, 170, 8
+    EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Formea&ză acest cod pentru una interurbană:", -1, 14, 122, 170, 8
+    EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Prefixul pentru &apeluri interurbane:", -1, 14, 138, 170, 8
+    EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Prefixul pentru &apeluri internaționale:", -1, 14, 154, 170, 8
+    EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Dezactivează așteptarea apelurilor, formând:", 1035, 14, 177, 170, 10
+    COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
+    LTEXT "Apel prin:", -1, 14, 195, 40, 8
+    AUTORADIOBUTTON "T&on", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Puls", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
+    LTEXT "Numărul de telefon va fi apelat astfel:", 1052, 7, 219, 180, 8
+    LTEXT "", 1053, 14, 232, 224, 16
 END
 
 103 DIALOGEX 0, 0, 252, 218
@@ -60,14 +59,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Reguli și coduri interurbane"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT       "O regulă de apel desemnează modul în care sunt formate numerele în cazul apelurilor atât în interiorul cât și exteriorul regiunii în care vă aflați.", 2000, 7, 7, 238, 16
-	LTEXT       "&Reguli de apel:", -1, 7, 31, 238, 8
-	CONTROL     "",               1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
-	PUSHBUTTON  "N&ouă…",         1030, 87, 147, 50, 14
-	PUSHBUTTON  "&Modificare…",   1031, 141, 147, 50, 14
-	PUSHBUTTON  "&Elimină",       1032, 195, 147, 50, 14
-	GROUPBOX    "Descriere",      2006, 7, 166, 238, 45
-	LTEXT       "",               1039, 14, 180, 224, 24
+    LTEXT "O regulă de apel desemnează modul în care sunt formate numerele în cazul apelurilor atât în interiorul cât și exteriorul regiunii în care vă aflați.", 2000, 7, 7, 238, 16
+    LTEXT "&Reguli de apel:", -1, 7, 31, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
+    PUSHBUTTON "N&ouă…", 1030, 87, 147, 50, 14
+    PUSHBUTTON "&Modificare…", 1031, 141, 147, 50, 14
+    PUSHBUTTON "&Elimină", 1032, 195, 147, 50, 14
+    GROUPBOX "Descriere", 2006, 7, 166, 238, 45
+    LTEXT "", 1039, 14, 180, 224, 24
 END
 
 104 DIALOGEX 0, 0, 252, 218
@@ -75,23 +74,23 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Cartelă de apel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT      "Alegeți o cartelă de apel existentă, sau adăugați o nouă cartelă.", 2000, 7, 7, 238, 8
-	LTEXT      "&Tipuri de cartelă:", -1, 7, 23, 238, 8
-	CONTROL    "",           1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
-	PUSHBUTTON "N&ouă…",     1030, 87, 103, 50, 14
-	PUSHBUTTON "&Modificare…", 1031, 141, 103, 50, 14
-	PUSHBUTTON "&Elimină",   1032, 195, 103, 50, 14
-	LTEXT      "Număr de &cont:", -1, 7, 127, 91, 8
-	EDITTEXT                 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
-	LTEXT      "&PIN:",      -1, 7, 145, 91, 8
-	EDITTEXT                 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
-	GROUPBOX   "Numere de telefon pentru", 2001, 7, 158, 238, 53
-	LTEXT      "Apeluri interurbane:", -1, 14, 172, 84, 8
-	LTEXT      "",           1042, 102, 172, 136, 8
-	LTEXT      "Apeluri internaționale:", -1, 14, 184, 84, 8
-	LTEXT      "",           1043, 102, 184, 136, 8
-	LTEXT      "Apeluri locale:", -1, 14, 196, 84, 8
-	LTEXT      "",           1051, 102, 196, 136, 8
+    LTEXT "Alegeți o cartelă de apel existentă, sau adăugați o nouă cartelă.", 2000, 7, 7, 238, 8
+    LTEXT "Tip&uri de cartelă:", -1, 7, 23, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
+    PUSHBUTTON "N&ouă…", 1030, 87, 103, 50, 14
+    PUSHBUTTON "&Modificare…", 1031, 141, 103, 50, 14
+    PUSHBUTTON "&Elimină", 1032, 195, 103, 50, 14
+    LTEXT "Număr de &cont:", -1, 7, 127, 91, 8
+    EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
+    LTEXT "&PIN:", -1, 7, 145, 91, 8
+    EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
+    GROUPBOX "Numere de telefon pentru", 2001, 7, 158, 238, 53
+    LTEXT "Apeluri interurbane:", -1, 14, 172, 84, 8
+    LTEXT "", 1042, 102, 172, 136, 8
+    LTEXT "Apeluri internaționale:", -1, 14, 184, 84, 8
+    LTEXT "", 1043, 102, 184, 136, 8
+    LTEXT "Apeluri locale:", -1, 14, 196, 84, 8
+    LTEXT "", 1051, 102, 196, 136, 8
 END
 
 105 DIALOGEX 0, 0, 252, 218
@@ -99,18 +98,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	ICON                203, 2000, 7, 7, 20, 20
-	LTEXT     "N&umele cartelei:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
-	EDITTEXT            1047, 105, 9, 140, 14, ES_AUTOHSCROLL
-	LTEXT     "Număr de &cont:", -1, 7, 35, 238, 8
-	EDITTEXT            1018, 7, 46, 116, 14, ES_AUTOHSCROLL
-	LTEXT     "Număr de Identificare &Personal (PIN):", -1, 7, 68, 238, 8
-	EDITTEXT            1019, 7, 80, 116, 14, ES_AUTOHSCROLL
-	LTEXT     "Această cartelă de apel se va utiliza în cazul:", 1056, 14, 117, 224, 8
-	GROUPBOX  "Detaliile cartelei de apel", 2001, 7, 105, 238, 66
-	LTEXT     "",       1000, 22, 131, 216, 8
-	LTEXT     "",       1001, 22, 143, 216, 8
-	LTEXT     "",       1002, 22, 155, 216, 8
+    ICON 203, 2000, 7, 7, 20, 20
+    LTEXT "N&umele cartelei:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Număr de &cont:", -1, 7, 35, 238, 8
+    EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Număr de Identificare &Personal (PIN):", -1, 7, 68, 238, 8
+    EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Această cartelă de apel se va utiliza în cazul:", 1056, 14, 117, 224, 8
+    GROUPBOX "Detaliile cartelei de apel", 2001, 7, 105, 238, 66
+    LTEXT "", 1000, 22, 131, 216, 8
+    LTEXT "", 1001, 22, 143, 216, 8
+    LTEXT "", 1002, 22, 155, 216, 8
 END
 
 106 DIALOGEX 0, 0, 252, 218
@@ -118,20 +117,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apeluri interurbane"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT       "Numărul de acces pentru apelurile &interurbane:", -1, 7, 7, 238, 8
-	EDITTEXT                 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
-	LTEXT       "Utilizați butoanele de mai jos pentru a specifica pașii necesari efectuării de apeluri interurbane.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel.", 2000, 7, 40, 238, 24
-	LTEXT       "Pașii de utili&zare a cartelei:", -1, 7, 72, 120, 8
-	CONTROL     "List1",     1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-	PUSHBUTTON  "Mută s&us", 1022, 195, 83, 50, 14
-	PUSHBUTTON  "Mută j&os", 1023, 195, 101, 50, 14
-	PUSHBUTTON  "&Elimină",  1024, 195, 119, 50, 14
-	PUSHBUTTON  "Nu&mărul de acces", 1025, 7, 161, 90, 14
-	PUSHBUTTON  "Numărul de &cont", 1018, 101, 161, 90, 14
-	PUSHBUTTON  "&PIN",      1019, 7, 179, 90, 14
-	PUSHBUTTON  "Număr &destinație…", 1020, 101, 179, 90, 14
-	PUSHBUTTON  "&Așteaptare ton…", 1017, 7, 197, 90, 14
-	PUSHBUTTON  "&Specifcare cifre…", 1021, 101, 197, 90, 14
+    LTEXT "Numărul de acces pentru apelurile interurbane:", -1, 7, 7, 238, 8
+    EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Utilizați butoanele de mai jos pentru a specifica pașii necesari efectuării de apeluri interurbane.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel.", 2000, 7, 40, 238, 24
+    LTEXT "Pașii de utili&zare a cartelei:", -1, 7, 72, 120, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Mută s&us", 1022, 195, 83, 50, 14
+    PUSHBUTTON "Mută j&os", 1023, 195, 101, 50, 14
+    PUSHBUTTON "Eli&mină", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numărul de &acces", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
+    PUSHBUTTON "Așt&eptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Specifca&re cifre…", 1021, 101, 197, 90, 14
 END
 
 107 DIALOGEX 0, 0, 252, 218
@@ -139,20 +138,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apeluri internaționale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT       "Numărul de acces pentru apeluri &internaționale:", -1, 7, 7, 238, 8
-	EDITTEXT                 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
-	LTEXT       "Utilizați butoanele de mai jos pentru a specifica pașii necesari efectuării de apeluri internaționale.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel.", 2000, 7, 40, 244, 24
-	LTEXT       "Pașii de u&tilizare a cartelei:", -1, 7, 72, 120, 8
-	CONTROL     "List1",     1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-	PUSHBUTTON  "Mută s&us", 1022, 195, 83, 50, 14
-	PUSHBUTTON  "Mută j&os", 1023, 195, 101, 50, 14
-	PUSHBUTTON  "&Elimină",  1024, 195, 119, 50, 14
-	PUSHBUTTON  "Nu&mărul de acces", 1025, 7, 161, 90, 14
-	PUSHBUTTON  "Numărul de &cont", 1018, 101, 161, 90, 14
-	PUSHBUTTON  "&PIN",      1019, 7, 179, 90, 14
-	PUSHBUTTON  "Număr &destinație…", 1020, 101, 179, 90, 14
-	PUSHBUTTON  "&Așteaptare ton…", 1017, 7, 197, 90, 14
-	PUSHBUTTON  "&Specificare cifre…", 1021, 101, 197, 90, 14
+    LTEXT "Numărul de acces pentru apeluri internaționale:", -1, 7, 7, 238, 8
+    EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Utilizați butoanele de mai jos pentru a specifica pașii necesari efectuării de apeluri internaționale.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel.", 2000, 7, 40, 244, 24
+    LTEXT "Pașii de utili&zare a cartelei:", -1, 7, 72, 120, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Mută s&us", 1022, 195, 83, 50, 14
+    PUSHBUTTON "Mută j&os", 1023, 195, 101, 50, 14
+    PUSHBUTTON "Eli&mină", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numărul de &acces", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
+    PUSHBUTTON "Așt&eaptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Specifica&re cifre…", 1021, 101, 197, 90, 14
 END
 
 108 DIALOGEX 0, 0, 252, 218
@@ -160,20 +159,20 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apeluri locale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT       "Numărul de acces pentru apeluri &locale:", -1, 7, 7, 238, 8
-	EDITTEXT                 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
-	LTEXT       "Specificați pașii necesari efectuării de apeluri locale.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel. Pentru a apela fără cartelă, lăsați necompletată această secțiune.", 2000, 7, 40, 238, 24
-	LTEXT       "Pașii de u&tilizare a cartelei:", -1, 7, 72, 238, 8
-	CONTROL     "List1",     1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-	PUSHBUTTON  "Mută s&us", 1022, 195, 83, 50, 14
-	PUSHBUTTON  "Mută j&os", 1023, 195, 101, 50, 14
-	PUSHBUTTON  "&Elimină",  1024, 195, 119, 50, 14
-	PUSHBUTTON  "Nu&mărul de acces", 1025, 7, 161, 90, 14
-	PUSHBUTTON  "Numărul de &cont", 1018, 101, 161, 90, 14
-	PUSHBUTTON  "&PIN",      1019, 7, 179, 90, 14
-	PUSHBUTTON  "Număr &destinație…", 1020, 101, 179, 90, 14
-	PUSHBUTTON  "&Așteptare ton…", 1017, 7, 197, 90, 14
-	PUSHBUTTON  "&Specificare cifre…", 1021, 101, 197, 90, 14
+    LTEXT "Numărul de acces pentru apeluri locale:", -1, 7, 7, 238, 8
+    EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Specificați pașii necesari efectuării de apeluri locale.  Introduceți acești pași exact în ordinea apariției lor pe cartela de apel. Pentru a apela fără cartelă, lăsați necompletată această secțiune.", 2000, 7, 40, 238, 24
+    LTEXT "Pașii de utili&zare a cartelei:", -1, 7, 72, 238, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Mută s&us", 1022, 195, 83, 50, 14
+    PUSHBUTTON "Mută j&os", 1023, 195, 101, 50, 14
+    PUSHBUTTON "Eli&mină", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numărul de &acces", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Numărul de &cont", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Număr &destinație…", 1020, 101, 179, 90, 14
+    PUSHBUTTON "Așt&eptare ton…", 1017, 7, 197, 90, 14
+    PUSHBUTTON "Specifica&re cifre…", 1021, 101, 197, 90, 14
 END
 
 109 DIALOGEX 0, 0, 252, 257
@@ -182,30 +181,30 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Reguli pentru cod nou de regiune"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT           "Această regulă se va aplica doar apelurilor către codul de regiune și prefixele pe care le veți specifica mai jos.", 2000, 7, 6, 238, 16
-	LTEXT           "Codul de regiune apelat:", -1, 7, 31, 110, 8
-	LTEXT           "&Cod reg.:", -1, 7, 47, 36, 8
-	EDITTEXT                      1034, 46, 44, 50, 14, ES_AUTOHSCROLL
-	LTEXT           "Specificați prefixele utilizate cu acest cod de regiune.", -1, 14, 78, 224, 8
-	AUTORADIOBUTTON "Include t&oate prefixele din acest cod de regiune", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
-	AUTORADIOBUTTON "Include &doar prefixele enumerate mai jos:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
-	LTEXT           "&Prefixe incluse:", 1057, 26, 117, 119, 8
-	CONTROL         "List1",      1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
-	PUSHBUTTON      "&Adăugare…", 1005, 95, 128, 70, 14
-	PUSHBUTTON      "&Elimină",   1024, 95, 146, 70, 14
-	LTEXT           "În cazul apelurilor ce conțin prefixele menționate:", -1, 14, 184, 224, 8
-	AUTOCHECKBOX    "Apelea&ză:", 1012, 14, 198, 50, 12
-	EDITTEXT                      1007, 66, 196, 42, 14, ES_AUTOHSCROLL
-	AUTOCHECKBOX    "Include și codul de &regiune", 1029, 14, 214, 120, 12
-	DEFPUSHBUTTON   "Con&firmă",  1, 141, 236, 50, 14
-	PUSHBUTTON      "A&nulează",  2, 195, 236, 50, 14
-	RTEXT           "Cod regiune", 2001, 133, 31, 51, 8
-	LTEXT           "Prefix",     2002, 200, 31, 45, 8
-	CONTROL         "",           2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
-	CONTROL         "",           2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
-	RTEXT           "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
-	GROUPBOX        "Prefixe",    -1, 7, 64, 238, 102
-	GROUPBOX        "Reguli",     -1, 7, 170, 238, 60
+    LTEXT "Această regulă se va aplica doar apelurilor către codul de regiune și prefixele pe care le veți specifica mai jos.", 2000, 7, 6, 238, 16
+    LTEXT "Codul de regiune apelat:", -1, 7, 31, 110, 8
+    LTEXT "&Cod reg.:", -1, 7, 47, 36, 8
+    EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
+    LTEXT "Specificați prefixele utilizate cu acest cod de regiune.", -1, 14, 78, 224, 8
+    AUTORADIOBUTTON "Include t&oate prefixele din acest cod de regiune", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Include &doar prefixele enumerate mai jos:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
+    LTEXT "&Prefixe incluse:", 1057, 26, 117, 119, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Adăugare…", 1005, 95, 128, 70, 14
+    PUSHBUTTON "&Elimină", 1024, 95, 146, 70, 14
+    LTEXT "În cazul apelurilor ce conțin prefixele menționate:", -1, 14, 184, 224, 8
+    AUTOCHECKBOX "Apelea&ză:", 1012, 14, 198, 50, 12
+    EDITTEXT 1007, 66, 196, 42, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Include și codul de &regiune", 1029, 14, 214, 120, 12
+    DEFPUSHBUTTON "Con&firmă", 1, 141, 236, 50, 14
+    PUSHBUTTON "A&nulează", 2, 195, 236, 50, 14
+    RTEXT "Cod regiune", 2001, 133, 31, 51, 8
+    LTEXT "Prefix", 2002, 200, 31, 45, 8
+    CONTROL "", 2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
+    CONTROL "", 2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
+    RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
+    GROUPBOX "Prefixe", -1, 7, 64, 238, 102
+    GROUPBOX "Reguli", -1, 7, 170, 238, 60
 END
 
 110 DIALOGEX 0, 0, 227, 82
@@ -213,11 +212,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT         "",           1003, 7, 7, 213, 8
-	LTEXT         "",           1039, 7, 23, 213, 8
-	EDITTEXT                    1031, 7, 34, 213, 14, ES_AUTOHSCROLL
-	DEFPUSHBUTTON "Con&firmă",  1, 116, 62, 50, 14
-	PUSHBUTTON    "A&nulează",  2, 170, 62, 50, 14
+    LTEXT "", 1003, 7, 7, 213, 8
+    LTEXT "", 1039, 7, 23, 213, 8
+    EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Con&firmă", 1, 116, 62, 50, 14
+    PUSHBUTTON "A&nulează", 2, 170, 62, 50, 14
 END
 
 111 DIALOGEX 0, 0, 252, 124
@@ -226,15 +225,15 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Așteptare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT            "Stabiliți normele perioadei de așteptare (în cazul în care este necesară), în procesul de execuție a secvenței de apel.", 2000, 7, 7, 238, 16
-	AUTORADIOBUTTON  "Așteaptă t&onul de apel", 1009, 7, 31, 238, 10, WS_GROUP
-	AUTORADIOBUTTON  "Așteaptă completarea mesajului &vocal", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
-	AUTORADIOBUTTON  "Așteaptă o anumită perioa&dă de timp:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
-	EDITTEXT                       1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
-	CONTROL          "Spin1",      1049, "msctls_updown32", 0x00000036, 42, 77, 11, 14
-	LTEXT            "se&cunde",   -1, 58, 81, 187, 8
-	DEFPUSHBUTTON    "Con&firmă",  1, 141, 103, 50, 14
-	PUSHBUTTON       "A&nulează",  2, 195, 103, 50, 14
+    LTEXT "Stabiliți normele perioadei de așteptare (în cazul în care este necesară), în procesul de execuție a secvenței de apel.", 2000, 7, 7, 238, 16
+    AUTORADIOBUTTON "Așteaptă t&onul de apel", 1009, 7, 31, 238, 10, WS_GROUP
+    AUTORADIOBUTTON "Așteaptă completarea mesajului &vocal", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Așteaptă o anumită perioa&dă de timp:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 77, 11, 14
+    LTEXT "se&cunde", -1, 58, 81, 187, 8
+    DEFPUSHBUTTON "Con&firmă", 1, 141, 103, 50, 14
+    PUSHBUTTON "A&nulează", 2, 195, 103, 50, 14
 END
 
 112 DIALOGEX 0, 0, 252, 111
@@ -243,12 +242,12 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Număr destinație"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT          "Acest pas va stabili numărul destinație care va fi apelat în secvența cartelei de apel.  Cum doriți să fie efectuată apelarea numărului destinație?", 2000, 7, 7, 238, 24
-	AUTOCHECKBOX   "Apelând &codul țării/codul regiunii", 1027, 7, 39, 238, 10
-	AUTOCHECKBOX   "Apelând codul &zonei", 1034, 7, 55, 238, 10
-	AUTOCHECKBOX   "Apelând n&umărul", 1008, 7, 71, 238, 10, WS_DISABLED
-	DEFPUSHBUTTON  "Con&firmă",        1, 141, 92, 50, 14
-	PUSHBUTTON     "A&nulează",        2, 195, 92, 50, 14
+    LTEXT "Acest pas va stabili numărul destinație care va fi apelat în secvența cartelei de apel.  Cum doriți să fie efectuată apelarea numărului destinație?", 2000, 7, 7, 238, 24
+    AUTOCHECKBOX "Apelând &codul țării/codul regiunii", 1027, 7, 39, 238, 10
+    AUTOCHECKBOX "Apelând codul &zonei", 1034, 7, 55, 238, 10
+    AUTOCHECKBOX "Apelând n&umărul", 1008, 7, 71, 238, 10, WS_DISABLED
+    DEFPUSHBUTTON "Con&firmă", 1, 141, 92, 50, 14
+    PUSHBUTTON "A&nulează", 2, 195, 92, 50, 14
 END
 
 113 DIALOGEX 0, 0, 252, 218
@@ -256,13 +255,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	ICON                     201, 2000, 7, 7, 20, 20
-	LTEXT       "În acest calculator sunt disponibili următorii furnizori de servicii de telefonie:", -1, 40, 7, 205, 24
-	LTEXT       "F&urnizori:", -1, 7, 35, 238, 8
-	LISTBOX                  1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
-	PUSHBUTTON  "A&dăugare…", 1005, 57, 197, 60, 14
-	PUSHBUTTON  "&Elimină",  1024, 121, 197, 60, 14
-	PUSHBUTTON  "&Configurare…", 1031, 185, 197, 60, 14
+    ICON 201, 2000, 7, 7, 20, 20
+    LTEXT "În acest calculator sunt disponibili următorii furnizori de servicii de telefonie:", -1, 40, 7, 205, 24
+    LTEXT "F&urnizori:", -1, 7, 35, 238, 8
+    LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
+    PUSHBUTTON "A&dăugare…", 1005, 57, 197, 60, 14
+    PUSHBUTTON "&Elimină", 1024, 121, 197, 60, 14
+    PUSHBUTTON "&Configurare…", 1031, 185, 197, 60, 14
 END
 
 114 DIALOGEX 20, 15, 252, 127
@@ -270,11 +269,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Adăugare furnizor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT          "Alegeți un furnizor din lista de mai jos, apoi apăsați „Adaugă”", 2000, 7, 7, 241, 8
-	LTEXT          "F&urnizori de servicii de telefonie:", -1, 7, 23, 144, 10
-	LISTBOX                       1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-	PUSHBUTTON     "&Adaugă",     1005, 141, 106, 50, 14
-	DEFPUSHBUTTON  "A&nulează",   2, 195, 106, 50, 14
+    LTEXT "Alegeți un furnizor din lista de mai jos, apoi apăsați „Adaugă”", 2000, 7, 7, 241, 8
+    LTEXT "F&urnizori de servicii de telefonie:", -1, 7, 23, 144, 10
+    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Adaugă", 1005, 141, 106, 50, 14
+    DEFPUSHBUTTON "A&nulează", 2, 195, 106, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228
@@ -283,38 +282,38 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Informații locale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	CONTROL                       302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-	LTEXT            "Înainte de a crea o conexiune de telefon sau modem, sunt necesare următoarele informații referitoare la locația curentă.", 2000, 107, 15, 188, 25
-	LTEXT            "În ce țară/&regiune vă aflați?", -1, 107, 43, 189, 10
-	COMBOBOX                      1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-	LTEXT            "În ce &zonă (sau oraș) vă aflați?", -1, 107, 74, 189, 10
-	EDITTEXT                      1034, 107, 87, 45, 12, ES_AUTOHSCROLL
-	LTEXT            "Dacă se folosește și un careva &cod purtător, care este?", -1, 107, 105, 189, 10
-	EDITTEXT                      1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-	LTEXT            "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 107, 137, 189, 10
-	EDITTEXT                      1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-	LTEXT            "Sistemul de telefonie în această locație folosește:", -1, 107, 168, 189, 10
-	AUTORADIOBUTTON  "&Ton",      1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON  "&Puls",     1037, 175, 178, 57, 14, NOT WS_TABSTOP
-	DEFPUSHBUTTON    "Con&firmă", 1, 192, 204, 50, 14
-	PUSHBUTTON       "A&nulează", 2, 246, 204, 50, 14
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
+    LTEXT "Înainte de a crea o conexiune de telefon sau modem, sunt necesare următoarele informații referitoare la locația curentă.", 2000, 107, 15, 188, 25
+    LTEXT "În ce țară/&regiune vă aflați?", -1, 107, 43, 189, 10
+    COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "În ce &zonă (sau oraș) vă aflați?", -1, 107, 74, 189, 10
+    EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
+    LTEXT "Dacă se folosește și un careva &cod purtător, care este?", -1, 107, 105, 189, 10
+    EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 107, 137, 189, 10
+    EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Sistemul de telefonie în această locație folosește:", -1, 107, 168, 189, 10
+    AUTORADIOBUTTON "T&on", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Puls", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
+    DEFPUSHBUTTON "Con&firmă", 1, 192, 204, 50, 14
+    PUSHBUTTON "A&nulează", 2, 246, 204, 50, 14
 END
 
 400 DIALOGEX 0, 0, 290, 151
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	CONTROL                  302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-	LTEXT            "Înainte de a crea o conexiune de telefon sau modem, sunt necesare următoarele informații referitoare la locația curentă.", 2000, 95, 2, 188, 25
-	LTEXT            "În ce țară/&regiune vă aflați?", -1, 95, 30, 188, 10
-	COMBOBOX                 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-	LTEXT            "În ce &zonă (sau oraș) vă aflați?", -1, 95, 61, 188, 10
-	EDITTEXT                 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
-	LTEXT            "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 95, 96, 188, 10
-	EDITTEXT                 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-	LTEXT            "Sistemul de telefonie în această locație folosește:", -1, 95, 129, 159, 10
-	AUTORADIOBUTTON  "&Ton", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON  "&Puls", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
+    LTEXT "Înainte de a crea o conexiune de telefon sau modem, sunt necesare următoarele informații referitoare la locația curentă.", 2000, 95, 2, 188, 25
+    LTEXT "În ce țară/&regiune vă aflați?", -1, 95, 30, 188, 10
+    COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "În ce &zonă (sau oraș) vă aflați?", -1, 95, 61, 188, 10
+    EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
+    LTEXT "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 95, 96, 188, 10
+    EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Sistemul de telefonie în această locație folosește:", -1, 95, 129, 159, 10
+    AUTORADIOBUTTON "T&on", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Puls", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
 END
 
 500 DIALOGEX 0, 0, 235, 88
@@ -322,132 +321,132 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWIND
 CAPTION "ReactOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	ICON                          504, 501, 13, 14, 21, 20
-	LTEXT          "",            502, 47, 15, 180, 32
-	AUTOCHECKBOX   "&Etichetează pagina ca fiind de încredere", 503, 50, 47, 147, 12
-	DEFPUSHBUTTON  "Con&firmă",   505, 110, 65, 50, 14
-	PUSHBUTTON     "A&nulează",   506, 164, 65, 50, 14
+    ICON 504, 501, 13, 14, 21, 20
+    LTEXT "", 502, 47, 15, 180, 32
+    AUTOCHECKBOX "&Etichetează pagina ca fiind de încredere", 503, 50, 47, 147, 12
+    DEFPUSHBUTTON "Con&firmă", 505, 110, 65, 50, 14
+    PUSHBUTTON "A&nulează", 506, 164, 65, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-	1 "Opțiuni de telefon și modem"
-	2 "Configurează regulile de apel și parametrii de utilizare a modemului."
-	3 "Locația"
-	4 "Pentru a adăuga o nouă locație, apăsați „Nouă”."
-	5 "Locație nouă"
-	6 "Editare locație"
-	7 "Cartelă de apel nouă"
-	8 "Editarea cartelei de apel"
-	9 "Codul regiunii"
-	10 "Prefixe"
-	11 "Reguli"
-	12 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, *, #, și virgulă."
-	13 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, *, #, spațiu, și virgulă."
-	14 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9."
-	15 "Caracterul introdus nu este valid."
-	16 "Apelare %1"
-	17 "Apelare %1 plus codul regiunii"
-	18 "Apelare cod regiune"
-	19 "Apelare doar număr"
-	20 "Toate"
-	21 "Selectate"
-	22 "Modifică regula codului de regiune"
-	23 "Alegeți o regulă în lista de mai sus pentru a-i vedea descrierea, sau apăsați „Nouă” pentru a adăuga o regulă."
-	24 "Formează '%2' plus codul regiunii înaintea numărului pentru toate apelurile din codul regional %1."
-	25 "Formează '%2' înaintea numărului pentru toate apelurile din codul regional %1."
-	26 "Formează codul de regiune înaintea numărului pentru toate apelurile din codul regional %1."
-	27 "Formează doar numărul pentru toate apelurile din codul regional %1."
-	28 "Formează '%2' plus codul de regiune înaintea numărului pentru apelurile din codul regional %1, conținând prefixele specificate."
-	29 "Formează '%2' înaintea numărului pentru apelurile în codul regional %1, conținând prefixele specificate."
-	30 "Formează codul regiunii înaintea numărului pentru apelurile în codul regional %1, conținând prefixele specificate."
-	31 "Apelează doar numărul pentru apelurile în codul regional %1, conținând prefixele specificate."
-	32 "Formează un '1' înaintea apelurile în toate celelalte coduri regionale și include codul de regiune pentru toate prefixele."
-	33 "Adaugă prefix"
-	34 "Introduceți unul sau mai multe prefixe separate de spații sau virgule."
-	35 "Specificați cifrele"
-	36 "Introduceți unul sau mai multe cifre (inclusiv * și #) pentru a fi formate."
-	37 "Ați încercat introducerea unui caracter nevalid.\n\nCaracterele valide sunt de la 0 la 9 și spațiu."
-	38 "Așteaptă %1!d! secunde."
-	39 "Formează numărul de acces."
-	40 "Formează numărul de cont."
-	41 "Apelează codul PIN."
-	42 "Așteaptă tonul de apel."
-	43 "Așteaptă încheierea mesajului vocal."
-	44 "Formează codul țării/regiunii, codul zonei, și numărul."
-	45 "Formează codul țării/regiunii și numărul."
-	46 "Formează codul zonei și numărul."
-	47 "Formează codul țării/regiunii."
-	48 "Formează codul zonei."
-	49 "Formează numărul."
-	50 "efectuarea apelurilor interurbane."
-	51 "efectuarea apelurilor internaționale."
-	52 "efectuarea apelurilor locale."
-	53 "Nu există reguli definite pentru modul de utilizare a cartelei de apel."
-	54 "Pentru această locație este necesară introducerea codulu purtător pentru apeluri interurbane."
-	55 "Este necesară introducerea unui nume pentru această locație."
-	56 "Este necesară introducerea unui cod pentru această locație."
-	57 "Este necesară selecția formării unui număr pentru a dezactiva așteptarea la apelare."
-	58 "Este necesară selectarea țării sau regiunii din care efectuați apelul."
-	59 "Informație lipsă"
-	60 "Numele locației introduse este utilizat deja.  Introduceți un nume unic."
-	61 "Aceastei cartele de apel îi lipsește numele sau o careva informație necesară. Pentru a utiliza această cartelă, editați-o furnizând mai multe informații sau alegeți o altă cartelă."
-	62 "Este necesară alegerea unei cartele implicite. Fie alegeți o cartelă din listă, fie creați una nouă în acest scop."
-	63 "Este necesară introducerea numelui de cartelă."
-	64 "Este necesară introducerea numărului de cont."
-	65 "Este necesară introducerea numărului personal de identificare (PIN)."
-	66 "Nu există reguli definite pentru cartela de apelare. Pentru a crea o regulă, alegeți unul dintre compartimentele Interurban, Internațional sau Local."
-	67 "Regula de apel interurban necesită numărul de acces interurban al cartelei de apel."
-	68 "Regula de apel internațional necesită numărul de acces internațional al cartelei de apel."
-	69 "Regula de apel local necesită numărul de acces local al cartelei de apel."
-	70 "Nespecificat"
-	71 "Sigur doriți eliminarea Furnizorului de Servicii de Telefonie?"
-	72 "<nu există furnizori de servicii disponibili>"
-	73 "Este necesară introducerea prefixelor pentru care se aplică această regulă."
-	74 "&Cifre:"
-	75 "&Prefixe:"
-	76 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, spațiu și virgulă."
-	77 "Confirmați ștergerea"
-	78 "Sigur doriți ștergerea acestei locații?"
-	79 "Sigur doriți ștergerea acestei cartele de apel?"
-	80 "Sigur doriți ștergerea acestui reguli de cod regional?"
-	81 "Pentru a apela trebuie să introduceți cifre."
-	82 "Numele cartelei pe care ați introdus-o există deja.  Introduceți un nume unic."
-	83 "Este necesară informația de telefonie despre locația din care se efectuează apelul. Dacă omiteți furnizarea acestei informații, pot surveni cazuri de funcționare incorectă a procedurii de apel. De asemenea, unele aplicații pot răspunde la închiderea acestei ferestre prin redeschiderea ei.\nSigur doriți anularea?"
-	84 "Confirmă anularea"
-	85 "Locația mea"
-	86 "<nu există furnizori disponibili pentru instalare>"
-	87 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, de la A până la D, *, #, +, !, spațiu, și virgulă."
-	88 "Pentru această locație este necesară introducerea unui cod (purtător) internațional."
-	89 "Pentru această locație este necesară introducerea unui cod purtător."
-	90 "Această pagină încearcă să efectueze/monitorizeze apeluri telefonice sau conexiuni multimedia din acest calculator.\nPermiteți acest lucru?"
-	91 "Această pagină încearcă să acceseze informații directoare prin rețea.\nPermiteți acest lucru?"
-	92 "Această pagină încearcă accesarea sau modificarea informațiilor de conferință în rețea.\nPermiteți acest lucru?"
-	93 "Această pagină încearcă accesarea sau modificarea informațiilor din registru.\nPermiteți acest lucru?"
-	1064 "Panelul de control Telefon și modem nu poate fi deschis. Este posibil să survină probleme la deschiderea serviciului de telefonie."
-	1065 "Elimină furnizor"
-	15800 "23"
-	15801 "0,""Nespecificat (apelare directă)"","""","""","""","""","""","""","""","""",1"
-	15802 "1,""AT&T apelare directă prin 1010ATT1"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010288"",""1010288"",1"
-	15803 "2,""AT&T prin 1010ATT0"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010288"",""1010288"",1"
-	15804 "3,""AT&T prin 1-800-321-0288"","""",""G"",""J$TFG$TH"",""J$T01EFG$TH"","""","""",""18003210288"",""18003210288"",1"
-	15805 "4,""MCI apelare directă 10102221"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010222"",""1010222"",1"
-	15806 "5,""MCI prin 10102220"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010222"",""1010222"",1"
-	15807 "6,""MCI prin 1-800-888-8000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18008888000"",""18008888000"",1"
-	15808 "7,""MCI prin 1-800-674-0700"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006740700"",""18006740700"",1"
-	15809 "8,""MCI prin 1-800-674-7000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006747000"",""18006747000"",1"
-	15810 "9,""US Sprint apelare directă prin 10103331"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010333"",""1010333"",1"
-	15811 "10,""US Sprint prin 10103330"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010333"",""1010333"",1"
-	15812 "11,""US Sprint prin 1-800-877-8000"","""",""G"",""J,,,T0FG,,H"",""J,,,T01EFG#,H"","""","""",""18008778000"",""18008778000"",1"
-	15813 "12,""Cartelă de apel prin 0"","""",""G"",""0FG$TH"",""01EFG$TH"","""","""","""","""",1"
-	15814 "13,""Carte France Telecom"","""",""T3010,H,0FG#"",""T3010,H,0FG#"",""T3010,H,00EFG#"","""","""","""","""",1"
-	15815 "14,""Mercury (UK)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,0FG"","""",""0500800800"",""0500800800"",""0500800800"",1"
-	15816 "15,""British Telecom (UK)"","""",""J$H,0FG"",""J$H,0FG"",""J$H,00EFG"","""",""144"",""144"".""144"",1"
-	15817 "16,""CLEAR Communications (Noua Zelandă)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,00EFG"","""",""0502333"",""0502333"",""0502333"",1"
-	15818 "17,""Telecom New Zealand"","""",""J,0FG?H"",""J,0FG?H"",""J,00EFG?H"","""",""012"",""012"",""012"",1"
-	15819 "18,""Global Card (Taiwan spre USA)"","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1"
-	15820 "19,""Telstra (Australia) prin 1818 (voice)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0011EFG#"","""",""1818"",""1818"",""1818"",1"
-	15821 "20,""Telstra (Australia) prin 1818 (fax)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0015EFG#"","""",""1818"",""1818"",""1818"",1"
-	15822 "21,""Optus (Australia) prin 1812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""1812"",1"
-	15823 "22,""Optus (Australia) prin 008551812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""008551812"",1"
+    1 "Opțiuni de telefon și modem"
+    2 "Configurează regulile de apel și parametrii de utilizare a modemului."
+    3 "Locația"
+    4 "Pentru a adăuga o nouă locație, apăsați „Nouă”."
+    5 "Locație nouă"
+    6 "Editare locație"
+    7 "Cartelă de apel nouă"
+    8 "Editarea cartelei de apel"
+    9 "Codul regiunii"
+    10 "Prefixe"
+    11 "Reguli"
+    12 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, *, #, și virgulă."
+    13 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, *, #, spațiu, și virgulă."
+    14 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9."
+    15 "Caracterul introdus nu este valid."
+    16 "Apelare %1"
+    17 "Apelare %1 plus codul regiunii"
+    18 "Apelare cod regiune"
+    19 "Apelare doar număr"
+    20 "Toate"
+    21 "Selectate"
+    22 "Modifică regula codului de regiune"
+    23 "Alegeți o regulă în lista de mai sus pentru a-i vedea descrierea, sau apăsați „Nouă” pentru a adăuga o regulă."
+    24 "Formează '%2' plus codul regiunii înaintea numărului pentru toate apelurile din codul regional %1."
+    25 "Formează '%2' înaintea numărului pentru toate apelurile din codul regional %1."
+    26 "Formează codul de regiune înaintea numărului pentru toate apelurile din codul regional %1."
+    27 "Formează doar numărul pentru toate apelurile din codul regional %1."
+    28 "Formează '%2' plus codul de regiune înaintea numărului pentru apelurile din codul regional %1, conținând prefixele specificate."
+    29 "Formează '%2' înaintea numărului pentru apelurile în codul regional %1, conținând prefixele specificate."
+    30 "Formează codul regiunii înaintea numărului pentru apelurile în codul regional %1, conținând prefixele specificate."
+    31 "Apelează doar numărul pentru apelurile în codul regional %1, conținând prefixele specificate."
+    32 "Formează un '1' înaintea apelurile în toate celelalte coduri regionale și include codul de regiune pentru toate prefixele."
+    33 "Adaugă prefix"
+    34 "Introduceți unul sau mai multe prefixe separate de spații sau virgule."
+    35 "Specificați cifrele"
+    36 "Introduceți unul sau mai multe cifre (inclusiv * și #) pentru a fi formate."
+    37 "Ați încercat introducerea unui caracter nevalid.\n\nCaracterele valide sunt de la 0 la 9 și spațiu."
+    38 "Așteaptă %1!d! secunde."
+    39 "Formează numărul de acces."
+    40 "Formează numărul de cont."
+    41 "Apelează codul PIN."
+    42 "Așteaptă tonul de apel."
+    43 "Așteaptă încheierea mesajului vocal."
+    44 "Formează codul țării/regiunii, codul zonei, și numărul."
+    45 "Formează codul țării/regiunii și numărul."
+    46 "Formează codul zonei și numărul."
+    47 "Formează codul țării/regiunii."
+    48 "Formează codul zonei."
+    49 "Formează numărul."
+    50 "efectuarea apelurilor interurbane."
+    51 "efectuarea apelurilor internaționale."
+    52 "efectuarea apelurilor locale."
+    53 "Nu există reguli definite pentru modul de utilizare a cartelei de apel."
+    54 "Pentru această locație este necesară introducerea codulu purtător pentru apeluri interurbane."
+    55 "Este necesară introducerea unui nume pentru această locație."
+    56 "Este necesară introducerea unui cod pentru această locație."
+    57 "Este necesară selecția formării unui număr pentru a dezactiva așteptarea la apelare."
+    58 "Este necesară selectarea țării sau regiunii din care efectuați apelul."
+    59 "Informație lipsă"
+    60 "Numele locației introduse este utilizat deja.  Introduceți un nume unic."
+    61 "Aceastei cartele de apel îi lipsește numele sau o careva informație necesară. Pentru a utiliza această cartelă, editați-o furnizând mai multe informații sau alegeți o altă cartelă."
+    62 "Este necesară alegerea unei cartele implicite. Fie alegeți o cartelă din listă, fie creați una nouă în acest scop."
+    63 "Este necesară introducerea numelui de cartelă."
+    64 "Este necesară introducerea numărului de cont."
+    65 "Este necesară introducerea numărului personal de identificare (PIN)."
+    66 "Nu există reguli definite pentru cartela de apelare. Pentru a crea o regulă, alegeți unul dintre compartimentele Interurban, Internațional sau Local."
+    67 "Regula de apel interurban necesită numărul de acces interurban al cartelei de apel."
+    68 "Regula de apel internațional necesită numărul de acces internațional al cartelei de apel."
+    69 "Regula de apel local necesită numărul de acces local al cartelei de apel."
+    70 "Nespecificat"
+    71 "Sigur doriți eliminarea Furnizorului de Servicii de Telefonie?"
+    72 "<nu există furnizori de servicii disponibili>"
+    73 "Este necesară introducerea prefixelor pentru care se aplică această regulă."
+    74 "&Cifre:"
+    75 "&Prefixe:"
+    76 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, spațiu și virgulă."
+    77 "Confirmați ștergerea"
+    78 "Sigur doriți ștergerea acestei locații?"
+    79 "Sigur doriți ștergerea acestei cartele de apel?"
+    80 "Sigur doriți ștergerea acestui reguli de cod regional?"
+    81 "Pentru a apela trebuie să introduceți cifre."
+    82 "Numele cartelei pe care ați introdus-o există deja.  Introduceți un nume unic."
+    83 "Este necesară informația de telefonie despre locația din care se efectuează apelul. Dacă omiteți furnizarea acestei informații, pot surveni cazuri de funcționare incorectă a procedurii de apel. De asemenea, unele aplicații pot răspunde la închiderea acestei ferestre prin redeschiderea ei.\nSigur doriți anularea?"
+    84 "Confirmă anularea"
+    85 "Locația mea"
+    86 "<nu există furnizori disponibili pentru instalare>"
+    87 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, de la A până la D, *, #, +, !, spațiu, și virgulă."
+    88 "Pentru această locație este necesară introducerea unui cod (purtător) internațional."
+    89 "Pentru această locație este necesară introducerea unui cod purtător."
+    90 "Această pagină încearcă să efectueze/monitorizeze apeluri telefonice sau conexiuni multimedia din acest calculator.\nPermiteți acest lucru?"
+    91 "Această pagină încearcă să acceseze informații directoare prin rețea.\nPermiteți acest lucru?"
+    92 "Această pagină încearcă accesarea sau modificarea informațiilor de conferință în rețea.\nPermiteți acest lucru?"
+    93 "Această pagină încearcă accesarea sau modificarea informațiilor din registru.\nPermiteți acest lucru?"
+    1064 "Panelul de control Telefon și modem nu poate fi deschis. Este posibil să survină probleme la deschiderea serviciului de telefonie."
+    1065 "Elimină furnizor"
+    15800 "23"
+    15801 "0,""Nespecificat (apelare directă)"","""","""","""","""","""","""","""","""",1"
+    15802 "1,""AT&T apelare directă prin 1010ATT1"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010288"",""1010288"",1"
+    15803 "2,""AT&T prin 1010ATT0"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010288"",""1010288"",1"
+    15804 "3,""AT&T prin 1-800-321-0288"","""",""G"",""J$TFG$TH"",""J$T01EFG$TH"","""","""",""18003210288"",""18003210288"",1"
+    15805 "4,""MCI apelare directă 10102221"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010222"",""1010222"",1"
+    15806 "5,""MCI prin 10102220"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010222"",""1010222"",1"
+    15807 "6,""MCI prin 1-800-888-8000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18008888000"",""18008888000"",1"
+    15808 "7,""MCI prin 1-800-674-0700"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006740700"",""18006740700"",1"
+    15809 "8,""MCI prin 1-800-674-7000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006747000"",""18006747000"",1"
+    15810 "9,""US Sprint apelare directă prin 10103331"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010333"",""1010333"",1"
+    15811 "10,""US Sprint prin 10103330"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010333"",""1010333"",1"
+    15812 "11,""US Sprint prin 1-800-877-8000"","""",""G"",""J,,,T0FG,,H"",""J,,,T01EFG#,H"","""","""",""18008778000"",""18008778000"",1"
+    15813 "12,""Cartelă de apel prin 0"","""",""G"",""0FG$TH"",""01EFG$TH"","""","""","""","""",1"
+    15814 "13,""Carte France Telecom"","""",""T3010,H,0FG#"",""T3010,H,0FG#"",""T3010,H,00EFG#"","""","""","""","""",1"
+    15815 "14,""Mercury (UK)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,0FG"","""",""0500800800"",""0500800800"",""0500800800"",1"
+    15816 "15,""British Telecom (UK)"","""",""J$H,0FG"",""J$H,0FG"",""J$H,00EFG"","""",""144"",""144"".""144"",1"
+    15817 "16,""CLEAR Communications (Noua Zelandă)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,00EFG"","""",""0502333"",""0502333"",""0502333"",1"
+    15818 "17,""Telecom New Zealand"","""",""J,0FG?H"",""J,0FG?H"",""J,00EFG?H"","""",""012"",""012"",""012"",1"
+    15819 "18,""Global Card (Taiwan spre USA)"","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1"
+    15820 "19,""Telstra (Australia) prin 1818 (voice)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0011EFG#"","""",""1818"",""1818"",""1818"",1"
+    15821 "20,""Telstra (Australia) prin 1818 (fax)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0015EFG#"","""",""1818"",""1818"",""1818"",1"
+    15822 "21,""Optus (Australia) prin 1812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""1812"",1"
+    15823 "22,""Optus (Australia) prin 008551812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""008551812"",1"
 END

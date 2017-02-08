@@ -18,30 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <stdarg.h>
-//#include <string.h>
-//#include <limits.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-//#include "winerror.h"
-
-#include <ole2.h>
-#include <olectl.h>
-//#include "oleauto.h"
 #include <initguid.h>
-#include "typelib.h"
 #include <oleaut32_oaidl.h>
 
-#include <wine/debug.h>
-//#include "wine/unicode.h"
+#include "typelib.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(heap);
@@ -85,6 +67,9 @@ static CRITICAL_SECTION_DEBUG cs_bstr_cache_dbg =
 static CRITICAL_SECTION cs_bstr_cache = { &cs_bstr_cache_dbg, -1, 0, 0, 0, 0 };
 
 typedef struct {
+#ifdef _WIN64
+    DWORD pad;
+#endif
     DWORD size;
     union {
         char ptr[1];
@@ -118,24 +103,37 @@ static inline bstr_t *bstr_from_str(BSTR str)
     return CONTAINING_RECORD(str, bstr_t, u.str);
 }
 
-static inline bstr_cache_entry_t *get_cache_entry(size_t size)
+static inline bstr_cache_entry_t *get_cache_entry_from_idx(unsigned cache_idx)
 {
-    unsigned cache_idx = FIELD_OFFSET(bstr_t, u.ptr[size-1])/BUCKET_SIZE;
     return bstr_cache_enabled && cache_idx < sizeof(bstr_cache)/sizeof(*bstr_cache)
         ? bstr_cache + cache_idx
         : NULL;
 }
 
+static inline bstr_cache_entry_t *get_cache_entry(size_t size)
+{
+    unsigned cache_idx = FIELD_OFFSET(bstr_t, u.ptr[size+sizeof(WCHAR)-1])/BUCKET_SIZE;
+    return get_cache_entry_from_idx(cache_idx);
+}
+
+static inline bstr_cache_entry_t *get_cache_entry_from_alloc_size(SIZE_T alloc_size)
+{
+    unsigned cache_idx;
+    if (alloc_size < BUCKET_SIZE) return NULL;
+    cache_idx = (alloc_size - BUCKET_SIZE) / BUCKET_SIZE;
+    return get_cache_entry_from_idx(cache_idx);
+}
+
 static bstr_t *alloc_bstr(size_t size)
 {
-    bstr_cache_entry_t *cache_entry = get_cache_entry(size+sizeof(WCHAR));
+    bstr_cache_entry_t *cache_entry = get_cache_entry(size);
     bstr_t *ret;
 
     if(cache_entry) {
         EnterCriticalSection(&cs_bstr_cache);
 
         if(!cache_entry->cnt) {
-            cache_entry = get_cache_entry(size+sizeof(WCHAR)+BUCKET_SIZE);
+            cache_entry = get_cache_entry(size+BUCKET_SIZE);
             if(cache_entry && !cache_entry->cnt)
                 cache_entry = NULL;
         }
@@ -150,19 +148,16 @@ static bstr_t *alloc_bstr(size_t size)
 
         if(cache_entry) {
             if(WARN_ON(heap)) {
-                size_t tail;
-
-                memset(ret, ARENA_INUSE_FILLER, FIELD_OFFSET(bstr_t, u.ptr[size+sizeof(WCHAR)]));
-                tail = bstr_alloc_size(size) - FIELD_OFFSET(bstr_t, u.ptr[size+sizeof(WCHAR)]);
-                if(tail)
-                    memset(ret->u.ptr+size+sizeof(WCHAR), ARENA_TAIL_FILLER, tail);
+                size_t fill_size = (FIELD_OFFSET(bstr_t, u.ptr[size])+2*sizeof(WCHAR)-1) & ~(sizeof(WCHAR)-1);
+                memset(ret, ARENA_INUSE_FILLER, fill_size);
+                memset((char *)ret+fill_size, ARENA_TAIL_FILLER, bstr_alloc_size(size)-fill_size);
             }
             ret->size = size;
             return ret;
         }
     }
 
-    ret = HeapAlloc(GetProcessHeap(), 0, bstr_alloc_size(size));
+    ret = CoTaskMemAlloc(bstr_alloc_size(size));
     if(ret)
         ret->size = size;
     return ret;
@@ -235,6 +230,16 @@ BSTR WINAPI SysAllocString(LPCOLESTR str)
     return SysAllocStringLen(str, lstrlenW(str));
 }
 
+static inline IMalloc *get_malloc(void)
+{
+    static IMalloc *malloc;
+
+    if (!malloc)
+        CoGetMalloc(1, &malloc);
+
+    return malloc;
+}
+
 /******************************************************************************
  *		SysFreeString	[OLEAUT32.6]
  *
@@ -254,12 +259,19 @@ void WINAPI SysFreeString(BSTR str)
 {
     bstr_cache_entry_t *cache_entry;
     bstr_t *bstr;
+    IMalloc *malloc = get_malloc();
+    SIZE_T alloc_size;
 
     if(!str)
         return;
 
     bstr = bstr_from_str(str);
-    cache_entry = get_cache_entry(bstr->size+sizeof(WCHAR));
+
+    alloc_size = IMalloc_GetSize(malloc, bstr);
+    if (alloc_size == ~0UL)
+        return;
+
+    cache_entry = get_cache_entry_from_alloc_size(alloc_size);
     if(cache_entry) {
         unsigned i;
 
@@ -280,8 +292,7 @@ void WINAPI SysFreeString(BSTR str)
             cache_entry->cnt++;
 
             if(WARN_ON(heap)) {
-                unsigned n = bstr_alloc_size(bstr->size) / sizeof(DWORD) - 1;
-                bstr->size = ARENA_FREE_FILLER;
+                unsigned n = (alloc_size-FIELD_OFFSET(bstr_t, u.ptr))/sizeof(DWORD);
                 for(i=0; i<n; i++)
                     bstr->u.dwptr[i] = ARENA_FREE_FILLER;
             }
@@ -293,7 +304,7 @@ void WINAPI SysFreeString(BSTR str)
         LeaveCriticalSection(&cs_bstr_cache);
     }
 
-    HeapFree(GetProcessHeap(), 0, bstr);
+    CoTaskMemFree(bstr);
 }
 
 /******************************************************************************
@@ -360,29 +371,25 @@ int WINAPI SysReAllocStringLen(BSTR* old, const OLECHAR* str, unsigned int len)
 {
     /* Detect integer overflow. */
     if (len >= ((UINT_MAX-sizeof(WCHAR)-sizeof(DWORD))/sizeof(WCHAR)))
-	return 0;
+	return FALSE;
 
     if (*old!=NULL) {
-      BSTR old_copy = *old;
       DWORD newbytelen = len*sizeof(WCHAR);
-      bstr_t *bstr = HeapReAlloc(GetProcessHeap(),0,((DWORD*)*old)-1,bstr_alloc_size(newbytelen));
+      bstr_t *old_bstr = bstr_from_str(*old);
+      bstr_t *bstr = CoTaskMemRealloc(old_bstr, bstr_alloc_size(newbytelen));
+
+      if (!bstr) return FALSE;
+
       *old = bstr->u.str;
       bstr->size = newbytelen;
-      /* Subtle hidden feature: The old string data is still there
-       * when 'in' is NULL!
-       * Some Microsoft program needs it.
-       * FIXME: Is it a sideeffect of BSTR caching?
-       */
-      if (str && old_copy!=str) memmove(*old, str, newbytelen);
-      (*old)[len] = 0;
+      /* The old string data is still there when str is NULL */
+      if (str && old_bstr->u.str != str) memmove(bstr->u.str, str, newbytelen);
+      bstr->u.str[len] = 0;
     } else {
-      /*
-       * Allocate the new string
-       */
       *old = SysAllocStringLen(str, len);
     }
 
-    return 1;
+    return TRUE;
 }
 
 /******************************************************************************
@@ -419,10 +426,11 @@ BSTR WINAPI SysAllocStringByteLen(LPCSTR str, UINT len)
 
     if(str) {
         memcpy(bstr->u.ptr, str, len);
-        bstr->u.ptr[len] = bstr->u.ptr[len+1] = 0;
+        bstr->u.ptr[len] = 0;
     }else {
-        memset(bstr->u.ptr, 0, len+sizeof(WCHAR));
+        memset(bstr->u.ptr, 0, len+1);
     }
+    bstr->u.str[(len+sizeof(WCHAR)-1)/sizeof(WCHAR)] = 0;
 
     return bstr->u.str;
 }
@@ -502,7 +510,7 @@ static const WCHAR	*pdelimiter = &_delimiter[0];
  *  Success: S_OK.
  *  Failure: HRESULT code.
  */
-HRESULT WINAPI RegisterActiveObject(
+HRESULT WINAPI DECLSPEC_HOTPATCH RegisterActiveObject(
 	LPUNKNOWN punk,REFCLSID rcid,DWORD dwFlags,LPDWORD pdwRegister
 ) {
 	WCHAR 			guidbuf[80];
@@ -541,7 +549,7 @@ HRESULT WINAPI RegisterActiveObject(
  *  Success: S_OK.
  *  Failure: HRESULT code.
  */
-HRESULT WINAPI RevokeActiveObject(DWORD xregister,LPVOID reserved)
+HRESULT WINAPI DECLSPEC_HOTPATCH RevokeActiveObject(DWORD xregister,LPVOID reserved)
 {
 	LPRUNNINGOBJECTTABLE	runobtable;
 	HRESULT			ret;
@@ -568,7 +576,7 @@ HRESULT WINAPI RevokeActiveObject(DWORD xregister,LPVOID reserved)
  *  Success: S_OK.
  *  Failure: HRESULT code.
  */
-HRESULT WINAPI GetActiveObject(REFCLSID rcid,LPVOID preserved,LPUNKNOWN *ppunk)
+HRESULT WINAPI DECLSPEC_HOTPATCH GetActiveObject(REFCLSID rcid,LPVOID preserved,LPUNKNOWN *ppunk)
 {
 	WCHAR 			guidbuf[80];
 	HRESULT			ret;
@@ -742,7 +750,6 @@ extern HRESULT WINAPI OLEAUTPS_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DEC
 extern BOOL WINAPI OLEAUTPS_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI OLEAUTPS_DllRegisterServer(void) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI OLEAUTPS_DllUnregisterServer(void) DECLSPEC_HIDDEN;
-extern GUID const CLSID_PSFactoryBuffer DECLSPEC_HIDDEN;
 
 extern void _get_STDFONT_CF(LPVOID *);
 extern void _get_STDPIC_CF(LPVOID *);
@@ -879,7 +886,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
     static const WCHAR oanocacheW[] = {'o','a','n','o','c','a','c','h','e',0};
 
-    bstr_cache_enabled = !GetEnvironmentVariableW(oanocacheW, NULL, 0);
+    if(fdwReason == DLL_PROCESS_ATTACH)
+        bstr_cache_enabled = !GetEnvironmentVariableW(oanocacheW, NULL, 0);
 
     return OLEAUTPS_DllMain( hInstDll, fdwReason, lpvReserved );
 }
@@ -906,6 +914,6 @@ HRESULT WINAPI DllUnregisterServer(void)
 HCURSOR WINAPI OleIconToCursor( HINSTANCE hinstExe, HICON hIcon)
 {
     FIXME("(%p,%p), partially implemented.\n",hinstExe,hIcon);
-    /* FIXME: make a extended conversation from HICON to HCURSOR */
+    /* FIXME: make an extended conversation from HICON to HCURSOR */
     return CopyCursor(hIcon);
 }

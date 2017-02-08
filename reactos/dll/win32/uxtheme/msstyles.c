@@ -19,10 +19,8 @@
  */
 
 #include "uxthemep.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
+#include <wine/unicode.h>
 
 /***********************************************************************
  * Defines and global variables
@@ -32,7 +30,6 @@ static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, 
 static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize);
 static HRESULT MSSTYLES_GetFont (LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LOGFONTW* logfont);
 
-extern HINSTANCE hDllInst;
 extern int alphaBlendMode;
 
 #define MSSTYLES_VERSION 0x0003
@@ -80,6 +77,9 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
     LPWSTR pszSizes;
     LPWSTR pszSelectedSize = NULL;
     LPWSTR tmp;
+
+    if (!gbThemeHooksActive)
+        return E_FAIL;
 
     TRACE("Opening %s\n", debugstr_w(lpThemeFile));
 
@@ -168,6 +168,9 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
     (*tf)->pszSelectedColor = pszSelectedColor;
     (*tf)->pszSelectedSize = pszSelectedSize;
     (*tf)->dwRefCount = 1;
+
+    TRACE("Theme %p refcount: %d\n", *tf, (*tf)->dwRefCount);
+
     return S_OK;
 
 invalid_theme:
@@ -183,7 +186,10 @@ invalid_theme:
 void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
 {
     if(tf) {
+
         tf->dwRefCount--;
+        TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
+
         if(!tf->dwRefCount) {
             if(tf->hTheme) FreeLibrary(tf->hTheme);
             if(tf->classes) {
@@ -192,6 +198,13 @@ void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
                     tf->classes = pcls->next;
                     while(pcls->partstate) {
                         PTHEME_PARTSTATE ps = pcls->partstate;
+
+                        while(ps->properties) {
+                            PTHEME_PROPERTY prop = ps->properties;
+                            ps->properties = prop->next;
+                            HeapFree(GetProcessHeap(), 0, prop);
+                        }
+
                         pcls->partstate = ps->next;
                         HeapFree(GetProcessHeap(), 0, ps);
                     }
@@ -218,6 +231,7 @@ void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
 HRESULT MSSTYLES_ReferenceTheme(PTHEME_FILE tf)
 {
     tf->dwRefCount++;
+    TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
     return S_OK;
 }
 
@@ -749,6 +763,9 @@ void MSSTYLES_ParseThemeIni(PTHEME_FILE tf)
 PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR pszClassList)
 {
     PTHEME_CLASS cls = NULL;
+#ifdef __REACTOS__
+    PTHEME_CLASS defaultCls = NULL;
+#endif
     WCHAR szClassName[MAX_THEME_CLASS_NAME];
     LPCWSTR start;
     LPCWSTR end;
@@ -765,16 +782,35 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR
         start = end+1;
         cls = MSSTYLES_FindClass(tf, pszAppName, szClassName);
         if(cls) break;
+#ifdef __REACTOS__
+        if (!defaultCls)
+            defaultCls = MSSTYLES_FindClass(tf, NULL, szClassName);
+#endif
     }
     if(!cls && *start) {
         lstrcpynW(szClassName, start, sizeof(szClassName)/sizeof(szClassName[0]));
         cls = MSSTYLES_FindClass(tf, pszAppName, szClassName);
+#ifdef __REACTOS__
+        if (!defaultCls)
+            defaultCls = MSSTYLES_FindClass(tf, NULL, szClassName);
+#endif
     }
     if(cls) {
         TRACE("Opened app %s, class %s from list %s\n", debugstr_w(cls->szAppName), debugstr_w(cls->szClassName), debugstr_w(pszClassList));
 	cls->tf = tf;
 	cls->tf->dwRefCount++;
+    TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
     }
+#ifdef __REACTOS__
+    else if (defaultCls)
+    {
+        cls = defaultCls;
+        TRACE("Opened default class %s from list %s\n", debugstr_w(cls->szClassName), debugstr_w(pszClassList));
+        cls->tf = tf;
+        cls->tf->dwRefCount++;
+        TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
+    }
+#endif
     return cls;
 }
 

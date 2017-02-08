@@ -32,6 +32,10 @@ Author:
 #include <setypes.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -65,7 +69,7 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define FLG_KERNEL_STACK_TRACE_DB               0x00002000
 #define FLG_MAINTAIN_OBJECT_TYPELIST            0x00004000
 #define FLG_HEAP_ENABLE_TAG_BY_DLL              0x00008000
-#define FLG_IGNORE_DEBUG_PRIV                   0x00010000
+#define FLG_DISABLE_STACK_EXTENSION             0x00010000
 #define FLG_ENABLE_CSRDEBUG                     0x00020000
 #define FLG_ENABLE_KDEBUG_SYMBOL_LOAD           0x00040000
 #define FLG_DISABLE_PAGE_KERNEL_STACKS          0x00080000
@@ -85,11 +89,17 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 //
 // Flags for NtCreateProcessEx
 //
-#define PROCESS_CREATE_FLAGS_BREAKAWAY          0x00000001
-#define PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT   0x00000002
-#define PROCESS_CREATE_FLAGS_INHERIT_HANDLES    0x00000004
+#define PROCESS_CREATE_FLAGS_BREAKAWAY              0x00000001
+#define PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT       0x00000002
+#define PROCESS_CREATE_FLAGS_INHERIT_HANDLES        0x00000004
 #define PROCESS_CREATE_FLAGS_OVERRIDE_ADDRESS_SPACE 0x00000008
-#define PROCESS_CREATE_FLAGS_LARGE_PAGES        0x00000010
+#define PROCESS_CREATE_FLAGS_LARGE_PAGES            0x00000010
+#define PROCESS_CREATE_FLAGS_ALL_LARGE_PAGE_FLAGS   PROCESS_CREATE_FLAGS_LARGE_PAGES
+#define PROCESS_CREATE_FLAGS_LEGAL_MASK             (PROCESS_CREATE_FLAGS_BREAKAWAY | \
+                                                     PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT | \
+                                                     PROCESS_CREATE_FLAGS_INHERIT_HANDLES | \
+                                                     PROCESS_CREATE_FLAGS_OVERRIDE_ADDRESS_SPACE | \
+                                                     PROCESS_CREATE_FLAGS_ALL_LARGE_PAGE_FLAGS)
 
 //
 // Process priority classes
@@ -101,18 +111,6 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define PROCESS_PRIORITY_CLASS_REALTIME         4
 #define PROCESS_PRIORITY_CLASS_BELOW_NORMAL     5
 #define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL     6
-
-//
-// NtCreateProcessEx flags
-//
-#define PS_REQUEST_BREAKAWAY                    1
-#define PS_NO_DEBUG_INHERIT                     2
-#define PS_INHERIT_HANDLES                      4
-#define PS_LARGE_PAGES                          8
-#define PS_ALL_FLAGS                            (PS_REQUEST_BREAKAWAY | \
-                                                 PS_NO_DEBUG_INHERIT  | \
-                                                 PS_INHERIT_HANDLES   | \
-                                                 PS_LARGE_PAGES)
 
 //
 // Process base priorities
@@ -131,8 +129,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 //
 // Process Priority Separation Values (OR)
 //
-#define PSP_VARIABLE_QUANTUMS                   4
-#define PSP_LONG_QUANTUMS                       16
+#define PSP_DEFAULT_QUANTUMS                    0x00
+#define PSP_VARIABLE_QUANTUMS                   0x04
+#define PSP_FIXED_QUANTUMS                      0x08
+#define PSP_LONG_QUANTUMS                       0x10
+#define PSP_SHORT_QUANTUMS                      0x20
 
 #ifndef NTOS_MODE_USER
 //
@@ -180,6 +181,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 // TLS Slots
 //
 #define TLS_MINIMUM_AVAILABLE                   64
+
+//
+// TEB Active Frame Flags
+//
+#define TEB_ACTIVE_FRAME_CONTEXT_FLAG_EXTENDED 	0x1
 
 //
 // Job Access Types
@@ -561,7 +567,7 @@ NTSTATUS
 );
 
 typedef
-VOID
+NTSTATUS
 (NTAPI *PKWIN32_DELETEMETHOD_CALLOUT)(
     _In_ struct _WIN32_DELETEMETHOD_PARAMETERS *Parameters
 );
@@ -574,11 +580,19 @@ NTSTATUS
 
 typedef
 NTSTATUS
+(NTAPI *PKWIN32_SESSION_CALLOUT)(
+    _In_ PVOID Parameter
+);
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+typedef
+NTSTATUS
 (NTAPI *PKWIN32_WIN32DATACOLLECTION_CALLOUT)(
     _In_ struct _EPROCESS *Process,
     _In_ PVOID Callback,
     _In_ PVOID Context
 );
+#endif
 
 //
 // Lego Callback
@@ -675,13 +689,29 @@ typedef struct _TEB_ACTIVE_FRAME_CONTEXT
     ULONG Flags;
     LPSTR FrameName;
 } TEB_ACTIVE_FRAME_CONTEXT, *PTEB_ACTIVE_FRAME_CONTEXT;
+typedef const struct _TEB_ACTIVE_FRAME_CONTEXT *PCTEB_ACTIVE_FRAME_CONTEXT;
+
+typedef struct _TEB_ACTIVE_FRAME_CONTEXT_EX
+{
+    TEB_ACTIVE_FRAME_CONTEXT BasicContext;
+    PCSTR SourceLocation;
+} TEB_ACTIVE_FRAME_CONTEXT_EX, *PTEB_ACTIVE_FRAME_CONTEXT_EX;
+typedef const struct _TEB_ACTIVE_FRAME_CONTEXT_EX *PCTEB_ACTIVE_FRAME_CONTEXT_EX;
 
 typedef struct _TEB_ACTIVE_FRAME
 {
     ULONG Flags;
     struct _TEB_ACTIVE_FRAME *Previous;
-    PTEB_ACTIVE_FRAME_CONTEXT Context;
+    PCTEB_ACTIVE_FRAME_CONTEXT Context;
 } TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
+typedef const struct _TEB_ACTIVE_FRAME *PCTEB_ACTIVE_FRAME;
+
+typedef struct _TEB_ACTIVE_FRAME_EX
+{
+    TEB_ACTIVE_FRAME BasicFrame;
+    PVOID ExtensionIdentifier;
+} TEB_ACTIVE_FRAME_EX, *PTEB_ACTIVE_FRAME_EX;
+typedef const struct _TEB_ACTIVE_FRAME_EX *PCTEB_ACTIVE_FRAME_EX;
 
 typedef struct _CLIENT_ID32
 {
@@ -803,6 +833,29 @@ typedef struct _PROCESS_FOREGROUND_BACKGROUND
 {
     BOOLEAN Foreground;
 } PROCESS_FOREGROUND_BACKGROUND, *PPROCESS_FOREGROUND_BACKGROUND;
+
+//
+// Apphelp SHIM Cache
+//
+typedef enum _APPHELPCACHESERVICECLASS
+{
+    ApphelpCacheServiceLookup = 0,
+    ApphelpCacheServiceRemove = 1,
+    ApphelpCacheServiceUpdate = 2,
+    ApphelpCacheServiceFlush = 3,
+    ApphelpCacheServiceDump = 4,
+
+    ApphelpDBGReadRegistry = 0x100,
+    ApphelpDBGWriteRegistry = 0x101,
+} APPHELPCACHESERVICECLASS;
+
+
+typedef struct _APPHELP_CACHE_SERVICE_LOOKUP
+{
+    UNICODE_STRING ImageName;
+    HANDLE ImageHandle;
+} APPHELP_CACHE_SERVICE_LOOKUP, *PAPPHELP_CACHE_SERVICE_LOOKUP;
+
 
 //
 // Thread Information Structures for NtQueryProcessInformation
@@ -1408,18 +1461,24 @@ typedef struct _WIN32_CALLOUTS_FPNS
     PKWIN32_POWERSTATE_CALLOUT PowerStateCallout;
     PKWIN32_JOB_CALLOUT JobCallout;
     PGDI_BATCHFLUSH_ROUTINE BatchFlushRoutine;
-    PKWIN32_OPENMETHOD_CALLOUT DesktopOpenProcedure;
-    PKWIN32_OKTOCLOSEMETHOD_CALLOUT DesktopOkToCloseProcedure;
-    PKWIN32_CLOSEMETHOD_CALLOUT DesktopCloseProcedure;
-    PKWIN32_DELETEMETHOD_CALLOUT DesktopDeleteProcedure;
-    PKWIN32_OKTOCLOSEMETHOD_CALLOUT WindowStationOkToCloseProcedure;
-    PKWIN32_CLOSEMETHOD_CALLOUT WindowStationCloseProcedure;
-    PKWIN32_DELETEMETHOD_CALLOUT WindowStationDeleteProcedure;
-    PKWIN32_PARSEMETHOD_CALLOUT WindowStationParseProcedure;
-    PKWIN32_OPENMETHOD_CALLOUT WindowStationOpenProcedure;
+    PKWIN32_SESSION_CALLOUT DesktopOpenProcedure;
+    PKWIN32_SESSION_CALLOUT DesktopOkToCloseProcedure;
+    PKWIN32_SESSION_CALLOUT DesktopCloseProcedure;
+    PKWIN32_SESSION_CALLOUT DesktopDeleteProcedure;
+    PKWIN32_SESSION_CALLOUT WindowStationOkToCloseProcedure;
+    PKWIN32_SESSION_CALLOUT WindowStationCloseProcedure;
+    PKWIN32_SESSION_CALLOUT WindowStationDeleteProcedure;
+    PKWIN32_SESSION_CALLOUT WindowStationParseProcedure;
+    PKWIN32_SESSION_CALLOUT WindowStationOpenProcedure;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PKWIN32_WIN32DATACOLLECTION_CALLOUT Win32DataCollectionProcedure;
+#endif
 } WIN32_CALLOUTS_FPNS, *PWIN32_CALLOUTS_FPNS;
 
 #endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif // _PSTYPES_H

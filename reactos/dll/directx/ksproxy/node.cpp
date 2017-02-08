@@ -4,7 +4,7 @@
  * FILE:            dll/directx/ksproxy/node.cpp
  * PURPOSE:         Control Node
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

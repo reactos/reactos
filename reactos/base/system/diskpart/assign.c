@@ -5,18 +5,10 @@
  * PURPOSE:         Manages all the partitions of the OS in an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL assign_main(INT argc, WCHAR **argv)
+BOOL assign_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-/*
- * help_assign():
- * Shows the description and explains each argument type of the assign command
- */
-VOID help_assign(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_ASSIGN);
 }

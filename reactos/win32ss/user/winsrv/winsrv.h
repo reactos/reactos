@@ -9,53 +9,52 @@
 #ifndef __WINSRV_H__
 #define __WINSRV_H__
 
-#pragma once
+#include <stdarg.h>
 
 /* PSDK/NDK Headers */
-#include <stdarg.h>
-#include <stdlib.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
 #include <winuser.h>
+#include <imm.h>
+
+/* Undocumented user definitions */
+#include <undocuser.h>
+
 #define NTOS_MODE_USER
-#include <ndk/iofuncs.h>
-#include <ndk/kefuncs.h>
-#include <ndk/mmfuncs.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
-/* Public Win32K Headers */
-#include <ntuser.h>
-
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
-/* External Winlogon Header */
-#include <winlogon.h>
+/* Public Win32K Headers */
+#include <ntuser.h>
 
 /* CSRSS Header */
 #include <csr/csrsrv.h>
 
-/* USER Headers */
-#include <win/winmsg.h>
+typedef struct tagSHUTDOWN_SETTINGS
+{
+    BOOL  AutoEndTasks;
+    ULONG HungAppTimeout;
+    ULONG WaitToKillAppTimeout;
+    ULONG WaitToKillServiceTimeout;
+    ULONG ProcessTerminateTimeout;
+} SHUTDOWN_SETTINGS, *PSHUTDOWN_SETTINGS;
 
-/* Public Win32 Headers */
-#include <commctrl.h>
+extern SHUTDOWN_SETTINGS ShutdownSettings;
 
-#include "resource.h"
+VOID FASTCALL
+GetTimeouts(IN PSHUTDOWN_SETTINGS ShutdownSettings);
 
-
-/* Globals */
-extern HINSTANCE UserServerDllInstance;
-extern HANDLE UserServerHeap;
-extern ULONG_PTR LogonProcessId;
-
-#endif // __WINSRV_H__
-
-/* EOF */
+#endif /* __WINSRV_H__ */

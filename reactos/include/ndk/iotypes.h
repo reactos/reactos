@@ -52,6 +52,13 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define SYMBOLIC_LINK_ALL_ACCESS                STANDARD_RIGHTS_REQUIRED | 0x0001
 #endif
 
+#ifdef NTOS_MODE_USER
+
+/* File System Attributes Flags */
+#define FILE_READ_ONLY_VOLUME 0x00080000
+
+#endif
+
 //
 // NtCreateFile Result Flags
 //
@@ -174,7 +181,7 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DNF_LEGACY_DRIVER                       0x00004000
 #define DNF_STOPPED                             0x00008000
 #define DNF_WILL_BE_REMOVED                     0x00010000
-#define DNF_NEED_TO_ENUM                        0x00020000
+#define DNF_LEGACY_RESOURCE_DEVICENODE          0x00020000
 #define DNF_NOT_CONFIGURED                      0x00040000
 #define DNF_REINSTALL                           0x00080000
 #define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x00100000 // ???
@@ -620,6 +627,13 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION
     ULONG FileAttributes;
     ULONG ReparseTag;
 } FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
+
+typedef struct _FILE_TRACKING_INFORMATION
+{
+    HANDLE DestinationFile;
+    ULONG ObjectInformationLength;
+    CHAR ObjectInformation[1];
+} FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
 //
 // File System Information structures for NtQueryInformationFile

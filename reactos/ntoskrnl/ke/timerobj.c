@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/timer.c
+ * FILE:            ntoskrnl/ke/timerobj.c
  * PURPOSE:         Handle Kernel Timers (Kernel-part of Executive Timers)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -68,7 +68,7 @@ KiInsertTimerTable(IN PKTIMER Timer,
     BOOLEAN Expired = FALSE;
     PLIST_ENTRY ListHead, NextEntry;
     PKTIMER CurrentTimer;
-    DPRINT("KiInsertTimerTable(): Timer %p, Hand: %d\n", Timer, Hand);
+    DPRINT("KiInsertTimerTable(): Timer %p, Hand: %lu\n", Timer, Hand);
 
     /* Check if the period is zero */
     if (!Timer->Period) Timer->Header.SignalState = FALSE;

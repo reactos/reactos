@@ -48,4 +48,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: drag_link.cur */
 4 CURSOR drag_link.cur
 
-1 WINE_REGISTRY ole32.rgs
+1 WINE_REGISTRY "ole32.rgs"

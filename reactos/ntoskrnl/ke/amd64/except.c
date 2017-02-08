@@ -140,7 +140,7 @@ KiDispatchExceptionToUser(
     _SEH2_EXCEPT((LocalExceptRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord),
                  EXCEPTION_EXECUTE_HANDLER)
     {
-        // FIXNE: handle stack overflow
+        // FIXME: handle stack overflow
 
         /* Nothing we can do here */
         _SEH2_YIELD(return);
@@ -277,7 +277,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     if (PreviousMode == KernelMode)
     {
         /* Check if this is a first-chance exception */
-        if (FirstChance == TRUE)
+        if (FirstChance)
         {
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,

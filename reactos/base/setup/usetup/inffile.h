@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/inffile.h
+ * FILE:            base/setup/usetup/inffile.h
  * PURPOSE:         .inf files support functions
  * PROGRAMMER:      Hervé Poussineau
  */
@@ -45,47 +45,49 @@
  * Delete it once we don't use inflib anymore */
 typedef struct _INFCONTEXT
 {
-	PVOID Inf;
-	PVOID Section;
-	PVOID Line;
+    PVOID Inf;
+    PVOID Section;
+    PVOID Line;
 } INFCONTEXT;
 
-BOOL WINAPI
+BOOL
+WINAPI
 InfpFindFirstLineW(
-	IN HINF InfHandle,
-	IN PCWSTR Section,
-	IN PCWSTR Key,
-	IN OUT PINFCONTEXT Context);
+    IN HINF InfHandle,
+    IN PCWSTR Section,
+    IN PCWSTR Key,
+    IN OUT PINFCONTEXT Context);
 
-HINF WINAPI
+HINF
+WINAPI
 InfpOpenInfFileW(
-	IN PCWSTR FileName,
-	IN PCWSTR InfClass,
-	IN DWORD InfStyle,
-	IN LCID LocaleId,
-	OUT PUINT ErrorLine);
+    IN PCWSTR FileName,
+    IN PCWSTR InfClass,
+    IN DWORD InfStyle,
+    IN LCID LocaleId,
+    OUT PUINT ErrorLine);
 
 #endif /* __REACTOS__ */
 
 BOOLEAN
 INF_GetData(
-	IN PINFCONTEXT Context,
-	OUT PWCHAR *Key,
-	OUT PWCHAR *Data);
+    IN PINFCONTEXT Context,
+    OUT PWCHAR *Key,
+    OUT PWCHAR *Data);
 
 BOOLEAN
 INF_GetDataField(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	OUT PWCHAR *Data);
+    IN PINFCONTEXT Context,
+    IN ULONG FieldIndex,
+    OUT PWCHAR *Data);
 
 HINF WINAPI
 INF_OpenBufferedFileA(
-	IN PSTR FileBuffer,
-	IN ULONG FileSize,
-	IN PCSTR InfClass,
-	IN DWORD InfStyle,
-	IN LCID LocaleId,
-	OUT PUINT ErrorLine);
+    IN PSTR FileBuffer,
+    IN ULONG FileSize,
+    IN PCSTR InfClass,
+    IN DWORD InfStyle,
+    IN LCID LocaleId,
+    OUT PUINT ErrorLine);
 
 /* EOF */

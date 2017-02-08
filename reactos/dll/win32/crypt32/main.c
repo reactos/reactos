@@ -17,18 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "i_cryptasn1tls.h"
 #include "crypt32_private.h"
-#include "wine/debug.h"
+
+#include "i_cryptasn1tls.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -42,17 +33,16 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
         case DLL_PROCESS_ATTACH:
             hInstance = hInst;
             DisableThreadLibraryCalls(hInst);
+            init_empty_store();
             crypt_oid_init();
             break;
         case DLL_PROCESS_DETACH:
+            if (pvReserved) break;
             crypt_oid_free();
             crypt_sip_free();
             root_store_free();
             default_chain_engine_free();
-            /* Don't release the default provider on process shutdown, there's
-             * no guarantee the provider dll hasn't already been unloaded.
-             */
-            if (hDefProv && !pvReserved) CryptReleaseContext(hDefProv, 0);
+            if (hDefProv) CryptReleaseContext(hDefProv, 0);
             break;
     }
     return TRUE;
@@ -250,4 +240,17 @@ ASN1encoding_t WINAPI I_CryptGetAsn1Encoder(HCRYPTASN1MODULE x)
 {
     FIXME("(%08x): stub\n", x);
     return NULL;
+}
+
+BOOL WINAPI CryptProtectMemory(void *data, DWORD len, DWORD flags)
+{
+    FIXME("(%p %u %08x): stub\n", data, len, flags);
+    return TRUE;
+}
+
+BOOL WINAPI CryptUnprotectMemory(void *data, DWORD len, DWORD flags)
+{
+    static int fixme_once;
+    if (!fixme_once++) FIXME("(%p %u %08x): stub\n", data, len, flags);
+    return TRUE;
 }

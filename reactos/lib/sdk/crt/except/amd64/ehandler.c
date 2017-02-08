@@ -12,6 +12,19 @@ __C_specific_handler(
     struct _DISPATCHER_CONTEXT *_DispatcherContext)
 {
     UNIMPLEMENTED;
+    __debugbreak();
+    return 0;
+}
+
+DWORD
+__CxxFrameHandler(
+    PEXCEPTION_RECORD rec,
+    EXCEPTION_REGISTRATION_RECORD* ExceptionRegistrationFrame,
+    PCONTEXT context,
+    EXCEPTION_REGISTRATION_RECORD** _ExceptionRecord)
+{
+    UNIMPLEMENTED;
+    __debugbreak();
     return 0;
 }
 

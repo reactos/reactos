@@ -4,10 +4,28 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Apri...",    IDM_OPEN_FILE
-        MENUITEM "&Chiudi",     IDM_CLOSE_FILE
+        MENUITEM "&Apri...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Chiudi\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Esci",       IDM_EXIT
+        MENUITEM "&Esci", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+    END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
     END
     POPUP "&Aiuto"
     BEGIN
@@ -15,16 +33,35 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+ID_ACCELERATORS ACCELERATORS
 BEGIN
-    IDS_ALL_TYPES_FILTER "Tutti i tipi supportati (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-    IDS_TOOLTIP_PLAY     "Riproduci"
-    IDS_TOOLTIP_STOP     "Interrompi"
-    IDS_TOOLTIP_EJECT    "Espelli"
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_OPEN "Opened"
+    IDS_MODE_STOP "Stopped"
+    IDS_MODE_PLAY "Playing"
+    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_RECORD "Recording"
+    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_NOT_READY "Not ready"
+    IDS_ALL_TYPES_FILTER "Tutti i tipi supportati"
+    IDS_TOOLTIP_PLAY "Riproduci"
+    IDS_TOOLTIP_STOP "Interrompi"
+    IDS_TOOLTIP_EJECT "Espelli"
     IDS_TOOLTIP_BACKWARD "Precedente"
     IDS_TOOLTIP_SEEKBACK "Riavvolgimento rapido"
     IDS_TOOLTIP_SEEKFORW "Avanzamento rapido"
-    IDS_TOOLTIP_FORWARD  "Successivo"
-    IDS_APPTITLE         "Riproduttore multimediale ReactOS"
-	IDS_PLAY             "Riproduci"
+    IDS_TOOLTIP_FORWARD "Successivo"
+    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_APPTITLE "Riproduttore multimediale ReactOS"
+    IDS_PLAY "Riproduci"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error."
 END

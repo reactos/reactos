@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         RTL Interlocked Routines
  * FILE:            lib/rtl/interlck.c
- * PROGRAMERS:      Stefan Ginsberg (stefan__100__@hotmail.com)
+ * PROGRAMERS:      Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,17 +14,6 @@
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
-
-PSLIST_ENTRY
-NTAPI
-RtlInterlockedPushListSList(IN PSLIST_HEADER ListHead,
-                            IN PSLIST_ENTRY List,
-                            IN PSLIST_ENTRY ListEnd,
-                            IN ULONG Count)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
 
 LONGLONG
 NTAPI

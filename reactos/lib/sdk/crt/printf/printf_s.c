@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 printf_s(const char *format, ...)
 {
     va_list argptr;

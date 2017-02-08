@@ -405,6 +405,7 @@ DbgkMapViewOfSection(IN PVOID Section,
     LoadDll->BaseOfDll = BaseAddress;
     LoadDll->DebugInfoFileOffset = 0;
     LoadDll->DebugInfoSize = 0;
+    LoadDll->NamePointer = &NtCurrentTeb()->NtTib.ArbitraryUserPointer;
 
     /* Get the NT Headers */
     NtHeader = RtlImageNtHeader(BaseAddress);

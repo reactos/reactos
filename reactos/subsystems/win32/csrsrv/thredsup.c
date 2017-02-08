@@ -14,11 +14,11 @@
 #define NDEBUG
 #include <debug.h>
 
-#define CsrHashThread(t) (HandleToUlong(t)&(256 - 1))
+#define CsrHashThread(t) (HandleToUlong(t) % NUMBER_THREAD_HASH_BUCKETS)
 
 /* GLOBALS ********************************************************************/
 
-LIST_ENTRY CsrThreadHashTable[256];
+LIST_ENTRY CsrThreadHashTable[NUMBER_THREAD_HASH_BUCKETS];
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -292,13 +292,24 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
  * @remarks None.
  *
  *--*/
-VOID
+NTSTATUS
 NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
                 IN PCSR_THREAD Thread)
 {
     ULONG i;
+    NTSTATUS Status;
+    ULONG ThreadInfo;
     // ASSERT(ProcessStructureListLocked());
+
+    /* Make sure the thread isn't already dead by the time we got this */
+    Status = NtQueryInformationThread(Thread->ThreadHandle,
+                                      ThreadIsTerminated,
+                                      &ThreadInfo,
+                                      sizeof(ThreadInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+    if (ThreadInfo) return STATUS_THREAD_IS_TERMINATING;
 
     /* Insert it into the Regular List */
     InsertTailList(&Process->ThreadList, &Thread->Link);
@@ -311,6 +322,7 @@ CsrInsertThread(IN PCSR_PROCESS Process,
 
     /* Insert it there too */
     InsertHeadList(&CsrThreadHashTable[i], &Thread->HashLinks);
+    return STATUS_SUCCESS;
 }
 
 /*++
@@ -581,7 +593,7 @@ CsrCreateRemoteThread(IN HANDLE hThread,
         DPRINT1("No known process for %lx\n", ClientId->UniqueProcess);
         return Status;
     }
-    
+
     /* Make sure the thread didn't terminate */
     if (KernelTimes.ExitTime.QuadPart)
     {
@@ -623,7 +635,15 @@ CsrCreateRemoteThread(IN HANDLE hThread,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        if (CsrThread->ThreadHandle != hThread) NtClose(CsrThread->ThreadHandle);
+        CsrUnlockProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        return Status;
+    }
 
     /* Release the lock and return */
     CsrUnlockProcess(CsrProcess);
@@ -694,7 +714,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     /* Get the Thread Create Time */
     Status = NtQueryInformationThread(hThread,
                                       ThreadTimes,
-                                      (PVOID)&KernelTimes,
+                                      &KernelTimes,
                                       sizeof(KernelTimes),
                                       NULL);
     if (!NT_SUCCESS(Status))
@@ -720,7 +740,14 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrUnlockProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        return Status;
+    }
 
     /* Release the lock and return */
     CsrReleaseProcessLock();
@@ -1018,7 +1045,7 @@ CsrReferenceThread(IN PCSR_THREAD CsrThread)
     CsrAcquireProcessLock();
 
     /* Sanity checks */
-    ASSERT(CsrThread->Flags & CsrThreadTerminated); // CSR_THREAD_DESTROYED in ASSERT
+    ASSERT((CsrThread->Flags & CsrThreadTerminated) == 0);
     ASSERT(CsrThread->ReferenceCount != 0);
 
     /* Increment reference count */

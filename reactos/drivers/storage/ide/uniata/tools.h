@@ -34,6 +34,8 @@ Revision History:
 #ifndef __TOOLS_H__
 #define __TOOLS_H__
 
+#pragma pack(push, 1)
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -109,6 +111,14 @@ if((a)!=NULL) {                             \
     KdPrint(("\n"));                        \
 }
 
+#define DbgDumpRegTranslation(chan, idx) \
+        KdPrint2((PRINT_PREFIX \
+                   "  IO_%#x (%#x), %s:\n", \
+                   idx,          \
+                   chan->RegTranslation[idx].Addr, \
+                   chan->RegTranslation[idx].Proc ? "Proc" : (        \
+                   chan->RegTranslation[idx].MemIo ? "Mem" : "IO"))); \
+
 #define BrutePoint() { ASSERT(0); }
 
 #define DbgAllocatePool(x,y) ExAllocatePool(x,y)
@@ -118,6 +128,8 @@ if((a)!=NULL) {                             \
 #else
 
 #define KdDump(a,b) {}
+
+#define DbgDumpRegTranslation(chan, idx) {}
 
 #define DbgAllocatePool(x,y) ExAllocatePool(x,y)
 #define DbgFreePool(x) ExFreePool(x)
@@ -182,5 +194,7 @@ extern UNICODE_STRING SavedSPString;
 #ifndef offsetof
 #define offsetof(type, field)   (ULONG)&(((type *)0)->field)
 #endif //offsetof
+
+#pragma pack(pop)
 
 #endif // __TOOLS_H__

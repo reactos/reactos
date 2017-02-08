@@ -7,7 +7,7 @@
 
 #pragma once
 
-NTSTATUS openTcpFile(PHANDLE tcpFile);
+NTSTATUS openTcpFile(PHANDLE tcpFile, ACCESS_MASK DesiredAccess);
 VOID closeTcpFile(HANDLE tcpFile);
 NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
 			    PDWORD numEntities );

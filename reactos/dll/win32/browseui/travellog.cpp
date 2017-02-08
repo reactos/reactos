@@ -40,6 +40,7 @@ TODO:
     Implement Revert
 
 */
+
 #include "precomp.h"
 
 class CTravelEntry :
@@ -124,9 +125,10 @@ HRESULT CTravelEntry::GetToolTipText(IUnknown *punk, LPWSTR pwzText) const
 {
     HRESULT                                 hResult;
 
-    hResult = ILGetDisplayNameEx(NULL, fPIDL, pwzText, ILGDN_NORMAL);
-    if (FAILED(hResult))
+    hResult = ILGetDisplayNameEx(NULL, fPIDL, pwzText, ILGDN_NORMAL) ? S_OK : S_FALSE;
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
     return S_OK;
 }
 
@@ -141,14 +143,16 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Invoke(IUnknown *punk)
     CComPtr<IStream>                        globalStream;
     HRESULT                                 hResult;
 
-    hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
-    if (FAILED(hResult))
+    TRACE("CTravelEntry::Invoke for IUnknown punk=%p\n", punk);
+
+    hResult = punk->QueryInterface(IID_PPV_ARG(IPersistHistory, &persistHistory));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = CreateStreamOnHGlobal(fPersistState, FALSE, &globalStream);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = persistHistory->LoadHistory(globalStream, NULL);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
 }
@@ -159,34 +163,43 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     CComPtr<IPersistHistory>                persistHistory;
     CComPtr<IStream>                        globalStream;
     WINDOWDATA                              windowData;
-    HGLOBAL                                 globalStorage;
     HRESULT                                 hResult;
+
+    TRACE("CTravelEntry::Update for IUnknown punk=%p, fIsLocalAnchor=%s\n", punk, fIsLocalAnchor ? "TRUE" : "FALSE");
+
+
+    WCHAR wch[MAX_PATH * 2];
+    GetToolTipText(punk, wch);
+    TRACE("Updating entry with display name: %S\n", wch);
 
     ILFree(fPIDL);
     fPIDL = NULL;
     GlobalFree(fPersistState);
     fPersistState = NULL;
-    hResult = punk->QueryInterface(IID_ITravelLogClient, reinterpret_cast<void **>(&travelLogClient));
-    if (FAILED(hResult))
+    hResult = punk->QueryInterface(IID_PPV_ARG(ITravelLogClient, &travelLogClient));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = travelLogClient->GetWindowData(&windowData);
-    if (FAILED(hResult))
+    hResult = punk->QueryInterface(IID_PPV_ARG(IPersistHistory, &persistHistory));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = CreateStreamOnHGlobal(NULL, FALSE, &globalStream);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = persistHistory->SaveHistory(globalStream);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = travelLogClient->GetWindowData(globalStream, &windowData);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     fPIDL = windowData.pidl;
     // TODO: Properly free the windowData
-    hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
-    if (FAILED(hResult))
-        return hResult;
-    globalStorage = GlobalAlloc(GMEM_FIXED, 0);
-    hResult = CreateStreamOnHGlobal(globalStorage, FALSE, &globalStream);
-    if (FAILED(hResult))
-        return hResult;
-    hResult = persistHistory->SaveHistory(globalStream);
-    if (FAILED(hResult))
-        return hResult;
     hResult = GetHGlobalFromStream(globalStream, &fPersistState);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
+    GetToolTipText(punk, wch);
+    TRACE("Updated entry display name is now: %S\n", wch);
+
     return S_OK;
 }
 
@@ -197,6 +210,9 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::GetPidl(LPITEMIDLIST *ppidl)
     *ppidl = ILClone(fPIDL);
     if (*ppidl == NULL)
         return E_OUTOFMEMORY;
+
+    TRACE("CTravelEntry::GetPidl returning ppidl=%p\n", *ppidl);
+
     return S_OK;
 }
 
@@ -208,6 +224,7 @@ CTravelLog::CTravelLog()
     fMaximumSize = 0;
     fCurrentSize = 0;
     fEntryCount = 0;
+    TRACE("CTravelLog created\n");
 }
 
 CTravelLog::~CTravelLog()
@@ -222,19 +239,25 @@ CTravelLog::~CTravelLog()
         anEntry->Release();
         anEntry = next;
     }
+    TRACE("CTravelLog destroyed\n");
 }
 
 HRESULT CTravelLog::Initialize()
 {
+    FIXME("CTravelLog::Initialize using hardcoded fMaximumSize.\n");
     fMaximumSize = 1024 * 1024;         // TODO: change to read this from registry
     // Software\Microsoft\Windows\CurrentVersion\Explorer\TravelLog
     // MaxSize
     return S_OK;
 }
 
-HRESULT CTravelLog::FindRelativeEntry(int offset, CTravelEntry **foundEntry)
+HRESULT CTravelLog::FindRelativeEntry(int _offset, CTravelEntry **foundEntry)
 {
     CTravelEntry                            *curEntry;
+    int offset = _offset;
+
+    if (foundEntry == NULL)
+        return E_INVALIDARG;
 
     *foundEntry = NULL;
     curEntry = fCurrentEntry;
@@ -256,7 +279,11 @@ HRESULT CTravelLog::FindRelativeEntry(int offset, CTravelEntry **foundEntry)
     }
     if (curEntry == NULL)
         return E_INVALIDARG;
+    
     *foundEntry = curEntry;
+
+    TRACE("CTravelLog::FindRelativeEntry for offset %d, returning %p\n", offset, *foundEntry);
+
     return S_OK;
 }
 
@@ -264,6 +291,10 @@ void CTravelLog::DeleteChain(CTravelEntry *startHere)
 {
     CTravelEntry                            *saveNext;
     long                                    itemSize;
+
+    TRACE("CTravelLog::DeleteChain deleting chain starting at %p\n", startHere);
+
+    long startEntryCount = fEntryCount;
 
     if (startHere->fPreviousEntry != NULL)
     {
@@ -284,17 +315,21 @@ void CTravelLog::DeleteChain(CTravelEntry *startHere)
         startHere = saveNext;
         fEntryCount--;
     }
+
+    TRACE("CTravelLog::DeleteChain chain of %d items deleted\n", startEntryCount - fEntryCount);
 }
 
 void CTravelLog::AppendEntry(CTravelEntry *afterEntry, CTravelEntry *newEntry)
 {
     if (afterEntry == NULL)
     {
+        TRACE("CTravelLog::AppendEntry appending %p after NULL. Resetting head and tail\n", newEntry);
         fListHead = newEntry;
         fListTail = newEntry;
     }
     else
     {
+        TRACE("CTravelLog::AppendEntry appending %p after %p\n", newEntry, afterEntry);
         newEntry->fNextEntry = afterEntry->fNextEntry;
         afterEntry->fNextEntry = newEntry;
         newEntry->fPreviousEntry = afterEntry;
@@ -310,6 +345,8 @@ HRESULT STDMETHODCALLTYPE CTravelLog::AddEntry(IUnknown *punk, BOOL fIsLocalAnch
 {
     CComObject<CTravelEntry>                *newEntry;
     long                                    itemSize;
+
+    TRACE("CTravelLog::AddEntry for IUnknown punk=%p, fIsLocalAnchor=%s\n", punk, fIsLocalAnchor ? "TRUE" : "FALSE");
 
     if (punk == NULL)
         return E_INVALIDARG;
@@ -345,12 +382,14 @@ HRESULT STDMETHODCALLTYPE CTravelLog::Travel(IUnknown *punk, int iOffset)
     CTravelEntry                            *destinationEntry;
     HRESULT                                 hResult;
 
+    TRACE("CTravelLog::Travel for IUnknown punk=%p at offset=%d\n", punk, iOffset);
+
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     fCurrentEntry = destinationEntry;
     hResult = destinationEntry->Invoke(punk);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
 }
@@ -359,11 +398,17 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
 {
     CTravelEntry                            *destinationEntry;
     HRESULT                                 hResult;
-
+    
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    return destinationEntry->QueryInterface(IID_ITravelEntry, reinterpret_cast<void **>(ppte));
+    hResult = destinationEntry->QueryInterface(IID_PPV_ARG(ITravelEntry, ppte));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    TRACE("CTravelLog::GetTravelEntry for IUnknown punk=%p at offset=%d returning %p\n", punk, iOffset, *ppte);
+
+    return hResult;
 }
 
 HRESULT STDMETHODCALLTYPE CTravelLog::FindTravelEntry(IUnknown *punk, LPCITEMIDLIST pidl, ITravelEntry **ppte)
@@ -372,6 +417,9 @@ HRESULT STDMETHODCALLTYPE CTravelLog::FindTravelEntry(IUnknown *punk, LPCITEMIDL
         return E_POINTER;
     if (punk == NULL || pidl == NULL)
         return E_INVALIDARG;
+
+    UNIMPLEMENTED;
+
     return E_NOTIMPL;
 }
 
@@ -387,20 +435,27 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetToolTipText(IUnknown *punk, int iOffset
     if (punk == NULL || cchText == 0)
         return E_INVALIDARG;
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = destinationEntry->GetToolTipText(punk, tempString);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     if (iOffset < 0)
     {
-        wcscpy(templateString, L"Back to %s");
+        if(LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                            IDS_BACK, templateString, sizeof(templateString) / sizeof(wchar_t)) == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
     }
     else
     {
-        wcscpy(templateString, L"Forward to %s");
+        if(LoadStringW(_AtlBaseModule.GetResourceInstance(),
+                            IDS_FORWARD, templateString, sizeof(templateString) / sizeof(wchar_t)) == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
     }
     _snwprintf(pwzText, cchText, templateString, tempString);
+
+    TRACE("CTravelLog::GetToolTipText for IUnknown punk=%p at offset=%d returning L\"%S\"\n", punk, iOffset, pwzText);
+
     return S_OK;
 }
 
@@ -431,6 +486,8 @@ HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hm
     MENUITEMINFO                            menuItemInfo;
     wchar_t                                 itemTextBuffer[MAX_PATH * 2];
     HRESULT                                 hResult;
+
+    TRACE("CTravelLog::InsertMenuEntries for IUnknown punk=%p, nPos=%d, idFirst=%d, idLast=%d\n", punk);
 
     // TLMENUF_BACK - include back entries
     // TLMENUF_INCLUDECURRENT - include current entry, if TLMENUF_CHECKCURRENT then check the entry
@@ -466,6 +523,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hm
                 if (SUCCEEDED(hResult))
                 {
                     FixAmpersands(itemTextBuffer);
+                    TRACE("CTravelLog::InsertMenuEntries adding entry L\"%S\"/L\"%S\" with id %d\n", itemTextBuffer, menuItemInfo.dwTypeData, menuItemInfo.wID);
                     if (InsertMenuItem(hmenu, nPos, TRUE, &menuItemInfo))
                     {
                         nPos++;
@@ -486,6 +544,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hm
                 if (SUCCEEDED(hResult))
                 {
                     FixAmpersands(itemTextBuffer);
+                    TRACE("CTravelLog::InsertMenuEntries adding entry L\"%S\"/L\"%S\" with id %d\n", itemTextBuffer, menuItemInfo.dwTypeData, menuItemInfo.wID);
                     if (InsertMenuItem(hmenu, nPos, TRUE, &menuItemInfo))
                     {
                         nPos++;
@@ -506,6 +565,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hm
                 FixAmpersands(itemTextBuffer);
                 if ((dwFlags & TLMENUF_CHECKCURRENT) != 0)
                     menuItemInfo.fState |= MFS_CHECKED;
+                TRACE("CTravelLog::InsertMenuEntries adding entry L\"%S\"/L\"%S\" with id %d\n", itemTextBuffer, menuItemInfo.dwTypeData, menuItemInfo.wID);
                 if (InsertMenuItem(hmenu, nPos, TRUE, &menuItemInfo))
                 {
                     nPos++;
@@ -526,6 +586,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hm
             if (SUCCEEDED(hResult))
             {
                 FixAmpersands(itemTextBuffer);
+                TRACE("CTravelLog::InsertMenuEntries adding entry L\"%S\"/L\"%S\" with id %d\n", itemTextBuffer, menuItemInfo.dwTypeData, menuItemInfo.wID);
                 if (InsertMenuItem(hmenu, nPos, TRUE, &menuItemInfo))
                 {
                     nPos++;
@@ -544,6 +605,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::Clone(ITravelLog **pptl)
         return E_POINTER;
     *pptl = NULL;
     // duplicate the log
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
@@ -557,28 +619,11 @@ DWORD STDMETHODCALLTYPE CTravelLog::CountEntries(IUnknown *punk)
 HRESULT STDMETHODCALLTYPE CTravelLog::Revert()
 {
     // remove the current entry?
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT CreateTravelLog(REFIID riid, void **ppv)
 {
-    CComObject<CTravelLog>                  *theTravelLog;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theTravelLog = new CComObject<CTravelLog>);
-    if (theTravelLog == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theTravelLog->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theTravelLog;
-        return hResult;
-    }
-    hResult = theTravelLog->Initialize();
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
+    return ShellObjectCreatorInit<CTravelLog>(riid, ppv);
 }

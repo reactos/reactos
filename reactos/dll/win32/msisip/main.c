@@ -44,10 +44,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             break;
-        case DLL_PROCESS_DETACH:
-            break;
-        default:
-            break;
     }
 
     return TRUE;
@@ -89,6 +85,7 @@ HRESULT WINAPI DllRegisterServer(void)
     prov.pwszVerifyFuncName = verifyIndirectData;
     prov.pwszRemoveFuncName = removeSignedDataMsg;
     prov.pwszIsFunctionNameFmt2 = isMyTypeOfFile;
+    prov.pwszGetCapFuncName = NULL;
     return CryptSIPAddProvider(&prov) ? S_OK : S_FALSE;
 }
 

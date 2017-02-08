@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/vprintf.c
+ * FILE:            lib/sdk/crt/printf/vprintf_s.c
  * PURPOSE:         Implementation of vprintf
  * PROGRAMMER:      Samuel Serapión
  */
@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 vprintf_s(const char *format, va_list valist)
 {
     return vfprintf_s(stdout,format,valist);

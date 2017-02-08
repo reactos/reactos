@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2007, 2009, 2010 by                  */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,6 +24,93 @@
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_pfr
+
+
+  /*
+   *  The overall structure of a PFR file is as follows.
+   *
+   *    PFR header
+   *      58 bytes (contains nPhysFonts)
+   *
+   *    Logical font directory (size at most 2^16 bytes)
+   *      2 bytes (nLogFonts)
+   *      + nLogFonts * 5 bytes
+   *
+   *         ==>   nLogFonts <= 13106
+   *
+   *    Logical font section (size at most 2^24 bytes)
+   *      nLogFonts * logFontRecord
+   *
+   *      logFontRecord (size at most 2^16 bytes)
+   *        12 bytes (fontMatrix)
+   *        + 1 byte (flags)
+   *        + 0-5 bytes (depending on `flags')
+   *        + 0-(1+255*(2+255)) = 0-65536 (depending on `flags')
+   *        + 5 bytes (physical font info)
+   *        + 0-1 bytes (depending on PFR header)
+   *
+   *         ==>   minimum size 18 bytes
+   *
+   *    Physical font section (size at most 2^24 bytes)
+   *      nPhysFonts * (physFontRecord
+   *                    + nBitmapSizes * nBmapChars * bmapCharRecord)
+   *
+   *      physFontRecord (size at most 2^24 bytes)
+   *        14 bytes (font info)
+   *        + 1 byte (flags)
+   *        + 0-2 (depending on `flags')
+   *        + 0-? (structure too complicated to be shown here; depending on
+   *               `flags'; contains `nBitmapSizes' and `nBmapChars')
+   *        + 3 bytes (nAuxBytes)
+   *        + nAuxBytes
+   *        + 1 byte (nBlueValues)
+   *        + 2 * nBlueValues
+   *        + 6 bytes (hinting data)
+   *        + 2 bytes (nCharacters)
+   *        + nCharacters * (4-10 bytes) (depending on `flags')
+   *
+   *         ==>   minimum size 27 bytes
+   *
+   *      bmapCharRecord
+   *        4-7 bytes
+   *
+   *    Glyph program strings (three possible types: simpleGps, compoundGps,
+   *                           and bitmapGps; size at most 2^24 bytes)
+   *      simpleGps (size at most 2^16 bytes)
+   *        1 byte (flags)
+   *        1-2 bytes (n[XY]orus, depending on `flags')
+   *        0-(64+512*2) = 0-1088 bytes (depending on `n[XY]orus')
+   *        0-? (structure too complicated to be shown here; depending on
+   *             `flags')
+   *        1-? glyph data (faintly resembling PS Type 1 charstrings)
+   *
+   *         ==>   minimum size 3 bytes
+   *
+   *      compoundGps (size at most 2^16 bytes)
+   *        1 byte (nElements <= 63, flags)
+   *        + 0-(1+255*(2+255)) = 0-65536 (depending on `flags')
+   *        + nElements * (6-14 bytes)
+   *
+   *      bitmapGps (size at most 2^16 bytes)
+   *        1 byte (flags)
+   *        3-13 bytes (position info, depending on `flags')
+   *        0-? bitmap data
+   *
+   *         ==>   minimum size 4 bytes
+   *
+   *    PFR trailer
+   *        8 bytes
+   *
+   *
+   * ==>   minimum size of a valid PFR:
+   *         58 (header)
+   *         + 2 (nLogFonts)
+   *         + 27 (1 physFontRecord)
+   *         + 8 (trailer)
+   *        -----
+   *         95 bytes
+   *
+   */
 
 
   /*************************************************************************/
@@ -49,7 +136,7 @@
                          PFR_ExtraItem   item_list,
                          FT_Pointer      item_data )
   {
-    FT_Error  error = PFR_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_Byte*  p     = *pp;
     FT_UInt   num_items, item_type, item_size;
 
@@ -75,7 +162,8 @@
           if ( extra->type == item_type )
           {
             error = extra->parser( p, p + item_size, item_data );
-            if ( error ) goto Exit;
+            if ( error )
+              goto Exit;
 
             break;
           }
@@ -91,7 +179,7 @@
 
   Too_Short:
     FT_ERROR(( "pfr_extra_items_parse: invalid extra items table\n" ));
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     goto Exit;
   }
 
@@ -179,11 +267,12 @@
     if ( header->signature  != 0x50465230L ||   /* "PFR0" */
          header->version     > 4           ||
          header->header_size < 58          ||
-         header->signature2 != 0x0d0a      )    /* CR/LF  */
+         header->signature2 != 0x0D0A      )    /* CR/LF  */
     {
       result = 0;
     }
-    return  result;
+
+    return result;
   }
 
 
@@ -199,20 +288,31 @@
   FT_LOCAL_DEF( FT_Error )
   pfr_log_font_count( FT_Stream  stream,
                       FT_UInt32  section_offset,
-                      FT_UInt   *acount )
+                      FT_Long   *acount )
   {
     FT_Error  error;
     FT_UInt   count;
     FT_UInt   result = 0;
 
 
-    if ( FT_STREAM_SEEK( section_offset ) || FT_READ_USHORT( count ) )
+    if ( FT_STREAM_SEEK( section_offset ) ||
+         FT_READ_USHORT( count )          )
       goto Exit;
+
+    /* check maximum value and a rough minimum size */
+    if ( count > ( ( 1 << 16 ) - 2 ) / 5                ||
+         2 + count * 5 >= stream->size - section_offset )
+    {
+      FT_ERROR(( "pfr_log_font_count:"
+                 " invalid number of logical fonts\n" ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
 
     result = count;
 
   Exit:
-    *acount = result;
+    *acount = (FT_Long)result;
     return error;
   }
 
@@ -236,7 +336,7 @@
       goto Exit;
 
     if ( idx >= num_log_fonts )
-      return PFR_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( FT_STREAM_SKIP( idx * 5 ) ||
          FT_READ_USHORT( size )    ||
@@ -254,13 +354,14 @@
       FT_UInt   local;
 
 
-      if ( FT_STREAM_SEEK( offset ) || FT_FRAME_ENTER( size ) )
+      if ( FT_STREAM_SEEK( offset ) ||
+           FT_FRAME_ENTER( size )   )
         goto Exit;
 
       p     = stream->cursor;
       limit = p + size;
 
-      PFR_CHECK(13);
+      PFR_CHECK( 13 );
 
       log_font->matrix[0] = PFR_NEXT_LONG( p );
       log_font->matrix[1] = PFR_NEXT_LONG( p );
@@ -308,10 +409,11 @@
       if ( flags & PFR_LOG_EXTRA_ITEMS )
       {
         error = pfr_extra_items_skip( &p, limit );
-        if (error) goto Fail;
+        if ( error )
+          goto Fail;
       }
 
-      PFR_CHECK(5);
+      PFR_CHECK( 5 );
       log_font->phys_size   = PFR_NEXT_USHORT( p );
       log_font->phys_offset = PFR_NEXT_ULONG( p );
       if ( size_increment )
@@ -329,7 +431,7 @@
 
   Too_Short:
     FT_ERROR(( "pfr_log_font_load: invalid logical font table\n" ));
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     goto Fail;
   }
 
@@ -353,12 +455,12 @@
     PFR_Strike  strike;
     FT_UInt     flags0;
     FT_UInt     n, count, size1;
-    FT_Error    error = PFR_Err_Ok;
+    FT_Error    error = FT_Err_Ok;
 
 
     PFR_CHECK( 5 );
 
-    p += 3;  /* skip bctSize */
+    p     += 3;  /* skip bctSize */
     flags0 = PFR_NEXT_BYTE( p );
     count  = PFR_NEXT_BYTE( p );
 
@@ -427,19 +529,19 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_extra_item_load_bitmap_info:"
                " invalid bitmap info table\n" ));
     goto Exit;
   }
 
 
-  /* Load font ID.  This is a so-called "unique" name that is rather
-   * long and descriptive (like "Tiresias ScreenFont v7.51").
+  /* Load font ID.  This is a so-called `unique' name that is rather
+   * long and descriptive (like `Tiresias ScreenFont v7.51').
    *
    * Note that a PFR font's family name is contained in an *undocumented*
-   * string of the "auxiliary data" portion of a physical font record.  This
-   * may also contain the "real" style name!
+   * string of the `auxiliary data' portion of a physical font record.  This
+   * may also contain the `real' style name!
    *
    * If no family name is present, the font ID is used instead for the
    * family.
@@ -449,9 +551,9 @@
                                FT_Byte*     limit,
                                PFR_PhyFont  phy_font )
   {
-    FT_Error    error  = PFR_Err_Ok;
-    FT_Memory   memory = phy_font->memory;
-    FT_PtrDist  len    = limit - p;
+    FT_Error   error  = FT_Err_Ok;
+    FT_Memory  memory = phy_font->memory;
+    FT_UInt    len    = (FT_UInt)( limit - p );
 
 
     if ( phy_font->font_id != NULL )
@@ -476,8 +578,8 @@
                                   PFR_PhyFont  phy_font )
   {
     FT_UInt    count, num_vert, num_horz;
-    FT_Int*    snaps;
-    FT_Error   error  = PFR_Err_Ok;
+    FT_Int*    snaps  = NULL;
+    FT_Error   error  = FT_Err_Ok;
     FT_Memory  memory = phy_font->memory;
 
 
@@ -506,7 +608,7 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_exta_item_load_stem_snaps:"
                " invalid stem snaps table\n" ));
     goto Exit;
@@ -521,11 +623,9 @@
                                      PFR_PhyFont  phy_font )
   {
     PFR_KernItem  item   = NULL;
-    FT_Error      error  = PFR_Err_Ok;
+    FT_Error      error  = FT_Err_Ok;
     FT_Memory     memory = phy_font->memory;
 
-
-    FT_TRACE2(( "pfr_extra_item_load_kerning_pairs()\n" ));
 
     if ( FT_NEW( item ) )
       goto Exit;
@@ -535,7 +635,8 @@
     item->pair_count = PFR_NEXT_BYTE( p );
     item->base_adj   = PFR_NEXT_SHORT( p );
     item->flags      = PFR_NEXT_BYTE( p );
-    item->offset     = phy_font->offset + ( p - phy_font->cursor );
+    item->offset     = phy_font->offset +
+                       (FT_Offset)( p - phy_font->cursor );
 
 #ifndef PFR_CONFIG_NO_CHECKS
     item->pair_size = 3;
@@ -604,12 +705,11 @@
   Too_Short:
     FT_FREE( item );
 
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_extra_item_load_kerning_pairs:"
                " invalid kerning pairs table\n" ));
     goto Exit;
   }
-
 
 
   static const PFR_ExtraItemRec  pfr_phy_font_extra_items[] =
@@ -622,7 +722,8 @@
   };
 
 
-  /* Loads a name from the auxiliary data.  Since this extracts undocumented
+  /*
+   * Load a name from the auxiliary data.  Since this extracts undocumented
    * strings from the font file, we need to be careful here.
    */
   static FT_Error
@@ -631,7 +732,7 @@
                      FT_Memory    memory,
                      FT_String*  *astring )
   {
-    FT_Error    error = PFR_Err_Ok;
+    FT_Error    error  = FT_Err_Ok;
     FT_String*  result = NULL;
     FT_UInt     n, ok;
 
@@ -728,7 +829,8 @@
     phy_font->kern_items      = NULL;
     phy_font->kern_items_tail = &phy_font->kern_items;
 
-    if ( FT_STREAM_SEEK( offset ) || FT_FRAME_ENTER( size ) )
+    if ( FT_STREAM_SEEK( offset ) ||
+         FT_FRAME_ENTER( size )   )
       goto Exit;
 
     phy_font->cursor = stream->cursor;
@@ -756,16 +858,16 @@
     /* load the extra items when present */
     if ( flags & PFR_PHY_EXTRA_ITEMS )
     {
-      error =  pfr_extra_items_parse( &p, limit,
-                                      pfr_phy_font_extra_items, phy_font );
+      error = pfr_extra_items_parse( &p, limit,
+                                     pfr_phy_font_extra_items, phy_font );
 
       if ( error )
         goto Fail;
     }
 
-    /* In certain fonts, the auxiliary bytes contain interesting  */
-    /* information. These are not in the specification but can be */
-    /* guessed by looking at the content of a few PFR0 fonts.     */
+    /* In certain fonts, the auxiliary bytes contain interesting   */
+    /* information.  These are not in the specification but can be */
+    /* guessed by looking at the content of a few PFR0 fonts.      */
     PFR_CHECK( 3 );
     num_aux = PFR_NEXT_ULONG( p );
 
@@ -775,7 +877,7 @@
       FT_Byte*  q2;
 
 
-      PFR_CHECK( num_aux );
+      PFR_CHECK_SIZE( num_aux );
       p += num_aux;
 
       while ( num_aux > 0 )
@@ -796,9 +898,8 @@
         switch ( type )
         {
         case 1:
-          /* this seems to correspond to the font's family name,
-           * padded to 16-bits with one zero when necessary
-           */
+          /* this seems to correspond to the font's family name, padded to */
+          /* an even number of bytes with a zero byte appended if needed   */
           error = pfr_aux_name_load( q, length - 4U, memory,
                                      &phy_font->family_name );
           if ( error )
@@ -813,13 +914,11 @@
           phy_font->ascent  = PFR_NEXT_SHORT( q );
           phy_font->descent = PFR_NEXT_SHORT( q );
           phy_font->leading = PFR_NEXT_SHORT( q );
-          q += 16;
           break;
 
         case 3:
-          /* this seems to correspond to the font's style name,
-           * padded to 16-bits with one zero when necessary
-           */
+          /* this seems to correspond to the font's style name, padded to */
+          /* an even number of bytes with a zero byte appended if needed  */
           error = pfr_aux_name_load( q, length - 4U, memory,
                                      &phy_font->style_name );
           if ( error )
@@ -865,10 +964,7 @@
 
 
       phy_font->num_chars    = count = PFR_NEXT_USHORT( p );
-      phy_font->chars_offset = offset + ( p - stream->cursor );
-
-      if ( FT_NEW_ARRAY( phy_font->chars, count ) )
-        goto Fail;
+      phy_font->chars_offset = offset + (FT_Offset)( p - stream->cursor );
 
       Size = 1 + 1 + 2;
       if ( flags & PFR_PHY_2BYTE_CHARCODE )
@@ -886,7 +982,10 @@
       if ( flags & PFR_PHY_3BYTE_GPS_OFFSET )
         Size += 1;
 
-      PFR_CHECK( count * Size );
+      PFR_CHECK_SIZE( count * Size );
+
+      if ( FT_NEW_ARRAY( phy_font->chars, count ) )
+        goto Fail;
 
       for ( n = 0; n < count; n++ )
       {
@@ -899,7 +998,7 @@
 
         cur->advance   = ( flags & PFR_PHY_PROPORTIONAL )
                          ? PFR_NEXT_SHORT( p )
-                         : (FT_Int) phy_font->standard_advance;
+                         : phy_font->standard_advance;
 
 #if 0
         cur->ascii     = ( flags & PFR_PHY_ASCII_CODE )
@@ -932,7 +1031,7 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_phy_font_load: invalid physical font table\n" ));
     goto Fail;
   }

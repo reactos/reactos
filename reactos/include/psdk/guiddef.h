@@ -18,6 +18,7 @@
 
 #ifndef GUID_DEFINED
 #define GUID_DEFINED
+
 typedef struct _GUID
 {
 #ifdef _MSC_VER
@@ -31,13 +32,12 @@ typedef struct _GUID
 } GUID;
 #endif
 
-#ifndef DECLSPEC_SELECTANY
-#ifdef __clang__
-/* FIXME: http://llvm.org/bugs/show_bug.cgi?id=13778 */
-#define DECLSPEC_SELECTANY __attribute__((weak))
-#else
-#define DECLSPEC_SELECTANY __declspec(selectany)
+#ifndef FAR
+#define FAR
 #endif
+
+#ifndef DECLSPEC_SELECTANY
+#define DECLSPEC_SELECTANY __declspec(selectany)
 #endif
 
 #ifndef EXTERN_C
@@ -114,6 +114,8 @@ typedef GUID FMTID,*LPFMTID;
 #define REFFMTID            const FMTID* __MIDL_CONST
 #endif /* !defined(__cplusplus) && !defined(CINTERFACE) */
 
+#if !defined(__midl) && !defined(__WIDL__)
+#include <string.h>
 #if defined(__cplusplus) && !defined(CINTERFACE)
 
 __inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
@@ -124,7 +126,11 @@ __inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
         ((unsigned long *) &rguid1)[2] == ((unsigned long *) &rguid2)[2] &&
         ((unsigned long *) &rguid1)[3] == ((unsigned long *) &rguid2)[3]);
 }
-#define IsEqualGUID(rguid1, rguid2) (!memcmp(&(rguid1), &(rguid2), sizeof(GUID)))
+
+__inline int IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+{
+    return !memcmp(&rguid1, &rguid2, sizeof(GUID));
+}
 
 #else /* defined(__cplusplus) && !defined(CINTERFACE) */
 
@@ -136,6 +142,7 @@ __inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))
 
 #endif /* defined(__cplusplus) && !defined(CINTERFACE) */
+#endif /* __midl && __WIDL__ */
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 #include <string.h>

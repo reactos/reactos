@@ -6,16 +6,22 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _DNSAPI_H
+#define _DNSAPI_H
+
 /* INCLUDES ******************************************************************/
 
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#define NTOS_MODE_USER
+#include <stdarg.h>
 
 /* PSDK/NDK Headers */
-#include <windows.h>
-//#include <winerror.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
 #include <windns.h>
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 
 /* Internal DNSAPI Headers */
@@ -124,3 +130,5 @@ static inline LPSTR dns_strdup_ua( const char *src )
     }
     return dst;
 }
+
+#endif /* _DNSAPI_H */

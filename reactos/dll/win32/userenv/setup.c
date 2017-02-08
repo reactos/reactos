@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/setup.c
+ * FILE:            dll/win32/userenv/setup.c
  * PURPOSE:         Profile setup functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -29,6 +29,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "resources.h"
 
 typedef struct _FOLDERDATA
 {
@@ -330,7 +331,7 @@ InitializeProfiles(VOID)
 
     /* Set 'Fonts' folder path */
     GetWindowsDirectoryW(szBuffer, MAX_PATH);
-    wcscat(szBuffer, L"\\fonts");
+    wcscat(szBuffer, L"\\Fonts");
 
     dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
     Error = RegSetValueExW(hKey,

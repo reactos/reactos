@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/environment.c
+ * FILE:            dll/win32/userenv/environment.c
  * PURPOSE:         User environment functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -29,8 +29,8 @@
 #define NDEBUG
 #include <debug.h>
 
-
-static BOOL
+static
+BOOL
 SetUserEnvironmentVariable(LPVOID *Environment,
                            LPWSTR lpName,
                            LPWSTR lpValue,
@@ -117,7 +117,8 @@ SetUserEnvironmentVariable(LPVOID *Environment,
 }
 
 
-static BOOL
+static
+BOOL
 AppendUserEnvironmentVariable(LPVOID *Environment,
                               LPWSTR lpName,
                               LPWSTR lpValue)
@@ -165,15 +166,16 @@ AppendUserEnvironmentVariable(LPVOID *Environment,
 }
 
 
-static HKEY
+static
+HKEY
 GetCurrentUserKey(HANDLE hToken)
 {
     UNICODE_STRING SidString;
     HKEY hKey;
     LONG Error;
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return NULL;
@@ -198,7 +200,91 @@ GetCurrentUserKey(HANDLE hToken)
 }
 
 
-static BOOL
+static
+BOOL
+GetUserAndDomainName(IN HANDLE hToken,
+                     OUT LPWSTR *UserName,
+                     OUT LPWSTR *DomainName)
+{
+    PSID Sid = NULL;
+    LPWSTR lpUserName = NULL;
+    LPWSTR lpDomainName = NULL;
+    DWORD cbUserName = 0;
+    DWORD cbDomainName = 0;
+    SID_NAME_USE SidNameUse;
+    BOOL bRet = TRUE;
+
+    if (!GetUserSidFromToken(hToken,
+                             &Sid))
+    {
+        DPRINT1("GetUserSidFromToken() failed\n");
+        return FALSE;
+    }
+
+    if (!LookupAccountSidW(NULL,
+                           Sid,
+                           NULL,
+                           &cbUserName,
+                           NULL,
+                           &cbDomainName,
+                           &SidNameUse))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            bRet = FALSE;
+            goto done;
+        }
+    }
+
+    lpUserName = LocalAlloc(LPTR,
+                            cbUserName * sizeof(WCHAR));
+    if (lpUserName == NULL)
+    {
+        bRet = FALSE;
+        goto done;
+    }
+
+    lpDomainName = LocalAlloc(LPTR,
+                              cbDomainName * sizeof(WCHAR));
+    if (lpDomainName == NULL)
+    {
+        bRet = FALSE;
+        goto done;
+    }
+
+    if (!LookupAccountSidW(NULL,
+                           Sid,
+                           lpUserName,
+                           &cbUserName,
+                           lpDomainName,
+                           &cbDomainName,
+                           &SidNameUse))
+    {
+        bRet = FALSE;
+        goto done;
+    }
+
+    *UserName = lpUserName;
+    *DomainName = lpDomainName;
+
+done:
+    if (bRet == FALSE)
+    {
+        if (lpUserName != NULL)
+            LocalFree(lpUserName);
+
+        if (lpDomainName != NULL)
+            LocalFree(lpDomainName);
+    }
+
+    LocalFree(Sid);
+
+    return bRet;
+}
+
+
+static
+BOOL
 SetUserEnvironment(LPVOID *lpEnvironment,
                    HKEY hKey,
                    LPWSTR lpSubKeyName)
@@ -254,6 +340,7 @@ SetUserEnvironment(LPVOID *lpEnvironment,
     }
 
     /* Allocate buffers */
+    dwMaxValueNameLength++;
     lpValueName = LocalAlloc(LPTR,
                              dwMaxValueNameLength * sizeof(WCHAR));
     if (lpValueName == NULL)
@@ -310,7 +397,8 @@ SetUserEnvironment(LPVOID *lpEnvironment,
 }
 
 
-BOOL WINAPI
+BOOL
+WINAPI
 CreateEnvironmentBlock(LPVOID *lpEnvironment,
                        HANDLE hToken,
                        BOOL bInherit)
@@ -321,6 +409,8 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
     DWORD dwType;
     HKEY hKey;
     HKEY hKeyUser;
+    LPWSTR lpUserName = NULL;
+    LPWSTR lpDomainName = NULL;
     NTSTATUS Status;
     LONG lError;
 
@@ -339,6 +429,29 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
         DPRINT1("RtlCreateEnvironment() failed (Status %lx)\n", Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
+    }
+
+    /* Set 'SystemRoot' variable */
+    Length = MAX_PATH;
+    if (GetEnvironmentVariableW(L"SystemRoot",
+                                Buffer,
+                                Length))
+    {
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"SystemRoot",
+                                   Buffer,
+                                   FALSE);
+    }
+
+    /* Set 'SystemDrive' variable */
+    if (GetEnvironmentVariableW(L"SystemDrive",
+                                Buffer,
+                                Length))
+    {
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"SystemDrive",
+                                   Buffer,
+                                   FALSE);
     }
 
     /* Set 'COMPUTERNAME' variable */
@@ -361,6 +474,17 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    L"ALLUSERSPROFILE",
                                    Buffer,
                                    FALSE);
+    }
+
+    /* Set 'USERSPROFILE' variable to the default users profile */
+    Length = MAX_PATH;
+    if (GetDefaultUserProfileDirectory(Buffer,
+                                       &Length))
+    {
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"USERPROFILE",
+                                   Buffer,
+                                   TRUE);
     }
 
     lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -420,21 +544,50 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                  Buffer,
                                  &Length))
     {
+        DWORD MinLen = 2;
+
         SetUserEnvironmentVariable(lpEnvironment,
                                    L"USERPROFILE",
                                    Buffer,
                                    FALSE);
+
+        /* At least <drive letter>:<path> */
+        if (Length > MinLen)
+        {
+            /* Set 'HOMEDRIVE' variable */
+            StringCchCopyNW(szValue, MAX_PATH, Buffer, MinLen);
+            SetUserEnvironmentVariable(lpEnvironment,
+                                       L"HOMEDRIVE",
+                                       szValue,
+                                       FALSE);
+
+            /* Set 'HOMEPATH' variable */
+            StringCchCopyNW(szValue, MAX_PATH, Buffer + MinLen, Length - MinLen);
+            SetUserEnvironmentVariable(lpEnvironment,
+                                       L"HOMEPATH",
+                                       szValue,
+                                       FALSE);
+        }
+    }
+    else
+    {
+        DPRINT1("GetUserProfileDirectoryW failed with error %lu\n", GetLastError());
     }
 
-    /* FIXME: Set 'USERDOMAIN' variable */
-
-    Length = MAX_PATH;
-    if (GetUserNameW(Buffer,
-                     &Length))
+    if (GetUserAndDomainName(hToken,
+                             &lpUserName,
+                             &lpDomainName))
     {
+        /* Set 'USERDOMAIN' variable */
+        SetUserEnvironmentVariable(lpEnvironment,
+                                   L"USERDOMAIN",
+                                   lpDomainName,
+                                   FALSE);
+
+        /* Set 'USERNAME' variable */
         SetUserEnvironmentVariable(lpEnvironment,
                                    L"USERNAME",
-                                   Buffer,
+                                   lpUserName,
                                    FALSE);
     }
 
@@ -450,11 +603,18 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
 
     RegCloseKey(hKeyUser);
 
+    if (lpUserName != NULL)
+        LocalFree(lpUserName);
+
+    if (lpDomainName != NULL)
+        LocalFree(lpDomainName);
+
     return TRUE;
 }
 
 
-BOOL WINAPI
+BOOL
+WINAPI
 DestroyEnvironmentBlock(LPVOID lpEnvironment)
 {
     DPRINT("DestroyEnvironmentBlock() called\n");
@@ -471,7 +631,8 @@ DestroyEnvironmentBlock(LPVOID lpEnvironment)
 }
 
 
-BOOL WINAPI
+BOOL
+WINAPI
 ExpandEnvironmentStringsForUserW(IN HANDLE hToken,
                                  IN LPCWSTR lpSrc,
                                  OUT LPWSTR lpDest,
@@ -522,7 +683,8 @@ ExpandEnvironmentStringsForUserW(IN HANDLE hToken,
 }
 
 
-BOOL WINAPI
+BOOL
+WINAPI
 ExpandEnvironmentStringsForUserA(IN HANDLE hToken,
                                  IN LPCSTR lpSrc,
                                  OUT LPSTR lpDest,

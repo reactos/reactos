@@ -16,36 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winreg.h"
-#include <objbase.h>
-//#include "ocidl.h"
-#include <initguid.h>
-//#include "wincodec.h"
-#include <wincodecsdk.h>
-
 #include "wincodecs_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 extern HRESULT WINAPI WIC_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 
 typedef struct {
     REFCLSID classid;
-    HRESULT (*constructor)(IUnknown*,REFIID,void**);
+    class_constructor constructor;
 } classinfo;
 
 static const classinfo wic_classes[] = {
@@ -65,6 +42,7 @@ static const classinfo wic_classes[] = {
     {&CLSID_WineTgaDecoder, TgaDecoder_CreateInstance},
     {&CLSID_WICUnknownMetadataReader, UnknownMetadataReader_CreateInstance},
     {&CLSID_WICIfdMetadataReader, IfdMetadataReader_CreateInstance},
+    {&CLSID_WICPngGamaMetadataReader, PngGamaReader_CreateInstance},
     {&CLSID_WICPngTextMetadataReader, PngTextReader_CreateInstance},
     {&CLSID_WICLSDMetadataReader, LSDReader_CreateInstance},
     {&CLSID_WICIMDMetadataReader, IMDReader_CreateInstance},
@@ -135,7 +113,11 @@ static HRESULT WINAPI ClassFactoryImpl_CreateInstance(IClassFactory *iface,
 {
     ClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
-    return This->info->constructor(pUnkOuter, riid, ppv);
+    *ppv = NULL;
+
+    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
+
+    return This->info->constructor(riid, ppv);
 }
 
 static HRESULT WINAPI ClassFactoryImpl_LockServer(IClassFactory *iface, BOOL lock)
@@ -201,4 +183,15 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
     TRACE("<-- %08X\n", ret);
     return ret;
+}
+
+HRESULT create_instance(CLSID *clsid, const IID *iid, void **ppv)
+{
+    int i;
+
+    for (i=0; wic_classes[i].classid; i++)
+        if (IsEqualCLSID(wic_classes[i].classid, clsid))
+            return wic_classes[i].constructor(iid, ppv);
+
+    return CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, iid, ppv);
 }

@@ -25,8 +25,8 @@ THE SOFTWARE.
 */
 
 
-#ifndef __BDFDRIVR_H__
-#define __BDFDRIVR_H__
+#ifndef BDFDRIVR_H_
+#define BDFDRIVR_H_
 
 #include <ft2build.h>
 #include FT_INTERNAL_DRIVER_H
@@ -38,12 +38,12 @@ FT_BEGIN_HEADER
 
 #ifdef FT_CONFIG_OPTION_PIC
 #error "this module does not support PIC yet"
-#endif 
+#endif
 
 
   typedef struct  BDF_encoding_el_
   {
-    FT_ULong   enc;
+    FT_Long    enc;
     FT_UShort  glyph;
 
   } BDF_encoding_el;
@@ -74,7 +74,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __BDFDRIVR_H__ */
+#endif /* BDFDRIVR_H_ */
 
 
 /* END */

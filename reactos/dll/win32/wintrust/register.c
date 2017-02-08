@@ -18,22 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <winuser.h>
-#include <winreg.h>
-#include <winnls.h>
-//#include "objbase.h"
-
-//#include "guiddef.h"
-//#include "wintrust.h"
-#include <softpub.h>
-#include <mssip.h>
 #include "wintrust_priv.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
@@ -230,7 +215,7 @@ error_close_key:
  *
  * NOTES
  *   Adding definitions is basically only adding relevant information
- *   to the registry. No verification takes place whether a DLL or it's
+ *   to the registry. No verification takes place whether a DLL or its
  *   entrypoints exist.
  *   Information in the registry will always be overwritten.
  *
@@ -911,6 +896,7 @@ static BOOL WINTRUST_SIPPAddProvider(GUID* Subject, WCHAR* MagicNumber)
     NewProv.pwszVerifyFuncName     = CryptSIPVerifyIndirectData;
     NewProv.pwszRemoveFuncName     = CryptSIPRemoveSignedDataMsg;
     NewProv.pwszIsFunctionNameFmt2 = NULL;
+    NewProv.pwszGetCapFuncName     = NULL;
 
     Ret = CryptSIPAddProvider(&NewProv);
 
@@ -959,14 +945,16 @@ HRESULT WINAPI DllRegisterServer(void)
     HRESULT CryptRegisterRes = S_OK;
     HRESULT TrustProviderRes = S_OK;
     HRESULT SIPAddProviderRes = S_OK;
+    HCRYPTPROV crypt_provider;
+    BOOL ret;
 
     TRACE("\n");
 
     /* Testing on native shows that when an error is encountered in one of the CryptRegisterOIDFunction calls
-     * the rest of these calls is skipped. Registering is however continued for the trust providers.
+     * the rest of these calls are skipped. Registering is however continued for the trust providers.
      *
-     * We are not totally in line with native as there all decoding functions are registered after all encoding
-     * functions.
+     * We are not totally in line with native as all decoding functions are registered after all encoding
+     * functions there.
      */
 #define WINTRUST_REGISTEROID( oid, encode_funcname, decode_funcname ) \
     do { \
@@ -1075,6 +1063,11 @@ add_trust_providers:
      * (The ERROR_INVALID_PARAMETER for Wine it totally valid as we (and native) do register
      * a trust provider without a diagnostic policy).
      */
+
+    /* Create a dummy context to force creation of the MachineGuid registry key. */
+    ret = CryptAcquireContextW(&crypt_provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (ret) CryptReleaseContext(crypt_provider, 0);
+    else ERR("Failed to acquire cryptographic context: %u\n", GetLastError());
 
     /* If CryptRegisterRes is not S_OK it will always overrule the return value. */
     if (CryptRegisterRes != S_OK)

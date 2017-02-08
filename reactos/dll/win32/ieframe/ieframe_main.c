@@ -19,40 +19,9 @@
 #include "ieframe.h"
 
 #include <rpcproxy.h>
-//#include "shlguid.h"
-//#include "isguids.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 LONG module_ref = 0;
 HINSTANCE ieframe_instance;
-
-const char *debugstr_variant(const VARIANT *v)
-{
-    if(!v)
-        return "(null)";
-
-    switch(V_VT(v)) {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
-    case VT_R8:
-        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
-    case VT_BSTR:
-        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
-    case VT_DISPATCH:
-        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
-    case VT_BOOL:
-        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
-    default:
-        return wine_dbg_sprintf("{vt %d}", V_VT(v));
-    }
-}
 
 static ITypeLib *typelib;
 static ITypeInfo *typeinfos[LAST_tid];
@@ -218,6 +187,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         DisableThreadLibraryCalls(ieframe_instance);
         break;
     case DLL_PROCESS_DETACH:
+        if (lpv) break;
         unregister_iewindow_class();
         release_typelib();
     }

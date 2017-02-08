@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -117,6 +117,10 @@ MMPTE DemandZeroPte  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BI
 /* Template PTE for prototype page */
 MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)};
 
+MMPTE ValidKernelPteLocal = {{0}};
+MMPDE ValidKernelPdeLocal = {{0}};
+MMPTE MmDecommittedPte = {{0}};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -135,42 +139,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 {
     UNIMPLEMENTED_DBGBREAK();
     return FALSE;
-}
-
-VOID
-NTAPI
-MmUpdatePageDir(IN PEPROCESS Process,
-                IN PVOID Address,
-                IN ULONG Size)
-{
-    /* Nothing to do */
-    return;
-}
-
-PULONG
-NTAPI
-MmGetPageDirectory(VOID)
-{
-    /* Return the TTB */
-    return (PULONG)KeArmTranslationTableRegisterGet().AsUlong;
-}
-
-VOID
-NTAPI
-MmDisableVirtualMapping(IN PEPROCESS Process,
-                        IN PVOID Address,
-                        OUT PBOOLEAN WasDirty,
-                        OUT PPFN_NUMBER Page)
-{
-    UNIMPLEMENTED_DBGBREAK();
-}
-
-VOID
-NTAPI
-MmEnableVirtualMapping(IN PEPROCESS Process,
-                       IN PVOID Address)
-{
-    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -208,7 +176,6 @@ VOID
 NTAPI
 MmDeleteVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address,
-                       IN BOOLEAN FreePage,
                        OUT PBOOLEAN WasDirty,
                        OUT PPFN_NUMBER Page)
 {
@@ -327,19 +294,29 @@ MmInitGlobalKernelPageDirectory(VOID)
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented
- */
-PHYSICAL_ADDRESS
+VOID
 NTAPI
-MmGetPhysicalAddress(IN PVOID Address)
+MmGetPageFileMapping(
+    PEPROCESS Process,
+    PVOID Address,
+    SWAPENTRY* SwapEntry)
 {
-    PHYSICAL_ADDRESS PhysicalAddress;
-    PhysicalAddress.QuadPart = 0;
-
-    UNIMPLEMENTED_DBGBREAK();
-
-    return PhysicalAddress;
+    ASSERT(FALSE);
 }
+
+BOOLEAN
+NTAPI
+MmIsDisabledPage(PEPROCESS Process, PVOID Address)
+{
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiInitializeSessionSpaceLayout(VOID)
+{
+    ASSERT(FALSE);
+}
+

@@ -1,5 +1,5 @@
 /*
- * FILE:            ntoskrnl/ke/i386/trap.S
+ * FILE:            ntoskrnl/ke/i386/trap.s
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Traps, Entrypoints and Exitpoints
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
@@ -59,9 +59,11 @@ idt _KiTrap10,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
 idt _KiTrap11,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
 idt _KiTrap0F,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
-REPEAT 22
-idt _KiTrap0F,         INT_32_DPL0  /* INT 14-29: UNDEFINED INTERRUPTS      */
+REPEAT 21
+idt _KiTrap0F,         INT_32_DPL0  /* INT 14-28: UNDEFINED INTERRUPTS      */
 ENDR
+idt _KiRaiseSecurityCheckFailure, INT_32_DPL3
+                                    /* INT 29: Handler for __fastfail       */
 idt _KiGetTickCount,   INT_32_DPL3  /* INT 2A: Get Tick Count Handler       */
 idt _KiCallbackReturn, INT_32_DPL3  /* INT 2B: User-Mode Callback Return    */
 idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
@@ -113,6 +115,7 @@ TRAP_ENTRY KiTrap0F, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap10, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap11, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap13, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiRaiseSecurityCheckFailure, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiGetTickCount, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE
@@ -142,14 +145,20 @@ PUBLIC _KiSystemService
     KiCallHandler @KiSystemServiceHandler@8
 .ENDP
 
-EXTERN @KiFastCallEntryHandler@8:PROC
 PUBLIC _KiFastCallEntry
 .PROC _KiFastCallEntry
     FPO 0, 0, 0, 0, 1, FRAME_TRAP
     KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
-    KiCallHandler @KiFastCallEntryHandler@8
+    KiCallHandler @KiSystemServiceHandler@8
 .ENDP
 
+PUBLIC _KiFastCallEntryWithSingleStep
+.PROC _KiFastCallEntryWithSingleStep
+    FPO 0, 0, 0, 0, 1, FRAME_TRAP
+    KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
+    or dword ptr [ecx + KTRAP_FRAME_EFLAGS], EFLAGS_TF
+    KiCallHandler @KiSystemServiceHandler@8
+.ENDP
 
 PUBLIC _KiEndUnexpectedRange@0
 _KiEndUnexpectedRange@0:
@@ -166,13 +175,31 @@ KiTrapExitStub KiSystemCallTrapReturn,    (KI_RESTORE_EAX OR KI_RESTORE_FS OR KI
 KiTrapExitStub KiEditedTrapReturn,        (KI_RESTORE_VOLATILES OR KI_RESTORE_EFLAGS OR KI_EDITED_FRAME OR KI_EXIT_RET)
 KiTrapExitStub KiTrapReturn,              (KI_RESTORE_VOLATILES OR KI_RESTORE_SEGMENTS OR KI_EXIT_IRET)
 KiTrapExitStub KiTrapReturnNoSegments,    (KI_RESTORE_VOLATILES OR KI_EXIT_IRET)
+KiTrapExitStub KiTrapReturnNoSegmentsRet8,(KI_RESTORE_VOLATILES OR KI_RESTORE_EFLAGS OR KI_EXIT_RET8)
 
-#ifdef _MSC_VER
 EXTERN _PsConvertToGuiThread@0:PROC
 
 PUBLIC _KiConvertToGuiThread@0
 _KiConvertToGuiThread@0:
-    /* Safe ebx */
+
+    /*
+     * Converting to a GUI thread safely updates ESP in-place as well as the
+     * current Thread->TrapFrame and EBP when KeSwitchKernelStack is called.
+     *
+     * However, PsConvertToGuiThread "helpfully" restores EBP to the original
+     * caller's value, since it is considered a nonvolatile register. As such,
+     * as soon as we're back after the conversion and we try to store the result
+     * which will probably be in some stack variable (EBP-based), we'll crash as
+     * we are touching the de-allocated non-expanded stack.
+     *
+     * Thus we need a way to update our EBP before EBP is touched, and the only
+     * way to guarantee this is to do the call itself in assembly, use the EAX
+     * register to store the result, fixup EBP, and then let the C code continue
+     * on its merry way.
+     *
+     */
+
+    /* Save ebx */
     push ebx
 
     /* Calculate the stack frame offset in ebx */
@@ -191,6 +218,5 @@ _KiConvertToGuiThread@0:
 
     /* return to the caller */
     ret
-#endif
 
 END

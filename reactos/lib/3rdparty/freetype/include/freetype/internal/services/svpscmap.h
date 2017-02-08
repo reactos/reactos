@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType PostScript charmap service (specification).             */
 /*                                                                         */
-/*  Copyright 2003, 2006 by                                                */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __SVPSCMAP_H__
-#define __SVPSCMAP_H__
+#ifndef SVPSCMAP_H_
+#define SVPSCMAP_H_
 
 #include FT_INTERNAL_OBJECTS_H
 
@@ -120,37 +120,50 @@ FT_BEGIN_HEADER
 
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_PSCMAPSREC(class_, unicode_value_, unicodes_init_, \
-        unicodes_char_index_, unicodes_char_next_, macintosh_name_,          \
-        adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_)     \
-  static const FT_Service_PsCMapsRec class_ =                                \
-  {                                                                          \
-    unicode_value_, unicodes_init_,                                          \
-    unicodes_char_index_, unicodes_char_next_, macintosh_name_,              \
-    adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_          \
+#define FT_DEFINE_SERVICE_PSCMAPSREC( class_,                               \
+                                      unicode_value_,                       \
+                                      unicodes_init_,                       \
+                                      unicodes_char_index_,                 \
+                                      unicodes_char_next_,                  \
+                                      macintosh_name_,                      \
+                                      adobe_std_strings_,                   \
+                                      adobe_std_encoding_,                  \
+                                      adobe_expert_encoding_ )              \
+  static const FT_Service_PsCMapsRec  class_ =                              \
+  {                                                                         \
+    unicode_value_, unicodes_init_,                                         \
+    unicodes_char_index_, unicodes_char_next_, macintosh_name_,             \
+    adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_         \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_PSCMAPSREC(class_, unicode_value_, unicodes_init_, \
-        unicodes_char_index_, unicodes_char_next_, macintosh_name_,          \
-        adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_)     \
-  void                                                                       \
-  FT_Init_Class_##class_( FT_Library library,                                \
-                          FT_Service_PsCMapsRec* clazz)                      \
-  {                                                                          \
-    FT_UNUSED(library);                                                      \
-    clazz->unicode_value = unicode_value_;                                   \
-    clazz->unicodes_init = unicodes_init_;                                   \
-    clazz->unicodes_char_index = unicodes_char_index_;                       \
-    clazz->unicodes_char_next = unicodes_char_next_;                         \
-    clazz->macintosh_name = macintosh_name_;                                 \
-    clazz->adobe_std_strings = adobe_std_strings_;                           \
-    clazz->adobe_std_encoding = adobe_std_encoding_;                         \
-    clazz->adobe_expert_encoding = adobe_expert_encoding_;                   \
-  } 
+#define FT_DEFINE_SERVICE_PSCMAPSREC( class_,                               \
+                                      unicode_value_,                       \
+                                      unicodes_init_,                       \
+                                      unicodes_char_index_,                 \
+                                      unicodes_char_next_,                  \
+                                      macintosh_name_,                      \
+                                      adobe_std_strings_,                   \
+                                      adobe_std_encoding_,                  \
+                                      adobe_expert_encoding_ )              \
+  void                                                                      \
+  FT_Init_Class_ ## class_( FT_Library              library,                \
+                            FT_Service_PsCMapsRec*  clazz )                 \
+  {                                                                         \
+    FT_UNUSED( library );                                                   \
+                                                                            \
+    clazz->unicode_value         = unicode_value_;                          \
+    clazz->unicodes_init         = unicodes_init_;                          \
+    clazz->unicodes_char_index   = unicodes_char_index_;                    \
+    clazz->unicodes_char_next    = unicodes_char_next_;                     \
+    clazz->macintosh_name        = macintosh_name_;                         \
+    clazz->adobe_std_strings     = adobe_std_strings_;                      \
+    clazz->adobe_std_encoding    = adobe_std_encoding_;                     \
+    clazz->adobe_expert_encoding = adobe_expert_encoding_;                  \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 
@@ -158,7 +171,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* __SVPSCMAP_H__ */
+#endif /* SVPSCMAP_H_ */
 
 
 /* END */

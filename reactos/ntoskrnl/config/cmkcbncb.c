@@ -1164,7 +1164,7 @@ CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
             {
                 /* Get the key body */
                 KeyBody = CONTAINING_RECORD(NextEntry, CM_KEY_BODY, KeyBodyList);
-                ASSERT(KeyBody->Type == '20yk');
+                ASSERT(KeyBody->Type == CM_KEY_BODY_TYPE);
 
                 /* Check for notifications */
                 if (KeyBody->NotifyBlock)

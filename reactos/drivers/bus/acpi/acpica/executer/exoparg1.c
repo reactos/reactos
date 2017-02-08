@@ -1,120 +1,45 @@
-
 /******************************************************************************
  *
  * Module Name: exoparg1 - AML execution - opcodes with 1 argument
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
-
-#define __EXOPARG1_C__
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "acpi.h"
 #include "accommon.h"
@@ -253,36 +178,30 @@ AcpiExOpcode_1A_0T_0R (
         Status = AcpiExReleaseMutex (Operand[0], WalkState);
         break;
 
-
     case AML_RESET_OP:      /*  Reset (EventObject) */
 
         Status = AcpiExSystemResetEvent (Operand[0]);
         break;
-
 
     case AML_SIGNAL_OP:     /*  Signal (EventObject) */
 
         Status = AcpiExSystemSignalEvent (Operand[0]);
         break;
 
-
     case AML_SLEEP_OP:      /*  Sleep (MsecTime) */
 
         Status = AcpiExSystemDoSleep (Operand[0]->Integer.Value);
         break;
-
 
     case AML_STALL_OP:      /*  Stall (UsecTime) */
 
         Status = AcpiExSystemDoStall ((UINT32) Operand[0]->Integer.Value);
         break;
 
-
     case AML_UNLOAD_OP:     /*  Unload (Handle) */
 
         Status = AcpiExUnloadTable (Operand[0]);
         break;
-
 
     default:                /*  Unknown opcode  */
 
@@ -403,7 +322,6 @@ AcpiExOpcode_1A_1T_1R (
             ReturnDesc->Integer.Value = ~Operand[0]->Integer.Value;
             break;
 
-
         case AML_FIND_SET_LEFT_BIT_OP:  /* FindSetLeftBit (Operand, Result) */
 
             ReturnDesc->Integer.Value = Operand[0]->Integer.Value;
@@ -413,14 +331,13 @@ AcpiExOpcode_1A_1T_1R (
              * endian unsigned value, so this boundary condition is valid.
              */
             for (Temp32 = 0; ReturnDesc->Integer.Value &&
-                             Temp32 < ACPI_INTEGER_BIT_SIZE; ++Temp32)
+                    Temp32 < ACPI_INTEGER_BIT_SIZE; ++Temp32)
             {
                 ReturnDesc->Integer.Value >>= 1;
             }
 
             ReturnDesc->Integer.Value = Temp32;
             break;
-
 
         case AML_FIND_SET_RIGHT_BIT_OP: /* FindSetRightBit (Operand, Result) */
 
@@ -431,7 +348,7 @@ AcpiExOpcode_1A_1T_1R (
              * endian unsigned value, so this boundary condition is valid.
              */
             for (Temp32 = 0; ReturnDesc->Integer.Value &&
-                             Temp32 < ACPI_INTEGER_BIT_SIZE; ++Temp32)
+                     Temp32 < ACPI_INTEGER_BIT_SIZE; ++Temp32)
             {
                 ReturnDesc->Integer.Value <<= 1;
             }
@@ -442,9 +359,7 @@ AcpiExOpcode_1A_1T_1R (
                 Temp32 == 0 ? 0 : (ACPI_INTEGER_BIT_SIZE + 1) - Temp32;
             break;
 
-
         case AML_FROM_BCD_OP:           /* FromBcd (BCDValue, Result)  */
-
             /*
              * The 64-bit ACPI integer can hold 16 4-bit BCD characters
              * (if table is 32-bit, integer can hold 8 BCD characters)
@@ -489,7 +404,6 @@ AcpiExOpcode_1A_1T_1R (
             }
             break;
 
-
         case AML_TO_BCD_OP:             /* ToBcd (Operand, Result)  */
 
             ReturnDesc->Integer.Value = 0;
@@ -521,9 +435,7 @@ AcpiExOpcode_1A_1T_1R (
             }
             break;
 
-
         case AML_COND_REF_OF_OP:        /* CondRefOf (SourceObject, Result)  */
-
             /*
              * This op is a little strange because the internal return value is
              * different than the return value stored in the result descriptor
@@ -542,7 +454,7 @@ AcpiExOpcode_1A_1T_1R (
             /* Get the object reference, store it, and remove our reference */
 
             Status = AcpiExGetObjectReference (Operand[0],
-                        &ReturnDesc2, WalkState);
+                &ReturnDesc2, WalkState);
             if (ACPI_FAILURE (Status))
             {
                 goto Cleanup;
@@ -558,14 +470,14 @@ AcpiExOpcode_1A_1T_1R (
 
 
         default:
+
             /* No other opcodes get here */
+
             break;
         }
         break;
 
-
     case AML_STORE_OP:              /* Store (Source, Target) */
-
         /*
          * A store operand is typically a number, string, buffer or lvalue
          * Be careful about deleting the source object,
@@ -592,40 +504,38 @@ AcpiExOpcode_1A_1T_1R (
         }
         return_ACPI_STATUS (Status);
 
-
     /*
      * ACPI 2.0 Opcodes
      */
     case AML_COPY_OP:               /* Copy (Source, Target) */
 
-        Status = AcpiUtCopyIobjectToIobject (Operand[0], &ReturnDesc,
-                    WalkState);
+        Status = AcpiUtCopyIobjectToIobject (
+            Operand[0], &ReturnDesc, WalkState);
         break;
-
 
     case AML_TO_DECSTRING_OP:       /* ToDecimalString (Data, Result) */
 
-        Status = AcpiExConvertToString (Operand[0], &ReturnDesc,
-                    ACPI_EXPLICIT_CONVERT_DECIMAL);
+        Status = AcpiExConvertToString (
+            Operand[0], &ReturnDesc, ACPI_EXPLICIT_CONVERT_DECIMAL);
         if (ReturnDesc == Operand[0])
         {
             /* No conversion performed, add ref to handle return value */
+
             AcpiUtAddReference (ReturnDesc);
         }
         break;
-
 
     case AML_TO_HEXSTRING_OP:       /* ToHexString (Data, Result) */
 
-        Status = AcpiExConvertToString (Operand[0], &ReturnDesc,
-                    ACPI_EXPLICIT_CONVERT_HEX);
+        Status = AcpiExConvertToString (
+            Operand[0], &ReturnDesc, ACPI_EXPLICIT_CONVERT_HEX);
         if (ReturnDesc == Operand[0])
         {
             /* No conversion performed, add ref to handle return value */
+
             AcpiUtAddReference (ReturnDesc);
         }
         break;
-
 
     case AML_TO_BUFFER_OP:          /* ToBuffer (Data, Result) */
 
@@ -633,22 +543,22 @@ AcpiExOpcode_1A_1T_1R (
         if (ReturnDesc == Operand[0])
         {
             /* No conversion performed, add ref to handle return value */
+
             AcpiUtAddReference (ReturnDesc);
         }
         break;
-
 
     case AML_TO_INTEGER_OP:         /* ToInteger (Data, Result) */
 
-        Status = AcpiExConvertToInteger (Operand[0], &ReturnDesc,
-                    ACPI_ANY_BASE);
+        Status = AcpiExConvertToInteger (
+            Operand[0], &ReturnDesc, ACPI_ANY_BASE);
         if (ReturnDesc == Operand[0])
         {
             /* No conversion performed, add ref to handle return value */
+
             AcpiUtAddReference (ReturnDesc);
         }
         break;
-
 
     case AML_SHIFT_LEFT_BIT_OP:     /* ShiftLeftBit (Source, BitNum)  */
     case AML_SHIFT_RIGHT_BIT_OP:    /* ShiftRightBit (Source, BitNum) */
@@ -660,7 +570,6 @@ AcpiExOpcode_1A_1T_1R (
             AcpiPsGetOpcodeName (WalkState->Opcode)));
         Status = AE_SUPPORT;
         goto Cleanup;
-
 
     default:                        /* Unknown opcode */
 
@@ -740,7 +649,7 @@ AcpiExOpcode_1A_0T_1R (
         }
 
         /*
-         * Set result to ONES (TRUE) if Value == 0.  Note:
+         * Set result to ONES (TRUE) if Value == 0. Note:
          * ReturnDesc->Integer.Value is initially == 0 (FALSE) from above.
          */
         if (!Operand[0]->Integer.Value)
@@ -749,12 +658,10 @@ AcpiExOpcode_1A_0T_1R (
         }
         break;
 
-
     case AML_DECREMENT_OP:          /* Decrement (Operand)  */
     case AML_INCREMENT_OP:          /* Increment (Operand)  */
-
         /*
-         * Create a new integer.  Can't just get the base integer and
+         * Create a new integer. Can't just get the base integer and
          * increment it because it may be an Arg or Field.
          */
         ReturnDesc = AcpiUtCreateInternalObject (ACPI_TYPE_INTEGER);
@@ -799,11 +706,11 @@ AcpiExOpcode_1A_0T_1R (
          */
         if (WalkState->Opcode == AML_INCREMENT_OP)
         {
-            ReturnDesc->Integer.Value = TempDesc->Integer.Value +1;
+            ReturnDesc->Integer.Value = TempDesc->Integer.Value + 1;
         }
         else
         {
-            ReturnDesc->Integer.Value = TempDesc->Integer.Value -1;
+            ReturnDesc->Integer.Value = TempDesc->Integer.Value - 1;
         }
 
         /* Finished with this Integer object */
@@ -817,12 +724,10 @@ AcpiExOpcode_1A_0T_1R (
         Status = AcpiExStore (ReturnDesc, Operand[0], WalkState);
         break;
 
-
-    case AML_TYPE_OP:               /* ObjectType (SourceObject) */
-
+    case AML_OBJECT_TYPE_OP:            /* ObjectType (SourceObject) */
         /*
          * Note: The operand is not resolved at this point because we want to
-         * get the associated object, not its value.  For example, we don't
+         * get the associated object, not its value. For example, we don't
          * want to resolve a FieldUnit to its value, we want the actual
          * FieldUnit object.
          */
@@ -845,9 +750,7 @@ AcpiExOpcode_1A_0T_1R (
         }
         break;
 
-
     case AML_SIZE_OF_OP:            /* SizeOf (SourceObject)  */
-
         /*
          * Note: The operand is not resolved at this point because we want to
          * get the associated object, not its value.
@@ -855,8 +758,8 @@ AcpiExOpcode_1A_0T_1R (
 
         /* Get the base object */
 
-        Status = AcpiExResolveMultiple (WalkState,
-                    Operand[0], &Type, &TempDesc);
+        Status = AcpiExResolveMultiple (
+            WalkState, Operand[0], &Type, &TempDesc);
         if (ACPI_FAILURE (Status))
         {
             goto Cleanup;
@@ -864,7 +767,7 @@ AcpiExOpcode_1A_0T_1R (
 
         /*
          * The type of the base object must be integer, buffer, string, or
-         * package.  All others are not supported.
+         * package. All others are not supported.
          *
          * NOTE: Integer is not specifically supported by the ACPI spec,
          * but is supported implicitly via implicit operand conversion.
@@ -874,10 +777,12 @@ AcpiExOpcode_1A_0T_1R (
         switch (Type)
         {
         case ACPI_TYPE_INTEGER:
+
             Value = AcpiGbl_IntegerByteWidth;
             break;
 
         case ACPI_TYPE_STRING:
+
             Value = TempDesc->String.Length;
             break;
 
@@ -898,9 +803,12 @@ AcpiExOpcode_1A_0T_1R (
             break;
 
         default:
+
             ACPI_ERROR ((AE_INFO,
-                "Operand must be Buffer/Integer/String/Package - found type %s",
+                "Operand must be Buffer/Integer/String/Package"
+                " - found type %s",
                 AcpiUtGetTypeName (Type)));
+
             Status = AE_AML_OPERAND_TYPE;
             goto Cleanup;
         }
@@ -925,7 +833,8 @@ AcpiExOpcode_1A_0T_1R (
 
     case AML_REF_OF_OP:             /* RefOf (SourceObject) */
 
-        Status = AcpiExGetObjectReference (Operand[0], &ReturnDesc, WalkState);
+        Status = AcpiExGetObjectReference (
+            Operand[0], &ReturnDesc, WalkState);
         if (ACPI_FAILURE (Status))
         {
             goto Cleanup;
@@ -972,9 +881,9 @@ AcpiExOpcode_1A_0T_1R (
                     /* Set Operand[0] to the value of the local/arg */
 
                     Status = AcpiDsMethodDataGetValue (
-                                Operand[0]->Reference.Class,
-                                Operand[0]->Reference.Value,
-                                WalkState, &TempDesc);
+                        Operand[0]->Reference.Class,
+                        Operand[0]->Reference.Value,
+                        WalkState, &TempDesc);
                     if (ACPI_FAILURE (Status))
                     {
                         goto Cleanup;
@@ -1005,9 +914,11 @@ AcpiExOpcode_1A_0T_1R (
                 break;
 
             case ACPI_TYPE_STRING:
+
                 break;
 
             default:
+
                 Status = AE_AML_OPERAND_TYPE;
                 goto Cleanup;
             }
@@ -1026,19 +937,19 @@ AcpiExOpcode_1A_0T_1R (
                  *    Field, so we need to resolve the node to a value.
                  */
                 Status = AcpiNsGetNode (WalkState->ScopeInfo->Scope.Node,
-                            Operand[0]->String.Pointer,
-                            ACPI_NS_SEARCH_PARENT,
-                            ACPI_CAST_INDIRECT_PTR (
-                                ACPI_NAMESPACE_NODE, &ReturnDesc));
+                    Operand[0]->String.Pointer,
+                    ACPI_NS_SEARCH_PARENT,
+                    ACPI_CAST_INDIRECT_PTR (
+                        ACPI_NAMESPACE_NODE, &ReturnDesc));
                 if (ACPI_FAILURE (Status))
                 {
                     goto Cleanup;
                 }
 
                 Status = AcpiExResolveNodeToValue (
-                            ACPI_CAST_INDIRECT_PTR (
-                                ACPI_NAMESPACE_NODE, &ReturnDesc),
-                            WalkState);
+                    ACPI_CAST_INDIRECT_PTR (
+                        ACPI_NAMESPACE_NODE, &ReturnDesc),
+                    WalkState);
                 goto Cleanup;
             }
         }
@@ -1054,7 +965,7 @@ AcpiExOpcode_1A_0T_1R (
              * dereferenced above.
              */
             ReturnDesc = AcpiNsGetAttachedObject (
-                            (ACPI_NAMESPACE_NODE *) Operand[0]);
+                (ACPI_NAMESPACE_NODE *) Operand[0]);
             AcpiUtAddReference (ReturnDesc);
         }
         else
@@ -1066,7 +977,6 @@ AcpiExOpcode_1A_0T_1R (
             switch (Operand[0]->Reference.Class)
             {
             case ACPI_REFCLASS_INDEX:
-
                 /*
                  * The target type for the Index operator must be
                  * either a Buffer or a Package
@@ -1098,50 +1008,83 @@ AcpiExOpcode_1A_0T_1R (
                     }
                     break;
 
-
                 case ACPI_TYPE_PACKAGE:
-
                     /*
-                     * Return the referenced element of the package.  We must
+                     * Return the referenced element of the package. We must
                      * add another reference to the referenced object, however.
                      */
                     ReturnDesc = *(Operand[0]->Reference.Where);
-                    if (ReturnDesc)
+                    if (!ReturnDesc)
                     {
-                        AcpiUtAddReference (ReturnDesc);
+                        /*
+                         * Element is NULL, do not allow the dereference.
+                         * This provides compatibility with other ACPI
+                         * implementations.
+                         */
+                        return_ACPI_STATUS (AE_AML_UNINITIALIZED_ELEMENT);
                     }
-                    break;
 
+                    AcpiUtAddReference (ReturnDesc);
+                    break;
 
                 default:
 
                     ACPI_ERROR ((AE_INFO,
                         "Unknown Index TargetType 0x%X in reference object %p",
                         Operand[0]->Reference.TargetType, Operand[0]));
+
                     Status = AE_AML_OPERAND_TYPE;
                     goto Cleanup;
                 }
                 break;
-
 
             case ACPI_REFCLASS_REFOF:
 
                 ReturnDesc = Operand[0]->Reference.Object;
 
                 if (ACPI_GET_DESCRIPTOR_TYPE (ReturnDesc) ==
-                        ACPI_DESC_TYPE_NAMED)
+                    ACPI_DESC_TYPE_NAMED)
                 {
                     ReturnDesc = AcpiNsGetAttachedObject (
-                                    (ACPI_NAMESPACE_NODE *) ReturnDesc);
+                        (ACPI_NAMESPACE_NODE *) ReturnDesc);
+                    if (!ReturnDesc)
+                    {
+                        break;
+                    }
+
+                   /*
+                    * June 2013:
+                    * BufferFields/FieldUnits require additional resolution
+                    */
+                    switch (ReturnDesc->Common.Type)
+                    {
+                    case ACPI_TYPE_BUFFER_FIELD:
+                    case ACPI_TYPE_LOCAL_REGION_FIELD:
+                    case ACPI_TYPE_LOCAL_BANK_FIELD:
+                    case ACPI_TYPE_LOCAL_INDEX_FIELD:
+
+                        Status = AcpiExReadDataFromField (
+                            WalkState, ReturnDesc, &TempDesc);
+                        if (ACPI_FAILURE (Status))
+                        {
+                            goto Cleanup;
+                        }
+
+                        ReturnDesc = TempDesc;
+                        break;
+
+                    default:
+
+                        /* Add another reference to the object */
+
+                        AcpiUtAddReference (ReturnDesc);
+                        break;
+                    }
                 }
-
-                /* Add another reference to the object! */
-
-                AcpiUtAddReference (ReturnDesc);
                 break;
 
-
             default:
+
                 ACPI_ERROR ((AE_INFO,
                     "Unknown class in reference(%p) - 0x%2.2X",
                     Operand[0], Operand[0]->Reference.Class));
@@ -1152,11 +1095,11 @@ AcpiExOpcode_1A_0T_1R (
         }
         break;
 
-
     default:
 
         ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
             WalkState->Opcode));
+
         Status = AE_AML_BAD_OPCODE;
         goto Cleanup;
     }
@@ -1180,4 +1123,3 @@ Cleanup:
 
     return_ACPI_STATUS (Status);
 }
-

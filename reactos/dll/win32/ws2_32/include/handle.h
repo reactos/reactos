@@ -1,13 +1,12 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/handle.h
+ * FILE:        dll/win32/ws2_32/include/handle.h
  * PURPOSE:     Provider handle definitions
  */
+
 #ifndef __HANDLE_H
 #define __HANDLE_H
-
-//#include <catalog.h>
 
 typedef struct _PROVIDER_HANDLE
 {
@@ -44,5 +43,3 @@ VOID
 FreeProviderHandleTable(VOID);
 
 #endif /* __HANDLE_H */
-
-/* EOF */

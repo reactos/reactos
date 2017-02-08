@@ -452,7 +452,7 @@
 @ stdcall SetupInstallServicesFromInfSectionW(long wstr long)
 @ stdcall SetupIterateCabinetA(str long ptr ptr)
 @ stdcall SetupIterateCabinetW(wstr long ptr ptr)
-@ stub SetupLogErrorA
+@ stdcall SetupLogErrorA(str long)
 @ stdcall SetupLogErrorW(wstr long)
 @ stub SetupLogFileA
 @ stub SetupLogFileW
@@ -530,8 +530,8 @@
 @ stub SetupUninstallNewlyCopiedInfs
 @ stdcall SetupUninstallOEMInfA(str long ptr)
 @ stdcall SetupUninstallOEMInfW(wstr long ptr)
-@ stub SetupVerifyInfFileA
-@ stub SetupVerifyInfFileW
+@ stdcall SetupVerifyInfFileA(str ptr ptr)
+@ stdcall SetupVerifyInfFileW(wstr ptr ptr)
 @ stdcall UnicodeToMultiByte(wstr long) pSetupUnicodeToMultiByte
 @ stub VerifyCatalogFile
 @ stub pSetupAccessRunOnceNodeList
@@ -562,7 +562,7 @@
 @ stub pSetupHandleFailedVerification
 @ stub pSetupInfCacheBuild
 @ stub pSetupInfIsFromOemLocation
-@ stub pSetupInstallCatalog
+@ stdcall pSetupInstallCatalog(wstr wstr ptr)
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
 @ stub pSetupIsLocalSystem
@@ -604,31 +604,3 @@
 @ stub pSetupVerifyQueuedCatalogs
 @ stub pSetupWriteLogEntry
 @ stub pSetupWriteLogError
-
-# Unknown functions, they are not present in Win2003 SP1
-@ stdcall AssertFail(str long str)
-@ stub CM_Remove_Unmarked_Children
-@ stub CM_Remove_Unmarked_Children_Ex
-@ stub CM_Reset_Children_Marks
-@ stub CM_Reset_Children_Marks_Ex
-@ stdcall CaptureStringArg(wstr ptr)
-@ stdcall DelayedMove(wstr wstr)
-@ stub DelimStringToMultiSz
-@ stub DestroyTextFileReadBuffer
-@ stdcall FileExists(wstr ptr)
-@ stub GetNewInfName
-@ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
-@ stub LookUpStringInTable
-@ stub MemoryInitialize
-@ stub MultiSzFromSearchControl
-@ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
-@ stub ReadAsciiOrUnicodeTextFile
-# Yes, Microsoft really misspelled this one!
-@ stdcall RetreiveFileSecurity(wstr ptr)
-@ stub SearchForInfFile
-@ stdcall StampFileSecurity(wstr ptr)
-@ stdcall TakeOwnershipOfFile(wstr)
-@ stub pSetupDirectoryIdToPath
-@ stub pSetupGetOsLoaderDriveAndPath
-@ stub pSetupGetVersionDatum
-@ stub pSetupSetSystemSourceFlags

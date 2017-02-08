@@ -1,6 +1,10 @@
 
 #include <tchar.h>
 
+#if defined(_MSC_VER)
+#pragma function(_tcscmp)
+#endif /* _MSC_VER */
+
 int _tcscmp(const _TCHAR* s1, const _TCHAR* s2)
 {
  while(*s1 == *s2)

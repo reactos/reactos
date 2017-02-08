@@ -1,0 +1,17 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FINDSTR: Printon të gjitha linjat e një dokumente që përmbajnë një varg.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""string"" [ file... ]\n\
+    /C  Numëro numrat e linjave që përmbajnë një varg\n\
+    /I  Injoro rastin\n\
+    /N  Linjat e numrave shfaqen, duke filluar në 1\n\
+    /V  Shfaq linjat që nuk përmbajnë një varg"
+    IDS_NO_SUCH_FILE "FINDSTR: %s: Nuk ka dokument të tillë\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: Nuk e hap dot dokumentin\n"
+END

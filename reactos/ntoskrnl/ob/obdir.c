@@ -60,7 +60,7 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
         (Parent != Context->Directory))
     {
         /* Invalid context */
-        DPRINT1("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
+        DPRINT1("OB: ObpInsertEntryDirectory - invalid context %p %u\n",
                 Context, Context->DirectoryLocked);
         ASSERT(FALSE);
         return FALSE;

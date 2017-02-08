@@ -25,23 +25,13 @@ Revision History:
 
 --*/
 
-#include <stddef.h>
-#include <stdarg.h>
+#ifndef _CLASSPNP_PCH_
+#define _CLASSPNP_PCH_
+
 #include <ntddk.h>
-
-#include <scsi.h>
-#include <wmidata.h>
 #include <classpnp.h>
-
-#if CLASS_INIT_GUID
-#include <initguid.h>
-#endif
-
-#include <mountdev.h>
 #include <ioevent.h>
 #include <pseh/pseh2.h>
-
-#include "wmistr.h"
 
 extern CLASSPNP_SCAN_FOR_SPECIAL_INFO ClassBadItems[];
 
@@ -508,25 +498,11 @@ static inline BOOLEAN SimpleIsSlistEmpty(SINGLE_LIST_ENTRY *SListHdr)
     return (SListHdr->Next == NULL);
 }
 
-NTSTATUS
-NTAPI
-DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath
-    );
+DRIVER_INITIALIZE DriverEntry;
 
-VOID
-NTAPI
-ClassUnload(
-    IN PDRIVER_OBJECT DriverObject
-    );
+DRIVER_UNLOAD ClassUnload;
 
-NTSTATUS
-NTAPI
-ClassCreateClose(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
+DRIVER_DISPATCH ClassCreateClose;
 
 NTSTATUS
 NTAPI
@@ -550,26 +526,11 @@ ClasspEjectionControl(
     IN BOOLEAN Lock
     );
 
-NTSTATUS
-NTAPI
-ClassReadWrite(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
+DRIVER_DISPATCH ClassReadWrite;
 
-NTSTATUS
-NTAPI
-ClassDeviceControlDispatch(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp
-    );
+DRIVER_DISPATCH ClassDeviceControlDispatch;
 
-NTSTATUS
-NTAPI
-ClassDispatchPnp(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp
-    );
+DRIVER_DISPATCH ClassDispatchPnp;
 
 NTSTATUS
 NTAPI
@@ -584,31 +545,15 @@ ClassShutdownFlush(
     IN PIRP Irp
     );
 
-NTSTATUS
-NTAPI
-ClassSystemControl(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
+DRIVER_DISPATCH ClassSystemControl;
 
 //
 // Class internal routines
 //
 
-NTSTATUS
-NTAPI
-ClassAddDevice(
-    IN PDRIVER_OBJECT DriverObject,
-    IN OUT PDEVICE_OBJECT PhysicalDeviceObject
-    );
+DRIVER_ADD_DEVICE ClassAddDevice;
 
-NTSTATUS
-NTAPI
-ClasspSendSynchronousCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
-    );
+IO_COMPLETION_ROUTINE ClasspSendSynchronousCompletion;
 
 VOID
 NTAPI
@@ -658,12 +603,7 @@ ClassQueryPnpCapabilities(
     IN PDEVICE_CAPABILITIES Capabilities
     );
 
-VOID
-NTAPI
-ClasspStartIo(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
+DRIVER_STARTIO ClasspStartIo;
 
 NTSTATUS
 NTAPI
@@ -767,13 +707,7 @@ ClasspFreeReleaseRequest(
     IN PDEVICE_OBJECT Fdo
     );
 
-NTSTATUS
-NTAPI
-ClassReleaseQueueCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
-    );
+IO_COMPLETION_ROUTINE ClassReleaseQueueCompletion;
 
 VOID
 NTAPI
@@ -792,12 +726,7 @@ ClasspDisablePowerNotification(
 // class power routines
 //
 
-NTSTATUS
-NTAPI
-ClassDispatchPower(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
+DRIVER_DISPATCH ClassDispatchPower;
 
 NTSTATUS
 NTAPI
@@ -832,14 +761,7 @@ ClasspRetryDpcTimer(
     IN PCLASS_PRIVATE_FDO_DATA FdoData
     );
 
-VOID
-NTAPI
-ClasspRetryRequestDpc(
-    IN PKDPC Dpc,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID Arg1,
-    IN PVOID Arg2
-    );
+KDEFERRED_ROUTINE ClasspRetryRequestDpc;
 
 VOID
 NTAPI
@@ -944,3 +866,7 @@ PMDL NTAPI BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen);
 VOID NTAPI FreeDeviceInputMdl(PMDL Mdl);
 NTSTATUS NTAPI InitializeTransferPackets(PDEVICE_OBJECT Fdo);
 VOID NTAPI DestroyAllTransferPackets(PDEVICE_OBJECT Fdo);
+
+#include "debug.h"
+
+#endif /* _CLASSPNP_PCH_ */

@@ -215,7 +215,7 @@ interface IShellFolder : IUnknown
         [in] LPBC pbcReserved,
         [in, string] LPOLESTR lpszDisplayName,
         [out] ULONG *pchEaten,
-        [out] LPITEMIDLIST *ppidl,
+        [out] PIDLIST_RELATIVE *ppidl,
         [in, out, unique] ULONG *pdwAttributes);
 
     HRESULT EnumObjects(
@@ -224,21 +224,21 @@ interface IShellFolder : IUnknown
         [out] IEnumIDList **ppenumIDList);
 
     HRESULT BindToObject(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUIDLIST_RELATIVE pidl,
         [in] LPBC pbcReserved,
         [in] REFIID riid,
         [out, iid_is(riid)] void **ppvOut);
 
     HRESULT BindToStorage(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUIDLIST_RELATIVE pidl,
         [in] LPBC pbcReserved,
         [in] REFIID riid,
         [out, iid_is(riid)] void **ppvObj);
 
     HRESULT CompareIDs(
         [in] LPARAM lParam,
-        [in] LPCITEMIDLIST pidl1,
-        [in] LPCITEMIDLIST pidl2);
+        [in] PCUIDLIST_RELATIVE pidl1,
+        [in] PCUIDLIST_RELATIVE pidl2);
 
     HRESULT CreateViewObject(
         [in] HWND hwndOwner,
@@ -247,28 +247,28 @@ interface IShellFolder : IUnknown
 
     HRESULT GetAttributesOf(
         [in] UINT cidl,
-        [in, size_is(cidl)] LPCITEMIDLIST *apidl,
+        [in, size_is(cidl)] PCUITEMID_CHILD_ARRAY apidl,
         [in, out] SFGAOF *rgfInOut);
 
     HRESULT GetUIObjectOf(
         [in] HWND hwndOwner,
         [in] UINT cidl,
-        [in, size_is(cidl)] LPCITEMIDLIST *apidl,
+        [in, size_is(cidl)] PCUITEMID_CHILD_ARRAY apidl,
         [in] REFIID riid,
         [in, out, unique] UINT *prgfInOut,
         [out, iid_is(riid)] void **ppvOut);
 
     HRESULT GetDisplayNameOf(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUITEMID_CHILD pidl,
         [in] SHGDNF uFlags,
         [out] STRRET *lpName);
 
     HRESULT SetNameOf(
         [in] HWND hwnd,
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUITEMID_CHILD pidl,
         [in, string] LPCOLESTR lpszName,
         [in] SHGDNF uFlags,
-        [out] LPITEMIDLIST *ppidlOut);
+        [out] PITEMID_CHILD *ppidlOut);
 }
 
 
@@ -332,8 +332,8 @@ interface IShellFolder2 : IShellFolder
     HRESULT EnumSearches( [out] IEnumExtraSearch **ppenum );
     HRESULT GetDefaultColumn( [in] DWORD dwReserved, [out] ULONG *pSort, [out] ULONG *pDisplay );
     HRESULT GetDefaultColumnState( [in] UINT iColumn, [out] SHCOLSTATEF *pcsFlags );
-    HRESULT GetDetailsEx( [in] LPCITEMIDLIST pidl, [in] const SHCOLUMNID *pscid, [out] VARIANT *pv);
-    HRESULT GetDetailsOf( [in] LPCITEMIDLIST pidl, [in] UINT iColumn, [out] SHELLDETAILS *psd);
+    HRESULT GetDetailsEx( [in] PCUITEMID_CHILD pidl, [in] const SHCOLUMNID *pscid, [out] VARIANT *pv);
+    HRESULT GetDetailsOf( [in] PCUITEMID_CHILD pidl, [in] UINT iColumn, [out] SHELLDETAILS *psd);
     HRESULT MapColumnToSCID( [in] UINT iColumn, [in] SHCOLUMNID *pscid );
 }
 
@@ -589,6 +589,7 @@ cpp_quote("HRESULT WINAPI SHGetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE
 cpp_quote("HRESULT WINAPI SHGetItemFromObject(IUnknown *punk, REFIID riid, void **ppv);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArray(PCIDLIST_ABSOLUTE pidlParent, IShellFolder* psf, UINT cidl, PCUITEMID_CHILD_ARRAY ppidl, IShellItemArray **ppsiItemArray);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromShellItem(IShellItem *psi, REFIID riid, void **ppv);")
+cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromIDLists(UINT cidl, PCIDLIST_ABSOLUTE_ARRAY pidl_array, IShellItemArray **psia);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromDataObject(IDataObject *pdo, REFIID riid, void **ppv);")
 
 /*****************************************************************************
@@ -800,6 +801,35 @@ cpp_quote("#include <poppack.h>")
     );
 }
 
+[
+    object,
+    uuid(ec39fa88-f8af-41c5-8421-38bed28f4673),
+    pointer_default(unique)
+]
+interface IShellView3 : IShellView2
+{
+    [v1_enum] enum _SV3CVW3_FLAGS
+    {
+        SV3CVW3_DEFAULT          = 0x00000000,
+        SV3CVW3_NONINTERACTIVE   = 0x00000001,
+        SV3CVW3_FORCEVIEWMODE    = 0x00000002,
+        SV3CVW3_FORCEFOLDERFLAGS = 0x00000004
+    };
+
+    typedef DWORD SV3CVW3_FLAGS;
+
+    HRESULT CreateViewWindow3(
+        [in] IShellBrowser *owner,
+        [in, unique] IShellView *prev_view,
+        [in] SV3CVW3_FLAGS view_flags,
+        [in] FOLDERFLAGS mask,
+        [in] FOLDERFLAGS flags,
+        [in] FOLDERVIEWMODE mode,
+        [in, unique] const SHELLVIEWID *view_id,
+        [in] const RECT *rect,
+        [out] HWND *hwnd);
+}
+
 /*****************************************************************************
  * IFolderView interface
  */
@@ -845,6 +875,126 @@ interface IFolderView : IUnknown
         [in, unique, size_is(cidl)] POINT* apt,
         [in] DWORD flags
     );
+}
+
+[v1_enum] enum tagSORTDIRECTION
+{
+    SORT_DESCENDING = -1,
+    SORT_ASCENDING = 1
+};
+typedef int SORTDIRECTION;
+
+typedef struct SORTCOLUMN
+{
+    PROPERTYKEY propkey;
+    SORTDIRECTION direction;
+} SORTCOLUMN;
+
+typedef [v1_enum] enum FVTEXTTYPE
+{
+    FVST_EMPTYTEXT = 0
+} FVTEXTTYPE;
+
+[
+    uuid(1af3a467-214f-4298-908e-06b03e0b39f9),
+    object,
+    pointer_default(unique)
+]
+interface IFolderView2 : IFolderView
+{
+    HRESULT SetGroupBy(
+        [in] REFPROPERTYKEY key,
+        [in] BOOL ascending);
+
+    [local]
+    HRESULT GetGroupBy(
+        [out] PROPERTYKEY *pkey,
+        [out] BOOL *ascending);
+
+    [call_as(GetGroupBy)]
+    HRESULT RemoteGetGroupBy(
+        [out] PROPERTYKEY *pkey,
+        [out] BOOL *ascending);
+
+    HRESULT SetViewProperty(
+        [in] PCUITEMID_CHILD pidl,
+        [in] REFPROPERTYKEY propkey,
+        [in] REFPROPVARIANT propvar);
+
+    HRESULT GetViewProperty(
+        [in] PCUITEMID_CHILD pidl,
+        [in] REFPROPERTYKEY propkey,
+        [out] PROPVARIANT *propvar);
+
+    HRESULT SetTileViewProperties(
+        [in] PCUITEMID_CHILD pidl,
+        [in, string] LPCWSTR prop_list);
+
+    HRESULT SetExtendedTileViewProperties(
+        [in] PCUITEMID_CHILD pidl,
+        [in, string] LPCWSTR prop_list);
+
+    HRESULT SetText(
+        [in] FVTEXTTYPE type,
+        [in] LPCWSTR text);
+
+    HRESULT SetCurrentFolderFlags(
+        [in] DWORD mask,
+        [in] DWORD flags);
+
+    HRESULT GetCurrentFolderFlags([out] DWORD *flags);
+
+    HRESULT GetSortColumnCount([out] int *columns);
+
+    HRESULT SetSortColumns(
+        [in, size_is(count)] const SORTCOLUMN *columns,
+        [in] int count);
+
+    HRESULT GetSortColumns(
+        [out, size_is(count)] SORTCOLUMN *columns,
+        [in] int count);
+
+    HRESULT GetItem(
+        [in] int ittem,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT GetVisibleItem(
+        [in] int start,
+        [in] BOOL previous,
+        [out] int *item);
+
+    HRESULT GetSelectedItem(
+        [in] int start,
+        [out] int *item);
+
+    HRESULT GetSelection(
+        [in] BOOL none_implies_folder,
+        [out] IShellItemArray **array);
+
+    HRESULT GetSelectionState(
+        [in] PCUITEMID_CHILD pidl,
+        [out] DWORD *flags);
+
+    HRESULT InvokeVerbOnSelection([in, unique, string] LPCSTR verb);
+
+    HRESULT SetViewModeAndIconSize(
+        [in] FOLDERVIEWMODE mode,
+        [in] int size);
+
+    HRESULT GetViewModeAndIconSize(
+        [out] FOLDERVIEWMODE *mode,
+        [out] int *size);
+
+    HRESULT SetGroupSubsetCount([in] UINT visible_rows);
+
+    HRESULT GetGroupSubsetCount([out] UINT *visible_rows);
+
+    HRESULT SetRedraw([in] BOOL redraw);
+
+    HRESULT IsMoveInSameFolder();
+
+    HRESULT DoRename();
 }
 
 /*****************************************************************************
@@ -1765,7 +1915,7 @@ interface INewShortcutHookA : IUnknown
     HRESULT GetExtension(
                 [out] LPSTR pszExtension,
                 [in] int cchExtension);
-} 
+}
 
 
 /*****************************************************************************
@@ -1796,7 +1946,7 @@ interface INewShortcutHookW : IUnknown
     HRESULT GetExtension(
                 [out] LPWSTR pszExtension,
                 [in] int cchExtension);
-} 
+}
 
 /*****************************************************************************
  * IRunnableTask interface
@@ -1832,6 +1982,8 @@ interface IShellChangeNotify : IUnknown
                 [in] LPCITEMIDLIST pidl1,
                 [in] LPCITEMIDLIST pidl2);
 }
+
+cpp_quote("#define STR_FILE_SYS_BIND_DATA  L\"File System Bind Data\"")
 
 /*****************************************************************************
  * IFileSystemBindData interface
@@ -1873,6 +2025,145 @@ interface ITaskbarList : IUnknown
 
     HRESULT SetActiveAlt(
         [in] HWND hwnd);
+}
+
+/*****************************************************************************
+ *    ITaskbarList2 interface
+ */
+[
+    object,
+    uuid(602D4995-B13A-429B-A66E-1935E44F4317),
+    pointer_default(unique)
+]
+interface ITaskbarList2 : ITaskbarList
+{
+    HRESULT MarkFullscreenWindow(
+        [in] HWND hwnd,
+        [in] BOOL fullscreen);
+}
+
+cpp_quote("#ifdef MIDL_PASS")
+typedef IUnknown* HIMAGELIST;
+cpp_quote("#endif")
+
+typedef [v1_enum] enum THUMBBUTTONFLAGS {
+    THBF_ENABLED         = 0x0000,
+    THBF_DISABLED        = 0x0001,
+    THBF_DISMISSONCLICK  = 0x0002,
+    THBF_NOBACKGROUND    = 0x0004,
+    THBF_HIDDEN          = 0x0008,
+    THBF_NONINTERACTIVE  = 0x0010
+} THUMBBUTTONFLAGS;
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONFLAGS)")
+
+typedef [v1_enum] enum THUMBBUTTONMASK {
+    THB_BITMAP   = 0x0001,
+    THB_ICON     = 0x0002,
+    THB_TOOLTIP  = 0x0004,
+    THB_FLAGS    = 0x0008
+} THUMBBUTTONMASK;
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONMASK)")
+
+cpp_quote("#include <pshpack8.h>")
+typedef struct THUMBBUTTON {
+    THUMBBUTTONMASK dwMask;
+    UINT iId;
+    UINT iBitmap;
+    HICON hIcon;
+    WCHAR szTip[260];
+    THUMBBUTTONFLAGS dwFlags;
+} THUMBBUTTON, *LPTHUMBBUTTON;
+cpp_quote("#include <poppack.h>")
+
+[
+    uuid(ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf),
+    object
+]
+interface ITaskbarList3 : ITaskbarList2
+{
+    typedef [v1_enum] enum TBPFLAG {
+        TBPF_NOPROGRESS     = 0x0000,
+        TBPF_INDETERMINATE  = 0x0001,
+        TBPF_NORMAL         = 0x0002,
+        TBPF_ERROR          = 0x0004,
+        TBPF_PAUSED         = 0x0008
+    } TBPFLAG;
+
+    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(TBPFLAG)")
+
+    HRESULT SetProgressValue(
+            [in] HWND hwnd,
+            [in] ULONGLONG ullCompleted,
+            [in] ULONGLONG ullTotal);
+
+    HRESULT SetProgressState(
+            [in] HWND hwnd,
+            [in] TBPFLAG tbpFlags);
+
+    HRESULT RegisterTab(
+            [in] HWND hwndTab,
+            [in] HWND hwndMDI);
+
+    HRESULT UnregisterTab([in] HWND hwndTab);
+
+    HRESULT SetTabOrder(
+            [in] HWND hwndTab,
+            [in] HWND hwndInsertBefore);
+
+    HRESULT SetTabActive(
+            [in] HWND hwndTab,
+            [in] HWND hwndMDI,
+            [in] DWORD dwReserved);
+
+    HRESULT ThumbBarAddButtons(
+            [in] HWND hwnd,
+            [in] UINT cButtons,
+            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
+
+    HRESULT ThumbBarUpdateButtons(
+            [in] HWND hwnd,
+            [in] UINT cButtons,
+            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
+
+    HRESULT ThumbBarSetImageList(
+            [in] HWND hwnd,
+            [in] HIMAGELIST himl);
+
+    HRESULT SetOverlayIcon(
+            [in] HWND hwnd,
+            [in] HICON hIcon,
+            [in, unique, string] LPCWSTR pszDescription);
+
+    HRESULT SetThumbnailTooltip(
+            [in] HWND hwnd,
+            [in, unique, string] LPCWSTR pszTip);
+
+    HRESULT SetThumbnailClip(
+            [in] HWND hwnd,
+            [in] RECT *prcClip);
+}
+
+[
+    uuid(c43dc798-95d1-4bea-9030-bb99e2983a1a),
+    object
+]
+interface ITaskbarList4 : ITaskbarList3
+{
+    typedef [v1_enum] enum STPFLAG {
+        STPF_NONE                       = 0x0000,
+        STPF_USEAPPTHUMBNAILALWAYS      = 0x0001,
+        STPF_USEAPPTHUMBNAILWHENACTIVE  = 0x0002,
+        STPF_USEAPPPEEKALWAYS           = 0x0004,
+        STPF_USEAPPPEEKWHENACTIVE       = 0x0008
+    } STPFLAG;
+
+    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(STPFLAG)")
+
+    HRESULT SetTabProperties(
+            [in] HWND hwndTab,
+            [in] STPFLAG stpFlags);
 }
 
 /*****************************************************************************
@@ -2161,25 +2452,6 @@ interface IMenuBand : IUnknown
 }
 
 /*****************************************************************************
- * IProfferService interface
- */
-[
-    uuid(cb728b20-f786-11ce-92ad-00aa00a74cd0),
-    object,
-    pointer_default(unique),
-    local
-]
-interface IProfferService : IUnknown
-{
-    HRESULT ProfferService(
-        [in] REFGUID service,
-        [in] IServiceProvider *pService,
-        [out] DWORD *pCookie);
-
-    HRESULT RevokeService([in] DWORD cookie);
-}
-
-/*****************************************************************************
  * IShellMenuCallback interface
  */
 cpp_quote("#include <pshpack8.h>")
@@ -2281,7 +2553,7 @@ cpp_quote("#define SMC_SFDDRESTRICTED		0x00000030")
 ]
 interface IShellMenuCallback : IUnknown
 {
-	HRESULT CallbackSM( 
+	HRESULT CallbackSM(
 		[in, out] LPSMDATA psmd,
         [in] UINT uMsg,
         [in] WPARAM wParam,
@@ -2317,682 +2589,50 @@ cpp_quote("#define SMINV_ID                     0x00000008")
 ]
 interface IShellMenu : IUnknown
 {
-	HRESULT Initialize( 
+	HRESULT Initialize(
 		[in] IShellMenuCallback *psmc,
         [in] UINT uId,
         [in] UINT uIdAncestor,
         [in] DWORD dwFlags);
-        
-	HRESULT GetMenuInfo( 
+
+	HRESULT GetMenuInfo(
 		[out] IShellMenuCallback **ppsmc,
 		[out] UINT *puId,
 		[out] UINT *puIdAncestor,
 		[out] DWORD *pdwFlags);
-        
-	HRESULT SetShellFolder( 
+
+	HRESULT SetShellFolder(
         [in] IShellFolder *psf,
 		[in] LPCITEMIDLIST pidlFolder,
         [in] HKEY hKey,
         [in] DWORD dwFlags);
-        
-	HRESULT GetShellFolder( 
+
+	HRESULT GetShellFolder(
 		[out] DWORD *pdwFlags,
 		[out] LPITEMIDLIST *ppidl,
 		[in] REFIID riid,
 		[out] void **ppv);
-        
-	HRESULT SetMenu( 
+
+	HRESULT SetMenu(
 		[in] HMENU hmenu,
 		[in] HWND hwnd,
         [in] DWORD dwFlags);
-        
-	HRESULT GetMenu( 
+
+	HRESULT GetMenu(
 		[out] HMENU *phmenu,
 		[out] HWND *phwnd,
 		[out] DWORD *pdwFlags);
-        
-	HRESULT InvalidateItem( 
+
+	HRESULT InvalidateItem(
 		[in] LPSMDATA psmd,
         [in] DWORD dwFlags);
-        
-	HRESULT GetState( 
+
+	HRESULT GetState(
 		[out] LPSMDATA psmd);
-        
-	HRESULT SetMenuToolbar( 
+
+	HRESULT SetMenuToolbar(
 		[in] IUnknown *punk,
         [in] DWORD dwFlags);
-}
-
-
-typedef struct _WINDOWDATA
-{
-    DWORD     dwWindowID;
-    UINT      uiCP;
-    LPITEMIDLIST  pidl;
-    [string]  LPWSTR lpszUrl;
-    [string]  LPWSTR lpszUrlLocation;
-    [string]  LPWSTR lpszTitle;
-} WINDOWDATA;
-
-typedef WINDOWDATA *LPWINDOWDATA;
-typedef const WINDOWDATA *LPCWINDOWDATA;
-
-
-/*****************************************************************************
- * ITravelEntry interface
- */
-[
-    uuid(F46EDB3B-BC2F-11d0-9412-00AA00A3EBD3),
-    object,
-    pointer_default(unique),
-    local
-]
-interface ITravelEntry : IUnknown
-{
-    HRESULT Invoke(
-		[in] IUnknown *punk);
-
-    HRESULT Update(
-		[in] IUnknown *punk,
-		BOOL fIsLocalAnchor);
-
-    HRESULT GetPidl(
-		[in] LPITEMIDLIST *ppidl);
-};
-
-
-/*****************************************************************************
- * ITravelLogClient interface
- */
-[
-    uuid(241c033e-e659-43da-aa4d-4086dbc4758d),
-    object,
-    pointer_default(unique),
-    local
-]
-interface ITravelLogClient : IUnknown
-{
-    HRESULT FindWindowByIndex(
-        [in] DWORD dwID,
-        [out] IUnknown **ppunk);
-    
-    HRESULT GetWindowData(
-        [out] LPWINDOWDATA pWinData);
-
-    HRESULT LoadHistoryPosition(
-        [in] LPWSTR pszUrlLocation,
-        [in] DWORD dwPosition);
-};
-
-
-/*****************************************************************************
- * ITravelLog interface
- */
-[
-    uuid(66A9CB08-4802-11d2-A561-00A0C92DBFE8),
-    object,
-    pointer_default(unique),
-    local
-]
-interface ITravelLog : IUnknown
-{
-    enum tagTLENUMF
-    {
-        TLEF_RELATIVE_INCLUDE_CURRENT   = 0x00000001,
-        TLEF_RELATIVE_BACK              = 0x00000010,
-        TLEF_RELATIVE_FORE              = 0x00000020,
-        TLEF_INCLUDE_UNINVOKEABLE       = 0x00000040,
-        TLEF_ABSOLUTE                   = 0x00000031,
-    };
-    typedef DWORD TLENUMF;
-
-	HRESULT AddEntry(
-		[in] IUnknown *punk,
-		BOOL fIsLocalAnchor);
-
-	HRESULT UpdateEntry(
-		[in] IUnknown *punk,
-		BOOL fIsLocalAnchor);
-
-	HRESULT UpdateExternal(
-		[in] IUnknown *punk,
-		[in] IUnknown *punkHLBrowseContext);
-
-	HRESULT Travel(
-		[in] IUnknown *punk,
-		int iOffset);
-
-	HRESULT GetTravelEntry(
-		[in] IUnknown *punk,
-		int iOffset,
-		[out] ITravelEntry **ppte);
-
-	HRESULT FindTravelEntry(
-		[in] IUnknown *punk,
-		[in] LPCITEMIDLIST pidl,
-		[out] ITravelEntry **ppte);
-
-	HRESULT GetToolTipText(
-		[in] IUnknown *punk,
-		int iOffset,
-		int idsTemplate,
-		[out] LPWSTR pwzText,
-		DWORD cchText);
-
-	HRESULT InsertMenuEntries(
-		[in] IUnknown *punk,
-		[in, out] HMENU hmenu,
-		int nPos,
-		int idFirst,
-		int idLast,
-		DWORD dwFlags);
-
-	HRESULT Clone(
-		[out] ITravelLog **pptl);
-
-	DWORD CountEntries(
-		[in] IUnknown *punk);
-
-	HRESULT Revert();
-};
-
-/*****************************************************************************
- * IShellService interface
- */
-[
-    object,
-    uuid(5836FB00-8187-11CF-A12B-00AA004AE837),
-    pointer_default(unique),
-    local
-]
-interface IShellService : IUnknown
-{
-	HRESULT SetOwner(
-		[in] IUnknown *owner);
-};
-
-/*****************************************************************************
- * IShellBrowser interface
- */
-[
-    object,
-    uuid(02BA3B52-0547-11D1-B833-00C04FC9B31F),
-    pointer_default(unique),
-    local
-]
-interface IBrowserService : IUnknown
-{
-    typedef enum tagBNSTATE
-    {
-		BNS_NORMAL	= 0,
-		BNS_BEGIN_NAVIGATE	= 1,
-		BNS_NAVIGATE	= 2
-    } BNSTATE;
-
-    cpp_quote("#include <pshpack8.h>")
-    typedef struct basebrowserdataxp
-    {
-		HWND				_hwnd;
-		ITravelLog			*_ptl;
-		IUnknown			*_phlf;
-		IUnknown			*_pautoWB2;
-		IUnknown			*_pautoEDS;
-		IShellService		*_pautoSS;
-		int					_eSecureLockIcon;
-		DWORD				_fCreatingViewWindow;
-		UINT				_uActivateState;
-		LPITEMIDLIST		_pidlViewState;
-		IOleCommandTarget	*_pctView;
-		LPITEMIDLIST		_pidlCur;
-		IShellView			*_psv;
-		IShellFolder		*_psf;
-		HWND				_hwndView;
-		LPWSTR				_pszTitleCur;
-		LPITEMIDLIST		_pidlPending;
-		IShellView			*_psvPending;
-		IShellFolder		*_psfPending;
-		HWND				_hwndViewPending;
-		LPWSTR				_pszTitlePending;
-		BOOL				_fIsViewMSHTML;
-		BOOL				_fPrivacyImpacted;
-		CLSID				_clsidView;
-		CLSID				_clsidViewPending;
-		HWND				_hwndFrame;
-    } BASEBROWSERDATAXP;
-	typedef struct basebrowserdataxp *LPBASEBROWSERDATAXP;
-
-	typedef struct basebrowserdatalh
-	{
-		HWND				_hwnd;
-		ITravelLog			*_ptl;
-		IUnknown			*_phlf;
-		IUnknown			*_pautoWB2;
-		IUnknown			*_pautoEDS;
-		IShellService		*_pautoSS;
-		int					_eSecureLockIcon;
-		DWORD				_fCreatingViewWindow;
-		UINT				_uActivateState;
-		LPITEMIDLIST		_pidlViewState;
-		IOleCommandTarget	*_pctView;
-		LPITEMIDLIST		_pidlCur;
-		IShellView			*_psv;
-		IShellFolder		*_psf;
-		HWND				_hwndView;
-		LPWSTR				_pszTitleCur;
-		LPITEMIDLIST		_pidlPending;
-		IShellView			*_psvPending;
-		IShellFolder		*_psfPending;
-		HWND				_hwndViewPending;
-		LPWSTR				_pszTitlePending;
-		BOOL				_fIsViewMSHTML;
-		BOOL				_fPrivacyImpacted;
-		CLSID				_clsidView;
-		CLSID				_clsidViewPending;
-		HWND				_hwndFrame;
-		LONG				_lPhishingFilterStatus;
-	} BASEBROWSERDATALH;
-    cpp_quote("#include <poppack.h>")
-	typedef struct basebrowserdatalh *LPBASEBROWSERDATALH;
-
-	typedef BASEBROWSERDATAXP BASEBROWSERDATA;
-
-	typedef const BASEBROWSERDATA *LPCBASEBROWSERDATA;
-
-	typedef BASEBROWSERDATA *LPBASEBROWSERDATA;
-
-cpp_quote("#if 0")
-typedef HANDLE HMONITOR;
-cpp_quote("#endif /* 0 */")
-
-	typedef struct SToolbarItem
-	{
-		IDockingWindow		*ptbar;
-		BORDERWIDTHS		rcBorderTool;
-		LPWSTR				pwszItem;
-		BOOL				fShow;
-		HMONITOR			hMon;
-	} TOOLBARITEM;
-
-	typedef struct SToolbarItem *LPTOOLBARITEM;
-
-	HRESULT GetParentSite(
-		[out] IOleInPlaceSite **ppipsite);
-
-	HRESULT SetTitle(
-		[in] IShellView *psv,
-		[in] LPCWSTR pszName);
-
-	HRESULT GetTitle(
-		[in] IShellView *psv,
-		[out] LPWSTR pszName,
-		DWORD cchName);
-
-	HRESULT GetOleObject(
-		[out] IOleObject **ppobjv);
-
-	HRESULT GetTravelLog(
-		[out] ITravelLog **pptl);
-
-	HRESULT ShowControlWindow(
-		UINT id,
-		BOOL fShow);
-
-	HRESULT IsControlWindowShown(
-		UINT id,
-		[out] BOOL *pfShown);
-
-	HRESULT IEGetDisplayName(
-		[in] LPCITEMIDLIST pidl,
-		[out] LPWSTR pwszName,
-		UINT uFlags);
-
-	HRESULT IEParseDisplayName(
-		UINT uiCP,
-		[in] LPCWSTR pwszPath,
-		[out] LPCITEMIDLIST *ppidlOut);
-
-	HRESULT DisplayParseError(
-		HRESULT hres,
-		[in] LPCWSTR pwszPath);
-
-	HRESULT NavigateToPidl(
-		[in] LPCITEMIDLIST pidl,
-		DWORD grfHLNF);
-
-	HRESULT SetNavigateState(
-		BNSTATE bnstate);
-
-	HRESULT GetNavigateState(
-		[out] BNSTATE *pbnstate);
-
-	HRESULT NotifyRedirect(
-		[in] IShellView *psv,
-		[in] LPCITEMIDLIST pidl,
-		[out] BOOL *pfDidBrowse);
-
-	HRESULT UpdateWindowList();
-
-	HRESULT UpdateBackForwardState();
-
-	HRESULT SetFlags(
-		DWORD dwFlags,
-		DWORD dwFlagMask);
-
-	HRESULT GetFlags(
-		[out] DWORD *pdwFlags);
-
-	HRESULT CanNavigateNow();
-
-	HRESULT GetPidl(
-		[out] LPCITEMIDLIST *ppidl);
-
-	HRESULT SetReferrer(
-		[in] LPCITEMIDLIST pidl);
-
-	DWORD GetBrowserIndex();
-
-	HRESULT GetBrowserByIndex(
-		DWORD dwID,
-		[out] IUnknown **ppunk);
-
-	HRESULT GetHistoryObject(
-		[out] IOleObject **ppole,
-		[out] IStream **pstm,
-		[out] IBindCtx **ppbc);
-
-	HRESULT SetHistoryObject(
-		[in] IOleObject *pole,
-		BOOL fIsLocalAnchor);
-
-	HRESULT CacheOLEServer(
-		[in] IOleObject *pole);
-
-	HRESULT GetSetCodePage(
-		[in] VARIANT *pvarIn,
-		[out] VARIANT *pvarOut);
-
-	HRESULT OnHttpEquiv(
-		[in] IShellView *psv,
-		BOOL fDone,
-		[in] VARIANT *pvarargIn,
-		[out] VARIANT *pvarargOut);
-
-	HRESULT GetPalette(
-		[out] HPALETTE *hpal);
-
-	HRESULT RegisterWindow(
-		BOOL fForceRegister,
-		int swc);
-}
-
-
-/*****************************************************************************
- * IShellBrowser2 interface
- */
-[
-    uuid(68BD21CC-438B-11D2-A560-00A0C92DBFE8),
-    object,
-    pointer_default(unique),
-    local
-]
-interface IBrowserService2 : IBrowserService
-{
-	typedef struct tagFolderSetData
-	{
-		FOLDERSETTINGS		_fs;
-		SHELLVIEWID			_vidRestore;
-		DWORD				_dwViewPriority;
-	} FOLDERSETDATA;
-
-	typedef struct tagFolderSetData *LPFOLDERSETDATA;
-
-	LRESULT WndProcBS(
-		[in] HWND hwnd,
-		UINT uMsg,
-		WPARAM wParam,
-		LPARAM lParam);
-
-	HRESULT SetAsDefFolderSettings();
-
-	HRESULT GetViewRect(
-		[out] RECT *prc);
-
-	HRESULT OnSize(
-		WPARAM wParam);
-
-	HRESULT OnCreate(
-		[in] struct tagCREATESTRUCTW *pcs);
-
-	LRESULT OnCommand(
-		WPARAM wParam,
-		LPARAM lParam);
-
-	HRESULT OnDestroy();
-
-	LRESULT OnNotify(
-		[in] struct tagNMHDR *pnm);
-
-	HRESULT OnSetFocus();
-
-	HRESULT OnFrameWindowActivateBS(
-		BOOL fActive);
-
-	HRESULT ReleaseShellView();
-
-	HRESULT ActivatePendingView();
-
-	HRESULT CreateViewWindow(
-		[in] IShellView *psvNew,
-		[in] IShellView *psvOld,
-		[in] LPRECT prcView,
-		[out] HWND *phwnd);
-
-	HRESULT CreateBrowserPropSheetExt(
-		[in] REFIID riid,
-		[out] void **ppv);
-
-	HRESULT GetViewWindow(
-		[out] HWND *phwndView);
-
-	HRESULT GetBaseBrowserData(
-		[out] LPCBASEBROWSERDATA *pbbd);
-
-	LPBASEBROWSERDATA PutBaseBrowserData();
-
-	HRESULT InitializeTravelLog(
-		[in] ITravelLog *ptl,
-		DWORD dw);
-
-	HRESULT SetTopBrowser();
-
-	HRESULT Offline(
-		int iCmd);
-
-	HRESULT AllowViewResize(
-		BOOL f);
-
-	HRESULT SetActivateState(
-		UINT u);
-
-	HRESULT UpdateSecureLockIcon(
-		int eSecureLock);
-
-	HRESULT InitializeDownloadManager();
-
-	HRESULT InitializeTransitionSite();
-
-	HRESULT _Initialize(
-		[in] HWND hwnd,
-		[in] IUnknown *pauto);
-
-	HRESULT _CancelPendingNavigationAsync();
-
-	HRESULT _CancelPendingView();
-
-	HRESULT _MaySaveChanges();
-
-	HRESULT _PauseOrResumeView(
-		BOOL fPaused);
-
-	HRESULT _DisableModeless();
-
-	HRESULT _NavigateToPidl(
-		[in] LPCITEMIDLIST pidl,
-		DWORD grfHLNF,
-		DWORD dwFlags);
-
-	HRESULT _TryShell2Rename(
-		[in] IShellView *psv,
-		[in] LPCITEMIDLIST pidlNew);
-
-	HRESULT _SwitchActivationNow();
-
-	HRESULT _ExecChildren(
-		[in] IUnknown *punkBar,
-		BOOL fBroadcast,
-		[in] const GUID *pguidCmdGroup,
-		DWORD nCmdID,
-		DWORD nCmdexecopt,
-		[in] VARIANTARG *pvarargIn,
-		[in, out] VARIANTARG *pvarargOut);
-
-	HRESULT _SendChildren(
-		[in] HWND hwndBar,
-		BOOL fBroadcast,
-		UINT uMsg,
-		WPARAM wParam,
-		LPARAM lParam);
-
-	HRESULT GetFolderSetData(
-		[out] struct tagFolderSetData *pfsd);
-
-	HRESULT _OnFocusChange(
-		UINT itb);
-
-	HRESULT v_ShowHideChildWindows(
-		BOOL fChildOnly);
-
-	UINT _get_itbLastFocus();
-
-	HRESULT _put_itbLastFocus(
-		UINT itbLastFocus);
-
-	HRESULT _UIActivateView(
-		UINT uState);
-
-	HRESULT _GetViewBorderRect(
-		[out] RECT *prc);
-
-	HRESULT _UpdateViewRectSize();
-
-	HRESULT _ResizeNextBorder(
-		UINT itb);
-
-	HRESULT _ResizeView();
-
-	HRESULT _GetEffectiveClientArea(
-		[out] LPRECT lprectBorder,
-		[in] HMONITOR hmon);
-
-	IStream *v_GetViewStream(
-		[in] LPCITEMIDLIST pidl,
-		DWORD grfMode,
-		[in] LPCWSTR pwszName);
-
-	LRESULT ForwardViewMsg(
-		UINT uMsg,
-		WPARAM wParam,
-		LPARAM lParam);
-
-	HRESULT SetAcceleratorMenu(
-		[in] HACCEL hacc);
-
-	int _GetToolbarCount();
-
-	LPTOOLBARITEM _GetToolbarItem(
-		int itb);
-
-	HRESULT _SaveToolbars(
-		[in] IStream *pstm);
-
-	HRESULT _LoadToolbars(
-		[in] IStream *pstm);
-
-	HRESULT _CloseAndReleaseToolbars(
-		BOOL fClose);
-
-	HRESULT v_MayGetNextToolbarFocus(
-		[in] LPMSG lpMsg,
-		UINT itbNext,
-		int citb,
-		[out] LPTOOLBARITEM *pptbi,
-		[out] HWND *phwnd);
-
-	HRESULT _ResizeNextBorderHelper(
-		UINT itb,
-		BOOL bUseHmonitor);
-
-	UINT _FindTBar(
-		[in] IUnknown *punkSrc);
-
-	HRESULT _SetFocus(
-		[in] LPTOOLBARITEM ptbi,
-		[in] HWND hwnd,
-		[in] LPMSG lpMsg);
-
-	HRESULT v_MayTranslateAccelerator(
-		[in] MSG *pmsg);
-
-	HRESULT _GetBorderDWHelper(
-		[in] IUnknown *punkSrc,
-		[out] LPRECT lprectBorder,
-		BOOL bUseHmonitor);
-
-	HRESULT v_CheckZoneCrossing(
-		[in] LPCITEMIDLIST pidl);
-}
-
-
-/*****************************************************************************
- * IShellBrowser3 interface
- */
-[
-    uuid(27D7CE21-762D-48F3-86F3-40E2FD3749C4),
-    object,
-    pointer_default(unique),
-    local
-]
-interface IBrowserService3 : IBrowserService2
-{
-	HRESULT _PositionViewWindow(
-		[in] HWND hwnd,
-		[in] LPRECT prc);
-
-	HRESULT IEParseDisplayNameEx(
-		UINT uiCP,
-		[in] LPCWSTR pwszPath,
-		DWORD dwFlags,
-		[out] LPITEMIDLIST *ppidlOut);
-}
-
-
-/*****************************************************************************
- * IShellBrowser4 interface
- */
-[
-    uuid(639f1bff-e135-4096-abd8-e0f504d649a4),
-    object,
-    pointer_default(unique),
-    local
-]
-interface IBrowserService4 : IBrowserService3
-{
-	HRESULT ActivateView(
-		BOOL fPendingView);
-
-	HRESULT SaveViewState();
-
-	HRESULT _ResizeAllBorders();
 }
 
 cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE60)")
@@ -3008,12 +2648,12 @@ cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE60)")
 ]
 interface ITrackShellMenu : IShellMenu
 {
-	HRESULT SetObscured( 
+	HRESULT SetObscured(
 		[in] HWND hwndTB,
 		[in] IUnknown *punkBand,
 		DWORD dwSMSetFlags);
 
-	HRESULT Popup( 
+	HRESULT Popup(
 		[in] HWND hwnd,
 		[in] POINTL *ppt,
 		[in] RECTL *prcExclude,
@@ -3021,145 +2661,6 @@ interface ITrackShellMenu : IShellMenu
 };
 
 cpp_quote("#endif /* _WIN32_IE_IE60 */")
-
-cpp_quote("#ifdef MIDL_PASS")
-typedef IUnknown* HIMAGELIST;
-cpp_quote("#endif")
-
-typedef [v1_enum] enum THUMBBUTTONFLAGS {
-    THBF_ENABLED         = 0x0000,
-    THBF_DISABLED        = 0x0001,
-    THBF_DISMISSONCLICK  = 0x0002,
-    THBF_NOBACKGROUND    = 0x0004,
-    THBF_HIDDEN          = 0x0008,
-    THBF_NONINTERACTIVE  = 0x0010
-} THUMBBUTTONFLAGS;
-
-cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONFLAGS)")
-
-typedef [v1_enum] enum THUMBBUTTONMASK {
-    THB_BITMAP   = 0x0001,
-    THB_ICON     = 0x0002,
-    THB_TOOLTIP  = 0x0004,
-    THB_FLAGS    = 0x0008
-} THUMBBUTTONMASK;
-
-cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(THUMBBUTTONMASK)")
-
-cpp_quote("#include <pshpack8.h>")
-typedef struct THUMBBUTTON {
-    THUMBBUTTONMASK dwMask;
-    UINT iId;
-    UINT iBitmap;
-    HICON hIcon;
-    WCHAR szTip[260];
-    THUMBBUTTONFLAGS dwFlags;
-} THUMBBUTTON, *LPTHUMBBUTTON;
-cpp_quote("#include <poppack.h>")
-
-/*****************************************************************************
- *    ITaskbarList2 interface
- */
-[
-    object,
-    uuid(602D4995-B13A-429B-A66E-1935E44F4317),
-    pointer_default(unique)
-]
-interface ITaskbarList2 : ITaskbarList
-{
-    HRESULT MarkFullscreenWindow(
-        [in] HWND hwnd,
-        [in] BOOL fullscreen);
-}
-
-[
-    uuid(ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf),
-    object
-]
-interface ITaskbarList3 : ITaskbarList2
-{
-    typedef [v1_enum] enum TBPFLAG {
-        TBPF_NOPROGRESS     = 0x0000,
-        TBPF_INDETERMINATE  = 0x0001,
-        TBPF_NORMAL         = 0x0002,
-        TBPF_ERROR          = 0x0004,
-        TBPF_PAUSED         = 0x0008
-    } TBPFLAG;
-
-    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(TBPFLAG)")
-
-    HRESULT SetProgressValue(
-            [in] HWND hwnd,
-            [in] ULONGLONG ullCompleted,
-            [in] ULONGLONG ullTotal);
-
-    HRESULT SetProgressState(
-            [in] HWND hwnd,
-            [in] TBPFLAG tbpFlags);
-
-    HRESULT RegisterTab(
-            [in] HWND hwndTab,
-            [in] HWND hwndMDI);
-
-    HRESULT UnregisterTab([in] HWND hwndTab);
-
-    HRESULT SetTabOrder(
-            [in] HWND hwndTab,
-            [in] HWND hwndInsertBefore);
-
-    HRESULT SetTabActive(
-            [in] HWND hwndTab,
-            [in] HWND hwndMDI,
-            [in] DWORD dwReserved);
-
-    HRESULT ThumbBarAddButtons(
-            [in] HWND hwnd,
-            [in] UINT cButtons,
-            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
-
-    HRESULT ThumbBarUpdateButtons(
-            [in] HWND hwnd,
-            [in] UINT cButtons,
-            [in, size_is(cButtons)] LPTHUMBBUTTON pButton);
-
-    HRESULT ThumbBarSetImageList(
-            [in] HWND hwnd,
-            [in] HIMAGELIST himl);
-
-    HRESULT SetOverlayIcon(
-            [in] HWND hwnd,
-            [in] HICON hIcon,
-            [in, unique, string] LPCWSTR pszDescription);
-
-    HRESULT SetThumbnailTooltip(
-            [in] HWND hwnd,
-            [in, unique, string] LPCWSTR pszTip);
-
-    HRESULT SetThumbnailClip(
-            [in] HWND hwnd,
-            [in] RECT *prcClip);
-}
-
-[
-    uuid(c43dc798-95d1-4bea-9030-bb99e2983a1a),
-    object
-]
-interface ITaskbarList4 : ITaskbarList3
-{
-    typedef [v1_enum] enum STPFLAG {
-        STPF_NONE                       = 0x0000,
-        STPF_USEAPPTHUMBNAILALWAYS      = 0x0001,
-        STPF_USEAPPTHUMBNAILWHENACTIVE  = 0x0002,
-        STPF_USEAPPPEEKALWAYS           = 0x0004,
-        STPF_USEAPPPEEKWHENACTIVE       = 0x0008
-    } STPFLAG;
-
-    cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(STPFLAG)")
-
-    HRESULT SetTabProperties(
-            [in] HWND hwndTab,
-            [in] STPFLAG stpFlags);
-}
 
 /*****************************************************************************
  *    IAutoCompleteDropDown interface
@@ -3178,6 +2679,24 @@ cpp_quote("#define ACDD_VISIBLE   0x0001")
         [out, string] LPWSTR *ppwszString);
 
     HRESULT ResetEnumerator();
+}
+
+/*****************************************************************************
+ * IProfferService interface
+ */
+[
+    object,
+    uuid(cb728b20-f786-11ce-92ad-00aa00a74cd0),
+    pointer_default(unique)
+]
+interface IProfferService : IUnknown
+{
+    HRESULT ProfferService(
+        [in] REFGUID service,
+        [in] IServiceProvider *pService,
+        [out] DWORD *pCookie);
+
+    HRESULT RevokeService([in] DWORD cookie);
 }
 
 /*****************************************************************************
@@ -3243,7 +2762,9 @@ typedef [v1_enum] enum tagEXPLORER_BROWSER_OPTIONS {
     EBO_ALWAYSNAVIGATE     = 0x04,
     EBO_NOTRAVELLOG        = 0x08,
     EBO_NOWRAPPERWINDOW    = 0x10,
-    EBO_HTMLSHAREPOINTVIEW = 0x20
+    EBO_HTMLSHAREPOINTVIEW = 0x20,
+    EBO_NOBORDER           = 0x40,
+    EBO_NOPERSISTVIEWSTATE = 0x80,
 } EXPLORER_BROWSER_OPTIONS;
 
 cpp_quote("#define SID_SExplorerBrowserFrame IID_ICommDlgBrowser")
@@ -3699,7 +3220,7 @@ interface IFileDialog;
 typedef [v1_enum] enum FDE_OVERWRITE_RESPONSE
 {
     FDEOR_DEFAULT  = 0,
-    FDEOR_ACCCEP   = 1,
+    FDEOR_ACCEPT   = 1,
     FDEOR_REFUSE   = 2
 } FDE_OVERWRITE_RESPONSE;
 
@@ -4443,6 +3964,213 @@ interface ICustomDestinationList : IUnknown
     HRESULT AbortList();
 }
 
+[
+    uuid(ddefe873-6997-4e68-be26-39b633adbe12),
+    object,
+    pointer_default(unique)
+]
+interface IQueryCancelAutoPlay : IUnknown
+{
+    HRESULT AllowAutoPlay([in, string] LPCWSTR path,
+                          [in] DWORD content_type,
+                          [in, string] LPCWSTR label,
+                          [in] DWORD serial_number);
+}
+
+[
+    uuid(d594d0d8-8da7-457b-b3b4-ce5dbaac0b88),
+    pointer_default(unique)
+]
+interface ITransferAdviseSink : IUnknown
+{
+    [v1_enum] enum _TRANSFER_ADVISE_STATE
+    {
+        TS_NONE          = 0,
+        TS_PERFORMING    = 1,
+        TS_PREPARING     = 2,
+        TS_INDETERMINATE = 4
+    };
+    typedef DWORD TRANSFER_ADVISE_STATE;
+
+    HRESULT UpdateProgress([in] ULONGLONG size_current,
+                           [in] ULONGLONG size_total,
+                           [in] INT files_current,
+                           [in] INT files_total,
+                           [in] INT folders_current,
+                           [in] INT folders_total);
+    HRESULT UpdateTransferState([in] TRANSFER_ADVISE_STATE state);
+    HRESULT ConfirmOverwrite([in] IShellItem *source,
+                             [in] IShellItem *dest_parent,
+                             [in, string] LPCWSTR name);
+    HRESULT ConfirmEncryptLoss([in] IShellItem *source);
+    HRESULT FileFailure([in] IShellItem *item,
+                        [in, unique, string] LPCWSTR itemname,
+                        [in] HRESULT hr,
+                        [in, out, unique, size_is(crename)] LPWSTR rename,
+                        [in] ULONG crename);
+    HRESULT SubStreamFailure([in] IShellItem *item,
+                             [in, string] LPCWSTR stream,
+                             [in] HRESULT hr);
+    HRESULT PropertyFailure([in] IShellItem *item,
+                            [in, unique] const PROPERTYKEY *key,
+                            [in] HRESULT hr);
+}
+
+[v1_enum] enum _TRANSFER_SOURCE_FLAGS
+{
+    TSF_NORMAL                     = 0,
+    TSF_FAIL_EXIST                 = 0,
+    TSF_RENAME_EXIST               = 0x1,
+    TSF_OVERWRITE_EXIST            = 0x2,
+    TSF_ALLOW_DECRYPTION           = 0x4,
+    TSF_NO_SECURITY                = 0x8,
+    TSF_COPY_CREATION_TIME         = 0x10,
+    TSF_COPY_WRITE_TIME            = 0x20,
+    TSF_USE_FULL_ACCESS            = 0x40,
+    TSF_DELETE_RECYCLE_IF_POSSIBLE = 0x80,
+    TSF_COPY_HARD_LINK             = 0x100,
+    TSF_COPY_LOCALIZED_NAME        = 0x200,
+    TSF_MOVE_AS_COPY_DELETE        = 0x400,
+    TSF_SUSPEND_SHELLEVENTS        = 0x800
+};
+typedef DWORD TRANSFER_SOURCE_FLAGS;
+
+[
+    uuid(00adb003-bde9-45c6-8e29-d09f9353e108),
+    object,
+    pointer_default(unique)
+]
+interface ITransferSource : IUnknown
+{
+    HRESULT Advise([in] ITransferAdviseSink *sink, [out] DWORD *cookie);
+    HRESULT Unadvise([in] DWORD cookie);
+    HRESULT SetProperties([in] IPropertyChangeArray *array);
+    HRESULT OpenItem([in] IShellItem *item,
+                     [in] TRANSFER_SOURCE_FLAGS flags,
+                     [in] REFIID riid,
+                     [out, iid_is(riid)] void **ppv);
+    HRESULT MoveItem([in] IShellItem *item,
+                     [in] IShellItem *parent_dest,
+                     [in, string] LPCWSTR name_dest,
+                     [in] TRANSFER_SOURCE_FLAGS flags,
+                     [out] IShellItem **newitem);
+    HRESULT RecycleItem([in] IShellItem *source,
+                        [in] IShellItem *parent_dest,
+                        [in] TRANSFER_SOURCE_FLAGS flags,
+                        [out] IShellItem **new_dest);
+    HRESULT RemoveItem([in] IShellItem *source, [in] TRANSFER_SOURCE_FLAGS flags);
+    HRESULT RenameItem([in] IShellItem *source,
+                       [in, string] LPCWSTR newname,
+                       [in] TRANSFER_SOURCE_FLAGS flags,
+                       [out] IShellItem **new_dest);
+    HRESULT LinkItem([in] IShellItem *source,
+                     [in] IShellItem *parent_dest,
+                     [in, unique, string] LPCWSTR new_name,
+                     [in] TRANSFER_SOURCE_FLAGS flags,
+                     [out] IShellItem **new_dest);
+    HRESULT ApplyPropertiesToItem([in] IShellItem *source, [out] IShellItem **newitem);
+    HRESULT GetDefaultDestinationName([in] IShellItem *source,
+                                      [in] IShellItem *parent_dest,
+                                      [out, string] LPWSTR *dest_name);
+    HRESULT EnterFolder([in] IShellItem *child_folder);
+    HRESULT LeaveFolder([in] IShellItem *child_folder);
+}
+
+[
+    uuid(48addd32-3ca5-4124-abe3-b5a72531b207),
+    object,
+    pointer_default(unique)
+]
+interface ITransferDestination : IUnknown
+{
+    HRESULT Advise([in] ITransferAdviseSink *sink, [out] DWORD *cookie);
+    HRESULT Unadvise([in] DWORD cookie);
+    HRESULT CreateItem([in, string] LPCWSTR name,
+                       [in] DWORD attr,
+                       [in] ULONGLONG size,
+                       [in] TRANSFER_SOURCE_FLAGS flags,
+                       [in] REFIID riid,
+                       [out, iid_is(riid)] void **ppv,
+                       [in] REFIID resources,
+                       [out, iid_is(riid)] void **presources);
+}
+
+[
+    uuid(92218cab-ecaa-4335-8133-807fd234c2ee),
+    object,
+    pointer_default(unique)
+]
+interface IAssocHandlerInvoker : IUnknown
+{
+    HRESULT SupportsSelection();
+    HRESULT Invoke();
+}
+
+[
+    uuid(f04061ac-1659-4a3f-a954-775aa57fc083),
+    object,
+    pointer_default(unique)
+]
+interface IAssocHandler : IUnknown
+{
+    HRESULT GetName([out, string] LPWSTR *name);
+    HRESULT GetUIName([out, string] LPWSTR *uiname);
+    HRESULT GetIconLocation([out, string] LPWSTR *path,
+                            [out] int *index);
+    HRESULT IsRecommended();
+    HRESULT MakeDefault([in, string] LPCWSTR description);
+    HRESULT Invoke([in] IDataObject *object);
+    HRESULT CreateInvoker([in] IDataObject *object,
+                          [out] IAssocHandlerInvoker **invoker);
+}
+
+[
+    uuid(973810ae-9599-4b88-9e4d-6ee98c9552da),
+    object,
+    pointer_default(unique)
+]
+interface IEnumAssocHandlers : IUnknown
+{
+    HRESULT Next([in]  ULONG count,
+                 [out, size_is(count), length_is(*fetched)] IAssocHandler **handlers,
+                 [out] ULONG *fetched);
+}
+
+typedef enum ASSOC_FILTER
+{
+    ASSOC_FILTER_NONE = 0,
+    ASSOC_FILTER_RECOMMENDED
+} ASSOC_FILTER;
+cpp_quote("HRESULT WINAPI SHAssocEnumHandlers(PCWSTR extra, ASSOC_FILTER filter, IEnumAssocHandlers **handlersenum);")
+
+typedef [v1_enum] enum ACTIVATEOPTIONS
+{
+    AO_NONE             = 0x00000000,
+    AO_DESIGNMODE       = 0x00000001,
+    AO_NOERRORUI        = 0x00000002,
+    AO_NOSPLASHSCREEN   = 0x00000004
+} ACTIVATEOPTIONS;
+
+[
+    uuid(2e941141-7f97-4756-ba1d-9decde894a3d),
+    object,
+    pointer_default(unique)
+]
+interface IApplicationActivationManager : IUnknown
+{
+    HRESULT ActivateApplication([in] LPCWSTR appusermodelid,
+                                [in, unique] LPCWSTR arguments,
+                                [in] ACTIVATEOPTIONS options,
+                                [out] DWORD *processid);
+    HRESULT ActivateForFile([in] LPCWSTR appusermodelid,
+                            [in] IShellItemArray *itemarray,
+                            [in, unique] LPCWSTR verb,
+                            [out] DWORD *processid);
+    HRESULT ActivateForProtocol([in] LPCWSTR appusermodelid,
+                                [in] IShellItemArray *itemarray,
+                                [out] DWORD *processid);
+}
+
 /*****************************************************************************
  * ShellObjects typelibrary
  */
@@ -4523,4 +4251,210 @@ library ShellObjects
     coclass DestinationList {
         interface ICustomDestinationList;
     }
+
+    [
+        uuid(2d3468c1-36a7-43b6-ac24-d3f02fd9607a)
+    ]
+    coclass EnumerableObjectCollection
+    {
+        interface IEnumObjects;
+    }
+
+    [
+        uuid(331f1768-05a9-4ddd-b86e-dae34ddc998a)
+    ]
+    coclass QueryCancelAutoPlay
+    {
+        interface IQueryCancelAutoPlay;
+    }
+
+    [
+        uuid(9ac9fbe1-e0a2-4ad6-b4ee-e212013ea917)
+    ]
+    coclass ShellItem {
+        interface IShellItem2;
+    }
+
+    [
+        uuid(45ba127d-10a8-46ea-8ab7-56ea9078943c)
+    ]
+    coclass ApplicationActivationManager
+    {
+        interface IApplicationActivationManager;
+    }
+}
+
+enum _OPPROGDLGF
+{
+    OPPROGDLG_DEFAULT = 0,
+    OPPROGDLG_ENABLEPAUSE = 0x80,
+    OPPROGDLG_ALLOWUNDO = 0x100,
+    OPPROGDLG_DONTDISPLAYSOURCEPATH = 0x200,
+    OPPROGDLG_DONTDISPLAYDESTPATH = 0x400,
+    OPPROGDLG_NOMULTIDAYESTIMATES = 0x800,
+    OPPROGDLG_DONTDISPLAYLOCATIONS = 0x1000
+};
+typedef DWORD OPPROGDLGF;
+
+enum _PDMODE
+{
+    PDM_DEFAULT = 0,
+    PDM_RUN = 0x1,
+    PDM_PREFLIGHT = 0x2,
+    PDM_UNDOING = 0x4,
+    PDM_ERRORSBLOCKING = 0x8,
+    PDM_INDETERMINATE = 0x10
+};
+typedef DWORD PDMODE;
+
+typedef enum PDOPSTATUS
+{
+    PDOPS_RUNNING = 1,
+    PDOPS_PAUSED = 2,
+    PDOPS_CANCELLED = 3,
+    PDOPS_STOPPED = 4,
+    PDOPS_ERRORS = 5
+} 	PDOPSTATUS;
+
+typedef enum _SPACTION
+{
+    SPACTION_NONE = 0,
+    SPACTION_MOVING = 1,
+    SPACTION_COPYING = 2,
+    SPACTION_RECYCLING = 3,
+    SPACTION_APPLYINGATTRIBS = 4,
+    SPACTION_DOWNLOADING = 5,
+    SPACTION_SEARCHING_INTERNET = 6,
+    SPACTION_CALCULATING = 7,
+    SPACTION_UPLOADING = 8,
+    SPACTION_SEARCHING_FILES = 9,
+    SPACTION_DELETING = 10,
+    SPACTION_RENAMING = 11,
+    SPACTION_FORMATTING = 12,
+    SPACTION_COPY_MOVING = 13
+} 	SPACTION;
+
+[
+    uuid(0C9FB851-E5C9-43EB-A370-F0677B13874C),
+    object,
+    pointer_default(unique)
+]
+interface IOperationsProgressDialog : IUnknown
+{
+     HRESULT StartProgressDialog(
+         [in] HWND hwndOwner,
+         [in] OPPROGDLGF flags);
+     HRESULT StopProgressDialog();
+     HRESULT SetOperation(
+         [in] SPACTION action);
+     HRESULT SetMode(
+         [in] PDMODE mode);
+     HRESULT UpdateProgress(
+        [in] ULONGLONG ullPointsCurrent,
+        [in] ULONGLONG ullPointsTotal,
+        [in] ULONGLONG ullSizeCurrent,
+        [in] ULONGLONG ullSizeTotal,
+        [in] ULONGLONG ullItemsCurrent,
+        [in] ULONGLONG ullItemsTotal);
+     HRESULT UpdateLocations(
+         [in, optional] IShellItem *psiSource,
+         [in, optional] IShellItem *psiTarget,
+         [in, optional] IShellItem *psiItem);
+     HRESULT ResetTimer();
+     HRESULT PauseTimer();
+     HRESULT ResumeTimer();
+     HRESULT GetMilliseconds(
+         [out] ULONGLONG *pullElapsed, 
+         [out] ULONGLONG *pullRemaining);
+     HRESULT GetOperationStatus(
+         [out] PDOPSTATUS *popstatus);
+};
+
+[
+    uuid(947aab5f-0a5c-4c13-b4d6-4bf7836fc9f8),
+    object,
+    pointer_default(unique)
+]
+interface IFileOperation : IUnknown
+{
+     HRESULT Advise(
+         [in] IFileOperationProgressSink *pfops, 
+         [out] DWORD *pdwCookie);
+     HRESULT Unadvise(
+         [in] DWORD dwCookie);
+     HRESULT SetOperationFlags(
+         [in] DWORD dwOperationFlags);
+     HRESULT SetProgressMessage(
+         [in] LPCWSTR pszMessage);
+     HRESULT SetProgressDialog(
+         [in] IOperationsProgressDialog *popd);
+     HRESULT SetProperties(
+         [in] IPropertyChangeArray *pproparray);
+     HRESULT SetOwnerWindow(
+         [in] HWND hwndOwner);
+     HRESULT ApplyPropertiesToItem(
+         [in] IShellItem *psiItem);
+     HRESULT ApplyPropertiesToItems(
+         [in] IUnknown *punkItems);
+     HRESULT RenameItem(
+         [in] IShellItem *psiItem, 
+         [in] LPCWSTR pszNewName,
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT RenameItems(
+         [in] IUnknown *pUnkItems,
+         [in] LPCWSTR pszNewName);
+     HRESULT MoveItem(
+         [in] IShellItem *psiItem, 
+         [in] IShellItem *psiDestinationFolder, 
+         [in] LPCWSTR pszNewName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT MoveItems(
+         [in] IUnknown *punkItems,
+         [in] IShellItem *psiDestinationFolder);
+     HRESULT CopyItem(
+         [in] IShellItem *psiItem, 
+         [in] IShellItem *psiDestinationFolder, 
+         [in] LPCWSTR pszCopyName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT CopyItems(
+         [in] IUnknown *punkItems, 
+         [in] IShellItem *psiDestinationFolder);
+     HRESULT DeleteItem(
+         [in] IShellItem *psiItem, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT DeleteItems(
+         [in] IUnknown *punkItems);
+     HRESULT NewItem(
+         [in] IShellItem *psiDestinationFolder, 
+         [in] DWORD dwFileAttributes, 
+         [in] LPCWSTR pszName, 
+         [in] LPCWSTR pszTemplateName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT PerformOperations();
+     HRESULT GetAnyOperationsAborted(
+         [out] BOOL *pfAnyOperationsAborted);
+};
+
+[
+    uuid(6CCB7BE0-6807-11d0-B810-00C04FD706EC),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface IShellTaskScheduler : IUnknown
+{
+    HRESULT AddTask(
+        [in] IRunnableTask *pTask, 
+        [in] REFGUID rtoid, 
+        [in] DWORD_PTR lParam, 
+        [in] DWORD dwPriority);
+    HRESULT RemoveTasks(
+        [in] REFGUID rtoid, 
+        [in] DWORD_PTR lParam, 
+        [in] BOOL fWaitIfRunning);
+    UINT CountTasks(
+        [in] REFGUID rtoid);
+    HRESULT Status(
+        [in] DWORD dwReleaseStatus, 
+        [in] DWORD dwThreadTimeout);
 }

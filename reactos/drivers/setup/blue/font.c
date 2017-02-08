@@ -10,8 +10,9 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ntddk.h>
 #include "blue.h"
+
+#include <ntddk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -79,7 +80,7 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &LinkName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -194,7 +195,7 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
 
 /* Font-load specific funcs */
 VOID
-OpenBitPlane()
+OpenBitPlane(VOID)
 {
     /* disable interrupts */
     _disable();
@@ -215,7 +216,7 @@ OpenBitPlane()
 }
 
 VOID
-CloseBitPlane()
+CloseBitPlane(VOID)
 {
     /* disable interrupts */
     _disable();
@@ -256,4 +257,3 @@ LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield)
         }
     }
 }
-

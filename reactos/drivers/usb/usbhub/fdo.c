@@ -8,8 +8,12 @@
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
 #include "usbhub.h"
+
+#include <stdio.h>
+
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS
 QueryStatusChangeEndpoint(
@@ -206,7 +210,7 @@ DeviceStatusChangeThread(
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PWORK_ITEM_DATA WorkItemData;
     PORT_STATUS_CHANGE PortStatus;
-    LONG PortId;
+    ULONG PortId;
     BOOLEAN SignalResetComplete = FALSE;
 
     DPRINT("Entered DeviceStatusChangeThread, Context %x\n", Context);
@@ -231,8 +235,8 @@ DeviceStatusChangeThread(
             return;
         }
 
-        DPRINT1("Port %d Status %x\n", PortId, PortStatus.Status);
-        DPRINT1("Port %d Change %x\n", PortId, PortStatus.Change);
+        DPRINT("Port %d Status %x\n", PortId, PortStatus.Status);
+        DPRINT("Port %d Change %x\n", PortId, PortStatus.Change);
 
 
         //
@@ -241,7 +245,7 @@ DeviceStatusChangeThread(
         if (PortStatus.Change & USB_PORT_STATUS_CONNECT)
         {
             //
-            // Clear Port Connect 
+            // Clear Port Connect
             //
             Status = ClearPortFeature(RootHubDeviceObject, PortId, C_PORT_CONNECTION);
             if (!NT_SUCCESS(Status))
@@ -322,8 +326,8 @@ DeviceStatusChangeThread(
                 return;
             }
 
-            DPRINT1("Port %d Status %x\n", PortId, PortStatus.Status);
-            DPRINT1("Port %d Change %x\n", PortId, PortStatus.Change);
+            DPRINT("Port %d Status %x\n", PortId, PortStatus.Status);
+            DPRINT("Port %d Change %x\n", PortId, PortStatus.Change);
 
             //
             // Check that reset was cleared
@@ -436,7 +440,6 @@ NTSTATUS
 QueryStatusChangeEndpoint(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    NTSTATUS Status;
     PDEVICE_OBJECT RootHubDeviceObject;
     PIO_STACK_LOCATION Stack;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
@@ -520,7 +523,7 @@ QueryStatusChangeEndpoint(
     //
     DPRINT("DeviceObject is %x\n", DeviceObject);
     DPRINT("Iocalldriver %x with irp %x\n", RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
-    Status = IoCallDriver(RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
+    IoCallDriver(RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
 
     return STATUS_PENDING;
 }
@@ -791,7 +794,7 @@ IsCompositeDevice(
         return TRUE;
     }
 
-    if (DeviceDescriptor->bDeviceClass == 0xEF && 
+    if (DeviceDescriptor->bDeviceClass == 0xEF &&
         DeviceDescriptor->bDeviceSubClass == 0x02 &&
         DeviceDescriptor->bDeviceProtocol == 0x01)
     {
@@ -846,6 +849,12 @@ CreateDeviceIds(
     // use first interface descriptor available
     //
     InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, 0, -1, -1, -1, -1);
+    if (InterfaceDescriptor == NULL)
+    {
+         DPRINT1("Error USBD_ParseConfigurationDescriptorEx failed to parse interface descriptor\n");
+         return STATUS_INVALID_PARAMETER;
+    }
+
     ASSERT(InterfaceDescriptor);
 
     //
@@ -879,7 +888,7 @@ CreateDeviceIds(
 
         if (DeviceDescriptor->bDeviceClass == 0)
         {
-            Index += swprintf(&Buffer[Index], 
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           InterfaceDescriptor->bInterfaceClass, InterfaceDescriptor->bInterfaceSubClass, InterfaceDescriptor->bInterfaceProtocol) + 1;
             Index += swprintf(&Buffer[Index],
@@ -891,7 +900,7 @@ CreateDeviceIds(
         }
         else
         {
-            Index += swprintf(&Buffer[Index], 
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
             Index += swprintf(&Buffer[Index],
@@ -955,7 +964,7 @@ CreateDeviceIds(
     // Construct HardwareIds
     //
     Index = 0;
-    Index += swprintf(&Buffer[Index], 
+    Index += swprintf(&Buffer[Index],
                       L"USB\\Vid_%04x&Pid_%04x&Rev_%04x",
                       UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct, UsbChildExtension->DeviceDesc.bcdDevice) + 1;
     Index += swprintf(&Buffer[Index],
@@ -1137,7 +1146,7 @@ CreateUsbChildDeviceObject(
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
     HubInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
     //
-    // Find an empty slot in the child device array 
+    // Find an empty slot in the child device array
     //
     for (ChildDeviceCount = 0; ChildDeviceCount < USB_MAXCHILDREN; ChildDeviceCount++)
     {
@@ -1269,8 +1278,8 @@ CreateUsbChildDeviceObject(
         goto Cleanup;
     }
 
-    DumpDeviceDescriptor(&UsbChildExtension->DeviceDesc);
-    DumpConfigurationDescriptor(&ConfigDesc);
+    //DumpDeviceDescriptor(&UsbChildExtension->DeviceDesc);
+    //DumpConfigurationDescriptor(&ConfigDesc);
 
     //
     // FIXME: Support more than one configuration and one interface?
@@ -1282,7 +1291,7 @@ CreateUsbChildDeviceObject(
 
     if (ConfigDesc.bNumInterfaces > 1)
     {
-        DPRINT1("Warning: Device has more that one interface. Only one interface (the first) is currently supported\n");
+        DPRINT1("Warning: Device has more than one interface. Only one interface (the first) is currently supported\n");
     }
 
     ConfigDescSize = ConfigDesc.wTotalLength;
@@ -1309,7 +1318,7 @@ CreateUsbChildDeviceObject(
     }
 
     // query device details
-    Status = HubInterface->QueryDeviceInformation(HubInterfaceBusContext, 
+    Status = HubInterface->QueryDeviceInformation(HubInterfaceBusContext,
                                          UsbChildExtension->UsbDeviceHandle,
                                          &UsbChildExtension->DeviceInformation,
                                          sizeof(USB_DEVICE_INFORMATION_0),
@@ -1319,7 +1328,7 @@ CreateUsbChildDeviceObject(
     //DumpFullConfigurationDescriptor(UsbChildExtension->FullConfigDesc);
 
     //
-    // Construct all the strings that will described the device to PNP
+    // Construct all the strings that will describe the device to PNP
     //
     Status = CreateDeviceIds(NewChildDeviceObject);
     if (!NT_SUCCESS(Status))
@@ -1509,15 +1518,11 @@ USBHUB_FdoStartDevice(
     USBD_INTERFACE_LIST_ENTRY InterfaceList[2] = {{NULL, NULL}, {NULL, NULL}};
     PURB ConfigUrb = NULL;
     ULONG HubStatus;
-    PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PDEVICE_OBJECT RootHubDeviceObject;
-    PVOID HubInterfaceBusContext , UsbDInterfaceBusContext;
+    PVOID HubInterfaceBusContext;
     PORT_STATUS_CHANGE StatusChange;
-
-    // get current stack location
-    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     // get hub device extension
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
@@ -1610,8 +1615,6 @@ USBHUB_FdoStartDevice(
         return Status;
     }
 
-    UsbDInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
-
     // Get Root Hub Device Handle
     Status = SubmitRequestToRootHub(RootHubDeviceObject,
                                     IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE,
@@ -1635,13 +1638,13 @@ USBHUB_FdoStartDevice(
                                                                         sizeof(USB_DEVICE_INFORMATION_0),
                                                                         &Result);
 
-    DPRINT1("Status %x, Result 0x%08lx\n", Status, Result);
-    DPRINT1("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
-    DPRINT1("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
-    DPRINT1("PortNumber %x\n", HubDeviceExtension->DeviceInformation.PortNumber);
-    DPRINT1("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
-    DPRINT1("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
-    DPRINT1("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
+    DPRINT("Status %x, Result 0x%08lx\n", Status, Result);
+    DPRINT("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
+    DPRINT("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
+    DPRINT("PortNumber %x\n", HubDeviceExtension->DeviceInformation.PortNumber);
+    DPRINT("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
+    DPRINT("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
+    DPRINT("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
 
     // Get Root Hubs Device Descriptor
     UsbBuildGetDescriptorRequest(Urb,
@@ -1734,7 +1737,7 @@ USBHUB_FdoStartDevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-    DPRINT1("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
+    DPRINT("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
 
     // Build hub descriptor request
     UsbBuildVendorRequest(Urb,
@@ -2219,7 +2222,7 @@ USBHUB_FdoHandleDeviceControl(
     }
     else
     {
-        DPRINT1("UNIMPLEMENTED FdoHandleDeviceControl IoCtl %x InputBufferLength %x OutputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, 
+        DPRINT1("UNIMPLEMENTED FdoHandleDeviceControl IoCtl %x InputBufferLength %x OutputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode,
            IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
     }
 

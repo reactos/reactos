@@ -24,15 +24,15 @@
 class CBandSiteBase :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBandSite,
-    public IWinEventHandler,
-    public IDeskBarClient,
-    public IOleCommandTarget,
-    public IInputObject,
     public IInputObjectSite,
-    public IServiceProvider,
+    public IInputObject,
+    public IDeskBarClient,
+    public IWinEventHandler,
     public IPersistStream,
     public IDropTarget,
-    public IBandSiteHelper
+    public IServiceProvider,
+    public IBandSiteHelper,
+    public IOleCommandTarget
 {
 private:
     struct BandObject
@@ -144,7 +144,7 @@ class CBandSite :
 public:
 
     DECLARE_REGISTRY_RESOURCEID(IDR_BANDSITE)
-    DECLARE_NOT_AGGREGATABLE(CBandSite)
+    DECLARE_AGGREGATABLE(CBandSite)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 };

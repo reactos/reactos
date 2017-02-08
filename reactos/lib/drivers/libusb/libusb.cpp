@@ -8,8 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-
 #include "libusb.h"
+
+#define NDEBUG
+#include <debug.h>
 
 //
 // driver verifier
@@ -28,7 +30,7 @@ USBLIB_AddDevice(
     NTSTATUS Status;
     PHCDCONTROLLER HcdController;
 
-    DPRINT1("USBLIB_AddDevice\n");
+    DPRINT("USBLIB_AddDevice\n");
 
     /* first create the controller object */
     Status = CreateHCDController(&HcdController);
@@ -65,7 +67,7 @@ extern
 NTSTATUS
 NTAPI
 USBLIB_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PCOMMON_DEVICE_EXTENSION DeviceExtension;
@@ -100,7 +102,7 @@ USBLIB_Dispatch(
         case IRP_MJ_POWER:
         {
             //
-            // dispatch pnp
+            // dispatch power
             //
             return DeviceExtension->Dispatcher->HandlePower(DeviceObject, Irp);
         }
@@ -108,9 +110,16 @@ USBLIB_Dispatch(
         case IRP_MJ_DEVICE_CONTROL:
         {
             //
-            // dispatch pnp
+            // dispatch io control
             //
             return DeviceExtension->Dispatcher->HandleDeviceControl(DeviceObject, Irp);
+        }
+        case IRP_MJ_SYSTEM_CONTROL:
+        {
+            //
+            // dispatch system control
+            //
+            return DeviceExtension->Dispatcher->HandleSystemControl(DeviceObject, Irp);
         }
         default:
         {

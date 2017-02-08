@@ -12,8 +12,8 @@ void sync() { __asm__("eieio\n\tsync"); }
 
 void PpcPrepPutChar( int ch ) {
     if( ch == 0x0a ) {
-	SetPhysByte(prep_serial, 0x0d);
-	sync();
+    SetPhysByte(prep_serial, 0x0d);
+    sync();
     }
     SetPhysByte(prep_serial, ch);
     sync();
@@ -26,8 +26,8 @@ BOOLEAN PpcPrepDiskReadLogicalSectors
 
     for(secct = 0; secct < SectorCount; secct++)
     {
-	ide_seek(&ide1_desc, SectorNumber + secct, 0);
-	ide_read(&ide1_desc, ((PCHAR)Buffer) + secct * 512, 512);
+    ide_seek(&ide1_desc, SectorNumber + secct, 0);
+    ide_read(&ide1_desc, ((PCHAR)Buffer) + secct * 512, 512);
     }
     /* Never give up! */
     return TRUE;
@@ -62,14 +62,10 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
     *Depth = 16;
 }
 
-void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
-{
-}
-
 VOID PpcInitializeMmu(int max);
 
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
-			   ULONG MaxMemoryMapSize )
+               ULONG MaxMemoryMapSize )
 {
     // Probe memory
     paddr_t physAddr;
@@ -82,8 +78,8 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     // Find the last ram address in physical space ... this bypasses mapping
     // but could run into non-ram objects right above ram.  Usually systems
     // aren't designed like that though.
-    for (physAddr = 0x40000, change = newStore; 
-         (physAddr < 0x80000000) && (change == newStore); 
+    for (physAddr = 0x40000, change = newStore;
+         (physAddr < 0x80000000) && (change == newStore);
          physAddr += 1 << 12)
     {
         oldStore = GetPhys(physAddr);
@@ -106,7 +102,7 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return 1;
 }
 
-/* Most PReP hardware is in standard locations, based on the corresponding 
+/* Most PReP hardware is in standard locations, based on the corresponding
  * hardware on PCs. */
 PCONFIGURATION_COMPONENT_DATA PpcPrepHwDetect() {
   PCONFIGURATION_COMPONENT_DATA SystemKey;
@@ -140,8 +136,6 @@ void PpcPrepInit()
     MachVtbl.VideoClearScreen = PpcPrepVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcPrepVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = PpcPrepVideoGetDisplaySize;
-
-    MachVtbl.VideoPrepareForReactOS = PpcPrepVideoPrepareForReactOS;
 
     MachVtbl.GetMemoryMap = PpcPrepGetMemoryMap;
     MachVtbl.HwDetect = PpcPrepHwDetect;

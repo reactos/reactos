@@ -4,7 +4,7 @@
  * FILE:            include/reactos/subsys/csr/csrmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between CSR Clients and Servers
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -32,13 +32,6 @@ typedef enum _CSRSRV_API_NUMBER
 } CSRSRV_API_NUMBER, *PCSRSRV_API_NUMBER;
 
 
-/*
-typedef struct _CSR_API_NUMBER
-{
-    WORD Index;
-    WORD Subsystem;
-} CSR_API_NUMBER, *PCSR_API_NUMBER;
-*/
 typedef ULONG CSR_API_NUMBER;
 
 #define CSR_CREATE_API_NUMBER(ServerId, ApiId) \
@@ -51,21 +44,25 @@ typedef ULONG CSR_API_NUMBER;
     (ULONG)((ULONG)(ApiNumber) & 0xFFFF)
 
 
-typedef struct _CSR_CONNECTION_INFO
+typedef struct _CSR_API_CONNECTINFO
 {
-    ULONG Version;
-    ULONG Unknown;
-    HANDLE ObjectDirectory;
-    PVOID SharedSectionBase;
-    PVOID SharedSectionHeap;
-    PVOID SharedSectionData;
-    ULONG DebugFlags;
-    ULONG Unknown2[3];
-    HANDLE ProcessId;
-} CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
+    HANDLE ObjectDirectory; // Unused on Windows >= 2k3
+    PVOID  SharedSectionBase;
+    PVOID  SharedStaticServerData;
+    PVOID  SharedSectionHeap;
+    ULONG  DebugFlags;
+    ULONG  SizeOfPebData;
+    ULONG  SizeOfTebData;
+    ULONG  NumberOfServerDllNames;
+    HANDLE ServerProcessId;
+} CSR_API_CONNECTINFO, *PCSR_API_CONNECTINFO;
+
+#if defined(_M_IX86)
+C_ASSERT(sizeof(CSR_API_CONNECTINFO) == 0x24);
+#endif
 
 // We must have a size at most equal to the maximum acceptable LPC data size.
-C_ASSERT(sizeof(CSR_CONNECTION_INFO) <= LPC_MAX_DATA_LENGTH);
+C_ASSERT(sizeof(CSR_API_CONNECTINFO) <= LPC_MAX_DATA_LENGTH);
 
 
 typedef struct _CSR_IDENTIFY_ALTERTABLE_THREAD
@@ -107,7 +104,7 @@ typedef struct _CSR_API_MESSAGE
     PORT_MESSAGE Header;
     union
     {
-        CSR_CONNECTION_INFO ConnectionInfo; // Uniquely used in CSRSRV for internal signaling (opening a new connection).
+        CSR_API_CONNECTINFO ConnectionInfo; // Uniquely used in CSRSRV for internal signaling (opening a new connection).
         struct
         {
             PCSR_CAPTURE_BUFFER CsrCaptureData;
@@ -138,7 +135,7 @@ typedef struct _CSR_API_MESSAGE
                 // Finally, the overall message structure size must be at most
                 // equal to the maximum acceptable LPC message size.
                 //
-                ULONG_PTR Padding[35];
+                ULONG_PTR ApiMessageData[39];
             } Data;
         };
     };

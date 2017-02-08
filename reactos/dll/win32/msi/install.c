@@ -20,26 +20,7 @@
 
 /* Msi top level apis directly related to installs */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "msi.h"
-//#include "msidefs.h"
-#include <objbase.h>
-#include <oleauto.h>
-
 #include "msipriv.h"
-#include <msiserver.h>
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -592,7 +573,7 @@ UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolder
         const WCHAR *dir;
         MSICOMPONENT *comp = file->Component;
 
-        if (!comp->Enabled || (comp->assembly && !comp->assembly->application)) continue;
+        if (!comp->Enabled || msi_is_global_assembly( comp )) continue;
 
         dir = msi_get_target_folder( package, comp->Directory );
         msi_free( file->TargetPath );

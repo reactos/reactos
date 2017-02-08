@@ -352,7 +352,7 @@ static HGLOBAL get_unicode_text(ME_TextEditor *editor, const ME_Cursor *start, i
 
     ret = GlobalAlloc(GMEM_MOVEABLE, sizeof(WCHAR) * (nChars + pars + 1));
     data = GlobalLock(ret);
-    ME_GetTextW(editor, data, nChars + pars, start, nChars, TRUE);
+    ME_GetTextW(editor, data, nChars + pars, start, nChars, TRUE, FALSE);
     GlobalUnlock(ret);
     return ret;
 }

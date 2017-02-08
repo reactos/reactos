@@ -22,6 +22,11 @@ EXTERN KiXmmExceptionHandler:PROC
 EXTERN KiDeliverApc:PROC
 EXTERN KiDpcInterruptHandler:PROC
 
+#ifdef _WINKD_
+EXTERN KdSetOwedBreakpoints:PROC
+#endif
+
+
 /* GLOBALS *******************************************************************/
 
 .data
@@ -30,6 +35,55 @@ PUBLIC MsgUnimplemented
 MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
+MsgPageFault:
+.asciz "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n"
+
+MsgGeneralProtFault:
+.asciz "General protection fault at %p!\n"
+
+MsgBreakpointTrap:
+.asciz "BreakpointTrap at %p\n"
+
+MsgUnexpectedInterrupt:
+.asciz "UnexpectedInterrupt Vector=0x%02lx\n"
+
+MsgInvalidOpcodeFault:
+.asciz "Invalid opcode fault at %p!\n"
+
+MsgDoubleFault:
+.asciz "Double fault at %p, rbp=%p!\n"
+
+MsgTrapInfo:
+.asciz "Trap: %s at %p\n"
+
+MACRO(TRAPINFO, func)
+LOCAL label1, label2
+#if 0
+    jmp label2
+label1:  .asciz "\func"
+label2:
+    push rax
+    push rcx
+    push rdx
+    push r8
+    push r9
+    push r10
+    push r11
+    sub rsp, 32
+    lea rcx, MsgTrapInfo[rip]
+    lea rdx, 1b[rip]
+    mov r8, [rbp + KTRAP_FRAME_Rip]
+    call qword ptr FrLdrDbgPrint[rip]
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdx
+    pop rcx
+    pop rax
+    add rsp, 32
+#endif
+ENDM
 
 /* Helper Macros *************************************************************/
 
@@ -87,7 +141,7 @@ KiInterruptDispatchTemplate:
 
 
 // rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
-.PROC InternalDispatchException
+FUNC InternalDispatchException
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
     sub rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
@@ -155,7 +209,7 @@ KiInterruptDispatchTemplate:
 
     add rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
     ret
-.ENDP
+ENDFUNC
 
 
 /* CPU EXCEPTION HANDLERS ****************************************************/
@@ -180,6 +234,8 @@ PUBLIC KiDebugTrapOrFault
 FUNC KiDebugTrapOrFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
+
+    TRAPINFO KiDebugTrapOrFault
 
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
@@ -276,6 +332,12 @@ FUNC KiInvalidOpcodeFault
    /* No error code */
     EnterTrap TF_SAVE_ALL
 
+    TRAPINFO KiInvalidOpcodeFault
+
+    mov rdx, [rbp + KTRAP_FRAME_Rip]
+    lea rcx, MsgInvalidOpcodeFault[rip]
+    call qword ptr FrLdrDbgPrint[rip]
+
     /* Enable interrupts */
     sti
 
@@ -323,6 +385,11 @@ FUNC KiDoubleFaultAbort
    /* No error code */
     EnterTrap TF_SAVE_ALL
 
+    lea rcx, MsgDoubleFault[rip]
+    mov rdx, [rbp + KTRAP_FRAME_FaultAddress]
+    mov r8, rbp
+    call qword ptr FrLdrDbgPrint[rip]
+
     /* Bugcheck */
     Fatal 8 // EXCEPTION_DOUBLE_FAULT
     jmp $
@@ -336,6 +403,7 @@ FUNC KiNpxSegmentOverrunAbort
 
     /* Bugcheck */
     Fatal EXCEPTION_NPX_OVERRUN
+
     jmp $
 ENDFUNC
 
@@ -378,6 +446,11 @@ FUNC KiGeneralProtectionFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
+    //TRAPINFO KiGeneralProtectionFault
+    //mov rdx, [rbp + KTRAP_FRAME_Rip]
+    //lea rcx, MsgGeneralProtFault[rip]
+    //call qword ptr FrLdrDbgPrint[rip]
+
     /* Call the C handler */
     mov rcx, rbp
     call KiGeneralProtectionFaultHandler
@@ -412,6 +485,16 @@ FUNC KiPageFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
+    TRAPINFO KiPageFault
+
+#if 0
+    lea rcx, MsgPageFault[rip]
+    mov rdx, [rbp + KTRAP_FRAME_ErrorCode]
+    mov r8, [rbp + KTRAP_FRAME_Rip]
+    mov r9, [rbp + KTRAP_FRAME_FaultAddress]
+    call qword ptr FrLdrDbgPrint[rip]
+#endif
+
     /* Save page fault address */
     mov rdx, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
@@ -430,7 +513,18 @@ FUNC KiPageFault
 
     /* Check for success */
     test eax, eax
+#ifndef _WINKD_
     jge PageFaultReturn
+#else
+    jl PageFaultError
+
+    /* Check whether the kernel debugger has owed breakpoints to be inserted */
+    call KdSetOwedBreakpoints
+    /* We succeeded, return */
+    jmp PageFaultReturn
+
+PageFaultError:
+#endif
 
     /* Disable interrupts again for the debugger */
     cli
@@ -449,7 +543,6 @@ FUNC KiPageFault
     je SpecialCode
 
 InPageException:
-
     /* Dispatch in-page exception */
     mov r11d, eax // Param3 = Status
     mov eax, STATUS_IN_PAGE_ERROR // ExceptionCode
@@ -548,9 +641,11 @@ ENDFUNC
 
 
 PUBLIC KiDebugServiceTrap
-.PROC KiDebugServiceTrap
+FUNC KiDebugServiceTrap
    /* No error code */
     EnterTrap TF_SAVE_ALL
+
+    TRAPINFO KiDebugServiceTrap
 
     /* Increase Rip to skip the int3 */
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
@@ -560,7 +655,7 @@ PUBLIC KiDebugServiceTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-.ENDP
+ENDFUNC
 
 
 PUBLIC KiApcInterrupt

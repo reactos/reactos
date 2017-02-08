@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/ntuser/kbdlayout.c
+ * FILE:            win32ss/user/ntuser/kbdlayout.c
  * PURPOSE:         Keyboard layout management
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
@@ -9,10 +9,15 @@
  */
 
 #include <win32k.h>
+
+#include <winnls.h>
+
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 
 PKL gspklBaseLayout = NULL;
 PKBDFILE gpkfList = NULL;
+DWORD gSystemFS = 0;
+UINT gSystemCPCharSet = 0;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
@@ -199,7 +204,7 @@ cleanup:
  * Loads keyboard layout and creates KL object
  */
 static PKL
-UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
+UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
 {
     LCID lCid;
     CHARSETINFO cs;
@@ -214,7 +219,7 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     }
 
     pKl->hkl = hKL;
-    pKl->spkf = UserLoadKbdFile(pwszKLID);
+    pKl->spkf = UserLoadKbdFile(pustrKLID);
 
     /* Dereference keyboard layout */
     UserDereferenceObject(pKl);
@@ -222,26 +227,40 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     /* If we failed, remove KL object */
     if (!pKl->spkf)
     {
-        ERR("UserLoadKbdFile(%wZ) failed!\n", pwszKLID);
+        ERR("UserLoadKbdFile(%wZ) failed!\n", pustrKLID);
         UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
         return NULL;
     }
 
     // Up to Language Identifiers..
-    RtlUnicodeStringToInteger(pwszKLID, (ULONG)16, (PULONG)&lCid);
-    TRACE("Language Identifiers %wZ LCID 0x%x\n", pwszKLID, lCid);
+    if (!NT_SUCCESS(RtlUnicodeStringToInteger(pustrKLID, 16, (PULONG)&lCid)))
+    {
+        ERR("RtlUnicodeStringToInteger failed for '%wZ'\n", pustrKLID);
+        UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
+        return NULL;
+    }
+
+    TRACE("Language Identifiers %wZ LCID 0x%x\n", pustrKLID, lCid);
     if (co_IntGetCharsetInfo(lCid, &cs))
     {
        pKl->iBaseCharset = cs.ciCharset;
        pKl->dwFontSigs = cs.fs.fsCsb[0];
        pKl->CodePage = (USHORT)cs.ciACP;
-       TRACE("Charset %d Font Sig %d CodePage %d\n", pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
+       TRACE("Charset %u Font Sig %lu CodePage %u\n",
+             pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
     }
     else
     {
        pKl->iBaseCharset = ANSI_CHARSET;
        pKl->dwFontSigs = FS_LATIN1;
        pKl->CodePage = CP_ACP;
+    }
+
+    // Set initial system character set and font signature.
+    if (gSystemFS == 0)
+    {
+       gSystemCPCharSet = pKl->iBaseCharset;
+       gSystemFS = pKl->dwFontSigs;
     }
 
     return pKl;
@@ -447,7 +466,7 @@ UserGetKeyboardLayout(
 
     pti = PsGetThreadWin32Thread(pThread);
     pKl = pti->KeyboardLayout;
-    hKl = pKl ? pKl->hkl : NULL;;
+    hKl = pKl ? pKl->hkl : NULL;
     ObDereferenceObject(pThread);
     return hKl;
 }
@@ -472,7 +491,10 @@ NtUserGetKeyboardLayoutList(
     UserEnterShared();
 
     if (!gspklBaseLayout)
+    {
+        UserLeave();
         return 0;
+    }
     pKl = gspklBaseLayout;
 
     if (nBuff == 0)
@@ -572,7 +594,7 @@ NtUserLoadKeyboardLayoutEx(
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
-                  KLF_RESET|KLF_SETFORPROCESS|KLF_SHIFTLOCK))
+                  KLF_RESET|KLF_SHIFTLOCK))
     {
         ERR("Invalid flags: %x\n", Flags);
         EngSetLastError(ERROR_INVALID_FLAGS);
@@ -695,7 +717,7 @@ NtUserActivateKeyboardLayout(
 
     if (!pKl)
     {
-        ERR("Invalid HKL %x!\n", hKl);
+        ERR("Invalid HKL %p!\n", hKl);
         goto cleanup;
     }
 
@@ -741,7 +763,7 @@ NtUserUnloadKeyboardLayout(
     if (pKl)
         bRet = UserUnloadKbl(pKl);
     else
-        ERR("Invalid HKL %x!\n", hKl);
+        ERR("Invalid HKL %p!\n", hKl);
 
     UserLeave();
     return bRet;

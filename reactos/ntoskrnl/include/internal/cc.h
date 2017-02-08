@@ -1,5 +1,46 @@
 #pragma once
 
+//
+// Define this if you want debugging support
+//
+#define _CC_DEBUG_                                      0x00
+
+//
+// These define the Debug Masks Supported
+//
+#define CC_API_DEBUG                                    0x01
+
+//
+// Debug/Tracing support
+//
+#if _CC_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define CCTRACE(x, ...)                                     \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
+#else
+#define CCTRACE(x, ...)                                     \
+    if (x & CcRosTraceLevel)                                \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
+#endif
+#else
+#define CCTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
+#endif
+
+//
+// Global Cc Data
+//
+extern ULONG CcRosTraceLevel;
+
 typedef struct _PF_SCENARIO_ID
 {
     WCHAR ScenName[30];
@@ -101,66 +142,59 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
     LONG ActivePrefetches;
 } PFSN_PREFETCHER_GLOBALS, *PPFSN_PREFETCHER_GLOBALS;
 
-typedef struct _BCB
+typedef struct _ROS_SHARED_CACHE_MAP
 {
-    LIST_ENTRY BcbSegmentListHead;
-    LIST_ENTRY BcbRemoveListEntry;
-    BOOLEAN RemoveOnClose;
+    LIST_ENTRY CacheMapVacbListHead;
     ULONG TimeStamp;
     PFILE_OBJECT FileObject;
-    ULONG CacheSegmentSize;
-    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER SectionSize;
     LARGE_INTEGER FileSize;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
-    KSPIN_LOCK BcbLock;
+    KSPIN_LOCK CacheMapLock;
     ULONG RefCount;
 #if DBG
-	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
+    BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
-} BCB, *PBCB;
+} ROS_SHARED_CACHE_MAP, *PROS_SHARED_CACHE_MAP;
 
-typedef struct _CACHE_SEGMENT
+typedef struct _ROS_VACB
 {
-    /* Base address of the region where the cache segment data is mapped. */
+    /* Base address of the region where the view's data is mapped. */
     PVOID BaseAddress;
-    /*
-     * Memory area representing the region where the cache segment data is
-     * mapped.
-     */
+    /* Memory area representing the region where the view's data is mapped. */
     struct _MEMORY_AREA* MemoryArea;
-    /* Are the contents of the cache segment data valid. */
+    /* Are the contents of the view valid. */
     BOOLEAN Valid;
-    /* Are the contents of the cache segment data newer than those on disk. */
+    /* Are the contents of the view newer than those on disk. */
     BOOLEAN Dirty;
     /* Page out in progress */
     BOOLEAN PageOut;
     ULONG MappedCount;
-    /* Entry in the list of segments for this BCB. */
-    LIST_ENTRY BcbSegmentListEntry;
-    /* Entry in the list of segments which are dirty. */
-    LIST_ENTRY DirtySegmentListEntry;
-    /* Entry in the list of segments. */
-    LIST_ENTRY CacheSegmentListEntry;
-    LIST_ENTRY CacheSegmentLRUListEntry;
-    /* Offset in the file which this cache segment maps. */
-    ULONG FileOffset;
+    /* Entry in the list of VACBs for this shared cache map. */
+    LIST_ENTRY CacheMapVacbListEntry;
+    /* Entry in the list of VACBs which are dirty. */
+    LIST_ENTRY DirtyVacbListEntry;
+    /* Entry in the list of VACBs. */
+    LIST_ENTRY VacbLruListEntry;
+    /* Offset in the file which this view maps. */
+    LARGE_INTEGER FileOffset;
     /* Mutex */
     KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
-    /* Pointer to the BCB for the file which this cache segment maps data for. */
-    PBCB Bcb;
-    /* Pointer to the next cache segment in a chain. */
-    struct _CACHE_SEGMENT* NextInChain;
-} CACHE_SEGMENT, *PCACHE_SEGMENT;
+    /* Pointer to the shared cache map for the file which this view maps data for. */
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    /* Pointer to the next VACB in a chain. */
+} ROS_VACB, *PROS_VACB;
 
 typedef struct _INTERNAL_BCB
 {
     PUBLIC_BCB PFCB;
-    PCACHE_SEGMENT CacheSegment;
+    PROS_VACB Vacb;
     BOOLEAN Dirty;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
+    PVOID OwnerPointer;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID
@@ -172,8 +206,8 @@ CcPfInitializePrefetcher(
 VOID
 NTAPI
 CcMdlReadComplete2(
-    IN PMDL MemoryDescriptorList,
-    IN PFILE_OBJECT FileObject
+    IN PFILE_OBJECT FileObject,
+    IN PMDL MemoryDescriptorList
 );
 
 VOID
@@ -186,17 +220,17 @@ CcMdlWriteComplete2(
 
 NTSTATUS
 NTAPI
-CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment);
+CcRosFlushVacb(PROS_VACB Vacb);
 
 NTSTATUS
 NTAPI
-CcRosGetCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset,
-    PULONG BaseOffset,
+CcRosGetVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    LONGLONG FileOffset,
+    PLONGLONG BaseOffset,
     PVOID *BaseAddress,
     PBOOLEAN UptoDate,
-    PCACHE_SEGMENT *CacheSeg
+    PROS_VACB *Vacb
 );
 
 VOID
@@ -205,18 +239,11 @@ CcInitView(VOID);
 
 NTSTATUS
 NTAPI
-CcRosFreeCacheSegment(
-    PBCB,
-    PCACHE_SEGMENT
-);
+CcReadVirtualAddress(PROS_VACB Vacb);
 
 NTSTATUS
 NTAPI
-ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
-
-NTSTATUS
-NTAPI
-WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
+CcWriteVirtualAddress(PROS_VACB Vacb);
 
 BOOLEAN
 NTAPI
@@ -224,26 +251,17 @@ CcInitializeCacheManager(VOID);
 
 NTSTATUS
 NTAPI
-CcRosUnmapCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset,
+CcRosUnmapVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    LONGLONG FileOffset,
     BOOLEAN NowDirty
 );
 
-PCACHE_SEGMENT
+PROS_VACB
 NTAPI
-CcRosLookupCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset
-);
-
-NTSTATUS
-NTAPI
-CcRosGetCacheSegmentChain(
-    PBCB Bcb,
-    ULONG FileOffset,
-    ULONG Length,
-    PCACHE_SEGMENT* CacheSeg
+CcRosLookupVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    LONGLONG FileOffset
 );
 
 VOID
@@ -252,9 +270,9 @@ CcInitCacheZeroPage(VOID);
 
 NTSTATUS
 NTAPI
-CcRosMarkDirtyCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset
+CcRosMarkDirtyVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    LONGLONG FileOffset
 );
 
 NTSTATUS
@@ -275,13 +293,13 @@ CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 VOID
 NTAPI
-CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
+CcRosRemoveIfClosed(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 NTSTATUS
 NTAPI
-CcRosReleaseCacheSegment(
-    BCB* Bcb,
-    CACHE_SEGMENT *CacheSeg,
+CcRosReleaseVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    PROS_VACB Vacb,
     BOOLEAN Valid,
     BOOLEAN Dirty,
     BOOLEAN Mapped
@@ -289,19 +307,19 @@ CcRosReleaseCacheSegment(
 
 NTSTATUS
 NTAPI
-CcRosRequestCacheSegment(
-    BCB *Bcb,
-    ULONG FileOffset,
+CcRosRequestVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    LONGLONG FileOffset,
     PVOID* BaseAddress,
     PBOOLEAN UptoDate,
-    CACHE_SEGMENT **CacheSeg
+    PROS_VACB *Vacb
 );
 
 NTSTATUS
 NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
-    ULONG CacheSegmentSize,
+    PCC_FILE_SIZES FileSizes,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext
 );
@@ -315,3 +333,28 @@ CcRosReleaseFileCache(
 NTSTATUS
 NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+
+FORCEINLINE
+BOOLEAN
+DoRangesIntersect(
+    _In_ LONGLONG Offset1,
+    _In_ LONGLONG Length1,
+    _In_ LONGLONG Offset2,
+    _In_ LONGLONG Length2)
+{
+    if (Offset1 + Length1 <= Offset2)
+        return FALSE;
+    if (Offset2 + Length2 <= Offset1)
+        return FALSE;
+    return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+IsPointInRange(
+    _In_ LONGLONG Offset1,
+    _In_ LONGLONG Length1,
+    _In_ LONGLONG Point)
+{
+    return DoRangesIntersect(Offset1, Length1, Point, 1);
+}

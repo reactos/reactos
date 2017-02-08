@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            include/reactos/subsystems/sm/smmsg.h
+ * FILE:            include/reactos/subsys/sm/smmsg.h
  * PURPOSE:         SMSS (SB and SM) Message Format
  * PROGRAMMERS:     Alex Ionescu
  */
@@ -244,7 +244,7 @@ SmConnectToSm(
     IN PUNICODE_STRING SbApiPortName,
     IN HANDLE SbApiPort,
     IN ULONG ImageType,
-    IN HANDLE SmApiPort
+    OUT PHANDLE SmApiPort
 );
 
 NTSTATUS

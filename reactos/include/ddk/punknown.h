@@ -39,8 +39,8 @@ DEFINE_GUID(IID_IUnknown,
 
 DECLARE_INTERFACE(IUnknown) {
   STDMETHOD_(NTSTATUS, QueryInterface)( THIS_
-    IN  REFIID,
-    OUT PVOID*) PURE;
+    _In_ REFIID,
+    _COM_Outptr_ PVOID*) PURE;
 
   STDMETHOD_(ULONG, AddRef)( THIS ) PURE;
 
@@ -73,9 +73,9 @@ typedef IUnknown *PUNKNOWN;
 
 typedef HRESULT
 (NTAPI *PFNCREATEINSTANCE)(
-  OUT PUNKNOWN* Unknown,
-  IN REFCLSID ClassId,
-  IN PUNKNOWN OuterUnknown,
-  IN POOL_TYPE PoolType);
+  _Out_ PUNKNOWN* Unknown,
+  _In_ REFCLSID ClassId,
+  _In_ PUNKNOWN OuterUnknown,
+  _In_ POOL_TYPE PoolType);
 
 #endif /* _UNKNOWN_H_ */

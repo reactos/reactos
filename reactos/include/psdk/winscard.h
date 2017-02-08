@@ -24,6 +24,11 @@
 #include <winsmcrd.h>
 #include <scarderr.h>
 
+/* Valid scopes for contexts */
+#define SCARD_SCOPE_USER     0
+#define SCARD_SCOPE_TERMINAL 1
+#define SCARD_SCOPE_SYSTEM   2
+
 #ifndef _LPCBYTE_DEFINED
 #define _LPCBYTE_DEFINED
 typedef const BYTE *LPCBYTE;
@@ -129,7 +134,7 @@ LONG        WINAPI SCardLocateCardsByATRW(SCARDCONTEXT,LPSCARD_ATRMASK,DWORD,LPS
 #define     SCardLocateCardsByATR WINELIB_NAME_AW(SCardLocateCardsByATR)
 LONG        WINAPI SCardReconnect(SCARDHANDLE,DWORD,DWORD,DWORD,LPDWORD);
 LONG        WINAPI SCardReleaseContext(SCARDCONTEXT);
-void        WINAPI SCardReleaseStartedEvent(HANDLE);
+void        WINAPI SCardReleaseStartedEvent(void);
 LONG        WINAPI SCardRemoveReaderFromGroupA(SCARDCONTEXT,LPCSTR,LPCSTR);
 LONG        WINAPI SCardRemoveReaderFromGroupW(SCARDCONTEXT,LPCWSTR,LPCWSTR);
 #define     SCardRemoveReaderFromGroup WINELIB_NAME_AW(SCardRemoveReaderFromGroup)

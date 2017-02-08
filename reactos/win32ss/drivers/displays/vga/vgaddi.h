@@ -1,8 +1,10 @@
+#ifndef _VGADDI_PCH_
+#define _VGADDI_PCH_
+
 #define _WINBASE_
 #define _WINDOWS_H
 #include <stdarg.h>
 #include <windef.h>
-#include <guiddef.h>
 #include <wingdi.h>
 #include <winddi.h>
 #include <winioctl.h>
@@ -10,8 +12,6 @@
 #include <ioaccess.h>
 
 #include "vgavideo/vgavideo.h"
-#include "objects/brush.h"
-#include "objects/bitblt.h"
 
 #ifndef NDEBUG
 #define DPRINT DbgPrint
@@ -284,3 +284,5 @@ vgaReadScan(int x, int y, int w, void *b);
 
 VOID FASTCALL
 vgaWriteScan(int x, int y, int w, void *b);
+
+#endif /* _VGADDI_PCH_ */

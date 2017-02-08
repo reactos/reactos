@@ -1,0 +1,99 @@
+/*
+ * Copyright 2007 Daniel Nylander
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+  IDS_RESULTOBJDESC	"Infoga ett nytt %s-objekt i ditt dokument"
+  IDS_RESULTFILEOBJDESC	"Insert the contents of the file as an object into your document so that you may activate it using the program which created it."
+  IDS_BROWSE            "Bläddra"
+  IDS_NOTOLEMOD         "File does not appear to be a valid OLE module. Unable to register OLE control."
+  IDS_NOTOLEMODCAPTION  "Add Control"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+}
+
+STRINGTABLE
+{
+    IDS_PS_PASTE_DATA                     "Inserts the contents of the clipboard into your document as %s."
+    IDS_PS_PASTE_OBJECT                   "Inserts the contents of the clipboard into your document so that you can activate it using %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Inserts the contents of the clipboard into your document so that you can activate it using %s. It will be displayed as an icon."
+    IDS_PS_PASTE_LINK_DATA                "Inserts the contents of the clipboard into your document as %s. The data is linked to the source file so that changes to the file will be reflected in your document."
+    IDS_PS_PASTE_LINK_OBJECT              "Inserts a picture of the clipboard contents into your document. The picture is linked to the source file so that changes to the file will be reflected in your document."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Inserts a shortcut which points to the location of the clipboard contents. The shortcut is linked to the source file so that changes to the file will be reflected in your document."
+    IDS_PS_NON_OLE                        "Inserts the contents of the clipboard into your document."
+    IDS_PS_UNKNOWN_TYPE                   "Unknown Type"
+    IDS_PS_UNKNOWN_SRC                    "Unknown Source"
+    IDS_PS_UNKNOWN_APP                    "the program which created it"
+}
+
+UIINSERTOBJECT DIALOGEX  0, 0, 304, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Infoga objekt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Objekttyp:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,231,7,66,14
+    PUSHBUTTON      "Avbryt",IDCANCEL,231,24,66,14
+    GROUPBOX        "Resultat",IDC_RESULT,7,103,218,41
+    CONTROL         "Skapa ny",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,7,20,84,10
+    CONTROL         "Create Control",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
+    CONTROL         "Skapa från fil",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,84,10
+    LTEXT           "",IDC_RESULTDESC,49,112,169,26
+    PUSHBUTTON      "&Add Control...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    CONTROL         "Visa som ikon",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
+    PUSHBUTTON      "Bläddra...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
+    LTEXT           "Fil:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+IDD_PASTESPECIAL4 DIALOGEX 3, 15, 304, 160
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Paste Special"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "Källa:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "Klistra &in", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 73, 10
+    CONTROL       "Klistra in &länk", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 73, 10
+    LTEXT         "&Som:", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
+    CONTROL       "Avbryt", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
+    CONTROL       "&Hjälp", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
+    CONTROL       "&Visa som ikon", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
+    CONTROL       "Byt &ikon...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 121, 42, 34
+    CONTROL       "", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 120, 159, 35
+    CONTROL       "Resultat", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 110, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END

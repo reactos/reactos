@@ -22,7 +22,8 @@ Revision History:
 --*/
 
 #include "classp.h"
-#include "debug.h"
+
+#include <wmidata.h>
 
 #define GESN_TIMEOUT_VALUE (0x4)
 #define GESN_BUFFER_SIZE (0x8)
@@ -103,12 +104,7 @@ ClasspSendMediaStateIrp(
     IN ULONG CountDown
     );
 
-VOID
-NTAPI
-ClasspFailurePredict(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PFAILURE_PREDICTION_INFO Info
-    );
+IO_WORKITEM_ROUTINE ClasspFailurePredict;
 
 NTSTATUS
 NTAPI
@@ -164,7 +160,7 @@ ClassSendEjectionNotification(
     // non-MMC-compliant devices also from sense codes.
     //
 
-    DBGTRACE(ClassDebugTrace, ("ClassSendEjectionNotification: media EJECT_REQUEST"));    
+    DBGTRACE(ClassDebugTrace, ("ClassSendEjectionNotification: media EJECT_REQUEST"));
     ClasspSendNotification(FdoExtension,
                            &GUID_IO_MEDIA_EJECT_REQUEST,
                            0,
@@ -416,7 +412,7 @@ ClasspInterpretGesnData(
                            &GUID_IO_GENERIC_GESN_EVENT,
                            sizeof(NOTIFICATION_EVENT_STATUS_HEADER) + dataLength,
                            Header)
-*/                           
+*/
 
     switch (Header->NotificationClass) {
 
@@ -441,7 +437,7 @@ ClasspInterpretGesnData(
         KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                    "Classpnp => GESN::EXTERNAL: Event: %x Status %x Req %x\n",
                    externalInfo->ExternalEvent, externalInfo->ExternalStatus,
-                   (externalInfo->Request[0] >> 8) | externalInfo->Request[1]
+                   (externalInfo->Request[0] << 8) | externalInfo->Request[1]
                    ));
 
         RtlZeroMemory(&externalData, sizeof(DEVICE_EVENT_EXTERNAL_REQUEST));
@@ -454,7 +450,7 @@ ClasspInterpretGesnData(
         KeQuerySystemTime(&(externalData.SystemTime));
         externalData.SystemTime.QuadPart *= (LONGLONG)KeQueryTimeIncrement();
 
-        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media DEVICE_EXTERNAL_REQUEST"));        
+        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media DEVICE_EXTERNAL_REQUEST"));
         ClasspSendNotification(FdoExtension,
                                &GUID_IO_DEVICE_EXTERNAL_REQUEST,
                                sizeof(DEVICE_EVENT_EXTERNAL_REQUEST),
@@ -489,7 +485,7 @@ ClasspInterpretGesnData(
                 SET_FLAG(FdoExtension->DeviceObject->Flags, DO_VERIFY_VOLUME);
 
             }
-            InterlockedIncrement(&FdoExtension->MediaChangeCount);
+            InterlockedIncrement((PLONG)&FdoExtension->MediaChangeCount);
             ClasspSetMediaChangeStateEx(FdoExtension,
                                         MediaPresent,
                                         FALSE,
@@ -545,7 +541,7 @@ ClasspInterpretGesnData(
                    busyData.Estimated100msToReady
                    ));
 
-        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media BECOMING_READY"));                
+        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media BECOMING_READY"));
         ClasspSendNotification(FdoExtension,
                                &GUID_IO_DEVICE_BECOMING_READY,
                                sizeof(DEVICE_EVENT_BECOMING_READY),
@@ -559,7 +555,7 @@ ClasspInterpretGesnData(
 
     }
     
-    } // end switch on notification class    
+    } // end switch on notification class
     return;
 }
 
@@ -599,7 +595,7 @@ ClasspInternalSetMediaChangeState(
     )
 {
 #if DBG
-    PUCHAR states[] = {"Unknown", "Present", "Not Present"};
+    PCSTR states[] = {"Unknown", "Present", "Not Present"};
 #endif
     MEDIA_CHANGE_DETECTION_STATE oldMediaState;
     PMEDIA_CHANGE_DETECTION_INFO info = FdoExtension->MediaChangeDetectionInfo;
@@ -664,7 +660,7 @@ ClasspInternalSetMediaChangeState(
                                sizeof(ULONG),
                                &data);
 
-    } 
+    }
     else if (NewState == MediaNotPresent) {
 
         DBGTRACE(ClassDebugTrace, ("ClasspInternalSetMediaChangeState: media REMOVAL"));
@@ -818,9 +814,10 @@ NTAPI
 ClasspMediaChangeDetectionCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
-    PSCSI_REQUEST_BLOCK Srb
+    PVOID Context
     )
 {
+    PSCSI_REQUEST_BLOCK srb = Context;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData;
     PMEDIA_CHANGE_DETECTION_INFO info;
@@ -840,7 +837,7 @@ ClasspMediaChangeDetectionCompletion(
     info         = fdoExtension->MediaChangeDetectionInfo;
 
     ASSERT(info->MediaChangeIrp != NULL);
-    ASSERT(!TEST_FLAG(Srb->SrbStatus, SRB_STATUS_QUEUE_FROZEN));
+    ASSERT(!TEST_FLAG(srb->SrbStatus, SRB_STATUS_QUEUE_FROZEN));
     DBGTRACE(ClassDebugMCN, ("> ClasspMediaChangeDetectionCompletion: Device %p completed MCN irp %p.", DeviceObject, Irp));
 
     /*
@@ -855,37 +852,37 @@ ClasspMediaChangeDetectionCompletion(
      *  This hack only applies to drives with the CAUSE_NOT_REPORTABLE_HACK bit set; this
      *  is set by disk.sys when HackCauseNotReportableHack is set for the drive in its BadControllers list.
      */
-    if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
+    if ((SRB_STATUS(srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
         TEST_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_CAUSE_NOT_REPORTABLE_HACK) &&
-        (Srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseCode))){
+        (srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseCode))){
         
-        PSENSE_DATA senseData = Srb->SenseInfoBuffer;
+        PSENSE_DATA senseData = srb->SenseInfoBuffer;
         
-        if ((senseData->SenseKey == SCSI_SENSE_NOT_READY) && 
+        if ((senseData->SenseKey == SCSI_SENSE_NOT_READY) &&
             (senseData->AdditionalSenseCode == SCSI_ADSENSE_LUN_NOT_READY)){
-            Srb->SrbStatus = SRB_STATUS_SUCCESS;
+            srb->SrbStatus = SRB_STATUS_SUCCESS;
         }
-    }       
-        
+    }
+
 
     //
     // use ClassInterpretSenseInfo() to check for media state, and also
     // to call ClassError() with correct parameters.
     //
     status = STATUS_SUCCESS;
-    if (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) {
+    if (SRB_STATUS(srb->SrbStatus) != SRB_STATUS_SUCCESS) {
 
-        DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion - failed - srb status=%s, sense=%s/%s/%s.", DBGGETSRBSTATUSSTR(Srb), DBGGETSENSECODESTR(Srb), DBGGETADSENSECODESTR(Srb), DBGGETADSENSEQUALIFIERSTR(Srb)));
+        DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion - failed - srb status=%s, sense=%s/%s/%s.", DBGGETSRBSTATUSSTR(srb), DBGGETSENSECODESTR(srb), DBGGETADSENSECODESTR(srb), DBGGETADSENSEQUALIFIERSTR(srb)));
 
         ClassInterpretSenseInfo(DeviceObject,
-                                Srb,
+                                srb,
                                 IRP_MJ_SCSI,
                                 0,
                                 0,
                                 &status,
                                 NULL);
 
-    } 
+    }
     else {
         
         fdoData->LoggedTURFailureSinceLastIO = FALSE;
@@ -913,7 +910,7 @@ ClasspMediaChangeDetectionCompletion(
             status = STATUS_SUCCESS;
         }
 
-        if (!NT_SUCCESS(status)) {            
+        if (!NT_SUCCESS(status)) {
             DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion: GESN failed with status %x", status));
         } else {
 
@@ -936,8 +933,8 @@ ClasspMediaChangeDetectionCompletion(
     // free port-allocated sense buffer, if any.
     //
 
-    if (PORT_ALLOCATED_SENSE(fdoExtension, Srb)) {
-        FREE_PORT_ALLOCATED_SENSE_BUFFER(fdoExtension, Srb);
+    if (PORT_ALLOCATED_SENSE(fdoExtension, srb)) {
+        FREE_PORT_ALLOCATED_SENSE_BUFFER(fdoExtension, srb);
     }
 
     //
@@ -945,7 +942,7 @@ ClasspMediaChangeDetectionCompletion(
     //
 
     ASSERT(IoGetNextIrpStackLocation(Irp));
-    IoGetNextIrpStackLocation(Irp)->Parameters.Scsi.Srb = Srb;
+    IoGetNextIrpStackLocation(Irp)->Parameters.Scsi.Srb = srb;
 
     //
     // Reset the MCN timer.
@@ -1070,7 +1067,7 @@ ClasspPrepareMcnIrp(
     if (status == REMOVE_COMPLETE) {
         ASSERT(status != REMOVE_COMPLETE);
         return NULL;
-    } 
+    }
     else if (status == REMOVE_PENDING) {
         ClassReleaseRemoveLock(FdoExtension->DeviceObject, irp);
         return NULL;
@@ -2394,9 +2391,9 @@ ClasspIsMediaChangeDisabledDueToHardwareLimitation(
         //
 
         PWSTR nullMultiSz;
-        PUCHAR vendorId;
-        PUCHAR productId;
-        PUCHAR revisionId;
+        PCSTR vendorId;
+        PCSTR productId;
+        PCSTR revisionId;
         ULONG  length;
         ULONG  offset;
 
@@ -2417,21 +2414,21 @@ ClasspIsMediaChangeDisabledDueToHardwareLimitation(
         if (deviceDescriptor->VendorIdOffset == 0) {
             vendorId = NULL;
         } else {
-            vendorId = (PUCHAR) deviceDescriptor + deviceDescriptor->VendorIdOffset;
+            vendorId = (PCSTR) deviceDescriptor + deviceDescriptor->VendorIdOffset;
             length = strlen(vendorId);
         }
 
         if ( deviceDescriptor->ProductIdOffset == 0 ) {
             productId = NULL;
         } else {
-            productId = (PUCHAR) deviceDescriptor + deviceDescriptor->ProductIdOffset;
+            productId = (PCSTR) deviceDescriptor + deviceDescriptor->ProductIdOffset;
             length += strlen(productId);
         }
 
         if ( deviceDescriptor->ProductRevisionOffset == 0 ) {
             revisionId = NULL;
         } else {
-            revisionId = (PUCHAR) deviceDescriptor + deviceDescriptor->ProductRevisionOffset;
+            revisionId = (PCSTR) deviceDescriptor + deviceDescriptor->ProductRevisionOffset;
             length += strlen(revisionId);
         }
 
@@ -2441,10 +2438,10 @@ ClasspIsMediaChangeDisabledDueToHardwareLimitation(
 
         deviceString.Length = (USHORT)( length );
         deviceString.MaximumLength = deviceString.Length + 1;
-        deviceString.Buffer = (PUCHAR)ExAllocatePoolWithTag( NonPagedPool,
-                                                             deviceString.MaximumLength,
-                                                             CLASS_TAG_AUTORUN_DISABLE
-                                                             );
+        deviceString.Buffer = ExAllocatePoolWithTag( NonPagedPool,
+                                                     deviceString.MaximumLength,
+                                                     CLASS_TAG_AUTORUN_DISABLE
+                                                     );
         if (deviceString.Buffer == NULL) {
             DebugPrint((ClassDebugMCN,
                         "ClassMediaChangeDisabledForHardware: Unable to alloc "
@@ -2941,7 +2938,7 @@ ClasspMcnControl(
             //
 
             ClassDisableMediaChangeDetection(FdoExtension);
-            InterlockedIncrement(&(fsContext->McnDisableCount));
+            InterlockedIncrement((PLONG)&fsContext->McnDisableCount);
 
         } else {
 
@@ -2950,7 +2947,7 @@ ClasspMcnControl(
                 LEAVE;
             }
 
-            InterlockedDecrement(&(fsContext->McnDisableCount));
+            InterlockedDecrement((PLONG)&fsContext->McnDisableCount);
             ClassEnableMediaChangeDetection(FdoExtension);
         }
 
@@ -3144,7 +3141,7 @@ ClasspTimerTick(
                 // resets CountDown uses InterlockedExchange which is also
                 // atomic.
                 //
-                countDown = InterlockedDecrement(&info->CountDown);
+                countDown = InterlockedDecrement((PLONG)&info->CountDown);
                 if (countDown == 0) {
 
                     DebugPrint((4, "ClasspTimerTick: Send FP irp for %p\n",
@@ -3165,7 +3162,7 @@ ClasspTimerTick(
 
                             DebugPrint((1, "ClassTimerTick: Couldn't allocate "
                                            "item - try again in one minute\n"));
-                            InterlockedExchange(&info->CountDown, 60);
+                            InterlockedExchange((PLONG)&info->CountDown, 60);
 
                         } else {
 
@@ -3343,9 +3340,10 @@ VOID
 NTAPI
 ClasspFailurePredict(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PFAILURE_PREDICTION_INFO Info
+    IN PVOID Context
     )
 {
+    PFAILURE_PREDICTION_INFO info = Context;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
     PIO_WORKITEM workItem;
     STORAGE_PREDICT_FAILURE checkFailure;
@@ -3353,7 +3351,7 @@ ClasspFailurePredict(
 
     NTSTATUS status;
 
-    ASSERT(Info != NULL);
+    ASSERT(info != NULL);
 
     DebugPrint((1, "ClasspFailurePredict: Polling for failure\n"));
 
@@ -3364,8 +3362,8 @@ ClasspFailurePredict(
     // the lock.
     //
 
-    InterlockedExchange(&Info->CountDown, Info->Period);
-    workItem = InterlockedExchangePointer(&(Info->WorkQueueItem), NULL);
+    InterlockedExchange((PLONG)&info->CountDown, info->Period);
+    workItem = InterlockedExchangePointer((PVOID*)&info->WorkQueueItem, NULL);
 
     if (ClasspCanSendPollingIrp(fdoExtension)) {
 
@@ -3613,11 +3611,11 @@ ClassSetFailurePredictionPoll(
 
     if (PollingPeriod != 0) {
 
-        InterlockedExchange(&info->Period, PollingPeriod);
+        InterlockedExchange((PLONG)&info->Period, PollingPeriod);
 
     }
 
-    InterlockedExchange(&info->CountDown, info->Period);
+    InterlockedExchange((PLONG)&info->CountDown, info->Period);
 
     info->Method = FailurePredictionMethod;
     if (FailurePredictionMethod != FailurePredictionNone) {

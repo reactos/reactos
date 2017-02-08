@@ -156,6 +156,18 @@ typedef enum WICPixelFormatNumericRepresentation {
     WICPIXELFORMATNUMERICREPRESENTATION_FORCE_DWORD = CODEC_FORCE_DWORD
 } WICPixelFormatNumericRepresentation;
 
+typedef enum WICTiffCompressionOption {
+    WICTiffCompressionDontCare = 0x00000000,
+    WICTiffCompressionNone = 0x00000001,
+    WICTiffCompressionCCITT3 = 0x00000002,
+    WICTiffCompressionCCITT4 = 0x00000003,
+    WICTiffCompressionLZW = 0x00000004,
+    WICTiffCompressionRLE = 0x00000005,
+    WICTiffCompressionZIP = 0x00000006,
+    WICTiffCompressionLZWHDifferencing = 0x00000007,
+    WICTIFFCOMPRESSIONOPTION_FORCE_DWORD = CODEC_FORCE_DWORD
+} WICTiffCompressionOption;
+
 typedef GUID WICPixelFormatGUID;
 typedef REFGUID REFWICPixelFormatGUID;
 
@@ -177,9 +189,13 @@ cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppBGR555, 0x6fddc324,0x4e03,0x4bfe,
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppBGR565, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0a);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppBGRA5551, 0x05ec7c2b,0xf1e6,0x4961,0xad,0x46,0xe1,0xcc,0x81,0x0a,0x87,0xd2);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat24bppBGR, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0c);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat24bppRGB, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0d);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppBGR, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0e);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppBGRA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0f);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppPBGRA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x10);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppRGB, 0xd98c6b95,0x3efe,0x47d6,0xbb,0x25,0xeb,0x17,0x48,0xab,0x0c,0xf1);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppRGBA, 0xf5c7ad2d,0x6a8d,0x43dd,0xa7,0xa8,0xa2,0x99,0x35,0x26,0x1a,0xe9);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppPRGBA, 0x3cc4a650,0xa527,0x4d37,0xa9,0x16,0x31,0x42,0xc7,0xeb,0xed,0xba);")
 
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat48bppRGB, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x15);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat64bppRGBA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x16);")
@@ -212,11 +228,14 @@ cpp_quote("#define WINCODEC_ERR_PROPERTYNOTFOUND 0x88982f40")
 cpp_quote("#define WINCODEC_ERR_CODECNOTHUMBNAIL 0x88982f44")
 cpp_quote("#define WINCODEC_ERR_PALETTEUNAVAILABLE 0x88982f45")
 cpp_quote("#define WINCODEC_ERR_COMPONENTNOTFOUND 0x88982f50")
+cpp_quote("#define WINCODEC_ERR_BADIMAGE 0x88982f60")
 cpp_quote("#define WINCODEC_ERR_FRAMEMISSING 0x88982f62")
 cpp_quote("#define WINCODEC_ERR_BADMETADATAHEADER 0x88982f63")
 cpp_quote("#define WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT 0x88982f80")
 cpp_quote("#define WINCODEC_ERR_UNSUPPORTEDOPERATION 0x88982f81")
 cpp_quote("#define WINCODEC_ERR_INSUFFICIENTBUFFER 0x88982f8c")
+cpp_quote("#define WINCODEC_ERR_PROPERTYUNEXPECTEDTYPE 0x88982f8e")
+cpp_quote("#define WINCODEC_ERR_WIN32ERROR 0x88982f94")
 
 interface IWICPalette;
 

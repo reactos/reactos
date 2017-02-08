@@ -19,16 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include <stdlib.h>
-//#include <stdio.h>
-//#include <string.h>
-#include <assert.h>
-
 #include "dbghelp_private.h"
-#include <psapi.h>
-//#include "winternl.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -56,7 +47,7 @@ static int match_ext(const WCHAR* ptr, size_t len)
     for (e = ext; *e; e++)
     {
         l = strlenW(*e);
-        if (l >= len) return FALSE;
+        if (l >= len) return 0;
         if (strncmpiW(&ptr[len - l], *e, l)) continue;
         return l;
     }
@@ -101,14 +92,11 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 void module_set_module(struct module* module, const WCHAR* name)
 {
     module_fill_module(name, module->module.ModuleName, sizeof(module->module.ModuleName));
-    WideCharToMultiByte(CP_ACP, 0, module->module.ModuleName, -1,
-                        module->module_name, sizeof(module->module_name),
-                        NULL, NULL);
 }
 
 const WCHAR *get_wine_loader_name(void)
 {
-    static const int is_win64 = sizeof(void *) > sizeof(int); /* FIXME: should depend on target process */
+    static const BOOL is_win64 = sizeof(void *) > sizeof(int); /* FIXME: should depend on target process */
     static const WCHAR wineW[] = {'w','i','n','e',0};
     static const WCHAR suffixW[] = {'6','4',0};
     static const WCHAR *loader;
@@ -209,7 +197,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
 
     module->reloc_delta       = 0;
     module->type              = type;
-    module->is_virtual        = virtual ? TRUE : FALSE;
+    module->is_virtual        = virtual;
     for (i = 0; i < DFI_LAST; i++) module->format_info[i] = NULL;
     module->sortlist_valid    = FALSE;
     module->sorttab_size      = 0;
@@ -223,6 +211,9 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
      */
     hash_table_init(&module->pool, &module->ht_symbols, 4096);
     hash_table_init(&module->pool, &module->ht_types,   4096);
+#ifdef __x86_64__
+    hash_table_init(&module->pool, &module->ht_symaddr, 4096);
+#endif
     vector_init(&module->vtypes, sizeof(struct symt*),  32);
 
     module->sources_used      = 0;
@@ -349,9 +340,11 @@ BOOL module_get_debug(struct module_pair* pair)
         if (pair->effective->is_virtual) ret = FALSE;
         else switch (pair->effective->type)
         {
+#ifndef DBGHELP_STATIC_LIB
         case DMT_ELF:
             ret = elf_load_debug_info(pair->effective);
             break;
+#endif
         case DMT_PE:
             idslW64.SizeOfStruct = sizeof(idslW64);
             idslW64.BaseOfImage = pair->effective->module.BaseOfImage;
@@ -368,9 +361,11 @@ BOOL module_get_debug(struct module_pair* pair)
                          ret ? CBA_DEFERRED_SYMBOL_LOAD_COMPLETE : CBA_DEFERRED_SYMBOL_LOAD_FAILURE,
                          &idslW64);
             break;
+#ifndef DBGHELP_STATIC_LIB
         case DMT_MACHO:
-            ret = macho_load_debug_info(pair->effective, NULL);
+            ret = macho_load_debug_info(pair->effective);
             break;
+#endif
         default:
             ret = FALSE;
             break;
@@ -388,7 +383,7 @@ BOOL module_get_debug(struct module_pair* pair)
  * either the addr where module is loaded, or any address inside the 
  * module
  */
-struct module* module_find_by_addr(const struct process* pcs, unsigned long addr, 
+struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
                                    enum module_type type)
 {
     struct module*      module;
@@ -509,11 +504,13 @@ enum module_type module_get_type_by_name(const WCHAR* name)
 /******************************************************************
  *		                refresh_module_list
  */
+#ifndef DBGHELP_STATIC_LIB
 static BOOL refresh_module_list(struct process* pcs)
 {
     /* force transparent ELF and Mach-O loading / unloading */
     return elf_synchronize_module_list(pcs) || macho_synchronize_module_list(pcs);
 }
+#endif
 
 /***********************************************************************
  *			SymLoadModule (DBGHELP.@)
@@ -597,7 +594,9 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (Flags & ~(SLMFLAG_VIRTUAL))
         FIXME("Unsupported Flags %08x for %s\n", Flags, debugstr_w(wImageName));
 
+#ifndef DBGHELP_STATIC_LIB
     refresh_module_list(pcs);
+#endif
 
     /* this is a Wine extension to the API just to redo the synchronisation */
     if (!wImageName && !hFile) return 0;
@@ -621,6 +620,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
             wImageName)
         {
             /* and finally an ELF or Mach-O module */
+#ifndef DBGHELP_STATIC_LIB
             switch (module_get_type_by_name(wImageName))
             {
                 case DMT_ELF:
@@ -633,6 +633,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
                     /* Ignored */
                     break;
             }
+#endif
         }
     }
     if (!module)
@@ -659,8 +660,8 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
 DWORD64 WINAPI SymLoadModule64(HANDLE hProcess, HANDLE hFile, PCSTR ImageName,
                                PCSTR ModuleName, DWORD64 BaseOfDll, DWORD SizeOfDll)
 {
-    if (!validate_addr64(BaseOfDll)) return FALSE;
-    return SymLoadModule(hProcess, hFile, ImageName, ModuleName, (DWORD)BaseOfDll, SizeOfDll);
+    return SymLoadModuleEx(hProcess, hFile, ImageName, ModuleName, BaseOfDll, SizeOfDll,
+                           NULL, 0);
 }
 
 /******************************************************************
@@ -730,7 +731,7 @@ BOOL WINAPI SymUnloadModule64(HANDLE hProcess, DWORD64 BaseOfDll)
     pcs = process_find_by_handle(hProcess);
     if (!pcs) return FALSE;
     if (!validate_addr64(BaseOfDll)) return FALSE;
-    module = module_find_by_addr(pcs, (DWORD)BaseOfDll, DMT_UNKNOWN);
+    module = module_find_by_addr(pcs, BaseOfDll, DMT_UNKNOWN);
     if (!module) return FALSE;
     return module_remove(pcs, module);
 }
@@ -822,6 +823,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
     return TRUE;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 /******************************************************************
  *		EnumerateLoadedModules64 (DBGHELP.@)
  *
@@ -922,6 +924,7 @@ BOOL  WINAPI EnumerateLoadedModulesW64(HANDLE hProcess,
 
     return sz != 0 && i == sz;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
 /******************************************************************
  *		SymGetModuleInfo (DBGHELP.@)
@@ -1134,7 +1137,11 @@ BOOL WINAPI SymRefreshModuleList(HANDLE hProcess)
 
     if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
 
+#ifndef DBGHELP_STATIC_LIB
     return refresh_module_list(pcs);
+#else
+    return TRUE;
+#endif
 }
 
 /***********************************************************************

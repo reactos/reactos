@@ -21,34 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <config.h>
-
-#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winreg.h"
-#include <ole2.h>
 #include <rpcproxy.h>
-//#include "advpub.h"
-
-//#include "wine/unicode.h"
-#include <wine/debug.h>
-
-#include "itsstor.h"
-
-#include <initguid.h>
-#include <wine/itss.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(itss);
 
 static HRESULT ITSS_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 
@@ -61,8 +36,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
         hInst = hInstDLL;
-        break;
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;
@@ -200,8 +173,8 @@ static HRESULT WINAPI ITStorageImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IITStorage))
     {
-	IClassFactory_AddRef(iface);
-	*ppvObject = This;
+	IITStorage_AddRef(iface);
+	*ppvObject = iface;
 	return S_OK;
     }
 

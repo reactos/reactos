@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/userenv.c
+ * FILE:            dll/win32/userenv/userenv.c
  * PURPOSE:         DLL initialization code
  * PROGRAMMER:      Eric Kohl
  */
@@ -31,20 +31,21 @@
 
 HINSTANCE hInstance = NULL;
 
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD fdwReason,
-         LPVOID lpvReserved)
+BOOL
+WINAPI
+DllMain(HINSTANCE hinstDLL,
+        DWORD fdwReason,
+        LPVOID lpvReserved)
 {
-  if (fdwReason == DLL_PROCESS_ATTACH)
+    if (fdwReason == DLL_PROCESS_ATTACH)
     {
-       hInstance = hinstDLL;
-       InitializeGPNotifications();
+        hInstance = hinstDLL;
+        InitializeGPNotifications();
     }
-  else if (fdwReason == DLL_PROCESS_DETACH)
+    else if (fdwReason == DLL_PROCESS_DETACH)
     {
         UninitializeGPNotifications();
     }
 
-  return TRUE;
+    return TRUE;
 }

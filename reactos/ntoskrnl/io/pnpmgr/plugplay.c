@@ -76,7 +76,10 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
     Copy.Buffer = EventEntry->Event.TargetDevice.DeviceIds;
     Status = RtlAppendUnicodeStringToString(&Copy, DeviceIds);
     if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(EventEntry);
         return Status;
+    }
 
     InsertHeadList(&IopPnpEventQueueHead,
                    &EventEntry->ListEntry);
@@ -200,12 +203,92 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         if (Name.Buffer)
+        {
             ExFreePool(Name.Buffer);
+        }
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
 
     return Status;
+}
+
+static NTSTATUS
+IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceList)
+{
+    NTSTATUS Status;
+    PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA StackList;
+    UNICODE_STRING DeviceInstance;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    GUID FilterGuid;
+    PZZWSTR SymbolicLinkList = NULL, LinkList;
+    SIZE_T TotalLength;
+
+    _SEH2_TRY
+    {
+        RtlCopyMemory(&StackList, DeviceList, sizeof(PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA));
+
+        ProbeForRead(StackList.FilterGuid, sizeof(GUID), sizeof(UCHAR));
+        RtlCopyMemory(&FilterGuid, StackList.FilterGuid, sizeof(GUID));
+
+        if (StackList.Buffer != NULL && StackList.BufferSize != 0)
+        {
+            ProbeForWrite(StackList.Buffer, StackList.BufferSize, sizeof(UCHAR));
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &StackList.DeviceInstance);
+    if (NT_SUCCESS(Status))
+    {
+        /* Get the device object */
+        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+        if (DeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(DeviceInstance.Buffer);
+        }
+    }
+
+    Status = IoGetDeviceInterfaces(&FilterGuid, DeviceObject, StackList.Flags, &SymbolicLinkList);
+    ObDereferenceObject(DeviceObject);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        return Status;
+    }
+
+    LinkList = SymbolicLinkList;
+    while (*SymbolicLinkList != UNICODE_NULL)
+    {
+        SymbolicLinkList += wcslen(SymbolicLinkList) + (sizeof(UNICODE_NULL) / sizeof(WCHAR));
+    }
+    TotalLength = ((SymbolicLinkList - LinkList + 1) * sizeof(WCHAR));
+
+    _SEH2_TRY
+    {
+        if (StackList.Buffer != NULL &&
+            StackList.BufferSize >= TotalLength)
+        {
+            // We've already probed the buffer for writing above.
+            RtlCopyMemory(StackList.Buffer, LinkList, TotalLength);
+        }
+
+        DeviceList->BufferSize = TotalLength;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePool(LinkList);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    ExFreePool(LinkList);
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS
@@ -237,14 +320,20 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ExFreePool(DeviceInstance.Buffer);
+        if (DeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(DeviceInstance.Buffer);
+        }
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
     {
         return STATUS_NO_SUCH_DEVICE;
@@ -314,7 +403,10 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ExFreePool(TargetDeviceInstance.Buffer);
+        if (TargetDeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(TargetDeviceInstance.Buffer);
+        }
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -326,13 +418,19 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
                               TRUE))
     {
         DeviceNode = IopRootDeviceNode;
-        ExFreePool(TargetDeviceInstance.Buffer);
+        if (TargetDeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(TargetDeviceInstance.Buffer);
+        }
     }
     else
     {
         /* Get the device object */
         DeviceObject = IopGetDeviceObjectFromDeviceInstance(&TargetDeviceInstance);
-        ExFreePool(TargetDeviceInstance.Buffer);
+        if (TargetDeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(TargetDeviceInstance.Buffer);
+        }
         if (DeviceObject == NULL)
             return STATUS_NO_SUCH_DEVICE;
 
@@ -469,7 +567,10 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
     Status = IopCaptureUnicodeString(&DeviceInstance, &StatusData->DeviceInstance);
     if (!NT_SUCCESS(Status))
+    {
         return Status;
+    }
+
     DPRINT("Device name: '%wZ'\n", &DeviceInstance);
 
     _SEH2_TRY
@@ -483,16 +584,24 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (DeviceInstance.Buffer) ExFreePool(DeviceInstance.Buffer);
+        if (DeviceInstance.Buffer != NULL)
+        {
+            ExFreePool(DeviceInstance.Buffer);
+        }
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
+    {
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
@@ -532,6 +641,16 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     return Status;
 }
 
+static
+NTSTATUS
+IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
+{
+    DPRINT("IopGetDeviceRelations() called\n");
+    DPRINT("Device name: %wZ\n", &RelationsData->DeviceInstance);
+    DPRINT("Relations: %lu\n", &RelationsData->Relations);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 static NTSTATUS
 IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
@@ -552,9 +671,14 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
+    {
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
@@ -584,15 +708,22 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
 
     Status = IopCaptureUnicodeString(&DeviceInstance, &ResetDeviceData->DeviceInstance);
     if (!NT_SUCCESS(Status))
+    {
         return Status;
+    }
 
     DPRINT("IopResetDevice(%wZ)\n", &DeviceInstance);
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    ExFreePool(DeviceInstance.Buffer);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
     if (DeviceObject == NULL)
+    {
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
@@ -734,12 +865,13 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
     DPRINT("Waiting for pnp notification event\n");
     Status = KeWaitForSingleObject(&IopPnpNotifyEvent,
                                    UserRequest,
-                                   KernelMode,
+                                   UserMode,
                                    FALSE,
                                    NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) || Status == STATUS_USER_APC)
     {
-        DPRINT1("KeWaitForSingleObject() failed (Status %lx)\n", Status);
+        DPRINT("KeWaitForSingleObject() failed (Status %lx)\n", Status);
+        ASSERT(Status == STATUS_USER_APC);
         return Status;
     }
 
@@ -756,9 +888,20 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
     }
 
     /* Copy event data to the user buffer */
-    memcpy(Buffer,
-           &Entry->Event,
-           Entry->Event.TotalSize);
+    _SEH2_TRY
+    {
+        ProbeForWrite(Buffer,
+                      Entry->Event.TotalSize,
+                      sizeof(UCHAR));
+        RtlCopyMemory(Buffer,
+                      &Entry->Event,
+                      Entry->Event.TotalSize);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     DPRINT("NtGetPlugPlayEvent() done\n");
 
@@ -827,7 +970,7 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                   IN OUT PVOID Buffer,
                   IN ULONG BufferLength)
 {
-    DPRINT("NtPlugPlayControl(%lu %p %lu) called\n",
+    DPRINT("NtPlugPlayControl(%d %p %lu) called\n",
            PlugPlayControlClass, Buffer, BufferLength);
 
     /* Function can only be called from user-mode */
@@ -860,20 +1003,39 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 
     switch (PlugPlayControlClass)
     {
+//        case PlugPlayControlEnumerateDevice:
+//        case PlugPlayControlRegisterNewDevice:
+//        case PlugPlayControlDeregisterDevice:
+//        case PlugPlayControlInitializeDevice:
+//        case PlugPlayControlStartDevice:
+//        case PlugPlayControlUnlockDevice:
+//        case PlugPlayControlQueryAndRemoveDevice:
+
         case PlugPlayControlUserResponse:
             if (Buffer || BufferLength != 0)
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
+
+//        case PlugPlayControlGenerateLegacyDevice:
+
+        case PlugPlayControlGetInterfaceDeviceList:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopGetInterfaceDeviceList((PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA)Buffer);
 
         case PlugPlayControlProperty:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_PROPERTY_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopGetDeviceProperty((PPLUGPLAY_CONTROL_PROPERTY_DATA)Buffer);
 
+//        case PlugPlayControlDeviceClassAssociation:
+
         case PlugPlayControlGetRelatedDevice:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopGetRelatedDevice((PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA)Buffer);
+
+//        case PlugPlayControlGetInterfaceDeviceAlias:
 
         case PlugPlayControlDeviceStatus:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_STATUS_DATA))
@@ -885,10 +1047,22 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                 return STATUS_INVALID_PARAMETER;
             return IopGetDeviceDepth((PPLUGPLAY_CONTROL_DEPTH_DATA)Buffer);
 
+        case PlugPlayControlQueryDeviceRelations:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopGetDeviceRelations((PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA)Buffer);
+
+//        case PlugPlayControlTargetDeviceRelation:
+//        case PlugPlayControlQueryConflictList:
+//        case PlugPlayControlRetrieveDock:
+
         case PlugPlayControlResetDevice:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopResetDevice((PPLUGPLAY_CONTROL_RESET_DEVICE_DATA)Buffer);
+
+//        case PlugPlayControlHaltDevice:
+//        case PlugPlayControlGetBlockedDriverList:
 
         default:
             return STATUS_NOT_IMPLEMENTED;

@@ -17,11 +17,8 @@
  */
 
 #include "ieframe.h"
+
 #include <urlhist.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 static HRESULT WINAPI UrlHistoryStg_QueryInterface(IUrlHistoryStg2 *iface, REFIID riid, void **ppv)
 {

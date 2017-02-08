@@ -20,6 +20,9 @@
 
 #pragma once
 
+#define TAG_CACHE_DATA 'DcaC'
+#define TAG_CACHE_BLOCK 'BcaC'
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // This structure describes a cached block element. The disk is divided up into
@@ -31,13 +34,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-	LIST_ENTRY	ListEntry;					// Doubly linked list synchronization member
+    LIST_ENTRY    ListEntry;                    // Doubly linked list synchronization member
 
-	ULONG			BlockNumber;				// Track index for CHS, 64k block index for LBA
-	BOOLEAN		LockedInCache;				// Indicates that this block is locked in cache memory
-	ULONG			AccessCount;				// Access count for this block
+    ULONG            BlockNumber;                // Track index for CHS, 64k block index for LBA
+    BOOLEAN        LockedInCache;                // Indicates that this block is locked in cache memory
+    ULONG            AccessCount;                // Access count for this block
 
-	PVOID		BlockData;					// Pointer to block data
+    PVOID        BlockData;                    // Pointer to block data
 
 } CACHE_BLOCK, *PCACHE_BLOCK;
 
@@ -50,11 +53,11 @@ typedef struct
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-	UCHAR			DriveNumber;
-	ULONG			BytesPerSector;
+    UCHAR            DriveNumber;
+    ULONG            BytesPerSector;
 
-	ULONG			BlockSize;			// Block size (in sectors)
-	LIST_ENTRY		CacheBlockHead;			// Contains CACHE_BLOCK structures
+    ULONG            BlockSize;            // Block size (in sectors)
+    LIST_ENTRY        CacheBlockHead;            // Contains CACHE_BLOCK structures
 
 } CACHE_DRIVE, *PCACHE_DRIVE;
 
@@ -64,28 +67,28 @@ typedef struct
 // Internal data
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-extern	CACHE_DRIVE		CacheManagerDrive;
-extern	BOOLEAN			CacheManagerInitialized;
-extern	ULONG				CacheBlockCount;
-extern	SIZE_T				CacheSizeLimit;
-extern	SIZE_T				CacheSizeCurrent;
+extern    CACHE_DRIVE        CacheManagerDrive;
+extern    BOOLEAN            CacheManagerInitialized;
+extern    ULONG                CacheBlockCount;
+extern    SIZE_T                CacheSizeLimit;
+extern    SIZE_T                CacheSizeCurrent;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Internal functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-PCACHE_BLOCK	CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);				// Returns a pointer to a CACHE_BLOCK structure given a block number
-PCACHE_BLOCK	CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);					// Searches the block list for a particular block
-PCACHE_BLOCK	CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);				// Adds a block to the cache's block list
-BOOLEAN			CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive);									// Removes a block from the cache's block list & frees the memory
-VOID			CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive);							// Checks the cache size limits to see if we can add a new block, if not calls CacheInternalFreeBlock()
-VOID			CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive);								// Dumps the list of cached blocks to the debug output port
-VOID			CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheBlock);	// Moves the specified block to the head of the list
+PCACHE_BLOCK    CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);                // Returns a pointer to a CACHE_BLOCK structure given a block number
+PCACHE_BLOCK    CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);                    // Searches the block list for a particular block
+PCACHE_BLOCK    CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);                // Adds a block to the cache's block list
+BOOLEAN            CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive);                                    // Removes a block from the cache's block list & frees the memory
+VOID            CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive);                            // Checks the cache size limits to see if we can add a new block, if not calls CacheInternalFreeBlock()
+VOID            CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive);                                // Dumps the list of cached blocks to the debug output port
+VOID            CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheBlock);    // Moves the specified block to the head of the list
 
 
-BOOLEAN	CacheInitializeDrive(UCHAR DriveNumber);
-VOID	CacheInvalidateCacheData(VOID);
-BOOLEAN	CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount, PVOID Buffer);
-BOOLEAN	CacheForceDiskSectorsIntoCache(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount);
-BOOLEAN	CacheReleaseMemory(ULONG MinimumAmountToRelease);
+BOOLEAN    CacheInitializeDrive(UCHAR DriveNumber);
+VOID    CacheInvalidateCacheData(VOID);
+BOOLEAN    CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount, PVOID Buffer);
+BOOLEAN    CacheForceDiskSectorsIntoCache(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount);
+BOOLEAN    CacheReleaseMemory(ULONG MinimumAmountToRelease);

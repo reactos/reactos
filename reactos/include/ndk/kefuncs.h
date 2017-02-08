@@ -188,7 +188,9 @@ KiCoprocessorError(
     VOID
 );
 
+DECLSPEC_NORETURN
 VOID
+__cdecl
 KiUnexpectedInterrupt(
     VOID
 );
@@ -287,6 +289,19 @@ KeSetGdtSelector(
 
 VOID
 NTAPI
+KeProfileInterrupt(
+    _In_ PKTRAP_FRAME TrapFrame
+);
+
+VOID
+NTAPI
+KeProfileInterruptWithSource(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ KPROFILE_SOURCE Source
+);
+
+VOID
+NTAPI
 KeSetProfileIrql(
     _In_ KIRQL ProfileIrql
 );
@@ -312,9 +327,9 @@ NTSTATUS
 NTAPI
 KeUserModeCallback(
     _In_ ULONG FunctionID,
-    _In_ PVOID InputBuffer,
+    _In_reads_opt_(InputLength) PVOID InputBuffer,
     _In_ ULONG InputLength,
-    _Out_ PVOID *OutputBuffer,
+    _Outptr_result_buffer_(*OutputLength) PVOID *OutputBuffer,
     _Out_ PULONG OutputLength
 );
 
@@ -353,7 +368,7 @@ NtCreateProfile(
     _Out_ PHANDLE ProfileHandle,
     _In_ HANDLE ProcessHandle,
     _In_ PVOID ImageBase,
-    _In_ ULONG ImageSize,
+    _In_ SIZE_T ImageSize,
     _In_ ULONG Granularity,
     _Out_ PVOID Buffer,
     _In_ ULONG ProfilingSize,
@@ -364,18 +379,25 @@ NtCreateProfile(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
-NtDelayExecution(
-    _In_ BOOLEAN Alertable,
-    _In_ LARGE_INTEGER *Interval
+NtCreateProfileEx(
+    _Out_ PHANDLE ProfileHandle,
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID ImageBase,
+    _In_ SIZE_T ImageSize,
+    _In_ ULONG Granularity,
+    _Out_ PVOID Buffer,
+    _In_ ULONG ProfilingSize,
+    _In_ KPROFILE_SOURCE Source,
+    _In_ USHORT GroupCount,
+    _In_reads_(GroupCount) PGROUP_AFFINITY Affinity
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
-NtFlushInstructionCache(
-    _In_ HANDLE ProcessHandle,
-    _In_ PVOID BaseAddress,
-    _In_ ULONG NumberOfBytesToFlush
+NtDelayExecution(
+    _In_ BOOLEAN Alertable,
+    _In_ LARGE_INTEGER *Interval
 );
 
 ULONG

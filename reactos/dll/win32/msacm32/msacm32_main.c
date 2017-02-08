@@ -21,21 +21,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <wine/debug.h>
-//#include "mmsystem.h"
-#define NOBITMAP
-//#include "mmreg.h"
-//#include "msacm.h"
-#include <msacmdrv.h>
 #include "wineacm.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 /**********************************************************************/
 
@@ -57,9 +43,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	break;
     case DLL_PROCESS_DETACH:
         MSACM_UnregisterAllDrivers();
+        if (lpvReserved) break;
         HeapDestroy(MSACM_hHeap);
-        MSACM_hHeap = NULL;
-        MSACM_hInstance32 = NULL;
 	break;
     default:
 	break;
@@ -89,6 +74,7 @@ DWORD WINAPI acmGetVersion(void)
 	return 0x04000565; /* 4.0.1381 */
     default:
         FIXME("%x not supported\n", version.dwPlatformId);
+        /* fall through */
     case VER_PLATFORM_WIN32_WINDOWS:
 	return 0x04030000; /* 4.3.0 */
     }

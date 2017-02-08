@@ -1,11 +1,13 @@
 
 if(NOT MSVC)
 
-    if (USE_PSEH3)
+    if(USE_PSEH3)
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/pseh)
         list(APPEND SOURCE
             i386/pseh3.c
             i386/pseh3_i386.S)
+    elseif(USE_DUMMY_PSEH)
+        list(APPEND SOURCE dummy.c)
     elseif(ARCH STREQUAL "i386")
         list(APPEND SOURCE
             i386/framebased.S
@@ -18,7 +20,6 @@ if(NOT MSVC)
     endif()
 
     add_library(pseh ${SOURCE})
-    allow_warnings(pseh)
     target_link_libraries(pseh chkstk)
     add_dependencies(pseh psdk)
 
@@ -28,14 +29,17 @@ else()
         list(APPEND ASM_SOURCE
             i386/seh.s
             i386/seh_prolog.s)
-        list(APPEND SOURCE dummy.c)
     elseif(ARCH STREQUAL "amd64")
         list(APPEND ASM_SOURCE
             amd64/seh.s
             amd64/seh_prolog.s)
+    elseif(ARCH STREQUAL "arm")
+        list(APPEND ASM_SOURCE
+            arm/seh_prolog.s)
         list(APPEND SOURCE dummy.c)
     endif()
 
+    list(APPEND SOURCE dummy.c)
     add_asm_files(pseh_asm ${ASM_SOURCE})
     add_library(pseh ${SOURCE} ${pseh_asm})
     add_dependencies(pseh asm)

@@ -19,29 +19,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/debug.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "htmlhelp.h"
-#include "ole2.h"
-#include "rpcproxy.h"
-
-#define INIT_GUID
 #include "hhctrl.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
+#include <rpcproxy.h>
 
 HINSTANCE hhctrl_hinstance;
 BOOL hh_process = FALSE;
 
-extern struct list window_list;
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -52,8 +36,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
     case DLL_PROCESS_ATTACH:
         hhctrl_hinstance = hInstance;
         DisableThreadLibraryCalls(hInstance);
-        break;
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;
@@ -205,7 +187,20 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
         case HH_DISPLAY_TOPIC:
         case HH_DISPLAY_TOC:
             if (data)
-                index = (const WCHAR *)data;
+            {
+                static const WCHAR delimW[] = {':',':',0};
+                const WCHAR *i = (const WCHAR *)data;
+
+                index = strstrW(i, delimW);
+                if(index)
+                {
+                    if(memcmp(info->pCHMInfo->szFile, i, index-i))
+                        FIXME("Opening a CHM file in the context of another is not supported.\n");
+                    index += strlenW(delimW);
+                }
+                else
+                    index = i;
+            }
             break;
         }
 
@@ -275,6 +270,8 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
         url = FindContextAlias(info->pCHMInfo, data);
         if(!url)
         {
+            if(!data) /* there may legitimately be no context alias for id 0 */
+                return info->WinType.hwndHelp;
             ReleaseHelpViewer(info);
             return NULL;
         }

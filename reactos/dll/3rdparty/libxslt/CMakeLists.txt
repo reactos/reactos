@@ -1,6 +1,6 @@
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt
+                    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv)
 
 add_definitions(
     -DHAVE_CONFIG_H
@@ -13,7 +13,7 @@ add_definitions(
     -D_WINSOCKAPI_
     -DLIBXML_STATIC)
 
-add_library(libxslt SHARED
+list(APPEND SOURCE
     attributes.c
     attrvt.c
     documents.c
@@ -32,21 +32,24 @@ add_library(libxslt SHARED
     variables.c
     xslt.c
     xsltlocale.c
-    xsltutils.c)
+    xsltutils.c
+    precomp.h)
 
+add_library(libxslt SHARED ${SOURCE})
 set_module_type(libxslt win32dll)
-target_link_libraries(libxslt libxml2)
+target_link_libraries(libxslt libxml2 iconv-static zlib)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 
 if(MSVC)
     add_importlibs(libxslt ntdll)
 endif()
 
-add_dependencies(libxslt psdk)
-add_pch(libxslt libxslt.h)
+add_pch(libxslt precomp.h SOURCE)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(libxslt "-Wno-pointer-sign")
-    allow_warnings(libxslt)
+    add_target_compile_flags(libxslt "-Wno-pointer-sign -Wno-unused-function")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_target_compile_flags(libxslt "-Wno-unused-but-set-variable")
+    endif()
 endif()

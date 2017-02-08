@@ -1,9 +1,10 @@
 /* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-STRING_HELP,  "Naudojimas: %s diskas: [-FS:bylų-sistema] [-V:žymė] [-Q] [-A:dydis] [-C]\n\n\
+    STRING_HELP "Naudojimas: %s diskas: [-FS:bylų-sistema] [-V:žymė] [-Q] [-A:dydis] [-C]\n\n\
   [diskas:]        Nurodo diską formavimui.\n\
   -FS:bylų-sistema Nurodo bylų sistemos tipą (%s).\n\
   -V:žymė          Nurodo tomo žymę.\n\
@@ -15,53 +16,29 @@ STRING_HELP,  "Naudojimas: %s diskas: [-FS:bylų-sistema] [-V:žymė] [-Q] [-A:d
                    NTFS glaudinimas nėra palaikomas klasteriams, kurių dydis\n\
                    viršija 4096.\n\
   -C               Naujai sukurtos bylos bus automatiškai suglaudintos.\n\n"
-
-STRING_COMPLETE   "%lu procentų baigta.\r"
-
-STRING_FORMAT_FAIL "FormatEx nepavyko sėkmingai užbaigti operacijos.\n\n"
-
-STRING_NO_SUPPORT  "Operacija nepalaikoma"
-
-STRING_FMIFS_FAIL  "Nepavyko rasti FMIFS įėjimo taškų.\n\n"
-
-STRING_UNKNOW_ARG  "Nežinomas parametras: %s\n"
-
-STRING_DRIVE_PARM  "Trūksta reikiamo disko parametro.\n\n"
-
-STRING_ERROR_DRIVE_TYPE  "Nepavyko nustatyti disko tipo"
-
-STRING_INSERT_DISK       "Į įrenginį %C:\nįdėkite naują diskelį ir paspaukite Enter..."
-
-STRING_NO_VOLUME         "Nepavyko kreiptis į tomą"
-
-STRING_NO_VOLUME_SIZE    "Nepavyko nustatyti tomo dydžio"
-
-STRING_FILESYSTEM        "Bylų sistemos tipas yra %s.\n"
-
-STRING_LABEL_NAME_EDIT  "Įveskite dabartinę tomo žymę diskui %C: "
-
-STRING_ERROR_LABEL     "Įvesta netinkama šiam diskui tomo žymė.\n"
-
-STRING_YN_FORMAT       "\nDĖMESIO, VISA INFORMACIJA, ESANTI\n\
+    STRING_COMPLETE "%lu procentų baigta.\r"
+    STRING_FORMAT_FAIL "FormatEx nepavyko sėkmingai užbaigti operacijos.\n\n"
+    STRING_NO_SUPPORT "Operacija nepalaikoma"
+    STRING_FMIFS_FAIL "Nepavyko rasti FMIFS įėjimo taškų.\n\n"
+    STRING_UNKNOW_ARG "Nežinomas parametras: %s\n"
+    STRING_DRIVE_PARM "Trūksta reikiamo disko parametro.\n\n"
+    STRING_ERROR_DRIVE_TYPE "Nepavyko nustatyti disko tipo"
+    STRING_INSERT_DISK "Į įrenginį %C:\nįdėkite naują diskelį ir paspaukite Enter..."
+    STRING_NO_VOLUME "Nepavyko kreiptis į tomą"
+    STRING_NO_VOLUME_SIZE "Nepavyko nustatyti tomo dydžio"
+    STRING_FILESYSTEM "Bylų sistemos tipas yra %s.\n"
+    STRING_LABEL_NAME_EDIT "Įveskite dabartinę tomo žymę diskui %C: "
+    STRING_ERROR_LABEL "Įvesta netinkama šiam diskui tomo žymė.\n"
+    STRING_YN_FORMAT "\nDĖMESIO, VISA INFORMACIJA, ESANTI\n\
 DISKE %C: BUS SUNAIKINTA!\nTęsti formavimą (T/N)? "
-
-STRING_YES_NO_FAQ      "TN"
-
-STRING_VERIFYING       "Peržiūrima"
-
-STRING_FAST_FMT        "Spartus formavimas"
-
-STRING_CREATE_FSYS     "Kuriama bylų sistemos struktūra.\n"
-
-STRING_FMT_COMPLETE    "Formavimas baigtas.\n"
-
-STRING_VOL_COMPRESS    "Tomas nepalaiko glaudinimo.\n"
-
-STRING_ENTER_LABEL     "Tomo žymė (11 simbolių, Enter - be žymės)? "
-
-STRING_NO_LABEL        "Nepavyko pažymėti tomo"
-
-STRING_FREE_SPACE     "\n%I64d baitai iš viso diske.\n%I64d baitai laisvos vietos diske.\n"
-
-STRING_SERIAL_NUMBER   "\nTomo serijos numeris yra %04X-%04X\n"
+    STRING_YES_NO_FAQ "TN"
+    STRING_VERIFYING "Peržiūrima"
+    STRING_FAST_FMT "Spartus formavimas"
+    STRING_CREATE_FSYS "Kuriama bylų sistemos struktūra.\n"
+    STRING_FMT_COMPLETE "Formavimas baigtas.\n"
+    STRING_VOL_COMPRESS "Tomas nepalaiko glaudinimo.\n"
+    STRING_ENTER_LABEL "Tomo žymė (11 simbolių, Enter - be žymės)? "
+    STRING_NO_LABEL "Nepavyko pažymėti tomo"
+    STRING_FREE_SPACE "\n%I64d baitai iš viso diske.\n%I64d baitai laisvos vietos diske.\n"
+    STRING_SERIAL_NUMBER "\nTomo serijos numeris yra %04X-%04X\n"
 END

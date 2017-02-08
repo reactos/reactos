@@ -3,6 +3,94 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOL FASTCALL
+GreDPtoLP(HDC hdc, LPPOINT lpPoints, INT nCount)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   IntDPtoLP(dc, lpPoints, nCount);
+   DC_UnlockDc(dc);
+   return TRUE;
+}
+
+BOOL FASTCALL
+GreLPtoDP(HDC hdc, LPPOINT lpPoints, INT nCount)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   IntLPtoDP(dc, lpPoints, nCount);
+   DC_UnlockDc(dc);
+   return TRUE;
+}
+
+int FASTCALL
+GreGetBkMode(HDC hdc)
+{
+   PDC dc;
+   LONG lBkMode;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   lBkMode = dc->pdcattr->lBkMode;
+   DC_UnlockDc(dc);
+   return lBkMode;
+}
+
+COLORREF FASTCALL
+GreGetBkColor(HDC hdc)
+{
+   PDC dc;
+   COLORREF crBk;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   crBk = dc->pdcattr->ulBackgroundClr;
+   DC_UnlockDc(dc);
+   return crBk;
+}
+
+int FASTCALL
+GreGetMapMode(HDC hdc)
+{
+   PDC dc;
+   INT iMapMode;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   iMapMode = dc->pdcattr->iMapMode;
+   DC_UnlockDc(dc);
+   return iMapMode;
+}
+
+COLORREF FASTCALL
+GreGetTextColor(HDC hdc)
+{
+   PDC dc;
+   ULONG ulForegroundClr;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   ulForegroundClr = dc->pdcattr->ulForegroundClr;
+   DC_UnlockDc(dc);
+   return ulForegroundClr;
+}
+
 COLORREF FASTCALL
 IntGdiSetBkColor(HDC hDC, COLORREF color)
 {
@@ -86,14 +174,68 @@ IntGdiSetTextColor(HDC hDC,
     }
     pdcattr = pdc->pdcattr;
 
-    // What about ulForegroundClr, like in gdi32?
-    crOldColor = pdcattr->crForegroundClr;
-    pdcattr->crForegroundClr = color;
+    crOldColor = (COLORREF) pdcattr->ulForegroundClr;
+    pdcattr->ulForegroundClr = (ULONG)color;
+
+    if (pdcattr->crForegroundClr != color)
+    {
+        pdcattr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
+        pdcattr->crForegroundClr = color;
+    }
+
     DC_vUpdateTextBrush(pdc);
 
     DC_UnlockDc(pdc);
 
     return  crOldColor;
+}
+
+COLORREF FASTCALL
+IntSetDCBrushColor(HDC hdc, COLORREF crColor)
+{
+   COLORREF OldColor = CLR_INVALID;
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   else
+   {
+      OldColor = (COLORREF) dc->pdcattr->ulBrushClr;
+      dc->pdcattr->ulBrushClr = (ULONG) crColor;
+
+      if ( dc->pdcattr->crBrushClr != crColor )
+      {
+         dc->pdcattr->ulDirty_ |= DIRTY_FILL;
+         dc->pdcattr->crBrushClr = crColor;
+      }
+   }
+   DC_UnlockDc(dc);
+   return OldColor;
+}
+
+COLORREF FASTCALL
+IntSetDCPenColor(HDC hdc, COLORREF crColor)
+{
+   COLORREF OldColor;
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      return CLR_INVALID;
+   }
+
+   OldColor = (COLORREF)dc->pdcattr->ulPenClr;
+   dc->pdcattr->ulPenClr = (ULONG)crColor;
+
+   if (dc->pdcattr->crPenClr != crColor)
+   {
+      dc->pdcattr->ulDirty_ |= DIRTY_LINE;
+      dc->pdcattr->crPenClr = crColor;
+   }
+   DC_UnlockDc(dc);
+   return OldColor;
 }
 
 int
@@ -115,8 +257,24 @@ GreSetStretchBltMode(HDC hDC, int iStretchMode)
        if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
 
        pdcattr->jStretchBltMode = iStretchMode;
+       DC_UnlockDc(pdc);
     }
     return oSMode;
+}
+
+int FASTCALL
+GreGetGraphicsMode(HDC hdc)
+{
+   PDC dc;
+   int GraphicsMode;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   GraphicsMode = dc->pdcattr->iGraphicsMode;
+   DC_UnlockDc(dc);
+   return GraphicsMode;
 }
 
 VOID
@@ -152,7 +310,7 @@ FASTCALL
 IntSetDefaultRegion(PDC pdc)
 {
     PSURFACE pSurface;
-    PROSRGNDATA prgn;
+    PREGION prgn;
     RECTL rclWnd, rclClip;
 
     IntGdiReleaseRaoRgn(pdc);
@@ -245,7 +403,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
     }
     else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
     {
-        dc->fs &= ~DC_FLAG_DIRTY_RAO;
+        //dc->fs &= ~DC_FLAG_DIRTY_RAO;
     }
 
     DC_UnlockDc(dc);
@@ -307,6 +465,7 @@ NtGdiGetDCDword(
             break;
 
         case GdiGetEMFRestorDc:
+            SafeResult = pdc->dclevel.lSaveDepth;
             break;
 
         case GdiGetFontLanguageInfo:
@@ -551,7 +710,7 @@ NtGdiSetBoundsRect(
         RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
     }
 
-    if (flags & DCB_ACCUMULATE)
+    if (flags & DCB_ACCUMULATE && prc != NULL)
     {
         /* Capture the rect */
         _SEH2_TRY

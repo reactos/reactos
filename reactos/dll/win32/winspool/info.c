@@ -22,32 +22,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <wine/config.h>
-//#include "wine/port.h"
-
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <ctype.h>
-//#include <stddef.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <wingdi.h>
 #include <winreg.h>
-#include <shlwapi.h>
-#include <winspool.h>
-//#include "wine/unicode.h"
-#include <wine/debug.h>
 #include <winnls.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(winspool);
+#include <shlwapi.h>
 
 /******************************************************************************
  *		GetDefaultPrinterA   (WINSPOOL.@)

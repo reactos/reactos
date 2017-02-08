@@ -167,17 +167,16 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     if (lpInfo == NULL) return TRUE;
 
-    /* Fill relevent field of the Info structure */
+    /* Fill relevant field of the Info structure */
     Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-            Info.psd = (LPSERVICE_DESCRIPTIONA)&lpInfo;
-            Info.lpDescription = ((LPSERVICE_DESCRIPTIONA)lpInfo)->lpDescription; //HACK
+            Info.psd = lpInfo;
             break;
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            Info.psfa = (LPSERVICE_FAILURE_ACTIONSA)lpInfo;
+            Info.psfa = lpInfo;
             break;
 
         default:
@@ -225,16 +224,16 @@ ChangeServiceConfig2W(SC_HANDLE hService,
 
     if (lpInfo == NULL) return TRUE;
 
-    /* Fill relevent field of the Info structure */
+    /* Fill relevant field of the Info structure */
     Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-            Info.psd = (LPSERVICE_DESCRIPTIONW)lpInfo;
+            Info.psd = lpInfo;
             break;
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            Info.psfa = (LPSERVICE_FAILURE_ACTIONSW)lpInfo;
+            Info.psfa = lpInfo;
             break;
 
         default:
@@ -2123,6 +2122,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
     if (bUseTempBuffer == TRUE)
     {
         TRACE("RQueryServiceConfig2A() returns ERROR_INSUFFICIENT_BUFFER\n");
+        *pcbBytesNeeded = dwBufferSize;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
@@ -2240,6 +2240,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
     if (bUseTempBuffer == TRUE)
     {
         TRACE("RQueryServiceConfig2W() returns ERROR_INSUFFICIENT_BUFFER\n");
+        *pcbBytesNeeded = dwBufferSize;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }

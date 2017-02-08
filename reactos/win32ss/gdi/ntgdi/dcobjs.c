@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Functions for creation and destruction of DCs
- * FILE:              subsystems/win32/win32k/objects/dcobjs.c
+ * FILE:              win32ss/gdi/ntgdi/dcobjs.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
@@ -49,9 +49,8 @@ DC_vUpdateFillBrush(PDC pdc)
     /* Check for DC brush */
     if (pdcattr->hbrush == StockObjects[DC_BRUSH])
     {
-        /* ROS HACK, should use surf xlate */
         /* Update the eboFill's solid color */
-        EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboFill, pdcattr->crPenClr);
+        EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboFill, pdcattr->crBrushClr);
     }
 
     /* Clear flags */
@@ -159,7 +158,8 @@ DC_vSetBrushOrigin(PDC pdc, LONG x, LONG y)
  *
  * @implemented
  */
-_Success_(return != FALSE)
+_Success_(return!=FALSE)
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiSetBrushOrg(
@@ -230,6 +230,7 @@ GdiSelectPalette(
         return NULL;
     }
 
+    /// FIXME: we shouldn't dereference pSurface when the PDEV is not locked
     /* Is this a valid palette for this depth? */
 	if ((!pdc->dclevel.pSurface) ||
         (BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
@@ -318,6 +319,32 @@ NtGdiSelectPen(
     return hOrgPen;
 }
 
+BOOL
+NTAPI
+DC_bIsBitmapCompatible(PDC pdc, PSURFACE psurf)
+{
+    ULONG cBitsPixel;
+
+    /* Must be an API bitmap */
+    if (!(psurf->flags & API_BITMAP)) return FALSE;
+
+    /* DIB sections are always compatible */
+    if (psurf->hSecure != NULL) return TRUE;
+
+    /* See if this is the same PDEV */
+    if (psurf->SurfObj.hdev == (HDEV)pdc->ppdev)
+        return TRUE;
+
+    /* Get the bit depth of the bitmap */
+    cBitsPixel = gajBitsPerFormat[psurf->SurfObj.iBitmapFormat];
+
+    /* 1 BPP is compatible */
+    if ((cBitsPixel == 1) || (cBitsPixel == pdc->ppdev->gdiinfo.cBitsPixel))
+        return TRUE;
+
+    return FALSE;
+}
+
 /*
  * @implemented
  */
@@ -330,9 +357,7 @@ NtGdiSelectBitmap(
     PDC pdc;
     HBITMAP hbmpOld;
     PSURFACE psurfNew, psurfOld;
-    HRGN hVisRgn;
     HDC hdcOld;
-    ULONG cBitsPixel;
     ASSERT_NOGDILOCKS();
 
     /* Verify parameters */
@@ -394,11 +419,8 @@ NtGdiSelectBitmap(
             return NULL;
         }
 
-        /* Check if the bitmap is compatile with the dc */
-        cBitsPixel = gajBitsPerFormat[psurfNew->SurfObj.iBitmapFormat];
-        if ((cBitsPixel != 1) &&
-            (cBitsPixel != pdc->ppdev->gdiinfo.cBitsPixel) &&
-            (psurfNew->hSecure == NULL))
+        /* Check if the bitmap is compatible with the dc */
+        if (!DC_bIsBitmapCompatible(pdc, psurfNew))
         {
             /* Dereference the bitmap, unlock the DC and fail. */
             SURFACE_ShareUnlockSurface(psurfNew);
@@ -448,20 +470,16 @@ NtGdiSelectBitmap(
         SURFACE_ShareUnlockSurface(psurfOld);
     }
 
-    /* Mark the dc brushes invalid */
+    /* Mark the DC brushes and the RAO region invalid */
     pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
+    pdc->fs |= DC_FLAG_DIRTY_RAO;
 
-    /* FIXME: Improve by using a region without a handle and selecting it */
-    hVisRgn = IntSysCreateRectRgn( 0,
-                                   0,
-                                   pdc->dclevel.sizl.cx,
-                                   pdc->dclevel.sizl.cy);
-
-    if (hVisRgn)
-    {
-        GdiSelectVisRgn(hdc, hVisRgn);
-        GreDeleteObject(hVisRgn);
-    }
+    /* Update the system region */
+    REGION_SetRectRgn(pdc->prgnVis,
+                      0,
+                      0,
+                      pdc->dclevel.sizl.cx,
+                      pdc->dclevel.sizl.cy);
 
     /* Unlock the DC */
     DC_UnlockDc(pdc);
@@ -477,7 +495,7 @@ NtGdiSelectClipPath(
     HDC hDC,
     int Mode)
 {
-    HRGN  hrgnPath;
+    PREGION  RgnPath;
     PPATH pPath;
     BOOL  success = FALSE;
     PDC_ATTR pdcattr;
@@ -507,17 +525,30 @@ NtGdiSelectClipPath(
     }
 
     /* Construct a region from the path */
-    else if (PATH_PathToRegion(pPath, pdcattr->jFillMode, &hrgnPath))
+    RgnPath = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (!RgnPath)
     {
-        success = GdiExtSelectClipRgn(pdc, hrgnPath, Mode) != ERROR;
-        GreDeleteObject( hrgnPath );
-
-        /* Empty the path */
-        if (success)
-            PATH_EmptyPath(pPath);
-
-        /* FIXME: Should this function delete the path even if it failed? */
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        DC_UnlockDc(pdc);
+        return FALSE;
     }
+
+    if (!PATH_PathToRegion(pPath, pdcattr->jFillMode, RgnPath))
+    {
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        REGION_Delete(RgnPath);
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    success = IntGdiExtSelectClipRgn(pdc, RgnPath, Mode) != ERROR;
+    REGION_Delete(RgnPath);
+
+    /* Empty the path */
+    if (success)
+        PATH_EmptyPath(pPath);
+
+    /* FIXME: Should this function delete the path even if it failed? */
 
     PATH_UnlockPath(pPath);
     DC_UnlockDc(pdc);
@@ -693,9 +724,7 @@ NtGdiGetRandomRgn(
 {
     INT ret = 0;
     PDC pdc;
-    HRGN hrgnSrc = NULL;
     PREGION prgnSrc = NULL;
-    POINTL ptlOrg;
 
     pdc = DC_LockDc(hdc);
     if (!pdc)
@@ -707,8 +736,7 @@ NtGdiGetRandomRgn(
     switch (iCode)
     {
         case CLIPRGN:
-            hrgnSrc = pdc->rosdc.hClipRgn;
-//            if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
+            prgnSrc = pdc->dclevel.prgnClip;
             break;
 
         case METARGN:
@@ -716,14 +744,15 @@ NtGdiGetRandomRgn(
             break;
 
         case APIRGN:
+            if (pdc->fs & DC_FLAG_DIRTY_RAO)
+                CLIPPING_UpdateGCRegion(pdc);
             if (pdc->prgnAPI)
             {
                 prgnSrc = pdc->prgnAPI;
             }
-//            else if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
-            else if (pdc->rosdc.hClipRgn)
+            else if (pdc->dclevel.prgnClip)
             {
-                hrgnSrc = pdc->rosdc.hClipRgn;
+                prgnSrc = pdc->dclevel.prgnClip;
             }
             else if (pdc->dclevel.prgnMeta)
             {
@@ -739,26 +768,21 @@ NtGdiGetRandomRgn(
             break;
     }
 
-    if (hrgnSrc)
-    {
-        ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
-    }
-    else if (prgnSrc)
+    if (prgnSrc)
     {
         PREGION prgnDest = REGION_LockRgn(hrgnDest);
         if (prgnDest)
         {
             ret = IntGdiCombineRgn(prgnDest, prgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+            if ((ret == 1) && (iCode == SYSRGN))
+            {
+                /// \todo FIXME This is not really correct, since we already modified the region
+                ret = REGION_bOffsetRgn(prgnDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+            }
             REGION_UnlockRgn(prgnDest);
         }
         else
             ret = -1;
-    }
-
-    if (iCode == SYSRGN)
-    {
-        ptlOrg = pdc->ptlDCOrig;
-        NtGdiOffsetRgn(hrgnDest, ptlOrg.x, ptlOrg.y );
     }
 
     DC_UnlockDc(pdc);

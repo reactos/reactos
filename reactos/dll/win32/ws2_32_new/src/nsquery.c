@@ -1,12 +1,13 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        nsquery.c
+ * FILE:        dll/win32/ws2_32_new/src/nsquery.c
  * PURPOSE:     Namespace Query Object
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
 
 /* DATA **********************************************************************/
@@ -132,10 +133,10 @@ WsNqBeginEnumerationProc(PVOID Context,
         /* Get the provider */
         if (!(Provider = Entry->Provider))
         {
-            /* None was laoded, load it */
+            /* None was loaded, load it */
             if ((WsNcLoadProvider(EnumContext->Catalog, Entry) != ERROR_SUCCESS))
             {
-                /* return fake success */
+                /* return TRUE to continue enumerating */
                 return TRUE;
             }
 
@@ -446,7 +447,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
     }
     else
     {
-        /* Assume sucess */
+        /* Assume success */
         ErrorCode = ERROR_SUCCESS;
     }
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/isa.c
+ * FILE:            hal/halppc/generic/isa.c
  * PURPOSE:         Interfaces to the ISA bus
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:

@@ -19,26 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#include <config.h>
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <rpcproxy.h>
-#include <propsys.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
 #include "propsys_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(propsys);
+#include <rpcproxy.h>
 
 static HINSTANCE propsys_hInstance;
 
@@ -53,10 +36,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             propsys_hInstance = hinstDLL;
             DisableThreadLibraryCalls(hinstDLL);
-            break;
-        case DLL_PROCESS_DETACH:
-            break;
-        default:
             break;
     }
 
@@ -147,6 +126,109 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return S_FALSE;
 }
 
+static HRESULT WINAPI propsys_QueryInterface(IPropertySystem *iface, REFIID riid, void **obj)
+{
+    *obj = NULL;
+
+    if (IsEqualIID(riid, &IID_IPropertySystem) || IsEqualIID(riid, &IID_IUnknown)) {
+        *obj = iface;
+        IPropertySystem_AddRef(iface);
+        return S_OK;
+    }
+
+    FIXME("%s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI propsys_AddRef(IPropertySystem *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI propsys_Release(IPropertySystem *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI propsys_GetPropertyDescription(IPropertySystem *iface,
+    REFPROPERTYKEY propkey, REFIID riid, void **ppv)
+{
+    return PSGetPropertyDescription(propkey, riid, ppv);
+}
+
+static HRESULT WINAPI propsys_GetPropertyDescriptionByName(IPropertySystem *iface,
+    LPCWSTR canonical_name, REFIID riid, void **ppv)
+{
+    FIXME("%s %s %p: stub\n", debugstr_w(canonical_name), debugstr_guid(riid), ppv);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI propsys_GetPropertyDescriptionListFromString(IPropertySystem *iface,
+    LPCWSTR proplist, REFIID riid, void **ppv)
+{
+    return PSGetPropertyDescriptionListFromString(proplist, riid, ppv);
+}
+
+static HRESULT WINAPI propsys_EnumeratePropertyDescriptions(IPropertySystem *iface,
+    PROPDESC_ENUMFILTER filter, REFIID riid, void **ppv)
+{
+    FIXME("%d %s %p: stub\n", filter, debugstr_guid(riid), ppv);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI propsys_FormatForDisplay(IPropertySystem *iface,
+    REFPROPERTYKEY key, REFPROPVARIANT propvar, PROPDESC_FORMAT_FLAGS flags,
+    LPWSTR dest, DWORD destlen)
+{
+    FIXME("%p %p %x %p %d: stub\n", key, propvar, flags, dest, destlen);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI propsys_FormatForDisplayAlloc(IPropertySystem *iface,
+    REFPROPERTYKEY key, REFPROPVARIANT propvar, PROPDESC_FORMAT_FLAGS flags,
+    LPWSTR *text)
+{
+    FIXME("%p %p %x %p: stub\n", key, propvar, flags, text);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI propsys_RegisterPropertySchema(IPropertySystem *iface, LPCWSTR path)
+{
+    return PSRegisterPropertySchema(path);
+}
+
+static HRESULT WINAPI propsys_UnregisterPropertySchema(IPropertySystem *iface, LPCWSTR path)
+{
+    return PSUnregisterPropertySchema(path);
+}
+
+static HRESULT WINAPI propsys_RefreshPropertySchema(IPropertySystem *iface)
+{
+    return PSRefreshPropertySchema();
+}
+
+static const IPropertySystemVtbl propsysvtbl = {
+    propsys_QueryInterface,
+    propsys_AddRef,
+    propsys_Release,
+    propsys_GetPropertyDescription,
+    propsys_GetPropertyDescriptionByName,
+    propsys_GetPropertyDescriptionListFromString,
+    propsys_EnumeratePropertyDescriptions,
+    propsys_FormatForDisplay,
+    propsys_FormatForDisplayAlloc,
+    propsys_RegisterPropertySchema,
+    propsys_UnregisterPropertySchema,
+    propsys_RefreshPropertySchema
+};
+
+static IPropertySystem propsys = { &propsysvtbl };
+
+HRESULT WINAPI PSGetPropertySystem(REFIID riid, void **obj)
+{
+    return IPropertySystem_QueryInterface(&propsys, riid, obj);
+}
+
 HRESULT WINAPI PSRegisterPropertySchema(PCWSTR path)
 {
     FIXME("%s stub\n", debugstr_w(path));
@@ -164,6 +246,12 @@ HRESULT WINAPI PSUnregisterPropertySchema(PCWSTR path)
 HRESULT WINAPI PSGetPropertyDescription(REFPROPERTYKEY propkey, REFIID riid, void **ppv)
 {
     FIXME("%p, %p, %p\n", propkey, riid, ppv);
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI PSGetPropertyDescriptionListFromString(LPCWSTR proplist, REFIID riid, void **ppv)
+{
+    FIXME("%s, %p, %p\n", debugstr_w(proplist), riid, ppv);
     return E_NOTIMPL;
 }
 
@@ -192,12 +280,12 @@ HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY pkey, LPWSTR psz, UINT cch
 
     /* GUIDSTRING_MAX accounts for null terminator, +1 for space character. */
     if (cch <= GUIDSTRING_MAX + 1)
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
 
     if (!pkey)
     {
         psz[0] = '\0';
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
     }
 
     sprintfW(psz, guid_fmtW, pkey->fmtid.Data1, pkey->fmtid.Data2,
@@ -235,7 +323,7 @@ HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY pkey, LPWSTR psz, UINT cch
                 *p++ = *ptr--;
         }
 
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
     }
 }
 
@@ -323,7 +411,7 @@ static BOOL string_to_guid(LPCWSTR s, LPGUID id)
 
 HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR pszString, PROPERTYKEY *pkey)
 {
-    int has_minus = 0, has_comma = 0;
+    BOOL has_minus = FALSE, has_comma = FALSE;
 
     TRACE("(%s, %p)\n", debugstr_w(pszString), pkey);
 
@@ -349,7 +437,7 @@ HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR pszString, PROPERTYKEY *pkey)
             if (has_comma)
                 return S_OK;
             else
-                has_comma = 1;
+                has_comma = TRUE;
         }
         pszString++;
     }
@@ -365,7 +453,7 @@ HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR pszString, PROPERTYKEY *pkey)
     {
         if (*pszString == '-')
         {
-            has_minus = 1;
+            has_minus = TRUE;
             pszString++;
         }
     }
@@ -380,7 +468,7 @@ HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR pszString, PROPERTYKEY *pkey)
 
         if (*pszString == '-')
         {
-            has_minus = 1;
+            has_minus = TRUE;
             pszString++;
         }
 

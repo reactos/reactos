@@ -9,6 +9,8 @@
 
 #include "serenum.h"
 
+#include <debug.h>
+
 static NTSTATUS
 SerenumPdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject)

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            drivers/base/kdcom/kdbg.c
+ * FILE:            ntoskrnl/kd/i386/kdbg.c
  * PURPOSE:         Serial i/o functions for the kernel debugger.
  * PROGRAMMER:      Alex Ionescu
  *                  Hervé Poussineau
@@ -28,13 +28,14 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 #error Unknown architecture
 #endif
 
+#define MAX_COM_PORTS   (sizeof(BaseArray) / sizeof(BaseArray[0]) - 1)
+
 /* STATIC VARIABLES ***********************************************************/
 
 // static CPPORT DefaultPort = {0, 0, 0};
 
 /* The COM port must only be initialized once! */
 // static BOOLEAN PortInitialized = FALSE;
-
 
 /* REACTOS FUNCTIONS **********************************************************/
 
@@ -53,13 +54,11 @@ KdPortInitializeEx(
     IN ULONG ComPortNumber)
 {
     NTSTATUS Status;
-    CHAR buffer[80];
 
 #if 0 // Deactivated because never used in fact (was in KdPortInitialize but we use KdPortInitializeEx)
     /*
      * Find the port if needed
      */
-    SIZE_T i;
 
     if (!PortInitialized)
     {
@@ -73,20 +72,17 @@ KdPortInitializeEx(
              * If we reach the first element of the list, the invalid COM port,
              * then it means that no valid port was found.
              */
-            for (i = sizeof(BaseArray) / sizeof(BaseArray[0]) - 1; i > 0; i--)
+            for (ComPortNumber = MAX_COM_PORTS; ComPortNumber > 0; ComPortNumber--)
             {
-                if (CpDoesPortExist(UlongToPtr(BaseArray[i])))
+                if (CpDoesPortExist(UlongToPtr(BaseArray[ComPortNumber])))
                 {
-                    PortInformation->Address = DefaultPort.Address = BaseArray[i];
-                    ComPortNumber = (ULONG)i;
+                    PortInformation->Address = DefaultPort.Address = BaseArray[ComPortNumber];
                     break;
                 }
             }
             if (ComPortNumber == 0)
             {
-                sprintf(buffer,
-                        "\nKernel Debugger: No COM port found!\n\n");
-                HalDisplayString(buffer);
+                HalDisplayString("\r\nKernel Debugger: No COM port found!\r\n\r\n");
                 return FALSE;
             }
         }
@@ -105,17 +101,17 @@ KdPortInitializeEx(
                                                           : PortInformation->BaudRate));
     if (!NT_SUCCESS(Status))
     {
-        sprintf(buffer,
-                "\nKernel Debugger: Serial port not found!\n\n");
-        HalDisplayString(buffer);
+        HalDisplayString("\r\nKernel Debugger: Serial port not found!\r\n\r\n");
         return FALSE;
     }
     else
     {
 #ifndef NDEBUG
+        CHAR buffer[80];
+
         /* Print message to blue screen */
         sprintf(buffer,
-                "\nKernel Debugger: Serial port found: COM%ld (Port 0x%lx) BaudRate %ld\n\n",
+                "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%lx) BaudRate %ld\r\n\r\n",
                 ComPortNumber,
                 PortInformation->Address,
                 PortInformation->BaudRate);
@@ -136,7 +132,7 @@ KdPortGetByteEx(
     IN PCPPORT PortInformation,
     OUT PUCHAR ByteReceived)
 {
-    return (CpGetByte(PortInformation, ByteReceived, FALSE) == CP_GET_SUCCESS);
+    return (CpGetByte(PortInformation, ByteReceived, FALSE, FALSE) == CP_GET_SUCCESS);
 }
 
 VOID

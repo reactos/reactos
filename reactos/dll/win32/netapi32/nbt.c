@@ -65,22 +65,10 @@
  * See also other FIXMEs in the code.
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "netapi32.h"
 
-#include <config.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
 #include <winsock2.h>
-#include <wine/debug.h>
 #include <winreg.h>
-#include <iphlpapi.h>
-
-#include "netbios.h"
-#include "nbnamecache.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 
@@ -175,7 +163,7 @@ static int NetBTNameEncode(const UCHAR *p, UCHAR *buffer)
     if (!buffer) return 0;
 
     buffer[len++] = NCBNAMSZ * 2;
-    for (i = 0; p[i] && i < NCBNAMSZ; i++)
+    for (i = 0; i < NCBNAMSZ && p[i]; i++)
     {
         buffer[len++] = ((p[i] & 0xf0) >> 4) + 'A';
         buffer[len++] =  (p[i] & 0x0f) + 'A';
@@ -301,7 +289,7 @@ static UCHAR NetBTWaitForNameResponse(const NetBTAdapter *adapter, SOCKET fd,
     if (fd == INVALID_SOCKET) return NRC_BADDR;
     if (!answerCallback) return NRC_BADDR;
 
-    while (!found && ret == NRC_GOODRET && (now = GetTickCount()) < waitUntil)
+    while (!found && ret == NRC_GOODRET && (int)((now = GetTickCount()) - waitUntil) < 0)
     {
         DWORD msToWait = waitUntil - now;
         struct fd_set fds;
@@ -411,9 +399,8 @@ static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
     {
         if (queryData->cacheEntry == NULL)
         {
-            queryData->cacheEntry = HeapAlloc(
-             GetProcessHeap(), 0, sizeof(NBNameCacheEntry) +
-             (answerCount - 1) * sizeof(DWORD));
+            queryData->cacheEntry = HeapAlloc(GetProcessHeap(), 0,
+             FIELD_OFFSET(NBNameCacheEntry, addresses[answerCount]));
             if (queryData->cacheEntry)
                 queryData->cacheEntry->numAddresses = 0;
             else
@@ -545,8 +532,8 @@ static UCHAR NetBTinetResolve(const UCHAR name[NCBNAMSZ],
 
             if (addr != INADDR_NONE)
             {
-                *cacheEntry = HeapAlloc(GetProcessHeap(),
-                 0, sizeof(NBNameCacheEntry));
+                *cacheEntry = HeapAlloc(GetProcessHeap(), 0,
+                 FIELD_OFFSET(NBNameCacheEntry, addresses[1]));
                 if (*cacheEntry)
                 {
                     memcpy((*cacheEntry)->name, name, NCBNAMSZ);
@@ -570,9 +557,8 @@ static UCHAR NetBTinetResolve(const UCHAR name[NCBNAMSZ],
                     ;
                 if (host->h_addr_list && host->h_addr_list[0])
                 {
-                    *cacheEntry = HeapAlloc(
-                     GetProcessHeap(), 0, sizeof(NBNameCacheEntry) +
-                     (i - 1) * sizeof(DWORD));
+                    *cacheEntry = HeapAlloc(GetProcessHeap(), 0,
+                     FIELD_OFFSET(NBNameCacheEntry, addresses[i]));
                     if (*cacheEntry)
                     {
                         memcpy((*cacheEntry)->name, name, NCBNAMSZ);
@@ -581,7 +567,7 @@ static UCHAR NetBTinetResolve(const UCHAR name[NCBNAMSZ],
                         (*cacheEntry)->numAddresses = i;
                         for (i = 0; i < (*cacheEntry)->numAddresses; i++)
                             (*cacheEntry)->addresses[i] =
-                             (DWORD)host->h_addr_list[i];
+                             *(DWORD*)host->h_addr_list[i];
                     }
                     else
                         ret = NRC_OSRESNOTAV;
@@ -1007,7 +993,7 @@ static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
                     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
                      sizeof(timeout));
                 }
-                if (ncb->ncb_rto > 0)
+                if (ncb->ncb_sto > 0)
                 {
                     timeout = ncb->ncb_sto * 500;
                     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout,
@@ -1501,13 +1487,17 @@ void NetBTInit(void)
                NetBTNameEncode */
             char *ptr, *lenPtr;
 
-            for (ptr = gScopeID + 1; ptr - gScopeID < sizeof(gScopeID) && *ptr; )
+            for (ptr = gScopeID + 1, lenPtr = gScopeID; ptr - gScopeID < sizeof(gScopeID) && *ptr; ++ptr)
             {
-                for (lenPtr = ptr - 1, *lenPtr = 0;
-                     ptr - gScopeID < sizeof(gScopeID) && *ptr && *ptr != '.';
-                     ptr++)
-                    *lenPtr += 1;
-                ptr++;
+                if (*ptr == '.')
+                {
+                    lenPtr = ptr;
+                    *lenPtr = 0;
+                }
+                else
+                {
+                    ++*lenPtr;
+                }
             }
         }
         if (RegQueryValueExW(hKey, CacheTimeoutW, NULL, NULL,

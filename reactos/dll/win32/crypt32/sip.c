@@ -18,19 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "mssip.h"
-#include "winuser.h"
-
-#include "wine/debug.h"
-#include "wine/list.h"
+#include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -210,7 +198,7 @@ BOOL WINAPI CryptSIPAddProvider(SIP_ADD_NEWPROVIDER *psNewProv)
     TRACE("%p\n", psNewProv);
 
     if (!psNewProv ||
-        psNewProv->cbStruct != sizeof(SIP_ADD_NEWPROVIDER) ||
+        psNewProv->cbStruct < FIELD_OFFSET(SIP_ADD_NEWPROVIDER, pwszGetCapFuncName) ||
         !psNewProv->pwszGetFuncName ||
         !psNewProv->pwszPutFuncName ||
         !psNewProv->pwszCreateFuncName ||

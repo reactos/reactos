@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PSNames module implementation (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2006, 2007, 2008 by             */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,6 +17,7 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
@@ -311,7 +312,7 @@
 
     /* we first allocate the table */
     table->num_maps = 0;
-    table->maps     = 0;
+    table->maps     = NULL;
 
     if ( !FT_NEW_ARRAY( table->maps, num_glyphs + EXTRA_GLYPH_LIST_SIZE ) )
     {
@@ -369,7 +370,7 @@
         /* No unicode chars here! */
         FT_FREE( table->maps );
         if ( !error )
-          error = PSnames_Err_No_Unicode_Glyph_Name;
+          error = FT_THROW( No_Unicode_Glyph_Name );
       }
       else
       {
@@ -377,7 +378,7 @@
         if ( count < num_glyphs / 2 )
         {
           (void)FT_RENEW_ARRAY( table->maps, num_glyphs, count );
-          error = PSnames_Err_Ok;
+          error = FT_Err_Ok;
         }
 
         /* Sort the table in increasing order of unicode values, */
@@ -521,64 +522,76 @@
 
 
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
-  FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface, 
-    (PS_Unicode_ValueFunc)     ps_unicode_value,
-    (PS_Unicodes_InitFunc)     ps_unicodes_init,
-    (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,
-    (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,
 
-    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
-    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
+  FT_DEFINE_SERVICE_PSCMAPSREC(
+    pscmaps_interface,
+    (PS_Unicode_ValueFunc)     ps_unicode_value,        /* unicode_value         */
+    (PS_Unicodes_InitFunc)     ps_unicodes_init,        /* unicodes_init         */
+    (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,  /* unicodes_char_index   */
+    (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,   /* unicodes_char_next    */
 
-    t1_standard_encoding,
-    t1_expert_encoding
-  )
+    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,   /* macintosh_name        */
+    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
+
+    t1_standard_encoding,                               /* adobe_std_encoding    */
+    t1_expert_encoding )                                /* adobe_expert_encoding */
 
 #else
 
-  FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface, 
-    0,
-    0,
-    0,
-    0,
+  FT_DEFINE_SERVICE_PSCMAPSREC(
+    pscmaps_interface,
+    NULL,                                               /* unicode_value         */
+    NULL,                                               /* unicodes_init         */
+    NULL,                                               /* unicodes_char_index   */
+    NULL,                                               /* unicodes_char_next    */
 
-    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,
-    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings,
+    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,   /* macintosh_name        */
+    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
 
-    t1_standard_encoding,
-    t1_expert_encoding
-  )
+    t1_standard_encoding,                               /* adobe_std_encoding    */
+    t1_expert_encoding )                                /* adobe_expert_encoding */
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
 
-  FT_DEFINE_SERVICEDESCREC1(pscmaps_services, 
-    FT_SERVICE_ID_POSTSCRIPT_CMAPS, &FT_PSCMAPS_INTERFACE_GET
-  )
-
-
+  FT_DEFINE_SERVICEDESCREC1(
+    pscmaps_services,
+    FT_SERVICE_ID_POSTSCRIPT_CMAPS, &PSCMAPS_INTERFACE_GET )
 
 
   static FT_Pointer
   psnames_get_service( FT_Module    module,
                        const char*  service_id )
   {
-    FT_UNUSED( module );
+    /* PSCMAPS_SERVICES_GET dereferences `library' in PIC mode */
+#ifdef FT_CONFIG_OPTION_PIC
+    FT_Library  library;
 
-    return ft_service_list_lookup( FT_PSCMAPS_SERVICES_GET, service_id );
+
+    if ( !module )
+      return NULL;
+    library = module->library;
+    if ( !library )
+      return NULL;
+#else
+    FT_UNUSED( module );
+#endif
+
+    return ft_service_list_lookup( PSCMAPS_SERVICES_GET, service_id );
   }
 
 #endif /* FT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
 
 #ifndef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
-#define PUT_PS_NAMES_SERVICE(a) 0
+#define PUT_PS_NAMES_SERVICE( a )  NULL
 #else
-#define PUT_PS_NAMES_SERVICE(a) a
+#define PUT_PS_NAMES_SERVICE( a )  a
 #endif
 
-  FT_DEFINE_MODULE(psnames_module_class,
-  
+  FT_DEFINE_MODULE(
+    psnames_module_class,
+
     0,  /* this is not a font driver, nor a renderer */
     sizeof ( FT_ModuleRec ),
 
@@ -586,12 +599,11 @@
     0x10000L,   /* driver version                      */
     0x20000L,   /* driver requires FreeType 2 or above */
 
-    PUT_PS_NAMES_SERVICE((void*)&FT_PSCMAPS_INTERFACE_GET),   /* module specific interface */
-    (FT_Module_Constructor)0,
-    (FT_Module_Destructor) 0,
-    (FT_Module_Requester)  PUT_PS_NAMES_SERVICE(psnames_get_service)
-  )
-
+    PUT_PS_NAMES_SERVICE(
+      (void*)&PSCMAPS_INTERFACE_GET ),   /* module specific interface */
+    (FT_Module_Constructor)NULL,
+    (FT_Module_Destructor) NULL,
+    (FT_Module_Requester)  PUT_PS_NAMES_SERVICE( psnames_get_service ) )
 
 
 /* END */

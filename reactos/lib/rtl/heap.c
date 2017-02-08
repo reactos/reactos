@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/heap.c
  * PURPOSE:         RTL Heap backend allocator
@@ -46,7 +47,8 @@ UCHAR RtlpBitsClearLow[] =
     4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0
 };
 
-UCHAR FORCEINLINE
+FORCEINLINE
+UCHAR
 RtlpFindLeastSetBit(ULONG Bits)
 {
     if (Bits & 0xFFFF)
@@ -203,7 +205,8 @@ RtlpInitializeHeap(OUT PHEAP Heap,
     return STATUS_SUCCESS;
 }
 
-VOID FORCEINLINE
+FORCEINLINE
+VOID
 RtlpSetFreeListsBit(PHEAP Heap,
                     PHEAP_FREE_ENTRY FreeEntry)
 {
@@ -222,7 +225,8 @@ RtlpSetFreeListsBit(PHEAP Heap,
     Heap->u.FreeListsInUseBytes[Index] |= Bit;
 }
 
-VOID FORCEINLINE
+FORCEINLINE
+VOID
 RtlpClearFreeListsBit(PHEAP Heap,
                       PHEAP_FREE_ENTRY FreeEntry)
 {
@@ -423,6 +427,7 @@ RtlpGetSizeOfBigBlock(PHEAP_ENTRY HeapEntry)
 
     /* Get pointer to the containing record */
     VirtualEntry = CONTAINING_RECORD(HeapEntry, HEAP_VIRTUAL_ALLOC_ENTRY, BusyBlock);
+    ASSERT(VirtualEntry->BusyBlock.Size >= sizeof(HEAP_VIRTUAL_ALLOC_ENTRY));
 
     /* Restore the real size */
     return VirtualEntry->CommitSize - HeapEntry->Size;
@@ -1223,7 +1228,6 @@ RtlCreateHeap(ULONG Flags,
     PVOID CommittedAddress = NULL, UncommittedAddress = NULL;
     PHEAP Heap = NULL;
     RTL_HEAP_PARAMETERS SafeParams = {0};
-    PPEB Peb;
     ULONG_PTR MaximumUserModeAddress;
     SYSTEM_BASIC_INFORMATION SystemInformation;
     MEMORY_BASIC_INFORMATION MemoryInfo;
@@ -1276,32 +1280,10 @@ RtlCreateHeap(ULONG Flags,
 
         if (NtGlobalFlags & FLG_USER_STACK_TRACE_DB)
             Flags |= HEAP_CAPTURE_STACK_BACKTRACES;
-
-        /* Get PEB */
-        Peb = RtlGetCurrentPeb();
-
-        /* Apply defaults for non-set parameters */
-        if (!Parameters->SegmentCommit) Parameters->SegmentCommit = Peb->HeapSegmentCommit;
-        if (!Parameters->SegmentReserve) Parameters->SegmentReserve = Peb->HeapSegmentReserve;
-        if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = Peb->HeapDeCommitFreeBlockThreshold;
-        if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = Peb->HeapDeCommitTotalFreeThreshold;
-    }
-    else
-    {
-        /* Apply defaults for non-set parameters */
-#if 0
-        if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
-        if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
-        if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
-        if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
-#endif
     }
 
-    // FIXME: Move to memory manager
-        if (!Parameters->SegmentCommit) Parameters->SegmentCommit = PAGE_SIZE * 2;
-        if (!Parameters->SegmentReserve) Parameters->SegmentReserve = 1048576;
-        if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = PAGE_SIZE;
-        if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = 65536;
+    /* Set tunable parameters */
+    RtlpSetHeapParameters(Parameters);
 
     /* Get the max um address */
     Status = ZwQuerySystemInformation(SystemBasicInformation,
@@ -1948,8 +1930,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         return NULL;
     }
 
-    if (Flags & (HEAP_CREATE_ENABLE_TRACING |
-                 HEAP_CREATE_ALIGN_16))
+    if (Flags & (HEAP_CREATE_ENABLE_TRACING))
     {
         DPRINT1("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
     }
@@ -2115,6 +2096,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
 
         /* Initialize the newly allocated block */
         VirtualBlock->BusyBlock.Size = (USHORT)(AllocationSize - Size);
+        ASSERT(VirtualBlock->BusyBlock.Size >= sizeof(HEAP_VIRTUAL_ALLOC_ENTRY));
         VirtualBlock->BusyBlock.Flags = EntryFlags | HEAP_ENTRY_VIRTUAL_ALLOC | HEAP_ENTRY_EXTRA_PRESENT;
         VirtualBlock->CommitSize = AllocationSize;
         VirtualBlock->ReserveSize = AllocationSize;
@@ -2667,7 +2649,8 @@ RtlReAllocateHeap(HANDLE HeapPtr,
         if (InUseEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
         {
             /* Simple in case of a virtual alloc - just an unused size */
-            InUseEntry->Size = (USHORT)((AllocationSize - Size) >> HEAP_ENTRY_SHIFT);
+            InUseEntry->Size = (USHORT)(AllocationSize - Size);
+            ASSERT(InUseEntry->Size >= sizeof(HEAP_VIRTUAL_ALLOC_ENTRY));
         }
         else if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
         {

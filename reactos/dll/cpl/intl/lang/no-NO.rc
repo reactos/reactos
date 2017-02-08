@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "De&taljer...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Ytterligere språkstøtte", -1, 5, 62, 234, 82
     LTEXT "De fleste språk er innstallert som standard. Merk av i de relevante boksene nedenfor hvis du vil innstallere flere språk.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nnstaller filer for for omfattende skript og høyre-mot-venstre språk", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "Inn&staller filer for østasiatiske språk", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "I&nnstaller filer for for omfattende skript og høyre-mot-venstre språk", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "Inn&staller filer for østasiatiske språk", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -51,8 +51,8 @@ BEGIN
     LTEXT "Velg et språk som tilsvarer språkversjonen av programmet du vil bruke, som ikke er Unicode-programmer:", -1, 14, 55, 223, 18
     GROUPBOX "Konverteringstabeller for tegntabell", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Standard brukerkonto innstilling", -1, 5, 193, 234, 30
-    CHECKBOX "Bruk alle innstillinger på gjeldende brukerkonto og standard brukerprofil", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Standard brukerkonto innstilling", -1, 5, 193, 234, 32
+    CHECKBOX "Bruk alle innstillinger på gjeldende brukerkonto og standard brukerprofil", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -85,7 +85,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Valuta"
@@ -112,7 +111,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Klokkeslett"
@@ -133,10 +131,8 @@ BEGIN
     LTEXT "Klokkeslettformat\n\n\
 t = time    m = minutt    s = sekund    a = am/pm\n\n\
 t = 12 timer   T = 24 timer\n\
-tt, mm, ss = ledende null   t, m, s = ikke ledende null",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+tt, mm, ss = ledende null   t, m, s = ikke ledende null", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -171,7 +167,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sortering"
@@ -182,7 +177,6 @@ BEGIN
     LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN
@@ -197,3 +191,27 @@ BEGIN
     IDS_CPLNAME "Regionale innstillinger"
     IDS_CPLDESCRIPTION "Velg språk og nummer format, valuta, tid og dato."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
+    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
+    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
+    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+END
+

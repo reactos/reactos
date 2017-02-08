@@ -1,0 +1,29 @@
+/* TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 29-05-2008
+ * LastChange: 12-04-2011
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ukončenie programu - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ukončujem program... Počkajte, prosím.", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Ak zvolíte okamžité ukončenie programu, stratíte všetky neuložené údaje. Ak chcete program ukončiť okamžite, kliknite na tlačidlo Ukončiť ihneď.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Ukončiť ihneď", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ukončenie programu - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Zrušiť", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&Ukončiť ihneď", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Tento program neodpovedá.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Pre návrat do systému ReactOS a overenie stavu programu kliknite na tlačidlo Zrušiť.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Ak zvolíte okamžité ukončenie programu, stratíte všetky neuložené údaje. Ak chcete program ukončiť okamžite, kliknite na tlačidlo Ukončiť ihneď.", IDC_STATIC, 7, 53, 178, 26
+END

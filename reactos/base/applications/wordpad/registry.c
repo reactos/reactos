@@ -295,7 +295,7 @@ void registry_set_filelist(LPCWSTR newFile, HWND hMainWnd)
 
         if(lstrcmpiW(newFile, pFiles[0]))
         {
-            for(i = 0; pFiles[i] && i < FILELIST_ENTRIES; i++)
+            for(i = 0; i < FILELIST_ENTRIES && pFiles[i]; i++)
             {
                 if(!lstrcmpiW(pFiles[i], newFile))
                 {
@@ -320,7 +320,7 @@ void registry_set_filelist(LPCWSTR newFile, HWND hMainWnd)
                 pFiles[0] = newFile;
             }
 
-            for(i = 0; pFiles[i] && i < FILELIST_ENTRIES; i++)
+            for(i = 0; i < FILELIST_ENTRIES && pFiles[i]; i++)
             {
                 wsprintfW(buffer, var_file, i+1);
                 RegSetValueExW(hKey, (LPWSTR)&buffer, 0, REG_SZ, (const BYTE*)pFiles[i],

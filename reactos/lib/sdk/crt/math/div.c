@@ -5,6 +5,7 @@
  * @implemented
  */
 div_t
+CDECL
 div(int num, int denom)
 {
   div_t r;

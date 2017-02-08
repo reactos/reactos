@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/misc/dllmain.c
+ * FILE:            dll/win32/kernel32/client/dllmain.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Aleksey Bragin (aleksey@reactos.org)
@@ -17,8 +17,7 @@
 /* GLOBALS *******************************************************************/
 
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
-
-BOOLEAN BaseRunningInServerProcess;
+BOOLEAN BaseRunningInServerProcess = FALSE;
 
 WCHAR BaseDefaultPathBuffer[6140];
 
@@ -88,11 +87,11 @@ DllMain(HANDLE hDll,
         LPVOID lpReserved)
 {
     NTSTATUS Status;
-    ULONG Dummy;
-    ULONG DummySize = sizeof(Dummy);
+    BASESRV_API_CONNECTINFO ConnectInfo;
+    ULONG ConnectInfoSize = sizeof(ConnectInfo);
     WCHAR SessionDir[256];
 
-    DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
+    DPRINT("DllMain(hInst %p, dwReason %lu)\n",
            hDll, dwReason);
 
     Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
@@ -111,13 +110,16 @@ DllMain(HANDLE hDll,
             /* Enable the Rtl thread pool and timer queue to use proper Win32 thread */
             RtlSetThreadPoolStartFunc(BaseCreateThreadPoolThread, BaseExitThreadPoolThread);
 
+            /* Register the manifest prober routine */
+            LdrSetDllManifestProber(BasepProbeForDllManifest);
+
             /* Don't bother us for each thread */
             LdrDisableThreadCalloutsForDll((PVOID)hDll);
 
             /* Initialize default path to NULL */
             RtlInitUnicodeString(&BaseDefaultPath, NULL);
 
-            /* Setup the right Object Directory path */
+            /* Setup the Object Directory path */
             if (!SessionId)
             {
                 /* Use the raw path */
@@ -133,11 +135,11 @@ DllMain(HANDLE hDll,
                          WIN_OBJ_DIR);
             }
 
-            /* Connect to the base server */
+            /* Connect to the Base Server */
             Status = CsrClientConnectToServer(SessionDir,
                                               BASESRV_SERVERDLL_INDEX,
-                                              &Dummy,
-                                              &DummySize,
+                                              &ConnectInfo,
+                                              &ConnectInfoSize,
                                               &BaseRunningInServerProcess);
             if (!NT_SUCCESS(Status))
             {
@@ -200,7 +202,7 @@ DllMain(HANDLE hDll,
             }
 
             /* Initialize Console Support */
-            if (!BasepInitConsole())
+            if (!ConDllInitialize(dwReason, SessionDir))
             {
                 DPRINT1("Failed to set up console\n");
                 return FALSE;
@@ -219,16 +221,22 @@ DllMain(HANDLE hDll,
         {
             if (DllInitialized == TRUE)
             {
+                /* Uninitialize console support */
+                ConDllInitialize(dwReason, NULL);
+
                 /* Insert more dll detach stuff here! */
                 NlsUninit();
-
-                /* Uninitialize console support */
-                BasepUninitConsole();
 
                 /* Delete DLL critical section */
                 RtlDeleteCriticalSection(&BaseDllDirectoryLock);
             }
             break;
+        }
+
+        case DLL_THREAD_ATTACH:
+        {
+            /* ConDllInitialize sets the current console locale for the new thread */
+            return ConDllInitialize(dwReason, NULL);
         }
 
         default:

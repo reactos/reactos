@@ -1,36 +1,36 @@
 @ stdcall WlanAllocateMemory (long)
 @ stdcall WlanCloseHandle (ptr ptr)
-@ stub WlanConnect
-@ stub WlanDeleteProfile
-@ stub WlanDisconnect
+@ stdcall WlanConnect (ptr ptr ptr ptr)
+@ stdcall WlanDeleteProfile (ptr ptr ptr ptr)
+@ stdcall WlanDisconnect (ptr ptr ptr)
 @ stdcall WlanEnumInterfaces (ptr ptr ptr)
 @ stub WlanExtractPsdIEDataList
 @ stdcall WlanFreeMemory (ptr)
-@ stub WlanGetAvailableNetworkList
+@ stdcall WlanGetAvailableNetworkList (ptr ptr long ptr ptr)
 @ stub WlanGetFilterList
-@ stub WlanGetInterfaceCapability
+@ stdcall WlanGetInterfaceCapability (ptr ptr ptr ptr)
 @ stub WlanGetNetworkBssList
-@ stub WlanGetProfile
-@ stub WlanGetProfileCustomUserData
-@ stub WlanGetProfileList
+@ stdcall WlanGetProfile (ptr ptr ptr ptr ptr long ptr)
+@ stdcall WlanGetProfileCustomUserData (ptr ptr ptr ptr ptr ptr)
+@ stdcall WlanGetProfileList (ptr ptr ptr ptr)
 @ stub WlanGetSecuritySettings
-@ stub WlanIhvControl
+@ stdcall WlanIhvControl (ptr ptr ptr long ptr long ptr ptr)
 @ stdcall WlanOpenHandle (long ptr ptr ptr)
 @ stub WlanQueryAutoConfigParameter
-@ stub WlanQueryInterface
-@ stub WlanReasonCodeToString
-@ stub WlanRegisterNotification
-@ stub WlanRenameProfile
+@ stdcall WlanQueryInterface (ptr ptr ptr ptr ptr ptr ptr)
+@ stdcall WlanReasonCodeToString (long long ptr ptr)
+@ stdcall WlanRegisterNotification (ptr long long ptr ptr ptr ptr)
+@ stdcall WlanRenameProfile (ptr ptr ptr ptr ptr)
 @ stub WlanSaveTemporaryProfile
 @ stdcall WlanScan (ptr ptr ptr ptr ptr)
 @ stub WlanSetAutoConfigParameter
 @ stub WlanSetFilterList
 @ stub WlanSetInterface
-@ stub WlanSetProfile
-@ stub WlanSetProfileCustomUserData
+@ stdcall WlanSetProfile (ptr ptr long ptr ptr long ptr ptr)
+@ stdcall WlanSetProfileCustomUserData (ptr ptr ptr long ptr ptr)
 @ stub WlanSetProfileEapUserData
 @ stub WlanSetProfileEapXmlUserData
-@ stub WlanSetProfileList
+@ stdcall WlanSetProfileList (ptr ptr long ptr ptr)
 @ stub WlanSetProfilePosition
 @ stub WlanSetPsdIEDataList
-@ stub WlanSetSecuritySettings
+@ stdcall WlanSetSecuritySettings (ptr long ptr)

@@ -5,11 +5,11 @@
  * PURPOSE:     TDI transport handle management
  */
 
-#include "iphlpapi_private.h"
+#include "precomp.h"
 
 const PWCHAR TcpFileName = L"\\Device\\Tcp";
 
-NTSTATUS openTcpFile(PHANDLE tcpFile)
+NTSTATUS openTcpFile(PHANDLE tcpFile, ACCESS_MASK DesiredAccess)
 {
     UNICODE_STRING fileName;
     OBJECT_ATTRIBUTES objectAttributes;
@@ -24,18 +24,12 @@ NTSTATUS openTcpFile(PHANDLE tcpFile)
                                 NULL,
                                 NULL );
 
-    status = ZwCreateFile( tcpFile,
-                           SYNCHRONIZE | GENERIC_EXECUTE |
-                           GENERIC_READ | GENERIC_WRITE,
-                           &objectAttributes,
-                           &ioStatusBlock,
-                           NULL,
-                           FILE_ATTRIBUTE_NORMAL,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           FILE_OPEN_IF,
-                           FILE_SYNCHRONOUS_IO_NONALERT,
-                           0,
-                           0 );
+    status = NtOpenFile( tcpFile,
+                         DesiredAccess | SYNCHRONIZE,
+                         &objectAttributes,
+                         &ioStatusBlock,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,
+                         FILE_SYNCHRONOUS_IO_NONALERT);
 
     /* String does not need to be freed: it points to the constant
      * string we provided */

@@ -5,19 +5,19 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Computernaam"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS gebruikt de volgende informatie om uw computer te indentificeren op het netwerk.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Computerbeschrijving:", IDC_STATIC, 6, 40, 90, 9
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Volledige computernaam:", IDC_STATIC, 6, 68, 85, 9
-    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Werkgroep:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Om de Netwerk Indentificatie wizard te gebruiken, word lid van een domein en maak een lokale gebruiker aan en klik op ""Network ID"".", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON  "&Netwerk ID...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT       "Om deze computer te hernoemen of om lid te worden van een domein, klik op ""Change"".", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON  "&Wijzigen...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "Let op: Alleen Administrators mogen de indentificatie van deze computer aanpassen.", IDC_STATIC, 6, 179, 300, 9
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "ReactOS gebruikt de volgende informatie om uw computer te indentificeren op het netwerk.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Computerbeschrijving:", IDC_STATIC, 6, 40, 90, 9
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Volledige computernaam:", IDC_STATIC, 6, 68, 85, 9
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Werkgroep:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Om de Netwerk Indentificatie wizard te gebruiken, word lid van een domein en maak een lokale gebruiker aan en klik op ""Network ID"".", IDC_STATIC, 6, 113, 172, 24
+    PUSHBUTTON "&Netwerk ID...", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT "Om deze computer te hernoemen of om lid te worden van een domein, klik op ""Change"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON "&Wijzigen...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT "Let op: Alleen Administrators mogen de indentificatie van deze computer aanpassen.", IDC_STATIC, 6, 179, 300, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -67,12 +67,12 @@ BEGIN
     22 "Welkom bij de werkgoep %1."
     23 "Welkom bij het domein %1."
     24 "U moet de computer herstarten om de wijzigingen van kracht te laten gaan."
-	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
+    25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Let op: Alleen Administrators mogen de indentificatie van deze computer aanpassen."
     1022 "Let op: De indentificatie van deze computer kan niet gewijzigd worden omdat:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+    1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
     3210 "&Details >>"
     3220 "<< &Details"
-	4000 "Information"
-	4001 "Can't set new a computer name!"
+    4000 "Information"
+    4001 "Can't set new a computer name!"
 END

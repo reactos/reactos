@@ -167,6 +167,9 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
     if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST))
     {
+#ifdef _M_ARM
+        DbgBreakPoint();
+#else
         (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
         if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
         {
@@ -178,7 +181,8 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
         {
             while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->TargetSet, 0, 0));
         }
-        (void)InterlockedExchangePointer(&Prcb->SignalDone, NULL);
+        (void)InterlockedExchangePointer((PVOID*)&Prcb->SignalDone, NULL);
+#endif // _M_ARM
     }
 #endif
    return TRUE;
@@ -228,7 +232,11 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
                         &Count);
 
         /* Spin until the other processors are ready */
-        while ((volatile ULONG)Count != 1) YieldProcessor();
+        while (Count != 1)
+        {
+            YieldProcessor();
+            KeMemoryBarrierWithoutFence();
+        }
     }
 #endif
 
@@ -248,7 +256,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     if (Affinity)
     {
         /* Sanity check */
-        ASSERT(Prcb == (volatile PKPRCB)KeGetCurrentPrcb());
+        ASSERT(Prcb == KeGetCurrentPrcb());
 
         /* FIXME: TODO */
         ASSERTMSG("Not yet implemented\n", FALSE);

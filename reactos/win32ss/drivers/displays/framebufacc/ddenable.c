@@ -38,7 +38,7 @@ DrvEnableDirectDraw(
 {
 	 PPDEV ppdev = (PPDEV)dhpdev;
 
-	 if (ppdev->bDDInitialized == TRUE)
+	 if (ppdev->bDDInitialized)
 	 {
 		 return TRUE;
 	 }
@@ -237,7 +237,7 @@ DrvGetDirectDrawInfo(
 	{
 		ppdev->pvmList = pvmList;
 
-		if ( bDDrawHeap == TRUE)
+		if (bDDrawHeap)
 		{
 			pvmList->dwFlags        = VIDMEM_ISLINEAR ;
             pvmList->fpStart        = ppdev->ScreenHeight * ppdev->ScreenDelta;

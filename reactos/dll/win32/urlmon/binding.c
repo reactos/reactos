@@ -17,12 +17,6 @@
  */
 
 #include "urlmon_main.h"
-//#include "winreg.h"
-#include <shlwapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static WCHAR cbinding_contextW[] = {'C','B','i','n','d','i','n','g',' ','C','o','n','t','e','x','t',0};
 static WCHAR bscb_holderW[] = { '_','B','S','C','B','_','H','o','l','d','e','r','_',0 };
@@ -299,16 +293,18 @@ static void create_object(Binding *binding)
         return;
     }
 
-    if(!(clsid_str = get_mime_clsid(binding->mime, &clsid))) {
-        FIXME("Could not find object for MIME %s\n", debugstr_w(binding->mime));
-        return;
-    }
+    if((clsid_str = get_mime_clsid(binding->mime, &clsid)))
+        IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_CLASSIDAVAILABLE, clsid_str);
 
-    IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_CLASSIDAVAILABLE, clsid_str);
     IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_BEGINSYNCOPERATION, NULL);
 
-    hres = create_mime_object(binding, &clsid, clsid_str);
-    heap_free(clsid_str);
+    if(clsid_str) {
+        hres = create_mime_object(binding, &clsid, clsid_str);
+        heap_free(clsid_str);
+    }else {
+        FIXME("Could not find object for MIME %s\n", debugstr_w(binding->mime));
+        hres = REGDB_E_CLASSNOTREG;
+    }
 
     IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_ENDSYNCOPERATION, NULL);
     binding->clsid = CLSID_NULL;

@@ -1,0 +1,56 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Falsche Parameteranzahl -  xcopy /? zeigt Hilfe an\n"
+    STRING_INVPARM,  "Unbekannter Parameter '%1' - xcopy /? zeigt Hilfe an\n"
+    STRING_PAUSE,    "Eingabetaste betätigen, um mit dem Kopieren zu beginnen\n"
+    STRING_SIMCOPY,  "%1!d! Datei(en) würden kopiert\n"
+    STRING_COPY,     "%1!d! Datei(en) kopiert\n"
+    STRING_QISDIR,   "Ist '%1' eine Datei oder ein Verzeichnis\n\
+                     am Zielsort?\n\
+                     (D - Datei, V - Verzeichnis)\n"
+    STRING_SRCPROMPT,"%1? (Ja|Nein)\n"
+    STRING_OVERWRITE,"%1 überschreiben? (Ja|Nein|Alle)\n"
+    STRING_COPYFAIL, "Kopieren von '%1' nach '%2' fehlgeschlagen. Fehlernummer: %3!d!\n"
+    STRING_OPENFAIL, "Fehler beim Öffnen von '%1'\n"
+    STRING_READFAIL, "Fehler beim Lesen von '%1'\n"
+    STRING_YES_CHAR, "J"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"D"
+    STRING_DIR_CHAR, "V"
+
+    STRING_HELP,
+"XCOPY - Kopiert Dateien oder Verzeichnisse an einen Zielort\n\
+\n\
+Syntax:\n\
+XCOPY Quelle [Ziel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Mit:\n\
+\n\
+[/I]  Behandle Ziel als Verzeichnisnamen, wenn es nicht existiert und\n\
+\tmehrere Dateien kopiert werden.\n\
+[/S]  Kopiere Verzeichnisse und Unterverzeichnisse\n\
+[/E]  Kopiere Verzeichnisse und Unterverzeichnisse, auch leere\n\
+[/Q]  Zeige die Dateinamen beim Kopieren nicht an\n\
+[/F]  Zeige vollständige Dateinamen von Quelle und Ziel an\n\
+[/L]  Simulation: Zeige die Namen der Datein, die kopiert würden\n\
+[/W]  Wartet vor Beginn des Kopierens auf Bestätigung\n\
+[/T]  Erzeuge eine leere Verzeichnisstruktur, ohne Dateien zu kopieren\n\
+[/Y]  Keine Nachfrage vor dem Überschreiben von Dateien\n\
+[/-Y] Nachrage vor dem Überschreiben von Dateien\n\
+[/P]  Fragt für jede Quelldatei, ob sie kopiert werden soll\n\
+[/N]  Kopiert die Dateien unter ihrem Kurznamen\n\
+[/U]  Kopiert nur Dateien, die am Ziel bereits existieren\n\
+[/R]  Überschreibt schreibgeschützte Dateien\n\
+[/H]  Kopiere auch versteckte und Systemdateien\n\
+[/C]  Nach Fehlern den Kopiervorgang fortsetzen\n\
+[/A]  Nur Dateien mit Archivbit kopieren\n\
+[/M]  Nur Dateien mit Archivbit kopieren, danach Archivbit löschen\n\
+[/D | /D:M-T-J] Kopiere neue Dateien und Dateien, die neuer als das\n\
+\t\tangegebene Datum sind. Wird kein Datum angegegebn, werden nur\n\
+\t\tQuelldateien kopiert, die neuer sind als die Zieldatei\n\n"
+
+}

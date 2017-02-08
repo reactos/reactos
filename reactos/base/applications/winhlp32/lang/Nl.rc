@@ -1,0 +1,108 @@
+/*
+ * Help Viewer (Dutch resources)
+ *
+ * Copyright 2003 Hans Leidekker
+ * Copyright 2008 Frans Kool
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+MAIN_MENU MENU
+{
+ POPUP "&Bestand" {
+  MENUITEM "&Openen", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "Af&drukken", MNID_FILE_PRINT
+  MENUITEM "&Pagina-instellingen...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "&Afsluiten", MNID_FILE_EXIT
+ }
+ POPUP "&Bewerken" {
+   MENUITEM "&Kopiëren...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annoteren...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Favorieten" {
+   MENUITEM "&Aanmaken...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Opties" {
+  MENUITEM "Altijd &zichtbaar", MNID_HELP_HELPTOP
+  MENUITEM "Geschiedenis",		MNID_OPTS_HISTORY
+  POPUP    "Lettertype"
+  BEGIN
+    MENUITEM "Klein",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Standaard",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Groot",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "&Help" {
+   MENUITEM "Hulp &bij help", MNID_HELP_HELPON
+   MENUITEM "&Info...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotering...",        MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiëren",             MNID_CTXT_COPY
+		MENUITEM "Afdrukken...",         MNID_CTXT_PRINT
+		POPUP    "Lettertype"
+		BEGIN
+			MENUITEM "Klein",        MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normaal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Groot",        MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"ReactOS Help"
+STID_WHERROR, 		"FOUT"
+STID_WARNING,  		"WAARSCHUWING"
+STID_INFO,  		"Informatie"
+STID_NOT_IMPLEMENTED, 	"Niet geïmplementeerd"
+STID_HLPFILE_ERROR_s, 	"Fout bij het lezen van het helpbestand '%s'"
+STID_INDEX, 		"Inde&x"
+STID_CONTENTS,		"&Inhoudsopgave"
+STID_BACK, 		"&Terug"
+STID_ALL_FILES, 	"Alle bestanden (*.*)"
+STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan '%s' niet openen. Wilt u zelf dit bestand zoeken?"
+STID_NO_RICHEDIT	"Kan geen richedit implementatie vinden... Actie afgebroken"
+STID_PSH_INDEX,		"Help-onderwerpen: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Zoeken"
+{
+    LTEXT  "Nog niet geïmplementeerd", -1, 10, 10, 180, 150
+}

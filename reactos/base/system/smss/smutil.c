@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            base/system/smss/smss.c
+ * FILE:            base/system/smss/smutil.c
  * PURPOSE:         Main SMSS Code
  * PROGRAMMERS:     Alex Ionescu
  */
@@ -9,6 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
+#include <ndk/sefuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -162,6 +165,9 @@ SmpParseToken(IN PUNICODE_STRING Input,
     /* Save the input length */
     InputLength = Input->Length;
 
+    /* If the input string is empty, just return */
+    if (InputLength == 0) return STATUS_SUCCESS;
+
     /* Parse the buffer until the first character */
     p = Input->Buffer;
     Length = 0;
@@ -210,14 +216,14 @@ SmpParseToken(IN PUNICODE_STRING Input,
         if (!Token->Buffer) return STATUS_NO_MEMORY;
 
         /* Fill in the unicode string to hold it */
-        Token->MaximumLength = TokenLength + sizeof(UNICODE_NULL);
-        Token->Length = TokenLength;
+        Token->MaximumLength = (USHORT)(TokenLength + sizeof(UNICODE_NULL));
+        Token->Length = (USHORT)TokenLength;
         RtlCopyMemory(Token->Buffer, p, TokenLength);
         Token->Buffer[TokenLength / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     /* Modify the input string with the position of where the next token begins */
-    Input->Length -= (ULONG_PTR)pp - (ULONG_PTR)Input->Buffer;
+    Input->Length -= (USHORT)((ULONG_PTR)pp - (ULONG_PTR)Input->Buffer);
     Input->Buffer = pp;
     return STATUS_SUCCESS;
 }
@@ -253,7 +259,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
                  sizeof(L"\\system32;");
         RtlInitEmptyUnicodeString(&FullPathString,
                                   RtlAllocateHeap(SmpHeap, SmBaseTag, Length),
-                                  Length);
+                                  (USHORT)Length);
         if (FullPathString.Buffer)
         {
             /* Append the root, system32;, and then the current library path */
@@ -305,7 +311,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
     Length = PAGE_SIZE;
     RtlInitEmptyUnicodeString(&PathString,
                               RtlAllocateHeap(SmpHeap, SmBaseTag, Length),
-                              Length);
+                              (USHORT)Length);
     if (!PathString.Buffer)
     {
         /* Fail if we have no memory for this */
@@ -326,7 +332,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
         Length = PathString.Length + sizeof(UNICODE_NULL);
         RtlInitEmptyUnicodeString(&PathString,
                                   RtlAllocateHeap(SmpHeap, SmBaseTag, Length),
-                                  Length);
+                                  (USHORT)Length);
         if (!PathString.Buffer)
         {
             /* Fail if we have no memory for this */
@@ -530,7 +536,7 @@ SmpRestoreBootStatusData(IN BOOLEAN BootOkay,
     Status = RtlLockBootStatusData(&BootState);
     if (NT_SUCCESS(Status))
     {
-        /* Write the bootokay and bootshudown values */
+        /* Write the bootokay and bootshutdown values */
         RtlGetSetBootStatusData(BootState,
                                 FALSE,
                                 RtlBsdItemBootGood,

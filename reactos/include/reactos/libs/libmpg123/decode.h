@@ -53,14 +53,20 @@ int synth_1to1_altivec    (real*, int, mpg123_handle*, int);
 int synth_1to1_stereo_altivec(real*, real*, mpg123_handle*);
 int synth_1to1_x86_64     (real*, int, mpg123_handle*, int);
 int synth_1to1_stereo_x86_64(real*, real*, mpg123_handle*);
+int synth_1to1_avx        (real*, int, mpg123_handle*, int);
+int synth_1to1_stereo_avx (real*, real*, mpg123_handle*);
 int synth_1to1_arm        (real*, int, mpg123_handle*, int);
+int synth_1to1_neon       (real*, int, mpg123_handle*, int);
+int synth_1to1_stereo_neon(real*, real*, mpg123_handle*);
+int synth_1to1_neon64     (real*, int, mpg123_handle*, int);
+int synth_1to1_stereo_neon64(real*, real*, mpg123_handle*);
 /* This is different, special usage in layer3.c only.
    Hence, the name... and now forget about it.
    Never use it outside that special portion of code inside layer3.c! */
 int absynth_1to1_i486(real*, int, mpg123_handle*, int);
 /* These mono/stereo converters use one of the above for the grunt work. */
 int synth_1to1_mono       (real*, mpg123_handle*);
-int synth_1to1_mono2stereo(real*, mpg123_handle*);
+int synth_1to1_m2s(real*, mpg123_handle*);
 
 /* Sample rate decimation comes in less flavours. */
 #ifndef NO_DOWNSAMPLE
@@ -68,18 +74,18 @@ int synth_2to1            (real*, int, mpg123_handle*, int);
 int synth_2to1_dither     (real*, int, mpg123_handle*, int);
 int synth_2to1_i386       (real*, int, mpg123_handle*, int);
 int synth_2to1_mono       (real*, mpg123_handle*);
-int synth_2to1_mono2stereo(real*, mpg123_handle*);
+int synth_2to1_m2s(real*, mpg123_handle*);
 int synth_4to1            (real *,int, mpg123_handle*, int);
 int synth_4to1_dither     (real *,int, mpg123_handle*, int);
 int synth_4to1_i386       (real*, int, mpg123_handle*, int);
 int synth_4to1_mono       (real*, mpg123_handle*);
-int synth_4to1_mono2stereo(real*, mpg123_handle*);
+int synth_4to1_m2s(real*, mpg123_handle*);
 #endif
 #ifndef NO_NTOM
 /* NtoM is really just one implementation. */
 int synth_ntom (real *,int, mpg123_handle*, int);
 int synth_ntom_mono (real *, mpg123_handle *);
-int synth_ntom_mono2stereo (real *, mpg123_handle *);
+int synth_ntom_m2s (real *, mpg123_handle *);
 #endif
 #endif
 
@@ -92,25 +98,25 @@ int synth_1to1_8bit_i386       (real*, int, mpg123_handle*, int);
 int synth_1to1_8bit_wrap       (real*, int, mpg123_handle*, int);
 int synth_1to1_8bit_mono       (real*, mpg123_handle*);
 #endif
-int synth_1to1_8bit_mono2stereo(real*, mpg123_handle*);
+int synth_1to1_8bit_m2s(real*, mpg123_handle*);
 #ifndef NO_16BIT
 int synth_1to1_8bit_wrap_mono       (real*, mpg123_handle*);
-int synth_1to1_8bit_wrap_mono2stereo(real*, mpg123_handle*);
+int synth_1to1_8bit_wrap_m2s(real*, mpg123_handle*);
 #endif
 #ifndef NO_DOWNSAMPLE
 int synth_2to1_8bit            (real*, int, mpg123_handle*, int);
 int synth_2to1_8bit_i386       (real*, int, mpg123_handle*, int);
 int synth_2to1_8bit_mono       (real*, mpg123_handle*);
-int synth_2to1_8bit_mono2stereo(real*, mpg123_handle*);
+int synth_2to1_8bit_m2s(real*, mpg123_handle*);
 int synth_4to1_8bit            (real*, int, mpg123_handle*, int);
 int synth_4to1_8bit_i386       (real*, int, mpg123_handle*, int);
 int synth_4to1_8bit_mono       (real*, mpg123_handle*);
-int synth_4to1_8bit_mono2stereo(real*, mpg123_handle*);
+int synth_4to1_8bit_m2s(real*, mpg123_handle*);
 #endif
 #ifndef NO_NTOM
 int synth_ntom_8bit            (real*, int, mpg123_handle*, int);
 int synth_ntom_8bit_mono       (real*, mpg123_handle*);
-int synth_ntom_8bit_mono2stereo(real*, mpg123_handle*);
+int synth_ntom_8bit_m2s(real*, mpg123_handle*);
 #endif
 #endif
 
@@ -124,24 +130,30 @@ int synth_1to1_real_sse        (real*, int, mpg123_handle*, int);
 int synth_1to1_real_stereo_sse (real*, real*, mpg123_handle*);
 int synth_1to1_real_x86_64     (real*, int, mpg123_handle*, int);
 int synth_1to1_real_stereo_x86_64(real*, real*, mpg123_handle*);
+int synth_1to1_real_avx        (real*, int, mpg123_handle*, int);
+int synth_1to1_real_stereo_avx (real*, real*, mpg123_handle*);
 int synth_1to1_real_altivec    (real*, int, mpg123_handle*, int);
 int synth_1to1_real_stereo_altivec(real*, real*, mpg123_handle*);
+int synth_1to1_real_neon       (real*, int, mpg123_handle*, int);
+int synth_1to1_real_stereo_neon(real*, real*, mpg123_handle*);
+int synth_1to1_real_neon64     (real*, int, mpg123_handle*, int);
+int synth_1to1_real_stereo_neon64(real*, real*, mpg123_handle*);
 int synth_1to1_real_mono       (real*, mpg123_handle*);
-int synth_1to1_real_mono2stereo(real*, mpg123_handle*);
+int synth_1to1_real_m2s(real*, mpg123_handle*);
 #ifndef NO_DOWNSAMPLE
 int synth_2to1_real            (real*, int, mpg123_handle*, int);
 int synth_2to1_real_i386       (real*, int, mpg123_handle*, int);
 int synth_2to1_real_mono       (real*, mpg123_handle*);
-int synth_2to1_real_mono2stereo(real*, mpg123_handle*);
+int synth_2to1_real_m2s(real*, mpg123_handle*);
 int synth_4to1_real            (real*, int, mpg123_handle*, int);
 int synth_4to1_real_i386       (real*, int, mpg123_handle*, int);
 int synth_4to1_real_mono       (real*, mpg123_handle*);
-int synth_4to1_real_mono2stereo(real*, mpg123_handle*);
+int synth_4to1_real_m2s(real*, mpg123_handle*);
 #endif
 #ifndef NO_NTOM
 int synth_ntom_real            (real*, int, mpg123_handle*, int);
 int synth_ntom_real_mono       (real*, mpg123_handle*);
-int synth_ntom_real_mono2stereo(real*, mpg123_handle*);
+int synth_ntom_real_m2s(real*, mpg123_handle*);
 #endif
 #endif
 
@@ -153,24 +165,30 @@ int synth_1to1_s32_sse        (real*, int, mpg123_handle*, int);
 int synth_1to1_s32_stereo_sse (real*, real*, mpg123_handle*);
 int synth_1to1_s32_x86_64     (real*, int, mpg123_handle*, int);
 int synth_1to1_s32_stereo_x86_64(real*, real*, mpg123_handle*);
+int synth_1to1_s32_avx        (real*, int, mpg123_handle*, int);
+int synth_1to1_s32_stereo_avx (real*, real*, mpg123_handle*);
 int synth_1to1_s32_altivec    (real*, int, mpg123_handle*, int);
 int synth_1to1_s32_stereo_altivec(real*, real*, mpg123_handle*);
+int synth_1to1_s32_neon       (real*, int, mpg123_handle*, int);
+int synth_1to1_s32_stereo_neon(real*, real*, mpg123_handle*);
+int synth_1to1_s32_neon64     (real*, int, mpg123_handle*, int);
+int synth_1to1_s32_stereo_neon64(real*, real*, mpg123_handle*);
 int synth_1to1_s32_mono       (real*, mpg123_handle*);
-int synth_1to1_s32_mono2stereo(real*, mpg123_handle*);
+int synth_1to1_s32_m2s(real*, mpg123_handle*);
 #ifndef NO_DOWNSAMPLE
 int synth_2to1_s32            (real*, int, mpg123_handle*, int);
 int synth_2to1_s32_i386       (real*, int, mpg123_handle*, int);
 int synth_2to1_s32_mono       (real*, mpg123_handle*);
-int synth_2to1_s32_mono2stereo(real*, mpg123_handle*);
+int synth_2to1_s32_m2s(real*, mpg123_handle*);
 int synth_4to1_s32            (real*, int, mpg123_handle*, int);
 int synth_4to1_s32_i386       (real*, int, mpg123_handle*, int);
 int synth_4to1_s32_mono       (real*, mpg123_handle*);
-int synth_4to1_s32_mono2stereo(real*, mpg123_handle*);
+int synth_4to1_s32_m2s(real*, mpg123_handle*);
 #endif
 #ifndef NO_NTOM
 int synth_ntom_s32            (real*, int, mpg123_handle*, int);
 int synth_ntom_s32_mono       (real*, mpg123_handle*);
-int synth_ntom_s32_mono2stereo(real*, mpg123_handle*);
+int synth_ntom_s32_m2s(real*, mpg123_handle*);
 #endif
 #endif
 
@@ -189,6 +207,11 @@ void dct64_i486(int*, int* , real*); /* Yeah, of no use outside of synth_i486.c 
 void dct36         (real *,real *,real *,real *,real *);
 void dct36_3dnow   (real *,real *,real *,real *,real *);
 void dct36_3dnowext(real *,real *,real *,real *,real *);
+void dct36_x86_64  (real *,real *,real *,real *,real *);
+void dct36_sse     (real *,real *,real *,real *,real *);
+void dct36_avx     (real *,real *,real *,real *,real *);
+void dct36_neon    (real *,real *,real *,real *,real *);
+void dct36_neon64  (real *,real *,real *,real *,real *);
 
 /* Tools for NtoM resampling synth, defined in ntom.c . */
 int synth_ntom_set_step(mpg123_handle *fr); /* prepare ntom decoding */

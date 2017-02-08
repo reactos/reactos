@@ -204,6 +204,13 @@ operator delete(
     ExFreePool(ptr);
 }
 
+inline void __cdecl
+operator delete(
+    PVOID ptr, UINT_PTR)
+{
+    ExFreePool(ptr);
+}
+
 #endif  /* ALLOCATION_OPERATORS_DEFINED */
 
 

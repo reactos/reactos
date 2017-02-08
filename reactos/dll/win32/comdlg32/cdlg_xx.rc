@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "cdlg.h"
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define WINE_FILEDESCRIPTION_STR "Common Dialog Boxes"
@@ -28,7 +26,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_FILEVERSION 4,0,0,950 /* Maybe 4.1.0.980 for win98?? */
 #define WINE_FILEVERSION_STR "4.0"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 /* Translators do not need to translate this text, unless the language uses a
  * different character set or if the distribution of characters looks wrong.
@@ -60,34 +58,34 @@ STRINGTABLE
 
 
 /* @makedep: pd32_collate.ico */
-PD32_COLLATE ICON pd32_collate.ico
+PD32_COLLATE ICON "res/icons/pd32_collate.ico"
 
 /* @makedep: pd32_nocollate.ico */
-PD32_NOCOLLATE ICON pd32_nocollate.ico
+PD32_NOCOLLATE ICON "res/icons/pd32_nocollate.ico"
 
 /* @makedep: pd32_portrait.ico */
-PD32_PORTRAIT ICON pd32_portrait.ico
+PD32_PORTRAIT ICON "res/icons/pd32_portrait.ico"
 
 /* @makedep: pd32_landscape.ico */
-PD32_LANDSCAPE ICON pd32_landscape.ico
+PD32_LANDSCAPE ICON "res/icons/pd32_landscape.ico"
 
 /* @makedep: folder.ico */
-FOLDER ICON folder.ico
+FOLDER ICON "res/icons/folder.ico"
 
 /* @makedep: folder2.ico */
-FOLDER2 ICON folder2.ico
+FOLDER2 ICON "res/icons/folder2.ico"
 
 /* @makedep: floppy.ico */
-FLOPPY ICON floppy.ico
+FLOPPY ICON "res/icons/floppy.ico"
 
 /* @makedep: cdrom.ico */
-CDROM ICON cdrom.ico
+CDROM ICON "res/icons/cdrom.ico"
 
 /* @makedep: hdisk.ico */
-HDISK ICON hdisk.ico
+HDISK ICON "res/icons/hdisk.ico"
 
 /* @makedep: network.ico */
-NETWORK ICON network.ico
+NETWORK ICON "res/icons/network.ico"
 
 /* @makedep: fontpics.bmp */
-38 BITMAP fontpics.bmp
+38 BITMAP "res/bitmaps/fontpics.bmp"

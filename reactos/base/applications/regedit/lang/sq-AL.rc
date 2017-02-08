@@ -1,0 +1,548 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
+    "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
+    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+END
+
+/* Menus */
+
+IDC_REGEDIT MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "dIL", ID_REGISTRY_EXIT
+    END
+    POPUP "nDIHMë"
+    BEGIN
+        MENUITEM "rRETH ...", ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Importo ...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Eksporto...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Ngarko koshere...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Shkarko koshere...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Lidh regjistrin e Networkut...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "Shkeput regjistrin e Networkut...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Printo\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Dil", ID_REGISTRY_EXIT
+    END
+    POPUP "Modifiko"
+    BEGIN
+        MENUITEM "&Modifiko", ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "E Re"
+        BEGIN
+            MENUITEM "Çeles", ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "T'drejta...", ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
+        MENUITEM "Fshi\tDel", ID_EDIT_DELETE
+        MENUITEM "Emero", ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "Kopjo emrin çelesit", ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "Gjej\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "Gjej tjetren\tF3", ID_EDIT_FINDNEXT
+    END
+    POPUP "&Vëzhgo"
+    BEGIN
+        MENUITEM "&Bari statusit", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Ndaj", ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Rifresko\tF5", ID_VIEW_REFRESH
+    END
+    POPUP "&Favorite"
+    BEGIN
+        MENUITEM "Shto tek Favoritet", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "Hiq nga Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+    END
+    POPUP "Ndihmë"
+    BEGIN
+        MENUITEM "Ndihmë temë\tF1", ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Modifiko", ID_EDIT_MODIFY
+        MENUITEM "Modifiko Binary Data", ID_EDIT_MODIFY_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "Fshi\tDel", ID_EDIT_DELETE
+        MENUITEM "Emero", ID_EDIT_RENAME
+    END
+    POPUP ""
+    BEGIN
+        POPUP "E Re"
+        BEGIN
+            MENUITEM "Çeles", ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Hap/Zmadho", ID_TREE_EXPANDBRANCH
+        POPUP "E Re"
+        BEGIN
+            MENUITEM "Çeles", ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM "Gjej", ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "Fshi", ID_TREE_DELETE
+        MENUITEM "Emero", ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Exporto", ID_TREE_EXPORT
+        MENUITEM "T'drejta...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Kopjo emrin çelesit", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Prej", ID_HEXEDIT_CUT
+        MENUITEM "Kopjo", ID_HEXEDIT_COPY
+        MENUITEM "Ngjit", ID_HEXEDIT_PASTE
+        MENUITEM "Fshi", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Përzgjidh te gjitha", ID_HEXEDIT_SELECT_ALL
+    END
+END
+
+/* Dialogs */
+
+IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Value &name:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Value data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 196, 64, 50, 14
+END
+
+IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Multi-String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Value &name:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Value data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
+             ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 196, 154, 50, 14
+END
+
+IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Binary Value"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Value &name:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Value data:", IDC_STATIC, 6, 35, 161, 8
+    CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 196, 154, 50, 14
+END
+
+IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit DWORD"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Value &name:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Value data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
+    GROUPBOX "Base", IDC_STATIC, 130, 35, 116, 39
+    AUTORADIOBUTTON "&Hexadecimal", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "&Decimal", IDC_FORMAT_DEC, 141, 59, 60, 10
+    DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 196, 82, 50, 14
+END
+
+IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Resource List"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+    DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
+    PUSHBUTTON "Shfaq...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+END
+
+IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Burime"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    LTEXT "Nderprej:", IDC_STATIC, 10, 48, 35, 8
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    LTEXT "Memoria:", IDC_STATIC, 10, 91, 32, 8
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    LTEXT "Device specificifike data:", IDC_STATIC, 10, 177, 80, 8
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    GROUPBOX "Perdorim", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Perpuno", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Ndaj", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Device exclusiv", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Driver exclusiv", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Interface Tipi:", IDC_STATIC, 144, 220, 58, 8
+    LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
+    RTEXT "Bus Numer:", IDC_STATIC, 151, 230, 51, 8
+    LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
+    RTEXT "Versioni:", IDC_STATIC, 151, 240, 51, 8
+    LTEXT "", IDC_VERSION, 205, 240, 66, 8
+    RTEXT "Rishiko:", IDC_STATIC, 151, 250, 51, 8
+    LTEXT "", IDC_REVISION, 205, 250, 66, 8
+    DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
+    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME "Emri"
+    IDS_LIST_COLUMN_TYPE "Tipi"
+    IDS_LIST_COLUMN_DATA "Data"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Registry Editor"
+    IDC_REGEDIT "REGEDIT"
+    IDC_REGEDIT_FRAME "REGEDIT_FRAME"
+END
+
+STRINGTABLE
+BEGIN
+    ID_REGISTRY_MENU "Përmban komandat për të punuar me të gjithë regjistrin"
+    ID_EDIT_MENU "Përmban komandat për vlera reduktimi ose çelësat"
+    ID_VIEW_MENU "Përmban komandat për customizing dritaren e regjistrit"
+    ID_FAVOURITES_MENU "Përmban komandat për të hyrë çelësat e përdorura shpesh"
+    ID_HELP_MENU "Përmban komandat për të shfaqur ndihmë dhe informacion në lidhje me regjistri editor"
+    ID_EDIT_NEW_MENU "Përmban komandat për krijimin keys ose vlera të reja"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_MODIFY "Modifikon të dhënat e vlerës së"
+    ID_EDIT_NEW_KEY "Shto çeles te ri"
+    ID_EDIT_NEW_STRINGVALUE "Shton një vlerë të re string"
+    ID_EDIT_NEW_BINARYVALUE "Shton një vlerë të re binar"
+    ID_EDIT_NEW_DWORDVALUE "ADDS një vlerë të re të dyfishtë fjalën"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importon një file teksti në regjistër"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Eksportet gjitha ose pjesë e regjistrit në një skedar teksti"
+    ID_REGISTRY_LOADHIVE "Ngarkon një dokument në regjistër"
+    ID_REGISTRY_UNLOADHIVE "Shkarkon një dokument nga regjistri"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Lidhet me regjistrin e një kompjuteri largët"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Shkëputet nga regjistri një kompjuter në distancë të"
+    ID_REGISTRY_PRINT "Shtyp tërë ose pjesë të regjistrit"
+/*    ID_HELP_HELPTOPICS "Hap editor regjistrit ndihmë" */
+    ID_HELP_ABOUT "Displays informacion rreth programit, versionin dhe të drejtat e autorit"
+END
+
+STRINGTABLE
+BEGIN
+    ID_REGISTRY_EXIT "Quits the registry editor"
+    ID_FAVOURITES_ADDTOFAVOURITES "Shton çelësat në listën preferuarat"
+    ID_FAVOURITES_REMOVEFAVOURITE "Heq çelësat nga lista preferuarat"
+    ID_VIEW_STATUSBAR "Tregon ose fsheh status bar"
+    ID_VIEW_SPLIT "Ndryshimi pozitën e ndarë midis dy panes"
+    ID_VIEW_REFRESH "Rifresko dritaren"
+    ID_EDIT_DELETE "Fshin te perzgjedhurat"
+    ID_EDIT_RENAME "Emeron te perzgjedhurat"
+    ID_EDIT_COPYKEYNAME "Kopjet Emri i kyçit zgjedhur në Clipboard"
+    ID_EDIT_FIND "Gjen një varg tekst në një kyç, vlerë ose të dhëna"
+    ID_EDIT_FINDNEXT "Gjen dukuri tjetër e tekstit të specifikuar në kërkim kaluar"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_WARNING "Paralajmërim"
+    IDS_BAD_KEY "Nuk mund të query kyç '%s'"
+    IDS_BAD_VALUE "Nuk mund te query vleren '%s'"
+    IDS_UNSUPPORTED_TYPE "Nuk mund të modifikoni çelësat e këtij lloji (%ld)"
+    IDS_TOO_BIG_VALUE "Vlera eshte e madhe (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Data tipit REG_MULTI_SZ nuk mund te permbaje string bosh.\nStringu bosh eshte hequr nga lista."
+    IDS_QUERY_DELETE_KEY_ONE "Jeni te sigurte qe doni te fshini këtë çeles?"
+    IDS_QUERY_DELETE_KEY_MORE "Jeni te sigurte qe doni te fshini këto çelesa?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Konfirmo fshirjen e çelsave"
+    IDS_QUERY_DELETE_ONE "Jeni te sigurte qe doni te fshini këtë vlere?"
+    IDS_QUERY_DELETE_MORE "Jeni te sigurte qe doni te fshini këto vlera?"
+    IDS_QUERY_DELETE_CONFIRM "Konfirmo fshirjen e vlerave"
+    IDS_ERR_DELVAL_CAPTION "Error ne fshirjen e vlerave"
+    IDS_ERR_DELETEVALUE "E pafumdur fshirja e vlerave te specifikuara!"
+    IDS_ERR_RENVAL_CAPTION "Error emerimi i vlerave"
+    IDS_ERR_RENVAL_TOEMPTY "Nuk emerohet %s. Vlera specifike e emrit eshte bosht. Provo nje emer tjeter."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Konfirmo restaurimin e çelesit"
+    IDS_QUERY_IMPORT_HIVE_MSG "Një çeles do të rikthehet në krye të çelesit të zgjedhura aktualisht.\nTë gjitha vlerat dhe subkeys e këtij çelës do të fshihet.\nA doni të vazhdoni operacionin?"
+    IDS_NEW_KEY "Çeles i ri #%d"
+    IDS_NEW_VALUE "Vlere e re #%d"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BINARY_EMPTY "(zero-length binary value)"
+    IDS_DEFAULT_VALUE_NAME "(Default)"
+    IDS_VALUE_NOT_SET "(value not set)"
+    IDS_UNKNOWN_TYPE "Unknown type: (0x%lx)"
+    IDS_MY_COMPUTER "My Computer"
+    IDS_IMPORT_REG_FILE "Importo Registry File"
+    IDS_EXPORT_REG_FILE "Exporto Registry File"
+    IDS_LOAD_HIVE "Load Hive"
+    IDS_UNLOAD_HIVE "Unload Hive"
+    IDS_INVALID_DWORD "(invalid DWORD value)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FLT_REGFILE "Registration File"
+    IDS_FLT_REGFILES "Registration Files (*.reg)"
+    IDS_FLT_REGFILES_FLT "*.reg"
+    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 Registration Files (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4_FLT "*.reg"
+    IDS_FLT_ALLFILES "Gjith Dokumentat (*.*)"
+    IDS_FLT_ALLFILES_FLT "*.*"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ACCESS_FULLCONTROL "Kontroll i plote"
+    IDS_ACCESS_READ "Lexo"
+    IDS_ACCESS_QUERYVALUE "Vlera kerkuese"
+    IDS_ACCESS_SETVALUE "Ver vleren"
+    IDS_ACCESS_CREATESUBKEY "Krijo Subkey"
+    IDS_ACCESS_ENUMERATESUBKEYS "Rendit Subkeys"
+    IDS_ACCESS_NOTIFY "Njofto"
+    IDS_ACCESS_CREATELINK "Krijo Link"
+    IDS_ACCESS_DELETE "Fshi"
+    IDS_ACCESS_WRITEDAC "Shkruaj DAC"
+    IDS_ACCESS_WRITEOWNER "Shkruaj zoteruesin"
+    IDS_ACCESS_READCONTROL "Kontrol lexuesi"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INHERIT_THISKEYONLY "Veq kete çeles"
+    IDS_INHERIT_THISKEYANDSUBKEYS "Kete çeles dhe nençelesa"
+    IDS_INHERIT_SUBKEYSONLY "vetem nençelesa"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EXPAND "Zgjat"
+    IDS_COLLAPSE "Zgjero"
+    IDS_GOTO_SUGGESTED_KEY "Shko tek '%s'"
+    IDS_FINISHEDFIND "Përfunduar kërkimin përmes regjistrit."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_IMPORT_PROMPT "Shtimi informacion pa qëllim mund të ndryshojë ose të fshini vlerat dhe komponentëve të shkaktojnë që të largohet nga puna si duhet.\nNëse ju nuk besoni burimin e këtij informacioni në '%s', mos e shto ne regjister.\n\nJeni te sigurte qe doni te vazhdoni?"
+    IDS_IMPORT_OK "Çelësat dhe vlerat e përfshira në '%s' janë shtuar me sukses në regjistër."
+    IDS_IMPORT_ERROR "Nuk importohet '%s': Error hapjes së kartelës. Nuk mund të jetë një disk, dokumenti ne sistem nuk mund të ekzistojnë."
+    IDS_EXPORT_ERROR "Nuk exportohet '%s': Error krijuar apo shkrim në dosjen. Nuk mund të jetë një disk apo skedar sistemi gabim."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BUSNUMBER "Bus Numer"
+    IDS_INTERFACE "Interface"
+    IDS_DMA_CHANNEL "Kanal"
+    IDS_DMA_PORT "Port"
+    IDS_INTERRUPT_VECTOR "Vektor"
+    IDS_INTERRUPT_LEVEL "Nivel"
+    IDS_INTERRUPT_AFFINITY "Prirje"
+    IDS_INTERRUPT_TYPE "Tipi"
+    IDS_MEMORY_ADDRESS "Adresa fizike"
+    IDS_MEMORY_LENGTH "Gjatesi"
+    IDS_MEMORY_ACCESS "Akses"
+    IDS_PORT_ADDRESS "Adresa fizike"
+    IDS_PORT_LENGTH "Gjatesi"
+    IDS_PORT_ACCESS "Akses"
+    IDS_SPECIFIC_RESERVED1 "Reserved 1"
+    IDS_SPECIFIC_RESERVED2 "Reserved 2"
+    IDS_SPECIFIC_DATASIZE "Masa Data"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PORT_PORT_IO "Port"
+    IDS_PORT_MEMORY_IO "Memorie"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Nivel Sensitive"
+    IDS_MEMORY_READ_ONLY "Vetem lexo"
+    IDS_MEMORY_WRITE_ONLY "Vetem shkruaj"
+    IDS_MEMORY_READ_WRITE "Lexo / Shkruaj"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BUS_UNDEFINED "i papërcaktuar"
+    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_ISA "ISA"
+    IDS_BUS_EISA "EISA"
+    IDS_BUS_MICROCHANNEL "MicroChannel"
+    IDS_BUS_TURBOCHANNEL "TurboChannel"
+    IDS_BUS_PCIBUS "PCI"
+    IDS_BUS_VMEBUS "VME"
+    IDS_BUS_NUBUS "NuBus"
+    IDS_BUS_PCMCIABUS "PCMCIA"
+    IDS_BUS_CBUS "C-Bus"
+    IDS_BUS_MPIBUS "MPI-Bus"
+    IDS_BUS_MPSABUS "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PNPISABUS "PnP-ISA Bus"
+    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+END
+
+/*****************************************************************/
+
+/* Dialogs */
+
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Gama Exportit", IDC_STATIC, 2, 0, 366, 48
+    CONTROL "Te Gjith", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
+    CONTROL "Dega e perzgjedhur", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
+END
+
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ngarko kosheren"
+FONT 8, "Ms Shell Dlg"
+BEGIN
+    LTEXT "Çeles:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 89, 17, 50, 14
+END
+
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Shto tek Favoritet"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 129, 24, 50, 14
+    LTEXT "&Favorite Emer:", IDC_STATIC, 7, 7, 70, 10
+    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
+END
+
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hiq Favorite"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 7, 114, 50, 14
+    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+            WS_TABSTOP, 7, 20, 150, 90
+    LTEXT "Select Favorite(s):", IDC_STATIC, 7, 7, 99, 12
+END
+
+IDD_FIND DIALOGEX 0, 0, 254, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Gjej tjetrin", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "Anulo", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "Kerko në", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "Gjej çfar:", IDC_STATIC, 7, 8, 37, 10
+    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    CONTROL "Çeles", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 35, 8
+    CONTROL "&Vlera", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 36, 8
+    CONTROL "&Data", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 42, 8
+    CONTROL "Pershtath nje string te plote", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 32, 94, 13
+    CONTROL "Pershtat rastin", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 48, 90, 12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Gjej"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
+    DEFPUSHBUTTON "Anulo", IDCANCEL, 93, 29, 45, 14
+    LTEXT "Kerko ne regjister...", IDC_STATIC, 33, 12, 83, 8
+END
+
+/* String Table */
+/*
+ *STRINGTABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
+ *END
+ */

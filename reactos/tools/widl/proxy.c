@@ -37,14 +37,6 @@
 #include "typegen.h"
 #include "expr.h"
 
-#define END_OF_LIST(list)       \
-  do {                          \
-    if (list) {                 \
-      while (NEXT_LINK(list))   \
-        list = NEXT_LINK(list); \
-    }                           \
-  } while(0)
-
 static FILE* proxy;
 static int indent = 0;
 
@@ -794,6 +786,11 @@ int need_stub(const type_t *iface)
 int need_proxy_file(const statement_list_t *stmts)
 {
     return does_any_iface(stmts, need_proxy);
+}
+
+int need_proxy_delegation(const statement_list_t *stmts)
+{
+    return does_any_iface(stmts, need_delegation);
 }
 
 int need_inline_stubs(const type_t *iface)

@@ -5,21 +5,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Volume"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",IDC_DEVICE_NAME,40,10,194,36
-    GROUPBOX "Volume del dispositivo", -1, 7,30,230,100
-    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE,17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "Basso",-1,62,66,30,17
-    LTEXT "Alto",-1,195,66,30,17
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
+    LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 36
+    GROUPBOX "Volume del dispositivo", -1, 7, 30, 230, 100
+    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
+    CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
+    LTEXT "Basso", -1, 62, 66, 30, 17
+    LTEXT "Alto", -1, 195, 66, 30, 17
     CHECKBOX "&Mute", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     CHECKBOX "Mettere l'icona del &volume nella barra dei task", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "&Avanzate...", IDC_ADVANCED_BTN, 150,105,75,15
-    GROUPBOX "Impostazione altoparlanti", IDC_SPEAKER_SET_BTN, 7,140,230,80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Usare le impostazioni seguenti per modificare per i singoli altoparlanti il volume ed altre impostazioni.",-1,70,155,150,36
-    PUSHBUTTON "Volume...", IDC_SPEAKER_VOL_BTN, 70,195,75,15
-    PUSHBUTTON "A&vanzate...", IDC_ADVANCED2_BTN, 150,195,75,15
+    PUSHBUTTON "&Avanzate...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    GROUPBOX "Impostazione altoparlanti", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    LTEXT "Usare le impostazioni seguenti per modificare per i singoli altoparlanti il volume ed altre impostazioni.", -1, 70, 155, 150, 36
+    PUSHBUTTON "Volume...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
+    PUSHBUTTON "A&vanzate...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
@@ -27,18 +27,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suoni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Uno schema dei suoni Ë un insieme di suoni legati agli eventi in ReactOS e nei programmi. Potete selezionare uno schema esistente o salvarne uno che avete modificato.",-1,8,7,230,40
-    LTEXT "S&chema dei suoni:",-1,8,42,150,17
+    LTEXT "Uno schema dei suoni √® un insieme di suoni legati agli eventi in ReactOS e nei programmi. Potete selezionare uno schema esistente o salvarne uno che avete modificato.", -1, 8, 7, 230, 40
+    LTEXT "S&chema dei suoni:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Salva come...", IDC_SAVEAS_BTN, 134,70,50,15
-    PUSHBUTTON "&Cancella", IDC_DELETE_BTN, 188,70,50,15
-    LTEXT "Per cambiare i suoni, cliccare un evento nella lista seguente e poi scegliere il suono da usare. Potete salvare le modifiche in un nuovo schema di suoni.",-1,8,90,230,40
-    LTEXT "&Eventi:",-1,8,118,150,17
+    PUSHBUTTON "&Salva come...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "&Cancella", IDC_DELETE_BTN, 188, 70, 50, 15
+    LTEXT "Per cambiare i suoni, cliccare un evento nella lista seguente e poi scegliere il suono da usare. Potete salvare le modifiche in un nuovo schema di suoni.", -1, 8, 90, 230, 40
+    LTEXT "&Eventi:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Suoni:",IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    LTEXT "&Suoni:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED | BS_ICON
-    PUSHBUTTON "&Sfoglia...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
+    PUSHBUTTON "&Sfoglia...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -46,24 +46,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Audio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Riproduzione suoni", -1, 7,7,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "&Dispositivo preimpostato:",-1,50,20,180,17
+    GROUPBOX "Riproduzione suoni", -1, 7, 7, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
+    LTEXT "&Dispositivo preimpostato:", -1, 50, 20, 180, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Volume...", IDC_VOLUME1_BTN, 85,47,70,15
-    PUSHBUTTON "Ava&zate...", IDC_ADV2_BTN, 160,47,70,15
-    GROUPBOX "Registrazione dei suoni", -1, 7,75,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "D&ispositivo preimpostato:",-1,50,88,180,17
+    PUSHBUTTON "&Volume...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "Ava&zate...", IDC_ADV2_BTN, 160, 47, 70, 15
+    GROUPBOX "Registrazione dei suoni", -1, 7, 75, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
+    LTEXT "D&ispositivo preimpostato:", -1, 50, 88, 180, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "V&olume...", IDC_VOLUME2_BTN, 85,115,70,15
-    PUSHBUTTON "Avaza&te...", IDC_ADV1_BTN, 160,115,70,15
-    GROUPBOX "Riproduzione musica MIDI", -1, 7,145,230,60
-    ICON IDI_MIDICON, IDI_MIDICON, 15,158,32,32
-    LTEXT "D&ispositivo preimpostato:",-1,50,158,180,17
+    PUSHBUTTON "V&olume...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "Avaza&te...", IDC_ADV1_BTN, 160, 115, 70, 15
+    GROUPBOX "Riproduzione musica MIDI", -1, 7, 145, 230, 60
+    ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
+    LTEXT "D&ispositivo preimpostato:", -1, 50, 158, 180, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Volu&me...", IDC_VOLUME3_BTN, 85,185,70,15
-    PUSHBUTTON "Informazioni su...", IDC_ADV3_BTN, 160,185,70,15
+    PUSHBUTTON "Volu&me...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "Informazioni su...", IDC_ADV3_BTN, 160, 185, 70, 15
     CHECKBOX "&Usa solo dispositivi preimpostati", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
@@ -72,20 +72,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Voce"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Queste impostazioni controllano il volume e le impostazioni avanzate della riproduzione e della registrazione vocale per il dispositivo selezionato.",-1,8,7,230,40
-    GROUPBOX "Riproduzione vocale", -1, 7,37,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "D&ispositivo preimpostato:",-1,50,50,180,17
+    LTEXT "Queste impostazioni controllano il volume e le impostazioni avanzate della riproduzione e della registrazione vocale per il dispositivo selezionato.", -1, 8, 7, 230, 40
+    GROUPBOX "Riproduzione vocale", -1, 7, 37, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
+    LTEXT "D&ispositivo preimpostato:", -1, 50, 50, 180, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Volume...", IDC_VOLUME4_BTN, 85,77,70,15
-    PUSHBUTTON "&Avanzate...", IDC_ADV4_BTN, 160,77,70,15
-    GROUPBOX "Registrazione vocale", -1, 7,105,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "&Dispositivo preimpostato:",-1,50,118,180,17
+    PUSHBUTTON "&Volume...", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "&Avanzate...", IDC_ADV4_BTN, 160, 77, 70, 15
+    GROUPBOX "Registrazione vocale", -1, 7, 105, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
+    LTEXT "&Dispositivo preimpostato:", -1, 50, 118, 180, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "V&olume...", IDC_VOLUME5_BTN, 85,145,70,15
-    PUSHBUTTON "Ava&nzate...", IDC_ADV5_BTN, 160,145,70,15
-    PUSHBUTTON "&Test hardware...", IDC_TEST_HARDWARE, 160,175,70,15
+    PUSHBUTTON "V&olume...", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "Ava&nzate...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "&Test hardware...", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -93,10 +93,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-
 END
 
-IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
+IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Salvare schema come"
 FONT 8, "MS Shell Dlg"
@@ -107,7 +106,7 @@ BEGIN
     PUSHBUTTON "Annulla", IDCANCEL, 157, 36, 60, 14
 END
 
-IDD_SPEAKERS DIALOG 0, 0, 257, 204
+IDD_SPEAKERS DIALOGEX 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Altoparlanti"
 FONT 8, "MS Shell Dlg"
@@ -119,7 +118,7 @@ BEGIN
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
-IDD_PERFORMANCE1 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE1 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Prestazioni"
 FONT 8, "MS Shell Dlg"
@@ -140,7 +139,7 @@ BEGIN
     LTEXT "Questa stringa descrive le impostazioni hardware per il dispositivo di riproduzione", 5398, 13, 78, 227, 22
 END
 
-IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Prestazioni"
 FONT 8, "MS Shell Dlg"
@@ -161,21 +160,21 @@ BEGIN
     LTEXT "Questa stringa descrive le impostazioni hardware per il dispositivo di riproduzione", 5398, 13, 78, 227, 22
 END
 
-IDD_SETUP1 DIALOG 0, 0, 227, 206
+IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Impostazioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Questo computer non puÚ riprodurre l'audio perchË il servizio ReactOS Audio non Ë abilitato.", 10245, 60, 25, 150, 40
+    LTEXT "Questo computer non pu√≤ riprodurre l'audio perch√® il servizio ReactOS Audio non √® abilitato.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Abilitare ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Note", 10246, 58, 87, 150, 11
-    LTEXT "1. Dovete essere un amministratore per abilitare questo servizio. Se non lo siete vi sar‡ richiesto un nome utente e password di un amministratore.", 10247, 60, 100, 150, 40
+    LTEXT "1. Dovete essere un amministratore per abilitare questo servizio. Se non lo siete vi sar√† richiesto un nome utente e password di un amministratore.", 10247, 60, 100, 150, 40
     LTEXT "2. Dopo aver abilitato ReactOS Audio dovrete riavviare il computer.", 10248, 60, 140, 150, 40
 END
 
-IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
+IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Multicanale"
 FONT 8, "MS Shell Dlg"
@@ -217,16 +216,16 @@ BEGIN
     PUSHBUTTON "&Ripristinare i valori predefiniti", 9505, 110, 199, 110, 14
 END
 
-IDD_SETUP2 DIALOG 0, 0, 227, 206
+IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Impostazioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Il servizio ReactOS Audio Ë abilitato. Comunque, l'audio potrebbe non funzionare correttamente fino al riavvio di ReactOS. Se volte riavviare ora, salvate il vostro lavoro e chiudete tutti i programmi.", 10261, 60, 25, 150, 50
+    LTEXT "Il servizio ReactOS Audio √® abilitato. Comunque, l'audio potrebbe non funzionare correttamente fino al riavvio di ReactOS. Se volte riavviare ora, salvate il vostro lavoro e chiudete tutti i programmi.", 10261, 60, 25, 150, 50
     LTEXT "Per riavviare ReactOS, cliccare OK.", 10262, 60, 75, 150, 20
-    LTEXT "Se cliccherete Annulla, sar‡ necessario riavviare successivamente perchË ReactOS Audio funzioni corettamente.", 10263, 60, 100, 150, 40
+    LTEXT "Se cliccherete Annulla, sar√† necessario riavviare successivamente perch√® ReactOS Audio funzioni corettamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -234,8 +233,7 @@ BEGIN
     IDS_CPLNAME "Suoni e Dispositivi audio"
     IDS_CPLDESCRIPTION "Cambia lo schema dei suoni per il tuo computer o configura le impostazioni per gli altoparlanti e i dispositivi di registrazione."
     IDS_NO_SOUND "(nessuno)"
-	IDS_NO_DEVICES "No Devices"
-
+    IDS_NO_DEVICES "No Devices"
     5825 "Errore del programma"
     5826 "Chiudere il programma"
     5827 "Allarme di batteria critica"
@@ -252,7 +250,7 @@ BEGIN
     5838 "Iniziare navigazione"
     5839 "Aprire programma"
     5840 "Stampa completata"
-    5841 "Ripristinare gi˘"
+    5841 "Ripristinare gi√π"
     5842 "Ripristinare su"
     5843 "Asterisco"
     5844 "Suono predefinito"
@@ -265,5 +263,5 @@ BEGIN
     5851 "Menu avvio"
     5852 "Fine sessione di ReactOS"
     5853 "Inizio sessione di ReactOS"
-	5854 "ReactOS Explorer"
+    5854 "ReactOS Explorer"
 END

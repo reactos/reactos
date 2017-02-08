@@ -1,0 +1,18 @@
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "Streaming Device Class Installer"
+#define REACTOS_STR_INTERNAL_NAME     "streamci.dll"
+#define REACTOS_STR_ORIGINAL_FILENAME "streamci.dll"
+#define REACTOS_STR_PRODUCT_VERSION   "5.1.2600.3264"
+#define REACTOS_STR_FILE_VERSION      "5.1.2600.3264"
+#include <reactos/version.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+

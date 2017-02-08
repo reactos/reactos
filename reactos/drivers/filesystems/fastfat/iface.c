@@ -25,8 +25,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
+
+#if defined(ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DriverEntry)
+#endif
+
 
 /* GLOBALS *****************************************************************/
 
@@ -34,9 +41,6 @@ PVFAT_GLOBAL_DATA VfatGlobalData;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initialize the driver
  * ARGUMENTS:
@@ -44,91 +48,95 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+INIT_SECTION
+NTSTATUS
+NTAPI
+DriverEntry(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PUNICODE_STRING RegistryPath)
 {
-   PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
-   NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
+    NTSTATUS Status;
 
-   UNREFERENCED_PARAMETER(RegistryPath);
+    UNREFERENCED_PARAMETER(RegistryPath);
 
-   Status = IoCreateDevice(DriverObject,
-			   sizeof(VFAT_GLOBAL_DATA),
-			   &DeviceName,
-			   FILE_DEVICE_DISK_FILE_SYSTEM,
-			   0,
-			   FALSE,
-			   &DeviceObject);
-
-   if (Status == STATUS_OBJECT_NAME_EXISTS ||
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(VFAT_GLOBAL_DATA),
+                            &DeviceName,
+                            FILE_DEVICE_DISK_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (Status == STATUS_OBJECT_NAME_EXISTS ||
        Status == STATUS_OBJECT_NAME_COLLISION)
-     {
-       /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
-       RtlInitUnicodeString(&DeviceName, L"\\RosFat");
-       Status = IoCreateDevice(DriverObject,
-                               sizeof(VFAT_GLOBAL_DATA),
-                               &DeviceName,
-                               FILE_DEVICE_DISK_FILE_SYSTEM,
-                               0,
-                               FALSE,
-                               &DeviceObject);
-     }
+    {
+        /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
+        RtlInitUnicodeString(&DeviceName, L"\\RosFat");
+        Status = IoCreateDevice(DriverObject,
+                                sizeof(VFAT_GLOBAL_DATA),
+                                &DeviceName,
+                                FILE_DEVICE_DISK_FILE_SYSTEM,
+                                0,
+                                FALSE,
+                                &DeviceObject);
+    }
 
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
+    VfatGlobalData = DeviceObject->DeviceExtension;
+    RtlZeroMemory (VfatGlobalData, sizeof(VFAT_GLOBAL_DATA));
+    VfatGlobalData->DriverObject = DriverObject;
+    VfatGlobalData->DeviceObject = DeviceObject;
+    /* Enable this to enter the debugger when file system corruption
+     * has been detected:
+    VfatGlobalData->Flags = VFAT_BREAK_ON_CORRUPTION; */
 
-   if (!NT_SUCCESS(Status))
-     {
-       return (Status);
-     }
+    DeviceObject->Flags |= DO_DIRECT_IO;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_READ] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
+    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_PNP] = VfatBuildRequest;
 
-   VfatGlobalData = DeviceObject->DeviceExtension;
-   RtlZeroMemory (VfatGlobalData, sizeof(VFAT_GLOBAL_DATA));
-   VfatGlobalData->DriverObject = DriverObject;
-   VfatGlobalData->DeviceObject = DeviceObject;
+    DriverObject->DriverUnload = NULL;
 
-   DeviceObject->Flags |= DO_DIRECT_IO;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_READ] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-     VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-     VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
-   DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_PNP] = VfatBuildRequest;
+    /* Cache manager */
+    VfatGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = VfatAcquireForLazyWrite;
+    VfatGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = VfatReleaseFromLazyWrite;
+    VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForReadAhead;
+    VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
 
-   DriverObject->DriverUnload = NULL;
+    /* Fast I/O */
+    VfatInitFastIoRoutines(&VfatGlobalData->FastIoDispatch);
+    DriverObject->FastIoDispatch = &VfatGlobalData->FastIoDispatch;
 
-   /* Cache manager */
-   VfatGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = VfatAcquireForLazyWrite;
-   VfatGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = VfatReleaseFromLazyWrite;
-   VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForReadAhead;
-   VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
+    /* Private lists */
+    ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList,
+                                    NULL, NULL, 0, sizeof(VFATFCB), TAG_FCB, 0);
+    ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList,
+                                    NULL, NULL, 0, sizeof(VFATCCB), TAG_CCB, 0);
+    ExInitializeNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList,
+                                    NULL, NULL, 0, sizeof(VFAT_IRP_CONTEXT), TAG_IRP, 0);
 
-   /* Fast I/O */
-   VfatInitFastIoRoutines(&VfatGlobalData->FastIoDispatch);
-   DriverObject->FastIoDispatch = &VfatGlobalData->FastIoDispatch;
-
-   /* Private lists */
-   ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList,
-                                   NULL, NULL, 0, sizeof(VFATFCB), TAG_FCB, 0);
-   ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList,
-                                   NULL, NULL, 0, sizeof(VFATCCB), TAG_CCB, 0);
-   ExInitializeNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList,
-                                   NULL, NULL, 0, sizeof(VFAT_IRP_CONTEXT), TAG_IRP, 0);
-
-   ExInitializeResourceLite(&VfatGlobalData->VolumeListLock);
-   InitializeListHead(&VfatGlobalData->VolumeListHead);
-   IoRegisterFileSystem(DeviceObject);
-   return(STATUS_SUCCESS);
+    ExInitializeResourceLite(&VfatGlobalData->VolumeListLock);
+    InitializeListHead(&VfatGlobalData->VolumeListHead);
+    IoRegisterFileSystem(DeviceObject);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
-

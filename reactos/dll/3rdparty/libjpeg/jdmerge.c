@@ -2,6 +2,7 @@
  * jdmerge.c
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
+ * Modified 2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -103,17 +104,17 @@ build_ycc_rgb_table (j_decompress_ptr cinfo)
   for (i = 0, x = -CENTERJSAMPLE; i <= MAXJSAMPLE; i++, x++) {
     /* i is the actual input pixel value, in the range 0..MAXJSAMPLE */
     /* The Cb or Cr value we are thinking of is x = i - CENTERJSAMPLE */
-    /* Cr=>R value is nearest int to 1.40200 * x */
+    /* Cr=>R value is nearest int to 1.402 * x */
     upsample->Cr_r_tab[i] = (int)
-		    RIGHT_SHIFT(FIX(1.40200) * x + ONE_HALF, SCALEBITS);
-    /* Cb=>B value is nearest int to 1.77200 * x */
+		    RIGHT_SHIFT(FIX(1.402) * x + ONE_HALF, SCALEBITS);
+    /* Cb=>B value is nearest int to 1.772 * x */
     upsample->Cb_b_tab[i] = (int)
-		    RIGHT_SHIFT(FIX(1.77200) * x + ONE_HALF, SCALEBITS);
-    /* Cr=>G value is scaled-up -0.71414 * x */
-    upsample->Cr_g_tab[i] = (- FIX(0.71414)) * x;
-    /* Cb=>G value is scaled-up -0.34414 * x */
+		    RIGHT_SHIFT(FIX(1.772) * x + ONE_HALF, SCALEBITS);
+    /* Cr=>G value is scaled-up -0.714136286 * x */
+    upsample->Cr_g_tab[i] = (- FIX(0.714136286)) * x;
+    /* Cb=>G value is scaled-up -0.344136286 * x */
     /* We also add in ONE_HALF so that need not do it in inner loop */
-    upsample->Cb_g_tab[i] = (- FIX(0.34414)) * x + ONE_HALF;
+    upsample->Cb_g_tab[i] = (- FIX(0.344136286)) * x + ONE_HALF;
   }
 }
 

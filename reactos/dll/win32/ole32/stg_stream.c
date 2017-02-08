@@ -23,59 +23,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-//#include <stdlib.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-//#include "winternl.h"
-#include <wine/debug.h>
-
+#include "precomp.h"
 #include "storage32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
-
-
-/***
- * This is the destructor of the StgStreamImpl class.
- *
- * This method will clean-up all the resources used-up by the given StgStreamImpl
- * class. The pointer passed-in to this function will be freed and will not
- * be valid anymore.
- */
-static void StgStreamImpl_Destroy(StgStreamImpl* This)
-{
-  TRACE("(%p)\n", This);
-
-  /*
-   * Release the reference we are holding on the parent storage.
-   * IStorage_Release(&This->parentStorage->IStorage_iface);
-   *
-   * No, don't do this. Some apps call IStorage_Release without
-   * calling IStream_Release first. If we grab a reference the
-   * file is not closed, and the app fails when it tries to
-   * reopen the file (Easy-PC, for example). Just inform the
-   * storage that we have closed the stream
-   */
-
-  if(This->parentStorage) {
-
-    StorageBaseImpl_RemoveStream(This->parentStorage, This);
-
-  }
-
-  This->parentStorage = 0;
-
-  HeapFree(GetProcessHeap(), 0, This);
-}
 
 /***
  * This implements the IUnknown method QueryInterface for this
@@ -126,17 +77,27 @@ static ULONG WINAPI StgStreamImpl_Release(
 		IStream* iface)
 {
   StgStreamImpl* This = impl_from_IStream(iface);
+  ULONG ref = InterlockedDecrement(&This->ref);
 
-  ULONG ref;
-
-  ref = InterlockedDecrement(&This->ref);
-
-  /*
-   * If the reference count goes down to 0, perform suicide.
-   */
-  if (ref==0)
+  if (!ref)
   {
-    StgStreamImpl_Destroy(This);
+    TRACE("(%p)\n", This);
+
+    /*
+     * Release the reference we are holding on the parent storage.
+     * IStorage_Release(&This->parentStorage->IStorage_iface);
+     *
+     * No, don't do this. Some apps call IStorage_Release without
+     * calling IStream_Release first. If we grab a reference the
+     * file is not closed, and the app fails when it tries to
+     * reopen the file (Easy-PC, for example). Just inform the
+     * storage that we have closed the stream
+     */
+
+    if (This->parentStorage)
+      StorageBaseImpl_RemoveStream(This->parentStorage, This);
+    This->parentStorage = 0;
+    HeapFree(GetProcessHeap(), 0, This);
   }
 
   return ref;
@@ -190,7 +151,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
     /*
      * Advance the pointer for the number of positions read.
      */
-    This->currentPosition.u.LowPart += *pcbRead;
+    This->currentPosition.QuadPart += *pcbRead;
   }
 
   TRACE("<-- %08x\n", res);
@@ -271,12 +232,12 @@ static HRESULT WINAPI StgStreamImpl_Write(
   /*
    * Advance the position pointer for the number of positions written.
    */
-  This->currentPosition.u.LowPart += *pcbWritten;
+  This->currentPosition.QuadPart += *pcbWritten;
 
   if (SUCCEEDED(res))
     res = StorageBaseImpl_Flush(This->parentStorage);
 
-  TRACE("<-- S_OK, written %u\n", *pcbWritten);
+  TRACE("<-- %08x, written %u\n", res, *pcbWritten);
   return res;
 }
 

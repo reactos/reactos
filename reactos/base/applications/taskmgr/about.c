@@ -24,10 +24,10 @@
 
 void OnAbout(void)
 {
-    TCHAR szTaskmgr[128];
+    WCHAR szTaskmgr[128];
     HICON taskmgrIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_TASKMANAGER));
 
-    LoadString(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(TCHAR));
-    ShellAbout(hMainWnd, szTaskmgr, 0, taskmgrIcon);
+    LoadStringW(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(WCHAR));
+    ShellAboutW(hMainWnd, szTaskmgr, 0, taskmgrIcon);
     DeleteObject(taskmgrIcon);
 }

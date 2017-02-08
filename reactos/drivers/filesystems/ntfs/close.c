@@ -31,80 +31,93 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *****************************************************************/
-
-
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
-	      PFILE_OBJECT FileObject)
 /*
  * FUNCTION: Closes a file
  */
+NTSTATUS
+NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
+              PFILE_OBJECT FileObject)
 {
-  PNTFS_CCB Ccb;
+    PNTFS_CCB Ccb;
+    PNTFS_FCB Fcb;
 
-  DPRINT("NtfsCloseFile(DeviceExt %p, FileObject %p)\n",
-	 DeviceExt,
-	 FileObject);
+    DPRINT("NtfsCloseFile(DeviceExt %p, FileObject %p)\n",
+           DeviceExt,
+           FileObject);
 
-  Ccb = (PNTFS_CCB)(FileObject->FsContext2);
+    Ccb = (PNTFS_CCB)(FileObject->FsContext2);
+    Fcb = (PNTFS_FCB)(FileObject->FsContext);
 
-  DPRINT("Ccb %p\n", Ccb);
-  if (Ccb == NULL)
+    DPRINT("Ccb %p\n", Ccb);
+    if (Ccb == NULL)
     {
-      return(STATUS_SUCCESS);
+        return STATUS_SUCCESS;
     }
 
-  FileObject->FsContext2 = NULL;
+    FileObject->FsContext2 = NULL;
+    FileObject->FsContext = NULL;
+    FileObject->SectionObjectPointer = NULL;
+    DeviceExt->OpenHandleCount--;
 
-  if (FileObject->FileName.Buffer)
+    if (FileObject->FileName.Buffer)
     {
-      // This a FO, that was created outside from FSD.
-      // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
-      // This FO's don't have a FileName.
-      NtfsReleaseFCB(DeviceExt, FileObject->FsContext);
+        // This a FO, that was created outside from FSD.
+        // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
+        // This FO's don't have a FileName.
+        NtfsReleaseFCB(DeviceExt, Fcb);
     }
 
-  if (Ccb->DirectorySearchPattern)
+    if (Ccb->DirectorySearchPattern)
     {
-      ExFreePool(Ccb->DirectorySearchPattern);
+        ExFreePool(Ccb->DirectorySearchPattern);
     }
-  ExFreePool(Ccb);
 
-  return(STATUS_SUCCESS);
+    ExFreePool(Ccb);
+
+    return STATUS_SUCCESS;
 }
 
 
-NTSTATUS NTAPI
-NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+NTSTATUS
+NtfsClose(PNTFS_IRP_CONTEXT IrpContext)
 {
-  PDEVICE_EXTENSION DeviceExtension;
-  PIO_STACK_LOCATION Stack;
-  PFILE_OBJECT FileObject;
-  NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
 
-  DPRINT("NtfsClose() called\n");
+    DPRINT("NtfsClose() called\n");
 
-  if (DeviceObject == NtfsGlobalData->DeviceObject)
+    DeviceObject = IrpContext->DeviceObject;
+    if (DeviceObject == NtfsGlobalData->DeviceObject)
     {
-      DPRINT("Closing file system\n");
-      Status = STATUS_SUCCESS;
-      goto ByeBye;
+        DPRINT("Closing file system\n");
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_SUCCESS;
     }
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-  FileObject = Stack->FileObject;
-  DeviceExtension = DeviceObject->DeviceExtension;
+    FileObject = IrpContext->FileObject;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
-  Status = NtfsCloseFile(DeviceExtension,FileObject);
+    if (!ExAcquireResourceExclusiveLite(&DeviceExtension->DirResource,
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
 
-ByeBye:
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
+    Status = NtfsCloseFile(DeviceExtension, FileObject);
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  return(Status);
+    ExReleaseResourceLite(&DeviceExtension->DirResource);
+
+    if (Status == STATUS_PENDING)
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
+
+    IrpContext->Irp->IoStatus.Information = 0;
+    return Status;
 }
+
+/* EOF */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType Multiple Masters and GX var services (specification).   */
 /*                                                                         */
-/*  Copyright 2003, 2004 by                                                */
+/*  Copyright 2003-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __SVMM_H__
-#define __SVMM_H__
+#ifndef SVMM_H_
+#define SVMM_H_
 
 #include FT_INTERNAL_SERVICE_H
 
@@ -68,37 +68,46 @@ FT_BEGIN_HEADER
     FT_Set_Var_Design_Func  set_var_design;
   };
 
+
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_MULTIMASTERSREC(class_, get_mm_, set_mm_design_,   \
-        set_mm_blend_, get_mm_var_, set_var_design_)                         \
-  static const FT_Service_MultiMastersRec class_ =                           \
-  {                                                                          \
-    get_mm_, set_mm_design_, set_mm_blend_, get_mm_var_, set_var_design_     \
+#define FT_DEFINE_SERVICE_MULTIMASTERSREC( class_,                          \
+                                           get_mm_,                         \
+                                           set_mm_design_,                  \
+                                           set_mm_blend_,                   \
+                                           get_mm_var_,                     \
+                                           set_var_design_ )                \
+  static const FT_Service_MultiMastersRec  class_ =                         \
+  {                                                                         \
+    get_mm_, set_mm_design_, set_mm_blend_, get_mm_var_, set_var_design_    \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_MULTIMASTERSREC(class_, get_mm_, set_mm_design_,   \
-        set_mm_blend_, get_mm_var_, set_var_design_)                         \
-  void                                                                       \
-  FT_Init_Class_##class_( FT_Service_MultiMastersRec*  clazz )               \
-  {                                                                          \
-    clazz->get_mm = get_mm_;                                                 \
-    clazz->set_mm_design = set_mm_design_;                                   \
-    clazz->set_mm_blend = set_mm_blend_;                                     \
-    clazz->get_mm_var = get_mm_var_;                                         \
-    clazz->set_var_design = set_var_design_;                                 \
-  } 
+#define FT_DEFINE_SERVICE_MULTIMASTERSREC( class_,                          \
+                                           get_mm_,                         \
+                                           set_mm_design_,                  \
+                                           set_mm_blend_,                   \
+                                           get_mm_var_,                     \
+                                           set_var_design_ )                \
+  void                                                                      \
+  FT_Init_Class_ ## class_( FT_Service_MultiMastersRec*  clazz )            \
+  {                                                                         \
+    clazz->get_mm         = get_mm_;                                        \
+    clazz->set_mm_design  = set_mm_design_;                                 \
+    clazz->set_mm_blend   = set_mm_blend_;                                  \
+    clazz->get_mm_var     = get_mm_var_;                                    \
+    clazz->set_var_design = set_var_design_;                                \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 
 
 FT_END_HEADER
 
-#endif /* __SVMM_H__ */
+#endif /* SVMM_H_ */
 
 
 /* END */

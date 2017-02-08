@@ -236,24 +236,4 @@ KeSetTimeIncrement(IN ULONG MaxIncrement,
     KiTickOffset = MaxIncrement;
 }
 
-NTSTATUS
-NTAPI
-NtQueryTimerResolution(OUT PULONG MinimumResolution,
-                       OUT PULONG MaximumResolution,
-                       OUT PULONG ActualResolution)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtSetTimerResolution(IN ULONG DesiredResolution,
-                     IN BOOLEAN SetResolution,
-                     OUT PULONG CurrentResolution)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 /* EOF */

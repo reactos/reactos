@@ -1,8 +1,14 @@
-#include <windows.h>
-#include <mmsystem.h>
+#ifndef _MMENT4_PCH_
+#define _MMENT4_PCH_
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <mmddk.h>
-#include <ntddsnd.h>
 #include <sndnames.h>
 #include <sndtypes.h>
 #include <mmebuddy.h>
-#include <mment4.h>
+
+#endif /* _MMENT4_PCH_ */

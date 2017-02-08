@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse functions
- * FILE:             subsystems/win32/win32k/ntuser/input.c
+ * FILE:             win32ss/user/ntuser/mouse.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */
@@ -402,7 +402,7 @@ IntTrackMouseEvent(
                              lpEventTrack->dwFlags & TME_NONCLIENT ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
                              0, 0);
         }
-        TRACE("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack, pWnd);
+        TRACE("IntTrackMouseEvent spwndTrack %p pwnd %p\n", pDesk->spwndTrack, pWnd);
         return TRUE;
     }
 

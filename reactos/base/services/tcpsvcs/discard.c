@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/discard.c
+ * FILE:        base/services/tcpsvcs/discard.c
  * PURPOSE:     Receives input from a client and discards it
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
@@ -24,7 +24,7 @@ ReceiveIncomingPackets(SOCKET sock)
         {
             TCHAR logBuf[256];
 
-            _swprintf(logBuf, L"Discard: Received %d bytes from client", readBytes);
+            swprintf(logBuf, L"Discard: Received %d bytes from client", readBytes);
             LogEvent(logBuf, 0, 0, LOG_FILE);
         }
         else if (readBytes == SOCKET_ERROR)

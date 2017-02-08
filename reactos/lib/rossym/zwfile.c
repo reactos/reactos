@@ -8,12 +8,9 @@
  */
 
 #define NTOSAPI
-#include <ntddk.h>
+#include <wdm.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
-
-#define NDEBUG
-#include <debug.h>
 
 BOOLEAN
 RosSymZwReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
@@ -48,5 +45,3 @@ RosSymZwSeekFile(PVOID FileContext, ULONG_PTR Position)
 
   return NT_SUCCESS(Status);
 }
-
-/* EOF */

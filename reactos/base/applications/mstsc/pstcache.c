@@ -1,11 +1,11 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Persistent Bitmap Cache routines
-   Copyright (C) Jeroen Meijer 2004-2005
+   Copyright (C) Jeroen Meijer <jeroen@oldambt7.com> 2004-2008
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -13,23 +13,24 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "precomp.h"
 
 #define MAX_CELL_SIZE		0x1000	/* pixels */
 
+#define IS_PERSISTENT(id) (id < 8 && g_pstcache_fd[id] > 0)
+
 extern int g_server_depth;
-extern BOOL g_bitmap_cache;
-extern BOOL g_bitmap_cache_persist_enable;
-extern BOOL g_bitmap_cache_precache;
+extern RD_BOOL g_bitmap_cache;
+extern RD_BOOL g_bitmap_cache_persist_enable;
+extern RD_BOOL g_bitmap_cache_precache;
 
 int g_pstcache_fd[8];
 int g_pstcache_Bpp;
-BOOL g_pstcache_enumerated = False;
+RD_BOOL g_pstcache_enumerated = False;
 uint8 zero_key[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
@@ -48,21 +49,19 @@ pstcache_touch_bitmap(uint8 cache_id, uint16 cache_idx, uint32 stamp)
 }
 
 /* Load a bitmap from the persistent cache */
-BOOL
+RD_BOOL
 pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 {
 	uint8 *celldata;
 	int fd;
 	CELLHEADER cellhdr;
-	HBITMAP bitmap;
+	RD_HBITMAP bitmap;
 
 	if (!g_bitmap_cache_persist_enable)
 		return False;
 
 	if (!IS_PERSISTENT(cache_id) || cache_idx >= BMPCACHE2_NUM_PSTCELLS)
 		return False;
-
-	memset(&cellhdr, 0, sizeof(CELLHEADER));
 
 	fd = g_pstcache_fd[cache_id];
 	rd_lseek_file(fd, cache_idx * (g_pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
@@ -71,7 +70,7 @@ pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 	rd_read_file(fd, celldata, cellhdr.length);
 
 	bitmap = ui_create_bitmap(cellhdr.width, cellhdr.height, celldata);
-	DEBUG(("Load bitmap from disk: id=%d, idx=%d, bmp=0x%x)\n", cache_id, cache_idx, bitmap));
+	DEBUG(("Load bitmap from disk: id=%d, idx=%d, bmp=%p)\n", cache_id, cache_idx, bitmap));
 	cache_put_bitmap(cache_id, cache_idx, bitmap);
 
 	xfree(celldata);
@@ -79,7 +78,7 @@ pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 }
 
 /* Store a bitmap in the persistent cache */
-BOOL
+RD_BOOL
 pstcache_save_bitmap(uint8 cache_id, uint16 cache_idx, uint8 * key,
 		     uint8 width, uint8 height, uint16 length, uint8 * data)
 {
@@ -160,7 +159,7 @@ pstcache_enumerate(uint8 id, HASH_KEY * keylist)
 }
 
 /* initialise the persistent bitmap cache */
-BOOL
+RD_BOOL
 pstcache_init(uint8 cache_id)
 {
 	int fd;

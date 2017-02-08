@@ -1,5 +1,5 @@
 /*
- * Top level resource file for MOUSE driver dll
+ * Top level resource file for rich edit control
  *
  * Copyright 2007 Maarten Lankhorst for CodeWeavers
  *
@@ -17,5 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#pragma once
 
 #define OCR_REVERSE 107

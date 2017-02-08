@@ -25,8 +25,8 @@ class CACLMulti :
     public CComCoClass<CACLMulti, &CLSID_ACLMulti>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumString,
-    public IACList,
-    public IObjMgr
+    public IObjMgr,
+    public IACList
 {
 private:
     struct ACLMultiSublist

@@ -1,238 +1,192 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by explorer_intres.rc
-//
-#define IDS_TITLE                       1
-#define MANIFEST_RESOURCE_ID            1
-#define IDS_START                       2
-#define IDS_LOGOFF                      3
-#define IDS_SHUTDOWN                    4
-#define IDS_LAUNCH                      5
-#define IDS_START_HELP                  6
-#define IDS_SEARCH_FILES                7
-#define IDS_DOCUMENTS                   8
-#define IDS_FAVORITES                   9
-#define IDS_PROGRAMS                    10
-#define IDS_SETTINGS                    11
-#define IDS_EXPLORE                     12
-#define IDS_EMPTY                       13
-#define IDS_RECENT                      14
-#define IDS_ADMIN                       15
-#define IDS_NETWORK                     16
-#define IDS_CONNECTIONS                 17
-#define IDS_DRIVES                      18
-#define IDS_SEARCH_COMPUTER             19
-#define IDS_SETTINGS_MENU               20
-#define IDS_CONTROL_PANEL               21
-#define IDS_PRINTERS                    22
-#define IDS_BROWSE                      23
-#define IDS_SEARCH_PRG                  24
-#define IDS_ALL_USERS                   25
-#define IDS_SEARCH                      26
-#define IDS_ABOUT_EXPLORER              27
-#define IDS_LAUNCH_MANY_PROGRAMS        28
-#define IDS_DESKTOPBAR_SETTINGS         29
-#define IDS_DESKTOP                     30
-#define IDS_TASKBAR                     31
-#define IDS_STARTMENU                   32
-#define IDS_MINIMIZE_ALL                33
-#define IDS_DESKTOP_NUM                 34
-#define IDS_VOLUME                      35
-#define IDS_ITEMS_CUR                   36
-#define IDS_ITEMS_CONFIGURED            37
-#define IDS_ITEMS_VISIBLE               38
-#define IDS_ITEMS_HIDDEN                39
-#define IDS_NOTIFY_SHOW                 40
-#define IDS_NOTIFY_HIDE                 41
-#define IDS_NOTIFY_AUTOHIDE             42
-#define IDS_SHOW_HIDDEN_ICONS           43
-#define IDS_HIDE_ICONS                  44
-#define IDS_TERMINATE                   45
-#define IDS_RESTART                     46
-#define IDS_NAMECOLUMN                  47
-#define IDS_PATHCOLUMN                  48
-#define IDS_MENUCOLUMN                  49
-#define IDI_COMPUTER                    100
-#define IDI_EXPLORER                    101
-#define IDI_STARTMENU                   102
-#define IDB_TOOLBAR                     103
-#define IDA_EXPLORER                    104
-#define ID_ACTIVATE                     105
-#define IDD_SEARCH_PROGRAM              105
-#define IDB_DRIVEBAR                    106
-#define IDD_DESKBAR_DESKTOP             106
-#define IDB_IMAGES                      107
-#define IDD_EXECUTE                     108
-#define IDR_MAINFRAME                   109
-#define IDM_MDIFRAME                    110
-#define ID_EXECUTE                      111
-#define IDM_SDIFRAME                    113
-#define IDI_LOGOFF                      124
-#define IDI_FOLDERARROW                 125
-#define IDI_ARROW                       125
-#define IDI_ARROW_SELECTED              126
-#define IDI_SHUTDOWN                    127
-#define IDB_LOGOV                       129
-#define IDB_LOGOV256                    130
-#define IDA_SEARCH_PROGRAM              133
-#define IDI_APPICON                     134
-#define IDA_TRAYNOTIFY                  134
-#define IDI_FLOATING                    135
-#define IDD_ABOUT_EXPLORER              135
-#define IDI_REACTOS_BIG                 137
-#define IDI_DOCUMENTS                   138
-#define IDI_CONFIG                      139
-#define IDI_FAVORITES                   140
-#define IDI_INFO                        141
-#define IDI_APPS                        142
-#define IDI_SEARCH                      143
-#define IDI_ACTION                      144
-#define IDI_FOLDER                      145
-#define IDI_SEARCH_DOC                  146
-#define IDI_PRINTER                     147
-#define IDI_NETWORK                     148
-#define IDI_REACTOS                     149
-#define IDM_DESKTOPBAR                  150
-#define IDM_VOLUME                      151
-#define IDM_NOTIFYAREA                  152
-#define IDD_DESKBAR_TASKBAR             153
-#define IDB_ICON_ALIGN_0                153
-#define IDD_DESKBAR_STARTMENU           154
-#define IDB_ICON_ALIGN_1                154
-#define IDB_ICON_ALIGN_2                155
-#define IDD_NOTIFYAREA                  155
-#define IDB_ICON_ALIGN_3                156
-#define IDD_MDI_SDI                     156
-#define IDB_ICON_ALIGN_4                157
-#define IDB_ICON_ALIGN_5                158
-#define IDB_ICON_ALIGN_6                159
-#define IDB_ICON_ALIGN_7                160
-#define IDB_ICON_ALIGN_8                161
-#define IDB_ICON_ALIGN_9                162
-#define IDI_SPEAKER                     162
-#define IDB_ICON_ALIGN_10               163
-#define IDI_DOT                         163
-#define IDB_LOGOV16                     164
-#define IDI_DOT_TRANS                   164
-#define IDI_DOT_RED                     165
-#define IDI_ARROW_UP                    166
-#define IDI_ARROW_DOWN                  167
-#define IDI_NOTIFY_L                    168
-#define IDI_NOTIFY_R                    169
-#define IDB_MDI                         170
-#define IDB_SDI                         171
-#define IDI_MINIMIZE                    172
-#define IDI_CONTROLPAN                  173
-#define IDI_DESKSETTING                 174
-#define IDI_NETCONNS                    175
-#define IDI_ADMIN                       176
-#define IDI_RECENT                      178
-#define IDI_RESTART                     179
-#define ID_VIEW_NAME                    401
-#define ID_VIEW_ALL_ATTRIBUTES          402
-#define ID_VIEW_SELECTED_ATTRIBUTES     403
-#define ID_VIEW_STATUSBAR               503
-#define ID_VIEW_DRIVE_BAR               507
-#define ID_VIEW_TOOL_BAR                508
-#define ID_VIEW_EXTRA_BAR               509
-#define ID_VIEW_SIDE_BAR                510
-#define IDC_ROS_EXPLORER                1000
-#define IDC_ICON_ALIGN_0                1002
-#define IDC_ICON_ALIGN_1                1003
-#define IDC_NOTIFY_ICONS                1003
-#define IDC_ICON_ALIGN_2                1004
-#define IDC_ICON_ALIGN_3                1005
-#define IDC_ICON_ALIGN_4                1006
-#define IDC_NOTIFY_TOOLTIP              1006
-#define IDC_ICON_ALIGN_5                1007
-#define IDC_NOTIFY_TITLE                1007
-#define IDC_ICON_ALIGN_6                1008
-#define IDC_NOTIFY_MODULE               1008
-#define IDC_ICON_ALIGN_7                1009
-#define IDC_LABEL1                      1009
-#define IDC_ICON_ALIGN_8                1010
-#define IDC_LABEL2                      1010
-#define IDC_ICON_ALIGN_9                1011
-#define IDC_LABEL3                      1011
-#define IDC_ICON_ALIGN_10               1012
-#define IDC_WWW                         1012
-#define IDC_LABEL6                      1012
-#define IDC_ICON_ALIGN_11               1013
-#define IDC_LAST_CHANGE                 1013
-#define IDC_FILTER                      1017
-#define IDC_PROGRAMS_FOUND              1018
-#define IDC_PICTURE                     1019
-#define IDC_NOTIFY_SHOW                 1020
-#define IDC_NOTIFY_HIDE                 1021
-#define IDC_NOTIFY_AUTOHIDE             1022
-#define IDC_LABEL4                      1023
-#define ID_HIDE_INACTIVE_ICONS          1025
-#define ID_SHOW_CLOCK                   1026
-#define ID_DESKTOP_VERSION              1027
-#define IDC_BUTTON1                     1028
-#define IDC_CHECK_ENTRIES               1028
-#define IDC_VERSION_TXT                 1029
-#define IDC_WIN_VERSION                 1030
-#define IDC_MDI                         1030
-#define IDC_SDI                         1031
-#define IDC_SEPARATE_SUBFOLDERS         1034
-#define ID_REFRESH                      1704
-#define IDS_VERSION_STR                 5000
-#define IDS_EXPLORER_VERSION_STR        5001
-#define IDC_FILETREE                    10001
-#define ID_EXPLORER_FAQ                 10002
-#define ID_WEB_WINDOW                   10003
-#define ID_WINDOW_AUTOSORT              0x8003
-#define ID_VIEW_FULLSCREEN              0x8004
-#define ID_PREFERED_SIZES               0x8005
-#define ID_DRIVE_DESKTOP                0x9000
-#define ID_DRIVE_SHELL_NS               0x9001
-#define ID_DRIVE_UNIX_FS                0x9002
-#define ID_DRIVE_NTOBJ_NS               0x9003
-#define ID_DRIVE_REGISTRY               0x9004
-#define ID_DRIVE_FAT                    0x9005
-#define ID_DRIVE_FIRST                  0x9006
-#define ID_ABOUT_WINDOWS                40002
-#define ID_ABOUT_EXPLORER               40003
-#define ID_DESKTOPBAR_SETTINGS          40004
-#define ID_GO_BACK                      40005
-#define ID_GO_FORWARD                   40006
-#define ID_GO_HOME                      40007
-#define ID_GO_SEARCH                    40008
-#define ID_GO_UP                        40009
-#define ID_STOP                         40010
-#define ID_MINIMIZE_ALL                 40011
-#define ID_EXPLORE                      40012
-#define ID_TASKMGR                      40013
-#define ID_TRAY_VOLUME                  40014
-#define ID_VOLUME_PROPERTIES            40015
-#define ID_SHOW_HIDDEN_ICONS            40016
-#define ID_CONFIG_NOTIFYAREA            40017
-#define ID_CONFIG_TIME                  40018
-#define ID_VIEW_MDI                     40019
-#define ID_VIEW_SDI                     40020
-#define ID_TOOLS_OPTIONS                40021
-#define ID_SHOW_ICON_BUTTON             40023
-#define ID_SWITCH_DESKTOP_1             50000
-#define ID_WINDOW_NEW                   0xE130
-#define ID_WINDOW_ARRANGE               0xE131
-#define ID_WINDOW_CASCADE               0xE132
-#define ID_WINDOW_TILE_HORZ             0xE133
-#define ID_WINDOW_TILE_VERT             0xE134
-#define ID_WINDOW_SPLIT                 0xE135
-#define ID_EDIT_PROPERTIES              57656
-#define ID_FILE_EXIT                    0xE141
-#define ID_HELP_USING                   0xE144
-#define ID_HELP                         0xE146
-#define IDC_STATIC                      -1
+#pragma once
 
-// Next default values for new objects
-//
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        169
-#define _APS_NEXT_COMMAND_VALUE         40024
-#define _APS_NEXT_CONTROL_VALUE         1035
-#define _APS_NEXT_SYMED_VALUE           101
-#endif
-#endif
+#define IDC_STATIC -1
+
+/*******************************************************************************\
+|*                               Icon Resources                                *|
+\*******************************************************************************/
+
+#define IDI_MAIN            100
+#define IDI_CABINET         101
+#define IDI_PRINTER         102
+#define IDI_DESKTOP         103
+#define IDI_PRINTER_PROBLEM 104
+#define IDI_STARTMENU       107
+#define IDI_RECYCLEBIN      108
+#define IDI_SHOWINFO        109
+#define IDI_SHOWALERT       110
+#define IDI_SHOWERROR       111
+#define IDI_COMPUTER        205
+#define IDI_ARROWLEFT       250
+#define IDI_ARROWRIGHT      251
+#define IDI_FOLDER          252
+#define IDI_INTERNET        253
+#define IDI_MAIL            254
+#define IDI_MAILSMALL       256
+#define IDI_STARTMENU2      257
+#define IDI_START           4711
+
+/*******************************************************************************\
+|*                               Bitmap Resources                              *|
+\*******************************************************************************/
+
+#define IDB_START                           143
+#define IDB_TASKBARPROP_AUTOHIDE            145
+#define IDB_TASKBARPROP_LOCK_GROUP_QL       146
+#define IDB_TASKBARPROP_NOLOCK_GROUP_QL     147
+#define IDB_TASKBARPROP_LOCK_NOGROUP_QL     148
+#define IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   149
+#define IDB_TASKBARPROP_LOCK_GROUP_NOQL     150
+#define IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   151
+#define IDB_TASKBARPROP_LOCK_NOGROUP_NOQL   152
+#define IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL 153
+#define IDB_SYSTRAYPROP_SHOW_SECONDS        154
+#define IDB_SYSTRAYPROP_HIDE_SECONDS        155
+#define IDB_STARTMENU                       158
+#define IDB_STARTPREVIEW                    170
+#define IDB_STARTPREVIEW_CLASSIC            171
+#define IDB_SYSTRAYPROP_HIDE_CLOCK          180
+#define IDB_SYSTRAYPROP_HIDE_NOCLOCK        181
+#define IDB_SYSTRAYPROP_SHOW_CLOCK          182
+#define IDB_SYSTRAYPROP_SHOW_NOCLOCK        183
+
+/*******************************************************************************\
+|*                                Menu Resources                               *|
+\*******************************************************************************/
+
+#define IDM_STARTMENU 204
+#define IDM_TRAYWND   205
+
+/* NOTE: The following constants may *NOT* be changed because
+         they're hardcoded and need to be the exact values
+         in order to get the start menu to work! */
+#define IDM_PROGRAMS                504
+#define IDM_FAVORITES               507
+#define IDM_DOCUMENTS               501
+#define IDM_SETTINGS                508
+#define IDM_CONTROLPANEL            505
+#define IDM_SECURITY                5001
+#define IDM_NETWORKCONNECTIONS      557
+#define IDM_PRINTERSANDFAXES        510
+#define IDM_TASKBARANDSTARTMENU     413
+#define IDM_SEARCH                  520
+#define IDM_HELPANDSUPPORT          503
+#define IDM_RUN                     401
+#define IDM_SYNCHRONIZE             553
+#define IDM_LOGOFF                  402
+#define IDM_DISCONNECT              5000
+#define IDM_UNDOCKCOMPUTER          410
+#define IDM_SHUTDOWN                506
+#define IDM_LASTSTARTMENU_SEPARATOR 450
+
+/*******************************************************************************\
+|*                               Dialog Resources                              *|
+\*******************************************************************************/
+
+#define IDD_TASKBARPROP_TASKBAR       6
+#define IDD_NOTIFICATIONS_CUSTOMIZE   7
+#define IDD_CLASSICSTART_CUSTOMIZE    9
+#define IDD_FILENAME_WARNING          20
+#define IDD_TASKBARPROP_STARTMENU     205
+#define IDD_MODERNSTART_ADVANCED      1036
+#define IDD_MODERNSTART_GENERAL       1037
+
+/*******************************************************************************\
+|*                               String Resources                              *|
+\*******************************************************************************/
+
+#define IDS_STARTUP_ERROR                  105
+#define IDS_START                          595
+#define IDS_OPEN_ALL_USERS                 718
+#define IDS_EXPLORE_ALL_USERS              719
+#define IDS_PROPERTIES                     720
+#define IDS_HELP_COMMAND                   732
+#define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
+
+/*******************************************************************************\
+|*                              Control Resources                              *|
+\*******************************************************************************/
+
+/* Taskbar Page */
+#define IDC_TASKBARPROP_HIDEICONS            1000
+#define IDC_TASKBARPROP_ICONCUST             1007
+#define IDC_TASKBARPROP_ONTOP                1101
+#define IDC_TASKBARPROP_HIDE                 1102
+#define IDC_TASKBARPROP_CLOCK                1103
+#define IDC_TASKBARPROP_GROUP                1104
+#define IDC_TASKBARPROP_LOCK                 1105
+#define IDC_TASKBARPROP_SECONDS              1106
+#define IDC_TASKBARPROP_SHOWQL               1107
+#define IDC_TASKBARPROP_TASKBARBITMAP        1111
+#define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
+
+/* Startmenu Page */
+#define IDC_TASKBARPROP_STARTMENUCLASSICCUST 1130
+#define IDC_TASKBARPROP_STARTMENUCUST        1131
+#define IDC_TASKBARPROP_STARTMENU            1132
+#define IDC_TASKBARPROP_STARTMENUCLASSIC     1133
+#define IDC_TASKBARPROP_STARTMENU_BITMAP     1134
+#define IDC_STARTBTN                         1140
+
+/* Customize Notifications Dialog */
+#define IDC_TASKBARPROP_NOTIREST             1402
+#define IDC_NOTIFICATION_LIST                1005 
+#define IDC_NOTIFICATION_BEHAVIOUR           1006
+
+/* Customize classic start menu dialog */
+#define IDC_CLASSICSTART_ADD                 1126
+#define IDC_CLASSICSTART_REMOVE              1127
+#define IDC_CLASSICSTART_ADVANCED            1128
+#define IDC_CLASSICSTART_SORT                1124
+#define IDC_CLASSICSTART_CLEAR               1125
+#define IDC_CLASSICSTART_SETTINGS            1135
+
+/* File Name Warning Dialog */
+#define IDC_FILE_RENAME                      1006
+#define IDC_NOTCHECK                         4610
+
+/* Customize modern start menu Advanced Page */
+#define IDC_AUTOOPEN                         1306
+#define IDC_HIGHLIGHT                        4326
+#define IDC_ITEMS                            1123
+#define IDC_RECENTLY                         1308
+#define IDC_CLEAR                            1309
+
+/* Customize modern start menu General Page */
+#define IDC_LARGEICON                       1301
+#define IDC_SMALLICON                       1300
+#define IDC_CHOOSELARGE                     1302
+#define IDC_CHOOSESMALL                     1303
+#define IDC_NUMBEROFPROGRAMS                1304
+#define IDC_NUMBERUPDOWN                    1305
+#define IDC_CLEARLIST                       1310
+#define IDC_SHOWINTERNET                    1320
+#define IDC_INTERNETDEFAULTAPP              1321
+#define IDC_SHOWEMAIL                       1322
+#define IDC_EMAILDEFAULTAPP                 1323
+
+/*******************************************************************************\
+|*                            Accelerator Resources                            *|
+\*******************************************************************************/
+
+#define IDA_TASKBAR 251
+#define IDMA_START 305
+#define IDMA_CYCLE_FOCUS 41008
+#define IDMA_SEARCH 41093
+#define IDMA_RESTORE_OPEN 416
+#define IDMA_MINIMIZE_ALL 419
+
+#define ID_SHELL_CMD_FIRST              0xF
+#define ID_SHELL_CMD_LAST               0x7FEF
+#define ID_SHELL_CMD_PROPERTIES         (ID_SHELL_CMD_LAST + 1)
+#define ID_SHELL_CMD_OPEN_ALL_USERS     (ID_SHELL_CMD_LAST + 2)
+#define ID_SHELL_CMD_EXPLORE_ALL_USERS  (ID_SHELL_CMD_LAST + 3)
+#define ID_LOCKTASKBAR                  (ID_SHELL_CMD_LAST + 4)
+#define ID_SHELL_CMD_OPEN_TASKMGR       (ID_SHELL_CMD_LAST + 5)
+#define ID_SHELL_CMD_UNDO_ACTION        (ID_SHELL_CMD_LAST + 6)
+#define ID_SHELL_CMD_SHOW_DESKTOP       (ID_SHELL_CMD_LAST + 7)
+#define ID_SHELL_CMD_TILE_WND_V         (ID_SHELL_CMD_LAST + 8)
+#define ID_SHELL_CMD_TILE_WND_H         (ID_SHELL_CMD_LAST + 9)
+#define ID_SHELL_CMD_CASCADE_WND        (ID_SHELL_CMD_LAST + 10)
+#define ID_SHELL_CMD_CUST_NOTIF         (ID_SHELL_CMD_LAST + 11)
+#define ID_SHELL_CMD_ADJUST_DAT         (ID_SHELL_CMD_LAST + 12)

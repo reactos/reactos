@@ -1,16 +1,15 @@
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
-BEGIN
 
-STRING_ASSOC_HELP,    "Ändra assossierad filextention.\n\n\
+STRINGTABLE
+BEGIN
+    STRING_ASSOC_HELP "Ändra assossierad filextention.\n\n\
 assoc [.ext[=[FileType]]]\n\
 \n\
 assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-
-STRING_ATTRIB_HELP,    "Visar eller ändrar filattributen.\n\n\
+    STRING_ATTRIB_HELP "Visar eller ändrar filattributen.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
        [/S [/D]]\n\n\
   +   Sätter ett attribut\n\
@@ -23,26 +22,22 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
       och alla undermappar.\n\
   /D  Bearbetar även mappar.\n\n\
 Skriv ATTRIB utan parametrar för att visa attributten för alla filer.\n"
-
-STRING_ALIAS_HELP,  "Sätter, tar bort eller visar alias.\n\n\
+    STRING_ALIAS_HELP "Sätter, tar bort eller visar alias.\n\n\
 ALIAS [alias=[Kommando]]\n\n\
-  alias    Namn på ett alias.\n\
-  Kommando 									 Text som skall erstättas av ett alias.\n\n\
+  alias     Namn på ett alias.\n\
+  Kommando  Text som skall erstättas av ett alias.\n\n\
 för att lista alla alias:\n\
   ALIAS\n\n\
 För att sätta ett nytt eller ändra ett befintligt alias:\n\
   ALIAS da=dir a:\n\n\
 För att ta bort ett alias från listan:\n\
   kortnamn da="
-
-STRING_BEEP_HELP, "Skickar en ljudsignal genom högtalaren.\n\nPIP\n"
-
-STRING_CALL_HELP, "Kallar ett batchprogram från ett annat.\n\n\
+    STRING_BEEP_HELP "Skickar en ljudsignal genom högtalaren.\n\nPIP\n"
+    STRING_CALL_HELP "Kallar ett batchprogram från ett annat.\n\n\
 CALL [enhet:][mapp]filnamn [batch-parameter]\n\n\
   batch-parameter  Specificerar en kommandoradsinformation som batchprogrammet \n\
                    behöver."
-
-STRING_CD_HELP,      "Visar namnet på, eller ändrar aktuell mapp\n\n\
+    STRING_CD_HELP "Visar namnet på, eller ändrar aktuell mapp\n\n\
 CHDIR [/D][enhet:][mapp]\n\
 CHDIR[..|.]\n\
 CD [/D][enhet:][mapp]\n\
@@ -52,13 +47,11 @@ CD[..|.]\n\n\
   /D   Vill ändra aktuell enhet och aktuell mapp.\n\n\
 Skriv CD enhet: för att visa aktuell mapp på specificerad enhet.\n\
 Skriv CD uten parametere för att visa aktuell enhet och mapp.\n"
-
-STRING_CHCP_HELP,   "Visar eller väljer aktiv teckentabell.\n\n\
+    STRING_CHCP_HELP "Visar eller väljer aktiv teckentabell.\n\n\
 CHCP [nnn]\n\n\
   nnn   Anger nummer på teckentabell.\n\n\
 Skriv CHCP utan parametrar för att visa aktiv teckentabellnummer.\n"
-
-STRING_CHOICE_HELP, "Väntar på att användaren skall ange ett av alternativen.\n\n\
+    STRING_CHOICE_HELP "Väntar på att användaren skall ange ett av alternativen.\n\n\
 CHOICE  [/C[:]val][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]Val      Anger lista med alternativ. Standard är JN.\n\
   /N            Visa inte alternativen och ? vid slutet av frågan.\n\
@@ -66,32 +59,22 @@ CHOICE  [/C[:]val][/N][/S][/T[:]c,nn][text]\n\n\
   /T[:]c,nn     Standardval sätts till c efter nn sekunder.\n\
   text          Textsträng som visas.\n\n\
 ERRORLEVEL sätts till nummer för knappen användaren väljer.\n"
-
-STRING_CLS_HELP, "Tömmer skärmen.\n\nCLS\n"
-
-STRING_CMD_HELP1, "\nInterna kommandon som är tillgängliga:\n"
-
-STRING_CMD_HELP2, "\nFunksjoner som är tillgängliga:"
-
-STRING_CMD_HELP3,"  [alias:er]"
-
-STRING_CMD_HELP4,"  [historik]"
-
-STRING_CMD_HELP5,"  [unix filnamnsavslutning]"
-
-STRING_CMD_HELP6,"  [mapplista]"
-
-STRING_CMD_HELP7,"  [omadressering och datakanaler]"
-
-STRING_CMD_HELP8, "Start ett ny instans av ReactOS kommandotolk.\n\n\
+    STRING_CLS_HELP "Tömmer skärmen.\n\nCLS\n"
+    STRING_CMD_HELP1 "\nInterna kommandon som är tillgängliga:\n"
+    STRING_CMD_HELP2 "\nFunksjoner som är tillgängliga:"
+    STRING_CMD_HELP3 "  [alias:er]"
+    STRING_CMD_HELP4 "  [historik]"
+    STRING_CMD_HELP5 "  [unix filnamnsavslutning]"
+    STRING_CMD_HELP6 "  [mapplista]"
+    STRING_CMD_HELP7 "  [omadressering och datakanaler]"
+    STRING_CMD_HELP8 "Start ett ny instans av ReactOS kommandotolk.\n\n\
 CMD [/[C|K] kommando][/P][/Q][/T:bf]\n\n\
   /C kommando  Kör angivet kommando och avslutar.\n\
   /K kommando  Kör angivet kommando men avslutar inte.\n\
   /P          CMD körs permanent och starter autoexec.bat\n\
               (kan inte avsluttes).\n\
   /T:bf       Ställer in bakgrunn/forgrunn färg (se COLOR kommando).\n"
-
-STRING_COLOR_HELP1, "Ställer in standard forgrunns- och bakgrunnsfarger.\n\n\
+    STRING_COLOR_HELP1 "Ställer in standard forgrunns- och bakgrunnsfarger.\n\n\
 COLOR [attr [/-F]] \n\n\
   attr        Anger fargeattributter for konsollteksten\n\
   /-F         Fyller inte blank plass med fargeattributter\n\n\
@@ -109,16 +92,14 @@ dec  hex  namn       dec  hex  namn\n\
 5    5    Magenta    13   D    Ljus Magenta\n\
 6    6    Gul        14   E    Ljus Gult\n\
 7    7    Vit        15   F    Ljus Vit\n"
-
-STRING_COPY_HELP1,  "Vill du erstätta %s (Ja/Nej/Alla)? "
-
-STRING_COPY_HELP2, "Kopierar en eller flera filer till annan plats.\n\n\
+    STRING_COPY_HELP1 "Vill du erstätta %s (Ja/Nej/Alla)? "
+    STRING_COPY_HELP2 "Kopierar en eller flera filer till annan plats.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] källa [/A|/B]\n\
      [+ källa [/A|/B] [+ ...]] [mål [/A|/B]]\n\n\
   källa        Anger filen eller filerna som kopieras.\n\
   /A           Anger att filen är en ASCII-textfil.\n\
   /B           Anger att filen är en binär-fil.\n\
-  mål  		   Anger mappen och/eller filnamn för den nya filen/filerna.\n\
+  mål          Anger mappen och/eller filnamn för den nya filen/filerna.\n\
   /V           Kontrollera att nya filer är korrekt skrivna.\n\
   /Y           Undertrycker frågor om att godkänna om du önskar att skriva över\n\
                befintlig destinationsfil.\n\
@@ -126,20 +107,15 @@ COPY [/V][/Y|/-Y][/A|/B] källa [/A|/B]\n\
                befintlig destinationsfil.\n\n\
 Växeln /Y kan läggas in i COPYCMD miljövariabel.\n\
 ...\n"
-
-STRING_DATE_HELP1, "\nSkriv in nytt datum (mm%cdd%cyyyy): "
-
-STRING_DATE_HELP2, "\nSkriv in nytt datum (dd%cmm%cyyyy): "
-
-STRING_DATE_HELP3, "\nSkriv in nytt datum (yyyy%cmm%cdd): "
-
-STRING_DATE_HELP4, "Visa eller ändra datumet.\n\n\
+    STRING_DATE_HELP1 "\nSkriv in nytt datum (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "\nSkriv in nytt datum (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "\nSkriv in nytt datum (yyyy%cmm%cdd): "
+    STRING_DATE_HELP4 "Visa eller ändra datumet.\n\n\
 DATE [/T][datum]\n\n\
   /T    Endast visa\n\n\
 Skriv DATE utan parametrar för att visa aktuella datum och\n\
 fråga om nytt datum.  Tryck ENTER för att behålla samma datum.\n"
-
-STRING_DEL_HELP1,  "Radera en eller flera filer.\n\n\
+    STRING_DEL_HELP1 "Radera en eller flera filer.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attribut]] fil ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attribut]] fil ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attribut]] fil ...\n\n\
@@ -159,18 +135,15 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attribut]] fil ...\n\n\
         A     Arkiv filer\n\
         H     Dolda filer\n\
         -     prefiks som betyder INTE. (f.eks -R)\n"
-
-STRING_DEL_HELP2, "Alla filer i mappen kommer att bli raderade!\nÄr du säker (J/N)?"
-STRING_DEL_HELP3, "    %lu fil raderade\n"
-STRING_DEL_HELP4, "    %lu filer raderade\n"
-
-STRING_DELAY_HELP, "paus i n sekunder eller mikrosekunder\n\
+    STRING_DEL_HELP2 "Alla filer i mappen kommer att bli raderade!\nÄr du säker (J/N)?"
+    STRING_DEL_HELP3 "    %lu fil raderade\n"
+    STRING_DEL_HELP4 "    %lu filer raderade\n"
+    STRING_DELAY_HELP "paus i n sekunder eller mikrosekunder\n\
 DELAY [/m]n\n\n\
   /m          anger at n är mikrosekunder\n\
               annars är n sekunder\n"
-
-STRING_DIR_HELP1, "DIR [enhet:][mapp][filnamn] [/A[[:]attribut]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortering]] [/P] [/Q] [/S] [/T[[:]tidsfält]] [/W] [/X] [/4]\n\n\
+    STRING_DIR_HELP1 "DIR [enhet:][mapp][filnamn] [/A[[:]attribut]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]sortering]] [/P] [/Q] [/R] [/S] [/T[[:]tidsfält]] [/W] [/X] [/4]\n\n\
   [enhet:][mapp][filnamn]\n\
               Anger enhet, mapp, och/eller filer som skall listes.\n\n\
   /A          Vis filer ved att ange attributter.\n\
@@ -189,6 +162,7 @@ STRING_DIR_HELP1, "DIR [enhet:][mapp][filnamn] [/A[[:]attribut]] [/B] [/C] [/D] 
                G  Gruppera mappar först          -  Prefix för omvänd ordning\n\
   /P          Pausa efter varje hel skärmbild.\n\
   /Q          Viser vem som äger filen.\n\
+  /R          Displays alternate data streams of the files.\n\
   /S          Viser alla filer i angiven mapp och alla undermappar.\n\
   /T          Kontrollerar vilket tidsfält som visas eller blir använt för sortering\n\
   timefelt    C  Skapelse \n\
@@ -202,50 +176,38 @@ STRING_DIR_HELP1, "DIR [enhet:][mapp][filnamn] [/A[[:]attribut]] [/B] [/C] [/D] 
   /4          Visar fyresiffriga årtal\n\n\
 Växlar kan ställas in på förhand i DIRCMD miljövariabel.  Åtsidosätt\n\
 förinställda växlar med ett bindestreck (-) före, till exempel, /-W.\n"
-
-STRING_DIR_HELP2, " Volumen i enhet %c är %s\n"
-STRING_DIR_HELP3, " Volumet i enhet %c är utan namn.\n"
-STRING_DIR_HELP4, " Volymens serienummer är %04X-%04X\n"
-STRING_DIR_HELP5, "\n     Totalt filer listet:\n%16i fil(är)% 14s byte\n"
-STRING_DIR_HELP6, "%16i mapp(ar)% 15s byte\n"
-STRING_DIR_HELP7, "\n mapp av %s\n\n"
-STRING_DIR_HELP8, "%16i fil(er)% 14s byte\n"
-
-STRING_DIRSTACK_HELP1, "Sparar aktuell mapp for användning av POPD kommandot, och\n\
+    STRING_DIR_HELP2 " Volumen i enhet %c är %s\n"
+    STRING_DIR_HELP3 " Volumet i enhet %c är utan namn.\n"
+    STRING_DIR_HELP4 " Volymens serienummer är %04X-%04X\n"
+    STRING_DIR_HELP5 "\n     Totalt filer listet:\n%16i fil(är)% 14s byte\n"
+    STRING_DIR_HELP6 "%16i mapp(ar)% 15s byte ledigt\n"
+    STRING_DIR_HELP7 "\n mapp av %s\n\n"
+    STRING_DIR_HELP8 "%16i fil(er)% 14s byte\n"
+    STRING_DIRSTACK_HELP1 "Sparar aktuell mapp for användning av POPD kommandot, och\n\
 ändrar därefter till angiven mapp.\n\n\
 PUSHD [mapp | ..]\n\n\
   mapp        ange mapp det ändra till.\n"
-
-STRING_DIRSTACK_HELP2, "Ändra till mapp som lagrats med PUSHD kommandot.\n\nPOPD"
-
-STRING_DIRSTACK_HELP3, "Skriver ut innehållet av en mapplista.\n\nDIRS"
-
-STRING_DIRSTACK_HELP4, "mapplistan är tom"
-
-STRING_ECHO_HELP1,  "Visar meddelanden utan enter och radsprång.\n\n\
+    STRING_DIRSTACK_HELP2 "Ändra till mapp som lagrats med PUSHD kommandot.\n\nPOPD"
+    STRING_DIRSTACK_HELP3 "Skriver ut innehållet av en mapplista.\n\nDIRS"
+    STRING_DIRSTACK_HELP4 "mapplistan är tom"
+    STRING_ECHO_HELP1 "Visar meddelanden utan enter och radsprång.\n\n\
   ECHOS meddelande"
-
-STRING_ECHO_HELP2,  "Visar ett meddelande skrivet till mottagare av felmeddelanden.\n\n\
+    STRING_ECHO_HELP2 "Visar ett meddelande skrivet till mottagare av felmeddelanden.\n\n\
   ECHOERR meddelande\n\
   ECHOERR.           skriver en tom rad"
-
-STRING_ECHO_HELP3, "Skriver en meddelande till standardmottagaren av felmeddelanden utan enter och radsprång.\n\n\
+    STRING_ECHO_HELP3 "Skriver en meddelande till standardmottagaren av felmeddelanden utan enter och radsprång.\n\n\
   ECHOSERR meddelande"
-
-STRING_ECHO_HELP4, "Visar ett meddelande eller växlar kommandot echo på eller av.\n\n\
+    STRING_ECHO_HELP4 "Visar ett meddelande eller växlar kommandot echo på eller av.\n\n\
   ECHO [ON | OFF]\n\
   ECHO [meddelande]\n\
   ECHO.             skriv en tom rad\n\n\
 Skriv ECHO utan parametar för att visa aktuell ECHO inställning."
-
-STRING_ECHO_HELP5, "ECHO är %s\n"
-
-STRING_EXIT_HELP, "Avsluta kommandotolken (cmd.exe).\n\nEXIT [/b] [ExitCode]\n\n\
+    STRING_ECHO_HELP5 "ECHO är %s\n"
+    STRING_EXIT_HELP "Avsluta kommandotolken (cmd.exe).\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Avslutt bara en batchfil.  \n\
                 Om det körs utan en batch filkommer det avslutta cmd.exe\n\
   ExitCode      Detta värdet kommer att skickas till ERRORLEVEL vid avslutning\n"
-
-STRING_FOR_HELP1, "Kör ett angivet kommando för varje fil i en grupp med filer\n\n\
+    STRING_FOR_HELP1 "Kör ett angivet kommando för varje fil i en grupp med filer\n\n\
 FOR %variabel IN (grupp) DO kommando [parametrar]\n\n\
   %variable   Anger en utbytbar parameter (en enda bokstav).\n\
   (grupp)     Anger en grupp med en eller flera filer. Jokertecken kan användas.\n\
@@ -253,16 +215,17 @@ FOR %variabel IN (grupp) DO kommando [parametrar]\n\n\
   parametrar  Anger parametrarna eller växlarna för angivet kommando.\n\n\
 för att bruke FOR kommando i en batchfil, ange %%variabel istället för\n\
 %variabel.\n"
-
-STRING_FREE_HELP1, "\nVolum i enhet %s är %-11s\n\
+    STRING_FREE_HELP1 "\nVolum i enhet %s är %-11s\n\
  Serienummret är %s\n\
   %16s byte total lagringsutrymme\n\
   %16s byte använt\n\
   %16s byte ledigt\n"
-
-STRING_FREE_HELP2, "Visa enhetsinformation.\n\nFREE [enhet: ...]\n"
-
-STRING_IF_HELP1, "Utför villkorsstyrd bearbetning i batchprogram.\n\n\
+    STRING_FREE_HELP2 "Visa enhetsinformation.\n\nFREE [enhet: ...]\n"
+    STRING_GOTO_HELP1 "Dirigerar CMD till en namngiven etikett i ett batchprogram.\n\n\
+GOTO etikett\n\n\
+  etikett  Anger en text sträng använt i ett batchprogram.\n\n\
+En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten."
+    STRING_IF_HELP1 "Utför villkorsstyrd bearbetning i batchprogram.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] sträng1==sträng2 kommando\n\
   IF [NOT] EXIST filnamn kommando\n\
@@ -276,46 +239,31 @@ sträng1==sträng2  Anger ett uppfyllt villkor om textsträngarna är lika\n\
 EXIST filnamn     Anger ett uppfyllt villkor om angivet filnamn existerar.\n\
 DEFINED variabel  Anger ett uppfyllt villkor om angiven variabel är\n\
                   definerad.\n"
-
-STRING_GOTO_HELP1,  "Dirigerar CMD till en namngiven etikett i ett batchprogram.\n\n\
-GOTO etikett\n\n\
-  etikett  	Anger en text sträng använt i ett batchprogram.\n\n\
-En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten."
-
-STRING_LABEL_HELP1, "Skapar, tar bort eller ändrar etikett på enhet.\n\nLABEL [enhet:][etikett]\n"
-
-STRING_LABEL_HELP2, "Volymen i enhet %c: är %s\n"
-STRING_LABEL_HELP3, "Volymen i enhet %c: är utan namn\n"
-STRING_LABEL_HELP4, "Volymens serienummer är %04X-%04X\n"
-STRING_LABEL_HELP5, "Volymnamn (11 tecken, Enter = inget namn)? "
-
-STRING_LOCALE_HELP1, "aktuell tid är"
-
-STRING_MKDIR_HELP,   "Skapar en mapp.\n\n\
+    STRING_LABEL_HELP1 "Skapar, tar bort eller ändrar etikett på enhet.\n\nLABEL [enhet:][etikett]\n"
+    STRING_LABEL_HELP2 "Volymen i enhet %c: är %s\n"
+    STRING_LABEL_HELP3 "Volymen i enhet %c: är utan namn\n"
+    STRING_LABEL_HELP4 "Volymens serienummer är %04X-%04X\n"
+    STRING_LABEL_HELP5 "Volymnamn (11 tecken, Enter = inget namn)? "
+    STRING_LOCALE_HELP1 "aktuell tid är"
+    STRING_MKDIR_HELP "Skapar en mapp.\n\n\
 MKDIR [enhet:]mapp\nMD [enhet:]mapp"
-
-STRING_MKLINK_HELP, "Skapar en filesystemslänk.\n\n\
+    STRING_MKLINK_HELP "Skapar en filesystemslänk.\n\n\
 MKLINK [/D | /H | /J] linknamn mål\n\n\
   /D  Anger att länkens mål är en mapp.\n\
   /H  Skapar en hårdlänk i stället för en symbolisk länk.\n\
   /J  Skapar en knutpunkt för en mapp sk. junction.\n\n\
 Om varken /H eller /J är angivna kommer en symbolisk länk att skapas."
-
-STRING_MEMMORY_HELP1, "Visar mängd systemminne.\n\nMEMORY"
-
-STRING_MEMMORY_HELP2, "\n  %12s%% använt minne.\n\n\
+    STRING_MEMMORY_HELP1 "Visar mängd systemminne.\n\nMEMORY"
+    STRING_MEMMORY_HELP2 "\n  %12s%% använt minne.\n\n\
   %13s byte totalt fysisk RAM-minne.\n\
   %13s byte tillgängligt fysisk RAM-minne.\n\n\
   %13s byte total sidväxlingsfil.\n\
   %13s byte tillgänglig sidväxlingsfil.\n\n\
   %13s byte totalt virtuell minne.\n\
   %13s byte tilgängeligt virtuellt minne.\n"
-
-STRING_MISC_HELP1, "Tryck en knapp för att fortsätta...\n"
-
-STRING_MOVE_HELP1, "Skriv över %s (Ja/Nej/Alla)? "
-
-STRING_MOVE_HELP2, "Flyttar filer, och byter namn på filer och mappar.\n\n\
+    STRING_MISC_HELP1 "Tryck en knapp för att fortsätta...\n"
+    STRING_MOVE_HELP1 "Skriv över %s (Ja/Nej/Alla)? "
+    STRING_MOVE_HELP2 "Flyttar filer, och byter namn på filer och mappar.\n\n\
 för att flytte en eller flera filer:\n\
 MOVE [/N][enhet:][mapp]filnamn1[,...] destination\n\n\
 för att ändra namn på en mapp:\n\
@@ -325,25 +273,22 @@ MOVE [/N][enhet:][mapp]mappnamn1 mappnamn2\n\n\
   /N                    Ingenting. Gör allt utom att flytta filer eller mappar.\n\n\
 aktuell begränsningar:\n\
   - Du kan inte flytta en fil eller mapp från en enhet till en annan.\n"
-
-STRING_MSGBOX_HELP, "vis en meldingsboks och returner brukers svar\n\n\
+    STRING_MSGBOX_HELP "vis en meldingsboks och returner brukers svar\n\n\
 MSGBOX type ['tittel'] melding\n\n\
 type          knapp vises\n\
               mulige verdier är: OK, OKCANCEL,\n\
               YESNO, YESNOCANCEL\n\
 tittel        tittel på meldingsboks\n\
 melding       text som vises i meldingsboks\n\n\n\
-ERRORLEVEL 	  settes avhengig av hvilken knapp som trykkes:\n\n\
-JA  :  10    |  NEI      :  11\n\
-OK   :  10    |  AVBRYT  :  12\n"
-
-STRING_PATH_HELP1, "Viser eller setter en søkesti for kjørbare filer.\n\n\
+ERRORLEVEL    settes avhengig av hvilken knapp som trykkes:\n\n\
+JA  :  10    |  NEI     :  11\n\
+OK  :  10    |  AVBRYT  :  12\n"
+    STRING_PATH_HELP1 "Viser eller setter en søkesti for kjørbare filer.\n\n\
 PATH [[enhet:]mapp[;...]]\nPATH ;\n\n\
 Skriv PATH; för att tømme alle søkemappar inställninar och angi at kommandoskallet\n\
 kun skal søke aktuell mapp.\n\
 Skriv PATH uten parameter för att visa aktuell søkesti.\n"
-
-STRING_PROMPT_HELP1, "Ändra kommandoledetekst.\n\n\
+    STRING_PROMPT_HELP1 "Ändra kommandoledetekst.\n\n\
 PROMPT [text]\n\n\
   text    Anger en nytt kommandoledetekst.\n\n\
 Ledeteksten kan bli satt sammen av normale tegn och følgende spesielle koder:\n\n\
@@ -355,32 +300,28 @@ Ledeteksten kan bli satt sammen av normale tegn och følgende spesielle koder:\n
   $F   ) (Høyreparentes)\n\
   $G   > (større-enn symbol)\n\
   $H   Tilbake (sletter forrige tegn)\n\
+  $I   Information line\n\
   $L   < (mindre-enn symbol)\n\
   $N   aktuell enhet\n\
   $P   aktuell enhet och mapp\n\
   $Q   = (likhetstegn)\n\
+  $S   (space)\n\
   $T   aktuell klokkeslett\n\
   $V   Versjonsnummer for ReactOS\n\
   $_   Retur och linjeskift\n\
   $$   $ (dollar tegn)\n"
-
-STRING_PAUSE_HELP1, "Stoppar eksekvering av satsvis fil och vis følgende melding:\n\
+    STRING_PAUSE_HELP1 "Stoppar eksekvering av satsvis fil och vis følgende melding:\n\
 'Tryck valfri tangent för att fortsette...' eller en användaren definert melding.\n\n\
 PAUSE [melding]"
-
-STRING_PROMPT_HELP2, "  $+   Vis aktuell dybde av mappstakken"
-
-STRING_PROMPT_HELP3, "\nSkriv PROMPT uten parameter för att resette ledeteksten."
-
-STRING_REM_HELP, "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"
-
-STRING_RMDIR_HELP,   "Flytter en mapp.\n\n\
+    STRING_PROMPT_HELP2 "  $+   Vis aktuell dybde av mappstakken"
+    STRING_PROMPT_HELP3 "\nSkriv PROMPT uten parameter för att resette ledeteksten."
+    STRING_REM_HELP "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"
+    STRING_RMDIR_HELP "Flytter en mapp.\n\n\
 RMDIR [enhet:]mapp\nRD [enhet:]mapp\n\
-/S			Sletter alle filer och mappar innenfor målet\n\
-/Q			Inte spør før sletting.\n"
-STRING_RMDIR_HELP2,	"mappn är inte tom!\n"
-
-STRING_REN_HELP1, "Ändra namn på fil/mapp eller filer/mappar.\n\n\
+/S          Sletter alle filer och mappar innenfor målet\n\
+/Q          Inte spør før sletting.\n"
+    STRING_RMDIR_HELP2 "mappn är inte tom!\n"
+    STRING_REN_HELP1 "Ändra namn på fil/mapp eller filer/mappar.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_namn ... nytt_namn\n\
 REN [/E /N /P /Q /S /T] gammelt_namn ... nytt_namn\n\n\
   /E    Ingen feilmeldinger.\n\
@@ -392,12 +333,9 @@ REN [/E /N /P /Q /S /T] gammelt_namn ... nytt_namn\n\n\
   /T    Vis totalt antall endrede filer.\n\n\
 NB; du kan inte ange en ny destinasjon for filen/mappen. Bruk\n\
 MOVE kommando for det formålet.\n"
-
-STRING_REN_HELP2, "    %lu fil endret namn\n"
-
-STRING_REN_HELP3, "    %lu filer endret namn\n"
-
-STRING_REPLACE_HELP1, "Replaces files.\n\n\
+    STRING_REN_HELP2 "    %lu fil endret namn\n"
+    STRING_REN_HELP3 "    %lu filer endret namn\n"
+    STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [drive1:][path1]filename Specifies the source file or files.\n\
@@ -415,64 +353,43 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
   /W                       Waits for you to insert a disk before beginning.\n\
   /U                       Replaces (updates) only files that are older than\n\
                            source files. Cannot use with the /A switch.\n"
-
-STRING_REPLACE_HELP2, "Source path required\n"
-
-STRING_REPLACE_HELP3, "No files replaced\n"
-
-STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
-
-STRING_REPLACE_HELP5, "Replacing %s\n"
-
-STRING_REPLACE_HELP6, "Replace %s\n"
-
-STRING_REPLACE_HELP7, "No files added\n"
-
-STRING_REPLACE_HELP8, "%lu file(s) added\n"
-
-STRING_REPLACE_HELP9, "Add %s (Y/N) "
-
-STRING_REPLACE_HELP10, "Replace %s (Y/N) "
-
-STRING_REPLACE_HELP11, "Adding %s\n"
-
-
-STRING_SHIFT_HELP, "Ändra posisjon for erstattelig parameter i et satsvis fil.\n\n\
+    STRING_REPLACE_HELP2 "Source path required\n"
+    STRING_REPLACE_HELP3 "No files replaced\n"
+    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
+    STRING_REPLACE_HELP5 "Replacing %s\n"
+    STRING_REPLACE_HELP6 "Replace %s\n"
+    STRING_REPLACE_HELP7 "No files added\n"
+    STRING_REPLACE_HELP8 "%lu file(s) added\n"
+    STRING_REPLACE_HELP9 "Add %s (Y/N) "
+    STRING_REPLACE_HELP10 "Replace %s (Y/N) "
+    STRING_REPLACE_HELP11 "Adding %s\n"
+    STRING_SHIFT_HELP "Ändra posisjon for erstattelig parameter i et satsvis fil.\n\n\
 SHIFT [NED]"
-
-STRING_SCREEN_HELP, "flytt markør och potensielt skriv ut text\n\n\
+    STRING_SCREEN_HELP "flytt markør och potensielt skriv ut text\n\n\
 SCREEN rad kol [text]\n\n\
   rad         rad markør flyttes til\n\
   kol         kolonne markør flyttes til"
-
-STRING_SET_HELP, "Vis, sett, eller fjern miljøvariabel.\n\n\
+    STRING_SET_HELP "Vis, sett, eller fjern miljøvariabel.\n\n\
 SET [variabel[=][streng]]\n\n\
   variabel  Anger miljøvariabel namn.\n\
   string    Anger en serie av tegn til bestemme variabel.\n\n\
 Skriv SET uten parameter för att visa aktuell miljøvariabler.\n"
-
-STRING_START_HELP1, "Start en kommando.\n\n\
+    STRING_START_HELP1 "Start en kommando.\n\n\
 START kommando\n\n\
   kommando     Anger kommando för att kjøre.\n\n\
 NB; for øyeblikket blir alle kommandoer startet asynkront.\n"
-
-STRING_TITLE_HELP, "Velg vindustittel for kommandotolkvindu.\n\n\
+    STRING_TITLE_HELP "Velg vindustittel for kommandotolkvindu.\n\n\
 TITLE [streng]\n\n\
 streng       Anger tittel for kommandotolkvindu.\n"
-
-STRING_TIME_HELP1, "Vis eller sett system tid.\n\n\
+    STRING_TIME_HELP1 "Vis eller sett system tid.\n\n\
 TIME [/T][tid]\n\n\
   /T    vis bare\n\n\
 Skriv TIME uten parametere för att visa aktuell tidsinställninar och et\n\
 spørsmål om en ny en.  Tryck ENTER för att beholde samme tid.\n"
-
-STRING_TIME_HELP2, "Velg ny tid: "
-
-STRING_TIMER_HELP1, "Forløpt %d msecs\n"
-
-STRING_TIMER_HELP2, "Forløpt %02d%c%02d%c%02d%c%02d\n"
-
-STRING_TIMER_HELP3, "Tillater bruk av inntil ti stoppeklokker.\n\n\
+    STRING_TIME_HELP2 "Velg ny tid: "
+    STRING_TIMER_HELP1 "Forløpt %d msecs\n"
+    STRING_TIMER_HELP2 "Forløpt %02d%c%02d%c%02d%c%02d\n"
+    STRING_TIMER_HELP3 "Tillater bruk av inntil ti stoppeklokker.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          start stoppeklokke\n\
   OFF         Stoppar stoppeklokke\n\
@@ -487,61 +404,47 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 hvis hverken ON, OFF eller /S är spesifisert\n\
 vil status for stoppeklokken veksles.\n\n"
-
-STRING_TYPE_HELP1, "Vis innholdet av tekstfiler.\n\nSkriv [enhet:][mapp]filnamn \n\
-  /P 		  Vis en full skjerm om gangen.\n"
-
-STRING_VERIFY_HELP1, "Denne kommandoen är bare en etterlikning!!\n\
+    STRING_TYPE_HELP1 "Vis innholdet av tekstfiler.\n\nSkriv [enhet:][mapp]filnamn \n\
+  /P          Vis en full skjerm om gangen.\n"
+    STRING_VERIFY_HELP1 "Denne kommandoen är bare en etterlikning!!\n\
 Anger om det skal bekreftes at dine filer är skrevet korrekt til disk \n\n\
 VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre för att visa aktuell VERIFY inställninar.\n"
-
-STRING_VERIFY_HELP2, "VERIFY är %s.\n"
-
-STRING_VERIFY_HELP3, "Må ange ON eller OFF."
-
-STRING_VERSION_HELP1, "Vis Reactos versjonen\n\n\
+    STRING_VERIFY_HELP2 "VERIFY är %s.\n"
+    STRING_VERIFY_HELP3 "Må ange ON eller OFF."
+    STRING_VERSION_HELP1 "Vis ReactOS versjonen\n\n\
 VER [/C][/R][/W]\n\n\
   /C  Vis anerkjennelse.\n\
   /R  Vis videreformidlingsinformasjon.\n\
   /W  Vis garantiinformasjon."
-
-STRING_VERSION_HELP2, " kommer med ABSOLUTT INGEN GARANTI; for detaljer\n\
+    STRING_VERSION_HELP2 " kommer med ABSOLUTT INGEN GARANTI; for detaljer\n\
 Skriv: `ver /w'. Dette är gratis programvare, och du är velkommen til videreformidle\n\
 det under gitte betingelser; Skriv `ver /r' for detaljer. Skriv `ver /c' for en\n\
 liste av anerkjennelser."
-
-STRING_VERSION_HELP3, "\n Dette programet är fordelt i håpet som det vil bli brukbar,\n\
+    STRING_VERSION_HELP3 "\n Dette programet är fordelt i håpet som det vil bli brukbar,\n\
  men UTEN NOEN GARANTI; uten engang antydet garantid for \n\
  SALGBARHET eller BRUKBARHET FOR NOE MÅL.  Se \n\
  GNU Generell Publikum Lisens for flere detaljer."
-
-STRING_VERSION_HELP4, "\n Dette programmet är gratis programvare; du kan videre-\n\
+    STRING_VERSION_HELP4 "\n Dette programmet är gratis programvare; du kan videre-\n\
  formidle det och/eller modifisere det under betingelser av Generell Publikum \n\
   Lisens som utgivelses av Free Software Foundation; enten version 2 av \n\
   Lisens, eller (ved din mulighet) andre nyere version.\n"
-
-STRING_VERSION_HELP5, "\nSend bug rapporter til <ros-dev@reactos.org>.\n\
+    STRING_VERSION_HELP5 "\nSend bug rapporter til <ros-dev@reactos.org>.\n\
 oppdateringer är tilgjengelig her: http://www.reactos.org"
-
-STRING_VERSION_HELP6, "\nFreeDOS version skrevet av:\n"
-
-STRING_VERSION_HELP7, "\nReactOS version skrevet av:\n"
-
-STRING_VOL_HELP1, " Volumet i enhet %c är %s\n"
-STRING_VOL_HELP2, " Volumet i enhet %c har ingen namn.\n"
-STRING_VOL_HELP3, " Volumet Serie nummer är %04X-%04X\n"
-STRING_VOL_HELP4, "Vis disk volumet merke och serie nummer, hvis det eksisterer.\n\nVOL [enhet:]"
-
-STRING_WINDOW_HELP1, "ändra konsoll vindu aspekt\n\n\
+    STRING_VERSION_HELP6 "\nFreeDOS version skrevet av:\n"
+    STRING_VERSION_HELP7 "\nReactOS version skrevet av:\n"
+    STRING_VOL_HELP1 " Volumet i enhet %c är %s\n"
+    STRING_VOL_HELP2 " Volumet i enhet %c har ingen namn.\n"
+    STRING_VOL_HELP3 " Volumet Serie nummer är %04X-%04X\n"
+    STRING_VOL_HELP4 "Vis disk volumet merke och serie nummer, hvis det eksisterer.\n\nVOL [enhet:]"
+    STRING_WINDOW_HELP1 "ändra konsoll vindu aspekt\n\n\
 WINDOW [/POS[=]venstre,topp,bredde,høyde]\n\
               [MINI|MAKS|GJENOPPRETT] ['tittel']\n\n\
 /POS          ange vindusposisjon och størrelse\n\
 MINI          minimer vinduet\n\
 MAKS          maksimer vinduet\n\
 GJENOPPRETT   gjenopprett vinduet"
-
-STRING_WINDOW_HELP2, "ändra konsoll vindu aspekt\n\n\
+    STRING_WINDOW_HELP2 "ändra konsoll vindu aspekt\n\n\
 ACTIVATE 'window' [/POS[=]venstre,topp,bredde,høyde]\n\
               [MINI|MAKS|GJENOPPRETT] ['tittel']\n\n\
 vindu         tittel av vindu på stad fullføre handlinger\n\
@@ -550,164 +453,90 @@ MIN           minimer vinduet\n\
 MAX           maksimer vinduet\n\
 RESTORE       gjenopprett vinduet\n\
 tittel        ny tittel\n"
-
-
-STRING_HELP1, "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
-kommando /?     For mer informasjon om en bestemt kommando\n\n\
-?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
-ALIAS    Sett, fjern eller vis alias.\n\
-ATTRIB   Viser eller ändra fil attributter.\n\
-BEEP     Piper i høyttaleren.\n\
-CALL     Starte et satsvis program fra et annet.\n\
-CD       Vis namnet på eller endrer aktuell mapp.\n\
-CHCP     Viser eller anger nummer på aktiv tegntabell.\n\
-CHOICE   Venter til bruken väljer en av et sett av val.\n\
-CLS      Tømmer skjermen.\n\
-CMD      Start en ny forekomst av ReactOS kommandotolk.\n\
-COLOR    Anger standard forgrunn- och bakgrunnsfargr for konsollen.\n\
-COPY     Kopierer en eller flere filer til en annen plassering.\n\
-DATE     Viser eller anger datoen.\n\
-DELETE   Sletter en eller flere filer.\n\
-DIR      Viser en liste over filer och undermappar i en mapp.\n\
-ECHO     Viser meldinger, eller slår kommandoecho på eller av.\n\
-ERASE    Sletter en eller flere filer.\n\
-EXIT     Avslutter programmet CMD.EXE program (kommandotolken).\n\
-FOR      Kjør en bestemt kommando for hver fil i et sett av filer.\n\
-FREE     Viser ledig diskplass.\n\
-GOTO     Leder ReactOS kommandotolk til en merket linje i\n\
-         et satsvis program.\n\
-HELP     Viser hjelpeinformasjon for ReactOS-kommandoer.\n\
-HISTORY  Lister alle kommandoer som har blitt brukt\n\
-IF       Utføre betinget behandling i satsvise programmer.\n\
-LABEL    Oppretter, endrer, eller sletter volumnamnet på en disk.\n\
-MD       Oppretter en mapp.\n\
-MKDIR    Oppretter en mapp.\n\
-MKLINK   Creates a filesystem link object.\n\
-MOVE     Flytter en eller flere filer fra en mapp til en annen.\n\
-PATH     Vis eller sett en søkesti for kjørbare filer.\n\
-PAUSE    Avbryter behandling av en satsvis fil, och viser en melding.\n\
-POPD     Fjenoppretter den forige verdien av aktuell mapp, lagret av\n\
-         PUSHD.\n\
-PROMPT   Ändra kommandoledeteksten.\n\
-PUSHD    Lagre aktuell mapp och endrer den etterpå.\n\
-RD       Fjerner en mapp.\n\
-REM      Anger kommentarer i satsvise filer.\n\
-REN      Gir nytt namn til en eller flere filer.\n\
-RENAME   Gir nytt namn til en eller flere filer.\n\
-RMDIR    Fjerner en mapp.\n\
-SCREEN   Flytter markør.\n\
-SET      Vis, sett, eller fjern ReactOS miljøvariabel.\n\
-SHIFT    Shift plass for erstattelige parameter i satsvise filer.\n"
-STRING_HELP2, "START    Start et separat vindu til att kjøre et spesifisert program eller kommando.\n\
-         Utfører kommando.\n\
-TIME     Vis eller sett system tid.\n\
-TIMER    Håndtere stoppeklokker (maks 10 stk).\n\
-TITLE    Sett vindustittel for CMD.EXE sesjon.\n\
-TYPE     Vis innholdet i en text fil.\n\
-VER      Viser ReactOS version.\n\
-VERIFY   Forteller ReactOS om att bekrefte om dine filer är skrevet\n\
-         riktig til disk.\n\
-VOL      Vis et volums namn och serienummer.\n"
-
-
-STRING_CHOICE_OPTION,         "YN"
-STRING_COPY_OPTION,           "YNA"
-
-STRING_ALIAS_ERROR,          "Kommando linje for lang etter alias utvidelse!\n"
-STRING_ASSOC_ERROR,          "Fil association ble inte funnet for utvidelsen %s\n"
-STRING_BATCH_ERROR,          "Feil ved åpning av satsvis fil\n"
-STRING_CHCP_ERROR1,          "Aktiv tegntabell: %u\n"
-STRING_CHCP_ERROR4,          "Ugyldig tegntabell\n"
-STRING_CHOICE_ERROR,         "Ugyldig  val. Forventet format: /C[:]val"
-STRING_CHOICE_ERROR_TXT,     "Ugyldig  val. Forventet format: /T[:]c,nn"
-STRING_CHOICE_ERROR_OPTION,  "Ulovlig operasjon: %s"
-STRING_CMD_ERROR1,           "Kan inte videreføre inndata fra fil %s\n"
-STRING_CMD_ERROR2,           "Feil under oppretting av temporær fil for datakanal\n"
-STRING_CMD_ERROR3,           "Kan inte videreføre til fil %s\n"
-STRING_CMD_ERROR4,           "Kör %s...\n"
-STRING_CMD_ERROR5,           "Kör cmdexit.bat...\n"
-STRING_COLOR_ERROR1,         "Samme farge feil! (Bakgrunn och forgrunn kan inte ha samme farge)"
-STRING_COLOR_ERROR2,         "feil i farge spesifikasjon"
-STRING_COLOR_ERROR3,         "Farge %x\n"
-STRING_COLOR_ERROR4,         "samme farge feil!"
-STRING_CONSOLE_ERROR,        "Ukjent feil: %d\n"
-STRING_COPY_ERROR1,          "Feil: kan inte åpne kilden - %s!\n"
-STRING_COPY_ERROR2,          "Feil: kan inte kopiere til seg selv!\n"
-STRING_COPY_ERROR3,          "Feil ved skriving til destinasjon!\n"
-STRING_COPY_ERROR4,          "Feil: Inte implementert enda!\n"
-STRING_DATE_ERROR,           "Ugyldig dato."
-STRING_DEL_ERROR5,           "Filen %s vil bli slettet! "
-STRING_DEL_ERROR6,           "Er du sikker (J/N)?"
-STRING_DEL_ERROR7,           "Sletter: %s\n"
-STRING_ERROR_ERROR1,         "Ukjent feil! Feilkode: 0x%lx\n"
-STRING_ERROR_ERROR2,         "Syntaks feil"
-STRING_FOR_ERROR1,           "'in' tapt i FOR kommando."
-STRING_FOR_ERROR2,           "ingen brakett funnet."
-STRING_FOR_ERROR3,           "'gjøre' tapt."
-STRING_FOR_ERROR4,           "ingen kommando etter 'gjøre'."
-STRING_FREE_ERROR1,          "Ugyldig driver"
-STRING_FREE_ERROR2,          "utmerket"
-STRING_GOTO_ERROR1,          "Ingen merke spesifisert for GÅTIL"
-STRING_GOTO_ERROR2,          "merke '%s' inte funnet\n"
-
-STRING_MD_ERROR,             "En undermapp eller fil finnes allerede.\n"
-STRING_MD_ERROR2,            "Stien til den nye mappen eksisterer inte.\n"
-STRING_MOVE_ERROR1,          "[OK]\n"
-STRING_MOVE_ERROR2,          "[Feil]\n"
-
-STRING_REN_ERROR1,           "MoveFile() mislykkes. Feil: %lu\n"
-
-STRING_START_ERROR1,         "Ingen satsvis støtte for øyeblikket!"
-
-STRING_TIME_ERROR1,          "Ugyldig tid."
-
-STRING_TYPE_ERROR1,          "Ugyldig alternativ '/%s'\n"
-
-STRING_WINDOW_ERROR1,        "vinduet ble inte funnet"
-
-
-STRING_ERROR_PARAMETERF_ERROR,     "Parameter format inte riktig - %c\n"
-STRING_ERROR_INVALID_SWITCH,       "Ugyldig bryter  - /%c\n"
-STRING_ERROR_TOO_MANY_PARAMETERS,  "For mange parametere - %s\n"
-STRING_ERROR_PATH_NOT_FOUND,       "Stien ble inte funnet\n"
-STRING_ERROR_FILE_NOT_FOUND,       "Filen ble inte funnet\n"
-STRING_ERROR_REQ_PARAM_MISSING,    "Obligatorisk parameter mangler\n"
-STRING_ERROR_INVALID_DRIVE,        "Ugyldig enhet angitt\n"
-STRING_ERROR_INVALID_PARAM_FORMAT, "Ugyldig parameter format - %s\n"
-STRING_ERROR_BADCOMMAND,           "Feil kommando eller filnamn - %s\n"
-STRING_ERROR_OUT_OF_MEMORY,        "Feil: Minne fullt.\n"
-STRING_ERROR_CANNOTPIPE,           "Feil! Kan inte bruke datakanal! Kan inte åpne midlertidig fil!\n"
-STRING_ERROR_D_PAUSEMSG,           "Tryck valfri tangent för att fortsette . . ."
-STRING_ERROR_DRIVER_NOT_READY,     "enheten är inte klar"
-
-STRING_PATH_ERROR,                 "CMD: Inte i miljøet '%s'\n"
-
-STRING_REPLACE_ERROR1, "Invalid switch - %s\n"
-STRING_REPLACE_ERROR2, "Mappen ble inte funnet - %s\n"
-STRING_REPLACE_ERROR3, "The filename, directory name, or volume label syntax is incorrect.\n"
-STRING_REPLACE_ERROR4, "Invalid parameter combination\n"
-STRING_REPLACE_ERROR5, "Tilgang nektet - %s\n"
-STRING_REPLACE_ERROR6, "Ingen filer ble funnet - %s\n"
-STRING_REPLACE_ERROR7, "Extended Error 32\n"
-
-STRING_REACTOS_VERSION,            "ReactOS Operativsystem [Versjon %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\nReactOS Kommandotolk\nVersjon %s %s"
-STRING_VERSION_RUNVER,             " körs på %s"
-STRING_COPY_FILE ,                 "        %d file(r) kopiert\n"
-STRING_DELETE_WIPE,                "slettet"
-STRING_FOR_ERROR,                  "ugyldig variabel spesifikasjon."
-STRING_SCREEN_COL,                 "ugyldig verdi for kolonne"
-STRING_SCREEN_ROW,                 "ugyldig verdi for rad"
-STRING_TIMER_TIME                  "Stoppeklokke %d är %s: "
-STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
-STRING_MORE,                       "More? "
-STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break trykket.  Avbryt batch filen? (Ja/Nei/Alt) "
-
-STRING_INVALID_OPERAND,            "Ugyldig operand."
-STRING_EXPECTED_CLOSE_PAREN,       "Forventet ')'."
-STRING_EXPECTED_NUMBER_OR_VARIABLE,"Forventet nummer eller variabel namn."
-STRING_SYNTAX_COMMAND_INCORRECT,   "Syntaks for kommandoen är feil."
-
+    STRING_CHOICE_OPTION "YN"
+    STRING_COPY_OPTION "YNA"
+    STRING_ALIAS_ERROR "Kommando linje for lang etter alias utvidelse!\n"
+    STRING_ASSOC_ERROR "Fil association ble inte funnet for utvidelsen %s\n"
+    STRING_BATCH_ERROR "Feil ved åpning av satsvis fil\n"
+    STRING_CHCP_ERROR1 "Aktiv tegntabell: %u\n"
+    STRING_CHCP_ERROR4 "Ugyldig tegntabell\n"
+    STRING_CHOICE_ERROR "Ugyldig  val. Forventet format: /C[:]val"
+    STRING_CHOICE_ERROR_TXT "Ugyldig  val. Forventet format: /T[:]c,nn"
+    STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s"
+    STRING_CMD_ERROR1 "Kan inte videreføre inndata fra fil %s\n"
+    STRING_CMD_ERROR2 "Feil under oppretting av temporær fil for datakanal\n"
+    STRING_CMD_ERROR3 "Kan inte videreføre til fil %s\n"
+    STRING_CMD_ERROR4 "Kör %s...\n"
+    STRING_CMD_ERROR5 "Kör cmdexit.bat...\n"
+    STRING_COLOR_ERROR1 "Samme farge feil! (Bakgrunn och forgrunn kan inte ha samme farge)"
+    STRING_COLOR_ERROR2 "feil i farge spesifikasjon"
+    STRING_COLOR_ERROR3 "Farge %02x\n"
+    STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
+    STRING_COPY_ERROR1 "Feil: kan inte åpne kilden - %s!\n"
+    STRING_COPY_ERROR2 "Feil: kan inte kopiere til seg selv!\n"
+    STRING_COPY_ERROR3 "Feil ved skriving til destinasjon!\n"
+    STRING_COPY_ERROR4 "Feil: Inte implementert enda!\n"
+    STRING_DATE_ERROR "Ugyldig dato."
+    STRING_DEL_ERROR5 "Filen %s vil bli slettet! "
+    STRING_DEL_ERROR6 "Er du sikker (J/N)?"
+    STRING_DEL_ERROR7 "Sletter: %s\n"
+    STRING_ERROR_ERROR1 "Ukjent feil! Feilkode: 0x%lx\n"
+    STRING_ERROR_ERROR2 "Syntaks feil"
+    STRING_FOR_ERROR1 "'in' tapt i FOR kommando."
+    STRING_FOR_ERROR2 "ingen brakett funnet."
+    STRING_FOR_ERROR3 "'gjøre' tapt."
+    STRING_FOR_ERROR4 "ingen kommando etter 'gjøre'."
+    STRING_FREE_ERROR1 "Ugyldig driver"
+    STRING_FREE_ERROR2 "utmerket"
+    STRING_GOTO_ERROR1 "Ingen merke spesifisert for GÅTIL"
+    STRING_GOTO_ERROR2 "merke '%s' inte funnet\n"
+    STRING_MD_ERROR "En undermapp eller fil finnes allerede.\n"
+    STRING_MD_ERROR2 "Stien til den nye mappen eksisterer inte.\n"
+    STRING_MOVE_ERROR1 "[OK]\n"
+    STRING_MOVE_ERROR2 "[Feil]\n"
+    STRING_REN_ERROR1 "MoveFile() mislykkes. Feil: %lu\n"
+    STRING_TIME_ERROR1 "Ugyldig tid."
+    STRING_TYPE_ERROR1 "Ugyldig alternativ '/%s'\n"
+    STRING_WINDOW_ERROR1 "vinduet ble inte funnet"
+    STRING_ERROR_PARAMETERF_ERROR "Parameter format inte riktig - %c\n"
+    STRING_ERROR_INVALID_SWITCH "Ugyldig bryter  - /%c\n"
+    STRING_ERROR_TOO_MANY_PARAMETERS "For mange parametere - %s\n"
+    STRING_ERROR_PATH_NOT_FOUND "Stien ble inte funnet\n"
+    STRING_ERROR_FILE_NOT_FOUND "Filen ble inte funnet\n"
+    STRING_ERROR_REQ_PARAM_MISSING "Obligatorisk parameter mangler\n"
+    STRING_ERROR_INVALID_DRIVE "Ugyldig enhet angitt\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ugyldig parameter format - %s\n"
+    STRING_ERROR_BADCOMMAND "Feil kommando eller filnamn - %s\n"
+    STRING_ERROR_OUT_OF_MEMORY "Feil: Minne fullt.\n"
+    STRING_ERROR_CANNOTPIPE "Feil! Kan inte bruke datakanal! Kan inte åpne midlertidig fil!\n"
+    STRING_ERROR_D_PAUSEMSG "Tryck valfri tangent för att fortsette . . ."
+    STRING_ERROR_DRIVER_NOT_READY "enheten är inte klar"
+    STRING_PATH_ERROR "CMD: Inte i miljøet '%s'\n"
+    STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
+    STRING_REPLACE_ERROR2 "Mappen ble inte funnet - %s\n"
+    STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
+    STRING_REPLACE_ERROR4 "Invalid parameter combination\n"
+    STRING_REPLACE_ERROR5 "Tilgang nektet - %s\n"
+    STRING_REPLACE_ERROR6 "Ingen filer ble funnet - %s\n"
+    STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_REACTOS_VERSION "ReactOS Operativsystem [Versjon %s-%s]\n"
+    STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersjon %s %s"
+    STRING_VERSION_RUNNING_ON "Körs på: "
+    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
+    STRING_COPY_FILE "        %d file(r) kopiert\n"
+    STRING_DELETE_WIPE "slettet"
+    STRING_FOR_ERROR "ugyldig variabel spesifikasjon."
+    STRING_SCREEN_COL "ugyldig verdi for kolonne"
+    STRING_SCREEN_ROW "ugyldig verdi for rad"
+    STRING_TIMER_TIME "Stoppeklokke %d är %s: "
+    STRING_MKLINK_CREATED_SYMBOLIC "Symbolic link created for %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
+    STRING_MORE "More? "
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break trykket.  Avbryt batch filen? (Ja/Nei/Alt) "
+    STRING_INVALID_OPERAND "Ugyldig operand."
+    STRING_EXPECTED_CLOSE_PAREN "Forventet ')'."
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Forventet nummer eller variabel namn."
+    STRING_SYNTAX_COMMAND_INCORRECT "Syntaks for kommandoen är feil."
 END

@@ -3,6 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+
 #ifndef _INC_MBSTRING
 #define _INC_MBSTRING
 
@@ -390,13 +391,13 @@ extern "C" {
     _In_ size_t _Count);
 
   _CRTIMP
-  int
+  errno_t
   __cdecl
   _mbsnbcpy_s(
-    _Out_writes_z_(size) unsigned char* dst,
-    _In_ size_t size,
-    _In_z_ const unsigned char* src,
-    _In_ size_t n);
+    _Out_writes_z_(_DstSizeInBytes) unsigned char *_Dst,
+    _In_ size_t _DstSizeInBytes,
+    _In_z_ const unsigned char *_Src,
+    _In_ size_t _MaxCount);
 
   _CRTIMP
   unsigned char*

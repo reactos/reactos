@@ -5,6 +5,8 @@
 
 #pragma once
 
+#define GDI_OBJECT_STACK_LEVELS 20
+
 /* The first 10 entries are never used in windows, they are empty */
 static const unsigned RESERVE_ENTRIES_COUNT = 10;
 
@@ -28,7 +30,8 @@ extern PGDI_HANDLE_TABLE GdiHandleTable;
 
 typedef PVOID PGDIOBJ;
 
-typedef BOOL (NTAPI *GDICLEANUPPROC)(PVOID ObjectBody);
+typedef VOID (NTAPI *GDICLEANUPPROC)(PVOID ObjectBody);
+typedef VOID (NTAPI *GDIOBJDELETEPROC)(PVOID ObjectBody);
 
 /* Every GDI Object must have this standard type of header.
  * It's for thread locking. */
@@ -42,6 +45,9 @@ typedef struct _BASEOBJECT
     USHORT cExclusiveLock;
     USHORT BaseFlags;
     EX_PUSH_LOCK pushlock;
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+    PVOID apvBackTrace[GDI_OBJECT_STACK_LEVELS];
+#endif
 #if DBG_ENABLE_EVENT_LOGGING
     SLIST_HEADER slhLog;
 #endif
@@ -93,6 +99,13 @@ GreSetObjectOwner(
     HGDIOBJ hobj,
     ULONG ulOwner);
 
+BOOL
+NTAPI
+GreSetObjectOwnerEx(
+    HGDIOBJ hobj,
+    ULONG ulOwner,
+    ULONG Flags);
+
 INT
 NTAPI
 GreGetObject(
@@ -131,6 +144,12 @@ GDIOBJ_vDereferenceObject(
 PGDIOBJ
 NTAPI
 GDIOBJ_LockObject(
+    HGDIOBJ hobj,
+    UCHAR objt);
+
+PGDIOBJ
+NTAPI
+GDIOBJ_TryLockObject(
     HGDIOBJ hobj,
     UCHAR objt);
 

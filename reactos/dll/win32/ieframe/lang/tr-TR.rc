@@ -1,0 +1,80 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "&Kütük"
+    {
+        POPUP "&Yeni"
+        {
+            MENUITEM "&Pencere",                ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "&Aç...",                      ID_BROWSE_OPEN
+        MENUITEM "&Sakla",                      ID_BROWSE_SAVE
+        MENUITEM "Ay&rı Sakla...",              ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Ya&zdırma Biçimi...",         ID_BROWSE_PRINT_FORMAT
+        MENUITEM "Yaz&dır...",                  ID_BROWSE_PRINT
+        MENUITEM "Yazd&ırma Ön İzlemesi",       ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Husûsiyetler",               ID_BROWSE_PROPERTIES
+        MENUITEM "&Kapat",                      ID_BROWSE_QUIT
+    }
+    POPUP "&Görünüm"
+    {
+        POPUP "&Araç Çubukları"
+        {
+            MENUITEM "&Ölçünlü Çubuk",          ID_BROWSE_BAR_STD
+            MENUITEM "&Adres Çubuğu",           ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "&Yer İmleri"
+    {
+        MENUITEM "&Yer İmleri'ne Ekle...",      ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "Y&ardım"
+    {
+        MENUITEM "&Internet Explorer Üzerine", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "Geri"
+    IDS_TB_FORWARD          "İleri"
+    IDS_TB_STOP             "Dur"
+    IDS_TB_REFRESH          "Yenile"
+    IDS_TB_HOME             "Giriş"
+    IDS_TB_PRINT            "Yazdır..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "Adres"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "%s İçin Aranıyor"
+    IDS_BEGINDOWNLOADDATA   "%s İndirmeye Başlanıyor"
+    IDS_ENDDOWNLOADDATA     "%s İndiriliyor"
+    IDS_SENDINGREQUEST      "%s İçin Soruyor"
+}
+
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+CAPTION "URL Aç"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Internet Explorer içinde açmak için istedğiniz URL'yi belirtiniz.",-1, 35,5,160,25
+    LTEXT "Aç:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "Tamam", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 145, 50, 50, 14
+}

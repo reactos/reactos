@@ -20,7 +20,7 @@
  * is inserted, so the string looks right on the console but still
  * contains the original string, plus other garbage:
  */
-static char 
+static char
 *backSpaceEdit(char *s)
 {
     char c;
@@ -58,7 +58,7 @@ handle_switch(FILE *outFile, int *sw, char *arg, char *desc)
             *sw = x;
             changed = 1;
         }
-    } 
+    }
     if (desc)
     {
         esclog(outFile, "%s is %d (%s)\n", desc, *sw, changed ? "changed":"unchanged");
@@ -90,14 +90,14 @@ handle_switch_str(FILE *outFile, char *sw, char *arg, char *desc)
                 changed = 1;
             }
         }
-    } 
+    }
     if (desc)
     {
         esclog(outFile, "%s is \"%s\" (%s)\n", desc, sw, changed ? "changed":"unchanged");
         if (!arg)
             esclog(outFile, "(readonly)\n");
     }
-        
+
     return changed;
 }
 
@@ -132,14 +132,14 @@ handle_switch_pstr(FILE *outFile, char **psw, char *arg, char *desc)
                 }
             }
         }
-    } 
+    }
     if (desc)
     {
         esclog(outFile, "%s is \"%s\" (%s)\n", desc, *psw, changed ? "changed":"unchanged");
         if (!arg)
             esclog(outFile, "(readonly)\n");
     }
-        
+
     return changed;
 }
 
@@ -155,12 +155,12 @@ handle_address_cmd(FILE *outFile, char *arg)
     if(( s = strchr(arg, ':') ))
     {
         *s = ' ';
-        if ( (cnt = sscanf(arg,"%20s %lx", Image, &Offset)) == 2)
+        if ( (cnt = sscanf(arg,"%20s %x", Image, &Offset)) == 2)
         {
             if (( plm = entry_lookup(&cache, Image) ))
             {
                 if (plm->RelBase != INVALID_BASE)
-					esclog(outFile, "Address: 0x%lx\n", plm->RelBase + Offset)
+                    esclog(outFile, "Address: 0x%lx\n", plm->RelBase + Offset)
                 else
                     esclog(outFile, "Relocated base missing for '%s' ('mod' will update)\n", Image);
             }
@@ -168,7 +168,7 @@ handle_address_cmd(FILE *outFile, char *arg)
                 esclog(outFile, "Image '%s' not found\n", Image);
         }
         else
-			esclog(outFile, "usage: `a <Image>:<offset>\n");
+            esclog(outFile, "usage: `a <Image>:<offset>\n");
     }
     else
         esclog(outFile, "':' expected\n");
@@ -259,10 +259,10 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         break;
     case 'R':
         changed = handle_switch_pstr(outFile, &opt_Revision, arg, NULL);
-		opt_Revision_check = 0;
+        opt_Revision_check = 0;
         if (opt_Revision)
         {
-			opt_Revision_check = 1;
+            opt_Revision_check = 1;
             if (strstr(opt_Revision, "check") == opt_Revision)
             {
                 esclog(outFile, "-R is \"%s\" (%s)\n", opt_Revision, changed ? "changed":"unchanged");
@@ -292,7 +292,7 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         {
             memset(&summ, 0, sizeof(SUMM));
             esclog(outFile, "Statistics cleared\n");
-        } 
+        }
         else
             stat_print(outFile, &summ);
         break;
@@ -302,7 +302,7 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         {
             handle_switch(outFile, &opt_undo, "1", "-u Undo");
             handle_switch(outFile, &opt_redo, "1", "-U Undo and reprocess");
-			opt_Revision_check = 1;
+            opt_Revision_check = 1;
         }
         esclog(outFile, "-S Sources option is %d+%d,\"%s\"\n", opt_Source, opt_SrcPlus, opt_SourcesPath);
         esclog(outFile, "(Setting source tree not implemented)\n");

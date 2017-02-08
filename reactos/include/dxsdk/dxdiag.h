@@ -52,6 +52,7 @@ DECLARE_INTERFACE_(IDxDiagProvider,IUnknown)
   STDMETHOD(Initialize) (THIS_ DXDIAG_INIT_PARAMS* pParams) PURE;
   STDMETHOD(GetRootContainer) (THIS_ IDxDiagContainer **ppInstance) PURE;
 };
+#undef INTERFACE
 
 #define DXDIAG_E_INSUFFICIENT_BUFFER ((HRESULT)0x8007007AL)
 #if !defined(__cplusplus) || defined(CINTERFACE)

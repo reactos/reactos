@@ -17,70 +17,78 @@
  */
 
 #include <windef.h>
-//#include "iccvid_private.h"
 
-#ifdef LANGUAGE_DA_DK
-    #include "iccvid_Da.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "iccvid_En.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "iccvid_Hu.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "iccvid_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "iccvid_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "iccvid_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "iccvid_Pl.rc"
-#endif
-#ifdef LANGUAGE_PT_PT
-    #include "iccvid_Pt.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "iccvid_Sv.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "iccvid_Tr.rc"
-#endif
+#include "iccvid_private.h"
 
 /* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DA_DK
+    #include "lang/iccvid_Da.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
-    #include "iccvid_De.rc"
+    #include "lang/iccvid_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/iccvid_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "iccvid_Es.rc"
+    #include "lang/iccvid_Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "iccvid_Fr.rc"
+    #include "lang/iccvid_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "iccvid_He.rc"
+    #include "lang/iccvid_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/iccvid_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "iccvid_It.rc"
+    #include "lang/iccvid_It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "iccvid_Ja.rc"
+    #include "lang/iccvid_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/iccvid_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "iccvid_Lt.rc"
+    #include "lang/iccvid_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/iccvid_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/iccvid_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/iccvid_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/iccvid_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "iccvid_Ro.rc"
+    #include "lang/iccvid_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "iccvid_Ru.rc"
+    #include "lang/iccvid_Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "iccvid_Si.rc"
+    #include "lang/iccvid_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/iccvid_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/iccvid_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/iccvid_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "iccvid_Uk.rc"
+    #include "lang/iccvid_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/iccvid_Zh.rc"
 #endif

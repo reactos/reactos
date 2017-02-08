@@ -21,74 +21,82 @@
 #ifndef __QMGR_H__
 #define __QMGR_H__
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#define COBJMACROS
 
 #include <windef.h>
 #include <winbase.h>
+#include <winsvc.h>
 #include <objbase.h>
-
-#define COBJMACROS
 #include <bits1_5.h>
+#include <bits2_0.h>
+#include <bits2_5.h>
+#include <bits3_0.h>
 
-//#include <string.h>
 #include <wine/list.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
 /* Background copy job vtbl and related data */
 typedef struct
 {
-    const IBackgroundCopyJob2Vtbl *lpVtbl;
+    IBackgroundCopyJob3 IBackgroundCopyJob3_iface;
+    IBackgroundCopyJobHttpOptions IBackgroundCopyJobHttpOptions_iface;
     LONG ref;
     LPWSTR displayName;
+    LPWSTR description;
     BG_JOB_TYPE type;
     GUID jobId;
     struct list files;
     BG_JOB_PROGRESS jobProgress;
     BG_JOB_STATE state;
+    ULONG notify_flags;
+    IBackgroundCopyCallback2 *callback;
+    BOOL callback2; /* IBackgroundCopyCallback2 is supported in addition to IBackgroundCopyCallback */
     /* Protects file list, and progress */
     CRITICAL_SECTION cs;
     struct list entryFromQmgr;
+    struct
+    {
+        WCHAR              *headers;
+        ULONG               flags;
+        BG_AUTH_CREDENTIALS creds[BG_AUTH_TARGET_PROXY][BG_AUTH_SCHEME_PASSPORT];
+    } http_options;
+    struct
+    {
+        BG_ERROR_CONTEXT      context;
+        HRESULT               code;
+        IBackgroundCopyFile2 *file;
+    } error;
+    HANDLE wait;
+    HANDLE cancel;
+    HANDLE done;
 } BackgroundCopyJobImpl;
-
-/* Enum background copy jobs vtbl and related data */
-typedef struct
-{
-    const IEnumBackgroundCopyJobsVtbl *lpVtbl;
-    LONG ref;
-    IBackgroundCopyJob **jobs;
-    ULONG numJobs;
-    ULONG indexJobs;
-} EnumBackgroundCopyJobsImpl;
-
-/* Enum background copy files vtbl and related data */
-typedef struct
-{
-    const IEnumBackgroundCopyFilesVtbl *lpVtbl;
-    LONG ref;
-    IBackgroundCopyFile **files;
-    ULONG numFiles;
-    ULONG indexFiles;
-} EnumBackgroundCopyFilesImpl;
 
 /* Background copy file vtbl and related data */
 typedef struct
 {
-    const IBackgroundCopyFileVtbl *lpVtbl;
+    IBackgroundCopyFile2 IBackgroundCopyFile2_iface;
     LONG ref;
     BG_FILE_INFO info;
     BG_FILE_PROGRESS fileProgress;
     WCHAR tempFileName[MAX_PATH];
     struct list entryFromJob;
     BackgroundCopyJobImpl *owner;
+    DWORD read_size;
 } BackgroundCopyFileImpl;
 
 /* Background copy manager vtbl and related data */
 typedef struct
 {
-    const IBackgroundCopyManagerVtbl *lpVtbl;
+    IBackgroundCopyManager IBackgroundCopyManager_iface;
     /* Protects job list, job states, and jobEvent  */
     CRITICAL_SECTION cs;
     HANDLE jobEvent;
@@ -97,49 +105,53 @@ typedef struct
 
 typedef struct
 {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
 } ClassFactoryImpl;
 
-extern HANDLE stop_event;
-extern ClassFactoryImpl BITS_ClassFactory;
-extern BackgroundCopyManagerImpl globalMgr;
+extern HANDLE stop_event DECLSPEC_HIDDEN;
+extern ClassFactoryImpl BITS_ClassFactory DECLSPEC_HIDDEN;
+extern BackgroundCopyManagerImpl globalMgr DECLSPEC_HIDDEN;
 
-HRESULT BackgroundCopyManagerConstructor(IUnknown *pUnkOuter, LPVOID *ppObj);
+HRESULT BackgroundCopyManagerConstructor(LPVOID *ppObj) DECLSPEC_HIDDEN;
 HRESULT BackgroundCopyJobConstructor(LPCWSTR displayName, BG_JOB_TYPE type,
-                                     GUID *pJobId, LPVOID *ppObj);
-HRESULT EnumBackgroundCopyJobsConstructor(LPVOID *ppObj,
-                                          IBackgroundCopyManager* copyManager);
+                                     GUID *pJobId, BackgroundCopyJobImpl **job) DECLSPEC_HIDDEN;
+HRESULT enum_copy_job_create(BackgroundCopyManagerImpl *qmgr,
+        IEnumBackgroundCopyJobs **enumjob) DECLSPEC_HIDDEN;
 HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
                                       LPCWSTR remoteName, LPCWSTR localName,
-                                      LPVOID *ppObj);
-HRESULT EnumBackgroundCopyFilesConstructor(LPVOID *ppObj,
-                                           IBackgroundCopyJob2 *copyJob);
-DWORD WINAPI fileTransfer(void *param);
-void processJob(BackgroundCopyJobImpl *job);
-BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job);
+                                      BackgroundCopyFileImpl **file) DECLSPEC_HIDDEN;
+HRESULT EnumBackgroundCopyFilesConstructor(BackgroundCopyJobImpl*, IEnumBackgroundCopyFiles**) DECLSPEC_HIDDEN;
+DWORD WINAPI fileTransfer(void *param) DECLSPEC_HIDDEN;
+void processJob(BackgroundCopyJobImpl *job) DECLSPEC_HIDDEN;
+BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job) DECLSPEC_HIDDEN;
+BOOL transitionJobState(BackgroundCopyJobImpl *job, BG_JOB_STATE from, BG_JOB_STATE to) DECLSPEC_HIDDEN;
 
 /* Little helper functions */
-static inline char *
-qmgr_strdup(const char *s)
+static inline WCHAR *strdupW(const WCHAR *src)
 {
-    size_t n = strlen(s) + 1;
-    char *d = HeapAlloc(GetProcessHeap(), 0, n);
-    return d ? memcpy(d, s, n) : NULL;
+    WCHAR *dst = HeapAlloc(GetProcessHeap(), 0, (strlenW(src) + 1) * sizeof(WCHAR));
+    if (dst) strcpyW(dst, src);
+    return dst;
 }
 
-static inline BOOL
-transitionJobState(BackgroundCopyJobImpl *job, BG_JOB_STATE fromState,
-                   BG_JOB_STATE toState)
+static inline WCHAR *co_strdupW(const WCHAR *src)
 {
-    BOOL rv = FALSE;
-    EnterCriticalSection(&globalMgr.cs);
-    if (job->state == fromState)
-    {
-        job->state = toState;
-        rv = TRUE;
-    }
-    LeaveCriticalSection(&globalMgr.cs);
-    return rv;
+    WCHAR *dst = CoTaskMemAlloc((strlenW(src) + 1) * sizeof(WCHAR));
+    if (dst) strcpyW(dst, src);
+    return dst;
+}
+
+static inline HRESULT return_strval(const WCHAR *str, WCHAR **ret)
+{
+    int len;
+
+    if (!ret) return E_INVALIDARG;
+
+    len = strlenW(str);
+    *ret = CoTaskMemAlloc((len+1)*sizeof(WCHAR));
+    if (!*ret) return E_OUTOFMEMORY;
+    strcpyW(*ret, str);
+    return S_OK;
 }
 
 #endif /* __QMGR_H__ */

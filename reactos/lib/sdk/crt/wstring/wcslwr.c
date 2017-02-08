@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-wchar_t * _wcslwr(wchar_t *x)
+wchar_t * CDECL _wcslwr(wchar_t *x)
 {
 	wchar_t  *y=x;
 

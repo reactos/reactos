@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/message.c
+ * FILE:            win32ss/user/user32/windows/message.c
  * PURPOSE:         Messages
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -163,7 +163,7 @@ static unsigned DdeNumAlloc = 0;
 static unsigned DdeNumUsed = 0;
 static CRITICAL_SECTION DdeCrst;
 
-static BOOL FASTCALL
+BOOL FASTCALL
 DdeAddPair(HGLOBAL ClientMem, HGLOBAL ServerMem)
 {
   unsigned i;
@@ -213,7 +213,7 @@ DdeAddPair(HGLOBAL ClientMem, HGLOBAL ServerMem)
   return TRUE;
 }
 
-static HGLOBAL FASTCALL
+HGLOBAL FASTCALL
 DdeGetPair(HGLOBAL ServerMem)
 {
   unsigned i;
@@ -236,839 +236,27 @@ DdeGetPair(HGLOBAL ServerMem)
   return Ret;
 }
 
-static
-BOOL FASTCALL
-MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
+DWORD FASTCALL get_input_codepage( void )
 {
-  *KMMsg = *UMMsg;
-
-  switch (UMMsg->message)
-    {
-      case WM_DDE_ACK:
-        {
-          PKMDDELPARAM DdeLparam;
-          DdeLparam = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDELPARAM));
-          if (!DdeLparam ||
-              !UnpackDDElParam( UMMsg->message, UMMsg->lParam, &DdeLparam->uiLo, &DdeLparam->uiHi))
-             return FALSE;
-         /*
-             If this is a reply to WM_DDE_EXECUTE then
-             uiHi will contain a hMem, hence >= 0x10000.
-             Otherwise, it will be be an atom, a 16-bit value.
-          */
-          if (!IS_ATOM(DdeLparam->uiHi))
-          {
-             HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
-             if (h)
-             {
-                GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
-                DdeLparam->uiHi = (UINT_PTR) h;
-             }
-          }
-          FreeDDElParam(UMMsg->message, UMMsg->lParam);
-          KMMsg->lParam = (LPARAM) DdeLparam;
-        }
-        break;
-
-      case WM_DDE_EXECUTE:
-        {
-          SIZE_T Size;
-          PKMDDEEXECUTEDATA KMDdeExecuteData;
-          PVOID Data;
-
-          Size = GlobalSize((HGLOBAL) UMMsg->lParam);
-          Data = GlobalLock((HGLOBAL) UMMsg->lParam);
-          if (!Data)
-          {
-             SetLastError(ERROR_INVALID_HANDLE);
-             return FALSE;
-          }
-          KMDdeExecuteData = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDEEXECUTEDATA) + Size);
-          if (!KMDdeExecuteData)
-          {
-             SetLastError(ERROR_OUTOFMEMORY);
-             return FALSE;
-          }
-          KMDdeExecuteData->Sender = (HWND) UMMsg->wParam;
-          KMDdeExecuteData->ClientMem = (HGLOBAL) UMMsg->lParam;
-          memcpy((PVOID) (KMDdeExecuteData + 1), Data, Size);
-          KMMsg->wParam = sizeof(KMDDEEXECUTEDATA) + Size;
-          KMMsg->lParam = (LPARAM) KMDdeExecuteData;
-          GlobalUnlock((HGLOBAL) UMMsg->lParam);
-        }
-        break;
-
-      case WM_COPYDATA:
-        {
-          PCOPYDATASTRUCT pUMCopyData = (PCOPYDATASTRUCT)UMMsg->lParam;
-          PCOPYDATASTRUCT pKMCopyData;
-
-          pKMCopyData = HeapAlloc(GetProcessHeap(), 0,
-                                  sizeof(COPYDATASTRUCT) + pUMCopyData->cbData);
-          if (!pKMCopyData)
-          {
-              SetLastError(ERROR_OUTOFMEMORY);
-              return FALSE;
-          }
-
-          pKMCopyData->dwData = pUMCopyData->dwData;
-          pKMCopyData->cbData = pUMCopyData->cbData;
-          pKMCopyData->lpData = pKMCopyData + 1;
-
-          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData,
-                        pUMCopyData->cbData);
-
-          KMMsg->lParam = (LPARAM)pKMCopyData;
-        }
-        break;
-
-      default:
-        break;
-    }
-
-  return TRUE;
+    DWORD cp;
+    int ret;
+    HKL hkl = GetKeyboardLayout( 0 );
+    ret = GetLocaleInfoW( LOWORD(hkl), LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER, (WCHAR *)&cp, sizeof(cp) / sizeof(WCHAR) );
+    if (!ret) cp = CP_ACP;
+    return cp;
 }
 
-static
-VOID FASTCALL
-MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
+static WPARAM FASTCALL map_wparam_char_WtoA( WPARAM wParam, DWORD len )
 {
-  switch (KMMsg->message)
-    {
-      case WM_DDE_ACK:
-      case WM_DDE_EXECUTE:
-      case WM_COPYDATA:
-        HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
-        break;
-      default:
-        break;
-    }
-
-  return;
-}
-
-static BOOL FASTCALL
-MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
-{
-  *UMMsg = *KMMsg;
-
-  switch (UMMsg->message)
-    {
-      case WM_CREATE:
-      case WM_NCCREATE:
-        {
-          CREATESTRUCTW *Cs = (CREATESTRUCTW *) KMMsg->lParam;
-          PCHAR Class;
-          Cs->lpszName = (LPCWSTR) ((PCHAR) Cs + (DWORD_PTR) Cs->lpszName);
-          Class = (PCHAR) Cs + (DWORD_PTR) Cs->lpszClass;
-          if (L'A' == *((WCHAR *) Class))
-            {
-              Class += sizeof(WCHAR);
-              Cs->lpszClass = (LPCWSTR)(DWORD_PTR) (*((ATOM *) Class));
-            }
-          else
-            {
-              ASSERT(L'S' == *((WCHAR *) Class));
-              Class += sizeof(WCHAR);
-              Cs->lpszClass = (LPCWSTR) Class;
-            }
-        }
-        break;
-
-      case WM_DDE_ACK:
-        {
-          PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;
-          UMMsg->lParam = PackDDElParam(KMMsg->message, DdeLparam->uiLo, DdeLparam->uiHi);
-        }
-        break;
-
-      case WM_DDE_EXECUTE:
-        {
-          PKMDDEEXECUTEDATA KMDdeExecuteData;
-          HGLOBAL GlobalData;
-          PVOID Data;
-
-          KMDdeExecuteData = (PKMDDEEXECUTEDATA) KMMsg->lParam;
-          GlobalData = GlobalAlloc(GMEM_MOVEABLE, KMMsg->wParam - sizeof(KMDDEEXECUTEDATA));
-          if (!GlobalData)
-          {
-             return FALSE;
-          }
-          Data = GlobalLock(GlobalData);
-          if (!Data)
-          {
-             GlobalFree(GlobalData);
-             return FALSE;
-          }
-          memcpy(Data, (PVOID) (KMDdeExecuteData + 1), KMMsg->wParam - sizeof(KMDDEEXECUTEDATA));
-          GlobalUnlock(GlobalData);
-          if (!DdeAddPair(KMDdeExecuteData->ClientMem, GlobalData))
-          {
-             GlobalFree(GlobalData);
-             return FALSE;
-          }
-          UMMsg->wParam = (WPARAM) KMDdeExecuteData->Sender;
-          UMMsg->lParam = (LPARAM) GlobalData;
-        }
-        break;
-
-      case WM_COPYDATA:
-        {
-          PCOPYDATASTRUCT pKMCopyData = (PCOPYDATASTRUCT)KMMsg->lParam;
-          pKMCopyData->lpData = pKMCopyData + 1;
-        }
-        break;
-
-      default:
-        break;
-    }
-
-  return TRUE;
-}
-
-static VOID FASTCALL
-MsgiKMToUMCleanup(PMSG KMMsg, PMSG UMMsg)
-{
-  switch (KMMsg->message)
-    {
-      case WM_DDE_EXECUTE:
-#ifdef TODO
-        HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
-        GlobalUnlock((HGLOBAL) UMMsg->lParam);
-#endif
-        break;
-      default:
-        break;
-    }
-
-  return;
-}
-
-static BOOL FASTCALL
-MsgiKMToUMReply(PMSG KMMsg, PMSG UMMsg, LRESULT *Result)
-{
-  MsgiKMToUMCleanup(KMMsg, UMMsg);
-
-  return TRUE;
-}
-
-static BOOL FASTCALL
-MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
-{
-  UNICODE_STRING UnicodeString;
-
-  *UnicodeMsg = *AnsiMsg;
-
-  switch (AnsiMsg->message)
-    {
-    case WM_GETTEXT:
-    case WM_ASKCBFORMATNAME:
-      {
-        LPWSTR Buffer = HeapAlloc(GetProcessHeap(), 0,
-           AnsiMsg->wParam * sizeof(WCHAR));
-        if (!Buffer)
-          {
-            return FALSE;
-          }
-        UnicodeMsg->lParam = (LPARAM)Buffer;
-        break;
-      }
-
-    /* AnsiMsg->lParam is string (0-terminated) */
-    case WM_SETTEXT:
-    case WM_WININICHANGE:
-    case WM_DEVMODECHANGE:
-    case CB_DIR:
-    case LB_DIR:
-    case LB_ADDFILE:
-    case EM_REPLACESEL:
-      {
-        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
-        UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
-        break;
-      }
-
-    case LB_ADDSTRING:
-    case LB_ADDSTRING_LOWER:
-    case LB_ADDSTRING_UPPER:
-    case LB_INSERTSTRING:
-    case LB_INSERTSTRING_UPPER:
-    case LB_INSERTSTRING_LOWER:
-    case LB_FINDSTRING:
-    case LB_FINDSTRINGEXACT:
-    case LB_SELECTSTRING:
-      {
-        if (listbox_has_strings(AnsiMsg->hwnd))
-          {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
-            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
-          }
-        break;
-      }
-
-    case CB_ADDSTRING:
-    case CB_INSERTSTRING:
-    case CB_FINDSTRING:
-    case CB_FINDSTRINGEXACT:
-    case CB_SELECTSTRING:
-      {
-        if (combobox_has_strings(AnsiMsg->hwnd))
-          {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
-            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
-          }
-        break;
-      }
-
-    case WM_NCCREATE:
-    case WM_CREATE:
-      {
-        MDICREATESTRUCTW mdi_cs;
-        struct s
-        {
-           CREATESTRUCTW cs;    /* new structure */
-           LPCWSTR lpszName;    /* allocated Name */
-           LPCWSTR lpszClass;   /* allocated Class */
-        };
-
-        struct s *xs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct s));
-        if (!xs)
-          {
-            return FALSE;
-          }
-        xs->cs = *(CREATESTRUCTW *)AnsiMsg->lParam;
-        if (!IS_INTRESOURCE(xs->cs.lpszName))
-          {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszName);
-            xs->lpszName = xs->cs.lpszName = UnicodeString.Buffer;
-          }
-        if (!IS_ATOM(xs->cs.lpszClass))
-          {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszClass);
-            xs->lpszClass = xs->cs.lpszClass = UnicodeString.Buffer;
-          }
-
-        if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
-        {
-           mdi_cs = *(MDICREATESTRUCTW *)xs->cs.lpCreateParams;
-           mdi_cs.szTitle = xs->cs.lpszName;
-           mdi_cs.szClass = xs->cs.lpszClass;
-           xs->cs.lpCreateParams = &mdi_cs;
-        }
-
-        UnicodeMsg->lParam = (LPARAM)xs;
-        break;
-      }
-
-    case WM_MDICREATE:
-      {
-        MDICREATESTRUCTW *cs =
-            (MDICREATESTRUCTW *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
-
-        if (!cs)
-          {
-            return FALSE;
-          }
-
-        *cs = *(MDICREATESTRUCTW *)AnsiMsg->lParam;
-
-        if (!IS_ATOM(cs->szClass))
-          {
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)cs->szClass);
-            cs->szClass = UnicodeString.Buffer;
-          }
-
-        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)cs->szTitle);
-        cs->szTitle = UnicodeString.Buffer;
-
-        UnicodeMsg->lParam = (LPARAM)cs;
-        break;
-      }
-    }
-
-  return TRUE;
-}
-
-static BOOL FASTCALL
-MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
-{
-  UNICODE_STRING UnicodeString;
-
-  switch (AnsiMsg->message)
-    {
-    case WM_GETTEXT:
-    case WM_ASKCBFORMATNAME:
-      {
-        HeapFree(GetProcessHeap(), 0, (PVOID) UnicodeMsg->lParam);
-        break;
-      }
-
-    case WM_SETTEXT:
-    case WM_WININICHANGE:
-    case WM_DEVMODECHANGE:
-    case CB_DIR:
-    case LB_DIR:
-    case LB_ADDFILE:
-    case EM_REPLACESEL:
-      {
-        RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
-        RtlFreeUnicodeString(&UnicodeString);
-        break;
-      }
-
-    case LB_ADDSTRING:
-    case LB_ADDSTRING_LOWER:
-    case LB_ADDSTRING_UPPER:
-    case LB_INSERTSTRING:
-    case LB_INSERTSTRING_UPPER:
-    case LB_INSERTSTRING_LOWER:
-    case LB_FINDSTRING:
-    case LB_FINDSTRINGEXACT:
-    case LB_SELECTSTRING:
-      {
-        if (listbox_has_strings(AnsiMsg->hwnd))
-          {
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        break;
-      }
-
-    case CB_ADDSTRING:
-    case CB_INSERTSTRING:
-    case CB_FINDSTRING:
-    case CB_FINDSTRINGEXACT:
-    case CB_SELECTSTRING:
-      {
-        if (combobox_has_strings(AnsiMsg->hwnd))
-          {
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        break;
-      }
-
-    case WM_NCCREATE:
-    case WM_CREATE:
-      {
-        struct s
-        {
-           CREATESTRUCTW cs;	/* new structure */
-           LPWSTR lpszName;	/* allocated Name */
-           LPWSTR lpszClass;	/* allocated Class */
-        };
-
-        struct s *xs = (struct s *)UnicodeMsg->lParam;
-        if (xs->lpszName)
-          {
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)xs->lpszName);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        if (xs->lpszClass)
-          {
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)xs->lpszClass);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        HeapFree(GetProcessHeap(), 0, xs);
-        break;
-      }
-
-    case WM_MDICREATE:
-      {
-        MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)UnicodeMsg->lParam;
-        RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
-        RtlFreeUnicodeString(&UnicodeString);
-        if (!IS_ATOM(cs->szClass))
-          {
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szClass);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        HeapFree(GetProcessHeap(), 0, cs);
-        break;
-      }
-    }
-
-  return(TRUE);
-}
-
-static BOOL FASTCALL
-MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
-{
-  LRESULT Size;
-  switch (AnsiMsg->message)
-    {
-    case WM_GETTEXT:
-    case WM_ASKCBFORMATNAME:
-      {
-        LPWSTR Buffer = (LPWSTR)UnicodeMsg->lParam;
-        LPSTR AnsiBuffer = (LPSTR)AnsiMsg->lParam;
-        if (UnicodeMsg->wParam > 0 &&
-            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, UnicodeMsg->wParam, NULL, NULL))
-        {
-            AnsiBuffer[UnicodeMsg->wParam - 1] = 0;
-        }
-        break;
-      }
-    case LB_GETTEXT:
-      {
-        LPWSTR Buffer = (LPWSTR) UnicodeMsg->lParam;
-        LPSTR AnsiBuffer = (LPSTR) AnsiMsg->lParam;
-        if (!listbox_has_strings( UnicodeMsg->hwnd )) break;
-        Size = SendMessageW( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
-        if (Size == LB_ERR) break;
-        Size = Size + 1;
-        if (Size > 1 &&
-            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, Size, NULL, NULL))
-        {
-            AnsiBuffer[Size - 1] = 0;
-        }
-        break;
-      }
-    case CB_GETLBTEXT:
-      {
-        LPWSTR Buffer = (LPWSTR) UnicodeMsg->lParam;
-        LPSTR AnsiBuffer = (LPSTR) AnsiMsg->lParam;
-        if (!combobox_has_strings( UnicodeMsg->hwnd )) break;
-        Size = SendMessageW( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
-        if (Size == CB_ERR) break;
-        Size = Size + 1;
-        if (Size > 1 &&
-            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, Size, NULL, NULL))
-        {
-            AnsiBuffer[Size - 1] = 0;
-        }
-        break;
-      }
-    }
-
-  MsgiAnsiToUnicodeCleanup(UnicodeMsg, AnsiMsg);
-
-  return TRUE;
-}
-
-static BOOL FASTCALL
-MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
-{
-  ANSI_STRING AnsiString;
-  UNICODE_STRING UnicodeString;
-
-  *AnsiMsg = *UnicodeMsg;
-
-  switch(UnicodeMsg->message)
-    {
-      case WM_CREATE:
-      case WM_NCCREATE:
-        {
-          MDICREATESTRUCTA *pmdi_cs;
-          CREATESTRUCTA* CsA;
-          CREATESTRUCTW* CsW;
-          NTSTATUS Status;
-
-          CsW = (CREATESTRUCTW*)(UnicodeMsg->lParam);
-          CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA) + sizeof(MDICREATESTRUCTA));
-          if (NULL == CsA)
-            {
-              return FALSE;
-            }
-          memcpy(CsA, CsW, sizeof(CREATESTRUCTW));
-
-          /* pmdi_cs starts right after CsA */
-          pmdi_cs = (MDICREATESTRUCTA*)(CsA + 1);
-
-          RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
-          Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
-          if (! NT_SUCCESS(Status))
-            {
-              RtlFreeHeap(GetProcessHeap(), 0, CsA);
-              return FALSE;
-            }
-          CsA->lpszName = AnsiString.Buffer;
-          if (HIWORD((ULONG_PTR)CsW->lpszClass) != 0)
-            {
-              RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
-              Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
-              if (! NT_SUCCESS(Status))
-                {
-                  RtlInitAnsiString(&AnsiString, CsA->lpszName);
-                  RtlFreeAnsiString(&AnsiString);
-                  RtlFreeHeap(GetProcessHeap(), 0, CsA);
-                  return FALSE;
-                }
-              CsA->lpszClass = AnsiString.Buffer;
-            }
-
-          if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
-          {
-             *pmdi_cs = *(MDICREATESTRUCTA *)CsW->lpCreateParams;
-             pmdi_cs->szTitle = CsA->lpszName;
-             pmdi_cs->szClass = CsA->lpszClass;
-             CsA->lpCreateParams = pmdi_cs;
-          }
-
-          AnsiMsg->lParam = (LPARAM)CsA;
-          break;
-        }
-      case WM_GETTEXT:
-        {
-          /* Ansi string might contain MBCS chars so we need 2 * the number of chars */
-          AnsiMsg->wParam = UnicodeMsg->wParam * 2;
-          AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, AnsiMsg->wParam);
-          if (NULL == (PVOID) AnsiMsg->lParam)
-            {
-              return FALSE;
-            }
-          break;
-        }
-      case WM_SETTEXT:
-      case CB_DIR:
-      case LB_DIR:
-      case LB_ADDFILE:
-        {
-          RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
-          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                        &UnicodeString,
-                                                        TRUE)))
-            {
-              return FALSE;
-            }
-          AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
-          break;
-        }
-
-      case LB_ADDSTRING:
-      case LB_ADDSTRING_LOWER:
-      case LB_ADDSTRING_UPPER:
-      case LB_INSERTSTRING:
-      case LB_INSERTSTRING_UPPER:
-      case LB_INSERTSTRING_LOWER:
-      case LB_FINDSTRING:
-      case LB_FINDSTRINGEXACT:
-      case LB_SELECTSTRING:
-        {
-          if (listbox_has_strings(AnsiMsg->hwnd))
-            {
-              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
-              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                            &UnicodeString,
-                                                            TRUE)))
-                {
-                  return FALSE;
-                }
-              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
-            }
-          break;
-        }
-
-      case CB_ADDSTRING:
-      case CB_INSERTSTRING:
-      case CB_FINDSTRING:
-      case CB_FINDSTRINGEXACT:
-      case CB_SELECTSTRING:
-        {
-          if (combobox_has_strings(AnsiMsg->hwnd))
-            {
-              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
-              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                            &UnicodeString,
-                                                            TRUE)))
-                {
-                  return FALSE;
-                }
-              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
-            }
-          break;
-        }
-
-      case WM_MDICREATE:
-        {
-          MDICREATESTRUCTA *cs =
-              (MDICREATESTRUCTA *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
-
-          if (!cs)
-            {
-              return FALSE;
-            }
-
-          *cs = *(MDICREATESTRUCTA *)UnicodeMsg->lParam;
-
-          if (!IS_ATOM(cs->szClass))
-            {
-              RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szClass);
-              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                            &UnicodeString,
-                                                            TRUE)))
-                {
-                  HeapFree(GetProcessHeap(), 0, cs);
-                  return FALSE;
-                }
-              cs->szClass = AnsiString.Buffer;
-            }
-
-          RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szTitle);
-          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                        &UnicodeString,
-                                                        TRUE)))
-            {
-              if (!IS_ATOM(cs->szClass))
-                {
-                  RtlInitAnsiString(&AnsiString, cs->szClass);
-                  RtlFreeAnsiString(&AnsiString);
-                }
-
-              HeapFree(GetProcessHeap(), 0, cs);
-              return FALSE;
-            }
-          cs->szTitle = AnsiString.Buffer;
-
-          AnsiMsg->lParam = (LPARAM)cs;
-          break;
-        }
-    }
-
-  return TRUE;
-}
-
-static BOOL FASTCALL
-MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
-{
-  ANSI_STRING AnsiString;
-
-  switch(UnicodeMsg->message)
-    {
-      case WM_GETTEXT:
-        {
-          RtlFreeHeap(GetProcessHeap(), 0, (PVOID) AnsiMsg->lParam);
-          break;
-        }
-      case WM_SETTEXT:
-        {
-          RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
-          RtlFreeAnsiString(&AnsiString);
-          break;
-        }
-      case WM_CREATE:
-      case WM_NCCREATE:
-        {
-          CREATESTRUCTA* Cs;
-
-          Cs = (CREATESTRUCTA*) AnsiMsg->lParam;
-          RtlInitAnsiString(&AnsiString, Cs->lpszName);
-          RtlFreeAnsiString(&AnsiString);
-          if (HIWORD((ULONG_PTR)Cs->lpszClass) != 0)
-            {
-              RtlInitAnsiString(&AnsiString, Cs->lpszClass);
-              RtlFreeAnsiString(&AnsiString);
-            }
-          RtlFreeHeap(GetProcessHeap(), 0, Cs);
-          break;
-        }
-
-      case LB_ADDSTRING:
-      case LB_ADDSTRING_LOWER:
-      case LB_ADDSTRING_UPPER:
-      case LB_INSERTSTRING:
-      case LB_INSERTSTRING_UPPER:
-      case LB_INSERTSTRING_LOWER:
-      case LB_FINDSTRING:
-      case LB_FINDSTRINGEXACT:
-      case LB_SELECTSTRING:
-        {
-          if (listbox_has_strings(AnsiMsg->hwnd))
-            {
-              RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
-              RtlFreeAnsiString(&AnsiString);
-            }
-          break;
-        }
-
-      case CB_ADDSTRING:
-      case CB_INSERTSTRING:
-      case CB_FINDSTRING:
-      case CB_FINDSTRINGEXACT:
-      case CB_SELECTSTRING:
-        {
-          DWORD dwStyle = GetWindowLongPtrW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-               (dwStyle & CBS_HASSTRINGS))
-            {
-              RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
-              RtlFreeAnsiString(&AnsiString);
-            }
-          break;
-        }
-
-      case WM_MDICREATE:
-        {
-          MDICREATESTRUCTA *cs = (MDICREATESTRUCTA *)AnsiMsg->lParam;
-          RtlInitAnsiString(&AnsiString, (PCSTR)cs->szTitle);
-          RtlFreeAnsiString(&AnsiString);
-          if (!IS_ATOM(cs->szClass))
-            {
-              RtlInitAnsiString(&AnsiString, (PCSTR)cs->szClass);
-              RtlFreeAnsiString(&AnsiString);
-            }
-          HeapFree(GetProcessHeap(), 0, cs);
-          break;
-        }
-
-    }
-
-  return TRUE;
-}
-
-static BOOL FASTCALL
-MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
-{
-  LRESULT Size;
-  switch (UnicodeMsg->message)
-    {
-    case WM_GETTEXT:
-    case WM_ASKCBFORMATNAME:
-      {
-        LPSTR Buffer = (LPSTR) AnsiMsg->lParam;
-        LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
-        if (0 < AnsiMsg->wParam &&
-            ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, UnicodeMsg->wParam))
-        {
-            UBuffer[UnicodeMsg->wParam - 1] = L'\0';
-        }
-        break;
-      }
-    case LB_GETTEXT:
-      {
-        LPSTR Buffer = (LPSTR) AnsiMsg->lParam;
-        LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
-        if (!listbox_has_strings( UnicodeMsg->hwnd )) break;
-        Size = SendMessageW( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
-        if (Size == LB_ERR) break;
-        Size = Size + 1;
-        if (1 < Size &&
-            ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, Size))
-        {
-            UBuffer[Size - 1] = L'\0';
-        }
-        break;
-      }
-    case CB_GETLBTEXT:
-      {
-        LPSTR Buffer = (LPSTR) AnsiMsg->lParam;
-        LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
-        if (!combobox_has_strings( UnicodeMsg->hwnd )) break;
-        Size = SendMessageW( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
-        if (Size == CB_ERR) break;
-        Size = Size + 1;
-        if (1 < Size &&
-            ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, Size))
-        {
-            UBuffer[Size - 1] = L'\0';
-        }
-        break;
-      }
-    }
-
-  MsgiUnicodeToAnsiCleanup(AnsiMsg, UnicodeMsg);
-
-  return TRUE;
+    WCHAR wch = wParam;
+    BYTE ch[2];
+    DWORD cp = get_input_codepage();
+
+    len = WideCharToMultiByte( cp, 0, &wch, 1, (LPSTR)ch, len, NULL, NULL );
+    if (len == 2)
+       return MAKEWPARAM( (ch[0] << 8) | ch[1], HIWORD(wParam) );
+    else
+    return MAKEWPARAM( ch[0], HIWORD(wParam) );
 }
 
 /***********************************************************************
@@ -1076,7 +264,7 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
  *
  * Convert the wparam of an ASCII message to Unicode.
  */
-static WPARAM
+static WPARAM FASTCALL
 map_wparam_AtoW( UINT message, WPARAM wparam )
 {
     char ch[2];
@@ -1161,6 +349,920 @@ map_wparam_AtoW( UINT message, WPARAM wparam )
     return wparam;
 }
 
+static
+BOOL FASTCALL
+MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
+{
+  *KMMsg = *UMMsg;
+
+  switch (UMMsg->message)
+    {
+      case WM_COPYDATA:
+        {
+          PCOPYDATASTRUCT pUMCopyData = (PCOPYDATASTRUCT)UMMsg->lParam;
+          PCOPYDATASTRUCT pKMCopyData;
+
+          pKMCopyData = HeapAlloc(GetProcessHeap(), 0, sizeof(COPYDATASTRUCT) + pUMCopyData->cbData);
+          if (!pKMCopyData)
+          {
+              SetLastError(ERROR_OUTOFMEMORY);
+              return FALSE;
+          }
+
+          pKMCopyData->dwData = pUMCopyData->dwData;
+          pKMCopyData->cbData = pUMCopyData->cbData;
+          pKMCopyData->lpData = pKMCopyData + 1;
+
+          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData, pUMCopyData->cbData);
+
+          KMMsg->lParam = (LPARAM)pKMCopyData;
+        }
+        break;
+
+      default:
+        break;
+    }
+
+  return TRUE;
+}
+
+static
+VOID FASTCALL
+MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
+{
+  switch (KMMsg->message)
+    {
+      case WM_COPYDATA:
+        HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
+        break;
+      default:
+        break;
+    }
+
+  return;
+}
+
+static BOOL FASTCALL
+MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
+{
+  *UMMsg = *KMMsg;
+
+  if (KMMsg->lParam == 0) return TRUE;
+
+  switch (UMMsg->message)
+    {
+      case WM_CREATE:
+      case WM_NCCREATE:
+        {
+          CREATESTRUCTW *Cs = (CREATESTRUCTW *) KMMsg->lParam;
+          PCHAR Class;
+          Cs->lpszName = (LPCWSTR) ((PCHAR) Cs + (DWORD_PTR) Cs->lpszName);
+          Class = (PCHAR) Cs + (DWORD_PTR) Cs->lpszClass;
+          if (L'A' == *((WCHAR *) Class))
+            {
+              Class += sizeof(WCHAR);
+              Cs->lpszClass = (LPCWSTR)(DWORD_PTR) (*((ATOM *) Class));
+            }
+          else
+            {
+              ASSERT(L'S' == *((WCHAR *) Class));
+              Class += sizeof(WCHAR);
+              Cs->lpszClass = (LPCWSTR) Class;
+            }
+        }
+        break;
+
+      case WM_COPYDATA:
+        {
+          PCOPYDATASTRUCT pKMCopyData = (PCOPYDATASTRUCT)KMMsg->lParam;
+          pKMCopyData->lpData = pKMCopyData + 1;
+        }
+        break;
+
+      default:
+        break;
+    }
+
+  return TRUE;
+}
+
+static VOID FASTCALL
+MsgiKMToUMCleanup(PMSG KMMsg, PMSG UMMsg)
+{
+  switch (KMMsg->message)
+    {
+      case WM_DDE_EXECUTE:
+#ifdef TODO
+        HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
+        GlobalUnlock((HGLOBAL) UMMsg->lParam);
+#endif
+        break;
+      default:
+        break;
+    }
+
+  return;
+}
+
+static BOOL FASTCALL
+MsgiKMToUMReply(PMSG KMMsg, PMSG UMMsg, LRESULT *Result)
+{
+  MsgiKMToUMCleanup(KMMsg, UMMsg);
+
+  return TRUE;
+}
+
+//
+//  Ansi to Unicode -> callout
+//
+static BOOL FASTCALL
+MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
+{
+  UNICODE_STRING UnicodeString;
+
+  *UnicodeMsg = *AnsiMsg;
+
+  switch (AnsiMsg->message)
+    {
+    case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
+      {
+        LPWSTR Buffer;
+        if (!AnsiMsg->lParam) break;
+        Buffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, AnsiMsg->wParam * sizeof(WCHAR));
+        //ERR("WM_GETTEXT A2U Size %d\n",AnsiMsg->wParam);
+        if (!Buffer) return FALSE;
+        UnicodeMsg->lParam = (LPARAM)Buffer;
+        break;
+      }
+
+    case LB_GETTEXT:
+      {
+        DWORD Size = 1024 * sizeof(WCHAR);
+        if (!AnsiMsg->lParam || !listbox_has_strings( AnsiMsg->hwnd )) break;
+        /*Size = SendMessageW( AnsiMsg->hwnd, LB_GETTEXTLEN, AnsiMsg->wParam, 0 );
+        if (Size == LB_ERR)
+        {
+           ERR("LB_GETTEXT LB_ERR\n");
+           Size = sizeof(ULONG_PTR);
+        }
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        UnicodeMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+        if (!UnicodeMsg->lParam) return FALSE;
+        break;
+      }
+
+    case CB_GETLBTEXT:
+      {
+        DWORD Size = 1024 * sizeof(WCHAR);
+        if (!AnsiMsg->lParam || !combobox_has_strings( AnsiMsg->hwnd )) break;
+        /*Size = SendMessageW( AnsiMsg->hwnd, CB_GETLBTEXTLEN, AnsiMsg->wParam, 0 );
+        if (Size == LB_ERR)
+        {
+           ERR("CB_GETTEXT LB_ERR\n");
+           Size = sizeof(ULONG_PTR);
+        }
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        UnicodeMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+        if (!UnicodeMsg->lParam) return FALSE;
+        break;
+      }
+
+    /* AnsiMsg->lParam is string (0-terminated) */
+    case WM_SETTEXT:
+    case WM_WININICHANGE:
+    case WM_DEVMODECHANGE:
+    case CB_DIR:
+    case LB_DIR:
+    case LB_ADDFILE:
+    case EM_REPLACESEL:
+      {
+        if (!AnsiMsg->lParam) break;
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+        UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+        break;
+      }
+
+    case LB_ADDSTRING:
+    case LB_ADDSTRING_LOWER:
+    case LB_ADDSTRING_UPPER:
+    case LB_INSERTSTRING:
+    case LB_INSERTSTRING_UPPER:
+    case LB_INSERTSTRING_LOWER:
+    case LB_FINDSTRING:
+    case LB_FINDSTRINGEXACT:
+    case LB_SELECTSTRING:
+      {
+        if (AnsiMsg->lParam && listbox_has_strings(AnsiMsg->hwnd))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+          }
+        break;
+      }
+
+    case CB_ADDSTRING:
+    case CB_INSERTSTRING:
+    case CB_FINDSTRING:
+    case CB_FINDSTRINGEXACT:
+    case CB_SELECTSTRING:
+      {
+        if (AnsiMsg->lParam && combobox_has_strings(AnsiMsg->hwnd))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+          }
+        break;
+      }
+
+    case WM_NCCREATE:
+    case WM_CREATE:
+      {
+        struct s
+        {
+           CREATESTRUCTW cs;          /* new structure */
+           MDICREATESTRUCTW mdi_cs;   /* MDI info */
+           LPCWSTR lpszName;          /* allocated Name */
+           LPCWSTR lpszClass;         /* allocated Class */
+        };
+
+        struct s *xs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct s));
+        if (!xs)
+          {
+            return FALSE;
+          }
+        xs->cs = *(CREATESTRUCTW *)AnsiMsg->lParam;
+        if (!IS_INTRESOURCE(xs->cs.lpszName))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszName);
+            xs->lpszName = xs->cs.lpszName = UnicodeString.Buffer;
+          }
+        if (!IS_ATOM(xs->cs.lpszClass))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszClass);
+            xs->lpszClass = xs->cs.lpszClass = UnicodeString.Buffer;
+          }
+
+        if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
+        {
+           xs->mdi_cs = *(MDICREATESTRUCTW *)xs->cs.lpCreateParams;
+           xs->mdi_cs.szTitle = xs->cs.lpszName;
+           xs->mdi_cs.szClass = xs->cs.lpszClass;
+           xs->cs.lpCreateParams = &xs->mdi_cs;
+        }
+
+        UnicodeMsg->lParam = (LPARAM)xs;
+        break;
+      }
+
+    case WM_MDICREATE:
+      {
+        MDICREATESTRUCTW *cs =
+            (MDICREATESTRUCTW *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
+
+        if (!cs)
+          {
+            return FALSE;
+          }
+
+        *cs = *(MDICREATESTRUCTW *)AnsiMsg->lParam;
+
+        if (!IS_ATOM(cs->szClass))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)cs->szClass);
+            cs->szClass = UnicodeString.Buffer;
+          }
+
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)cs->szTitle);
+        cs->szTitle = UnicodeString.Buffer;
+
+        UnicodeMsg->lParam = (LPARAM)cs;
+        break;
+      }
+
+    case WM_GETDLGCODE:
+      if (UnicodeMsg->lParam)
+      {
+         MSG newmsg = *(MSG *)UnicodeMsg->lParam;
+         newmsg.wParam = map_wparam_AtoW( newmsg.message, newmsg.wParam);
+      }
+      break;
+
+    case WM_CHARTOITEM:
+    case WM_MENUCHAR:
+    case WM_CHAR:
+    case WM_DEADCHAR:
+    case WM_SYSCHAR:
+    case WM_SYSDEADCHAR:
+    case EM_SETPASSWORDCHAR:
+    case WM_IME_CHAR:
+      UnicodeMsg->wParam = map_wparam_AtoW( AnsiMsg->message, AnsiMsg->wParam );
+      break;
+    case EM_GETLINE:
+      ERR("FIXME EM_GETLINE A2U\n");
+      break;
+
+    }
+
+  return TRUE;
+}
+
+static BOOL FASTCALL
+MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
+{
+  UNICODE_STRING UnicodeString;
+
+  switch (AnsiMsg->message)
+    {
+    case LB_GETTEXT:
+        if (!listbox_has_strings( UnicodeMsg->hwnd )) break;
+    case CB_GETLBTEXT:
+        if (UnicodeMsg->message == CB_GETLBTEXT && !combobox_has_strings( UnicodeMsg->hwnd )) break;
+    case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
+      {
+        if (!UnicodeMsg->lParam) break;
+        RtlFreeHeap(GetProcessHeap(), 0, (PVOID) UnicodeMsg->lParam);
+        break;
+      }
+
+    case WM_SETTEXT:
+    case WM_WININICHANGE:
+    case WM_DEVMODECHANGE:
+    case CB_DIR:
+    case LB_DIR:
+    case LB_ADDFILE:
+    case EM_REPLACESEL:
+      {
+        if (!UnicodeMsg->lParam) break;
+        RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+        RtlFreeUnicodeString(&UnicodeString);
+        break;
+      }
+
+    case LB_ADDSTRING:
+    case LB_ADDSTRING_LOWER:
+    case LB_ADDSTRING_UPPER:
+    case LB_INSERTSTRING:
+    case LB_INSERTSTRING_UPPER:
+    case LB_INSERTSTRING_LOWER:
+    case LB_FINDSTRING:
+    case LB_FINDSTRINGEXACT:
+    case LB_SELECTSTRING:
+      {
+        if (UnicodeMsg->lParam && listbox_has_strings(AnsiMsg->hwnd))
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        break;
+      }
+
+    case CB_ADDSTRING:
+    case CB_INSERTSTRING:
+    case CB_FINDSTRING:
+    case CB_FINDSTRINGEXACT:
+    case CB_SELECTSTRING:
+      {
+        if (UnicodeMsg->lParam && combobox_has_strings(AnsiMsg->hwnd))
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        break;
+      }
+
+    case WM_NCCREATE:
+    case WM_CREATE:
+      {
+        struct s
+        {
+           CREATESTRUCTW cs;          /* new structure */
+           MDICREATESTRUCTW mdi_cs;   /* MDI info */
+           LPWSTR lpszName;           /* allocated Name */
+           LPWSTR lpszClass;          /* allocated Class */
+        };
+
+        struct s *xs = (struct s *)UnicodeMsg->lParam;
+        if (xs->lpszName)
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)xs->lpszName);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        if (xs->lpszClass)
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)xs->lpszClass);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        HeapFree(GetProcessHeap(), 0, xs);
+        break;
+      }
+
+    case WM_MDICREATE:
+      {
+        MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)UnicodeMsg->lParam;
+        RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
+        RtlFreeUnicodeString(&UnicodeString);
+        if (!IS_ATOM(cs->szClass))
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szClass);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        HeapFree(GetProcessHeap(), 0, cs);
+        break;
+      }
+    }
+
+  return(TRUE);
+}
+
+/*
+ *    callout return -> Unicode Result to Ansi Result
+ */
+static BOOL FASTCALL
+MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
+{
+  LPWSTR Buffer = (LPWSTR)UnicodeMsg->lParam;
+  LPSTR AnsiBuffer = (LPSTR)AnsiMsg->lParam;
+
+  switch (AnsiMsg->message)
+    {
+    case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
+      {
+        if (UnicodeMsg->wParam)
+        {
+           DWORD len = 0;
+           if (*Result) RtlUnicodeToMultiByteN( AnsiBuffer, UnicodeMsg->wParam - 1, &len, Buffer, strlenW(Buffer) * sizeof(WCHAR));
+           AnsiBuffer[len] = 0;
+           *Result = len;
+           //ERR("WM_GETTEXT U2A Result %d Size %d\n",*Result,AnsiMsg->wParam);
+        }
+        break;
+      }
+    case LB_GETTEXT:
+      {
+        if (!AnsiBuffer || !listbox_has_strings( UnicodeMsg->hwnd )) break;
+        if (*Result >= 0)
+        {
+           DWORD len;
+           RtlUnicodeToMultiByteN( AnsiBuffer, ~0u, &len, Buffer, (strlenW(Buffer) + 1) * sizeof(WCHAR) );
+           *Result = len - 1;
+        }
+        break;
+      }
+    case CB_GETLBTEXT:
+      {
+        if (!AnsiBuffer || !combobox_has_strings( UnicodeMsg->hwnd )) break;
+        if (*Result >= 0)
+        {
+           DWORD len;
+           RtlUnicodeToMultiByteN( AnsiBuffer, ~0u, &len, Buffer, (strlenW(Buffer) + 1) * sizeof(WCHAR) );
+           *Result = len - 1;
+        }
+        break;
+      }
+    }
+
+  MsgiAnsiToUnicodeCleanup(UnicodeMsg, AnsiMsg);
+
+  return TRUE;
+}
+
+//
+//  Unicode to Ansi callout ->
+//
+static BOOL FASTCALL
+MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
+{
+  ANSI_STRING AnsiString;
+  UNICODE_STRING UnicodeString;
+
+  *AnsiMsg = *UnicodeMsg;
+
+  switch(UnicodeMsg->message)
+    {
+      case WM_CREATE:
+      case WM_NCCREATE:
+        {
+          MDICREATESTRUCTA *pmdi_cs;
+          CREATESTRUCTA* CsA;
+          CREATESTRUCTW* CsW;
+          ULONG NameSize, ClassSize;
+          NTSTATUS Status;
+
+          CsW = (CREATESTRUCTW*)(UnicodeMsg->lParam);
+          RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
+          NameSize = RtlUnicodeStringToAnsiSize(&UnicodeString);
+          if (NameSize == 0)
+            {
+              return FALSE;
+            }
+          ClassSize = 0;
+          if (!IS_ATOM(CsW->lpszClass))
+            {
+              RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
+              ClassSize = RtlUnicodeStringToAnsiSize(&UnicodeString);
+              if (ClassSize == 0)
+                {
+                  return FALSE;
+                }
+            }
+
+          CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA) + sizeof(MDICREATESTRUCTA) + NameSize + ClassSize);
+          if (NULL == CsA)
+            {
+              return FALSE;
+            }
+          memcpy(CsA, CsW, sizeof(CREATESTRUCTW));
+
+          /* pmdi_cs starts right after CsA */
+          pmdi_cs = (MDICREATESTRUCTA*)(CsA + 1);
+
+          RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
+          RtlInitEmptyAnsiString(&AnsiString, (PCHAR)(pmdi_cs + 1), NameSize);
+          Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
+          if (! NT_SUCCESS(Status))
+            {
+              RtlFreeHeap(GetProcessHeap(), 0, CsA);
+              return FALSE;
+            }
+          CsA->lpszName = AnsiString.Buffer;
+          if (!IS_ATOM(CsW->lpszClass))
+            {
+              RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
+              RtlInitEmptyAnsiString(&AnsiString, (PCHAR)(pmdi_cs + 1) + NameSize, ClassSize);
+              Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
+              if (! NT_SUCCESS(Status))
+                {
+                  RtlFreeHeap(GetProcessHeap(), 0, CsA);
+                  return FALSE;
+                }
+              CsA->lpszClass = AnsiString.Buffer;
+            }
+
+          if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
+          {
+             *pmdi_cs = *(MDICREATESTRUCTA *)CsW->lpCreateParams;
+             pmdi_cs->szTitle = CsA->lpszName;
+             pmdi_cs->szClass = CsA->lpszClass;
+             CsA->lpCreateParams = pmdi_cs;
+          }
+
+          AnsiMsg->lParam = (LPARAM)CsA;
+          break;
+        }
+      case WM_GETTEXT:
+      case WM_ASKCBFORMATNAME:
+        {
+          if (!UnicodeMsg->lParam) break;
+          /* Ansi string might contain MBCS chars so we need 2 * the number of chars */
+          AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, UnicodeMsg->wParam * 2);
+          //ERR("WM_GETTEXT U2A Size %d\n",AnsiMsg->wParam);
+          if (!AnsiMsg->lParam) return FALSE;
+          break;
+        }
+
+    case LB_GETTEXT:
+      {
+        DWORD Size = 1024;
+        if (!UnicodeMsg->lParam || !listbox_has_strings( UnicodeMsg->hwnd )) break;
+        /*Size = SendMessageA( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
+        if (Size == LB_ERR)
+        {
+           ERR("LB_GETTEXT LB_ERR\n");
+           Size = sizeof(ULONG_PTR);
+        }
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+        if (!AnsiMsg->lParam) return FALSE;
+        break;
+      }
+
+    case CB_GETLBTEXT:
+      {
+        DWORD Size = 1024;
+        if (!UnicodeMsg->lParam || !combobox_has_strings( UnicodeMsg->hwnd )) break;
+        /*Size = SendMessageA( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
+        if (Size == LB_ERR)
+        {
+           ERR("CB_GETTEXT LB_ERR\n");
+           Size = sizeof(ULONG_PTR);
+        }
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+        if (!AnsiMsg->lParam) return FALSE;
+        break;
+      }
+
+      case WM_SETTEXT:
+      case WM_WININICHANGE:
+      case WM_DEVMODECHANGE:
+      case CB_DIR:
+      case LB_DIR:
+      case LB_ADDFILE:
+      case EM_REPLACESEL:
+        {
+          if (!UnicodeMsg->lParam) break;
+          RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                        &UnicodeString,
+                                                        TRUE)))
+            {
+              return FALSE;
+            }
+          AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
+          break;
+        }
+
+      case LB_ADDSTRING:
+      case LB_ADDSTRING_LOWER:
+      case LB_ADDSTRING_UPPER:
+      case LB_INSERTSTRING:
+      case LB_INSERTSTRING_UPPER:
+      case LB_INSERTSTRING_LOWER:
+      case LB_FINDSTRING:
+      case LB_FINDSTRINGEXACT:
+      case LB_SELECTSTRING:
+        {
+          if (UnicodeMsg->lParam && listbox_has_strings(AnsiMsg->hwnd))
+            {
+              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                            &UnicodeString,
+                                                            TRUE)))
+                {
+                  return FALSE;
+                }
+              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
+            }
+          break;
+        }
+
+      case CB_ADDSTRING:
+      case CB_INSERTSTRING:
+      case CB_FINDSTRING:
+      case CB_FINDSTRINGEXACT:
+      case CB_SELECTSTRING:
+        {
+          if (UnicodeMsg->lParam && combobox_has_strings(AnsiMsg->hwnd))
+            {
+              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                            &UnicodeString,
+                                                            TRUE)))
+                {
+                  return FALSE;
+                }
+              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
+            }
+          break;
+        }
+
+      case WM_MDICREATE:
+        {
+          MDICREATESTRUCTA *cs =
+              (MDICREATESTRUCTA *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
+
+          if (!cs)
+            {
+              return FALSE;
+            }
+
+          *cs = *(MDICREATESTRUCTA *)UnicodeMsg->lParam;
+
+          if (!IS_ATOM(cs->szClass))
+            {
+              RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szClass);
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                            &UnicodeString,
+                                                            TRUE)))
+                {
+                  HeapFree(GetProcessHeap(), 0, cs);
+                  return FALSE;
+                }
+              cs->szClass = AnsiString.Buffer;
+            }
+
+          RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szTitle);
+          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                        &UnicodeString,
+                                                        TRUE)))
+            {
+              if (!IS_ATOM(cs->szClass))
+                {
+                  RtlInitAnsiString(&AnsiString, cs->szClass);
+                  RtlFreeAnsiString(&AnsiString);
+                }
+
+              HeapFree(GetProcessHeap(), 0, cs);
+              return FALSE;
+            }
+          cs->szTitle = AnsiString.Buffer;
+
+          AnsiMsg->lParam = (LPARAM)cs;
+          break;
+        }
+
+      case WM_GETDLGCODE:
+        if (UnicodeMsg->lParam)
+        {
+           MSG newmsg = *(MSG *)UnicodeMsg->lParam;
+           switch(newmsg.message)
+           {
+              case WM_CHAR:
+              case WM_DEADCHAR:
+              case WM_SYSCHAR:
+              case WM_SYSDEADCHAR:
+                newmsg.wParam = map_wparam_char_WtoA( newmsg.wParam, 1 );
+                break;
+              case WM_IME_CHAR:
+                newmsg.wParam = map_wparam_char_WtoA( newmsg.wParam, 2 );
+                break;
+           }
+        }
+        break;
+
+      case WM_CHAR:
+        {
+           WCHAR wch = UnicodeMsg->wParam;
+           char ch[2];
+           DWORD cp = get_input_codepage();
+           DWORD len = WideCharToMultiByte( cp, 0, &wch, 1, ch, 2, NULL, NULL );
+           AnsiMsg->wParam = (BYTE)ch[0];
+           if (len == 2) AnsiMsg->wParam = (BYTE)ch[1];
+        }
+        break;
+
+      case WM_CHARTOITEM:
+      case WM_MENUCHAR:
+      case WM_DEADCHAR:
+      case WM_SYSCHAR:
+      case WM_SYSDEADCHAR:
+      case EM_SETPASSWORDCHAR:
+          AnsiMsg->wParam = map_wparam_char_WtoA(UnicodeMsg->wParam,1);
+          break;
+
+      case WM_IME_CHAR:
+          AnsiMsg->wParam = map_wparam_char_WtoA(UnicodeMsg->wParam,2);
+          break;
+      case EM_GETLINE:
+          ERR("FIXME EM_GETLINE U2A\n");
+          break;
+    }
+  return TRUE;
+}
+
+static BOOL FASTCALL
+MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
+{
+  ANSI_STRING AnsiString;
+
+  switch(UnicodeMsg->message)
+    {
+      case LB_GETTEXT:
+        if (!listbox_has_strings( AnsiMsg->hwnd )) break;
+      case CB_GETLBTEXT:
+        if (AnsiMsg->message == CB_GETLBTEXT && !combobox_has_strings( AnsiMsg->hwnd )) break;
+      case WM_GETTEXT:
+      case WM_ASKCBFORMATNAME:
+        {
+          if (!AnsiMsg->lParam) break;
+          RtlFreeHeap(GetProcessHeap(), 0, (PVOID) AnsiMsg->lParam);
+          break;
+        }
+      case WM_CREATE:
+      case WM_NCCREATE:
+        {
+          CREATESTRUCTA* Cs;
+
+          Cs = (CREATESTRUCTA*) AnsiMsg->lParam;
+          RtlFreeHeap(GetProcessHeap(), 0, Cs);
+          break;
+        }
+
+      case WM_SETTEXT:
+      case WM_WININICHANGE:
+      case WM_DEVMODECHANGE:
+      case CB_DIR:
+      case LB_DIR:
+      case LB_ADDFILE:
+      case EM_REPLACESEL:
+        {
+          if (!AnsiMsg->lParam) break;
+          RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+          RtlFreeAnsiString(&AnsiString);
+          break;
+        }
+
+      case LB_ADDSTRING:
+      case LB_ADDSTRING_LOWER:
+      case LB_ADDSTRING_UPPER:
+      case LB_INSERTSTRING:
+      case LB_INSERTSTRING_UPPER:
+      case LB_INSERTSTRING_LOWER:
+      case LB_FINDSTRING:
+      case LB_FINDSTRINGEXACT:
+      case LB_SELECTSTRING:
+        {
+          if (AnsiMsg->lParam && listbox_has_strings(AnsiMsg->hwnd))
+            {
+              RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+              RtlFreeAnsiString(&AnsiString);
+            }
+          break;
+        }
+
+      case CB_ADDSTRING:
+      case CB_INSERTSTRING:
+      case CB_FINDSTRING:
+      case CB_FINDSTRINGEXACT:
+      case CB_SELECTSTRING:
+        {
+          if (AnsiMsg->lParam && combobox_has_strings(AnsiMsg->hwnd))
+            {
+              RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
+              RtlFreeAnsiString(&AnsiString);
+            }
+          break;
+        }
+
+      case WM_MDICREATE:
+        {
+          MDICREATESTRUCTA *cs = (MDICREATESTRUCTA *)AnsiMsg->lParam;
+          RtlInitAnsiString(&AnsiString, (PCSTR)cs->szTitle);
+          RtlFreeAnsiString(&AnsiString);
+          if (!IS_ATOM(cs->szClass))
+            {
+              RtlInitAnsiString(&AnsiString, (PCSTR)cs->szClass);
+              RtlFreeAnsiString(&AnsiString);
+            }
+          HeapFree(GetProcessHeap(), 0, cs);
+          break;
+        }
+
+    }
+
+  return TRUE;
+}
+
+/*
+ *    callout return -> Ansi Result to Unicode Result
+ */
+static BOOL FASTCALL
+MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
+{
+  LPSTR Buffer = (LPSTR) AnsiMsg->lParam;
+  LPWSTR UBuffer = (LPWSTR) UnicodeMsg->lParam;
+
+  switch (UnicodeMsg->message)
+    {
+    case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
+      {
+        DWORD len = AnsiMsg->wParam;// * 2;
+        if (len)
+        {
+           if (*Result)
+           {
+              RtlMultiByteToUnicodeN( UBuffer, AnsiMsg->wParam*sizeof(WCHAR), &len, Buffer, strlen(Buffer)+1 );
+              *Result = len/sizeof(WCHAR) - 1;  /* do not count terminating null */
+              //ERR("WM_GETTEXT U2A Result %d Size %d\n",*Result,AnsiMsg->wParam);
+           }
+           UBuffer[*Result] = 0;
+        }
+        break;
+      }
+    case LB_GETTEXT:
+      {
+        if (!UBuffer || !listbox_has_strings( UnicodeMsg->hwnd )) break;
+        if (*Result >= 0)
+        {
+           DWORD len;
+           RtlMultiByteToUnicodeN( UBuffer, ~0u, &len, Buffer, strlen(Buffer) + 1 );
+           *Result = len / sizeof(WCHAR) - 1;
+        }
+        break;
+      }
+    case CB_GETLBTEXT:
+      {
+        if (!UBuffer || !combobox_has_strings( UnicodeMsg->hwnd )) break;
+        if (*Result >= 0)
+        {
+           DWORD len;
+           RtlMultiByteToUnicodeN( UBuffer, ~0u, &len, Buffer, strlen(Buffer) + 1 );
+           *Result = len / sizeof(WCHAR) - 1;
+        }
+        break;
+      }
+    }
+
+  MsgiUnicodeToAnsiCleanup(AnsiMsg, UnicodeMsg);
+
+  return TRUE;
+}
+
+
 LRESULT
 WINAPI
 DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
@@ -1174,6 +1276,9 @@ DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
   AnsiMsg.message = message;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+  AnsiMsg.time = 0;
+  AnsiMsg.pt.x = 0;
+  AnsiMsg.pt.y = 0;
 
   // Desktop is always Unicode so convert Ansi here.
   if (!MsgiAnsiToUnicodeMessage(hwnd, &UcMsg, &AnsiMsg))
@@ -1288,7 +1393,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
@@ -1297,14 +1401,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   {
       WARN("IntCallWindowsProcW() called with WndProc = NULL!\n");
       return FALSE;
-  }
-
-  // Safeguard against excessive recursions.
-  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
-  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
-  {
-     ERR("IntCallWindowsProcW() Exceeded Stack!\n");
-     return FALSE;
   }
 
   if (pWnd)
@@ -1327,7 +1423,10 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       UnicodeMsg.message = Msg;
       UnicodeMsg.wParam = wParam;
       UnicodeMsg.lParam = lParam;
-      if (! MsgiUnicodeToAnsiMessage(hWnd, &AnsiMsg, &UnicodeMsg))
+      UnicodeMsg.time = 0;
+      UnicodeMsg.pt.x = 0;
+      UnicodeMsg.pt.y = 0;
+       if (! MsgiUnicodeToAnsiMessage(hWnd, &AnsiMsg, &UnicodeMsg))
       {
           goto Exit;
       }
@@ -1355,7 +1454,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Got exception when calling Ansi WndProc %p Msg %d \n",WndProc,Msg);
+         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
 
@@ -1404,7 +1503,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Got exception when calling unicode WndProc %p Msg %d \n",WndProc, Msg);
+         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
 
@@ -1440,24 +1539,27 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  ULONG_PTR LowLimit;
+  //ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
+
+  TRACE("IntCallWindowProcA: IsAnsiProc : %s, WndProc %p, pWnd %p, hWnd %p, Msg %u, wParam %Iu, lParam %Iu.\n",
+      IsAnsiProc ? "TRUE" : "FALSE", WndProc, pWnd, hWnd, Msg, wParam, lParam);
 
   if (WndProc == NULL)
   {
       WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");
       return FALSE;
   }
-
+#if 0
   LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
   if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
   {
      ERR("IntCallWindowsProcA() Exceeded Stack!\n");
      return FALSE;
   }
-
+#endif
   if (pWnd)
      Dialog = (pWnd->fnid == FNID_DIALOG);
   else
@@ -1497,7 +1599,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Got exception when calling Ansi WndProc %p Msg %d \n",WndProc,Msg);
+         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
 
@@ -1522,6 +1624,9 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       AnsiMsg.message = Msg;
       AnsiMsg.wParam = wParam;
       AnsiMsg.lParam = lParam;
+      AnsiMsg.time = 0;
+      AnsiMsg.pt.x = 0;
+      AnsiMsg.pt.y = 0;
       if (! MsgiAnsiToUnicodeMessage(hWnd, &UnicodeMsg, &AnsiMsg))
       {
           goto Exit;
@@ -1551,7 +1656,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Got exception when calling unicode WndProc %p Msg %d \n",WndProc, Msg);
+         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
 
@@ -1734,7 +1839,9 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 /*
  * @implemented
  */
-LRESULT WINAPI
+LRESULT
+WINAPI
+DECLSPEC_HOTPATCH
 DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -1769,7 +1876,7 @@ DispatchMessageA(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        if (!NtUserValidateTimerCallback(lpmsg->lParam))
         {
            WARN("Validating Timer Callback failed!\n");
            return 0;
@@ -1826,7 +1933,9 @@ DispatchMessageA(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-LRESULT WINAPI
+LRESULT
+WINAPI
+DECLSPEC_HOTPATCH
 DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -1860,7 +1969,7 @@ DispatchMessageW(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG) lpmsg );
 
-        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam))
+        if (!NtUserValidateTimerCallback(lpmsg->lParam))
         {
            WARN("Validating Timer Callback failed!\n");
            return 0;
@@ -1926,7 +2035,9 @@ IntConvertMsgToAnsi(LPMSG lpMsg)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetMessageA(LPMSG lpMsg,
             HWND hWnd,
             UINT wMsgFilterMin,
@@ -1954,7 +2065,9 @@ GetMessageA(LPMSG lpMsg,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetMessageW(LPMSG lpMsg,
             HWND hWnd,
             UINT wMsgFilterMin,
@@ -2017,7 +2130,9 @@ PeekMessageWorker( PMSG pMsg,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 PeekMessageA(LPMSG lpMsg,
 	     HWND hWnd,
 	     UINT wMsgFilterMin,
@@ -2043,6 +2158,7 @@ PeekMessageA(LPMSG lpMsg,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 PeekMessageW(
   LPMSG lpMsg,
   HWND hWnd,
@@ -2204,6 +2320,7 @@ SendMessageW(HWND Wnd,
 {
   MSG UMMsg, KMMsg;
   LRESULT Result;
+  BOOL Ret;
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
@@ -2219,7 +2336,6 @@ SendMessageW(HWND Wnd,
 
       if ( Window != NULL &&
            Window->head.pti == ti &&
-//          !IsThreadHooked(GetWin32ClientInfo()) && // Enable to test message system bug.
           !ISITHOOKED(WH_CALLWNDPROC) &&
           !ISITHOOKED(WH_CALLWNDPROCRET) &&
           !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
@@ -2241,19 +2357,26 @@ SendMessageW(HWND Wnd,
   UMMsg.message = Msg;
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
+  UMMsg.time = 0;
+  UMMsg.pt.x = 0;
+  UMMsg.pt.y = 0;
 
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, FALSE))
   {
      return FALSE;
   }
 
-  Result = NtUserMessageCall( Wnd,
-                              KMMsg.message,
-                              KMMsg.wParam,
-                              KMMsg.lParam,
-                             (ULONG_PTR)&Result,
-                              FNID_SENDMESSAGE,
-                              FALSE);
+  Ret = NtUserMessageCall( Wnd,
+                           KMMsg.message,
+                           KMMsg.wParam,
+                           KMMsg.lParam,
+                          (ULONG_PTR)&Result,
+                           FNID_SENDMESSAGE,
+                           FALSE);
+  if (!Ret)
+  {
+     ERR("SendMessageW Error\n");
+  }
 
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
@@ -2269,6 +2392,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   MSG AnsiMsg, UcMsg, KMMsg;
   LRESULT Result;
+  BOOL Ret;
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
@@ -2284,7 +2408,6 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
       if ( Window != NULL &&
            Window->head.pti == ti &&
-//          !IsThreadHooked(GetWin32ClientInfo()) && // Enable to test message system bug.
           !ISITHOOKED(WH_CALLWNDPROC) &&
           !ISITHOOKED(WH_CALLWNDPROCRET) &&
           !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
@@ -2306,6 +2429,9 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+  AnsiMsg.time = 0;
+  AnsiMsg.pt.x = 0;
+  AnsiMsg.pt.y = 0;
 
   if (!MsgiAnsiToUnicodeMessage(Wnd, &UcMsg, &AnsiMsg))
   {
@@ -2318,13 +2444,17 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
   }
 
-  Result = NtUserMessageCall( Wnd,
-                              KMMsg.message,
-                              KMMsg.wParam,
-                              KMMsg.lParam,
-                             (ULONG_PTR)&Result,
-                              FNID_SENDMESSAGE,
-                              TRUE);
+  Ret = NtUserMessageCall( Wnd,
+                           KMMsg.message,
+                           KMMsg.wParam,
+                           KMMsg.lParam,
+                          (ULONG_PTR)&Result,
+                           FNID_SENDMESSAGE,
+                           TRUE);
+  if (!Ret)
+  {
+     ERR("SendMessageA Error\n");
+  }
 
   MsgiUMToKMCleanup(&UcMsg, &KMMsg);
   MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
@@ -2362,6 +2492,9 @@ SendMessageCallbackA(
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+  AnsiMsg.time = 0;
+  AnsiMsg.pt.x = 0;
+  AnsiMsg.pt.y = 0;
 
   if (!MsgiAnsiToUnicodeMessage(hWnd, &UcMsg, &AnsiMsg))
   {
@@ -2431,8 +2564,6 @@ SendMessageTimeoutA(
   MSG AnsiMsg, UcMsg;
   LRESULT Result;
   DOSENDMESSAGE dsm;
-  PWND Window;
-  PTHREADINFO ti = GetW32ThreadInfo();
 
   if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
   {
@@ -2442,32 +2573,19 @@ SendMessageTimeoutA(
 
   if (lpdwResult) *lpdwResult = 0;
 
-  //// This is due to message system bug.
-  if (hWnd != HWND_TOPMOST && hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
-  {
-      Window = ValidateHwnd(hWnd);
-
-      if ( Window != NULL &&
-           Window->head.pti == ti &&
-          !ISITHOOKED(WH_CALLWNDPROC) &&
-          !ISITHOOKED(WH_CALLWNDPROCRET) &&
-          !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
-      {
-          Result = IntCallMessageProc(Window, hWnd, Msg, wParam, lParam, TRUE);
-          if (lpdwResult) *lpdwResult = Result;
-          return TRUE;
-      }
-  }
-  ////
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
   dsm.uTimeout = uTimeout;
+  dsm.Result = 0;
 
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+  AnsiMsg.time = 0;
+  AnsiMsg.pt.x = 0;
+  AnsiMsg.pt.y = 0;
 
   if (! MsgiAnsiToUnicodeMessage(hWnd, &UcMsg, &AnsiMsg))
   {
@@ -2508,8 +2626,6 @@ SendMessageTimeoutW(
 {
   LRESULT Result;
   DOSENDMESSAGE dsm;
-  PWND Window;
-  PTHREADINFO ti = GetW32ThreadInfo();
 
   if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
   {
@@ -2519,27 +2635,11 @@ SendMessageTimeoutW(
 
   if (lpdwResult) *lpdwResult = 0;
 
-  //// This is due to message system bug.
-  if (hWnd != HWND_TOPMOST && hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
-  {
-      Window = ValidateHwnd(hWnd);
-
-      if ( Window != NULL &&
-           Window->head.pti == ti &&
-          !ISITHOOKED(WH_CALLWNDPROC) &&
-          !ISITHOOKED(WH_CALLWNDPROCRET) &&
-          !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
-      {
-          Result = IntCallMessageProc(Window, hWnd, Msg, wParam, lParam, FALSE);
-          if (lpdwResult) *lpdwResult = Result;
-          return TRUE;
-      }
-  }
-  ////
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
   dsm.uTimeout = uTimeout;
+  dsm.Result = 0;
 
   Result = NtUserMessageCall( hWnd,
                               Msg,
@@ -2580,6 +2680,9 @@ SendNotifyMessageA(
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+  AnsiMsg.time = 0;
+  AnsiMsg.pt.x = 0;
+  AnsiMsg.pt.y = 0;
   if (! MsgiAnsiToUnicodeMessage(hWnd, &UcMsg, &AnsiMsg))
   {
      return FALSE;
@@ -2615,6 +2718,9 @@ SendNotifyMessageW(
   UMMsg.message = Msg;
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
+  UMMsg.time = 0;
+  UMMsg.pt.x = 0;
+  UMMsg.pt.y = 0;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
   {
      return FALSE;
@@ -2684,11 +2790,9 @@ UINT WINAPI
 RegisterWindowMessageA(LPCSTR lpString)
 {
   UNICODE_STRING String;
-  BOOLEAN Result;
   UINT Atom;
 
-  Result = RtlCreateUnicodeStringFromAsciiz(&String, (PCSZ)lpString);
-  if (!Result)
+  if (!RtlCreateUnicodeStringFromAsciiz(&String, (PCSZ)lpString))
     {
       return(0);
     }
@@ -2766,7 +2870,6 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
   MSG KMMsg, UMMsg;
   PWND pWnd = NULL;
-  ULONG_PTR LowLimit;
   PCLIENTINFO pci = GetWin32ClientInfo();
 
   /* Make sure we don't try to access mem beyond what we were given */
@@ -2775,17 +2878,13 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
-  if (((ULONG_PTR)&ArgumentLength - LowLimit) < PAGE_SIZE )
-  {
-     ERR("Callback from Win32k Exceeded Stack!\n");
-     return STATUS_BAD_STACK;
-  }
-
   CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS) Arguments;
   KMMsg.hwnd = CallbackArgs->Wnd;
   KMMsg.message = CallbackArgs->Msg;
   KMMsg.wParam = CallbackArgs->wParam;
+  KMMsg.time = 0;
+  KMMsg.pt.x = 0;
+  KMMsg.pt.y = 0;
   /* Check if lParam is really a pointer and adjust it if it is */
   if (0 <= CallbackArgs->lParamBufferSize)
     {
@@ -2795,6 +2894,27 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           return STATUS_INFO_LENGTH_MISMATCH;
         }
       KMMsg.lParam = (LPARAM) ((char *) CallbackArgs + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS));
+     switch(KMMsg.message)
+     {
+        case WM_CREATE:
+        {
+            TRACE("WM_CREATE CB %p lParam %p\n",CallbackArgs, KMMsg.lParam);
+            break;
+        }
+        case WM_SYSTIMER:
+        {
+            TRACE("WM_SYSTIMER %p\n",KMMsg.hwnd);
+            break;
+        }
+        case WM_SIZING:
+        {
+           PRECT prect = (PRECT) KMMsg.lParam;
+           TRACE("WM_SIZING 1 t %d l %d r %d b %d\n",prect->top,prect->left,prect->right,prect->bottom);
+           break;
+        }
+        default:
+           break;
+     }
     }
   else
     {
@@ -2816,7 +2936,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
 
   if (pci->CallbackWnd.hWnd == UMMsg.hwnd)
-     pWnd  = pci->CallbackWnd.pWnd;
+     pWnd = pci->CallbackWnd.pWnd;
 
   CallbackArgs->Result = IntCallWindowProcW( CallbackArgs->IsAnsiProc,
                                              CallbackArgs->Proc,
@@ -2830,6 +2950,20 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
     }
 
+  if (0 <= CallbackArgs->lParamBufferSize)
+  {
+     switch(KMMsg.message)
+     {
+        case WM_SIZING:
+        {
+           PRECT prect = (PRECT) KMMsg.lParam;
+           TRACE("WM_SIZING 2 t %d l %d r %d b %d\n",prect->top,prect->left,prect->right,prect->bottom);
+           break;
+        }
+        default:
+           break;
+     }
+  }
   return ZwCallbackReturn(CallbackArgs, ArgumentLength, STATUS_SUCCESS);
 }
 
@@ -3000,7 +3134,7 @@ RealMsgWaitForMultipleObjectsEx(
       if ( (pcti->fsChangeBits & LOWORD(dwWakeMask)) ||
            ( (dwFlags & MWMO_INPUTAVAILABLE) && (pcti->fsWakeBits & LOWORD(dwWakeMask)) ) )
       {
-         //FIXME("Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
+         //FIXME("Return Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
          return nCount;
       }
    }
@@ -3023,12 +3157,22 @@ RealMsgWaitForMultipleObjectsEx(
    RtlCopyMemory(RealHandles, pHandles, nCount * sizeof(HANDLE));
    RealHandles[nCount] = MessageQueueHandle;
 
-   Result = WaitForMultipleObjectsEx(nCount + 1, RealHandles,
-                                     dwFlags & MWMO_WAITALL,
-                                     dwMilliseconds, dwFlags & MWMO_ALERTABLE);
+   //FIXME("1 Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
+
+   Result = WaitForMultipleObjectsEx( nCount + 1,
+                                      RealHandles,
+                                      dwFlags & MWMO_WAITALL,
+                                      dwMilliseconds,
+                                      dwFlags & MWMO_ALERTABLE );
+
+   //FIXME("2 Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
 
    HeapFree(GetProcessHeap(), 0, RealHandles);
    NtUserxMsqClearWakeMask();
+
+   // wine hack! MSDN: If dwMilliseconds is zero,,specified objects are not signaled; it always returns immediately.
+   if (!Result && !nCount && !dwMilliseconds) Result = WAIT_TIMEOUT;
+
    //FIXME("Result 0X%x\n",Result);
    return Result;
 }

@@ -1,0 +1,8 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "Spațiul de nume Obiect NT"
+    IDS_REGISTRY_NAME "Registrul de sistem"
+END

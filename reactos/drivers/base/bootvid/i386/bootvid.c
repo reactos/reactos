@@ -1,8 +1,11 @@
 #include "precomp.h"
 
+#include <ntifs.h>
+#include <ndk/halfuncs.h>
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
-BOOLEAN
+static BOOLEAN
 NTAPI
 VgaInterpretCmdStream(IN PUSHORT CmdStream)
 {
@@ -136,6 +139,7 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
             switch (Minor)
             {
                 case 0:
+                {
                     /* The port is what is in the stream right now */
                     ShortPort = UlongToPtr(*CmdStream);
 
@@ -164,7 +168,10 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
                         WRITE_PORT_USHORT(ShortPort, ShortValue);
                     }
                     break;
+                }
+
                 case 1:
+                {
                     /* The port is what is in the stream right now. Add the base too */
                     Port = *CmdStream + Base;
 
@@ -193,7 +200,10 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
                         WRITE_PORT_UCHAR(Port, Value);
                     }
                     break;
+                }
+
                 case 2:
+                {
                     /* The port is what is in the stream right now. Add the base too */
                     Port = *CmdStream + Base;
 
@@ -205,6 +215,8 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
                     /* Write the value */
                     WRITE_PORT_UCHAR(Port, Value);
                     break;
+                }
+
                 default:
                     /* Unknown command, fail */
                     return FALSE;
@@ -224,7 +236,7 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
     return TRUE;
 }
 
-BOOLEAN
+static BOOLEAN
 NTAPI
 VgaIsPresent(VOID)
 {
@@ -472,4 +484,3 @@ VidResetDisplay(IN BOOLEAN HalReset)
     InitializePalette();
     VidSolidColorFill(0, 0, 639, 479, 0);
 }
-

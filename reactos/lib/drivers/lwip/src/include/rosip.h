@@ -7,7 +7,9 @@
 #include "tcpip.h"
 
 #ifndef LWIP_TAG
-    #define LWIP_TAG 'PIwl'
+    #define LWIP_TAG         'PIwl'
+    #define LWIP_MESSAGE_TAG 'sMwl'
+    #define LWIP_QUEUE_TAG   'uQwl'
 #endif
 
 typedef struct tcp_pcb* PTCP_PCB;
@@ -107,6 +109,7 @@ err_t       LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const i
 err_t       LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port);
 err_t       LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port);
 void        LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg);
+void        LibTCPSetNoDelay(PTCP_PCB pcb, BOOLEAN Set);
 
 /* IP functions */
 void LibIPInsertPacket(void *ifarg, const void *const data, const u32_t size);

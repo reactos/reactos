@@ -29,8 +29,8 @@
  *
  * Scanline-oriented Write Support
  */
-#include "tiffiop.h"
-#include <stdio.h>
+
+#include <precomp.h>
 
 #define STRIPINCR	20		/* expansion factor on strip array */
 

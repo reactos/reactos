@@ -2,7 +2,7 @@
  * COPYRIGHT:         GPL, see COPYING in the top level directory
  * PROJECT:           ReactOS win32 kernel mode sunsystem
  * PURPOSE:           GDI DRIVEROBJ Functions
- * FILE:              subsystems/win32k/eng/driverobj.c
+ * FILE:              win32ss/gdi/eng/driverobj.c
  * PROGRAMER:         Timo Kreuzer
  */
 
@@ -19,8 +19,9 @@
 /*!
  * \brief DRIVEROBJ cleanup function
  */
-BOOL NTAPI
-DRIVEROBJ_Cleanup(PVOID pObject)
+VOID
+NTAPI
+DRIVEROBJ_vCleanup(PVOID pObject)
 {
     PEDRIVEROBJ pedo = pObject;
     FREEOBJPROC pFreeProc;
@@ -28,10 +29,8 @@ DRIVEROBJ_Cleanup(PVOID pObject)
     pFreeProc = pedo->drvobj.pFreeProc;
     if (pFreeProc)
     {
-        return pFreeProc(pedo->drvobj.pvObj);
+        NT_VERIFY(pFreeProc(&pedo->drvobj));
     }
-
-    return TRUE;
 }
 
 /** Public interface **********************************************************/
@@ -80,7 +79,7 @@ EngDeleteDriverObj(
     PEDRIVEROBJ pedo;
 
     /* Lock the object */
-    pedo = DRIVEROBJ_LockObject(hdo);
+    pedo = DRIVEROBJ_TryLockObject(hdo);
     if (!pedo)
     {
         return FALSE;
@@ -89,7 +88,7 @@ EngDeleteDriverObj(
     /* Manually call cleanup callback */
     if (bCallBack)
     {
-        if (!pedo->drvobj.pFreeProc(pedo->drvobj.pvObj))
+        if (!pedo->drvobj.pFreeProc(&pedo->drvobj))
         {
             /* Callback failed */
             DRIVEROBJ_UnlockObject(pedo);
@@ -100,10 +99,11 @@ EngDeleteDriverObj(
     /* Prevent cleanup callback from being called again */
     pedo->drvobj.pFreeProc = NULL;
 
-    /* NOTE: We don't care about the bLocked param, as our handle manager
-       allows freeing the object, while we hold any number of locks. */
+    /* Unlock if the caller indicates it is locked */
+    if (bLocked)
+        DRIVEROBJ_UnlockObject(pedo);
 
-    /* Delete the object */
+    /* Now delete the object */
     GDIOBJ_vDeleteObject(&pedo->baseobj);
     return TRUE;
 }
@@ -117,7 +117,7 @@ EngLockDriverObj(
     PEDRIVEROBJ pedo;
 
     /* Lock the object */
-    pedo = DRIVEROBJ_LockObject(hdo);
+    pedo = DRIVEROBJ_TryLockObject(hdo);
 
     /* Return pointer to the DRIVEROBJ structure */
     return &pedo->drvobj;
@@ -133,7 +133,7 @@ EngUnlockDriverObj(
     ULONG cLocks;
 
     /* First lock to get a pointer to the object */
-    pedo = DRIVEROBJ_LockObject(hdo);
+    pedo = DRIVEROBJ_TryLockObject(hdo);
     if(!pedo)
     {
         /* Object could not be locked, fail. */

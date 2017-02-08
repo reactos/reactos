@@ -1,208 +1,118 @@
-/*************************************************************************
-*
-* File: shutdown.c
-*
-* Module: Ext2 File System Driver (Kernel mode execution only)
-*
-* Description:
-*	Contains code to handle the "shutdown notification" dispatch entry point.
-*
-* Author: Manoj Paul Joseph
-*
-*
-*************************************************************************/
+/*
+ * COPYRIGHT:        See COPYRIGHT.TXT
+ * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
+ * FILE:             shutdown.c
+ * PROGRAMMER:       Matt Wu <mattwu@163.com>
+ * HOMEPAGE:         http://www.ext2fsd.com
+ * UPDATE HISTORY:
+ */
 
-#include			"ext2fsd.h"
+/* INCLUDES *****************************************************************/
 
-// define the file specific bug-check id
-#define			EXT2_BUG_CHECK_ID				EXT2_FILE_SHUTDOWN
-#define			DEBUG_LEVEL						(DEBUG_TRACE_SHUTDOWN)
+#include "ext2fs.h"
 
+/* GLOBALS ***************************************************************/
 
-/*************************************************************************
-*
-* Function: Ext2Shutdown()
-*
-* Description:
-*	All disk-based FSDs can expect to receive this shutdown notification
-*	request whenever the system is about to be halted gracefully. If you
-*	design and implement a network redirector, you must register explicitly
-*	for shutdown notification by invoking the IoRegisterShutdownNotification()
-*	routine from your driver entry.
-*
-*	Note that drivers that register to receive shutdown notification get
-*	invoked BEFORE disk-based FSDs are told about the shutdown notification.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: Irrelevant.
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2Shutdown(
-	PDEVICE_OBJECT		DeviceObject,		// the logical volume device object
-	PIRP				Irp)					// I/O Request Packet
+extern PEXT2_GLOBAL Ext2Global;
+
+/* DEFINITIONS *************************************************************/
+
+#ifdef ALLOC_PRAGMA
+#pragma alloc_text(PAGE, Ext2ShutDown)
+#endif
+
+NTSTATUS
+Ext2ShutDown (IN PEXT2_IRP_CONTEXT IrpContext)
 {
-	NTSTATUS				RC = STATUS_SUCCESS;
-	PtrExt2IrpContext	PtrIrpContext = NULL;
-	BOOLEAN				AreWeTopLevel = FALSE;
+    NTSTATUS                Status;
 
-	DebugTrace(DEBUG_TRACE_IRP_ENTRY, "Shutdown IRP received...", 0);
+    PIRP                    Irp;
 
-	FsRtlEnterFileSystem();
-	ASSERT(DeviceObject);
-	ASSERT(Irp);
+    PEXT2_VCB               Vcb;
+    PLIST_ENTRY             ListEntry;
 
-	// set the top level context
-	AreWeTopLevel = Ext2IsIrpTopLevel(Irp);
+    BOOLEAN                 GlobalResourceAcquired = FALSE;
 
-	try 
-	{
+    _SEH2_TRY {
 
-		// get an IRP context structure and issue the request
-		PtrIrpContext = Ext2AllocateIrpContext(Irp, DeviceObject);
-		ASSERT(PtrIrpContext);
+        Status = STATUS_SUCCESS;
 
-		RC = Ext2CommonShutdown(PtrIrpContext, Irp);
+        ASSERT(IrpContext);
+        ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
+               (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-	} 
-	except (Ext2ExceptionFilter(PtrIrpContext, GetExceptionInformation())) 
-	{
+        Irp = IrpContext->Irp;
 
-		RC = Ext2ExceptionHandler(PtrIrpContext, Irp);
+        if (!ExAcquireResourceExclusiveLite(
+                    &Ext2Global->Resource,
+                    IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
+            Status = STATUS_PENDING;
+            _SEH2_LEAVE;
+        }
 
-		Ext2LogEvent(EXT2_ERROR_INTERNAL_ERROR, RC);
-	}
+        GlobalResourceAcquired = TRUE;
 
-	if (AreWeTopLevel) 
-	{
-		IoSetTopLevelIrp(NULL);
-	}
+        for (ListEntry = Ext2Global->VcbList.Flink;
+                ListEntry != &(Ext2Global->VcbList);
+                ListEntry = ListEntry->Flink ) {
 
-	FsRtlExitFileSystem();
+            Vcb = CONTAINING_RECORD(ListEntry, EXT2_VCB, Next);
 
-	return(RC);
-}
+            if (ExAcquireResourceExclusiveLite(
+                        &Vcb->MainResource,
+                        TRUE )) {
 
+                if (IsMounted(Vcb)) {
 
-/*************************************************************************
-*
-* Function: Ext2CommonShutdown()
-*
-* Description:
-*	The actual work is performed here. Basically, all we do here is
-*	internally invoke a flush on all mounted logical volumes. This, in
-*	tuen, will result in all open file streams being flushed to disk.
-*
-* Expected Interrupt Level (for execution) :
-*
-*  IRQL_PASSIVE_LEVEL
-*
-* Return Value: Irrelevant
-*
-*************************************************************************/
-NTSTATUS NTAPI Ext2CommonShutdown(
-PtrExt2IrpContext			PtrIrpContext,
-PIRP							PtrIrp)
-{
-	NTSTATUS					RC = STATUS_SUCCESS;
-	PIO_STACK_LOCATION			PtrIoStackLocation = NULL;
+                    /* update mount count */
+                    Vcb->SuperBlock->s_mnt_count++;
+                    if (Vcb->SuperBlock->s_mnt_count >
+                            Vcb->SuperBlock->s_max_mnt_count ) {
+                        Vcb->SuperBlock->s_mnt_count =
+                            Vcb->SuperBlock->s_max_mnt_count;
+                    }
+                    Ext2SaveSuper(IrpContext, Vcb);
 
-	try 
-	{
-		// First, get a pointer to the current I/O stack location
-		PtrIoStackLocation = IoGetCurrentIrpStackLocation(PtrIrp);
-		ASSERT(PtrIoStackLocation);
+                    /* flush dirty cache for all files */
+                    Status = Ext2FlushFiles(IrpContext, Vcb, TRUE);
+                    if (!NT_SUCCESS(Status)) {
+                        DbgBreak();
+                    }
 
-		// (a) Block all new "mount volume" requests by acquiring an appropriate
-		//		 global resource/lock.
-		// (b) Go through your linked list of mounted logical volumes and for
-		//		 each such volume, do the following:
-		//		 (i) acquire the volume resource exclusively
-		//		 (ii) invoke Ext2FlushLogicalVolume() (internally) to flush the
-		//				open data streams belonging to the volume from the system
-		//				cache
-		//		 (iii) Invoke the physical/virtual/logical target device object
-		//				on which the volume is mounted and inform this device
-		//				about the shutdown request (Use IoBuildSynchronousFsdRequest()
-		//				to create an IRP with MajorFunction = IRP_MJ_SHUTDOWN that you
-		//				will then issue to the target device object).
-		//		 (iv) Wait for the completion of the shutdown processing by the target
-		//				device object
-		//		 (v) Release the VCB resource you will have acquired in (i) above.
+                    /* flush volume stream's cache to disk */
+                    Status = Ext2FlushVolume(IrpContext, Vcb, TRUE);
 
-		// Once you have processed all the mounted logical volumes, you can release
-		// all acquired global resources and leave (in peace :-)
+                    if (!NT_SUCCESS(Status) && Status != STATUS_MEDIA_WRITE_PROTECTED) {
+                        DbgBreak();
+                    }
 
-	
+                    /* send shutdown request to underlying disk */
+                    Ext2DiskShutDown(Vcb);
+                }
 
-/*////////////////////////////////////////////
-		//
-		//	Update the Group...
-		//
-		if( PtrVCB->LogBlockSize )
-		{
-			//	First block contains the descriptors...
-			VolumeByteOffset.QuadPart = LogicalBlockSize;
-		}
-		else
-		{
-			//	Second block contains the descriptors...
-			VolumeByteOffset.QuadPart = LogicalBlockSize * 2;
-		}
+                ExReleaseResourceLite(&Vcb->MainResource);
+            }
+        }
 
-		NumberOfBytesToRead = sizeof( struct ext2_group_desc );
-		NumberOfBytesToRead = Ext2Align( NumberOfBytesToRead, LogicalBlockSize );
+        /*
+                IoUnregisterFileSystem(Ext2Global->DiskdevObject);
+                IoUnregisterFileSystem(Ext2Global->CdromdevObject);
+        */
 
-		if (!CcMapData( PtrVCB->PtrStreamFileObject,
-               &VolumeByteOffset,
-               NumberOfBytesToRead,
-               TRUE,
-               &PtrBCB,
-               &PtrCacheBuffer )) 
-		{
-			DebugTrace(DEBUG_TRACE_ERROR,   "Cache read failiure while reading in volume meta data", 0);
-			try_return( Status = STATUS_INSUFFICIENT_RESOURCES );
-		}
-		else
-		{
-			//	
-			//	Saving up Often Used Group Descriptor Information in the VCB...
-			//
-			unsigned int DescIndex ;
+    } _SEH2_FINALLY {
 
-			DebugTrace(DEBUG_TRACE_MISC,   "Cache hit while reading in volume meta data", 0);
-			PtrGroupDescriptor = (PEXT2_GROUP_DESCRIPTOR )PtrCacheBuffer;
-			for( DescIndex = 0; DescIndex < PtrVCB->NoOfGroups; DescIndex++ )
-			{
-				PtrVCB->PtrGroupDescriptors[ DescIndex ].InodeTablesBlock 
-					= PtrGroupDescriptor[ DescIndex ].bg_inode_table;
+        if (GlobalResourceAcquired) {
+            ExReleaseResourceLite(&Ext2Global->Resource);
+        }
 
-				PtrVCB->PtrGroupDescriptors[ DescIndex ].InodeBitmapBlock 
-					= PtrGroupDescriptor[ DescIndex ].bg_inode_bitmap
-					;
-				PtrVCB->PtrGroupDescriptors[ DescIndex ].BlockBitmapBlock 
-					= PtrGroupDescriptor[ DescIndex ].bg_block_bitmap
-					;
-				PtrVCB->PtrGroupDescriptors[ DescIndex ].FreeBlocksCount 
-					= PtrGroupDescriptor[ DescIndex ].bg_free_blocks_count;
+        if (!IrpContext->ExceptionInProgress) {
+            if (Status == STATUS_PENDING) {
+                Ext2QueueRequest(IrpContext);
+            } else {
+                Ext2CompleteIrpContext(IrpContext, Status);
+            }
+        }
+    } _SEH2_END;
 
-				PtrVCB->PtrGroupDescriptors[ DescIndex ].FreeInodesCount 
-					= PtrGroupDescriptor[ DescIndex ].bg_free_inodes_count;
-			}
-			CcUnpinData( PtrBCB );
-			PtrBCB = NULL;
-		}
-*/////////////////////////////////////////////
-
-	} 
-	finally 
-	{
-
-		// See the read/write examples for how to fill in this portion
-
-	} // end of "finally" processing
-
-	return(RC);
+    return Status;
 }

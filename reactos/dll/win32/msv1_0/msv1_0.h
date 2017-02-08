@@ -36,6 +36,10 @@
 
 #include <wine/debug.h>
 
+
+#define FIXUP_POINTER(Pointer, Offset) ((Pointer != NULL) ? ((PWSTR)((ULONG_PTR)Pointer + Offset)) : NULL)
+
+
 typedef struct _RPC_SID
 {
     UCHAR Revision;
@@ -169,6 +173,10 @@ SamIConnect(IN PSAMPR_SERVER_NAME ServerName,
 
 VOID
 NTAPI
+SamIFreeVoid(PVOID Ptr);
+
+VOID
+NTAPI
 SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr);
 
 VOID
@@ -178,7 +186,27 @@ SamIFree_SAMPR_USER_INFO_BUFFER(PSAMPR_USER_INFO_BUFFER Ptr,
 
 NTSTATUS
 NTAPI
+SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
+                       IN unsigned char LmPresent,
+                       IN PENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm,
+                       IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm,
+                       IN unsigned char NtPresent,
+                       IN PENCRYPTED_NT_OWF_PASSWORD OldNtEncryptedWithNewNt,
+                       IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithOldNt,
+                       IN unsigned char NtCrossEncryptionPresent,
+                       IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithNewLm,
+                       IN unsigned char LmCrossEncryptionPresent,
+                       IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithNewNt);
+
+NTSTATUS
+NTAPI
 SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle);
+
+NTSTATUS
+NTAPI
+SamrLookupDomainInSamServer(IN SAMPR_HANDLE ServerHandle,
+                            IN PRPC_UNICODE_STRING Name,
+                            OUT PRPC_SID *DomainId);
 
 NTSTATUS
 NTAPI
@@ -292,5 +320,21 @@ WINAPI
 LsarQueryInformationPolicy(IN LSAPR_HANDLE PolicyHandle,
                            IN POLICY_INFORMATION_CLASS InformationClass,
                            OUT PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+WINAPI
+SystemFunction006(LPCSTR password,
+                  LPSTR hash);
+
+NTSTATUS
+WINAPI
+SystemFunction007(PUNICODE_STRING string,
+                  LPBYTE hash);
+
+NTSTATUS
+WINAPI
+SystemFunction012(const BYTE *in,
+                  const BYTE *key,
+                  LPBYTE out);
 
 /* EOF */

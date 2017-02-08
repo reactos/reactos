@@ -15,12 +15,11 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include "precomp.h"
+
 #ifndef lint
 static char sccsid[] = "@(#)ruserpass.c	5.1 (Berkeley) 3/1/89";
 #endif /* not lint */
-
-#include "precomp.h"
-//#include <utmp.h>
 
 struct	utmp *getutmp();
 static	FILE *cfile;

@@ -18,18 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
-#include "winternl.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static unsigned ppc_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                             enum cpu_addr ca, ADDRESS64* addr)
+static BOOL ppc_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                         enum cpu_addr ca, ADDRESS64* addr)
 {
    switch (ca)
     {
@@ -54,7 +48,7 @@ static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CON
     return FALSE;
 }
 
-static unsigned ppc_map_dwarf_register(unsigned regno)
+static unsigned ppc_map_dwarf_register(unsigned regno, BOOL eh_frame)
 {
     FIXME("not done\n");
     return 0;
@@ -72,6 +66,18 @@ static const char* ppc_fetch_regname(unsigned regno)
     return NULL;
 }
 
+static BOOL ppc_fetch_minidump_thread(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx)
+{
+    FIXME("NIY\n");
+    return FALSE;
+}
+
+static BOOL ppc_fetch_minidump_module(struct dump_context* dc, unsigned index, unsigned flags)
+{
+    FIXME("NIY\n");
+    return FALSE;
+}
+
 DECLSPEC_HIDDEN struct cpu cpu_ppc = {
     IMAGE_FILE_MACHINE_POWERPC,
     4,
@@ -82,4 +88,6 @@ DECLSPEC_HIDDEN struct cpu cpu_ppc = {
     ppc_map_dwarf_register,
     ppc_fetch_context_reg,
     ppc_fetch_regname,
+    ppc_fetch_minidump_thread,
+    ppc_fetch_minidump_module,
 };

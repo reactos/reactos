@@ -42,11 +42,6 @@
 #include "wine/unicode.h"
 #include "wine/list.h"
 
-#define YYLEX_PARAM info
-#define YYPARSE_PARAM info
-
-static int cond_error(const char *str);
-
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 typedef struct tag_yyinput
@@ -66,6 +61,7 @@ struct cond_str {
 static LPWSTR COND_GetString( COND_input *info, const struct cond_str *str );
 static LPWSTR COND_GetLiteral( COND_input *info, const struct cond_str *str );
 static int cond_lex( void *COND_lval, COND_input *info);
+static int cond_error( COND_input *info, const char *str);
 
 static void *cond_alloc( COND_input *cond, unsigned int sz );
 static void *cond_track_mem( COND_input *cond, void *ptr, unsigned int sz );
@@ -110,6 +106,8 @@ static BOOL num_from_prop( LPCWSTR p, INT *val )
 
 %}
 
+%lex-param { COND_input *info }
+%parse-param { COND_input *info }
 %pure-parser
 
 %union
@@ -798,7 +796,7 @@ static void cond_free( void *ptr )
     }
 }
 
-static int cond_error(const char *str)
+static int cond_error( COND_input *info, const char *str )
 {
     TRACE("%s\n", str );
     return 0;

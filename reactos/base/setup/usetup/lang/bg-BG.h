@@ -166,42 +166,12 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         8,
         13,
-        "- Настройвачът не може да работи с повече от един дял на диск.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Настройвачът не може да изтриe първичeн дял,",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  ако на диска има разширен дял." ,
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Настройвачът не може да изтрие първия разширен дял от диска, ",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  ако на диска има и други разширени дялове.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Настройвачът поддържа само FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Проверката на файловата уредба все още не е готова.",
         TEXT_STYLE_NORMAL
     },
@@ -511,6 +481,7 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY bgBGComputerPageEntries[] =
 {
     {
@@ -828,12 +799,25 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Натиснете C за създаване на нов дял.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Натиснете C за създаване на нов дял.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Натиснете D за изтриване на съществуващ дял.",
         TEXT_STYLE_NORMAL
     },
@@ -842,6 +826,100 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
         0,
         "   Почакайте...",  /* Редът да не се превежда, защото списъкът с дяловете ще се размести */
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bgBGConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " Слагане на РеактОС " KERNEL_VERSION_STR " . ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1289,6 +1367,10 @@ static MUI_ENTRY bgBGRegistryEntries[] =
 MUI_ERROR bgBGErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "РеактОС не е напълно сложен на компютъра\n"
         "ви. Ако сега излезете от слаганете, ще трябва\n"
@@ -1360,7 +1442,7 @@ MUI_ERROR bgBGErrorEntries[] =
           "\n"
           "Създаването или изтриването на дялове може да унищожи дяловата таблица.\n"
           "\n"
-          "  \x07  За изход натиснете F3."
+          "  \x07  За изход натиснете F3.\n"
           "  \x07  Натиснете ENTER за продължаване.",
           "F3 = Изход ENTER = Продължаване"
     },
@@ -1495,17 +1577,44 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "На избрания дял няма достатъчно свободно пространство.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Натиснете клавиш, за да продължите.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE bgBGPages[] =
 {
@@ -1548,6 +1657,10 @@ MUI_PAGE bgBGPages[] =
     {
         SELECT_PARTITION_PAGE,
         bgBGSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        bgBGConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1612,13 +1725,23 @@ MUI_STRING bgBGStrings[] =
     {STRING_PLEASEWAIT,
      "   Почакайте..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Слагане   D = Изтриване на дял   F3 = Изход"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Размер на новия дял:"},
     {STRING_CHOOSENEWPARTITION,
-     "Избрали сте да създадете нов дял на"},
+     "You have chosen to create a primary partition on"},
+//     "Избрали сте да създадете нов дял на"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Въведете размера на новия дял (в мегабайти)."},
     {STRING_CREATEPARTITION,
@@ -1627,12 +1750,18 @@ MUI_STRING bgBGStrings[] =
     "Предстои форматиране на дяла."},
     {STRING_NONFORMATTEDPART,
     "Избрали сте да сложите РеактОС на нов или неразпределен дял."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Слагане на РеактОС върху дял"},
     {STRING_CHECKINGPART,
     "Тече проверка на избрания дял."},
+    {STRING_CONTINUE,
+    "ENTER = Продължаване"},
     {STRING_QUITCONTINUE,
-    "F3= Изход  ENTER = Продължаване"},
+    "F3 = Изход  ENTER = Продължаване"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Презапускане на компютъра"},
     {STRING_TXTSETUPFAILED,
@@ -1658,11 +1787,11 @@ MUI_STRING bgBGStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Презапускане на компютъра"},
     {STRING_CONSOLEFAIL1,
-    "Отварянето на конзолата е невъзможно\n\n"},
+    "Отварянето на конзолата е невъзможно\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Това се случва най- често при употреба на USB клавиатура\n"},
+    "Това се случва най- често при употреба на USB клавиатура\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Поддръжката на USB е все още непълна\n"},
+    "Поддръжката на USB е все още непълна\r\n"},
     {STRING_FORMATTINGDISK,
     "Тече форматиране на диска"},
     {STRING_CHECKINGDISK,
@@ -1678,7 +1807,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  вид %lu    %I64u %s"},
+    "   %c%c  вид 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1686,11 +1815,11 @@ MUI_STRING bgBGStrings[] =
     {STRING_HDINFOPARTZEROED,
     "твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  вид %lu    %I64u %s"},
+    "%c%c  вид 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  вид %-3u                         %6lu %s"},
+    "%c%c %c %sвид %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
     {STRING_HDDINFOUNK6,
@@ -1698,9 +1827,11 @@ MUI_STRING bgBGStrings[] =
     {STRING_NEWPARTITION,
     "Бе създаден нов дял на"},
     {STRING_UNPSPACE,
-    "    Неразпределено място              %6lu %s"},
+    "    %sНеразпределено място%s            %6lu %s"},
     {STRING_MAXSIZE,
     "МБ (до %lu МБ)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Нов (Неформатиран)"},
     {STRING_FORMATUNUSED,

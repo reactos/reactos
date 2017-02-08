@@ -13,9 +13,15 @@
 
 #include "i8042prt.h"
 
+#include <poclass.h>
+#include <ndk/kdfuncs.h>
+
+#include <debug.h>
+
 /* GLOBALS *******************************************************************/
 
 static IO_WORKITEM_ROUTINE i8042PowerWorkItem;
+static KDEFERRED_ROUTINE i8042KbdDpcRoutine;
 
 /* This structure starts with the same layout as KEYBOARD_INDICATOR_TRANSLATION */
 typedef struct _LOCAL_KEYBOARD_INDICATOR_TRANSLATION {
@@ -191,9 +197,10 @@ i8042PowerWorkItem(
 	PIRP WaitingIrp;
 	NTSTATUS Status;
 
-	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)Context;
-
 	UNREFERENCED_PARAMETER(DeviceObject);
+
+	__analysis_assume(Context != NULL);
+	DeviceExtension = Context;
 
 	/* See http://blogs.msdn.com/doronh/archive/2006/09/08/746961.aspx */
 
@@ -326,7 +333,8 @@ i8042KbdDpcRoutine(
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
-	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)DeferredContext;
+	__analysis_assume(DeferredContext != NULL);
+	DeviceExtension = DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
 	if (HandlePowerKeys(DeviceExtension))
@@ -468,6 +476,34 @@ i8042KbdDeviceControl(
 	return Status;
 }
 
+VOID
+NTAPI
+i8042InitializeKeyboardAttributes(
+    PI8042_KEYBOARD_EXTENSION DeviceExtension)
+{
+    PPORT_DEVICE_EXTENSION PortDeviceExtension;
+    PI8042_SETTINGS Settings;
+    PKEYBOARD_ATTRIBUTES KeyboardAttributes;
+
+    PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
+    Settings = &PortDeviceExtension->Settings;
+
+    KeyboardAttributes = &DeviceExtension->KeyboardAttributes;
+
+    KeyboardAttributes->KeyboardIdentifier.Type = (UCHAR)Settings->OverrideKeyboardType;
+    KeyboardAttributes->KeyboardIdentifier.Subtype = (UCHAR)Settings->OverrideKeyboardSubtype;
+    KeyboardAttributes->NumberOfFunctionKeys = 4;
+    KeyboardAttributes->NumberOfIndicators = 3;
+    KeyboardAttributes->NumberOfKeysTotal = 101;
+    KeyboardAttributes->InputDataQueueLength = Settings->KeyboardDataQueueSize;
+    KeyboardAttributes->KeyRepeatMinimum.UnitId = 0;
+    KeyboardAttributes->KeyRepeatMinimum.Rate = (USHORT)Settings->SampleRate;
+    KeyboardAttributes->KeyRepeatMinimum.Delay = 0;
+    KeyboardAttributes->KeyRepeatMinimum.UnitId = 0;
+    KeyboardAttributes->KeyRepeatMinimum.Rate = (USHORT)Settings->SampleRate;
+    KeyboardAttributes->KeyRepeatMinimum.Delay = 0;
+}
+
 /*
  * Runs the keyboard IOCTL_INTERNAL dispatch.
  */
@@ -558,6 +594,8 @@ i8042KbdInternalDeviceControl(
 			DeviceExtension->Common.PortDeviceExtension->KeyboardExtension = DeviceExtension;
 			DeviceExtension->Common.PortDeviceExtension->Flags |= KEYBOARD_CONNECTED;
 
+            i8042InitializeKeyboardAttributes(DeviceExtension);
+
 			IoMarkIrpPending(Irp);
 			/* FIXME: DeviceExtension->KeyboardHook.IsrWritePort = ; */
 			DeviceExtension->KeyboardHook.QueueKeyboardPacket = i8042KbdQueuePacket;
@@ -601,8 +639,8 @@ cleanup:
 		}
 		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
 		{
-			DPRINT1("IOCTL_KEYBOARD_QUERY_ATTRIBUTES not implemented\n");
-#if 0
+		    PKEYBOARD_ATTRIBUTES KeyboardAttributes;
+
             /* FIXME: KeyboardAttributes are not initialized anywhere */
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
 			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
@@ -611,12 +649,11 @@ cleanup:
 				break;
 			}
 
-			*(PKEYBOARD_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->KeyboardAttributes;
+            KeyboardAttributes = Irp->AssociatedIrp.SystemBuffer;
+            *KeyboardAttributes = DeviceExtension->KeyboardAttributes;
+
 			Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
 			Status = STATUS_SUCCESS;
-			break;
-#endif
-			Status = STATUS_NOT_IMPLEMENTED;
 			break;
 		}
 		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
@@ -657,7 +694,7 @@ cleanup:
 		{
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_INDICATORS\n");
 
-			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
 			{
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
@@ -708,9 +745,9 @@ cleanup:
 }
 
 /*
- * Call the customization hook. The ToReturn parameter is about wether
+ * Call the customization hook. The ToReturn parameter is about whether
  * we should go on with the interrupt. The return value is what
- * we should return (indicating to the system wether someone else
+ * we should return (indicating to the system whether someone else
  * should try to handle the interrupt)
  */
 static BOOLEAN
@@ -759,7 +796,8 @@ i8042KbdInterruptService(
 
 	UNREFERENCED_PARAMETER(Interrupt);
 
-	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)Context;
+	__analysis_assume(Context != NULL);
+	DeviceExtension = Context;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 	InputData = DeviceExtension->KeyboardBuffer + DeviceExtension->KeysInBuffer;
 	Counter = PortDeviceExtension->Settings.PollStatusIterations;
@@ -812,21 +850,22 @@ i8042KbdInterruptService(
 		else if (DeviceExtension->TabPressed)
 		{
 			DeviceExtension->TabPressed = FALSE;
-            
+
             /* Check which action to do */
             if (InputData->MakeCode == 0x25)
             {
                 /* k - Breakpoint */
-                DbgBreakPoint();
+                DbgBreakPointWithStatus(DBG_STATUS_SYSRQ);
             }
             else if (InputData->MakeCode == 0x30)
             {
                 /* b - Bugcheck */
                 KeBugCheck(MANUALLY_INITIATED_CRASH);
             }
+#if defined(KDBG)
             else
             {
-			    /* Send request to the kernel debugger. 
+			    /* Send request to the kernel debugger.
 			     * Unknown requests will be ignored. */
 			    KdSystemDebugControl(' soR',
 			                         (PVOID)(ULONG_PTR)InputData->MakeCode,
@@ -836,6 +875,7 @@ i8042KbdInterruptService(
 			                         NULL,
 			                         KernelMode);
             }
+#endif
 		}
 	}
 

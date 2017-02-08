@@ -162,16 +162,16 @@ interface IMalloc : IUnknown
   typedef [unique] IMalloc *LPMALLOC;
 
   LPVOID Alloc(
-    [in] ULONG cb);
+    [in] SIZE_T cb);
 
   LPVOID Realloc(
     [in] LPVOID pv,
-    [in] ULONG cb);
+    [in] SIZE_T cb);
 
   void Free(
     [in] LPVOID pv);
 
-  ULONG GetSize(
+  SIZE_T GetSize(
     [in] LPVOID pv);
 
   int DidAlloc(LPVOID pv);
@@ -188,8 +188,8 @@ interface IMallocSpy : IUnknown
 {
   typedef [unique] IMallocSpy *LPMALLOCSPY;
 
-  ULONG PreAlloc(
-    [in] ULONG cbRequest);
+  SIZE_T PreAlloc(
+    [in] SIZE_T cbRequest);
 
   LPVOID PostAlloc(
     [in] LPVOID pActual);
@@ -201,9 +201,9 @@ interface IMallocSpy : IUnknown
   void PostFree(
     [in] BOOL fSpyed);
 
-  ULONG PreRealloc(
+  SIZE_T PreRealloc(
     [in] LPVOID pRequest,
-    [in] ULONG cbRequest,
+    [in] SIZE_T cbRequest,
     [out] LPVOID *ppNewRequest,
     [in] BOOL fSpyed);
 
@@ -215,8 +215,8 @@ interface IMallocSpy : IUnknown
     [in] LPVOID pRequest,
     [in] BOOL fSpyed);
 
-  ULONG PostGetSize(
-    [in] ULONG cbActual,
+  SIZE_T PostGetSize(
+    [in] SIZE_T cbActual,
     [in] BOOL fSpyed);
 
   LPVOID PreDidAlloc(
@@ -2327,6 +2327,15 @@ typedef enum _APTTYPE {
     APTTYPE_MAINSTA = 3
 } APTTYPE;
 
+typedef enum _APTTYPEQUALIFIER {
+    APTTYPEQUALIFIER_NONE                = 0,
+    APTTYPEQUALIFIER_IMPLICIT_MTA        = 1,
+    APTTYPEQUALIFIER_NA_ON_MTA           = 2,
+    APTTYPEQUALIFIER_NA_ON_STA           = 3,
+    APTTYPEQUALIFIER_NA_ON_IMPLICIT_MTA  = 4,
+    APTTYPEQUALIFIER_NA_ON_MAINSTA       = 5
+} APTTYPEQUALIFIER;
+
 typedef enum _THDTYPE {
     THDTYPE_BLOCKMESSAGES   = 0,
     THDTYPE_PROCESSMESSAGES = 1
@@ -2407,6 +2416,60 @@ interface IThumbnailExtractor : IUnknown
         [in] IStorage *pStg);
 }
 
+typedef enum tagGLOBALOPT_PROPERTIES
+{
+    COMGLB_EXCEPTION_HANDLING     = 1,
+    COMGLB_APPID                  = 2,
+    COMGLB_RPC_THREADPOOL_SETTING = 3
+} GLOBALOPT_PROPERTIES;
+
+typedef enum tagGLOBALOPT_EH_VALUES
+{
+    COMGLB_EXCEPTION_HANDLE               = 0,
+    COMGLB_EXCEPTION_DONOT_HANDLE_FATAL   = 1,
+    COMGLB_EXCEPTION_DONOT_HANDLE         = COMGLB_EXCEPTION_DONOT_HANDLE_FATAL,
+    COMGLB_EXCEPTION_DONOT_HANDLE_ANY     = 2
+} GLOBALOPT_EH_VALUES;
+
+typedef enum tagGLOBALOPT_RPCTP_VALUES
+{
+    COMGLB_RPC_THREADPOOL_SETTING_DEFAULT_POOL = 0,
+    COMGLB_RPC_THREADPOOL_SETTING_PRIVATE_POOL = 1
+} GLOBALOPT_RPCTP_VALUES;
+
+
+[
+    object,
+    local,
+    pointer_default(unique),
+    uuid(0000015B-0000-0000-C000-000000000046)
+]
+interface IGlobalOptions : IUnknown
+{
+    HRESULT Set([in] GLOBALOPT_PROPERTIES property, [in] ULONG_PTR value);
+    HRESULT Query([in] GLOBALOPT_PROPERTIES property, [out ] ULONG_PTR *value);
+}
+
+[
+    object,
+    pointer_default(unique),
+    uuid(947990de-cc28-11d2-a0f7-00805f858fb1)
+]
+interface IDummyHICONIncluder : IUnknown
+{
+    HRESULT Dummy([in] HICON hIcon, [in] HDC hdc);
+}
+
+[
+    object,
+    local,
+    pointer_default(unique),
+    uuid(a2f05a09-27a2-42b5-bc0e-ac163ef49d9b)
+]
+interface IApartmentShutdown : IUnknown
+{
+    void OnUninitialize([in] UINT64 identifier);
+}
 
 cpp_quote("#ifdef USE_COM_CONTEXT_DEF")
 

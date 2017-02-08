@@ -1,0 +1,74 @@
+/*
+ * Spanish resource file by HUMA2000
+ * Jose Pedro Fernández Pascual  2005
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Lista de todos los comandos disponibles (con descripción)\n\n\
+  help comando\n\
+  comando /?     Para más información del comando especificado.\n\n\
+?        Muestra todos los comandos disponibles (sin la descripción).\n\
+ALIAS    Crea, borra o muestra los alias.\n\
+ATTRIB   Muestra o cambia los atributos de archivo.\n\
+BEEP     Hace un beep con el altavoz.\n\
+CALL     Llama a un archivo por lotes desde otro.\n\
+CD       Muestra o cambia el directorio actual.\n\
+CHCP     Muestra o cambia el código de página activo.\n\
+CHOICE   Espera a que el usuario elija una opción de un grupo de opciones.\n\
+CLS      Limpia la pantalla.\n\
+CMD      Comienza una nueva instancia del intérprete de comandos.\n\
+COLOR    Configura el color por defecto de fondo y frente de la consola.\n\
+COPY     Copia uno o varios archivos de una localización a otra.\n\
+DATE     Muestra y cambia la fecha.\n\
+DELETE   Borra uno o más archivos.\n\
+DIR      Muestra una lista de los archivos y subdirecctorios en un directorio.\n\
+ECHO     Muestra mensajes, o cambia un comando entre mostrarlos o no.\n\
+ERASE    Borra uno o más archivos.\n\
+EXIT     Sale del programa CMD.EXE (intérprete de comandos).\n\
+FOR      Ejecuta un comando específico en un grupo de archivos.\n\
+FREE     Espacio libre en disco.\n\
+GOTO     Direcciona la ventana del intérprete de comandos a una linea etiquetada\n\
+         en un archivo por lotes.\n\
+HELP     Proporciona ayuda sobre los comandos para ReactOS.\n\
+HISTORY  Muestra todos los comandos que han sido usados.\n\
+IF       Realiza un proceso condicional en un archivo por lotes.\n\
+LABEL    Crea, cambia, o borra la etiqueta de volumen de un disco.\n\
+MD       Crea un directorio.\n\
+MKDIR    Crea un directorio.\n\
+MKLINK   Creates a filesystem link object.\n\
+MOVE     Mueve uno o más archivos de un directorio a otro.\n\
+PATH     Muestra o configura las rutas de búsqueda para archivos ejecutables.\n\
+PAUSE    Suspende el procesamiento de un archivo por lotes y muestra un mensaje.\n\
+POPD     Restaura el valor anterior del directorio actual guardado por PUSHD.\n\
+PROMPT   Cambia el símbolo del sistema del intéprete de comandos.\n\
+PUSHD    Guarda el directorio actual y después lo cambia.\n\
+RD       Borra un directorio.\n\
+REM      Marca comentarios en archivos por lotes.\n\
+REN      Renombra un archivo o varios archivos.\n\
+RENAME   Renombra un archivo o varios archivos.\n\
+RMDIR    Borra un directorio.\n\
+SCREEN   Mueve el cursor y opcionalmente escribe un texto.\n\
+SET      Muestra, cambia o borra variables del entorno de la ventana.\n\
+SHIFT    Marca la posición de parámetros remplazables en un archivo por lotes.\n"
+    IDS_HELP2 "START    Abre una ventana separada para ejecutar un programa o comando específicod.\n\
+         Ejecuta CMD.\n\
+TIME     Muestra o cambia la hora del sistema.\n\
+TIMER    Permite al usuario diez paradas para ver.\n\
+TITLE    Configura el título de la ventama de la sesión de CMD.EXE.\n\
+TYPE     Muestra el contenido de un archivo de texto.\n\
+VER      Muestra la versión de ReactOS.\n\
+VERIFY   Le dice a ReactOS que verifique que cada archivo se escriba.\n\
+         corectamente en el disco.\n\
+VOL      Muestra la etiqueta de volumen y el número de serie del disco.\n"
+END

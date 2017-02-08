@@ -1,63 +1,85 @@
 /* 
- * FILE:             base/applications/sndrec32/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:       2011-08-25  initial translation
- *                   2011-08-30  technical correction (icon)
- *                   2011-10-30  minor changes
+ * FILE:       base/applications/sndrec32/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre înregistratorul audio"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Despre Înregistratorul audio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "Înregistrator audio, versiunea 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
-    LTEXT           "Drept de autor (C) 2009",IDC_STATIC,55,25,114,8
-    DEFPUSHBUTTON   "Î&nchide",IDOK,139,54,50,14,WS_GROUP
+    ICON IDI_SNDREC32, -1, 19, 14, 21, 20
+    LTEXT "Înregistrator audio, versiunea 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Drept de autor (C) 2009", IDC_STATIC, 56, 25, 114, 8
+    DEFPUSHBUTTON "Î&nchide", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou",             ID_NEW
-        MENUITEM "&Deschidere…",     ID_FILE_OPEN
-        MENUITEM "Pă&strează",       ID_FILE_SAVE, GRAYED
-        MENUITEM "&Păstrare în…",    ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Nou", ID_FILE_NEW
+        MENUITEM "&Deschidere…", ID_FILE_OPEN
+        MENUITEM "&Păstrează", ID_FILE_SAVE, GRAYED
+        MENUITEM "Păst&rare în…", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Re&constituire…", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Pr&oprietăți…", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire",          ID_EXIT
+        MENUITEM "I&eșire", ID_FILE_EXIT
     END
-    MENUITEM "todo1",                0
-    MENUITEM "todo2",                0
-    POPUP "&?"
+    POPUP "&Editare"
     BEGIN
-        MENUITEM "&Despre…",         ID__ABOUT
+        MENUITEM "&Copiază", ID_EDIT_COPY
+        MENUITEM "&Lipește inserție", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Lipește mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "I&nserare fișier…", ID_EDIT_INSERTFILE
+        MENUITEM "&Mixare cu fișier…", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Șterge în&ainte de poziția curentă",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Șterge d&upă poziția curentă",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Proprietăți audio…", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "Efe&cte"
+    BEGIN
+        MENUITEM "&Crește volum (cu 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Descrește volum", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "C&rește viteză (cu 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "D&escrește viteză", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "&Adaugă ecou", ID_EFFECTS_ECHO
+        MENUITEM "In&versează", ID_EFFECTS_REVERSE
+    END
+    POPUP "Aj&utor"
+    BEGIN
+        MENUITEM "&Despre…", ID_ABOUT
     END
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Înregistrator audio"
-    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+    IDS_APP_TITLE "Înregistrator audio"
+    IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_STRPOS              "Poziție: %.2f s"
-    IDS_STRDUR              "Lungime: %.2f s"
-    IDS_STRBUF              "Memorie: %.2f kb"
-    IDS_STRFMT              "%.1f kHz %u biți"
-    IDS_STRMONO             "mono"
-    IDS_STRSTEREO           "stereo"
-    IDS_STRCHAN             "%s"
+    IDS_STRPOS "Poziție: %.2f s"
+    IDS_STRDUR "Lungime: %.2f s"
+    IDS_STRBUF "Memorie: %.2f kb"
+    IDS_STRFMT "%.1f kHz %u biți"
+    IDS_STRMONO "mono"
+    IDS_STRSTEREO "stereo"
+    IDS_STRCHAN "%s"
 END

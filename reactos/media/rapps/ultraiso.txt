@@ -1,0 +1,26 @@
+[Section]
+Name = UltraISO
+Version = 9.6.5.3237
+License = Trial verison
+Description = An ISO CD/DVD image file creating/editing/converting tool and a bootable CD/DVD maker, it can directly edit the CD/DVD image file and extract files and folders from it, as well as directly make ISO files from your CD/DVD-ROM or hard disk.
+Size = 4.2 MiB
+Category = 12
+URLSite = https://www.ezbsystems.com/ultraiso/
+URLDownload = http://dw.ezbsys.net/uiso9_pe.exe
+SHA1 = 7ca082c507012bc524d4294c20a2b7b1ad7b7bcd
+CDPath = none
+
+[Section.0418]
+License = Versiune de evaluare
+Description = Un instrument pentru crearea/editarea/conversia fișierelor de tip imagine ISO CD/DVD. Permite editarea copierea fișierelor ISO de pe o unitate CD/DVD, extracția din asemenea fișiere, și editarea directă, inclusiv pentru medii de inițializare.
+Size = 4,2 Mio
+
+[Section.041f]
+License = Deneme sürümü
+Description = CD/DVD kalıp kütüğünü doğrudan düzenleyebilmekle ve ondan kütükleri ve dizinleri çıkartabilmekle birlikte CD/DVD-ROM diskinizden ya da sâbit diskinizden doğrudan ISO kütükleri oluşturabilen bir ISO CD/DVD kalıp kütüğü oluşturma, düzenleme, dönüştürme uygulaması ve bir ön yüklenebilir CD/DVD oluşturucusudur.
+Size = 4,2 MiB
+
+[Section.0804]
+License = 试用版本
+Description = UltraISO 是一种 ISO CD/DVD 图像文件创建/编辑/转换工具和一个可启动的 CD/DVD 制造商，它可以直接编辑的 CD/DVD 图像文件和提取的文件和文件夹，以及直接从您的 CD 的 DVD-ROM 或硬盘使 ISO 文件。
+

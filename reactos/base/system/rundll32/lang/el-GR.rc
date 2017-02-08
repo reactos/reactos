@@ -1,10 +1,9 @@
-/*
- * el-GR.rc by Dj Apal®
- */
+/* Greek translation by Dj Apal */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary δεν κατάφερε να φορτώσει '%s'"
-    IDS_MissingEntry,   "Λείπει το σημείο εκκίνησης:%s\nIn %s"
+    IDS_DllNotLoaded "LoadLibrary δεν κατάφερε να φορτώσει '%s'"
+    IDS_MissingEntry "Λείπει το σημείο εκκίνησης:%s\nIn %s"
 END

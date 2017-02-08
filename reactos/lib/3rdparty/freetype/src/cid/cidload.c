@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 font loader (body).                                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2009 by             */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,11 +38,11 @@
 
 
   /* read a single offset */
-  FT_LOCAL_DEF( FT_Long )
+  FT_LOCAL_DEF( FT_ULong )
   cid_get_offset( FT_Byte*  *start,
                   FT_Byte    offsize )
   {
-    FT_Long   result;
+    FT_ULong  result;
     FT_Byte*  p = *start;
 
 
@@ -110,11 +110,11 @@
         CID_FaceDict  dict;
 
 
-        if ( parser->num_dict < 0 )
+        if ( parser->num_dict < 0 || parser->num_dict >= cid->num_dicts )
         {
           FT_ERROR(( "cid_load_keyword: invalid use of `%s'\n",
                      keyword->ident ));
-          error = CID_Err_Syntax_Error;
+          error = FT_THROW( Syntax_Error );
           goto Exit;
         }
 
@@ -147,42 +147,52 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  parse_font_matrix( CID_Face     face,
-                     CID_Parser*  parser )
+  cid_parse_font_matrix( CID_Face     face,
+                         CID_Parser*  parser )
   {
-    FT_Matrix*    matrix;
-    FT_Vector*    offset;
     CID_FaceDict  dict;
     FT_Face       root = (FT_Face)&face->root;
     FT_Fixed      temp[6];
     FT_Fixed      temp_scale;
 
 
-    if ( parser->num_dict >= 0 )
+    if ( parser->num_dict >= 0 && parser->num_dict < face->cid.num_dicts )
     {
+      FT_Matrix*  matrix;
+      FT_Vector*  offset;
+      FT_Int      result;
+
+
       dict   = face->cid.font_dicts + parser->num_dict;
       matrix = &dict->font_matrix;
       offset = &dict->font_offset;
 
-      (void)cid_parser_to_fixed_array( parser, 6, temp, 3 );
+      /* input is scaled by 1000 to accommodate default FontMatrix */
+      result = cid_parser_to_fixed_array( parser, 6, temp, 3 );
+
+      if ( result < 6 )
+        return FT_THROW( Invalid_File_Format );
 
       temp_scale = FT_ABS( temp[3] );
 
-      /* Set units per EM based on FontMatrix values.  We set the value to */
-      /* `1000/temp_scale', because temp_scale was already multiplied by   */
-      /* 1000 (in `t1_tofixed', from psobjs.c).                            */
-      root->units_per_EM = (FT_UShort)( FT_DivFix( 0x10000L,
-                                        FT_DivFix( temp_scale, 1000 ) ) );
+      if ( temp_scale == 0 )
+      {
+        FT_ERROR(( "cid_parse_font_matrix: invalid font matrix\n" ));
+        return FT_THROW( Invalid_File_Format );
+      }
 
-      /* we need to scale the values by 1.0/temp[3] */
+      /* atypical case */
       if ( temp_scale != 0x10000L )
       {
+        /* set units per EM based on FontMatrix values */
+        root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
+
         temp[0] = FT_DivFix( temp[0], temp_scale );
         temp[1] = FT_DivFix( temp[1], temp_scale );
         temp[2] = FT_DivFix( temp[2], temp_scale );
         temp[4] = FT_DivFix( temp[4], temp_scale );
         temp[5] = FT_DivFix( temp[5], temp_scale );
-        temp[3] = 0x10000L;
+        temp[3] = temp[3] < 0 ? -0x10000L : 0x10000L;
       }
 
       matrix->xx = temp[0];
@@ -195,8 +205,7 @@
       offset->y  = temp[5] >> 16;
     }
 
-    return CID_Err_Ok;      /* this is a callback function; */
-                            /* we must return an error code */
+    return FT_Err_Ok;
   }
 
 
@@ -206,11 +215,43 @@
   {
     CID_FaceInfo  cid    = &face->cid;
     FT_Memory     memory = face->root.memory;
-    FT_Error      error  = CID_Err_Ok;
+    FT_Stream     stream = parser->stream;
+    FT_Error      error  = FT_Err_Ok;
     FT_Long       num_dicts;
 
 
     num_dicts = cid_parser_to_int( parser );
+    if ( num_dicts < 0 )
+    {
+      FT_ERROR(( "parse_fd_array: invalid number of dictionaries\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    /*
+     * A single entry in the FDArray must (at least) contain the following
+     * structure elements.
+     *
+     *   %ADOBeginFontDict              18
+     *   X dict begin                   13
+     *     /FontMatrix [X X X X]        22
+     *     /Private X dict begin        22
+     *     end                           4
+     *   end                             4
+     *   %ADOEndFontDict                16
+     *
+     * This needs 18+13+22+22+4+4+16=99 bytes or more.  Normally, you also
+     * need a `dup X' at the very beginning and a `put' at the end, so a
+     * rough guess using 100 bytes as the minimum is justified.
+     */
+    if ( (FT_ULong)num_dicts > stream->size / 100 )
+    {
+      FT_TRACE0(( "parse_fd_array: adjusting FDArray size"
+                  " (from %d to %d)\n",
+                  num_dicts,
+                  stream->size / 100 ));
+      num_dicts = (FT_Long)( stream->size / 100 );
+    }
 
     if ( !cid->font_dicts )
     {
@@ -220,7 +261,7 @@
       if ( FT_NEW_ARRAY( cid->font_dicts, num_dicts ) )
         goto Exit;
 
-      cid->num_dicts = (FT_UInt)num_dicts;
+      cid->num_dicts = num_dicts;
 
       /* don't forget to set a few defaults */
       for ( n = 0; n < cid->num_dicts; n++ )
@@ -249,7 +290,7 @@
     CID_FaceDict  dict;
 
 
-    if ( parser->num_dict >= 0 )
+    if ( parser->num_dict >= 0 && parser->num_dict < face->cid.num_dicts )
     {
       dict = face->cid.font_dicts + parser->num_dict;
 
@@ -257,7 +298,7 @@
       dict->private_dict.expansion_factor = dict->expansion_factor;
     }
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -268,7 +309,7 @@
 #include "cidtoken.h"
 
     T1_FIELD_CALLBACK( "FDArray",         parse_fd_array, 0 )
-    T1_FIELD_CALLBACK( "FontMatrix",      parse_font_matrix, 0 )
+    T1_FIELD_CALLBACK( "FontMatrix",      cid_parse_font_matrix, 0 )
     T1_FIELD_CALLBACK( "ExpansionFactor", parse_expansion_factor, 0 )
 
     { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0, 0 }
@@ -279,14 +320,14 @@
   cid_parse_dict( CID_Face     face,
                   CID_Loader*  loader,
                   FT_Byte*     base,
-                  FT_Long      size )
+                  FT_ULong     size )
   {
     CID_Parser*  parser = &loader->parser;
 
 
     parser->root.cursor = base;
     parser->root.limit  = base + size;
-    parser->root.error  = CID_Err_Ok;
+    parser->root.error  = FT_Err_Ok;
 
     {
       FT_Byte*  cur   = base;
@@ -331,11 +372,11 @@
         /* look for immediates */
         if ( *cur == '/' && cur + 2 < limit )
         {
-          FT_PtrDist  len;
+          FT_UInt  len;
 
 
           cur++;
-          len = parser->root.cursor - cur;
+          len = (FT_UInt)( parser->root.cursor - cur );
 
           if ( len > 0 && len < 22 )
           {
@@ -352,10 +393,10 @@
               if ( !name )
                 break;
 
-              if ( cur[0] == name[0]                                 &&
-                   len == (FT_PtrDist)ft_strlen( (const char*)name ) )
+              if ( cur[0] == name[0]                     &&
+                   len == ft_strlen( (const char*)name ) )
               {
-                FT_PtrDist  n;
+                FT_UInt  n;
 
 
                 for ( n = 1; n < len; n++ )
@@ -380,7 +421,14 @@
 
         cur = parser->root.cursor;
       }
+
+      if ( !face->cid.num_dicts )
+      {
+        FT_ERROR(( "cid_parse_dict: No font dictionary found\n" ));
+        return FT_THROW( Invalid_File_Format );
+      }
     }
+
     return parser->root.error;
   }
 
@@ -396,7 +444,7 @@
     FT_Int         n;
     CID_Subrs      subr;
     FT_UInt        max_offsets = 0;
-    FT_ULong*      offsets = 0;
+    FT_ULong*      offsets = NULL;
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
 
@@ -419,6 +467,12 @@
         FT_UInt  new_max = FT_PAD_CEIL( num_subrs + 1, 4 );
 
 
+        if ( new_max <= max_offsets )
+        {
+          error = FT_THROW( Syntax_Error );
+          goto Fail;
+        }
+
         if ( FT_RENEW_ARRAY( offsets, max_offsets, new_max ) )
           goto Fail;
 
@@ -426,8 +480,8 @@
       }
 
       /* read the subrmap's offsets */
-      if ( FT_STREAM_SEEK( cid->data_offset + dict->subrmap_offset ) ||
-           FT_FRAME_ENTER( ( num_subrs + 1 ) * dict->sd_bytes )      )
+      if ( FT_STREAM_SEEK( cid->data_offset + dict->subrmap_offset )     ||
+           FT_FRAME_ENTER( ( num_subrs + 1 ) * (FT_UInt)dict->sd_bytes ) )
         goto Fail;
 
       p = (FT_Byte*)stream->cursor;
@@ -436,12 +490,28 @@
 
       FT_FRAME_EXIT();
 
+      /* offsets must be ordered */
+      for ( count = 1; count <= num_subrs; count++ )
+        if ( offsets[count - 1] > offsets[count] )
+        {
+          FT_ERROR(( "cid_read_subrs: offsets are not ordered\n" ));
+          error = FT_THROW( Invalid_File_Format );
+          goto Fail;
+        }
+
+      if ( offsets[num_subrs] > stream->size - cid->data_offset )
+      {
+        FT_ERROR(( "cid_read_subrs: too large `subrs' offsets\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
+
       /* now, compute the size of subrs charstrings, */
       /* allocate, and read them                     */
       data_len = offsets[num_subrs] - offsets[0];
 
       if ( FT_NEW_ARRAY( subr->code, num_subrs + 1 ) ||
-               FT_ALLOC( subr->code[0], data_len )   )
+           FT_ALLOC( subr->code[0], data_len )       )
         goto Fail;
 
       if ( FT_STREAM_SEEK( cid->data_offset + offsets[0] ) ||
@@ -471,7 +541,7 @@
         }
       }
 
-      subr->num_subrs = num_subrs;
+      subr->num_subrs = (FT_Int)num_subrs;
     }
 
   Exit:
@@ -495,8 +565,8 @@
 
 
   static void
-  t1_init_loader( CID_Loader*  loader,
-                  CID_Face     face )
+  cid_init_loader( CID_Loader*  loader,
+                   CID_Face     face )
   {
     FT_UNUSED( face );
 
@@ -504,8 +574,8 @@
   }
 
 
-  static void
-  t1_done_loader( CID_Loader*  loader )
+  static  void
+  cid_done_loader( CID_Loader*  loader )
   {
     CID_Parser*  parser = &loader->parser;
 
@@ -517,7 +587,7 @@
 
   static FT_Error
   cid_hex_to_binary( FT_Byte*  data,
-                     FT_Long   data_len,
+                     FT_ULong  data_len,
                      FT_ULong  offset,
                      CID_Face  face )
   {
@@ -553,7 +623,7 @@
 
         if ( size == 0 )
         {
-          error = CID_Err_Syntax_Error;
+          error = FT_THROW( Syntax_Error );
           goto Exit;
         }
 
@@ -586,7 +656,7 @@
       }
       else
       {
-        error = CID_Err_Syntax_Error;
+        error = FT_THROW( Syntax_Error );
         goto Exit;
       }
 
@@ -606,7 +676,7 @@
       p++;
     }
 
-    error = CID_Err_Ok;
+    error = FT_Err_Ok;
 
   Exit:
     return error;
@@ -621,9 +691,15 @@
     CID_Parser*  parser;
     FT_Memory    memory = face->root.memory;
     FT_Error     error;
+    FT_Int       n;
+
+    CID_FaceInfo  cid = &face->cid;
+
+    FT_ULong  binary_length;
+    FT_ULong  entry_len;
 
 
-    t1_init_loader( &loader, face );
+    cid_init_loader( &loader, face );
 
     parser = &loader.parser;
     error = cid_parser_new( parser, face->root.stream, face->root.memory,
@@ -645,6 +721,17 @@
 
     if ( parser->binary_length )
     {
+      if ( parser->binary_length >
+             face->root.stream->size - parser->data_offset )
+      {
+        FT_TRACE0(( "cid_face_open: adjusting length of binary data\n"
+                    "               (from %d to %d bytes)\n",
+                    parser->binary_length,
+                    face->root.stream->size - parser->data_offset ));
+        parser->binary_length = face->root.stream->size -
+                                parser->data_offset;
+      }
+
       /* we must convert the data section from hexadecimal to binary */
       if ( FT_ALLOC( face->binary_data, parser->binary_length )         ||
            cid_hex_to_binary( face->binary_data, parser->binary_length,
@@ -653,18 +740,99 @@
 
       FT_Stream_OpenMemory( face->cid_stream,
                             face->binary_data, parser->binary_length );
-      face->cid.data_offset = 0;
+      cid->data_offset = 0;
     }
     else
     {
-      *face->cid_stream     = *face->root.stream;
-      face->cid.data_offset = loader.parser.data_offset;
+      *face->cid_stream = *face->root.stream;
+      cid->data_offset  = loader.parser.data_offset;
     }
 
+    /* sanity tests */
+
+    if ( cid->fd_bytes < 0 || cid->gd_bytes < 1 )
+    {
+      FT_ERROR(( "cid_parse_dict:"
+                 " Invalid `FDBytes' or `GDBytes' value\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    /* allow at most 32bit offsets */
+    if ( cid->fd_bytes > 4 || cid->gd_bytes > 4 )
+    {
+      FT_ERROR(( "cid_parse_dict:"
+                 " Values of `FDBytes' or `GDBytes' larger than 4\n"
+                 "               "
+                 " are not supported\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    binary_length = face->cid_stream->size - cid->data_offset;
+    entry_len     = (FT_ULong)( cid->fd_bytes + cid->gd_bytes );
+
+    for ( n = 0; n < cid->num_dicts; n++ )
+    {
+      CID_FaceDict  dict = cid->font_dicts + n;
+
+
+      if ( dict->sd_bytes < 0 )
+      {
+        FT_ERROR(( "cid_parse_dict: Invalid `SDBytes' value\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      if ( dict->sd_bytes > 4 )
+      {
+        FT_ERROR(( "cid_parse_dict:"
+                   " Values of `SDBytes' larger than 4"
+                   " are not supported\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      if ( dict->subrmap_offset > binary_length )
+      {
+        FT_ERROR(( "cid_parse_dict: Invalid `SubrMapOffset' value\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
+      /* `num_subrs' is scanned as a signed integer */
+      if ( (FT_Int)dict->num_subrs < 0                                     ||
+           ( dict->sd_bytes                                              &&
+             dict->num_subrs > ( binary_length - dict->subrmap_offset ) /
+                                 (FT_UInt)dict->sd_bytes                 ) )
+      {
+        FT_ERROR(( "cid_parse_dict: Invalid `SubrCount' value\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+    }
+
+    if ( cid->cidmap_offset > binary_length )
+    {
+      FT_ERROR(( "cid_parse_dict: Invalid `CIDMapOffset' value\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    if ( entry_len                                            &&
+         cid->cid_count >
+           ( binary_length - cid->cidmap_offset ) / entry_len )
+    {
+      FT_ERROR(( "cid_parse_dict: Invalid `CIDCount' value\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    /* we can now safely proceed */
     error = cid_read_subrs( face );
 
   Exit:
-    t1_done_loader( &loader );
+    cid_done_loader( &loader );
     return error;
   }
 

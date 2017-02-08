@@ -1,0 +1,11 @@
+LIBRARY MLANG.DLL
+EXPORTS
+  ConvertINetMultiByteToUnicode@24
+  ;; ConvertINetReset (not documented)
+  ConvertINetString@28
+  ConvertINetUnicodeToMultiByte@24
+  IsConvertINetStringAvailable@8
+  LcidToRfc1766A@12
+  LcidToRfc1766W@12
+  Rfc1766ToLcidA@8
+  Rfc1766ToLcidW@8

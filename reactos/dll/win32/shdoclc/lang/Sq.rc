@@ -1,0 +1,239 @@
+/*
+ * Copyright 2005-2006 Jacek Caban
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Eksplorues Wine Interneti"
+}
+
+STRINGTABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&faqeinterneti &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "" /* Default */
+    {
+        MENUITEM "M&brapa",                  IDM_GOBACKWARD
+        MENUITEM "Përpara",               IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "&Ruaj FleteMurit Si...", IDM_SAVEBACKGROUND
+        MENUITEM "Vendos FletenMurit",     IDM_SETWALLPAPER
+        MENUITEM "&Kopjo FleteMurit",       IDM_COPYBACKGROUND
+        MENUITEM "Vendos si artikull &Desktop",   IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "Përzgjidh T'gjitha",            IDM_SELECTALL
+        MENUITEM "&Ngjit",                 IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Krijo Ikonë",       IDM_CREATESHORTCUT
+        MENUITEM "Shto tek &Preferuarat...",   IDM_ADDFAVORITES
+        MENUITEM "&Vezhgo Burimin",           IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Kodim",              IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Pr&into",                 IDM_PRINT
+        MENUITEM "&Rifresko",               _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Cilësime",            IDM_PROPERTIES
+    }
+
+    POPUP "" /* Image */
+    {
+        MENUITEM "&Hap lidhjen",               IDM_FOLLOWLINKC
+        MENUITEM "Hap lidhjen në Dritare T're", IDM_FOLLOWLINKN
+        MENUITEM "Ruaj Objektivin Si...",       IDM_SAVETARGET
+        MENUITEM "&Printo Objektivin",            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "S&hfaq Foto",            IDM_SHOWPICTURE
+        MENUITEM "&Ruaj Foto Si...",      IDM_SAVEPICTURE
+        MENUITEM "&E-mail Foto...",       IDM_MP_EMAILPICTURE
+        MENUITEM "Pr&into Foto...",        IDM_MP_PRINTPICTURE
+        MENUITEM "&Shko tek Fotot e Mia",       IDM_MP_MYPICS
+        MENUITEM "Vendos Si Sfond",       IDM_SETWALLPAPER
+        MENUITEM "Vendos Si artikull &Desktopi...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "Prej",                     IDM_CUT
+        MENUITEM "&Kopjo",                    IDM_COPY
+        MENUITEM "Kopjo Ikonë",           IDM_COPYSHORTCUT
+        MENUITEM "&Paste",                   IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Shto tek &Preferuarat...",     IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Cilësime",              IDM_PROPERTIES
+    }
+
+    POPUP "" /* Control */
+    {
+        MENUITEM "&Zhbëj",       IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Prej",        IDM_CUT
+        MENUITEM "&Kopjo",       IDM_COPY
+        MENUITEM "&Ngjit",      IDM_PASTE
+        MENUITEM "&Fshi",     IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Zgjedh T'gjitha", IDM_SELECTALL
+    }
+
+    POPUP "" /* Table */
+    {
+        POPUP "&Zgjedh"
+        {
+            MENUITEM "&Kuti",         IDM_CELLSELECT
+            MENUITEM "&Resht",          IDM_ROWSELECT
+            MENUITEM "&Kolonë",       IDM_COLUMNSELECT
+            MENUITEM "&Tabelë",        IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "&Cilësime Kutie",  IDM_CELLPROPERTIES
+        MENUITEM "&Cilësime Tabele", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "" /* 1DSite Select */
+    {
+        MENUITEM "Prej",        IDM_CUT
+        MENUITEM "&Kopjo",       IDM_COPY
+        MENUITEM "Ngjit",       IDM_PASTE
+        MENUITEM "Zgjedh T'gjitha", IDM_SELECTALL
+        MENUITEM "&Printo",      IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* Anchor */
+    {
+        MENUITEM "&Hap",                IDM_FOLLOWLINKC
+        MENUITEM "Hap në Dritare T're",  IDM_FOLLOWLINKN
+        MENUITEM "Ruaj Objektin Si...",   IDM_SAVETARGET
+        MENUITEM "&Printo Objektin",        IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Prej",                  IDM_CUT
+        MENUITEM "&Kopjo",                IDM_COPY
+        MENUITEM "Kopjo Ikonë",       IDM_COPYSHORTCUT
+        MENUITEM "&Ngjit",               IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Shto tek &Preferuarat...", IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Cilësime",          IDM_PROPERTIES
+    }
+
+    POPUP "" /* Context Unknown */
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "" /* DYNSRC Image */
+    {
+        MENUITEM "&Hap Lidhje",               IDM_FOLLOWLINKC
+        MENUITEM "Hap Lidhje në Dritare T're", IDM_FOLLOWLINKN
+        MENUITEM "Ruaj Objektivin Si...",       IDM_SAVETARGET
+        MENUITEM "&Printo Objektivin",            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "S&hfaq Foto",            IDM_SHOWPICTURE
+        MENUITEM "&Ruaj Video Si...",        IDM_SAVEPICTURE
+        MENUITEM "Vendos Si Sfond",       IDM_SETWALLPAPER
+        MENUITEM "Vendos Si artikull &Desktopi...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "Prej",                     IDM_CUT
+        MENUITEM "&Kopjo",                    IDM_COPY
+        MENUITEM "Kopjo Ikonë",           IDM_COPYSHORTCUT
+        MENUITEM "&Ngjit",                   IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Shto tek &Preferuarat...",     IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Luaj",                     IDM_DYNSRCPLAY
+        MENUITEM "Ndalo",                     IDM_DYNSRCSTOP
+        MENUITEM "Cilësime",              IDM_PROPERTIES
+    }
+
+    POPUP "" /* ART Image */
+    {
+        MENUITEM "&Hap Lidhje",               IDM_FOLLOWLINKC
+        MENUITEM "Hap Lidhje në Dritare T're", IDM_FOLLOWLINKN
+        MENUITEM "Ruaj Objektivin Si...",       IDM_SAVETARGET
+        MENUITEM "&Printo Objektivin",            IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "S&hfaq Foto",            IDM_SHOWPICTURE
+        MENUITEM "&Ruaj Foto Si...",      IDM_SAVEPICTURE
+        MENUITEM "Vendos Si Sfond",       IDM_SETWALLPAPER
+        MENUITEM "Vendos Si artikull &Desktopi...",  IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "Prej",                     IDM_CUT
+        MENUITEM "&Kopjo",                    IDM_COPY
+        MENUITEM "Kopjo Ikonë",           IDM_COPYSHORTCUT
+        MENUITEM "&Ngjit",                   IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Shto Tek &Preferuarat...",     IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Luaj",                     IDM_IMGARTPLAY
+        MENUITEM "Ndalo",                     IDM_IMGARTSTOP
+        MENUITEM "Kthe",                   IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM "Cilësime",              IDM_PROPERTIES
+    }
+
+    POPUP "" /* Debug */
+    {
+        MENUITEM "Gjurmo Etiketat",         IDM_TRACETAGS
+        MENUITEM "Dështimet e Burimeve",  IDM_RESOURCEFAILURES
+        MENUITEM "Derdhin info Ndjekes", IDM_DUMPTRACKINGINFO
+        MENUITEM "Rregullo Pushimin",        IDM_DEBUGBREAK
+        MENUITEM "Rregullo Shikimin",         IDM_DEBUGVIEW
+        MENUITEM "Derdh Pemën",          IDM_DUMPTREE
+        MENUITEM "Derdh Linjat",         IDM_DUMPLINES
+        MENUITEM "Derdh ShfaqPemën",   IDM_DUMPDISPLAYTREE
+        MENUITEM "Derdh FormatinKafaz",  IDM_DUMPFORMATCACHES
+        MENUITEM "Derdh ParaqitjenRects",   IDM_DUMPLAYOUTRECTS
+        MENUITEM "Memoria Monitorit",     IDM_MEMORYMONITOR
+        MENUITEM "Matja e Performancës", IDM_PERFORMANCEMETERS
+        MENUITEM "Ruaj HTML",          IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "&Shfleto Vezhgimin",       IDM_BROWSEMODE
+        MENUITEM "&Modifiko Vezhgimin",         IDM_EDITMODE
+    }
+
+    POPUP "" /* Vertical Scrollbar */
+    {
+        MENUITEM "Shkoni Këtu",  IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Lart",          IDM_SCROLL_TOP
+        MENUITEM "Poshtë",       IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Faqe Lart",      IDM_SCROLL_PAGEUP
+        MENUITEM "Faqe Posht",    IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "Shkoni Lart",    IDM_SCROLL_UP
+        MENUITEM "Shkoni Posht",  IDM_SCROLL_DOWN
+    }
+
+    POPUP "" /* Horizontal Scrollbar */
+    {
+        MENUITEM "Shkoni Ketë",  IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Cepi Majtas",    IDM_SCROLL_LEFTEDGE
+        MENUITEM "Cepi Djathtas",   IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "Faqe Majtas",    IDM_SCROLL_PAGELEFT
+        MENUITEM "Faqe Djathtas",   IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Shko Majtas",  IDM_SCROLL_LEFT
+        MENUITEM "Shko Djathtas", IDM_SCROLL_RIGHT
+    }
+}

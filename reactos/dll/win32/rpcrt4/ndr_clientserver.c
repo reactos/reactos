@@ -22,25 +22,7 @@
  *  - check for errors and throw exceptions
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <objbase.h>
-
-//#include "rpcproxy.h"
-
-#include <wine/debug.h>
-
-//#include "ndr_misc.h"
-//#include "rpcndr.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -123,6 +105,7 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
   pStubMsg->pPointerQueueState = NULL;
   pStubMsg->IgnoreEmbeddedPointers = 0;
   pStubMsg->PointerBufferMark = NULL;
+  pStubMsg->CorrDespIncrement = 0;
   pStubMsg->uFlags = 0;
   pStubMsg->UniquePtrCount = 0;
   pStubMsg->pfnAllocate = pStubDesc->pfnAllocate;

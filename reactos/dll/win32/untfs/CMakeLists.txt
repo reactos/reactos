@@ -7,7 +7,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/untfs.def)
 
 add_library(untfs SHARED ${SOURCE})
-
 set_module_type(untfs nativedll)
 target_link_libraries(untfs ntfslib)
 add_importlibs(untfs ntdll)

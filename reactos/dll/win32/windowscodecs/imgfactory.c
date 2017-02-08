@@ -1,5 +1,6 @@
 /*
  * Copyright 2009 Vincent Povirk for CodeWeavers
+ * Copyright 2012 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,29 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winreg.h"
-#include <objbase.h>
-//#include "shellapi.h"
-//#include "wincodec.h"
-#include <wincodecsdk.h>
-
 #include "wincodecs_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 typedef struct {
     IWICComponentFactory IWICComponentFactory_iface;
@@ -241,9 +220,24 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromFileHandle(
     IWICComponentFactory *iface, ULONG_PTR hFile, const GUID *pguidVendor,
     WICDecodeOptions metadataOptions, IWICBitmapDecoder **ppIDecoder)
 {
-    FIXME("(%p,%lx,%s,%u,%p): stub\n", iface, hFile, debugstr_guid(pguidVendor),
+    IWICStream *stream;
+    HRESULT hr;
+
+    TRACE("(%p,%lx,%s,%u,%p)\n", iface, hFile, debugstr_guid(pguidVendor),
         metadataOptions, ppIDecoder);
-    return E_NOTIMPL;
+
+    hr = StreamImpl_Create(&stream);
+    if (SUCCEEDED(hr))
+    {
+        hr = stream_initialize_from_filehandle(stream, (HANDLE)hFile);
+        if (SUCCEEDED(hr))
+        {
+            hr = IWICComponentFactory_CreateDecoderFromStream(iface, (IStream*)stream,
+                pguidVendor, metadataOptions, ppIDecoder);
+        }
+        IWICStream_Release(stream);
+    }
+    return hr;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateComponentInfo(IWICComponentFactory *iface,
@@ -411,7 +405,7 @@ static HRESULT WINAPI ComponentFactory_CreatePalette(IWICComponentFactory *iface
 static HRESULT WINAPI ComponentFactory_CreateFormatConverter(IWICComponentFactory *iface,
     IWICFormatConverter **ppIFormatConverter)
 {
-    return FormatConverter_CreateInstance(NULL, &IID_IWICFormatConverter, (void**)ppIFormatConverter);
+    return FormatConverter_CreateInstance(&IID_IWICFormatConverter, (void**)ppIFormatConverter);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapScaler(IWICComponentFactory *iface,
@@ -425,8 +419,8 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapScaler(IWICComponentFactory *
 static HRESULT WINAPI ComponentFactory_CreateBitmapClipper(IWICComponentFactory *iface,
     IWICBitmapClipper **ppIBitmapClipper)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIBitmapClipper);
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, ppIBitmapClipper);
+    return BitmapClipper_Create(ppIBitmapClipper);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFlipRotator(IWICComponentFactory *iface,
@@ -453,8 +447,8 @@ static HRESULT WINAPI ComponentFactory_CreateColorContext(IWICComponentFactory *
 static HRESULT WINAPI ComponentFactory_CreateColorTransformer(IWICComponentFactory *iface,
     IWICColorTransform **ppIColorTransform)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIColorTransform);
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, ppIColorTransform);
+    return ColorTransform_Create(ppIColorTransform);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmap(IWICComponentFactory *iface,
@@ -463,7 +457,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmap(IWICComponentFactory *iface,
 {
     TRACE("(%p,%u,%u,%s,%u,%p)\n", iface, uiWidth, uiHeight,
         debugstr_guid(pixelFormat), option, ppIBitmap);
-    return BitmapImpl_Create(uiWidth, uiHeight, pixelFormat, option, ppIBitmap);
+    return BitmapImpl_Create(uiWidth, uiHeight, 0, 0, NULL, pixelFormat, option, ppIBitmap);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFactory *iface,
@@ -510,7 +504,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFacto
     }
 
     if (SUCCEEDED(hr))
-        hr = BitmapImpl_Create(width, height, &pixelformat, option, &result);
+        hr = BitmapImpl_Create(width, height, 0, 0, NULL, &pixelformat, option, &result);
 
     if (SUCCEEDED(hr))
     {
@@ -535,20 +529,22 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFacto
             IWICBitmapLock_Release(lock);
         }
 
-        if (SUCCEEDED(hr))
-            hr = PaletteImpl_Create(&palette);
-
         if (SUCCEEDED(hr) && (format_type == WICPixelFormatNumericRepresentationUnspecified ||
                               format_type == WICPixelFormatNumericRepresentationIndexed))
         {
-            hr = IWICBitmapSource_CopyPalette(piBitmapSource, palette);
+            hr = PaletteImpl_Create(&palette);
 
             if (SUCCEEDED(hr))
-                hr = IWICBitmap_SetPalette(result, palette);
-            else
-                hr = S_OK;
+            {
+                hr = IWICBitmapSource_CopyPalette(piBitmapSource, palette);
 
-            IWICPalette_Release(palette);
+                if (SUCCEEDED(hr))
+                    hr = IWICBitmap_SetPalette(result, palette);
+                else
+                    hr = S_OK;
+
+                IWICPalette_Release(palette);
+            }
         }
 
         if (SUCCEEDED(hr))
@@ -580,27 +576,314 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSourceRect(IWICComponentF
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromMemory(IWICComponentFactory *iface,
-    UINT uiWidth, UINT uiHeight, REFWICPixelFormatGUID pixelFormat, UINT cbStride,
-    UINT cbBufferSize, BYTE *pbBuffer, IWICBitmap **ppIBitmap)
+    UINT width, UINT height, REFWICPixelFormatGUID format, UINT stride,
+    UINT size, BYTE *buffer, IWICBitmap **bitmap)
 {
-    FIXME("(%p,%u,%u,%s,%u,%u,%p,%p): stub\n", iface, uiWidth, uiHeight,
-        debugstr_guid(pixelFormat), cbStride, cbBufferSize, pbBuffer, ppIBitmap);
-    return E_NOTIMPL;
+    TRACE("(%p,%u,%u,%s,%u,%u,%p,%p\n", iface, width, height,
+        debugstr_guid(format), stride, size, buffer, bitmap);
+
+    if (!stride || !size || !buffer || !bitmap) return E_INVALIDARG;
+
+    return BitmapImpl_Create(width, height, stride, size, buffer, format, WICBitmapCacheOnLoad, bitmap);
+}
+
+static BOOL get_16bpp_format(HBITMAP hbm, WICPixelFormatGUID *format)
+{
+    BOOL ret = TRUE;
+    BITMAPV4HEADER bmh;
+    HDC hdc;
+
+    hdc = CreateCompatibleDC(0);
+
+    memset(&bmh, 0, sizeof(bmh));
+    bmh.bV4Size = sizeof(bmh);
+    bmh.bV4Width = 1;
+    bmh.bV4Height = 1;
+    bmh.bV4V4Compression = BI_BITFIELDS;
+    bmh.bV4BitCount = 16;
+
+    GetDIBits(hdc, hbm, 0, 0, NULL, (BITMAPINFO *)&bmh, DIB_RGB_COLORS);
+
+    if (bmh.bV4RedMask == 0x7c00 &&
+        bmh.bV4GreenMask == 0x3e0 &&
+        bmh.bV4BlueMask == 0x1f)
+    {
+        *format = GUID_WICPixelFormat16bppBGR555;
+    }
+    else if (bmh.bV4RedMask == 0xf800 &&
+        bmh.bV4GreenMask == 0x7e0 &&
+        bmh.bV4BlueMask == 0x1f)
+    {
+        *format = GUID_WICPixelFormat16bppBGR565;
+    }
+    else
+    {
+        FIXME("unrecognized bitfields %x,%x,%x\n", bmh.bV4RedMask,
+            bmh.bV4GreenMask, bmh.bV4BlueMask);
+        ret = FALSE;
+    }
+
+    DeleteDC(hdc);
+    return ret;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromHBITMAP(IWICComponentFactory *iface,
-    HBITMAP hBitmap, HPALETTE hPalette, WICBitmapAlphaChannelOption options,
-    IWICBitmap **ppIBitmap)
+    HBITMAP hbm, HPALETTE hpal, WICBitmapAlphaChannelOption option, IWICBitmap **bitmap)
 {
-    FIXME("(%p,%p,%p,%u,%p): stub\n", iface, hBitmap, hPalette, options, ppIBitmap);
-    return E_NOTIMPL;
+    BITMAP bm;
+    HRESULT hr;
+    WICPixelFormatGUID format;
+    IWICBitmapLock *lock;
+    UINT size, num_palette_entries = 0;
+    PALETTEENTRY entry[256];
+
+    TRACE("(%p,%p,%p,%u,%p)\n", iface, hbm, hpal, option, bitmap);
+
+    if (!bitmap) return E_INVALIDARG;
+
+    if (GetObjectW(hbm, sizeof(bm), &bm) != sizeof(bm))
+        return WINCODEC_ERR_WIN32ERROR;
+
+    if (hpal)
+    {
+        num_palette_entries = GetPaletteEntries(hpal, 0, 256, entry);
+        if (!num_palette_entries)
+            return WINCODEC_ERR_WIN32ERROR;
+    }
+
+    /* TODO: Figure out the correct format for 16, 32, 64 bpp */
+    switch(bm.bmBitsPixel)
+    {
+    case 1:
+        format = GUID_WICPixelFormat1bppIndexed;
+        break;
+    case 4:
+        format = GUID_WICPixelFormat4bppIndexed;
+        break;
+    case 8:
+        format = GUID_WICPixelFormat8bppIndexed;
+        break;
+    case 16:
+        if (!get_16bpp_format(hbm, &format))
+            return E_INVALIDARG;
+        break;
+    case 24:
+        format = GUID_WICPixelFormat24bppBGR;
+        break;
+    case 32:
+        switch (option)
+        {
+        case WICBitmapUseAlpha:
+            format = GUID_WICPixelFormat32bppBGRA;
+            break;
+        case WICBitmapUsePremultipliedAlpha:
+            format = GUID_WICPixelFormat32bppPBGRA;
+            break;
+        case WICBitmapIgnoreAlpha:
+            format = GUID_WICPixelFormat32bppBGR;
+            break;
+        default:
+            return E_INVALIDARG;
+        }
+        break;
+    case 48:
+        format = GUID_WICPixelFormat48bppRGB;
+        break;
+    default:
+        FIXME("unsupported %d bpp\n", bm.bmBitsPixel);
+        return E_INVALIDARG;
+    }
+
+    hr = BitmapImpl_Create(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes, 0, NULL, &format, WICBitmapCacheOnLoad, bitmap);
+    if (hr != S_OK) return hr;
+
+    hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);
+    if (hr == S_OK)
+    {
+        BYTE *buffer;
+        HDC hdc;
+        char bmibuf[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
+        BITMAPINFO *bmi = (BITMAPINFO *)bmibuf;
+
+        IWICBitmapLock_GetDataPointer(lock, &size, &buffer);
+
+        hdc = CreateCompatibleDC(0);
+
+        bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi->bmiHeader.biBitCount = 0;
+        GetDIBits(hdc, hbm, 0, 0, NULL, bmi, DIB_RGB_COLORS);
+        bmi->bmiHeader.biHeight = -bm.bmHeight;
+        GetDIBits(hdc, hbm, 0, bm.bmHeight, buffer, bmi, DIB_RGB_COLORS);
+
+        DeleteDC(hdc);
+        IWICBitmapLock_Release(lock);
+
+        if (num_palette_entries)
+        {
+            IWICPalette *palette;
+            WICColor colors[256];
+            UINT i;
+
+            hr = PaletteImpl_Create(&palette);
+            if (hr == S_OK)
+            {
+                for (i = 0; i < num_palette_entries; i++)
+                    colors[i] = 0xff000000 | entry[i].peRed << 16 |
+                                entry[i].peGreen << 8 | entry[i].peBlue;
+
+                hr = IWICPalette_InitializeCustom(palette, colors, num_palette_entries);
+                if (hr == S_OK)
+                    hr = IWICBitmap_SetPalette(*bitmap, palette);
+
+                IWICPalette_Release(palette);
+            }
+        }
+    }
+
+    if (hr != S_OK)
+    {
+        IWICBitmap_Release(*bitmap);
+        *bitmap = NULL;
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromHICON(IWICComponentFactory *iface,
-    HICON hIcon, IWICBitmap **ppIBitmap)
+    HICON hicon, IWICBitmap **bitmap)
 {
-    FIXME("(%p,%p,%p): stub\n", iface, hIcon, ppIBitmap);
-    return E_NOTIMPL;
+    IWICBitmapLock *lock;
+    ICONINFO info;
+    BITMAP bm;
+    int width, height, x, y;
+    UINT stride, size;
+    BYTE *buffer;
+    DWORD *bits;
+    BITMAPINFO bi;
+    HDC hdc;
+    BOOL has_alpha;
+    HRESULT hr;
+
+    TRACE("(%p,%p,%p)\n", iface, hicon, bitmap);
+
+    if (!bitmap) return E_INVALIDARG;
+
+    if (!GetIconInfo(hicon, &info))
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    GetObjectW(info.hbmColor ? info.hbmColor : info.hbmMask, sizeof(bm), &bm);
+
+    width = bm.bmWidth;
+    height = info.hbmColor ? abs(bm.bmHeight) : abs(bm.bmHeight) / 2;
+    stride = width * 4;
+    size = stride * height;
+
+    hr = BitmapImpl_Create(width, height, stride, size, NULL,
+                           &GUID_WICPixelFormat32bppBGRA, WICBitmapCacheOnLoad, bitmap);
+    if (hr != S_OK) goto failed;
+
+    hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);
+    if (hr != S_OK)
+    {
+        IWICBitmap_Release(*bitmap);
+        goto failed;
+    }
+    IWICBitmapLock_GetDataPointer(lock, &size, &buffer);
+
+    hdc = CreateCompatibleDC(0);
+
+    memset(&bi, 0, sizeof(bi));
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = width;
+    bi.bmiHeader.biHeight = info.hbmColor ? -height: -height * 2;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+
+    has_alpha = FALSE;
+
+    if (info.hbmColor)
+    {
+        GetDIBits(hdc, info.hbmColor, 0, height, buffer, &bi, DIB_RGB_COLORS);
+
+        if (bm.bmBitsPixel == 32)
+        {
+            /* If any pixel has a non-zero alpha, ignore hbmMask */
+            bits = (DWORD *)buffer;
+            for (x = 0; x < width && !has_alpha; x++, bits++)
+            {
+                for (y = 0; y < height; y++)
+                {
+                    if (*bits & 0xff000000)
+                    {
+                        has_alpha = TRUE;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else
+        GetDIBits(hdc, info.hbmMask, 0, height, buffer, &bi, DIB_RGB_COLORS);
+
+    if (!has_alpha)
+    {
+        DWORD *rgba;
+
+        if (info.hbmMask)
+        {
+            BYTE *mask;
+
+            mask = HeapAlloc(GetProcessHeap(), 0, size);
+            if (!mask)
+            {
+                IWICBitmapLock_Release(lock);
+                IWICBitmap_Release(*bitmap);
+                DeleteDC(hdc);
+                hr = E_OUTOFMEMORY;
+                goto failed;
+            }
+
+            /* read alpha data from the mask */
+            GetDIBits(hdc, info.hbmMask, info.hbmColor ? 0 : height, height, mask, &bi, DIB_RGB_COLORS);
+
+            for (y = 0; y < height; y++)
+            {
+                rgba = (DWORD *)(buffer + y * stride);
+                bits = (DWORD *)(mask + y * stride);
+
+                for (x = 0; x < width; x++, rgba++, bits++)
+                {
+                    if (*bits)
+                        *rgba = 0;
+                    else
+                        *rgba |= 0xff000000;
+                }
+            }
+
+            HeapFree(GetProcessHeap(), 0, mask);
+        }
+        else
+        {
+            /* set constant alpha of 255 */
+            for (y = 0; y < height; y++)
+            {
+                rgba = (DWORD *)(buffer + y * stride);
+                for (x = 0; x < width; x++, rgba++)
+                    *rgba |= 0xff000000;
+            }
+        }
+
+    }
+
+    IWICBitmapLock_Release(lock);
+    DeleteDC(hdc);
+
+failed:
+    DeleteObject(info.hbmColor);
+    DeleteObject(info.hbmMask);
+
+    return hr;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateComponentEnumerator(IWICComponentFactory *iface,
@@ -655,9 +938,129 @@ static HRESULT WINAPI ComponentFactory_CreateMetadataReader(IWICComponentFactory
 static HRESULT WINAPI ComponentFactory_CreateMetadataReaderFromContainer(IWICComponentFactory *iface,
         REFGUID format, const GUID *vendor, DWORD options, IStream *stream, IWICMetadataReader **reader)
 {
-    FIXME("%p,%s,%s,%x,%p,%p: stub\n", iface, debugstr_guid(format), debugstr_guid(vendor),
+    HRESULT hr;
+    IEnumUnknown *enumreaders;
+    IUnknown *unkreaderinfo;
+    IWICMetadataReaderInfo *readerinfo;
+    IWICPersistStream *wicpersiststream;
+    ULONG num_fetched;
+    GUID decoder_vendor;
+    BOOL matches;
+    LARGE_INTEGER zero;
+
+    TRACE("%p,%s,%s,%x,%p,%p\n", iface, debugstr_guid(format), debugstr_guid(vendor),
         options, stream, reader);
-    return E_NOTIMPL;
+
+    if (!format || !stream || !reader)
+        return E_INVALIDARG;
+
+    zero.QuadPart = 0;
+
+    hr = CreateComponentEnumerator(WICMetadataReader, WICComponentEnumerateDefault, &enumreaders);
+    if (FAILED(hr)) return hr;
+
+    *reader = NULL;
+
+start:
+    while (!*reader)
+    {
+        hr = IEnumUnknown_Next(enumreaders, 1, &unkreaderinfo, &num_fetched);
+
+        if (hr == S_OK)
+        {
+            hr = IUnknown_QueryInterface(unkreaderinfo, &IID_IWICMetadataReaderInfo, (void**)&readerinfo);
+
+            if (SUCCEEDED(hr))
+            {
+                if (vendor)
+                {
+                    hr = IWICMetadataReaderInfo_GetVendorGUID(readerinfo, &decoder_vendor);
+
+                    if (FAILED(hr) || !IsEqualIID(vendor, &decoder_vendor))
+                    {
+                        IWICMetadataReaderInfo_Release(readerinfo);
+                        IUnknown_Release(unkreaderinfo);
+                        continue;
+                    }
+                }
+
+                hr = IWICMetadataReaderInfo_MatchesPattern(readerinfo, format, stream, &matches);
+
+                if (SUCCEEDED(hr) && matches)
+                {
+                    hr = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
+
+                    if (SUCCEEDED(hr))
+                        hr = IWICMetadataReaderInfo_CreateInstance(readerinfo, reader);
+
+                    if (SUCCEEDED(hr))
+                    {
+                        hr = IWICMetadataReader_QueryInterface(*reader, &IID_IWICPersistStream, (void**)&wicpersiststream);
+
+                        if (SUCCEEDED(hr))
+                        {
+                            hr = IWICPersistStream_LoadEx(wicpersiststream,
+                                stream, vendor, options & WICPersistOptionsMask);
+
+                            IWICPersistStream_Release(wicpersiststream);
+                        }
+
+                        if (FAILED(hr))
+                        {
+                            IWICMetadataReader_Release(*reader);
+                            *reader = NULL;
+                        }
+                    }
+                }
+
+                IUnknown_Release(readerinfo);
+            }
+
+            IUnknown_Release(unkreaderinfo);
+        }
+        else
+            break;
+    }
+
+    if (!*reader && vendor)
+    {
+        vendor = NULL;
+        IEnumUnknown_Reset(enumreaders);
+        goto start;
+    }
+
+    IEnumUnknown_Release(enumreaders);
+
+    if (!*reader && !(options & WICMetadataCreationFailUnknown))
+    {
+        hr = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
+
+        if (SUCCEEDED(hr))
+            hr = UnknownMetadataReader_CreateInstance(&IID_IWICMetadataReader, (void**)reader);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = IWICMetadataReader_QueryInterface(*reader, &IID_IWICPersistStream, (void**)&wicpersiststream);
+
+            if (SUCCEEDED(hr))
+            {
+                hr = IWICPersistStream_LoadEx(wicpersiststream, stream, NULL, options & WICPersistOptionsMask);
+
+                IWICPersistStream_Release(wicpersiststream);
+            }
+
+            if (FAILED(hr))
+            {
+                IWICMetadataReader_Release(*reader);
+                *reader = NULL;
+            }
+        }
+    }
+
+    if (*reader)
+        return S_OK;
+    else
+        return WINCODEC_ERR_COMPONENTNOTFOUND;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateMetadataWriter(IWICComponentFactory *iface,
@@ -691,8 +1094,8 @@ static HRESULT WINAPI ComponentFactory_CreateQueryWriterFromBlockWriter(IWICComp
 static HRESULT WINAPI ComponentFactory_CreateEncoderPropertyBag(IWICComponentFactory *iface,
         PROPBAG2 *options, UINT count, IPropertyBag2 **property)
 {
-    FIXME("%p,%p,%u,%p: stub\n", iface, options, count, property);
-    return E_NOTIMPL;
+    TRACE("(%p,%p,%u,%p)\n", iface, options, count, property);
+    return CreatePropertyBag2(options, count, property);
 }
 
 static const IWICComponentFactoryVtbl ComponentFactory_Vtbl = {
@@ -733,16 +1136,14 @@ static const IWICComponentFactoryVtbl ComponentFactory_Vtbl = {
     ComponentFactory_CreateEncoderPropertyBag
 };
 
-HRESULT ComponentFactory_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT ComponentFactory_CreateInstance(REFIID iid, void** ppv)
 {
     ComponentFactory *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(ComponentFactory));
     if (!This) return E_OUTOFMEMORY;

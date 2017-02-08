@@ -19,35 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winnls.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <winreg.h>
-#include <commdlg.h>
-
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
-#include <filedlgbrowser.h>
 #include "cdlg.h"
-//#include "shlguid.h"
-//#include "servprov.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 typedef struct
 {
@@ -155,7 +127,7 @@ static void COMDLG32_UpdateCurrentDir(const FileOpenDlgInfos *fodInfos)
 /* copied from shell32 to avoid linking to it */
 static BOOL COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPCITEMIDLIST pidl)
 {
-	TRACE("dest=%p len=0x%x strret=%p pidl=%p stub\n",dest,len,src,pidl);
+        TRACE("dest=%p len=0x%x strret=%p pidl=%p\n", dest , len, src, pidl);
 
 	switch (src->uType)
 	{
@@ -231,26 +203,22 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
 
     *ppvObj = NULL;
 
-    if(IsEqualIID(riid, &IID_IUnknown))          /*IUnknown*/
-    { *ppvObj = This;
-    }
-    else if(IsEqualIID(riid, &IID_IOleWindow))  /*IOleWindow*/
-    { *ppvObj = This;
-    }
-
-    else if(IsEqualIID(riid, &IID_IShellBrowser))  /*IShellBrowser*/
-    { *ppvObj = This;
-    }
-
-    else if(IsEqualIID(riid, &IID_ICommDlgBrowser))  /*ICommDlgBrowser*/
+    if(IsEqualIID(riid, &IID_IUnknown))
+        *ppvObj = &This->IShellBrowser_iface;
+    else if(IsEqualIID(riid, &IID_IOleWindow))
+        *ppvObj = &This->IShellBrowser_iface;
+    else if(IsEqualIID(riid, &IID_IShellBrowser))
+        *ppvObj = &This->IShellBrowser_iface;
+    else if(IsEqualIID(riid, &IID_ICommDlgBrowser))
         *ppvObj = &This->ICommDlgBrowser_iface;
-    else if(IsEqualIID(riid, &IID_IServiceProvider))  /* IServiceProvider */
+    else if(IsEqualIID(riid, &IID_IServiceProvider))
         *ppvObj = &This->IServiceProvider_iface;
 
-    if(*ppvObj)
-    { IUnknown_AddRef( (IShellBrowser*) *ppvObj);
-      return S_OK;
+    if(*ppvObj) {
+        IUnknown_AddRef((IUnknown*)*ppvObj);
+        return S_OK;
     }
+
     FIXME("Unknown interface requested\n");
     return E_NOINTERFACE;
 }
@@ -461,6 +429,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 
     /* Set view window control id to 5002 */
     SetWindowLongPtrW(hwndView, GWLP_ID, lst2);
+    SendMessageW( hwndView, WM_SETFONT, SendMessageW( GetParent(hwndView), WM_GETFONT, 0, 0 ), FALSE );
 
     /* Select the new folder in the Look In combo box of the Open file dialog */
     FILEDLG95_LOOKIN_SelectItem(fodInfos->DlgInfos.hwndLookInCB,fodInfos->ShellInfos.pidlAbsCurrent);
@@ -950,7 +919,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
         return S_OK;
 
     /* Check if there is a mask to apply if not */
-    if(!fodInfos->ShellInfos.lpstrCurrentFilter || !lstrlenW(fodInfos->ShellInfos.lpstrCurrentFilter))
+    if(!fodInfos->ShellInfos.lpstrCurrentFilter || !fodInfos->ShellInfos.lpstrCurrentFilter[0])
         return S_OK;
 
     if (SUCCEEDED(IShellFolder_GetDisplayNameOf(fodInfos->Shell.FOIShellFolder, pidl, SHGDN_INFOLDER | SHGDN_FORPARSING, &str)))

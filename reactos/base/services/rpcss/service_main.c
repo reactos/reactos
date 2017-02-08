@@ -1,13 +1,15 @@
 /*
  * PROJECT:     ReactOS Remote Procedure Call service
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/rpcss/service_main.c
+ * FILE:        base/services/rpcss/service_main.c
  * PURPOSE:     Service control code
  * COPYRIGHT:   Copyright 2008 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "rpcss.h"
+
+#include <winsvc.h>
 
 #define NDEBUG
 #include <debug.h>

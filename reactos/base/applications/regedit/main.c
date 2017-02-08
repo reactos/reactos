@@ -22,7 +22,6 @@
 
 BOOL ProcessCmdLine(LPWSTR lpCmdLine);
 
-
 /*******************************************************************************
  * Global Variables:
  */
@@ -207,6 +206,16 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_REGEDIT, szChildClass, MAX_LOADSTRING);
 
+   
+    switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
+
+    default:
+      break;
+  }
     /* Store instance handle in our global variable */
     hInst = hInstance;
 

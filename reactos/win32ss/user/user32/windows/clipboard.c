@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/clipboard.c
+ * FILE:            win32ss/user/user32/windows/clipboard.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Pablo Borobia <pborobia@gmail.com>
@@ -17,8 +17,6 @@
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
-#define QUERY_SIZE 0
 
 /* FUNCTIONS *****************************************************************/
 
@@ -152,7 +150,7 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
     return ret;
 }
 
-PVOID static WINAPI
+static PVOID WINAPI
 IntSynthesizeMultiByte(PVOID pwStr, DWORD cbStr, BOOL bOem)
 {
     HANDLE hGlobal;
@@ -173,7 +171,7 @@ IntSynthesizeMultiByte(PVOID pwStr, DWORD cbStr, BOOL bOem)
     return pGlobal;
 }
 
-PVOID static WINAPI
+static PVOID WINAPI
 IntSynthesizeWideChar(PVOID pwStr, DWORD cbStr, BOOL bOem)
 {
     HANDLE hGlobal;
@@ -263,7 +261,7 @@ GetClipboardData(UINT uFormat)
             pData = pNewData;
         }
 
-        /* Save synthesized format in clibboard */
+        /* Save synthesized format in clipboard */
         if (pData)
         {
             HANDLE hMem;
@@ -296,7 +294,7 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     HANDLE hRet = NULL;
     SETCLIPBDATA scd = {FALSE, FALSE};
 
-    /* Check if this is delayed render */
+    /* Check if this is a delayed rendering */
     if (hMem == NULL)
         return NtUserSetClipboardData(uFormat, NULL, &scd);
 
@@ -308,7 +306,10 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     /* Meta files are probably checked for validity */
     else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT ||
              uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
+    {
+        UNIMPLEMENTED;
         hRet = NULL; // not supported yet
+    }
     else
     {
         /* Some formats accept only global handles, other accept global handles or integer values */

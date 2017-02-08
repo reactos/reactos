@@ -29,5 +29,6 @@ NTSTATUS NTAPI UserUpdateMonitorSize(IN HDEV hDev);
 PMONITOR NTAPI UserGetMonitorObject(IN HMONITOR);
 PMONITOR NTAPI UserGetPrimaryMonitor(VOID);
 PMONITOR NTAPI UserMonitorFromRect(PRECTL,DWORD);
+PMONITOR FASTCALL UserMonitorFromPoint(POINT,DWORD);
 
 /* EOF */

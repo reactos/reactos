@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/acpi/busemul.c
+ * FILE:            hal/halx86/acpi/busemul.c
  * PURPOSE:         ACPI HAL Bus Handler Emulation Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -225,7 +225,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         /* Call PCI function */
         return HalpGetPCIData(&BusHandler,
                               &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
+                              SlotNumber,
                               Buffer,
                               Offset,
                               Length);
@@ -304,7 +304,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         /* Call PCI function */
         return HalpSetPCIData(&BusHandler,
                               &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
+                              SlotNumber,
                               Buffer,
                               Offset,
                               Length);

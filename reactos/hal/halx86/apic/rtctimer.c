@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GNU GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/apic.c
+ * FILE:            hal/halx86/apic/rtctimer.c
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:
@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
+#pragma alloc_text(INIT, HalpInitializeClock)
+#endif
 
 /* GLOBALS ********************************************************************/
 
@@ -25,8 +28,8 @@ static UCHAR RtcMinimumClockRate = 6;  /* Minimum rate  6:  16 Hz / 62.5 ms */
 static UCHAR RtcMaximumClockRate = 10; /* Maximum rate 10: 256 Hz / 3.9 ms */
 
 
-ULONG
 FORCEINLINE
+ULONG
 RtcClockRateToIncrement(UCHAR Rate)
 {
     ULONG Freqency = ((32768 << 1) >> Rate);
@@ -61,10 +64,9 @@ RtcSetClockRate(UCHAR ClockRate)
     HalpReleaseCmosSpinLock();
 }
 
-
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializeClock(VOID)
 {
     ULONG_PTR EFlags;
@@ -122,7 +124,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Read register C, so that the next interrupt can happen */
-    HalpReadCmos(RTC_REGISTER_C);;
+    HalpReadCmos(RTC_REGISTER_C);
 
     /* Save increment */
     LastIncrement = HalpCurrentTimeIncrement;

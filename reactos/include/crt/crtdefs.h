@@ -20,6 +20,10 @@
 #endif
 #endif
 
+#undef _CRT_PACKING
+#define _CRT_PACKING 8
+#pragma pack(push,_CRT_PACKING)
+
 /* Disable non-ANSI C definitions if compiling with __STDC__ */
 //HACK: Disabled
 //#if __STDC__
@@ -28,10 +32,6 @@
 
 
 /** Properties ***************************************************************/
-
-#undef _CRT_PACKING
-#define _CRT_PACKING 8
-#pragma pack(push,_CRT_PACKING)
 
 #ifndef _CRT_STRINGIZE
 #define __CRT_STRINGIZE(_Value) #_Value
@@ -126,7 +126,7 @@
 #endif
 
 #ifndef UNALIGNED
-#if defined(__ia64__) || defined(__x86_64)
+#if defined(__ia64__) || defined(__x86_64) || defined(__arm__)
 #define UNALIGNED __unaligned
 #else
 #define UNALIGNED
@@ -228,6 +228,10 @@
 #define _CRT_OBSOLETE(_NewItem)
 #endif
 
+#ifndef _CRT_JIT_INTRINSIC
+#define _CRT_JIT_INTRINSIC
+#endif
+
 
 /** Constants ****************************************************************/
 
@@ -237,9 +241,11 @@
 #define _TRUNCATE ((size_t)-1)
 #endif
 
+#ifndef __REACTOS__
 #define __STDC_SECURE_LIB__ 200411L
 #define __GOT_SECURE_LIB__ __STDC_SECURE_LIB__
 #define _SECURECRT_FILL_BUFFER_PATTERN 0xFD
+#endif
 
 
 /** Type definitions *********************************************************/
@@ -314,7 +320,7 @@ extern "C" {
 
 #ifndef _WCHAR_T_DEFINED
 #define _WCHAR_T_DEFINED
-#ifndef __cplusplus
+#if defined(_MSC_VER) || !defined(__cplusplus)
   typedef unsigned short wchar_t;
 #endif
 #endif
@@ -323,6 +329,22 @@ extern "C" {
 #define _WCTYPE_T_DEFINED
   typedef unsigned short wint_t;
   typedef unsigned short wctype_t;
+#endif
+
+#ifdef __GNUC__
+#ifndef __GNUC_VA_LIST
+#define __GNUC_VA_LIST
+  typedef __builtin_va_list __gnuc_va_list;
+#endif
+#endif
+
+#ifndef _VA_LIST_DEFINED
+#define _VA_LIST_DEFINED
+#if defined(__GNUC__)
+  typedef __gnuc_va_list va_list;
+#elif defined(_MSC_VER)
+  typedef _Writable_bytes_(_Inexpressible_("length varies")) char *  va_list;
+#endif
 #endif
 
 #ifndef _ERRCODE_DEFINED

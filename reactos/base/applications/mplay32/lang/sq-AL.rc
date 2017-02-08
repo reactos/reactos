@@ -1,0 +1,71 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Skeda"
+    BEGIN
+        MENUITEM "&Hape...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Mbylle\tCtrl+W", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Dil", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+    END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
+    POPUP "&Ndihmë"
+    BEGIN
+        MENUITEM "&Rreth...", IDM_ABOUT
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_OPEN "Opened"
+    IDS_MODE_STOP "Stopped"
+    IDS_MODE_PLAY "Playing"
+    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_RECORD "Recording"
+    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_NOT_READY "Not ready"
+    IDS_ALL_TYPES_FILTER "Të gjith suportimet"
+    IDS_TOOLTIP_PLAY "Fillo"
+    IDS_TOOLTIP_STOP "Ndalo"
+    IDS_TOOLTIP_EJECT "Nxjerr"
+    IDS_TOOLTIP_BACKWARD "Kthe Mbrapa"
+    IDS_TOOLTIP_SEEKBACK "Kërko mbrapa"
+    IDS_TOOLTIP_SEEKFORW "Kërko përpara"
+    IDS_TOOLTIP_FORWARD "Kalo para"
+    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_APPTITLE "Programi muzikor i ReactOS"
+    IDS_PLAY "Fillo"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error."
+END

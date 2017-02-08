@@ -19,13 +19,28 @@
  *
  */
 
-#include "inetcpl.h"
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
 
+#include "resource.h"
+
+#include <reactos/manifest_hosted.rc>
+
+ /* UTF-8 */
+ #pragma code_page(65001)
+ 
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
@@ -60,14 +75,26 @@
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/Sr.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif
 
 #define WINE_FILENAME_STR "inetcpl.cpl"
@@ -81,6 +108,12 @@
 #define WINE_PRODUCTVERSION_STR "8.00.6001.18939"
 
 #include "wine/wine_common_ver.rc"
- 
+
 /* @makedep: inetcpl.ico */
-ICO_MAIN ICON "inetcpl.ico"
+ICO_MAIN ICON "resources/inetcpl.ico"
+ICO_INTERNET ICON "resources/inetcpl.ico"
+ICO_CERTIFICATES ICON "resources/certificates.ico"
+ICO_RESTRICTED ICON "resources/restricted.ico"
+ICO_HISTORY ICON "resources/history.ico"
+ICO_TRUSTED ICON "resources/trusted.ico"
+ICO_HOME ICON "resources/home.ico"

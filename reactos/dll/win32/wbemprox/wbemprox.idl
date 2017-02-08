@@ -1,0 +1,35 @@
+/*
+ * COM Classes for wbemprox
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+[
+    helpstring("WBEM Locator"),
+    threading(both),
+    uuid(4590f811-1d3a-11d0-891f-00aa004b2e24)
+]
+coclass WbemLocator { interface IWbemLocator; }
+
+[
+    helpstring("WBEM Administrative Locator"),
+    threading(both),
+    uuid(cb8555cc-9128-11d1-ad9b-00c04fd8fdff)
+]
+coclass WbemAdministrativeLocator { interface IWbemLocator; }

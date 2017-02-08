@@ -16,30 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-//#include <stdarg.h>
-
-#include <wine/debug.h>
-
-//#include "windef.h"
-#include <winbase.h>
-//#include "winreg.h"
-#include <winhttp.h>
-//#include "shlwapi.h"
-
 #include "winhttp_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 static const WCHAR scheme_http[] = {'h','t','t','p',0};
 static const WCHAR scheme_https[] = {'h','t','t','p','s',0};
 
 static BOOL set_component( WCHAR **str, DWORD *str_len, WCHAR *value, DWORD len, DWORD flags )
 {
+    if (*str && !*str_len)
+    {
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if (!*str_len) return TRUE;
     if (!*str)
     {
         if (len && *str_len && (flags & (ICU_DECODE|ICU_ESCAPE)))
@@ -177,6 +166,7 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
 {
     BOOL ret = FALSE;
     WCHAR *p, *q, *r, *url_decoded = NULL, *url_escaped = NULL;
+    INTERNET_SCHEME scheme = 0;
 
     TRACE("%s, %d, %x, %p\n", debugstr_w(url), len, flags, uc);
 
@@ -210,8 +200,8 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
         set_last_error( ERROR_WINHTTP_UNRECOGNIZED_SCHEME );
         return FALSE;
     }
-    if (p - url == 4 && !strncmpiW( url, scheme_http, 4 )) uc->nScheme = INTERNET_SCHEME_HTTP;
-    else if (p - url == 5 && !strncmpiW( url, scheme_https, 5 )) uc->nScheme = INTERNET_SCHEME_HTTPS;
+    if (p - url == 4 && !strncmpiW( url, scheme_http, 4 )) scheme = INTERNET_SCHEME_HTTP;
+    else if (p - url == 5 && !strncmpiW( url, scheme_https, 5 )) scheme = INTERNET_SCHEME_HTTPS;
     else
     {
         set_last_error( ERROR_WINHTTP_UNRECOGNIZED_SCHEME );
@@ -255,8 +245,8 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
         else
         {
             if (!(set_component( &uc->lpszHostName, &uc->dwHostNameLength, p, q - p, flags ))) goto exit;
-            if (uc->nScheme == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
-            if (uc->nScheme == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
+            if (scheme == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
+            if (scheme == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
         }
 
         if ((r = memchrW( q, '?', len - (q - url) )))
@@ -281,8 +271,8 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
         else
         {
             if (!(set_component( &uc->lpszHostName, &uc->dwHostNameLength, p, len - (p - url), flags ))) goto exit;
-            if (uc->nScheme == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
-            if (uc->nScheme == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
+            if (scheme == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
+            if (scheme == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
         }
         if (!(set_component( &uc->lpszUrlPath, &uc->dwUrlPathLength, (WCHAR *)url + len, 0, flags ))) goto exit;
         if (!(set_component( &uc->lpszExtraInfo, &uc->dwExtraInfoLength, (WCHAR *)url + len, 0, flags ))) goto exit;
@@ -298,8 +288,10 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
           debugstr_wn( uc->lpszExtraInfo, uc->dwExtraInfoLength ));
 
 exit:
+    if (ret) uc->nScheme = scheme;
     heap_free( url_decoded );
     heap_free( url_escaped );
+    if (ret) set_last_error( ERROR_SUCCESS );
     return ret;
 }
 
@@ -518,5 +510,6 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
         }
     }
     *url = 0;
+    set_last_error( ERROR_SUCCESS );
     return TRUE;
 }

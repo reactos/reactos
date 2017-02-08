@@ -230,7 +230,7 @@ NTSTATUS RawIPSendDatagram(
     }
     else
     {
-        if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
+        if(!(NCE = NBLocateNeighbor( &LocalAddress, NULL ))) {
             UnlockObject(AddrFile, OldIrql);
             return STATUS_INVALID_PARAMETER;
         }
@@ -321,6 +321,7 @@ VOID RawIpReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
                     0,
                     IPPacket,
                     DataSize);
+      DereferenceObject(AddrFile);
     } while ((AddrFile = AddrSearchNext(&SearchContext)) != NULL);
   } else {
     /* There are no open address files that will take this datagram */

@@ -4,7 +4,7 @@
  * FILE:            dll/directx/dsound_new/notify.c
  * PURPOSE:         IDirectSoundNotify implementation
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 

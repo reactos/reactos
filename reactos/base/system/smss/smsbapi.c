@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            base/system/smss/smss.c
+ * FILE:            base/system/smss/smsbapi.c
  * PURPOSE:         Main SMSS Code
  * PROGRAMMERS:     Alex Ionescu
  */
@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -178,7 +179,7 @@ SmpSbCreateSession(IN PVOID Reserved,
 #endif
 
     /* This is a native application being started as the initial command */
-    DPRINT1("Subsystem active, starting thread\n");
+    DPRINT("Subsystem active, starting thread\n");
     NtClose(ProcessInformation->ProcessHandle);
     NtResumeThread(ProcessInformation->ThreadHandle, NULL);
     NtClose(ProcessInformation->ThreadHandle);

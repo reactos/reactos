@@ -298,6 +298,15 @@ typedef struct _ALIAS_ADM_COMMENT_INFORMATION
     UNICODE_STRING AdminComment;
 } ALIAS_ADM_COMMENT_INFORMATION, *PALIAS_ADM_COMMENT_INFORMATION;
 
+typedef enum _DOMAIN_DISPLAY_INFORMATION
+{
+    DomainDisplayUser = 1,
+    DomainDisplayMachine,
+    DomainDisplayGroup,
+    DomainDisplayOemUser,
+    DomainDisplayOemGroup,
+    DomainDisplayServer
+} DOMAIN_DISPLAY_INFORMATION, *PDOMAIN_DISPLAY_INFORMATION;
 
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
@@ -430,6 +439,29 @@ typedef enum _GROUP_INFORMATION_CLASS
     GroupAdminCommentInformation,
     GroupReplicationInformation
 } GROUP_INFORMATION_CLASS;
+
+typedef struct _GROUP_GENERAL_INFORMATION
+{
+    UNICODE_STRING Name;
+    ULONG Attributes;
+    ULONG MemberCount;
+    UNICODE_STRING AdminComment;
+} GROUP_GENERAL_INFORMATION, *PGROUP_GENERAL_INFORMATION;
+
+typedef struct _GROUP_NAME_INFORMATION
+{
+    UNICODE_STRING Name;
+} GROUP_NAME_INFORMATION, *PGROUP_NAME_INFORMATION;
+
+typedef struct _GROUP_ATTRIBUTE_INFORMATION
+{
+    ULONG Attributes;
+} GROUP_ATTRIBUTE_INFORMATION, *PGROUP_ATTRIBUTE_INFORMATION;
+
+typedef struct GROUP_ADM_COMMENT_INFORMATION
+{
+    UNICODE_STRING AdminComment;
+} GROUP_ADM_COMMENT_INFORMATION, *PGROUP_ADM_COMMENT_INFORMATION;
 
 typedef struct _GROUP_MEMBERSHIP
 {
@@ -818,6 +850,13 @@ SamGetCompatibilityMode(IN SAM_HANDLE ObjectHandle,
 
 NTSTATUS
 NTAPI
+SamGetDisplayEnumerationIndex(IN SAM_HANDLE DomainHandle,
+                              IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                              IN PUNICODE_STRING Prefix,
+                              OUT PULONG Index);
+
+NTSTATUS
+NTAPI
 SamGetGroupsForUser(IN SAM_HANDLE UserHandle,
                     OUT PGROUP_MEMBERSHIP *Groups,
                     OUT PULONG MembershipCount);
@@ -884,6 +923,18 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
             IN ACCESS_MASK DesiredAccess,
             IN ULONG UserId,
             OUT PSAM_HANDLE UserHandle);
+
+NTSTATUS
+NTAPI
+SamQueryDisplayInformation(IN SAM_HANDLE DomainHandle,
+                           IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                           IN ULONG Index,
+                           IN ULONG EntryCount,
+                           IN ULONG PreferredMaximumLength,
+                           OUT PULONG TotalAvailable,
+                           OUT PULONG TotalReturned,
+                           OUT PULONG ReturnedEntryCount,
+                           OUT PVOID *SortedBuffer);
 
 NTSTATUS
 NTAPI

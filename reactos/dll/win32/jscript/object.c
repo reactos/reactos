@@ -16,13 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
 #include "jscript.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
@@ -54,7 +48,7 @@ static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
     static const WCHAR stringW[] = {'S','t','r','i','n','g',0};
     /* Keep in sync with jsclass_t enum */
     static const WCHAR *names[] = {NULL, arrayW, booleanW, dateW, errorW,
-        functionW, NULL, mathW, numberW, objectW, regexpW, stringW, objectW, objectW};
+        functionW, NULL, mathW, numberW, objectW, regexpW, stringW, objectW, objectW, objectW};
 
     TRACE("\n");
 
@@ -71,12 +65,13 @@ static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 
     if(r) {
         jsstr_t *ret;
+        WCHAR *ptr;
 
-        ret = jsstr_alloc_buf(9+strlenW(str));
-        if(!ret)
+        ptr = jsstr_alloc_buf(9+strlenW(str), &ret);
+        if(!ptr)
             return E_OUTOFMEMORY;
 
-        sprintfW(ret->str, formatW, str);
+        sprintfW(ptr, formatW, str);
         *r = jsval_string(ret);
     }
 
@@ -129,9 +124,14 @@ static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
         return hres;
 
     if(is_jsdisp(jsthis)) {
+        const WCHAR *name_str;
         BOOL result;
 
-        hres = jsdisp_is_own_prop(jsthis->u.jsdisp, name->str, &result);
+        name_str = jsstr_flatten(name);
+        if(name_str)
+            hres = jsdisp_is_own_prop(jsthis->u.jsdisp, name_str, &result);
+        else
+            hres = E_OUTOFMEMORY;
         jsstr_release(name);
         if(FAILED(hres))
             return hres;
@@ -163,7 +163,8 @@ static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
 static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    jsstr_t *name;
+    const WCHAR *name;
+    jsstr_t *name_str;
     BOOL ret;
     HRESULT hres;
 
@@ -179,12 +180,12 @@ static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, vdisp_t *jsthis, W
         return E_FAIL;
     }
 
-    hres = to_string(ctx, argv[0], &name);
+    hres = to_flat_string(ctx, argv[0], &name_str, &name);
     if(FAILED(hres))
         return hres;
 
-    hres = jsdisp_is_enumerable(jsthis->u.jsdisp, name->str, &ret);
-    jsstr_release(name);
+    hres = jsdisp_is_enumerable(jsthis->u.jsdisp, name, &ret);
+    jsstr_release(name_str);
     if(FAILED(hres))
         return hres;
 
@@ -200,26 +201,17 @@ static HRESULT Object_isPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     return E_NOTIMPL;
 }
 
-static HRESULT Object_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Object_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
+    jsstr_t *ret;
+
     TRACE("\n");
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    case DISPATCH_PROPERTYGET: {
-        jsstr_t *ret = jsstr_alloc(default_valueW);
-        if(!ret)
-            return E_OUTOFMEMORY;
-        *r = jsval_string(ret);
-        break;
-    }
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
+    ret = jsstr_alloc(default_valueW);
+    if(!ret)
+        return E_OUTOFMEMORY;
 
+    *r = jsval_string(ret);
     return S_OK;
 }
 
@@ -239,7 +231,7 @@ static const builtin_prop_t Object_props[] = {
 
 static const builtin_info_t Object_info = {
     JSCLASS_OBJECT,
-    {NULL, Object_value, 0},
+    {NULL, NULL,0, Object_get_value},
     sizeof(Object_props)/sizeof(*Object_props),
     Object_props,
     Object_destructor,
@@ -248,7 +240,7 @@ static const builtin_info_t Object_info = {
 
 static const builtin_info_t ObjectInst_info = {
     JSCLASS_OBJECT,
-    {NULL, Object_value, 0},
+    {NULL, NULL,0, Object_get_value},
     0, NULL,
     Object_destructor,
     NULL

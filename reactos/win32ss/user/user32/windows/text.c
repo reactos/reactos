@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            win32ss/user/user32/windows/text.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -67,7 +67,7 @@ CharLowerA(LPSTR str)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
+        _SEH2_YIELD(return NULL);
     }
     _SEH2_END;
 
@@ -267,7 +267,7 @@ LPSTR WINAPI CharUpperA(LPSTR str)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
+        _SEH2_YIELD(return NULL);
     }
     _SEH2_END;
 

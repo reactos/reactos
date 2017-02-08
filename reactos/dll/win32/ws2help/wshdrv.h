@@ -25,4 +25,4 @@ typedef struct _WAH_EA_DATA2
 
 #define IOCTL_WS2IFSL_SET_HANDLE 0x12B00
 
-#endif
+#endif /* __WSHDRV_H */

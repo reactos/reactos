@@ -8,7 +8,8 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2005, 2006, 2007, 2009 by David Turner.                      */
+/*  Copyright 2005-2016 by                                                 */
+/*  David Turner.                                                          */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -54,7 +55,7 @@
   ft_lzwstate_get_code( FT_LzwState  state )
   {
     FT_UInt   num_bits = state->num_bits;
-    FT_Int    offset   = state->buf_offset;
+    FT_UInt   offset   = state->buf_offset;
     FT_Byte*  p;
     FT_Int    result;
 
@@ -122,6 +123,15 @@
       {
         state->stack = NULL;
         old_size     = 0;
+      }
+
+      /* requirement of the character stack larger than 1<<LZW_MAX_BITS */
+      /* implies bug in the decompression code                          */
+      if ( new_size > ( 1 << LZW_MAX_BITS ) )
+      {
+        new_size = 1 << LZW_MAX_BITS;
+        if ( new_size == old_size )
+          return -1;
       }
 
       if ( FT_RENEW_ARRAY( state->stack, old_size, new_size ) )
@@ -279,7 +289,7 @@
                            : state->max_free + 1;
 
         c = ft_lzwstate_get_code( state );
-        if ( c < 0 )
+        if ( c < 0 || c > 255 )
           goto Eof;
 
         old_code = old_char = (FT_UInt)c;
@@ -312,11 +322,12 @@
           /* why not LZW_FIRST-256 ? */
           state->free_ent  = ( LZW_FIRST - 1 ) - 256;
           state->buf_clear = 1;
-          c = ft_lzwstate_get_code( state );
-          if ( c < 0 )
-            goto Eof;
 
-          code = (FT_UInt)c;
+          /* not quite right, but at least more predictable */
+          old_code = 0;
+          old_char = 0;
+
+          goto NextCode;
         }
 
         in_code = code; /* save code for later */
@@ -326,6 +337,10 @@
           /* special case for KwKwKwK */
           if ( code - 256U >= state->free_ent )
           {
+            /* corrupted LZW stream */
+            if ( code - 256U > state->free_ent )
+              goto Eof;
+
             FTLZW_STACK_PUSH( old_char );
             code = old_code;
           }

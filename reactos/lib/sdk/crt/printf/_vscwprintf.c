@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/_vscprintf.c
+ * FILE:            lib/sdk/crt/printf/_vscwprintf.c
  * PURPOSE:         Implementation of _vscprintf
  */
 
@@ -12,12 +12,13 @@
 #include <ntddk.h>
 #endif
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
+int __cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
-int _vscwprintf(
+int
+__cdecl
+_vscwprintf(
    const wchar_t *format,
-   va_list argptr
-)
+   va_list argptr)
 {
     int ret;
 #ifndef _LIBCNT_

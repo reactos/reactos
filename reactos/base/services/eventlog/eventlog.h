@@ -1,7 +1,7 @@
 /*
  * PROJECT:          ReactOS kernel
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             services/eventlog/eventlog.h
+ * FILE:             base/services/eventlog/eventlog.h
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
  */
@@ -9,21 +9,16 @@
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
 
-#define NDEBUG
-#define WIN32_NO_STATUS
+#include <stdarg.h>
 
-#include <stdio.h>
+#define WIN32_NO_STATUS
 
 #include <windef.h>
 #include <winbase.h>
-#include <netevent.h>
-#include <lpctypes.h>
-#include <lpcfuncs.h>
-#include <rtlfuncs.h>
-#include <obfuncs.h>
-#include <iofuncs.h>
-#include <debug.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/obfuncs.h>
 #include <eventlogrpc_s.h>
+#include <strsafe.h>
 
 typedef struct _IO_ERROR_LPC
 {
@@ -161,6 +156,8 @@ NTSTATUS
 LogfCreate(PLOGFILE *Logfile,
            WCHAR * LogName,
            PUNICODE_STRING FileName,
+           ULONG ulMaxSize,
+           ULONG ulRetention,
            BOOL Permanent,
            BOOL Backup);
 

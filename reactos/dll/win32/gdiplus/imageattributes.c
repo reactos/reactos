@@ -16,16 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "wingdi.h"
-
-//#include "objbase.h"
-
-//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes *imageattr,
     GpImageAttributes **cloneImageattr)
@@ -50,7 +41,7 @@ GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes **imageattr)
     if(!imageattr)
         return InvalidParameter;
 
-    *imageattr = GdipAlloc(sizeof(GpImageAttributes));
+    *imageattr = heap_alloc_zero(sizeof(GpImageAttributes));
     if(!*imageattr)    return OutOfMemory;
 
     (*imageattr)->wrap = WrapModeClamp;
@@ -70,9 +61,9 @@ GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes *imageattr)
         return InvalidParameter;
 
     for (i=0; i<ColorAdjustTypeCount; i++)
-        GdipFree(imageattr->colorremaptables[i].colormap);
+        heap_free(imageattr->colorremaptables[i].colormap);
 
-    GdipFree(imageattr);
+    heap_free(imageattr);
 
     return Ok;
 }
@@ -222,21 +213,21 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
         if(!map || !mapSize)
 	    return InvalidParameter;
 
-        new_map = GdipAlloc(sizeof(*map) * mapSize);
+        new_map = heap_alloc_zero(sizeof(*map) * mapSize);
 
         if (!new_map)
             return OutOfMemory;
 
         memcpy(new_map, map, sizeof(*map) * mapSize);
 
-        GdipFree(imageAttr->colorremaptables[type].colormap);
+        heap_free(imageAttr->colorremaptables[type].colormap);
 
         imageAttr->colorremaptables[type].mapsize = mapSize;
         imageAttr->colorremaptables[type].colormap = new_map;
     }
     else
     {
-        GdipFree(imageAttr->colorremaptables[type].colormap);
+        heap_free(imageAttr->colorremaptables[type].colormap);
         imageAttr->colorremaptables[type].colormap = NULL;
     }
 
@@ -269,4 +260,20 @@ GpStatus WINGDIPAPI GdipSetImageAttributesToIdentity(GpImageAttributes *imageAtt
         FIXME("not implemented\n");
 
     return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipResetImageAttributes(GpImageAttributes *imageAttr,
+    ColorAdjustType type)
+{
+    TRACE("(%p,%u)\n", imageAttr, type);
+
+    if(!imageAttr || type >= ColorAdjustTypeCount)
+        return InvalidParameter;
+
+    memset(&imageAttr->colormatrices[type], 0, sizeof(imageAttr->colormatrices[type]));
+    GdipSetImageAttributesColorKeys(imageAttr, type, FALSE, 0, 0);
+    GdipSetImageAttributesRemapTable(imageAttr, type, FALSE, 0, NULL);
+    GdipSetImageAttributesGamma(imageAttr, type, FALSE, 0.0);
+
+    return Ok;
 }

@@ -83,7 +83,8 @@ VOID NBUpdateNeighbor(
     UCHAR State);
 
 PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
-    PIP_ADDRESS Address);
+    PIP_ADDRESS Address,
+    PIP_INTERFACE Interface);
 
 PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
     PIP_INTERFACE Interface,

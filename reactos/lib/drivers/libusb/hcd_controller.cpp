@@ -8,8 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
 #include "libusb.h"
+
+#define NDEBUG
+#include <debug.h>
 
 class CHCDController : public IHCDController,
                        public IDispatchIrp
@@ -41,6 +43,7 @@ public:
     NTSTATUS HandlePnp(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
     NTSTATUS HandlePower(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
     NTSTATUS HandleDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
+    NTSTATUS HandleSystemControl(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
 
     // local functions
     NTSTATUS CreateFDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
@@ -603,12 +606,18 @@ CHCDController::HandlePower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(m_NextDeviceObject, Irp);
+}
 
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_NOT_IMPLEMENTED;
+NTSTATUS
+CHCDController::HandleSystemControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(m_NextDeviceObject, Irp);
 }
 
 NTSTATUS

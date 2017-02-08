@@ -164,10 +164,10 @@ struct acpi_device_flags {
 
 /* Plug and Play */
 
-typedef char			acpi_bus_id[20];
+typedef char			acpi_bus_id[8];
 typedef unsigned long		acpi_bus_address;
-typedef char			acpi_hardware_id[20];
-typedef char			acpi_unique_id[20];
+typedef char			*acpi_hardware_id;
+typedef char			acpi_unique_id[9];
 typedef char			acpi_device_name[40];
 typedef char			acpi_device_class[20];
 
@@ -175,7 +175,7 @@ struct acpi_device_pnp {
 	acpi_bus_id		bus_id;		               /* Object name */
 	acpi_bus_address	bus_address;	                      /* _ADR */
 	acpi_hardware_id	hardware_id;	                      /* _HID */
-	ACPI_DEVICE_ID_LIST *cid_list;		     /* _CIDs */
+	ACPI_PNP_DEVICE_ID_LIST *cid_list;		     /* _CIDs */
 	acpi_unique_id		unique_id;	                      /* _UID */
 	acpi_device_name	device_name;	         /* Driver-determined */
 	acpi_device_class	device_class;	         /*        "          */
@@ -330,7 +330,7 @@ int acpi_bus_trim(struct acpi_device *start, int rmdevice);
 int acpi_bus_start(struct acpi_device *device);
 ACPI_STATUS acpi_bus_get_ejd(ACPI_HANDLE handle, ACPI_HANDLE * ejd);
 int acpi_match_device_ids(struct acpi_device *device,
-			  const struct acpi_device_id *ids);
+			  const struct acpi_pnp_device_id *ids);
 int acpi_bus_get_device(ACPI_HANDLE handle, struct acpi_device **device);
 int acpi_init(void);
 ACPI_STATUS acpi_suspend (UINT32 state);

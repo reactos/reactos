@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS text-mode setup
- * FILE:        subsys/system/usetup/cabinet.c
+ * FILE:        base/setup/usetup/cabinet.c
  * PURPOSE:     Cabinet routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -9,6 +9,8 @@
  */
 
 #include "usetup.h"
+
+#include <zlib.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -802,7 +804,7 @@ CabinetFindNext(PCAB_SEARCH Search)
 
 #if 0
 int
-Validate()
+Validate(VOID)
 {
     return (int)RtlValidateHeap(ProcessHeap, 0, 0);
 }
@@ -1096,7 +1098,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
         Size -= OutputLength;
         /* reduce remaining block size by bytes consumed */
         RemainingBlock -= InputLength;
-        if (RemainingBlock == 0)
+        if (Size > 0 && RemainingBlock == 0)
         {
             /* used up this block, move on to the next */
             DPRINT("Out of block data\n");

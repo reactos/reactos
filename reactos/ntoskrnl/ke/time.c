@@ -20,8 +20,8 @@ BOOLEAN KiTimeAdjustmentEnabled = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
 FORCEINLINE
+VOID
 KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
 {
 #ifdef _WIN64
@@ -35,8 +35,8 @@ KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
 #endif
 }
 
-VOID
 FORCEINLINE
+VOID
 KiCheckForTimerExpiration(
     PKPRCB Prcb,
     PKTRAP_FRAME TrapFrame,
@@ -78,6 +78,9 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
         /* Increase interrupt count and end the interrupt */
         Prcb->InterruptCount++;
         KiEndInterrupt(Irql, TrapFrame);
+
+        /* Note: non-x86 return back to the caller! */
+        return;
     }
 
     /* Add the increment time to the shared data */
@@ -153,7 +156,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
 
     /* Check if we came from user mode */
 #ifndef _M_ARM
-    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
+    if (KiUserTrap(TrapFrame) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
 #else
     if (TrapFrame->PreviousMode == UserMode)
 #endif
@@ -181,12 +184,12 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
             /* Handle being in a DPC */
             Prcb->DpcTime++;
 
-#if 0 //DBG
+#if DBG
             /* Update the DPC time */
             Prcb->DebugDpcTime++;
 
             /* Check if we have timed out */
-            if (Prcb->DebugDpcTime == KiDPCTimeout);
+            if (Prcb->DebugDpcTime == KiDPCTimeout)
             {
                 /* We did! */
                 DbgPrint("*** DPC routine > 1 sec --- This is not a break in KeUpdateSystemTime\n");

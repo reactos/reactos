@@ -1,0 +1,26 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "管理命令列編輯設置、歷史記錄和宏。\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=大小]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=文件] [宏名=[文本]]\n\
+\n\
+  /INSERT             開啟插入模式。\n\
+  /OVERSTRIKE         \n\
+  /EXENAME=exename    設置要查看或改變歷史記錄和宏的程式名。\n\
+                      預設為 cmd.exe。\n\
+  /HISTORY            顯示命令歷史。\n\
+  /LISTSIZE=size      設置每個歷史記錄緩存記錄的命令數。\n\
+  /REINSTALL          清空命令歷史記錄。\n\
+  /MACROS             顯示定義的宏。\n\
+  /MACROS:exename     顯示為指定程式定義的宏。\n\
+  /MACROS:ALL         顯示為所有程式定義的宏。\n\
+  /MACROFILE=file     從檔載入巨集定義。\n\
+  宏名                指定要創建的宏名。\n\
+  文本                指定要替換該宏的文本。\n"
+    IDS_INVALID_MACRO_DEF "不正確巨集定義：%s\n"
+END

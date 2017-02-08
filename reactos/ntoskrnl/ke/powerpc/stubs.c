@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/vdm/vdmmain.c
+ * FILE:            ntoskrnl/ke/powerpc/stubs.c
  * PURPOSE:         VDM Support Services
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -31,7 +31,7 @@ Ke386CallBios(IN ULONG Int,
 
 VOID
 NTAPI
-KiUnexpectedInterrupt()
+KiUnexpectedInterrupt(VOID)
 {
 }
 
@@ -149,13 +149,6 @@ KiSwapContext(PKTHREAD CurrentThread, PKTHREAD NewThread)
     KeGetPcr()->Prcb->NextThread = NewThread;
     __asm__("mtdec %0" : : "r" (1));
     return TRUE;
-}
-
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process)
-{
-    return STATUS_UNSUCCESSFUL;
 }
 
 VOID

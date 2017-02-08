@@ -15,6 +15,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+XIPDispatch(IN ULONG DispatchCode,
+            OUT PVOID Buffer,
+            IN ULONG BufferSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 PMEMORY_ALLOCATION_DESCRIPTOR
 NTAPI
 INIT_FUNCTION

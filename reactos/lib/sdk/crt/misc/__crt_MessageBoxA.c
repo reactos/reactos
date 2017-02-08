@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS C runtime library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            lib/sdk/crt/__crt_MessageBoxA.c
+ * FILE:            lib/sdk/crt/misc/__crt_MessageBoxA.c
  * PURPOSE:         __crt_MessageBoxA implementation
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */

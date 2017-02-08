@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Xbox HAL
- * FILE:            hal/halx86/xbox/font.h
+ * FILE:            hal/halppc/generic/font.c
  * PURPOSE:         Font glyphs
  * PROGRAMMER:      Ge van Geldorp (gvg@reactos.com)
  * UPDATE HISTORY:

@@ -83,7 +83,7 @@ InitGroupMembersList(HWND hwndDlg,
     hwndLV = GetDlgItem(hwndDlg, IDC_USER_ADD_MEMBERSHIP_LIST);
     GetClientRect(hwndLV, &rect);
 
-    hImgList = ImageList_Create(16,16,ILC_COLOR8 | ILC_MASK,5,5);
+    hImgList = ImageList_Create(16,16,ILC_COLOR32 | ILC_MASK,5,5);
     hIcon = LoadImage(hApplet,MAKEINTRESOURCE(IDI_GROUP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
     ImageList_AddIcon(hImgList,hIcon);
     DestroyIcon(hIcon);
@@ -389,7 +389,7 @@ GetGeneralGroupData(HWND hwndDlg,
                     PGENERAL_GROUP_DATA pGroupData)
 {
     PLOCALGROUP_INFO_1 groupInfo = NULL;
-    PLOCALGROUP_MEMBERS_INFO_1 membersInfo = NULL;
+    PLOCALGROUP_MEMBERS_INFO_2 membersInfo = NULL;
     DWORD dwRead;
     DWORD dwTotal;
     DWORD_PTR resumeHandle = 0;
@@ -406,7 +406,7 @@ GetGeneralGroupData(HWND hwndDlg,
     hwndLV = GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_MEMBERS);
 
     /* Create the image list */
-    hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 5, 5);
+    hImgList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 5, 5);
     hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_GROUP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     ImageList_AddIcon(hImgList, hIcon);
     DestroyIcon(hIcon);
@@ -435,7 +435,7 @@ GetGeneralGroupData(HWND hwndDlg,
     NetApiBufferFree(groupInfo);
 
     /* Set group members */
-    NetLocalGroupGetMembers(NULL, pGroupData->szGroupName, 1, (LPBYTE*)&membersInfo,
+    NetLocalGroupGetMembers(NULL, pGroupData->szGroupName, 2, (LPBYTE*)&membersInfo,
                             MAX_PREFERRED_LENGTH, &dwRead, &dwTotal,
                             &resumeHandle);
 
@@ -443,31 +443,44 @@ GetGeneralGroupData(HWND hwndDlg,
     {
         ZeroMemory(&lvi, sizeof(lvi));
         lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
-        lvi.pszText = membersInfo[i].lgrmi1_name;
         lvi.state = 0;
-        if (membersInfo[i].lgrmi1_sidusage == SidTypeGroup ||
-            membersInfo[i].lgrmi1_sidusage == SidTypeWellKnownGroup)
+        if (membersInfo[i].lgrmi2_sidusage == SidTypeGroup ||
+            membersInfo[i].lgrmi2_sidusage == SidTypeWellKnownGroup)
         {
             lvi.iImage = 0;
         }
-        else if (membersInfo[i].lgrmi1_sidusage == SidTypeUser)
+        else if (membersInfo[i].lgrmi2_sidusage == SidTypeUser)
         {
             /* FIXME: handle locked user properly! */
             lvi.iImage = 1;
         }
 
-        if (membersInfo[i].lgrmi1_sidusage == SidTypeWellKnownGroup)
+        if (membersInfo[i].lgrmi2_sidusage == SidTypeWellKnownGroup)
         {
             TCHAR szSid[256];
 
-            GetTextSid(membersInfo[i].lgrmi1_sid, szSid);
+            GetTextSid(membersInfo[i].lgrmi2_sid, szSid);
 
             wsprintf(szGroupName,
                      TEXT("%s (%s)"),
-                     membersInfo[i].lgrmi1_name,
+                     membersInfo[i].lgrmi2_domainandname,
                      szSid);
 
             lvi.pszText = szGroupName;
+        }
+        else
+        {
+            LPWSTR ptr;
+
+            ptr = wcschr(membersInfo[i].lgrmi2_domainandname, L'\\');
+            if (ptr != NULL)
+            {
+                lvi.pszText = ++ptr;
+            }
+            else
+            {
+                lvi.pszText = membersInfo[i].lgrmi2_domainandname;
+            }
         }
 
         (void)ListView_InsertItem(hwndLV, &lvi);

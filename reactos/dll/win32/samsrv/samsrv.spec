@@ -16,17 +16,17 @@
 @ stub SamIFloatingSingleMasterOpEx
 @ stub SamIFreeSidAndAttributesList
 @ stub SamIFreeSidArray
-@ stub SamIFreeVoid
+@ stdcall SamIFreeVoid(ptr)
 @ stub SamIFree_SAMPR_ALIAS_INFO_BUFFER
 @ stub SamIFree_SAMPR_DISPLAY_INFO_BUFFER
 @ stub SamIFree_SAMPR_DOMAIN_INFO_BUFFER
 @ stdcall SamIFree_SAMPR_ENUMERATION_BUFFER(ptr)
-@ stub SamIFree_SAMPR_GET_GROUPS_BUFFER
-@ stub SamIFree_SAMPR_GET_MEMBERS_BUFFER
+@ stdcall SamIFree_SAMPR_GET_GROUPS_BUFFER(ptr)
+@ stdcall SamIFree_SAMPR_GET_MEMBERS_BUFFER(ptr)
 @ stub SamIFree_SAMPR_GROUP_INFO_BUFFER
 @ stdcall SamIFree_SAMPR_PSID_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_RETURNED_USTRING_ARRAY(ptr)
-@ stub SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR
+@ stdcall SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR(ptr)
 @ stdcall SamIFree_SAMPR_ULONG_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_USER_INFO_BUFFER(ptr long)
 @ stub SamIFree_UserInternal6Information
@@ -38,7 +38,7 @@
 @ stub SamIGetFixedAttributes
 @ stub SamIGetInterdomainTrustAccountPasswordsForUpgrade
 @ stub SamIGetPrivateData
-@ stub SamIGetResourceGroupmembershipsTransitive
+@ stub SamIGetResourceGroupMembershipsTransitive
 @ stub SamIGetSerialNumberDomain
 @ stub SamIGetUserLogonInformation
 @ stub SamIGetUserLogonInformation2

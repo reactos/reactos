@@ -9,6 +9,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
+
+#include <ndk/dbgkfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -59,10 +62,8 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                                  OUT PVOID Win32DebugEvent)
 {
     NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
     LPDEBUG_EVENT DebugEvent = Win32DebugEvent;
-    HANDLE ThreadHandle;
 
     /* Write common data */
     DebugEvent->dwProcessId = (DWORD)WaitStateChange->
@@ -74,7 +75,7 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     {
         /* New thread */
         case DbgCreateThreadStateChange:
-
+        {
             /* Setup Win32 code */
             DebugEvent->dwDebugEventCode = CREATE_THREAD_DEBUG_EVENT;
 
@@ -103,10 +104,11 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                     ThreadBasicInfo.TebBaseAddress;
             }
             break;
+        }
 
         /* New process */
         case DbgCreateProcessStateChange:
-
+        {
             /* Write Win32 debug code */
             DebugEvent->dwDebugEventCode = CREATE_PROCESS_DEBUG_EVENT;
 
@@ -154,30 +156,33 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
             DebugEvent->u.CreateProcessInfo.lpImageName = NULL;
             DebugEvent->u.CreateProcessInfo.fUnicode = TRUE;
             break;
+        }
 
         /* Thread exited */
         case DbgExitThreadStateChange:
-
+        {
             /* Write the Win32 debug code and the exit status */
             DebugEvent->dwDebugEventCode = EXIT_THREAD_DEBUG_EVENT;
             DebugEvent->u.ExitThread.dwExitCode =
                 WaitStateChange->StateInfo.ExitThread.ExitStatus;
             break;
+        }
 
         /* Process exited */
         case DbgExitProcessStateChange:
-
+        {
             /* Write the Win32 debug code and the exit status */
             DebugEvent->dwDebugEventCode = EXIT_PROCESS_DEBUG_EVENT;
             DebugEvent->u.ExitProcess.dwExitCode =
                 WaitStateChange->StateInfo.ExitProcess.ExitStatus;
             break;
+        }
 
         /* Any sort of exception */
         case DbgExceptionStateChange:
         case DbgBreakpointStateChange:
         case DbgSingleStepStateChange:
-
+        {
             /* Check if this was a debug print */
             if (WaitStateChange->StateInfo.Exception.ExceptionRecord.
                 ExceptionCode == DBG_PRINTEXCEPTION_C)
@@ -219,66 +224,40 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                     WaitStateChange->StateInfo.Exception.FirstChance;
             }
             break;
+        }
 
         /* DLL Load */
         case DbgLoadDllStateChange:
-
+        {
             /* Set the Win32 debug code */
             DebugEvent->dwDebugEventCode = LOAD_DLL_DEBUG_EVENT;
 
             /* Copy the rest of the data */
-            DebugEvent->u.LoadDll.lpBaseOfDll =
-                WaitStateChange->StateInfo.LoadDll.BaseOfDll;
             DebugEvent->u.LoadDll.hFile =
                 WaitStateChange->StateInfo.LoadDll.FileHandle;
+            DebugEvent->u.LoadDll.lpBaseOfDll =
+                WaitStateChange->StateInfo.LoadDll.BaseOfDll;
             DebugEvent->u.LoadDll.dwDebugInfoFileOffset =
                 WaitStateChange->StateInfo.LoadDll.DebugInfoFileOffset;
             DebugEvent->u.LoadDll.nDebugInfoSize =
                 WaitStateChange->StateInfo.LoadDll.DebugInfoSize;
-
-            /* Open the thread */
-            InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-            Status = NtOpenThread(&ThreadHandle,
-                                  THREAD_QUERY_INFORMATION,
-                                  &ObjectAttributes,
-                                  &WaitStateChange->AppClientId);
-            if (NT_SUCCESS(Status))
-            {
-                /* Query thread information */
-                Status = NtQueryInformationThread(ThreadHandle,
-                                                  ThreadBasicInformation,
-                                                  &ThreadBasicInfo,
-                                                  sizeof(ThreadBasicInfo),
-                                                  NULL);
-                NtClose(ThreadHandle);
-            }
-
-            /* Check if we got thread information */
-            if (NT_SUCCESS(Status))
-            {
-                /* Save the image name from the TIB */
-                DebugEvent->u.LoadDll.lpImageName =
-                    ((PTEB)ThreadBasicInfo.TebBaseAddress)->
-                    NtTib.ArbitraryUserPointer;
-            }
-            else
-            {
-                /* Otherwise, no name */
-                DebugEvent->u.LoadDll.lpImageName = NULL;
-            }
+            DebugEvent->u.LoadDll.lpImageName =
+                WaitStateChange->StateInfo.LoadDll.NamePointer;
 
             /* It's Unicode */
             DebugEvent->u.LoadDll.fUnicode = TRUE;
             break;
+        }
 
         /* DLL Unload */
         case DbgUnloadDllStateChange:
-
+        {
             /* Set Win32 code and DLL Base */
             DebugEvent->dwDebugEventCode = UNLOAD_DLL_DEBUG_EVENT;
             DebugEvent->u.UnloadDll.lpBaseOfDll =
                 WaitStateChange->StateInfo.UnloadDll.BaseAddress;
             break;
+        }
 
         /* Anything else, fail */
         default: return STATUS_UNSUCCESSFUL;

@@ -2,6 +2,7 @@
 #include <psdk/ntverp.h>
 
 /* DDK/IFS/NDK Headers */
+#define _NTSYSTEM_
 #include <excpt.h>
 #include <setjmp.h>
 #include <ntdef.h>
@@ -25,21 +26,6 @@ enum
     P4Home = 4 * sizeof(PVOID),
 };
 #endif
-
-// FIXME: where to put this?
-typedef struct _FIBER                                      /* Field offsets:  */
-{                                                          /* 32 bit   64 bit */
-    /* this must be the first field */
-    PVOID Parameter;                                       /*   0x00     0x00 */
-    PEXCEPTION_REGISTRATION_RECORD ExceptionList;          /*   0x04     0x08 */
-    PVOID StackBase;                                       /*   0x08     0x10 */
-    PVOID StackLimit;                                      /*   0x0C     0x18 */
-    PVOID DeallocationStack;                               /*   0x10     0x20 */
-    CONTEXT Context;                                       /*   0x14     0x28 */
-    ULONG GuaranteedStackBytes;                            /*   0x2E0         */
-    PVOID FlsData;                                         /*   0x2E4         */
-    PVOID /* PACTIVATION_CONTEXT_STACK */ ActivationContextStack; /*   0x2E8         */
-} FIBER, *PFIBER;
 
 typedef struct
 {
@@ -74,16 +60,17 @@ __attribute__ ((section(".asmdef")))
 
 ASMGENDATA Table[] =
 {
-
-/* PORTABLE CONSTANTS ********************************************************/
-#include "ksx.template.h"
-
 /* ARCHITECTURE SPECIFIC CONTSTANTS ******************************************/
 #ifdef _M_IX86
 #include "ks386.template.h"
 #elif defined(_M_AMD64)
 #include "ksamd64.template.h"
+#elif defined(_M_ARM)
+#include "ksarm.template.h"
 #endif
+
+/* PORTABLE CONSTANTS ********************************************************/
+#include "ksx.template.h"
 
     /* End of list */
     {TYPE_END, "", 0}

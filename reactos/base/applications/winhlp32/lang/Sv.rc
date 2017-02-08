@@ -1,0 +1,109 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Swedish language by Karl Backström <karl_b@geocities.com>
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2007, 2008 Daniel Nylander <po@danielnylander.se>
+ * Copyright 2009 Anders Jonsson
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+MAIN_MENU MENU
+{
+ POPUP "&Arkiv" {
+  MENUITEM "&Öppna", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Skriv ut", MNID_FILE_PRINT
+  MENUITEM "Skrivar&konfiguration...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "A&vsluta", MNID_FILE_EXIT
+ }
+ POPUP "R&edigera" {
+   MENUITEM "&Kopiera...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Kommentera...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Bokmärke" {
+   MENUITEM "&Definiera...", MNID_BKMK_DEFINE
+ }
+ POPUP "A&lternativ" {
+  MENUITEM "Alltid &överst", MNID_HELP_HELPTOP
+  MENUITEM "Historik",		MNID_OPTS_HISTORY
+  POPUP    "Typsnitt"
+  BEGIN
+    MENUITEM "Litet",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normalt",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Stort",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "&Hjälp" {
+   MENUITEM "Hjälp &för hjälp", MNID_HELP_HELPON
+   MENUITEM "&Info...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Kommentar...",        MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiera",             MNID_CTXT_COPY
+		MENUITEM "Skriv ut...",         MNID_CTXT_PRINT
+		POPUP    "Typsnitt"
+		BEGIN
+			MENUITEM "Litet",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalt",     MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Stort",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"ReactOS Hjälp"
+STID_WHERROR, 		"FEL"
+STID_WARNING,  		"VARNING"
+STID_INFO,  		"Information"
+STID_NOT_IMPLEMENTED, 	"Inte implementerat"
+STID_HLPFILE_ERROR_s, 	"Fel vid läsning av hjälpfilen `%s'"
+STID_INDEX, 		"&Innehåll"
+STID_CONTENTS,		"Sammandrag"
+STID_BACK, 		"&Bakåt"
+STID_ALL_FILES, 	"Alla filer (*.*)"
+STID_HELP_FILES_HLP, 	"Hjälpfiler (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du söka efter denna fil?"
+STID_NO_RICHEDIT	"Kan inte hitta en implementation av richedit... Avslutar"
+STID_PSH_INDEX,		"Hjälprubriker: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Sök"
+{
+    LTEXT  "Inte implementerat ännu", -1, 10, 10, 180, 150
+}

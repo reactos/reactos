@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "cdlg.h"
-//#include "winspool.h"
-//#include "filedlgbrowser.h"
+#include <windef.h>
+#include <winuser.h>
+#include <dlgs.h>
+
+#include "filedlgbrowser.h"
+#include "resource.h"
 
 /*
  * Everything that does not depend on language,
@@ -33,6 +32,8 @@
  * being duplicated for each language.
  */
 #include "cdlg_xx.rc"
+
+#include <reactos/manifest_dll.rc>
 
 /*
  * Everything specific to any language goes
@@ -45,98 +46,101 @@
 #pragma code_page(65001) // UTF-8
 
 #ifdef LANGUAGE_BG_BG
-    #include "cdlg_Bg.rc"
+    #include "lang/cdlg_Bg.rc"
 #endif
 #ifdef LANGUAGE_CA_ES
-    #include "cdlg_Ca.rc"
+    #include "lang/cdlg_Ca.rc"
 #endif
 #ifdef LANGUAGE_CS_CZ
-    #include "cdlg_Cs.rc"
+    #include "lang/cdlg_Cs.rc"
 #endif
 #ifdef LANGUAGE_DA_DK
-    #include "cdlg_Da.rc"
+    #include "lang/cdlg_Da.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
-    #include "cdlg_De.rc"
+    #include "lang/cdlg_De.rc"
 #endif
 #ifdef LANGUAGE_EL_GR
-    #include "cdlg_El.rc"
+    #include "lang/cdlg_El.rc"
 #endif
 #ifdef LANGUAGE_EN_US
-    #include "cdlg_En.rc"
+    #include "lang/cdlg_En.rc"
 #endif
 #ifdef LANGUAGE_EO_AA
-    #include "cdlg_Eo.rc"
+    #include "lang/cdlg_Eo.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "cdlg_Es.rc"
+    #include "lang/cdlg_Es.rc"
 #endif
 #ifdef LANGUAGE_FI_FI
-    #include "cdlg_Fi.rc"
+    #include "lang/cdlg_Fi.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "cdlg_Fr.rc"
+    #include "lang/cdlg_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "cdlg_He.rc"
+    #include "lang/cdlg_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
-    #include "cdlg_Hu.rc"
+    #include "lang/cdlg_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "cdlg_It.rc"
+    #include "lang/cdlg_It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "cdlg_Ja.rc"
+    #include "lang/cdlg_Ja.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "cdlg_Ko.rc"
+    #include "lang/cdlg_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "cdlg_Lt.rc"
+    #include "lang/cdlg_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "cdlg_Nl.rc"
+    #include "lang/cdlg_Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "cdlg_No.rc"
+    #include "lang/cdlg_No.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "cdlg_Pl.rc"
+    #include "lang/cdlg_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "cdlg_Pt.rc"
+    #include "lang/cdlg_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "cdlg_Ro.rc"
+    #include "lang/cdlg_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "cdlg_Ru.rc"
-#endif
-#ifdef LANGUAGE_SL_SI
-    #include "cdlg_Si.rc"
+    #include "lang/cdlg_Ru.rc"
 #endif
 #ifdef LANGUAGE_SK_SK
-    #include "cdlg_Sk.rc"
+    #include "lang/cdlg_Sk.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "lang/cdlg_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/cdlg_Sq.rc"
 #endif
 #ifdef LANGUAGE_SR_SP
-    #include "cdlg_Sr.rc"
+    #include "lang/cdlg_Sr.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
-    #include "cdlg_Sv.rc"
+    #include "lang/cdlg_Sv.rc"
 #endif
 #ifdef LANGUAGE_TH_TH
-    #include "cdlg_Th.rc"
+    #include "lang/cdlg_Th.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
-    #include "cdlg_Tr.rc"
-#endif
-#ifdef LANGUAGE_ZH_TW
-    #include "cdlg_Tw.rc"
+    #include "lang/cdlg_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "cdlg_Uk.rc"
+    #include "lang/cdlg_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/cdlg_Tw.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "cdlg_Zh.rc"
+    #include "lang/cdlg_Zh.rc"
 #endif

@@ -1,0 +1,53 @@
+/*
+ * Top level resource file for avifil32.dll
+ *
+ * Copyright 2002 Michael Günnewig
+ *
+ * Translated by Baruch Rutman
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+  IDS_WAVESTREAMFORMAT	"Waveform: %s"
+  IDS_WAVEFILETYPE	"Waveform"
+  IDS_ALLMULTIMEDIA	"כל קבצי המולטימדיה"
+  IDS_ALLFILES		"כל הקבצים (*.*)"
+  IDS_VIDEO		"וידאו"
+  IDS_AUDIO		"שמע"
+  IDS_AVIFILETYPE	"Wine AVI-default-filehandler"
+  IDS_UNCOMPRESSED      "לא דחוס"
+}
+
+IDD_SAVEOPTIONS DIALOGEX  43, 37, 226, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "אפשרויות דחיסה"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Choose a stream:",-1,5,5,154,10
+    COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "אפשרויות...",IDC_OPTIONS,170,17,50,14
+    AUTOCHECKBOX    "&Interleave every",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
+    EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
+    LTEXT           "שקופיות:",-1,129,43,36,9
+    LTEXT           "פורמט נוכחי:",-1,5,56,73,9
+    LTEXT           "",IDC_FORMATTEXT,80,56,88,26
+    DEFPUSHBUTTON   "אישור",IDOK,170,42,50,14
+    PUSHBUTTON      "ביטול",IDCANCEL,170,61,50,14
+END

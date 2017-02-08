@@ -1,11 +1,13 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        subsys/system/sndvol32/dialog.c
+ * FILE:        base/applications/sndvol32/dialog.c
  * PROGRAMMERS: Johannes Anderwald
  */
 
 #include "sndvol32.h"
+
+#include <wingdi.h>
 
 #define XLEFT (30)
 #define XTOP (20)

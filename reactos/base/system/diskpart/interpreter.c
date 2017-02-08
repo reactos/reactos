@@ -9,68 +9,55 @@
 
 #include "diskpart.h"
 
-BOOL exit_main(INT argc, WCHAR **argv);
-BOOL rem_main(INT argc, WCHAR **argv);
+BOOL exit_main(INT argc, LPWSTR *argv);
+BOOL rem_main(INT argc, LPWSTR *argv);
 
 
 COMMAND cmds[] =
 {
-    {L"active",      active_main,      help_active},
-    {L"add",         add_main,         help_add},
-    {L"assign",      assign_main,      help_assign},
-    {L"attributes",  attributes_main,  help_attributes},
-    {L"automount",   automount_main,   help_automount},
-    {L"break",       break_main,       help_break},
-    {L"clean",       clean_main,       help_clean},
-    {L"compact",     compact_main,     help_compact},
-    {L"convert",     convert_main,     help_convert},
-    {L"create",      create_main,      help_create},
-    {L"delete",      delete_main,      help_delete},
-    {L"detail",      detail_main,      help_detail},
-    {L"detach",      detach_main,      help_detach},
-    {L"exit",        exit_main,        NULL},
-    {L"expand",      expand_main,      help_expand},
-    {L"extend",      extend_main,      help_extend},
-    {L"filesystems", filesystems_main, help_filesystems},
-    {L"format",      format_main,      help_format},
-    {L"gpt",         gpt_main,         help_gpt},
-    {L"help",        help_main,        help_help},
-    {L"list",        list_main,        help_list},
-    {L"import",      import_main,      help_import},
-    {L"inactive",    inactive_main,    help_inactive},
-    {L"merge",       merge_main,       help_merge},
-    {L"offline",     offline_main,     help_offline},
-    {L"online",      online_main,      help_online},
-    {L"recover",     recover_main,     help_recover},
-    {L"rem",         rem_main,         NULL},
-    {L"remove",      remove_main,      help_remove},
-    {L"repair",      repair_main,      help_repair},
-    {L"rescan",      rescan_main,      help_rescan},
-    {L"retain",      retain_main,      help_retain},
-    {L"san",         san_main,         help_san},
-    {L"select",      select_main,      help_select},
-    {L"setid",       setid_main,       help_setid},
-    {L"shrink",      shrink_main,      help_shrink},
-    {L"uniqueid",    uniqueid_main,    help_uniqueid},
-    {NULL,           NULL,             NULL}
+    {L"active",      active_main,      IDS_HELP_CMD_ACTIVE,      IDS_HELP_CMD_DESC_ACTIVE},
+    {L"add",         add_main,         IDS_HELP_CMD_ADD,         IDS_HELP_CMD_DESC_ADD},
+    {L"assign",      assign_main,      IDS_HELP_CMD_ASSIGN,      IDS_HELP_CMD_DESC_ASSIGN},
+    {L"attach",      attach_main,      IDS_HELP_CMD_ATTACH,      IDS_HELP_CMD_DESC_ATTACH},
+    {L"attributes",  attributes_main,  IDS_HELP_CMD_ATTRIBUTES,  IDS_HELP_CMD_DESC_ATTRIBUTES},
+    {L"automount",   automount_main,   IDS_HELP_CMD_AUTOMOUNT,   IDS_HELP_CMD_DESC_AUTOMOUNT},
+    {L"break",       break_main,       IDS_HELP_CMD_BREAK,       IDS_HELP_CMD_DESC_BREAK},
+    {L"clean",       clean_main,       IDS_HELP_CMD_CLEAN,       IDS_HELP_CMD_DESC_CLEAN},
+    {L"compact",     compact_main,     IDS_HELP_CMD_COMPACT,     IDS_HELP_CMD_DESC_COMPACT},
+    {L"convert",     convert_main,     IDS_HELP_CMD_CONVERT,     IDS_HELP_CMD_DESC_CONVERT},
+    {L"create",      create_main,      IDS_HELP_CMD_CREATE,      IDS_HELP_CMD_DESC_CREATE},
+    {L"delete",      delete_main,      IDS_HELP_CMD_DELETE,      IDS_HELP_CMD_DESC_DELETE},
+    {L"detail",      detail_main,      IDS_HELP_CMD_DETAIL,      IDS_HELP_CMD_DESC_DETAIL},
+    {L"detach",      detach_main,      IDS_HELP_CMD_DETACH,      IDS_HELP_CMD_DESC_DETACH},
+    {L"exit",        NULL,             IDS_NONE,                 IDS_HELP_CMD_DESC_EXIT},
+    {L"expand",      expand_main,      IDS_HELP_CMD_EXPAND,      IDS_HELP_CMD_DESC_EXPAND},
+    {L"extend",      extend_main,      IDS_HELP_CMD_EXTEND,      IDS_HELP_CMD_DESC_EXTEND},
+    {L"filesystems", filesystems_main, IDS_HELP_CMD_FILESYSTEMS, IDS_HELP_CMD_DESC_FS},
+    {L"format",      format_main,      IDS_HELP_CMD_FORMAT,      IDS_HELP_CMD_DESC_FORMAT},
+    {L"gpt",         gpt_main,         IDS_HELP_CMD_GPT,         IDS_HELP_CMD_DESC_GPT},
+    {L"help",        help_main,        IDS_HELP_CMD_HELP,        IDS_HELP_CMD_DESC_HELP},
+    {L"import",      import_main,      IDS_HELP_CMD_IMPORT,      IDS_HELP_CMD_DESC_IMPORT},
+    {L"inactive",    inactive_main,    IDS_HELP_CMD_INACTIVE,    IDS_HELP_CMD_DESC_INACTIVE},
+    {L"list",        list_main,        IDS_HELP_CMD_LIST,        IDS_HELP_CMD_DESC_LIST},
+    {L"merge",       merge_main,       IDS_HELP_CMD_MERGE,       IDS_HELP_CMD_DESC_MERGE},
+    {L"offline",     offline_main,     IDS_HELP_CMD_OFFLINE,     IDS_HELP_CMD_DESC_OFFLINE},
+    {L"online",      online_main,      IDS_HELP_CMD_ONLINE,      IDS_HELP_CMD_DESC_ONLINE},
+    {L"recover",     recover_main,     IDS_HELP_CMD_RECOVER,     IDS_HELP_CMD_DESC_RECOVER},
+    {L"rem",         NULL,             IDS_NONE,                 IDS_HELP_CMD_DESC_REM},
+    {L"remove",      remove_main,      IDS_HELP_CMD_REMOVE,      IDS_HELP_CMD_DESC_REMOVE},
+    {L"repair",      repair_main,      IDS_HELP_CMD_REPAIR,      IDS_HELP_CMD_DESC_REPAIR},
+    {L"rescan",      rescan_main,      IDS_HELP_CMD_RESCAN,      IDS_HELP_CMD_DESC_RESCAN},
+    {L"retain",      retain_main,      IDS_HELP_CMD_RETAIN,      IDS_HELP_CMD_DESC_RETAIN},
+    {L"san",         san_main,         IDS_HELP_CMD_SAN,         IDS_HELP_CMD_DESC_SAN},
+    {L"select",      select_main,      IDS_HELP_CMD_SELECT,      IDS_HELP_CMD_DESC_SELECT},
+    {L"setid",       setid_main,       IDS_HELP_CMD_SETID,       IDS_HELP_CMD_DESC_SETID},
+    {L"shrink",      shrink_main,      IDS_HELP_CMD_SHRINK,      IDS_HELP_CMD_DESC_SHRINK},
+    {L"uniqueid",    uniqueid_main,    IDS_HELP_CMD_UNIQUEID,    IDS_HELP_CMD_DESC_UNIQUEID},
+    {NULL,           NULL,             IDS_NONE,                 IDS_NONE}
 };
 
 
 /* FUNCTIONS *****************************************************************/
-
-BOOL
-exit_main(INT argc, WCHAR **argv)
-{
-    return FALSE;
-}
-
-
-BOOL
-rem_main(INT argc, WCHAR **argv)
-{
-    return TRUE;
-}
-
 
 /*
  * InterpretCmd(char *cmd_line, char *arg_line):
@@ -78,17 +65,23 @@ rem_main(INT argc, WCHAR **argv)
  * determines which function to envoke.
  */
 BOOL
-InterpretCmd(int argc, WCHAR **argv)
+InterpretCmd(int argc, LPWSTR *argv)
 {
     PCOMMAND cmdptr;
+
+    /* First, determine if the user wants to exit
+       or to use a comment */
+    if(wcsicmp(argv[0], L"exit") == 0)
+        return FALSE;
+
+    if(wcsicmp(argv[0], L"rem") == 0)
+        return TRUE;
 
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->name; cmdptr++)
     {
         if (wcsicmp(argv[0], cmdptr->name) == 0)
-        {
             return cmdptr->func(argc, argv);
-        }
     }
 
     help_cmdlist();
@@ -102,12 +95,12 @@ InterpretCmd(int argc, WCHAR **argv)
  * The main function used for when reading commands from scripts.
  */
 BOOL
-InterpretScript(WCHAR *input_line)
+InterpretScript(LPWSTR input_line)
 {
-    WCHAR *args_vector[MAX_ARGS_COUNT];
+    LPWSTR args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
-    WCHAR *ptr;
+    LPWSTR ptr;
 
     memset(args_vector, 0, sizeof(args_vector));
 
@@ -148,11 +141,11 @@ VOID
 InterpretMain(VOID)
 {
     WCHAR input_line[MAX_STRING_SIZE];
-    WCHAR *args_vector[MAX_ARGS_COUNT];
+    LPWSTR args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bRun = TRUE;
-    WCHAR *ptr;
+    LPWSTR ptr;
 
     while (bRun == TRUE)
     {
@@ -180,10 +173,8 @@ InterpretMain(VOID)
                     args_vector[args_count] = ptr;
                     args_count++;
                 }
-
                 bWhiteSpace = FALSE;
             }
-
             ptr++;
         }
 

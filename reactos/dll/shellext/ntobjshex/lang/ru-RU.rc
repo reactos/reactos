@@ -1,0 +1,9 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "Пространство имен объектов NT"
+    IDS_REGISTRY_NAME "Системный реестр"
+END

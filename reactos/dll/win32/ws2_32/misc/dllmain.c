@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/dllmain.c
+ * FILE:        dll/win32/ws2_32/misc/dllmain.c
  * PURPOSE:     DLL entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -55,7 +55,8 @@ EXPORT
 WSAStartup(IN  WORD wVersionRequested,
            OUT LPWSADATA lpWSAData)
 {
-    BYTE Low, High;
+    WORD VersionReturned = 0;
+    DWORD ErrorCode = ERROR_SUCCESS;
 
     WS_DbgPrint(MAX_TRACE, ("WSAStartup of ws2_32.dll\n"));
 
@@ -65,55 +66,74 @@ WSAStartup(IN  WORD wVersionRequested,
     if (lpWSAData == NULL)
         return WSAEFAULT;
 
-    Low = LOBYTE(wVersionRequested);
-    High  = HIBYTE(wVersionRequested);
+    /* Check which version is being requested */
+    switch (LOBYTE(wVersionRequested))
+    {
+        case 0:
 
-    if (Low < 1)
-    {
-        WS_DbgPrint(MAX_TRACE, ("Bad winsock version requested, %d,%d", Low, High));
-        return WSAVERNOTSUPPORTED;
+            /* We don't support this unknown version */
+            ErrorCode = WSAVERNOTSUPPORTED;
+            break;
+
+        case 1:
+            /* We support only 1.0 and 1.1 */
+            if (HIBYTE(wVersionRequested) == 0)
+            {
+                /* Caller wants 1.0, return it */
+                VersionReturned = wVersionRequested;
+            }
+            else
+            {
+                /* The only other version we support is 1.1 */
+                VersionReturned = MAKEWORD(1, 1);
+            }
+            break;
+
+        case 2:
+            /* We support only 2.0, 2.1 and 2.2 */
+            if (HIBYTE(wVersionRequested) <= 2)
+            {
+                /* Caller wants 2.0-2.2, return it */
+                VersionReturned = MAKEWORD(2, HIBYTE(wVersionRequested));
+            }
+            else
+            {
+                /* The highest version we support is 2.2 */
+                VersionReturned = MAKEWORD(2, 2);
+            }
+            break;
+
+        default:
+
+            /* Return 2.2 */
+            VersionReturned = MAKEWORD(2, 2);
+            break;
     }
 
-    if (Low == 1)
+    /* Return the Version Requested, unless error */
+    lpWSAData->wVersion = VersionReturned;
+
+    lpWSAData->wHighVersion = MAKEWORD(2,2);
+    lstrcpyA(lpWSAData->szDescription, "WinSock 2.0");
+    lstrcpyA(lpWSAData->szSystemStatus, "Running");
+
+    if (LOBYTE(wVersionRequested) == 1)
     {
-        if (High == 0)
-        {
-            lpWSAData->wVersion = wVersionRequested;
-        }
-        else
-        {
-            lpWSAData->wVersion = MAKEWORD(1, 1);
-        }
-    }
-    else if (Low == 2)
-    {
-        if (High <= 2)
-        {
-            lpWSAData->wVersion = MAKEWORD(2, High);
-        }
-        else
-        {
-            lpWSAData->wVersion = MAKEWORD(2, 2);
-        }
-    }
+        lpWSAData->iMaxSockets = 32767;
+        lpWSAData->iMaxUdpDg = 65467;
+    } 
     else
     {
-        lpWSAData->wVersion = MAKEWORD(2, 2);
+        lpWSAData->iMaxSockets = 0;
+        lpWSAData->iMaxUdpDg = 0;
     }
-
-    lpWSAData->wVersion     = wVersionRequested;
-    lpWSAData->wHighVersion = MAKEWORD(2,2);
-    lstrcpyA(lpWSAData->szDescription, "WinSock 2.2");
-    lstrcpyA(lpWSAData->szSystemStatus, "Running");
-    lpWSAData->iMaxSockets  = 0;
-    lpWSAData->iMaxUdpDg    = 0;
-    lpWSAData->lpVendorInfo = NULL;
-
+    
     /*FIXME: increment internal counter */
 
-    WSASETINITIALIZED;
+    if (ErrorCode == ERROR_SUCCESS)
+        WSASETINITIALIZED;
 
-    return NO_ERROR;
+    return ErrorCode;
 }
 
 
@@ -867,9 +887,11 @@ DllMain(HANDLE hInstDll,
 
         case DLL_PROCESS_DETACH:
         {
-            DestroyCatalog();
-
-            FreeProviderHandleTable();
+            if (!lpReserved)
+            {
+                FreeProviderHandleTable();
+                DestroyCatalog();
+            }
         }
         break;
 

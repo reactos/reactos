@@ -801,7 +801,14 @@ xmlCheckFilename (const char *path)
     return 1;
 }
 
-static int
+/**
+ * xmlNop:
+ *
+ * No Operation function, does nothing, no input
+ *
+ * Returns zero
+ */
+int
 xmlNop(void) {
     return(0);
 }
@@ -888,7 +895,7 @@ xmlFileMatch (const char *filename ATTRIBUTE_UNUSED) {
  */
 static void *
 xmlFileOpen_real (const char *filename) {
-    const char *path = NULL;
+    const char *path = filename;
     FILE *fd;
 
     if (filename == NULL)
@@ -918,11 +925,8 @@ xmlFileOpen_real (const char *filename) {
 #else
 	path = &filename[5];
 #endif
-    } else
-	path = filename;
+    }
 
-    if (path == NULL)
-	return(NULL);
     if (!xmlCheckFilename(path))
         return(NULL);
 
@@ -1160,7 +1164,12 @@ xmlGzfileOpen_real (const char *filename) {
     gzFile fd;
 
     if (!strcmp(filename, "-")) {
-        fd = gzdopen(dup(0), "rb");
+        int duped_fd = dup(fileno(stdin));
+        fd = gzdopen(duped_fd, "rb");
+        if (fd == Z_NULL && duped_fd >= 0) {
+            close(duped_fd);  /* gzdOpen() does not close on failure */
+        }
+
 	return((void *) fd);
     }
 
@@ -1234,7 +1243,12 @@ xmlGzfileOpenW (const char *filename, int compression) {
 
     snprintf(mode, sizeof(mode), "wb%d", compression);
     if (!strcmp(filename, "-")) {
-        fd = gzdopen(dup(1), mode);
+        int duped_fd = dup(fileno(stdout));
+        fd = gzdopen(duped_fd, "rb");
+        if (fd == Z_NULL && duped_fd >= 0) {
+            close(duped_fd);  /* gzdOpen() does not close on failure */
+        }
+
 	return((void *) fd);
     }
 
@@ -1321,7 +1335,7 @@ xmlGzfileClose (void * context) {
 }
 #endif /* HAVE_ZLIB_H */
 
-#ifdef HAVE_LZMA_H
+#ifdef LIBXML_LZMA_ENABLED
 /************************************************************************
  *									*
  *		I/O for compressed file accesses			*
@@ -1356,7 +1370,7 @@ xmlXzfileOpen_real (const char *filename) {
     xzFile fd;
 
     if (!strcmp(filename, "-")) {
-        fd = __libxml2_xzdopen(dup(0), "rb");
+        fd = __libxml2_xzdopen(dup(fileno(stdin)), "rb");
 	return((void *) fd);
     }
 
@@ -1438,7 +1452,7 @@ xmlXzfileClose (void * context) {
     if (ret < 0) xmlIOErr(0, "xzclose()");
     return(ret);
 }
-#endif /* HAVE_LZMA_H */
+#endif /* LIBXML_LZMA_ENABLED */
 
 #ifdef LIBXML_HTTP_ENABLED
 /************************************************************************
@@ -2315,10 +2329,10 @@ xmlRegisterDefaultInputCallbacks(void) {
     xmlRegisterInputCallbacks(xmlGzfileMatch, xmlGzfileOpen,
 	                      xmlGzfileRead, xmlGzfileClose);
 #endif /* HAVE_ZLIB_H */
-#ifdef HAVE_LZMA_H
+#ifdef LIBXML_LZMA_ENABLED
     xmlRegisterInputCallbacks(xmlXzfileMatch, xmlXzfileOpen,
 	                      xmlXzfileRead, xmlXzfileClose);
-#endif /* HAVE_ZLIB_H */
+#endif /* LIBXML_LZMA_ENABLED */
 
 #ifdef LIBXML_HTTP_ENABLED
     xmlRegisterInputCallbacks(xmlIOHTTPMatch, xmlIOHTTPOpen,
@@ -2668,6 +2682,12 @@ __xmlParserInputBufferCreateFilename(const char *URI, xmlCharEncoding enc) {
 		}
 	    }
 #endif
+	}
+#endif
+#ifdef LIBXML_LZMA_ENABLED
+	if ((xmlInputCallbackTable[i].opencallback == xmlXzfileOpen) &&
+		(strcmp(URI, "-") != 0)) {
+            ret->compressed = __libxml2_xzcompressed(context);
 	}
 #endif
     }
@@ -3239,7 +3259,7 @@ xmlParserInputBufferPush(xmlParserInputBufferPtr in,
 	 * convert as much as possible to the parser reading buffer.
 	 */
 	use = xmlBufUse(in->raw);
-	nbchars = xmlCharEncInput(in);
+	nbchars = xmlCharEncInput(in, 1);
 	if (nbchars < 0) {
 	    xmlIOErr(XML_IO_ENCODER, NULL);
 	    in->error = XML_IO_ENCODER;
@@ -3326,6 +3346,17 @@ xmlParserInputBufferGrow(xmlParserInputBufferPtr in, int len) {
     if (res < 0) {
 	return(-1);
     }
+
+    /*
+     * try to establish compressed status of input if not done already
+     */
+    if (in->compressed == -1) {
+#ifdef LIBXML_LZMA_ENABLED
+	if (in->readcallback == xmlXzfileRead)
+            in->compressed = __libxml2_xzcompressed(in->context);
+#endif
+    }
+
     len = res;
     if (in->encoder != NULL) {
         unsigned int use;
@@ -3344,7 +3375,7 @@ xmlParserInputBufferGrow(xmlParserInputBufferPtr in, int len) {
 	 * convert as much as possible to the parser reading buffer.
 	 */
 	use = xmlBufUse(in->raw);
-	nbchars = xmlCharEncInput(in);
+	nbchars = xmlCharEncInput(in, 1);
 	if (nbchars < 0) {
 	    xmlIOErr(XML_IO_ENCODER, NULL);
 	    in->error = XML_IO_ENCODER;
@@ -3726,14 +3757,16 @@ xmlOutputBufferFlush(xmlOutputBufferPtr out) {
      */
     if ((out->conv != NULL) && (out->encoder != NULL)) {
 	/*
-	 * convert as much as possible to the parser reading buffer.
+	 * convert as much as possible to the parser output buffer.
 	 */
-	nbchars = xmlCharEncOutput(out, 0);
-	if (nbchars < 0) {
-	    xmlIOErr(XML_IO_ENCODER, NULL);
-	    out->error = XML_IO_ENCODER;
-	    return(-1);
-	}
+	do {
+	    nbchars = xmlCharEncOutput(out, 0);
+	    if (nbchars < 0) {
+		xmlIOErr(XML_IO_ENCODER, NULL);
+		out->error = XML_IO_ENCODER;
+		return(-1);
+	    }
+	} while (nbchars);
     }
 
     /*

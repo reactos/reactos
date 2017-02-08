@@ -10,6 +10,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
+
+#include <ndk/cmfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -38,7 +41,7 @@ RtlpQueryRegistryDirect(IN ULONG ValueType,
                         IN ULONG ValueLength,
                         IN PVOID Buffer)
 {
-    USHORT ActualLength = (USHORT)ValueLength;
+    USHORT ActualLength;
     PUNICODE_STRING ReturnString = Buffer;
     PULONG Length = Buffer;
     ULONG RealLength;
@@ -49,7 +52,10 @@ RtlpQueryRegistryDirect(IN ULONG ValueType,
         (ValueType == REG_MULTI_SZ))
     {
         /* Normalize the length */
-        if (ValueLength > MAXUSHORT) ValueLength = MAXUSHORT;
+        if (ValueLength > MAXUSHORT)
+            ActualLength = MAXUSHORT;
+        else
+            ActualLength = (USHORT)ValueLength;
 
         /* Check if the return string has been allocated */
         if (!ReturnString->Buffer)
@@ -205,7 +211,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 
             /* Check if we have space to copy the data */
             RequiredLength = KeyValueInfo->NameLength + sizeof(UNICODE_NULL);
-            if (SpareLength < RequiredLength)
+            if ((SpareData > DataEnd) || (SpareLength < RequiredLength))
             {
                 /* Fail and return the missing length */
                 *InfoSize = (ULONG)(SpareData - (PCHAR)KeyValueInfo) + RequiredLength;
@@ -242,7 +248,8 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         {
             /* Prepare defaults */
             Status = STATUS_SUCCESS;
-            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length - sizeof(UNICODE_NULL));
+            /* Skip the last two UNICODE_NULL chars (the terminating null string) */
+            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length - 2 * sizeof(UNICODE_NULL));
             p = Data;
 
             /* Loop all strings */
@@ -260,9 +267,9 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                                                      Data,
                                                      (ULONG)Length,
                                                      QueryTable->EntryContext);
-                    QueryTable->EntryContext = (PVOID)((ULONG_PTR)QueryTable->
-                                                       EntryContext +
-                                                       sizeof(UNICODE_STRING));
+                    QueryTable->EntryContext =
+                        (PVOID)((ULONG_PTR)QueryTable->EntryContext +
+                                sizeof(UNICODE_STRING));
                 }
                 else
                 {
@@ -328,13 +335,13 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 {
                     /* This is the good case, where we fit into a string */
                     Destination.MaximumLength = (USHORT)SpareLength;
-                    Destination.Buffer[SpareLength / 2 - 1] = UNICODE_NULL;
+                    Destination.Buffer[SpareLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
                 }
                 else
                 {
                     /* We can't fit into a string, so truncate */
                     Destination.MaximumLength = MAXUSHORT;
-                    Destination.Buffer[MAXUSHORT / 2 - 1] = UNICODE_NULL;
+                    Destination.Buffer[MAXUSHORT / sizeof(WCHAR) - 1] = UNICODE_NULL;
                 }
 
                 /* Expand the strings and set our type as one string */
@@ -516,7 +523,7 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
     /* Initialize the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -544,6 +551,20 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
     return Status;
 }
 
+FORCEINLINE
+VOID
+RtlpCloseRegistryHandle(
+    _In_ ULONG RelativeTo,
+    _In_ HANDLE KeyHandle)
+{
+    /* Did the caller pass a key handle? */
+    if (!(RelativeTo & RTL_REGISTRY_HANDLE))
+    {
+        /* We opened the key in RtlpGetRegistryHandle, so close it now */
+        ZwClose(KeyHandle);
+    }
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -565,7 +586,7 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
                                    &KeyHandle);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* All went well, close the handle and return success */
+    /* Close the handle even for RTL_REGISTRY_HANDLE */
     ZwClose(KeyHandle);
     return STATUS_SUCCESS;
 }
@@ -589,8 +610,8 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
                                    &KeyHandle);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* All went well, close the handle and return success */
-    ZwClose(KeyHandle);
+    /* All went well, close the handle and return status */
+    RtlpCloseRegistryHandle(RelativeTo, KeyHandle);
     return STATUS_SUCCESS;
 }
 
@@ -619,8 +640,8 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
     RtlInitUnicodeString(&Name, ValueName);
     Status = ZwDeleteValueKey(KeyHandle, &Name);
 
-    /* All went well, close the handle and return status */
-    ZwClose(KeyHandle);
+    /* Close the handle and return status */
+    RtlpCloseRegistryHandle(RelativeTo, KeyHandle);
     return Status;
 }
 
@@ -657,8 +678,8 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
                            ValueData,
                            ValueLength);
 
-    /* All went well, close the handle and return status */
-    ZwClose(KeyHandle);
+    /* Close the handle and return status */
+    RtlpCloseRegistryHandle(RelativeTo, KeyHandle);
     return Status;
 }
 
@@ -682,7 +703,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
         /* Initialize the attributes and open it */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyPath,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
         Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
@@ -696,7 +717,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
     RtlInitUnicodeString(&KeyPath, RtlpRegPaths[RTL_REGISTRY_USER]);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyPath,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
@@ -721,19 +742,21 @@ RtlFormatCurrentUserKeyPath(OUT PUNICODE_STRING KeyPath)
     PAGED_CODE_RTL();
 
     /* Open the thread token */
-    Status = ZwOpenThreadToken(NtCurrentThread(),
-                               TOKEN_QUERY,
-                               TRUE,
-                               &TokenHandle);
+    Status = ZwOpenThreadTokenEx(NtCurrentThread(),
+                                 TOKEN_QUERY,
+                                 TRUE,
+                                 OBJ_KERNEL_HANDLE,
+                                 &TokenHandle);
     if (!NT_SUCCESS(Status))
     {
         /* We failed, is it because we don't have a thread token? */
         if (Status != STATUS_NO_TOKEN) return Status;
 
         /* It is, so use the process token */
-        Status = ZwOpenProcessToken(NtCurrentProcess(),
-                                    TOKEN_QUERY,
-                                    &TokenHandle);
+        Status = ZwOpenProcessTokenEx(NtCurrentProcess(),
+                                      TOKEN_QUERY,
+                                      OBJ_KERNEL_HANDLE,
+                                      &TokenHandle);
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -1005,7 +1028,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
     if (!KeyValueInfo)
     {
         /* Close the handle if we have one and fail */
-        if (!(RelativeTo & RTL_REGISTRY_HANDLE)) ZwClose(KeyHandle);
+        RtlpCloseRegistryHandle(RelativeTo, KeyHandle);
         return Status;
     }
 
@@ -1149,7 +1172,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
                     if (KeyValueInfo->Type == REG_MULTI_SZ)
                     {
                         /* Add a null-char */
-                        ((PWCHAR)KeyValueInfo)[ResultLength / 2] = UNICODE_NULL;
+                        ((PWCHAR)KeyValueInfo)[ResultLength / sizeof(WCHAR)] = UNICODE_NULL;
                         KeyValueInfo->DataLength += sizeof(UNICODE_NULL);
                     }
 
@@ -1306,7 +1329,7 @@ ProcessValues:
     }
 
     /* Check if we need to close our handle */
-    if ((KeyHandle) && !(RelativeTo & RTL_REGISTRY_HANDLE)) ZwClose(KeyHandle);
+    if (KeyHandle) RtlpCloseRegistryHandle(RelativeTo, KeyHandle);
     if ((CurrentKey) && (CurrentKey != KeyHandle)) ZwClose(CurrentKey);
 
     /* Free our buffer and return status */

@@ -1091,7 +1091,10 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
     /* Function 78 */
     NTSTATUS __stdcall LsarOpenPolicySce(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName,
+        [in] PLSAPR_OBJECT_ATTRIBUTES ObjectAttributes,
+        [in] ACCESS_MASK DesiredAccess,
+        [out] LSAPR_HANDLE *PolicyHandle);
 
     /* Function 79 */
     NTSTATUS __stdcall LsarAdtRegisterSecurityEventSource(

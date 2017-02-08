@@ -16,25 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#include <config.h>
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <wincodec.h>
-
 #include "wincodecs_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 extern BOOL WINAPI WIC_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
 
@@ -45,8 +27,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
-            break;
-        case DLL_PROCESS_DETACH:
             break;
     }
 
@@ -89,7 +69,8 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
         return E_INVALIDARG;
 
     /* if the whole bitmap is copied and the buffer format matches then it's a matter of a single memcpy */
-    if (rc->X == 0 && rc->Y == 0 && rc->Width == srcwidth && rc->Height == srcheight && srcstride == dststride)
+    if (rc->X == 0 && rc->Y == 0 && rc->Width == srcwidth && rc->Height == srcheight &&
+        srcstride == dststride && srcstride == bytesperrow)
     {
         memcpy(dstbuffer, srcbuffer, srcstride * srcheight);
         return S_OK;
@@ -100,7 +81,7 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
     if (row_offset % 8 == 0)
     {
         /* everything lines up on a byte boundary */
-        UINT row;
+        INT row;
         const BYTE *src;
         BYTE *dst;
 
@@ -120,6 +101,92 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
         FIXME("cannot reliably copy bitmap data if bpp < 8\n");
         return E_FAIL;
     }
+}
+
+HRESULT configure_write_source(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *source, const WICRect *prc,
+    const WICPixelFormatGUID *format,
+    INT width, INT height, double xres, double yres)
+{
+    HRESULT hr=S_OK;
+    WICPixelFormatGUID src_format, dst_format;
+
+    if (width == 0 || height == 0)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    hr = IWICBitmapSource_GetPixelFormat(source, &src_format);
+    if (FAILED(hr)) return hr;
+
+    if (!format)
+    {
+        dst_format = src_format;
+
+        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &dst_format);
+        if (FAILED(hr)) return hr;
+
+        format = &dst_format;
+    }
+
+    if (!IsEqualGUID(&src_format, format))
+    {
+        /* FIXME: should use WICConvertBitmapSource to convert */
+        ERR("format %s unsupported\n", debugstr_guid(&src_format));
+        return E_FAIL;
+    }
+
+    if (xres == 0.0 || yres == 0.0)
+    {
+        hr = IWICBitmapSource_GetResolution(source, &xres, &yres);
+        if (FAILED(hr)) return hr;
+        hr = IWICBitmapFrameEncode_SetResolution(iface, xres, yres);
+        if (FAILED(hr)) return hr;
+    }
+
+    return hr;
+}
+
+HRESULT write_source(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *source, const WICRect *prc,
+    const WICPixelFormatGUID *format, UINT bpp,
+    INT width, INT height)
+{
+    HRESULT hr=S_OK;
+    WICRect rc;
+    UINT stride;
+    BYTE* pixeldata;
+
+    if (!prc)
+    {
+        UINT src_width, src_height;
+        hr = IWICBitmapSource_GetSize(source, &src_width, &src_height);
+        if (FAILED(hr)) return hr;
+        rc.X = 0;
+        rc.Y = 0;
+        rc.Width = src_width;
+        rc.Height = src_height;
+        prc = &rc;
+    }
+
+    if (prc->Width != width || prc->Height <= 0)
+        return E_INVALIDARG;
+
+    stride = (bpp * width + 7)/8;
+
+    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
+    if (!pixeldata) return E_OUTOFMEMORY;
+
+    hr = IWICBitmapSource_CopyPixels(source, prc, stride,
+        stride*prc->Height, pixeldata);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
+            stride*prc->Height, pixeldata);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pixeldata);
+
+    return hr;
 }
 
 void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride)

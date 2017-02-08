@@ -18,31 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "msipriv.h"
 
-//#include <stdarg.h>
 #include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winreg.h"
-//#include "winnls.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
-//#include "msi.h"
-#include "msiquery.h"
-//#include "msipriv.h"
-//#include "objidl.h"
-#include <objbase.h>
-#include <msiserver.h>
-#include "query.h"
-
-//#include "initguid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -58,179 +36,32 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
 
-typedef struct tagMSITRANSFORM {
-    struct list entry;
-    IStorage *stg;
-} MSITRANSFORM;
-
-typedef struct tagMSISTREAM {
-    struct list entry;
-    IStorage *stg;
-    IStream *stm;
-} MSISTREAM;
-
-static UINT find_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStream **stm )
+struct row_export_info
 {
-    MSISTREAM *stream;
-
-    LIST_FOR_EACH_ENTRY( stream, &db->streams, MSISTREAM, entry )
-    {
-        HRESULT r;
-        STATSTG stat;
-
-        if (stream->stg != stg) continue;
-
-        r = IStream_Stat( stream->stm, &stat, 0 );
-        if( FAILED( r ) )
-        {
-            WARN("failed to stat stream r = %08x!\n", r);
-            continue;
-        }
-
-        if( !strcmpW( name, stat.pwcsName ) )
-        {
-            TRACE("found %s\n", debugstr_w(name));
-            *stm = stream->stm;
-            CoTaskMemFree( stat.pwcsName );
-            return ERROR_SUCCESS;
-        }
-
-        CoTaskMemFree( stat.pwcsName );
-    }
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-UINT msi_clone_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStream **stm )
-{
-    IStream *stream;
-
-    if (find_open_stream( db, stg, name, &stream ) == ERROR_SUCCESS)
-    {
-        HRESULT r;
-        LARGE_INTEGER pos;
-
-        r = IStream_Clone( stream, stm );
-        if( FAILED( r ) )
-        {
-            WARN("failed to clone stream r = %08x!\n", r);
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        pos.QuadPart = 0;
-        r = IStream_Seek( *stm, pos, STREAM_SEEK_SET, NULL );
-        if( FAILED( r ) )
-        {
-            IStream_Release( *stm );
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
-    }
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
-{
-    HRESULT r;
-    IStorage *stg;
-    WCHAR decoded[MAX_STREAM_NAME_LEN];
-
-    decode_streamname( stname, decoded );
-    TRACE("%s -> %s\n", debugstr_w(stname), debugstr_w(decoded));
-
-    if (msi_clone_open_stream( db, db->storage, stname, stm ) == ERROR_SUCCESS)
-        return ERROR_SUCCESS;
-
-    r = IStorage_OpenStream( db->storage, stname, NULL,
-                             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
-    if( FAILED( r ) )
-    {
-        MSITRANSFORM *transform;
-
-        LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
-        {
-            r = IStorage_OpenStream( transform->stg, stname, NULL,
-                                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
-            if (SUCCEEDED(r))
-            {
-                stg = transform->stg;
-                break;
-            }
-        }
-    }
-    else stg = db->storage;
-
-    if( SUCCEEDED(r) )
-    {
-        MSISTREAM *stream;
-
-        if (!(stream = msi_alloc( sizeof(MSISTREAM) ))) return ERROR_NOT_ENOUGH_MEMORY;
-        stream->stg = stg;
-        IStorage_AddRef( stg );
-        stream->stm = *stm;
-        IStream_AddRef( *stm );
-        list_add_tail( &db->streams, &stream->entry );
-    }
-
-    return SUCCEEDED(r) ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
-}
+    HANDLE handle;
+    LPCWSTR folder;
+    LPCWSTR table;
+};
 
 static void free_transforms( MSIDATABASE *db )
 {
     while( !list_empty( &db->transforms ) )
     {
-        MSITRANSFORM *t = LIST_ENTRY( list_head( &db->transforms ),
-                                      MSITRANSFORM, entry );
+        MSITRANSFORM *t = LIST_ENTRY( list_head( &db->transforms ), MSITRANSFORM, entry );
         list_remove( &t->entry );
         IStorage_Release( t->stg );
         msi_free( t );
     }
 }
 
-void msi_destroy_stream( MSIDATABASE *db, const WCHAR *stname )
-{
-    MSISTREAM *stream, *stream2;
-
-    LIST_FOR_EACH_ENTRY_SAFE( stream, stream2, &db->streams, MSISTREAM, entry )
-    {
-        HRESULT r;
-        STATSTG stat;
-
-        r = IStream_Stat( stream->stm, &stat, 0 );
-        if (FAILED(r))
-        {
-            WARN("failed to stat stream r = %08x\n", r);
-            continue;
-        }
-
-        if (!strcmpW( stname, stat.pwcsName ))
-        {
-            TRACE("destroying %s\n", debugstr_w(stname));
-
-            list_remove( &stream->entry );
-            IStream_Release( stream->stm );
-            IStorage_Release( stream->stg );
-            IStorage_DestroyElement( stream->stg, stname );
-            msi_free( stream );
-            CoTaskMemFree( stat.pwcsName );
-            break;
-        }
-        CoTaskMemFree( stat.pwcsName );
-    }
-}
-
 static void free_streams( MSIDATABASE *db )
 {
-    while( !list_empty( &db->streams ) )
+    UINT i;
+    for (i = 0; i < db->num_streams; i++)
     {
-        MSISTREAM *s = LIST_ENTRY(list_head( &db->streams ), MSISTREAM, entry);
-        list_remove( &s->entry );
-        IStream_Release( s->stm );
-        IStorage_Release( s->stg );
-        msi_free( s );
+        if (db->streams[i].stream) IStream_Release( db->streams[i].stream );
     }
+    msi_free( db->streams );
 }
 
 void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
@@ -241,9 +72,6 @@ void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
     t->stg = stg;
     IStorage_AddRef( stg );
     list_add_head( &db->transforms, &t->entry );
-
-    /* the transform may add or replace streams */
-    free_streams( db );
 }
 
 static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
@@ -251,8 +79,8 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
     MSIDATABASE *db = (MSIDATABASE *) arg;
 
     msi_free(db->path);
-    free_cached_tables( db );
     free_streams( db );
+    free_cached_tables( db );
     free_transforms( db );
     if (db->strings) msi_destroy_stringtable( db->strings );
     IStorage_Release( db->storage );
@@ -261,6 +89,7 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
         DeleteFileW( db->deletefile );
         msi_free( db->deletefile );
     }
+    msi_free( db->tempfolder );
 }
 
 static HRESULT db_initialize( IStorage *stg, const GUID *clsid )
@@ -316,8 +145,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !pdb )
         return ERROR_INVALID_PARAMETER;
 
-    if (szPersist - MSIDBOPEN_PATCHFILE >= MSIDBOPEN_READONLY &&
-        szPersist - MSIDBOPEN_PATCHFILE <= MSIDBOPEN_CREATEDIRECT)
+    if (szPersist - MSIDBOPEN_PATCHFILE <= MSIDBOPEN_CREATEDIRECT)
     {
         TRACE("Database is a patch\n");
         szPersist -= MSIDBOPEN_PATCHFILE;
@@ -435,7 +263,6 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         db->deletefile = strdupW( szDBPath );
     list_init( &db->tables );
     list_init( &db->transforms );
-    list_init( &db->streams );
 
     db->strings = msi_load_string_table( stg, &db->bytes_per_strref );
     if( !db->strings )
@@ -943,6 +770,8 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     lstrcatW( path, file );
 
     data = msi_read_text_archive( path, &len );
+    if (data == NULL)
+        return ERROR_BAD_PATHNAME;
 
     ptr = data;
     msi_parse_line( &ptr, &columns, &num_columns, &len );
@@ -1081,50 +910,131 @@ end:
     return r;
 }
 
-static UINT msi_export_record( HANDLE handle, MSIRECORD *row, UINT start )
+static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
-    UINT i, count, len, r = ERROR_SUCCESS;
-    const char *sep;
     char *buffer;
+    BOOL bret;
     DWORD sz;
+    UINT r;
 
-    len = 0x100;
-    buffer = msi_alloc( len );
-    if ( !buffer )
+    sz = 0x100;
+    buffer = msi_alloc( sz );
+    if (!buffer)
         return ERROR_OUTOFMEMORY;
 
-    count = MSI_RecordGetFieldCount( row );
-    for ( i=start; i<=count; i++ )
+    r = MSI_RecordGetStringA( row, field, buffer, &sz );
+    if (r == ERROR_MORE_DATA)
     {
-        sz = len;
-        r = MSI_RecordGetStringA( row, i, buffer, &sz );
-        if (r == ERROR_MORE_DATA)
-        {
-            char *p = msi_realloc( buffer, sz + 1 );
-            if (!p)
-                break;
-            len = sz + 1;
-            buffer = p;
-        }
-        sz = len;
-        r = MSI_RecordGetStringA( row, i, buffer, &sz );
-        if (r != ERROR_SUCCESS)
-            break;
+        char *p;
 
-        if (!WriteFile( handle, buffer, sz, &sz, NULL ))
+        sz++; /* leave room for NULL terminator */
+        p = msi_realloc( buffer, sz );
+        if (!p)
         {
-            r = ERROR_FUNCTION_FAILED;
-            break;
+            msi_free( buffer );
+            return ERROR_OUTOFMEMORY;
         }
+        buffer = p;
+
+        r = MSI_RecordGetStringA( row, field, buffer, &sz );
+        if (r != ERROR_SUCCESS)
+        {
+            msi_free( buffer );
+            return r;
+        }
+    }
+    else if (r != ERROR_SUCCESS)
+        return r;
+
+    bret = WriteFile( handle, buffer, sz, &sz, NULL );
+    msi_free( buffer );
+    if (!bret)
+        return ERROR_FUNCTION_FAILED;
+
+    return r;
+}
+
+static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UINT field,
+                               UINT start )
+{
+    static const WCHAR fmt_file[] = { '%','s','/','%','s','/','%','s',0 };
+    static const WCHAR fmt_folder[] = { '%','s','/','%','s',0 };
+    WCHAR stream_name[256], stream_filename[MAX_PATH];
+    DWORD sz, read_size, write_size;
+    char buffer[1024];
+    HANDLE file;
+    UINT r;
+
+    /* get the name of the file */
+    sz = sizeof(stream_name)/sizeof(WCHAR);
+    r = MSI_RecordGetStringW( row, start, stream_name, &sz );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    /* if the destination folder does not exist then create it (folder name = table name) */
+    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_folder, folder, table );
+    if (GetFileAttributesW( stream_filename ) == INVALID_FILE_ATTRIBUTES)
+    {
+        if (!CreateDirectoryW( stream_filename, NULL ))
+            return ERROR_PATH_NOT_FOUND;
+    }
+
+    /* actually create the file */
+    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_file, folder, table, stream_name );
+    file = CreateFileW( stream_filename, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    if (file == INVALID_HANDLE_VALUE)
+        return ERROR_FILE_NOT_FOUND;
+
+    /* copy the stream to the file */
+    read_size = sizeof(buffer);
+    while (read_size == sizeof(buffer))
+    {
+        r = MSI_RecordReadStream( row, field, buffer, &read_size );
+        if (r != ERROR_SUCCESS)
+        {
+            CloseHandle( file );
+            return r;
+        }
+        if (!WriteFile( file, buffer, read_size, &write_size, NULL ) || read_size != write_size)
+        {
+            CloseHandle( file );
+            return ERROR_WRITE_FAULT;
+        }
+    }
+    CloseHandle( file );
+    return r;
+}
+
+static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
+{
+    HANDLE handle = row_export_info->handle;
+    UINT i, count, r = ERROR_SUCCESS;
+    const char *sep;
+    DWORD sz;
+
+    count = MSI_RecordGetFieldCount( row );
+    for (i = start; i <= count; i++)
+    {
+        r = msi_export_field( handle, row, i );
+        if (r == ERROR_INVALID_PARAMETER)
+        {
+            r = msi_export_stream( row_export_info->folder, row_export_info->table, row, i, start );
+            if (r != ERROR_SUCCESS)
+                return r;
+
+            /* exporting a binary stream, repeat the "Name" field */
+            r = msi_export_field( handle, row, start );
+            if (r != ERROR_SUCCESS)
+                return r;
+        }
+        else if (r != ERROR_SUCCESS)
+            return r;
 
         sep = (i < count) ? "\t" : "\r\n";
         if (!WriteFile( handle, sep, strlen(sep), &sz, NULL ))
-        {
-            r = ERROR_FUNCTION_FAILED;
-            break;
-        }
+            return ERROR_FUNCTION_FAILED;
     }
-    msi_free( buffer );
     return r;
 }
 
@@ -1148,9 +1058,25 @@ static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
     return ERROR_SUCCESS;
 }
 
+static UINT msi_export_summaryinformation( MSIDATABASE *db, HANDLE handle )
+{
+    static const char header[] = "PropertyId\tValue\r\n"
+                                 "i2\tl255\r\n"
+                                 "_SummaryInformation\tPropertyId\r\n";
+    DWORD sz;
+
+    sz = lstrlenA(header);
+    if (!WriteFile(handle, header, sz, &sz, NULL))
+        return ERROR_WRITE_FAULT;
+
+    return msi_export_suminfo( db, handle );
+}
+
 static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
                LPCWSTR folder, LPCWSTR file )
 {
+    static const WCHAR summaryinformation[] = {
+        '_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0 };
     static const WCHAR query[] = {
         's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
     static const WCHAR forcecodepage[] = {
@@ -1189,14 +1115,22 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         goto done;
     }
 
+    if (!strcmpW( table, summaryinformation ))
+    {
+        r = msi_export_summaryinformation( db, handle );
+        goto done;
+    }
+
     r = MSI_OpenQuery( db, &view, query, table );
     if (r == ERROR_SUCCESS)
     {
+        struct row_export_info row_export_info = { handle, folder, table };
+
         /* write out row 1, the column names */
         r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
         if (r == ERROR_SUCCESS)
         {
-            msi_export_record( handle, rec, 1 );
+            msi_export_record( &row_export_info, rec, 1 );
             msiobj_release( &rec->hdr );
         }
 
@@ -1204,7 +1138,7 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         r = MSI_ViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
         if (r == ERROR_SUCCESS)
         {
-            msi_export_record( handle, rec, 1 );
+            msi_export_record( &row_export_info, rec, 1 );
             msiobj_release( &rec->hdr );
         }
 
@@ -1213,12 +1147,12 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         if (r == ERROR_SUCCESS)
         {
             MSI_RecordSetStringW( rec, 0, table );
-            msi_export_record( handle, rec, 0 );
+            msi_export_record( &row_export_info, rec, 0 );
             msiobj_release( &rec->hdr );
         }
 
         /* write out row 4 onwards, the data */
-        r = MSI_IterateRecords( view, 0, msi_export_row, handle );
+        r = MSI_IterateRecords( view, 0, msi_export_row, &row_export_info );
         msiobj_release( &view->hdr );
     }
 
@@ -1380,7 +1314,10 @@ static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
 
     r = MSI_ViewGetColumnInfo(mergeview, MSICOLINFO_NAMES, &mergerec);
     if (r != ERROR_SUCCESS)
+    {
+        msiobj_release(&dbrec->hdr);
         return r;
+    }
 
     count = MSI_RecordGetFieldCount(dbrec);
     for (i = 1; i <= count; i++)
@@ -1405,7 +1342,10 @@ static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
 
     r = MSI_ViewGetColumnInfo(mergeview, MSICOLINFO_TYPES, &mergerec);
     if (r != ERROR_SUCCESS)
+    {
+        msiobj_release(&dbrec->hdr);
         return r;
+    }
 
     count = MSI_RecordGetFieldCount(dbrec);
     for (i = 1; i <= count; i++)
@@ -2178,7 +2118,7 @@ HRESULT create_msi_remote_database( IUnknown *pOuter, LPVOID *ppObj )
     This->database = 0;
     This->refs = 1;
 
-    *ppObj = This;
+    *ppObj = &This->IWineMsiRemoteDatabase_iface;
 
     return S_OK;
 }

@@ -6,11 +6,10 @@
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "lsasrv.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
+#include <ndk/sefuncs.h>
+#include <ndk/umfuncs.h>
 
 typedef enum _LSA_TOKEN_INFORMATION_TYPE
 {
@@ -31,6 +30,11 @@ typedef struct _LSA_TOKEN_INFORMATION_V1
 
 typedef PVOID PLSA_CLIENT_REQUEST;
 
+typedef NTSTATUS (NTAPI *PLSA_CREATE_LOGON_SESSION)(PLUID);
+typedef NTSTATUS (NTAPI *PLSA_DELETE_LOGON_SESSION)(PLUID);
+typedef NTSTATUS (NTAPI *PLSA_ADD_CREDENTIAL)(PLUID, ULONG, PLSA_STRING, PLSA_STRING);
+typedef NTSTATUS (NTAPI *PLSA_GET_CREDENTIALS)(PLUID, ULONG, PULONG, BOOLEAN, PLSA_STRING, PULONG, PLSA_STRING);
+typedef NTSTATUS (NTAPI *PLSA_DELETE_CREDENTIAL)(PLUID, ULONG, PLSA_STRING);
 typedef PVOID (NTAPI *PLSA_ALLOCATE_LSA_HEAP)(ULONG);
 typedef VOID (NTAPI *PLSA_FREE_LSA_HEAP)(PVOID);
 typedef NTSTATUS (NTAPI *PLSA_ALLOCATE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, ULONG, PVOID*);
@@ -42,11 +46,11 @@ typedef NTSTATUS (NTAPI *PLSA_COPY_FROM_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST,
 
 typedef struct LSA_DISPATCH_TABLE
 {
-    PVOID /*PLSA_CREATE_LOGON_SESSION */ CreateLogonSession;
-    PVOID /*PLSA_DELETE_LOGON_SESSION */ DeleteLogonSession;
-    PVOID /*PLSA_ADD_CREDENTIAL */ AddCredential;
-    PVOID /*PLSA_GET_CREDENTIALS */ GetCredentials;
-    PVOID /*PLSA_DELETE_CREDENTIAL */ DeleteCredential;
+    PLSA_CREATE_LOGON_SESSION CreateLogonSession;
+    PLSA_DELETE_LOGON_SESSION DeleteLogonSession;
+    PLSA_ADD_CREDENTIAL AddCredential;
+    PLSA_GET_CREDENTIALS GetCredentials;
+    PLSA_DELETE_CREDENTIAL DeleteCredential;
     PLSA_ALLOCATE_LSA_HEAP AllocateLsaHeap;
     PLSA_FREE_LSA_HEAP FreeLsaHeap;
     PLSA_ALLOCATE_CLIENT_BUFFER AllocateClientBuffer;
@@ -95,12 +99,74 @@ typedef struct _AUTH_PACKAGE
     PLSA_AP_LOGON_USER_INTERNAL LsaApLogonUser;
 } AUTH_PACKAGE, *PAUTH_PACKAGE;
 
+VOID
+NTAPI
+LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr);
+
+typedef wchar_t *PSAMPR_SERVER_NAME;
+typedef void *SAMPR_HANDLE;
+
+typedef struct _SAMPR_ULONG_ARRAY
+{
+    unsigned long Count;
+    unsigned long *Element;
+} SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
+
+typedef struct _SAMPR_SID_INFORMATION
+{
+    PRPC_SID SidPointer;
+} SAMPR_SID_INFORMATION, *PSAMPR_SID_INFORMATION;
+
+typedef struct _SAMPR_PSID_ARRAY
+{
+    unsigned long Count;
+    PSAMPR_SID_INFORMATION Sids;
+} SAMPR_PSID_ARRAY, *PSAMPR_PSID_ARRAY;
+
+NTSTATUS
+NTAPI
+SamIConnect(
+    PSAMPR_SERVER_NAME ServerName,
+    SAMPR_HANDLE *ServerHandle,
+    ACCESS_MASK DesiredAccess,
+    BOOLEAN Trusted);
+
+VOID
+NTAPI
+SamIFree_SAMPR_ULONG_ARRAY(
+    PSAMPR_ULONG_ARRAY Ptr);
+
+NTSTATUS
+__stdcall
+SamrCloseHandle(
+    SAMPR_HANDLE *SamHandle);
+
+NTSTATUS
+__stdcall
+SamrOpenDomain(
+    SAMPR_HANDLE ServerHandle,
+    ACCESS_MASK DesiredAccess,
+    PRPC_SID DomainId,
+    SAMPR_HANDLE *DomainHandle);
+
+NTSTATUS
+__stdcall
+SamrGetAliasMembership(
+    SAMPR_HANDLE DomainHandle,
+    PSAMPR_PSID_ARRAY SidArray,
+    PSAMPR_ULONG_ARRAY Membership);
+
 
 /* GLOBALS *****************************************************************/
 
 static LIST_ENTRY PackageListHead;
 static ULONG PackageId;
 static LSA_DISPATCH_TABLE DispatchTable;
+
+#define CONST_LUID(x1, x2) {x1, x2}
+static const LUID SeChangeNotifyPrivilege = CONST_LUID(SE_CHANGE_NOTIFY_PRIVILEGE, 0);
+static const LUID SeCreateGlobalPrivilege = CONST_LUID(SE_CREATE_GLOBAL_PRIVILEGE, 0);
+static const LUID SeImpersonatePrivilege = CONST_LUID(SE_IMPERSONATE_PRIVILEGE, 0);
 
 
 /* FUNCTIONS ***************************************************************/
@@ -295,26 +361,6 @@ LsapGetAuthenticationPackage(IN ULONG PackageId)
 
 
 static
-NTSTATUS
-NTAPI
-LsapCreateLogonSession(IN PLUID LogonId)
-{
-    TRACE("()\n");
-    return STATUS_SUCCESS;
-}
-
-
-static
-NTSTATUS
-NTAPI
-LsapDeleteLogonSession(IN PLUID LogonId)
-{
-    TRACE("()\n");
-    return STATUS_SUCCESS;
-}
-
-
-static
 PVOID
 NTAPI
 LsapAllocateHeap(IN ULONG Length)
@@ -437,9 +483,9 @@ LsapInitAuthPackages(VOID)
     /* Initialize the dispatch table */
     DispatchTable.CreateLogonSession = &LsapCreateLogonSession;
     DispatchTable.DeleteLogonSession = &LsapDeleteLogonSession;
-    DispatchTable.AddCredential = NULL;
-    DispatchTable.GetCredentials = NULL;
-    DispatchTable.DeleteCredential = NULL;
+    DispatchTable.AddCredential = &LsapAddCredential;
+    DispatchTable.GetCredentials = &LsapGetCredentials;
+    DispatchTable.DeleteCredential = &LsapDeleteCredential;
     DispatchTable.AllocateLsaHeap = &LsapAllocateHeap;
     DispatchTable.FreeLsaHeap = &LsapFreeHeap;
     DispatchTable.AllocateClientBuffer = &LsapAllocateClientBuffer;
@@ -454,8 +500,7 @@ LsapInitAuthPackages(VOID)
                                     &PackageId,
                                     NULL);
 
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -557,6 +602,763 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
 }
 
 
+static
+NTSTATUS
+LsapCopyLocalGroups(
+    IN PLSAP_LOGON_CONTEXT LogonContext,
+    IN PTOKEN_GROUPS ClientGroups,
+    IN ULONG ClientGroupsCount,
+    OUT PTOKEN_GROUPS *TokenGroups)
+{
+    ULONG LocalGroupsLength = 0;
+    PTOKEN_GROUPS LocalGroups = NULL;
+    ULONG SidHeaderLength = 0;
+    PSID SidHeader = NULL;
+    PSID SrcSid, DstSid;
+    ULONG SidLength;
+    ULONG AllocatedSids = 0;
+    ULONG i;
+    NTSTATUS Status;
+
+    LocalGroupsLength = sizeof(TOKEN_GROUPS) +
+                        (ClientGroupsCount - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+    LocalGroups = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  LocalGroupsLength);
+    if (LocalGroups == NULL)
+    {
+        TRACE("RtlAllocateHeap() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                 ClientGroups,
+                                 LocalGroups,
+                                 LocalGroupsLength,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+
+    SidHeaderLength  = RtlLengthRequiredSid(0);
+    SidHeader = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                SidHeaderLength);
+    if (SidHeader == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    for (i = 0; i < ClientGroupsCount; i++)
+    {
+        SrcSid = LocalGroups->Groups[i].Sid;
+
+        Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                     SrcSid,
+                                     SidHeader,
+                                     SidHeaderLength,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        SidLength = RtlLengthSid(SidHeader);
+        TRACE("Sid %lu: Length %lu\n", i, SidLength);
+
+        DstSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 SidLength);
+        if (DstSid == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                     SrcSid,
+                                     DstSid,
+                                     SidLength,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DstSid);
+            goto done;
+        }
+
+        LocalGroups->Groups[i].Sid = DstSid;
+        AllocatedSids++;
+    }
+
+    *TokenGroups = LocalGroups;
+
+done:
+    if (SidHeader != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidHeader);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (LocalGroups != NULL)
+        {
+            for (i = 0; i < AllocatedSids; i++)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
+        }
+    }
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapAddLocalGroups(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    IN PTOKEN_GROUPS LocalGroups)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PTOKEN_GROUPS Groups;
+    ULONG Length;
+    ULONG i;
+    ULONG j;
+
+    if (LocalGroups == NULL || LocalGroups->GroupCount == 0)
+        return STATUS_SUCCESS;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->Groups != NULL)
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (LocalGroups->GroupCount + TokenInfo1->Groups->GroupCount - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Groups->GroupCount = LocalGroups->GroupCount + TokenInfo1->Groups->GroupCount;
+
+            for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+            {
+                Groups->Groups[i].Sid = TokenInfo1->Groups->Groups[i].Sid;
+                Groups->Groups[i].Attributes = TokenInfo1->Groups->Groups[i].Attributes;
+            }
+
+            for (j = 0; j < LocalGroups->GroupCount; i++, j++)
+            {
+                Groups->Groups[i].Sid = LocalGroups->Groups[j].Sid;
+                Groups->Groups[i].Attributes = LocalGroups->Groups[j].Attributes;
+                LocalGroups->Groups[j].Sid = NULL;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TokenInfo1->Groups);
+
+            TokenInfo1->Groups = Groups;
+        }
+        else
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (LocalGroups->GroupCount - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Groups->GroupCount = LocalGroups->GroupCount;
+
+            for (i = 0; i < LocalGroups->GroupCount; i++)
+            {
+                Groups->Groups[i].Sid = LocalGroups->Groups[i].Sid;
+                Groups->Groups[i].Attributes = LocalGroups->Groups[i].Attributes;
+            }
+
+            TokenInfo1->Groups = Groups;
+        }
+    }
+    else
+    {
+        FIXME("TokenInformationType %d is not supported!\n", TokenInformationType);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+LsapAddDefaultGroups(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    IN SECURITY_LOGON_TYPE LogonType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PTOKEN_GROUPS Groups;
+    ULONG i, Length;
+    PSID SrcSid;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->Groups != NULL)
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (TokenInfo1->Groups->GroupCount + 2 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Groups->GroupCount = TokenInfo1->Groups->GroupCount;
+
+            for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+            {
+                Groups->Groups[i].Sid = TokenInfo1->Groups->Groups[i].Sid;
+                Groups->Groups[i].Attributes = TokenInfo1->Groups->Groups[i].Attributes;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TokenInfo1->Groups);
+
+            TokenInfo1->Groups = Groups;
+
+        }
+        else
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (2 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            TokenInfo1->Groups = Groups;
+        }
+
+        /* Append the World SID (aka Everyone) */
+        Length = RtlLengthSid(LsapWorldSid);
+        Groups->Groups[Groups->GroupCount].Sid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                 HEAP_ZERO_MEMORY,
+                                                                 Length);
+        if (Groups->Groups[Groups->GroupCount].Sid == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(Groups->Groups[Groups->GroupCount].Sid,
+                      LsapWorldSid,
+                      Length);
+
+        Groups->Groups[Groups->GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        Groups->GroupCount++;
+
+        /* Append the logon type SID */
+        switch (LogonType)
+        {
+            case Interactive:
+                SrcSid = LsapInteractiveSid;
+                break;
+
+            case Network:
+                SrcSid = LsapNetworkSid;
+                break;
+
+            case Batch:
+                SrcSid = LsapBatchSid;
+                break;
+
+            case Service:
+                SrcSid = LsapServiceSid;
+                break;
+
+            default:
+                FIXME("LogonType %d is not supported!\n", LogonType);
+                return STATUS_NOT_IMPLEMENTED;
+        }
+
+        Length = RtlLengthSid(SrcSid);
+        Groups->Groups[Groups->GroupCount].Sid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                 HEAP_ZERO_MEMORY,
+                                                                 Length);
+        if (Groups->Groups[Groups->GroupCount].Sid == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(Groups->Groups[Groups->GroupCount].Sid,
+                      SrcSid,
+                      Length);
+
+        Groups->Groups[Groups->GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        Groups->GroupCount++;
+    }
+    else
+    {
+        FIXME("TokenInformationType %d is not supported!\n", TokenInformationType);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapAppendSidToGroups(
+    IN PTOKEN_GROUPS *TokenGroups,
+    IN PSID DomainSid,
+    IN ULONG RelativeId)
+{
+    PTOKEN_GROUPS Groups;
+    PSID Sid;
+    ULONG Length;
+    ULONG i;
+
+    Sid = LsapAppendRidToSid(DomainSid, RelativeId);
+    if (Sid == NULL)
+    {
+        ERR("Group SID creation failed!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (*TokenGroups == NULL)
+    {
+        Length = sizeof(TOKEN_GROUPS) +
+                 (1 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+        Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+        if (Groups == NULL)
+        {
+            ERR("Group buffer allocation failed!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Groups->GroupCount = 1;
+
+        Groups->Groups[0].Sid = Sid;
+        Groups->Groups[0].Attributes = 
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        *TokenGroups = Groups;
+    }
+    else
+    {
+        for (i = 0; i < (*TokenGroups)->GroupCount; i++)
+        {
+            if (RtlEqualSid((*TokenGroups)->Groups[i].Sid, Sid))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Sid);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        Length = sizeof(TOKEN_GROUPS) +
+                 ((*TokenGroups)->GroupCount + 1 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+        Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+        if (Groups == NULL)
+        {
+            ERR("Group buffer allocation failed!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Groups->GroupCount = (*TokenGroups)->GroupCount;
+
+        for (i = 0; i < (*TokenGroups)->GroupCount; i++)
+        {
+            Groups->Groups[i].Sid = (*TokenGroups)->Groups[i].Sid;
+            Groups->Groups[i].Attributes = (*TokenGroups)->Groups[i].Attributes;
+        }
+
+        Groups->Groups[Groups->GroupCount].Sid = Sid;
+        Groups->Groups[Groups->GroupCount].Attributes = 
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        Groups->GroupCount++;
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *TokenGroups);
+
+        *TokenGroups = Groups;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapAddSamGroups(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE BuiltinDomainHandle = NULL;
+    SAMPR_HANDLE AccountDomainHandle = NULL;
+    SAMPR_PSID_ARRAY SidArray;
+    SAMPR_ULONG_ARRAY BuiltinMembership;
+    SAMPR_ULONG_ARRAY AccountMembership;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (TokenInformationType != LsaTokenInformationV1)
+        return STATUS_SUCCESS;
+
+    TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+    SidArray.Count = TokenInfo1->Groups->GroupCount + 1;
+    SidArray.Sids = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    (TokenInfo1->Groups->GroupCount + 1) * sizeof(PRPC_SID));
+    if (SidArray.Sids == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    SidArray.Sids[0].SidPointer = TokenInfo1->User.User.Sid;
+    for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+        SidArray.Sids[i + 1].SidPointer = TokenInfo1->Groups->Groups[i].Sid;
+
+    BuiltinMembership.Element = NULL;
+    AccountMembership.Element = NULL;
+
+    Status = SamIConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                         FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamIConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_GET_ALIAS_MEMBERSHIP,
+                            BuiltinDomainSid,
+                            &BuiltinDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_GET_ALIAS_MEMBERSHIP,
+                            AccountDomainSid,
+                            &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrGetAliasMembership(BuiltinDomainHandle,
+                                    &SidArray,
+                                    &BuiltinMembership);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrGetAliasMembership failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrGetAliasMembership(AccountDomainHandle,
+                                    &SidArray,
+                                    &AccountMembership);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrGetAliasMembership failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("Builtin Memberships: %lu\n", BuiltinMembership.Count);
+    for (i = 0; i < BuiltinMembership.Count; i++)
+    {
+        TRACE("RID %lu: %lu (0x%lx)\n", i, BuiltinMembership.Element[i], BuiltinMembership.Element[i]);
+        Status = LsapAppendSidToGroups(&TokenInfo1->Groups,
+                                       BuiltinDomainSid,
+                                       BuiltinMembership.Element[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsapAppendSidToGroups failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
+
+    TRACE("Account Memberships: %lu\n", AccountMembership.Count);
+    for (i = 0; i < AccountMembership.Count; i++)
+    {
+        TRACE("RID %lu: %lu (0x%lx)\n", i, AccountMembership.Element[i], AccountMembership.Element[i]);
+        Status = LsapAppendSidToGroups(&TokenInfo1->Groups,
+                                       AccountDomainSid,
+                                       AccountMembership.Element[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsapAppendSidToGroups failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
+
+done:
+    RtlFreeHeap(RtlGetProcessHeap(), 0, SidArray.Sids);
+
+    if (AccountMembership.Element != NULL)
+        SamIFree_SAMPR_ULONG_ARRAY(&AccountMembership);
+
+    if (BuiltinMembership.Element != NULL)
+        SamIFree_SAMPR_ULONG_ARRAY(&BuiltinMembership);
+
+    if (AccountDomainHandle != NULL)
+        SamrCloseHandle(&AccountDomainHandle);
+
+    if (BuiltinDomainHandle != NULL)
+        SamrCloseHandle(&BuiltinDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+//    return Status;
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapSetTokenOwner(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PSID OwnerSid = NULL;
+    ULONG i, Length;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->Owner.Owner != NULL)
+            return STATUS_SUCCESS;
+
+        OwnerSid = TokenInfo1->User.User.Sid;
+        for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+        {
+            if (EqualSid(TokenInfo1->Groups->Groups[i].Sid, LsapAdministratorsSid))
+            {
+                OwnerSid = LsapAdministratorsSid;
+                break;
+            }
+        }
+
+        Length = RtlLengthSid(OwnerSid);
+        TokenInfo1->Owner.Owner = DispatchTable.AllocateLsaHeap(Length);
+        if (TokenInfo1->Owner.Owner == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(TokenInfo1->Owner.Owner,
+                      OwnerSid,
+                      Length);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapAddTokenDefaultDacl(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PACL Dacl = NULL;
+    ULONG Length;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->DefaultDacl.DefaultDacl != NULL)
+            return STATUS_SUCCESS;
+
+        Length = sizeof(ACL) +
+                 (2 * sizeof(ACCESS_ALLOWED_ACE)) +
+                 RtlLengthSid(TokenInfo1->Owner.Owner) +
+                 RtlLengthSid(LsapLocalSystemSid);
+
+        Dacl = DispatchTable.AllocateLsaHeap(Length);
+        if (Dacl == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCreateAcl(Dacl, Length, ACL_REVISION);
+
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_ALL,
+                               TokenInfo1->Owner.Owner);
+
+        /* SID: S-1-5-18 */
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_ALL,
+                               LsapLocalSystemSid);
+
+        TokenInfo1->DefaultDacl.DefaultDacl = Dacl;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapAddPrivilegeToTokenPrivileges(PTOKEN_PRIVILEGES *TokenPrivileges,
+                                  PLSAPR_LUID_AND_ATTRIBUTES Privilege)
+{
+    PTOKEN_PRIVILEGES LocalPrivileges;
+    ULONG Length, TokenPrivilegeCount, i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (*TokenPrivileges == NULL)
+    {
+        Length = sizeof(TOKEN_PRIVILEGES) +
+                 (1 - ANYSIZE_ARRAY) * sizeof(LUID_AND_ATTRIBUTES);
+        LocalPrivileges = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          0,
+                                          Length);
+        if (LocalPrivileges == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        LocalPrivileges->PrivilegeCount = 1;
+        LocalPrivileges->Privileges[0].Luid = Privilege->Luid;
+        LocalPrivileges->Privileges[0].Attributes = Privilege->Attributes;
+    }
+    else
+    {
+        TokenPrivilegeCount = (*TokenPrivileges)->PrivilegeCount;
+
+        for (i = 0; i < TokenPrivilegeCount; i++)
+        {
+            if (RtlEqualLuid(&(*TokenPrivileges)->Privileges[i].Luid, &Privilege->Luid))
+                return STATUS_SUCCESS;
+        }
+
+        Length = sizeof(TOKEN_PRIVILEGES) +
+                 (TokenPrivilegeCount + 1 - ANYSIZE_ARRAY) * sizeof(LUID_AND_ATTRIBUTES);
+        LocalPrivileges = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          0,
+                                          Length);
+        if (LocalPrivileges == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        LocalPrivileges->PrivilegeCount = TokenPrivilegeCount + 1;
+        for (i = 0; i < TokenPrivilegeCount; i++)
+        {
+            LocalPrivileges->Privileges[i].Luid = (*TokenPrivileges)->Privileges[i].Luid;
+            LocalPrivileges->Privileges[i].Attributes = (*TokenPrivileges)->Privileges[i].Attributes;
+        }
+
+        LocalPrivileges->Privileges[TokenPrivilegeCount].Luid = Privilege->Luid;
+        LocalPrivileges->Privileges[TokenPrivilegeCount].Attributes = Privilege->Attributes;
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *TokenPrivileges);
+    }
+
+    *TokenPrivileges = LocalPrivileges;
+
+    return Status;
+}
+
+static
+NTSTATUS
+LsapSetPrivileges(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    LSAPR_HANDLE PolicyHandle = NULL;
+    LSAPR_HANDLE AccountHandle = NULL;
+    PLSAPR_PRIVILEGE_SET Privileges = NULL;
+    ULONG i, j;
+    NTSTATUS Status;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        Status = LsarOpenPolicy(NULL,
+                                NULL,
+                                0,
+                                &PolicyHandle);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+        {
+            Status = LsarOpenAccount(PolicyHandle,
+                                     TokenInfo1->Groups->Groups[i].Sid,
+                                     ACCOUNT_VIEW,
+                                     &AccountHandle);
+            if (!NT_SUCCESS(Status))
+                continue;
+
+            Status = LsarEnumeratePrivilegesAccount(AccountHandle,
+                                                    &Privileges);
+            if (NT_SUCCESS(Status))
+            {
+                for (j = 0; j < Privileges->PrivilegeCount; j++)
+                {
+                    Status = LsapAddPrivilegeToTokenPrivileges(&TokenInfo1->Privileges,
+                                                               &(Privileges->Privilege[j]));
+                    if (!NT_SUCCESS(Status))
+                    {
+                        /* We failed, clean everything and return */
+                        LsaIFree_LSAPR_PRIVILEGE_SET(Privileges);
+                        LsarClose(&AccountHandle);
+                        LsarClose(&PolicyHandle);
+
+                        return Status;
+                    }
+                }
+
+                LsaIFree_LSAPR_PRIVILEGE_SET(Privileges);
+                Privileges = NULL;
+            }
+
+            LsarClose(&AccountHandle);
+        }
+
+        LsarClose(&PolicyHandle);
+
+        if (TokenInfo1->Privileges != NULL)
+        {
+            for (i = 0; i < TokenInfo1->Privileges->PrivilegeCount; i++)
+            {
+                if (RtlEqualLuid(&TokenInfo1->Privileges->Privileges[i].Luid, &SeChangeNotifyPrivilege) ||
+                    RtlEqualLuid(&TokenInfo1->Privileges->Privileges[i].Luid, &SeCreateGlobalPrivilege) ||
+                    RtlEqualLuid(&TokenInfo1->Privileges->Privileges[i].Luid, &SeImpersonatePrivilege))
+                {
+                    TokenInfo1->Privileges->Privileges[i].Attributes |= SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT;
+                }
+            }
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext)
@@ -571,20 +1373,23 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     PUNICODE_STRING AuthenticatingAuthority = NULL;
     PUNICODE_STRING MachineName = NULL;
     PVOID LocalAuthInfo = NULL;
+    PTOKEN_GROUPS LocalGroups = NULL;
     HANDLE TokenHandle = NULL;
     ULONG i;
     ULONG PackageId;
+    SECURITY_LOGON_TYPE LogonType;
     NTSTATUS Status;
 
     TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     PackageId = RequestMsg->LogonUser.Request.AuthenticationPackage;
+    LogonType = RequestMsg->LogonUser.Request.LogonType;
 
     /* Get the right authentication package */
     Package = LsapGetAuthenticationPackage(PackageId);
     if (Package == NULL)
     {
-        TRACE("LsapGetAuthenticationPackage() failed to find a package\n");
+        ERR("LsapGetAuthenticationPackage() failed to find a package\n");
         return STATUS_NO_SUCH_PACKAGE;
     }
 
@@ -596,7 +1401,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                         RequestMsg->LogonUser.Request.AuthenticationInformationLength);
         if (LocalAuthInfo == NULL)
         {
-            TRACE("RtlAllocateHeap() failed\n");
+            ERR("RtlAllocateHeap() failed\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -608,10 +1413,25 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                      NULL);
         if (!NT_SUCCESS(Status))
         {
-            TRACE("NtReadVirtualMemory() failed (Status 0x%08lx)\n", Status);
+            ERR("NtReadVirtualMemory() failed (Status 0x%08lx)\n", Status);
             RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
             return Status;
         }
+    }
+
+    if (RequestMsg->LogonUser.Request.LocalGroupsCount > 0)
+    {
+        Status = LsapCopyLocalGroups(LogonContext,
+                                     RequestMsg->LogonUser.Request.LocalGroups,
+                                     RequestMsg->LogonUser.Request.LocalGroupsCount,
+                                     &LocalGroups);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapCopyLocalGroups failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        TRACE("GroupCount: %lu\n", LocalGroups->GroupCount);
     }
 
     if (Package->LsaApLogonUserEx2 != NULL)
@@ -669,7 +1489,61 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
     if (!NT_SUCCESS(Status))
     {
-        TRACE("LsaApLogonUser/Ex/2 failed (Status 0x%08lx)\n", Status);
+        ERR("LsaApLogonUser/Ex/2 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (LocalGroups->GroupCount > 0)
+    {
+        /* Add local groups to the token information */
+        Status = LsapAddLocalGroups(TokenInformation,
+                                    TokenInformationType,
+                                    LocalGroups);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapAddLocalGroupsToTokenInfo() failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+    }
+
+    Status = LsapAddDefaultGroups(TokenInformation,
+                                  TokenInformationType,
+                                  LogonType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapAddDefaultGroups() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = LsapAddSamGroups(TokenInformation,
+                              TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapAddSamGroups() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = LsapSetTokenOwner(TokenInformation,
+                               TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetTokenOwner() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = LsapAddTokenDefaultDacl(TokenInformation,
+                                     TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapAddTokenDefaultDacl() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = LsapSetPrivileges(TokenInformation,
+                               TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetPrivileges() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -705,7 +1579,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                &RequestMsg->LogonUser.Request.SourceContext);
         if (!NT_SUCCESS(Status))
         {
-            TRACE("NtCreateToken failed (Status 0x%08lx)\n", Status);
+            ERR("NtCreateToken failed (Status 0x%08lx)\n", Status);
             goto done;
         }
     }
@@ -726,17 +1600,36 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_CLOSE_SOURCE);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("NtDuplicateObject failed (Status 0x%08lx)\n", Status);
+        ERR("NtDuplicateObject failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
-    TokenHandle = NULL;
+//    TokenHandle = NULL;
 
-done:
+    Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId);
     if (!NT_SUCCESS(Status))
     {
+        ERR("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+done:
+//    if (!NT_SUCCESS(Status))
+//    {
         if (TokenHandle != NULL)
             NtClose(TokenHandle);
+//    }
+
+    /* Free the local groups */
+    if (LocalGroups != NULL)
+    {
+        for (i = 0; i < LocalGroups->GroupCount; i++)
+        {
+            if (LocalGroups->Groups[i].Sid != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
+        }
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
     }
 
     /* Free the local authentication info buffer */
@@ -813,6 +1706,8 @@ done:
 
         LsapFreeHeap(MachineName);
     }
+
+    TRACE("LsapLogonUser done (Status 0x%08lx)\n", Status);
 
     return Status;
 }

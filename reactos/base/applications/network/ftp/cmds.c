@@ -15,17 +15,17 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
-#endif /* not lint */
-
 /*
  * FTP User Program -- Command Routines.
  */
-//#include <sys/param.h>
-//#include <sys/wait.h>
 
 #include "precomp.h"
+
+#include "pathnames.h"
+
+#ifndef lint
+static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
+#endif /* not lint */
 
 extern	char *globerr;
 extern	char home[];
@@ -85,18 +85,11 @@ void setpeer(int argc, const char *argv[])
 	}
 	host = hookup(argv[1], portnum);
 	if (host) {
-#if defined(unix) && NBBY == 8
 		int overbose;
-#endif
 		connected = 1;
 		if (autologin)
 			(void) login(argv[1]);
 
-#if defined(unix) && NBBY == 8
-/*
- * this ifdef is to keep someone form "porting" this to an incompatible
- * system and not checking this out. This way they have to think about it.
- */
 		overbose = verbose;
 		if (debug == 0)
 			verbose = -1;
@@ -119,7 +112,7 @@ void setpeer(int argc, const char *argv[])
 				*cp = c;
 		}
 		if (!strncmp(reply_string, "215 UNIX Type: L8", 17)) {
-			setbinary();
+			setbinary(0, NULL);
 			/* allbinary = 1; this violates the RFC */
 			if (overbose)
 			    printf("Using %s mode to transfer files.\n",
@@ -130,7 +123,6 @@ void setpeer(int argc, const char *argv[])
 "Remember to set tenex mode when transfering binary files from this machine.\n");
 		}
 		verbose = overbose;
-#endif /* unix */
 	}
 	(void) fflush(stdout);
 }
@@ -1311,13 +1303,13 @@ void shell(int argc, const char *argv[])
 
     if (argc > 1)
     {
-        strncat(CmdLine, " /C", MAX_PATH);
+        strncat(CmdLine, " /C", MAX_PATH - strlen(CmdLine) - 1);
     }
 
     for (i=1; i<argc; i++)
     {
-        strncat(CmdLine, " ", MAX_PATH);
-        strncat(CmdLine, argv[i], MAX_PATH);
+        strncat(CmdLine, " ", MAX_PATH - strlen(CmdLine) - 1);
+        strncat(CmdLine, argv[i], MAX_PATH - strlen(CmdLine) - 1); 
     }
 
     StartupInfo.cb          = sizeof( StartupInfo );
@@ -1850,10 +1842,10 @@ dotrans(const char *name)
     char *cp2 = new;
 	register int i, ostop, found;
 
-	for (ostop = 0; *(ntout + ostop) && ostop < 16; ostop++);
+	for (ostop = 0; ostop < 16 && *(ntout + ostop); ostop++);
 	for (cp1 = name; *cp1; cp1++) {
 		found = 0;
-		for (i = 0; *(ntin + i) && i < 16; i++) {
+		for (i = 0; i < 16 && *(ntin + i); i++) {
 			if (*cp1 == *(ntin + i)) {
 				found++;
 				if (i < ostop) {

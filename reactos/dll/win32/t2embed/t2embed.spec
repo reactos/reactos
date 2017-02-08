@@ -11,14 +11,14 @@
 @ stdcall TTRunValidationTests(ptr ptr)
 @ stub _TTCharToUnicode@24
 @ stub _TTDeleteEmbeddedFont@12
-@ stub _TTEmbedFont@44
+@ stdcall _TTEmbedFont@44(long long long ptr ptr ptr ptr ptr long long ptr) TTEmbedFont
 @ stub _TTEmbedFontFromFileA@52
 @ stub _TTEnableEmbeddingForFacename@8
 @ stub _TTGetEmbeddedFontInfo@28
-@ stub _TTGetEmbeddingType@8
-@ stub _TTIsEmbeddingEnabled@8
+@ stdcall _TTGetEmbeddingType@8(long ptr) TTGetEmbeddingType
+@ stdcall _TTIsEmbeddingEnabled@8(long ptr) TTIsEmbeddingEnabled
 @ stub _TTIsEmbeddingEnabledForFacename@8
-@ stub _TTLoadEmbeddedFont@40
+@ stdcall _TTLoadEmbeddedFont@40(ptr long ptr long ptr ptr ptr wstr str ptr) TTLoadEmbeddedFont
 @ stub _TTRunValidationTests@8
 @ stdcall TTEmbedFontEx(ptr long long ptr ptr ptr ptr ptr long long ptr)
 @ stdcall TTRunValidationTestsEx(ptr ptr)

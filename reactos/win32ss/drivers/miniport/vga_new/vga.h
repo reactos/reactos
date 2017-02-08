@@ -1,18 +1,20 @@
 /*
  * PROJECT:         ReactOS VGA Miniport Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/miniport/vga/vga.h
+ * FILE:            win32ss/drivers/miniport/vga_new/vga.h
  * PURPOSE:         Main Header File
  * PROGRAMMERS:     Copyright (c) 1992  Microsoft Corporation
  *                  ReactOS Portable Systems Group
  */
 
-#include "ntdef.h"
-#include "dderror.h"
-#include "devioctl.h"
-#include "miniport.h"
-#include "ntddvdeo.h"
-#include "video.h"
+#ifndef _VGA_NEW_PCH_
+#define _VGA_NEW_PCH_
+
+#include <ntdef.h>
+#include <dderror.h>
+#include <miniport.h>
+#include <video.h>
+
 #include "cmdcnst.h"
 
 //
@@ -447,3 +449,5 @@ extern VIDEO_ACCESS_RANGE VgaAccessRange[];
 #define VESA_MAGIC ('V' + ('E' << 8) + ('S' << 16) + ('A' << 24))
 
 #include "vbe.h"
+
+#endif /* _VGA_NEW_PCH_ */

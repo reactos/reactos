@@ -166,7 +166,7 @@ typedef enum
     Pipe_Allocator_FirstPin,
     Pipe_Allocator_LastPin,
     Pipe_Allocator_MiddlePin
-}PIPE_ALLOCATOR_PLACE, *PPIPE_ALLOCATOR_PLACE;;
+}PIPE_ALLOCATOR_PLACE, *PPIPE_ALLOCATOR_PLACE;
 
 typedef enum
 {
@@ -177,7 +177,7 @@ typedef enum
     KS_MemoryTypeDeviceSpecific,
     KS_MemoryTypeUser,
     KS_MemoryTypeAnyHost
-}KS_LogicalMemoryType, *PKS_LogicalMemoryType;;
+}KS_LogicalMemoryType, *PKS_LogicalMemoryType;
 
 typedef struct _PIPE_TERMINATION {
     ULONG                       Flags;

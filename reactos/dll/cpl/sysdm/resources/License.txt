@@ -1,0 +1,3 @@
+The wizard hat icon was created by Yahir Vite and was downloaded from here: http://findicons.com/icon/208721/wizard#
+The audio card icon is from the Gnome Icon project.
+The rest of the icons are from ReactOS and the Tango project.

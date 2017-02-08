@@ -4,7 +4,6 @@ add_definitions(
     -D_USE_MATH_DEFINES)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -22,13 +21,23 @@ list(APPEND SOURCE
     pen.c
     region.c
     stringformat.c
+    gdiplus_private.h)
+
+add_library(gdiplus SHARED
+    ${SOURCE}
+    guid.c
     gdiplus.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
-add_library(gdiplus SHARED ${SOURCE})
 set_module_type(gdiplus win32dll)
-target_link_libraries(gdiplus uuid wine)
+target_link_libraries(gdiplus wine)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(gdiplus mingwex)
+endif()
+
 add_delay_importlibs(gdiplus windowscodecs)
 add_importlibs(gdiplus msvcrt shlwapi oleaut32 ole32 user32 gdi32 kernel32 ntdll)
+add_pch(gdiplus gdiplus_private.h SOURCE)
 add_cd_file(TARGET gdiplus DESTINATION reactos/system32 FOR all)

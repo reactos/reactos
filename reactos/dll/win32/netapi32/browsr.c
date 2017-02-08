@@ -20,6 +20,8 @@
 
 #include "netapi32.h"
 
+#include <lmbrowsr.h>
+
 /************************************************************
  *                I_BrowserSetNetlogonState  (NETAPI32.@)
  */

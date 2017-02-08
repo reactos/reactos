@@ -1,13 +1,15 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/toolspage.c
+ * FILE:        base/applications/msconfig/toolspage.c
  * PURPOSE:     Tools page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *
  */
 
 #include "precomp.h"
+
+#include <shlwapi.h>
 
 HWND hToolsPage;
 HWND hToolsListCtrl;

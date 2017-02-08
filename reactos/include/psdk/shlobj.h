@@ -22,7 +22,10 @@
 #include <ole2.h>
 #include <commctrl.h>
 #include <prsht.h>
+
+#ifndef INITGUID
 #include <shlguid.h>
+#endif
 
 #ifdef WINE_NO_UNICODE_MACROS
 #undef GetObject
@@ -81,47 +84,175 @@ typedef struct
 DECLARE_HANDLE(HPSXA);
 #endif
 
-UINT         WINAPI SHAddFromPropSheetExtArray(HPSXA,LPFNADDPROPSHEETPAGE,LPARAM);
+UINT
+WINAPI
+SHAddFromPropSheetExtArray(
+  _In_ HPSXA,
+  _In_ LPFNADDPROPSHEETPAGE,
+  LPARAM);
+
 LPVOID       WINAPI SHAlloc(SIZE_T) __WINE_ALLOC_SIZE(1);
-HRESULT      WINAPI SHCoCreateInstance(LPCWSTR,const CLSID*,IUnknown*,REFIID,LPVOID*);
-HPSXA        WINAPI SHCreatePropSheetExtArray(HKEY,LPCWSTR,UINT);
+
+HRESULT
+WINAPI
+SHCoCreateInstance(
+  _In_opt_ LPCWSTR,
+  _In_opt_ const CLSID*,
+  _In_opt_ IUnknown*,
+  _In_ REFIID,
+  _Outptr_ LPVOID*);
+
+HPSXA        WINAPI SHCreatePropSheetExtArray(_In_ HKEY, _In_opt_ LPCWSTR, UINT);
 HPSXA        WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
-HRESULT      WINAPI SHCreateShellItem(LPCITEMIDLIST,IShellFolder*,LPCITEMIDLIST,IShellItem**);
-DWORD        WINAPI SHCLSIDFromStringA(LPCSTR,CLSID*);
-DWORD        WINAPI SHCLSIDFromStringW(LPCWSTR,CLSID*);
+HRESULT      WINAPI SHCreateQueryCancelAutoPlayMoniker(IMoniker**);
+
+HRESULT
+WINAPI
+SHCreateShellItem(
+  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ IShellFolder*,
+  _In_ LPCITEMIDLIST,
+  _Outptr_ IShellItem**);
+
+DWORD        WINAPI SHCLSIDFromStringA(_In_ LPCSTR, _Out_ CLSID*);
+DWORD        WINAPI SHCLSIDFromStringW(_In_ LPCWSTR, _Out_ CLSID*);
 #define             SHCLSIDFromString WINELIB_NAME_AW(SHCLSIDFromString)
-HRESULT      WINAPI SHCreateStdEnumFmtEtc(UINT,const FORMATETC *,IEnumFORMATETC**);
-void         WINAPI SHDestroyPropSheetExtArray(HPSXA);
-BOOL         WINAPI SHFindFiles(LPCITEMIDLIST,LPCITEMIDLIST);
-DWORD        WINAPI SHFormatDrive(HWND,UINT,UINT,UINT);
-void         WINAPI SHFree(LPVOID);
-BOOL         WINAPI GetFileNameFromBrowse(HWND,LPWSTR,UINT,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR);
-HRESULT      WINAPI SHGetInstanceExplorer(IUnknown**);
-VOID         WINAPI SHSetInstanceExplorer (IUnknown*);
-HRESULT      WINAPI SHGetFolderPathAndSubDirA(HWND,int,HANDLE,DWORD,LPCSTR,LPSTR);
-HRESULT      WINAPI SHGetFolderPathAndSubDirW(HWND,int,HANDLE,DWORD,LPCWSTR,LPWSTR);
-#define             SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir);
-BOOL         WINAPI SHGetPathFromIDListA(LPCITEMIDLIST,LPSTR);
-BOOL         WINAPI SHGetPathFromIDListW(LPCITEMIDLIST,LPWSTR);
-#define             SHGetPathFromIDList WINELIB_NAME_AW(SHGetPathFromIDList)
-INT          WINAPI SHHandleUpdateImage(LPCITEMIDLIST);
-HRESULT      WINAPI SHILCreateFromPath(LPCWSTR,LPITEMIDLIST*,DWORD*);
+
+HRESULT
+WINAPI
+SHCreateStdEnumFmtEtc(
+  _In_ UINT cfmt,
+  _In_reads_(cfmt) const FORMATETC *,
+  _Outptr_ IEnumFORMATETC**);
+
+void         WINAPI SHDestroyPropSheetExtArray(_In_ HPSXA);
+BOOL         WINAPI SHFindFiles(_In_opt_ LPCITEMIDLIST, _In_opt_ LPCITEMIDLIST);
+DWORD        WINAPI SHFormatDrive(_In_ HWND, UINT, UINT, UINT);
+void         WINAPI SHFree(_In_opt_ LPVOID);
+
+BOOL
+WINAPI
+GetFileNameFromBrowse(
+  _In_opt_ HWND,
+  _Inout_updates_(cchFilePath) LPWSTR,
+  UINT cchFilePath,
+  _In_opt_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR);
+
+_Check_return_ HRESULT WINAPI SHGetInstanceExplorer(_Outptr_ IUnknown**);
+
+VOID         WINAPI SHSetInstanceExplorer(_In_opt_ IUnknown*);
+
+HRESULT
+WINAPI
+SHGetFolderPathAndSubDirA(
+  _Reserved_ HWND,
+  _In_ int,
+  _In_opt_ HANDLE,
+  _In_ DWORD,
+  _In_opt_ LPCSTR, _Out_writes_(MAX_PATH) LPSTR);
+
+HRESULT
+WINAPI
+SHGetFolderPathAndSubDirW(
+  _Reserved_ HWND,
+  _In_ int,
+  _In_opt_ HANDLE,
+  _In_ DWORD,
+  _In_opt_ LPCWSTR,
+  _Out_writes_(MAX_PATH) LPWSTR);
+
+#define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+SHGetPathFromIDListA(
+  _In_ LPCITEMIDLIST,
+  _Out_writes_(MAX_PATH) LPSTR);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+SHGetPathFromIDListW(
+  _In_ LPCITEMIDLIST,
+  _Out_writes_(MAX_PATH) LPWSTR);
+
+#define SHGetPathFromIDList WINELIB_NAME_AW(SHGetPathFromIDList)
+
+INT          WINAPI SHHandleUpdateImage(_In_ LPCITEMIDLIST);
+
+HRESULT
+WINAPI
+SHILCreateFromPath(
+  _In_ LPCWSTR,
+  _Outptr_ LPITEMIDLIST*,
+  _Inout_opt_ DWORD*);
+
 HRESULT      WINAPI SHLoadOLE(LPARAM);
-HRESULT      WINAPI SHParseDisplayName(LPCWSTR,IBindCtx*,LPITEMIDLIST*,SFGAOF,SFGAOF*);
-HRESULT      WINAPI SHPathPrepareForWriteA(HWND,IUnknown*,LPCSTR,DWORD);
-HRESULT      WINAPI SHPathPrepareForWriteW(HWND,IUnknown*,LPCWSTR,DWORD);
-#define             SHPathPrepareForWrite WINELIB_NAME_AW(SHPathPrepareForWrite);
-UINT         WINAPI SHReplaceFromPropSheetExtArray(HPSXA,UINT,LPFNADDPROPSHEETPAGE,LPARAM);
+
+HRESULT
+WINAPI
+SHParseDisplayName(
+  _In_ LPCWSTR,
+  _In_opt_ IBindCtx*,
+  _Outptr_ LPITEMIDLIST*,
+  _In_ SFGAOF,
+  _Out_opt_ SFGAOF*);
+
+HRESULT
+WINAPI
+SHPathPrepareForWriteA(
+  _In_opt_ HWND,
+  _In_opt_ IUnknown*,
+  _In_ LPCSTR, DWORD);
+
+HRESULT
+WINAPI
+SHPathPrepareForWriteW(
+  _In_opt_ HWND,
+  _In_opt_ IUnknown*,
+  _In_ LPCWSTR, DWORD);
+
+#define SHPathPrepareForWrite WINELIB_NAME_AW(SHPathPrepareForWrite);
+
+UINT
+WINAPI
+SHReplaceFromPropSheetExtArray(
+  _In_ HPSXA,
+  UINT,
+  _In_ LPFNADDPROPSHEETPAGE,
+  LPARAM);
+
 LPITEMIDLIST WINAPI SHSimpleIDListFromPath(LPCWSTR);
-int          WINAPI SHMapPIDLToSystemImageListIndex(IShellFolder*,LPCITEMIDLIST,int*);
+
+int
+WINAPI
+SHMapPIDLToSystemImageListIndex(
+  _In_ IShellFolder*,
+  _In_ LPCITEMIDLIST,
+  _Out_opt_ int*);
+
 HRESULT      WINAPI SHStartNetConnectionDialog(HWND,LPCSTR,DWORD);
-VOID         WINAPI SHUpdateImageA(LPCSTR,INT,UINT,INT);
-VOID         WINAPI SHUpdateImageW(LPCWSTR,INT,UINT,INT);
-INT          WINAPI PickIconDlg(HWND,LPWSTR,UINT,int *);
+VOID         WINAPI SHUpdateImageA(_In_ LPCSTR, INT, UINT, INT);
+VOID         WINAPI SHUpdateImageW(_In_ LPCWSTR, INT, UINT, INT);
+
+INT
+WINAPI
+PickIconDlg(
+  _In_opt_ HWND,
+  _Inout_updates_(cchIconPath) LPWSTR,
+  UINT cchIconPath,
+  _Inout_opt_ int *);
+
 #define             SHUpdateImage WINELIB_NAME_AW(SHUpdateImage)
-int          WINAPI RestartDialog(HWND,LPCWSTR,DWORD);
-int          WINAPI RestartDialogEx(HWND,LPCWSTR,DWORD,DWORD);
+int          WINAPI RestartDialog(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD);
+int          WINAPI RestartDialogEx(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD, DWORD);
 BOOL         WINAPI IsUserAnAdmin(void);
+
+#define KF_FLAG_DEFAULT_PATH        0x00000400
 
 #define SHFMT_ERROR     0xFFFFFFFFL  /* Error on last format, drive may be formattable */
 #define SHFMT_CANCEL    0xFFFFFFFEL  /* Last format was cancelled */
@@ -146,7 +277,13 @@ BOOL         WINAPI IsUserAnAdmin(void);
 #define SHOP_FILEPATH    0x02
 #define SHOP_VOLUMEGUID  0x04
 
-BOOL WINAPI SHObjectProperties(HWND,DWORD,LPCWSTR,LPCWSTR);
+BOOL
+WINAPI
+SHObjectProperties(
+  _In_opt_ HWND,
+  _In_ DWORD,
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR);
 
 #define PCS_FATAL           0x80000000
 #define PCS_REPLACEDCHAR    0x00000001
@@ -154,7 +291,7 @@ BOOL WINAPI SHObjectProperties(HWND,DWORD,LPCWSTR,LPCWSTR);
 #define PCS_TRUNCATED       0x00000004
 #define PCS_PATHTOOLONG     0x00000008
 
-int WINAPI PathCleanupSpec(LPCWSTR,LPWSTR);
+int WINAPI PathCleanupSpec(_In_opt_ LPCWSTR, _Inout_ LPWSTR);
 
 /*****************************************************************************
  * IContextMenu interface
@@ -334,6 +471,8 @@ typedef struct
 #define FCIDM_SHVIEW_INSERT     0x701A
 #define FCIDM_SHVIEW_UNDO       0x701B
 #define FCIDM_SHVIEW_INSERTLINK 0x701C
+#define FCIDM_SHVIEW_COPYTO     0x701E
+#define FCIDM_SHVIEW_MOVETO     0x701F
 #define FCIDM_SHVIEW_SELECTALL  0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 
@@ -394,7 +533,7 @@ DECLARE_INTERFACE_(IShellDetails, IUnknown)
     STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     /*** IShellDetails methods ***/
-    STDMETHOD(GetDetailsOf)(THIS_ PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *pDetails) PURE;
+    STDMETHOD(GetDetailsOf)(THIS_ _In_opt_ PCUITEMID_CHILD pidl, UINT iColumn, _Out_ SHELLDETAILS *pDetails) PURE;
     STDMETHOD(ColumnClick)(THIS_ UINT iColumn) PURE;
 };
 #undef INTERFACE
@@ -418,8 +557,8 @@ DECLARE_INTERFACE_(IQueryInfo,IUnknown)
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQueryInfo methods ***/
-    STDMETHOD(GetInfoTip)(THIS_ DWORD dwFlags, WCHAR** lppTips) PURE;
-    STDMETHOD(GetInfoFlags)(THIS_ DWORD* lpFlags) PURE;
+    STDMETHOD(GetInfoTip)(THIS_ DWORD dwFlags, _Outptr_ WCHAR** lppTips) PURE;
+    STDMETHOD(GetInfoFlags)(THIS_ _Out_ DWORD* lpFlags) PURE;
 };
 #undef INTERFACE
 
@@ -490,8 +629,8 @@ DECLARE_INTERFACE_(IObjMgr,IUnknown)
     STDMETHOD_(ULONG,AddRef) (THIS) PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     /*** IObjMgr methods ***/
-    STDMETHOD(Append)(THIS_ LPUNKNOWN punk) PURE;
-    STDMETHOD(Remove)(THIS_ LPUNKNOWN punk) PURE;
+    STDMETHOD(Append)(THIS_ _In_ LPUNKNOWN punk) PURE;
+    STDMETHOD(Remove)(THIS_ _In_ LPUNKNOWN punk) PURE;
 };
 #undef INTERFACE
 
@@ -514,7 +653,7 @@ DECLARE_INTERFACE_(IACList,IUnknown)
     STDMETHOD_(ULONG,AddRef) (THIS) PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     /*** IACList methods ***/
-    STDMETHOD(Expand)(THIS_ LPCOLESTR str) PURE;
+    STDMETHOD(Expand)(THIS_ _In_ LPCOLESTR str) PURE;
 };
 #undef INTERFACE
 
@@ -539,7 +678,7 @@ DECLARE_INTERFACE_(IACList2,IACList)
     STDMETHOD(Expand)(THIS_ LPCOLESTR str) PURE;
     /*** IACList2 methods ***/
     STDMETHOD(SetOptions)(THIS_ DWORD dwFlag) PURE;
-    STDMETHOD(GetOptions)(THIS_ DWORD* pdwFlag) PURE;
+    STDMETHOD(GetOptions)(THIS_ _Out_ DWORD* pdwFlag) PURE;
 };
 #undef INTERFACE
 
@@ -605,33 +744,33 @@ DECLARE_INTERFACE_(IShellFolderView, IUnknown)
 
     /*** IShellFolderView methods ***/
     STDMETHOD(Rearrange) (THIS_ LPARAM lParamSort) PURE;
-    STDMETHOD(GetArrangeParam) (THIS_ LPARAM *plParamSort) PURE;
+    STDMETHOD(GetArrangeParam) (THIS_ _Out_ LPARAM *plParamSort) PURE;
     STDMETHOD(ArrangeGrid) (THIS) PURE;
     STDMETHOD(AutoArrange) (THIS) PURE;
     STDMETHOD(GetAutoArrange) (THIS) PURE;
-    STDMETHOD(AddObject) (THIS_ PITEMID_CHILD pidl, UINT *puItem) PURE;
-    STDMETHOD(GetObject) (THIS_ PITEMID_CHILD *ppidl, UINT uItem) PURE;
-    STDMETHOD(RemoveObject) (THIS_ PITEMID_CHILD pidl, UINT *puItem) PURE;
-    STDMETHOD(GetObjectCount) (THIS_ UINT *puCount) PURE;
+    STDMETHOD(AddObject) (THIS_ _In_ PITEMID_CHILD pidl, _Out_ UINT *puItem) PURE;
+    STDMETHOD(GetObject) (THIS_ _Outptr_ PITEMID_CHILD *ppidl, UINT uItem) PURE;
+    STDMETHOD(RemoveObject) (THIS_ _In_opt_ PITEMID_CHILD pidl, _Out_ UINT *puItem) PURE;
+    STDMETHOD(GetObjectCount) (THIS_ _Out_ UINT *puCount) PURE;
     STDMETHOD(SetObjectCount) (THIS_ UINT uCount, UINT dwFlags) PURE;
-    STDMETHOD(UpdateObject) (THIS_ PITEMID_CHILD pidlOld, PITEMID_CHILD pidlNew, UINT *puItem) PURE;
-    STDMETHOD(RefreshObject) (THIS_ PITEMID_CHILD pidl, UINT *puItem) PURE;
+    STDMETHOD(UpdateObject) (THIS_ _In_ PITEMID_CHILD pidlOld, _In_ PITEMID_CHILD pidlNew, _Out_ UINT *puItem) PURE;
+    STDMETHOD(RefreshObject) (THIS_ _In_ PITEMID_CHILD pidl, _Out_ UINT *puItem) PURE;
     STDMETHOD(SetRedraw) (THIS_ BOOL bRedraw) PURE;
-    STDMETHOD(GetSelectedCount) (THIS_ UINT *puSelected) PURE;
-    STDMETHOD(GetSelectedObjects) (THIS_ PCITEMID_CHILD **pppidl, UINT *puItems) PURE;
-    STDMETHOD(IsDropOnSource) (THIS_ IDropTarget *pDropTarget) PURE;
-    STDMETHOD(GetDragPoint) (THIS_ POINT *ppt) PURE;
-    STDMETHOD(GetDropPoint) (THIS_ POINT *ppt) PURE;
-    STDMETHOD(MoveIcons) (THIS_ IDataObject *pDataObject) PURE;
-    STDMETHOD(SetItemPos) (THIS_ PCUITEMID_CHILD pidl, POINT *ppt) PURE;
-    STDMETHOD(IsBkDropTarget) (THIS_ IDropTarget *pDropTarget) PURE;
+    STDMETHOD(GetSelectedCount) (THIS_ _Out_ UINT *puSelected) PURE;
+    STDMETHOD(GetSelectedObjects) (THIS_ _Outptr_result_buffer_(*puItems) PCUITEMID_CHILD **pppidl, _Out_ UINT *puItems) PURE;
+    STDMETHOD(IsDropOnSource) (THIS_ _In_opt_ IDropTarget *pDropTarget) PURE;
+    STDMETHOD(GetDragPoint) (THIS_ _Out_ POINT *ppt) PURE;
+    STDMETHOD(GetDropPoint) (THIS_ _Out_ POINT *ppt) PURE;
+    STDMETHOD(MoveIcons) (THIS_ _In_ IDataObject *pDataObject) PURE;
+    STDMETHOD(SetItemPos) (THIS_ _In_ PCUITEMID_CHILD pidl, _In_ POINT *ppt) PURE;
+    STDMETHOD(IsBkDropTarget) (THIS_ _In_opt_ IDropTarget *pDropTarget) PURE;
     STDMETHOD(SetClipboard) (THIS_ BOOL bMove) PURE;
-    STDMETHOD(SetPoints) (THIS_ IDataObject *pDataObject) PURE;
-    STDMETHOD(GetItemSpacing) (THIS_ ITEMSPACING *pSpacing) PURE;
-    STDMETHOD(SetCallback) (THIS_ IShellFolderViewCB* pNewCB, IShellFolderViewCB** ppOldCB) PURE;
+    STDMETHOD(SetPoints) (THIS_ _In_ IDataObject *pDataObject) PURE;
+    STDMETHOD(GetItemSpacing) (THIS_ _Out_ ITEMSPACING *pSpacing) PURE;
+    STDMETHOD(SetCallback) (THIS_ _In_opt_ IShellFolderViewCB* pNewCB, _Outptr_result_maybenull_ IShellFolderViewCB** ppOldCB) PURE;
     STDMETHOD(Select) ( THIS_  UINT dwFlags ) PURE;
-    STDMETHOD(QuerySupport) (THIS_ UINT * pdwSupport ) PURE;
-    STDMETHOD(SetAutomationObject)(THIS_ IDispatch* pdisp) PURE;
+    STDMETHOD(QuerySupport) (THIS_ _Inout_ UINT * pdwSupport) PURE;
+    STDMETHOD(SetAutomationObject)(THIS_ _In_opt_ IDispatch* pdisp) PURE;
 };
 #undef INTERFACE
 
@@ -693,16 +832,16 @@ DECLARE_INTERFACE_(IProgressDialog,IUnknown)
     STDMETHOD_(ULONG,AddRef) (THIS) PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     /*** IProgressDialog methods ***/
-    STDMETHOD(StartProgressDialog)(THIS_ HWND hwndParent, IUnknown *punkEnableModeless, DWORD dwFlags, LPCVOID reserved) PURE;
+    STDMETHOD(StartProgressDialog)(THIS_ _In_opt_ HWND hwndParent, _In_opt_ IUnknown *punkEnableModeless, DWORD dwFlags, _Reserved_ LPCVOID reserved) PURE;
     STDMETHOD(StopProgressDialog)(THIS) PURE;
-    STDMETHOD(SetTitle)(THIS_ LPCWSTR pwzTitle) PURE;
-    STDMETHOD(SetAnimation)(THIS_ HINSTANCE hInstance, UINT uiResourceId) PURE;
+    STDMETHOD(SetTitle)(THIS_ _In_ LPCWSTR pwzTitle) PURE;
+    STDMETHOD(SetAnimation)(THIS_ _In_opt_ HINSTANCE hInstance, UINT uiResourceId) PURE;
     STDMETHOD_(BOOL,HasUserCancelled)(THIS) PURE;
     STDMETHOD(SetProgress)(THIS_ DWORD dwCompleted, DWORD dwTotal) PURE;
     STDMETHOD(SetProgress64)(THIS_ ULONGLONG ullCompleted, ULONGLONG ullTotal) PURE;
-    STDMETHOD(SetLine)(THIS_ DWORD dwLineNum, LPCWSTR pwzString, BOOL bPath, LPCVOID reserved) PURE;
-    STDMETHOD(SetCancelMsg)(THIS_ LPCWSTR pwzCancelMsg, LPCVOID reserved) PURE;
-    STDMETHOD(Timer)(THIS_ DWORD dwTimerAction, LPCVOID reserved) PURE;
+    STDMETHOD(SetLine)(THIS_ DWORD dwLineNum, _In_ LPCWSTR pwzString, BOOL bPath, _Reserved_ LPCVOID reserved) PURE;
+    STDMETHOD(SetCancelMsg)(THIS_ _In_ LPCWSTR pwzCancelMsg, _Reserved_ LPCVOID reserved) PURE;
+    STDMETHOD(Timer)(THIS_ DWORD dwTimerAction, _Reserved_ LPCVOID reserved) PURE;
 };
 #undef INTERFACE
 
@@ -737,10 +876,10 @@ DECLARE_INTERFACE_(IDeskBarClient,IOleWindow)
     STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
     STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
     /*** IDeskBarClient methods ***/
-    STDMETHOD_(HRESULT,SetDeskBarSite)(THIS_ IUnknown*) PURE;
+    STDMETHOD_(HRESULT,SetDeskBarSite)(THIS_ _In_opt_ IUnknown*) PURE;
     STDMETHOD_(HRESULT,SetModeDBC)(THIS_ DWORD) PURE;
     STDMETHOD_(HRESULT,UIActivateDBC)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,GetSize)(THIS_ DWORD,LPRECT) PURE;
+    STDMETHOD_(HRESULT,GetSize)(THIS_ DWORD, _Out_ LPRECT) PURE;
 };
 #undef INTERFACE
 
@@ -775,7 +914,7 @@ DECLARE_INTERFACE_(IDeskBarClient,IOleWindow)
 #define SHARD_PATHW     0x00000003L
 #define SHARD_PATH WINELIB_NAME_AW(SHARD_PATH)
 
-void WINAPI SHAddToRecentDocs(UINT,LPCVOID);
+void WINAPI SHAddToRecentDocs(UINT, _In_opt_ LPCVOID);
 
 /****************************************************************************
  * SHBrowseForFolder API
@@ -829,6 +968,7 @@ typedef struct tagBROWSEINFOW {
 #define BIF_BROWSEFORCOMPUTER  0x1000
 #define BIF_BROWSEFORPRINTER   0x2000
 #define BIF_BROWSEINCLUDEFILES 0x4000
+#define BIF_SHAREABLE          0x8000
 
 /* message from browser */
 #define BFFM_INITIALIZED        1
@@ -846,9 +986,10 @@ typedef struct tagBROWSEINFOW {
 #define BFFM_SETOKTEXT          (WM_USER+105)
 #define BFFM_SETEXPANDED        (WM_USER+106)
 
-LPITEMIDLIST WINAPI SHBrowseForFolderA(LPBROWSEINFOA lpbi);
-LPITEMIDLIST WINAPI SHBrowseForFolderW(LPBROWSEINFOW lpbi);
-#define SHBrowseForFolder	 WINELIB_NAME_AW(SHBrowseForFolder)
+LPITEMIDLIST WINAPI SHBrowseForFolderA(_In_ LPBROWSEINFOA lpbi);
+LPITEMIDLIST WINAPI SHBrowseForFolderW(_In_ LPBROWSEINFOW lpbi);
+#define SHBrowseForFolder WINELIB_NAME_AW(SHBrowseForFolder)
+
 #define BFFM_SETSTATUSTEXT  WINELIB_NAME_AW(BFFM_SETSTATUSTEXT)
 #define BFFM_SETSELECTION   WINELIB_NAME_AW(BFFM_SETSELECTION)
 #define BFFM_VALIDATEFAILED WINELIB_NAME_AW(BFFM_VALIDATEFAILED)
@@ -857,13 +998,14 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW(LPBROWSEINFOW lpbi);
  * SHCreateShellFolderViewEx API
  */
 
-typedef HRESULT (CALLBACK *LPFNVIEWCALLBACK)(
-	IShellView* dwUser,
-	IShellFolder* pshf,
-	HWND hWnd,
-	UINT uMsg,
-	WPARAM wParam,
-	LPARAM lParam);
+typedef HRESULT
+(CALLBACK *LPFNVIEWCALLBACK)(
+  _In_ IShellView* dwUser,
+  _In_ IShellFolder* pshf,
+  _In_ HWND hWnd,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam);
 
 #include <pshpack8.h>
 
@@ -880,7 +1022,11 @@ typedef struct _CSFV
 
 #include <poppack.h>
 
-HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
+HRESULT
+WINAPI
+SHCreateShellFolderViewEx(
+  _In_ LPCSFV pshfvi,
+  _Outptr_ IShellView **ppshv);
 
 /* SHCreateShellFolderViewEx callback messages */
 #define SFVM_MERGEMENU                 1
@@ -952,7 +1098,11 @@ typedef struct _SFV_CREATE
 
 #include <poppack.h>
 
-HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pscfv, IShellView **ppsv);
+HRESULT
+WINAPI
+SHCreateShellFolderView(
+  _In_ const SFV_CREATE *pscfv,
+  _Outptr_ IShellView **ppsv);
 
 /* Types and definitions for the SFM_* parameters */
 #include <pshpack8.h>
@@ -1000,10 +1150,12 @@ typedef struct _TBINFO
 *	SHShellFolderView_Message API
 */
 
-LRESULT WINAPI SHShellFolderView_Message(
-	HWND hwndCabinet,
-	UINT uMessage,
-	LPARAM lParam);
+LRESULT
+WINAPI
+SHShellFolderView_Message(
+  _In_ HWND hwndCabinet,
+  UINT uMessage,
+  LPARAM lParam);
 
 /* SHShellFolderView_Message messages */
 #define SFVM_REARRANGE          0x0001
@@ -1067,16 +1219,54 @@ typedef struct _SHDESCRIPTIONID
 
 #include <poppack.h>
 
-HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int nFormat, LPVOID pv, int cb);
-HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, int nFormat, LPVOID pv, int cb);
-#define  SHGetDataFromIDList WINELIB_NAME_AW(SHGetDataFromIDList)
+HRESULT
+WINAPI
+SHGetDataFromIDListA(
+  _In_ LPSHELLFOLDER psf,
+  _In_ LPCITEMIDLIST pidl,
+  int nFormat,
+  _Out_writes_bytes_(cb) LPVOID pv,
+  int cb);
 
-LPITEMIDLIST WINAPI SHCloneSpecialIDList(HWND hwnd, int csidl, BOOL fCreate);
-BOOL WINAPI SHGetSpecialFolderPathA (HWND hwndOwner, LPSTR szPath, int nFolder, BOOL bCreate);
-BOOL WINAPI SHGetSpecialFolderPathW (HWND hwndOwner, LPWSTR szPath, int nFolder, BOOL bCreate);
-#define  SHGetSpecialFolderPath WINELIB_NAME_AW(SHGetSpecialFolderPath)
+HRESULT
+WINAPI
+SHGetDataFromIDListW(
+  _In_ LPSHELLFOLDER psf,
+  _In_ LPCITEMIDLIST pidl,
+  int nFormat,
+  _Out_writes_bytes_(cb) LPVOID pv,
+  int cb);
 
-HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal) ;
+#define SHGetDataFromIDList WINELIB_NAME_AW(SHGetDataFromIDList)
+
+LPITEMIDLIST
+WINAPI
+SHCloneSpecialIDList(
+  _Reserved_ HWND hwnd,
+  _In_ int csidl,
+  _In_ BOOL fCreate);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+SHGetSpecialFolderPathA(
+  _Reserved_ HWND hwndOwner,
+  _Out_writes_(MAX_PATH) LPSTR szPath,
+  _In_ int nFolder,
+  _In_ BOOL bCreate);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+SHGetSpecialFolderPathW(
+  _Reserved_ HWND hwndOwner,
+  _Out_writes_(MAX_PATH) LPWSTR szPath,
+  _In_ int nFolder,
+  _In_ BOOL bCreate);
+
+#define SHGetSpecialFolderPath WINELIB_NAME_AW(SHGetSpecialFolderPath)
+
+_Check_return_ HRESULT WINAPI SHGetMalloc(_Outptr_ LPMALLOC *lpmal);
 
 /**********************************************************************
  * SHGetSetSettings ()
@@ -1141,7 +1331,7 @@ typedef struct
 	UINT :15; /* Required for proper binary layout with gcc */
 } SHELLFLAGSTATE, * LPSHELLFLAGSTATE;
 
-VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
+VOID WINAPI SHGetSettings(_Out_ LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
 
 #define SSF_SHOWALLOBJECTS		0x0001
 #define SSF_SHOWEXTENSIONS		0x0002
@@ -1520,28 +1710,75 @@ typedef struct _SHChangeProductKeyAsIDList {
     USHORT cbZero;
 } SHChangeProductKeyAsIDList, *LPSHChangeProductKeyAsIDList;
 
-ULONG WINAPI SHChangeNotifyRegister(HWND hwnd, int fSources, LONG fEvents, UINT wMsg,
-                                    int cEntries, SHChangeNotifyEntry *pshcne);
-BOOL WINAPI SHChangeNotifyDeregister(ULONG ulID);
-HANDLE WINAPI SHChangeNotification_Lock(HANDLE hChangeNotification, DWORD dwProcessId,
-                                        LPITEMIDLIST **pppidl, LONG *plEvent);
-BOOL WINAPI SHChangeNotification_Unlock(HANDLE hLock);
+ULONG
+WINAPI
+SHChangeNotifyRegister(
+  _In_ HWND hwnd,
+  int fSources,
+  LONG fEvents,
+  UINT wMsg,
+  int cEntries,
+  _In_ SHChangeNotifyEntry *pshcne);
 
-HRESULT WINAPI SHGetRealIDL(IShellFolder *psf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST * ppidlReal);
+BOOL WINAPI SHChangeNotifyDeregister(ULONG ulID);
+
+HANDLE
+WINAPI
+SHChangeNotification_Lock(
+  _In_ HANDLE hChangeNotification,
+  DWORD dwProcessId,
+  _Outptr_opt_result_buffer_(2)_Outptr_opt_result_buffer_(2) LPITEMIDLIST **pppidl,
+  _Out_opt_ LONG *plEvent);
+
+BOOL WINAPI SHChangeNotification_Unlock(_In_ HANDLE hLock);
+
+HRESULT
+WINAPI
+SHGetRealIDL(
+  _In_ IShellFolder *psf,
+  _In_ LPCITEMIDLIST pidlSimple,
+  _Outptr_ LPITEMIDLIST * ppidlReal);
 
 /****************************************************************************
 * SHCreateDirectory API
 */
-int WINAPI SHCreateDirectory(HWND, LPCWSTR);
-int WINAPI SHCreateDirectoryExA(HWND, LPCSTR, LPSECURITY_ATTRIBUTES);
-int WINAPI SHCreateDirectoryExW(HWND, LPCWSTR, LPSECURITY_ATTRIBUTES);
-#define    SHCreateDirectoryEx WINELIB_NAME_AW(SHCreateDirectoryEx)
+int WINAPI SHCreateDirectory(_In_opt_ HWND, _In_ LPCWSTR);
+
+int
+WINAPI
+SHCreateDirectoryExA(
+  _In_opt_ HWND,
+  _In_ LPCSTR,
+  _In_opt_ LPSECURITY_ATTRIBUTES);
+
+int
+WINAPI
+SHCreateDirectoryExW(
+  _In_opt_ HWND,
+  _In_ LPCWSTR,
+  _In_opt_ LPSECURITY_ATTRIBUTES);
+
+#define SHCreateDirectoryEx WINELIB_NAME_AW(SHCreateDirectoryEx)
 
 /****************************************************************************
 * SHGetSpecialFolderLocation API
 */
-HRESULT WINAPI SHGetSpecialFolderLocation(HWND hwndOwner, int nFolder, LPITEMIDLIST * ppidl);
-HRESULT WINAPI SHGetFolderLocation(HWND hwndOwner, int nFolder, HANDLE hToken, DWORD dwReserved, LPITEMIDLIST *ppidl);
+_Check_return_
+HRESULT
+WINAPI
+SHGetSpecialFolderLocation(
+  _Reserved_ HWND hwndOwner,
+  _In_ int nFolder,
+  _Outptr_ LPITEMIDLIST *ppidl);
+
+HRESULT
+WINAPI
+SHGetFolderLocation(
+  _Reserved_ HWND hwndOwner,
+  _In_ int nFolder,
+  _In_opt_ HANDLE hToken,
+  _In_ DWORD dwReserved,
+  _Outptr_ LPITEMIDLIST *ppidl);
 
 /****************************************************************************
 * SHGetFolderPath API
@@ -1551,9 +1788,25 @@ typedef enum {
     SHGFP_TYPE_DEFAULT = 1
 } SHGFP_TYPE;
 
-HRESULT WINAPI SHGetFolderPathA(HWND hwnd, int nFolder, HANDLE hToken, DWORD dwFlags, LPSTR pszPath);
-HRESULT WINAPI SHGetFolderPathW(HWND hwnd, int nFolder, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);
-#define        SHGetFolderPath WINELIB_NAME_AW(SHGetFolderPath)
+HRESULT
+WINAPI
+SHGetFolderPathA(
+  _Reserved_ HWND hwnd,
+  _In_ int nFolder,
+  _In_opt_ HANDLE hToken,
+  _In_ DWORD dwFlags,
+  _Out_writes_(MAX_PATH) LPSTR pszPath);
+
+HRESULT
+WINAPI
+SHGetFolderPathW(
+  _Reserved_ HWND hwnd,
+  _In_ int nFolder,
+  _In_opt_ HANDLE hToken,
+  _In_ DWORD dwFlags,
+  _Out_writes_(MAX_PATH) LPWSTR pszPath);
+
+#define SHGetFolderPath WINELIB_NAME_AW(SHGetFolderPath)
 
 #define CSIDL_DESKTOP		0x0000
 #define CSIDL_INTERNET		0x0001
@@ -1624,21 +1877,43 @@ HRESULT WINAPI SHGetFolderPathW(HWND hwnd, int nFolder, HANDLE hToken, DWORD dwF
 /****************************************************************************
  * SHGetDesktopFolder API
  */
-HRESULT WINAPI SHGetDesktopFolder(IShellFolder * *);
+_Check_return_ HRESULT WINAPI SHGetDesktopFolder(_Outptr_ IShellFolder * *);
 
 /****************************************************************************
  * SHBindToParent API
  */
-HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCITEMIDLIST *ppidlLast);
+HRESULT
+WINAPI
+SHBindToParent(
+  _In_ LPCITEMIDLIST pidl,
+  _In_ REFIID riid,
+  _Outptr_ LPVOID *ppv,
+  _Outptr_opt_ LPCITEMIDLIST *ppidlLast);
 
 /****************************************************************************
 * SHDefExtractIcon API
 */
-HRESULT WINAPI SHDefExtractIconA(LPCSTR pszIconFile, int iIndex, UINT uFlags,
-                                 HICON* phiconLarge, HICON* phiconSmall, UINT nIconSize);
-HRESULT WINAPI SHDefExtractIconW(LPCWSTR pszIconFile, int iIndex, UINT uFlags,
-                                 HICON* phiconLarge, HICON* phiconSmall, UINT nIconSize);
-#define        SHDefExtractIcon WINELIB_NAME_AW(SHDefExtractIcon)
+HRESULT
+WINAPI
+SHDefExtractIconA(
+  _In_ LPCSTR pszIconFile,
+  int iIndex,
+  UINT uFlags,
+  _Out_opt_ HICON* phiconLarge,
+  _Out_opt_ HICON* phiconSmall,
+  UINT nIconSize);
+
+HRESULT
+WINAPI
+SHDefExtractIconW(
+  _In_ LPCWSTR pszIconFile,
+  int iIndex,
+  UINT uFlags,
+  _Out_opt_ HICON* phiconLarge,
+  _Out_opt_ HICON* phiconSmall,
+  UINT nIconSize);
+
+#define SHDefExtractIcon WINELIB_NAME_AW(SHDefExtractIcon)
 
 /*
  * DROPFILES for CF_HDROP and CF_PRINTERS
@@ -1724,8 +1999,13 @@ typedef struct {
 
 #define CABINETSTATE_VERSION 2
 
-BOOL WINAPI ReadCabinetState(CABINETSTATE *, int);
-BOOL WINAPI WriteCabinetState(CABINETSTATE *);
+BOOL
+WINAPI
+ReadCabinetState(
+  _Out_writes_bytes_(cLength) CABINETSTATE *,
+  int cLength);
+
+BOOL WINAPI WriteCabinetState(_In_ CABINETSTATE *);
 
 /****************************************************************************
  * Path Manipulation Routines
@@ -1747,9 +2027,24 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *);
 #define PRF_FIRSTDIRDEF          0x04
 #define PRF_DONTFINDLINK         0x08
 
-VOID WINAPI PathGetShortPath(LPWSTR pszPath);
-LONG WINAPI PathProcessCommand(LPCWSTR, LPWSTR, int, DWORD);
-BOOL WINAPI PathYetAnotherMakeUniqueName(LPWSTR, LPCWSTR, LPCWSTR, LPCWSTR);
+VOID WINAPI PathGetShortPath(_Inout_updates_(MAX_PATH) LPWSTR pszPath);
+
+LONG
+WINAPI
+PathProcessCommand(
+  _In_ LPCWSTR,
+  _Out_writes_(cchDest) LPWSTR,
+  int cchDest,
+  DWORD);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+PathYetAnotherMakeUniqueName(
+  _Out_writes_(MAX_PATH) LPWSTR,
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR);
 
 /****************************************************************************
  * Drag And Drop Routines
@@ -1768,11 +2063,19 @@ typedef struct
 
 BOOL         WINAPI DAD_SetDragImage(HIMAGELIST,LPPOINT);
 BOOL         WINAPI DAD_DragEnterEx(HWND,POINT);
-BOOL         WINAPI DAD_DragEnterEx2(HWND,POINT,IDataObject*);
+BOOL         WINAPI DAD_DragEnterEx2(_In_ HWND, POINT, _In_opt_ IDataObject*);
 BOOL         WINAPI DAD_DragMove(POINT);
 BOOL         WINAPI DAD_DragLeave(void);
 BOOL         WINAPI DAD_AutoScroll(HWND,AUTO_SCROLL_DATA*,const POINT*);
-HRESULT      WINAPI SHDoDragDrop(HWND,IDataObject*,IDropSource*,DWORD,LPDWORD);
+
+HRESULT
+WINAPI
+SHDoDragDrop(
+  _In_opt_ HWND,
+  _In_ IDataObject*,
+  _In_opt_ IDropSource*,
+  _In_ DWORD,
+  _Out_ LPDWORD);
 
 /****************************************************************************
  * Internet shortcut properties
@@ -1791,23 +2094,23 @@ HRESULT      WINAPI SHDoDragDrop(HWND,IDataObject*,IDropSource*,DWORD,LPDWORD);
 #define PID_IS_COMMENT     13
 
 
-LPITEMIDLIST WINAPI ILAppendID(LPITEMIDLIST,LPCSHITEMID,BOOL);
-LPITEMIDLIST WINAPI ILClone(LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILCloneFirst(LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILCreateFromPathA(LPCSTR);
-LPITEMIDLIST WINAPI ILCreateFromPathW(LPCWSTR);
+LPITEMIDLIST WINAPI ILAppendID(_In_opt_ LPITEMIDLIST, _In_ LPCSHITEMID, BOOL);
+LPITEMIDLIST WINAPI ILClone(_In_ LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILCloneFirst(_In_ LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILCreateFromPathA(_In_ LPCSTR);
+LPITEMIDLIST WINAPI ILCreateFromPathW(_In_ LPCWSTR);
 #define             ILCreateFromPath WINELIB_NAME_AW(ILCreateFromPath)
-LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST,LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST,LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILFindLastID(LPCITEMIDLIST);
-void         WINAPI ILFree(LPITEMIDLIST);
-LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST);
-UINT         WINAPI ILGetSize(LPCITEMIDLIST);
-BOOL         WINAPI ILIsEqual(LPCITEMIDLIST,LPCITEMIDLIST);
-BOOL         WINAPI ILIsParent(LPCITEMIDLIST,LPCITEMIDLIST,BOOL);
-HRESULT      WINAPI ILLoadFromStream(LPSTREAM,LPITEMIDLIST*);
-BOOL         WINAPI ILRemoveLastID(LPITEMIDLIST);
-HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILCombine(_In_opt_ LPCITEMIDLIST, _In_opt_ LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILFindChild(_In_ LPCITEMIDLIST, _In_ LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILFindLastID(_In_ LPCITEMIDLIST);
+void         WINAPI ILFree(_In_opt_ LPITEMIDLIST);
+LPITEMIDLIST WINAPI ILGetNext(_In_opt_ LPCITEMIDLIST);
+UINT         WINAPI ILGetSize(_In_opt_ LPCITEMIDLIST);
+BOOL         WINAPI ILIsEqual(_In_ LPCITEMIDLIST, _In_ LPCITEMIDLIST);
+BOOL         WINAPI ILIsParent(_In_ LPCITEMIDLIST, _In_ LPCITEMIDLIST, BOOL);
+HRESULT      WINAPI ILLoadFromStream(_In_ LPSTREAM, _Inout_ LPITEMIDLIST*);
+BOOL         WINAPI ILRemoveLastID(_Inout_opt_ LPITEMIDLIST);
+HRESULT      WINAPI ILSaveToStream(_In_ LPSTREAM, _In_ LPCITEMIDLIST);
 
 
 #include <poppack.h>
@@ -1818,7 +2121,15 @@ HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
 #define MM_SUBMENUSHAVEIDS      0x00000002L
 #define MM_DONTREMOVESEPS       0x00000004L
 
-UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
+UINT
+WINAPI
+Shell_MergeMenus(
+  _In_ HMENU hmDst,
+  _In_ HMENU hmSrc,
+  UINT uInsert,
+  UINT uIDAdjust,
+  UINT uIDAdjustMax,
+  ULONG uFlags);
 
 
 /****************************************************************************
@@ -1829,21 +2140,46 @@ typedef struct
 {
   HWND hwnd;
   IContextMenuCB *pcmcb;
-  LPCITEMIDLIST pidlFolder;
+  PCIDLIST_ABSOLUTE pidlFolder;
   IShellFolder *psf;
   UINT cidl;
-  LPCITEMIDLIST* apidl;
+  PCUITEMID_CHILD_ARRAY apidl;
   IUnknown *punkAssociationInfo;
   UINT cKeys;
   const HKEY *aKeys;
 }DEFCONTEXTMENU;
 
-HRESULT WINAPI SHCreateDefaultContextMenu(const DEFCONTEXTMENU *,REFIID,void **ppv);
+HRESULT
+WINAPI
+SHCreateDefaultContextMenu(
+  _In_ const DEFCONTEXTMENU *,
+  _In_ REFIID,
+  _Outptr_ void **ppv);
 
-typedef HRESULT (CALLBACK * LPFNDFMCALLBACK)(IShellFolder*,HWND,IDataObject*,UINT,WPARAM,LPARAM);
-HRESULT WINAPI CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,const HKEY *,IContextMenu **);
+typedef HRESULT
+(CALLBACK * LPFNDFMCALLBACK)(
+  _In_opt_ IShellFolder*,
+  _In_opt_ HWND,
+  _In_opt_ IDataObject*,
+  UINT,
+  WPARAM,
+  LPARAM);
+
+HRESULT
+WINAPI
+CDefFolderMenu_Create2(
+  _In_opt_ PCIDLIST_ABSOLUTE,
+  _In_opt_ HWND,
+  UINT cidl,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY,
+  _In_opt_ IShellFolder*,
+  _In_opt_ LPFNDFMCALLBACK,
+  UINT nKeys,
+  _In_reads_opt_(nKeys) const HKEY *,
+  _Outptr_ IContextMenu **);
+
 /****************************************************************************
- * SHCreateDefaultContextMenu API
+ * SHCreateDefaultExtractIcon API
  */
 
 HRESULT WINAPI
@@ -1855,22 +2191,22 @@ SHCreateDefaultExtractIcon(
  */
 
 HRESULT WINAPI SHCreateDataObject(
-  LPCITEMIDLIST pidlFolder,
-  UINT cidl,
-  LPCITEMIDLIST* apidl,
-  IDataObject *pdtInner,
-  REFIID riid,
-  void **ppv);
+  _In_opt_ PCIDLIST_ABSOLUTE pidlFolder,
+  _In_ UINT cidl,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY apidl,
+  _In_opt_ IDataObject *pdtInner,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
 
 /****************************************************************************
  * CIDLData_CreateFromIDArray API
  */
 
 HRESULT WINAPI CIDLData_CreateFromIDArray(
-	LPCITEMIDLIST pidlFolder,
-	UINT cidl,
-	LPCITEMIDLIST* apidl,
-	IDataObject **ppdtobj);
+  _In_ PCIDLIST_ABSOLUTE pidlFolder,
+  _In_ UINT cidl,
+  _In_reads_opt_(cidl) PCUIDLIST_RELATIVE_ARRAY apidl,
+  _Outptr_ IDataObject **ppdtobj);
 
 /****************************************************************************
  * SHOpenWithDialog
@@ -1896,23 +2232,23 @@ typedef struct tagOPENASINFO {
 	OPEN_AS_INFO_FLAGS oaifInFlags;
 } OPENASINFO;
 
-HRESULT WINAPI SHOpenWithDialog(
-  HWND hwndParent,
-  const OPENASINFO *poainfo
-);
+HRESULT
+WINAPI
+SHOpenWithDialog(
+  _In_opt_ HWND hwndParent,
+  _In_ const OPENASINFO *poainfo);
 
 #define INTERFACE   IShellIconOverlayIdentifier
 
-DEFINE_GUID(IID_IShellIconOverlayIdentifier, 0x0c6c4200L, 0xc589, 0x11d0, 0x99, 0x9a, 0x00, 0xc0, 0x4f, 0xd6, 0x55, 0xe1);
 DECLARE_INTERFACE_(IShellIconOverlayIdentifier, IUnknown)
 {
     STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
     STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
 
-    STDMETHOD (IsMemberOf)(THIS_ LPCWSTR pwszPath, DWORD dwAttrib) PURE;
-    STDMETHOD (GetOverlayInfo)(THIS_ LPWSTR pwszIconFile, int cchMax, int * pIndex, DWORD * pdwFlags) PURE;
-    STDMETHOD (GetPriority)(THIS_ int * pIPriority) PURE;
+    STDMETHOD (IsMemberOf)(THIS_ _In_ LPCWSTR pwszPath, DWORD dwAttrib) PURE;
+    STDMETHOD (GetOverlayInfo)(THIS_ _Out_writes_(cchMax) LPWSTR pwszIconFile, int cchMax, _Out_ int * pIndex, _Out_ DWORD * pdwFlags) PURE;
+    STDMETHOD (GetPriority)(THIS_ _Out_ int * pIPriority) PURE;
 };
 
 #if !defined(__cplusplus) || defined(CINTERFACE)
@@ -1960,9 +2296,9 @@ DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
     STDMETHOD(ContextSensitiveHelp)(THIS_ BOOL fEnterMode) PURE;
 
     // *** IDockingWindowSite methods ***
-    STDMETHOD(GetBorderDW)(THIS_ IUnknown *punkObj, LPRECT prcBorder) PURE;
-    STDMETHOD(RequestBorderSpaceDW)(THIS_ IUnknown *punkObj, LPCBORDERWIDTHS pbw) PURE;
-    STDMETHOD(SetBorderSpaceDW)(THIS_ IUnknown *punkObj, LPCBORDERWIDTHS pbw) PURE;
+    STDMETHOD(GetBorderDW)(THIS_ _In_ IUnknown *punkObj, _Out_ LPRECT prcBorder) PURE;
+    STDMETHOD(RequestBorderSpaceDW)(THIS_ _In_ IUnknown *punkObj, _In_ LPCBORDERWIDTHS pbw) PURE;
+    STDMETHOD(SetBorderSpaceDW)(THIS_ _In_ IUnknown *punkObj, _In_ LPCBORDERWIDTHS pbw) PURE;
 };
 #undef INTERFACE
 
@@ -1978,39 +2314,6 @@ DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
 #define IDockingWindowSite_GetBorderDW(p,a,b)            (p)->lpVtbl->GetBorderDW(p,a,b)
 #define IDockingWindowSite_RequestBorderSpaceDW(p,a,b)   (p)->lpVtbl->RequestBorderSpaceDW(p,a,b)
 #define IDockingWindowSite_SetBorderSpaceDW(p,a,b)       (p)->lpVtbl->SetBorderSpaceDW(p,a,b)
-#endif
-
-/*****************************************************************************
- * IShellTaskScheduler interface
- */
-#define REFTASKOWNERID REFGUID
-
-#define INTERFACE IShellTaskScheduler
-DECLARE_INTERFACE_(IShellTaskScheduler, IUnknown)
-{
-    // *** IUnknown methods ***
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
-    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG, Release)(THIS) PURE;
-
-    // *** IShellTaskScheduler methods ***
-    STDMETHOD(AddTask)(THIS_ IRunnableTask *pTask, REFTASKOWNERID rtoid, DWORD_PTR lParam, DWORD dwPriority) PURE;
-    STDMETHOD(RemoveTasks)(THIS_ REFTASKOWNERID rtoid, DWORD_PTR lParam, BOOL fWaitIfRunning) PURE;
-    STDMETHOD_(UINT, CountTasks)(THIS_ REFTASKOWNERID rtoid) PURE;
-    STDMETHOD(Status)(THIS_ DWORD dwReleaseStatus, DWORD dwThreadTimeout) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IShellTaskScheduler_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IShellTaskScheduler_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IShellTaskScheduler_Release(p)             (p)->lpVtbl->Release(p)
-/*** IShellTaskScheduler methods ***/
-#define IShellTaskScheduler_AddTask(p,a,b,c,d)     (p)->lpVtbl->AddTask(p,a,b,c,d)
-#define IShellTaskScheduler_RemoveTasks(p,a,b,c)   (p)->lpVtbl->RemoveTasks(p,a,b,c)
-#define IShellTaskScheduler_CountTasks(p,a)        (p)->lpVtbl->CountTasks(p,a)
-#define IShellTaskScheduler_Status(p,a,b)          (p)->lpVtbl->Status(p,a,b)
 #endif
 
 typedef void (CALLBACK *PFNASYNCICONTASKBALLBACK)(LPCITEMIDLIST pidl, LPVOID pvData, LPVOID pvHint, INT iIconIndex, INT iOpenIconIndex);

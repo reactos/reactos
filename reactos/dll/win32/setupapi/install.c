@@ -21,7 +21,8 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
+#include <winsvc.h>
+#include <ndk/cmfuncs.h>
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
@@ -243,7 +244,7 @@ static void append_multi_sz_value( HKEY hkey, const WCHAR *value, const WCHAR *s
         {
             memcpy( p, strings, len * sizeof(WCHAR) );
             p[len] = 0;
-            total += len;
+            total += len * sizeof(WCHAR);
         }
         strings += len;
     }
@@ -1078,7 +1079,9 @@ profile_items_callback(
             hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
             if (SUCCEEDED(hr))
             {
-                Required = (MAX_PATH + wcslen(LinkSubDir) + 1 + wcslen(LinkName)) * sizeof(WCHAR);
+                Required = (MAX_PATH + 1 +
+                           ((LinkSubDir != NULL) ? wcslen(LinkSubDir) : 0) +
+                           ((LinkName != NULL) ? wcslen(LinkName) : 0)) * sizeof(WCHAR);
                 FullLinkName = MyMalloc(Required);
                 if (!FullLinkName)
                     hr = E_OUTOFMEMORY;
@@ -1721,11 +1724,11 @@ static VOID FixupServiceBinaryPath(
     IN OUT LPWSTR *ServiceBinary)
 {
     LPWSTR Buffer;
-    WCHAR ReactosDir[MAX_PATH];
+    WCHAR ReactOSDir[MAX_PATH];
     DWORD RosDirLength, ServiceLength, Win32Length;
 
-    GetWindowsDirectoryW(ReactosDir, MAX_PATH);
-    RosDirLength = strlenW(ReactosDir);
+    GetWindowsDirectoryW(ReactOSDir, MAX_PATH);
+    RosDirLength = strlenW(ReactOSDir);
     ServiceLength = strlenW(*ServiceBinary);
 
     /* Check and fix two things:
@@ -1736,7 +1739,7 @@ static VOID FixupServiceBinaryPath(
     if (ServiceLength < RosDirLength)
         return;
 
-    if (!wcsnicmp(*ServiceBinary, ReactosDir, RosDirLength))
+    if (!wcsnicmp(*ServiceBinary, ReactOSDir, RosDirLength))
     {
         /* Yes, the first part is the C:\ReactOS\, just skip it */
         MoveMemory(*ServiceBinary, *ServiceBinary + RosDirLength + 1,
@@ -1789,11 +1792,20 @@ static BOOL InstallOneService(
     BOOL useTag;
 
     if (!GetIntField(hInf, ServiceSection, ServiceTypeKey, &ServiceType))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
     if (!GetIntField(hInf, ServiceSection, StartTypeKey, &StartType))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
     if (!GetIntField(hInf, ServiceSection, ErrorControlKey, &ErrorControl))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
     useTag = (ServiceType == SERVICE_BOOT_START || ServiceType == SERVICE_SYSTEM_START);
 
     hSCManager = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CREATE_SERVICE);
@@ -1801,7 +1813,10 @@ static BOOL InstallOneService(
         goto cleanup;
 
     if (!GetLineText(hInf, ServiceSection, ServiceBinaryKey, &ServiceBinary))
+    {
+        SetLastError( ERROR_BAD_SERVICE_INSTALLSECT );
         goto cleanup;
+    }
 
     /* Adjust binary path according to the service type */
     FixupServiceBinaryPath(ServiceType, &ServiceBinary);
@@ -1984,7 +1999,7 @@ static BOOL InstallOneService(
         list ? list->HKLM : HKEY_LOCAL_MACHINE,
         REGSTR_PATH_SERVICES,
         0,
-        0,
+        READ_CONTROL,
         &hServicesKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -2095,21 +2110,27 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             SERVICE_STATUS ServiceStatus;
             ret = ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus);
             if (!ret && GetLastError() != ERROR_SERVICE_NOT_ACTIVE)
-                goto cleanup;
+                goto done;
             if (ServiceStatus.dwCurrentState != SERVICE_STOP_PENDING && ServiceStatus.dwCurrentState != SERVICE_STOPPED)
             {
                 SetLastError(ERROR_INSTALL_SERVICE_FAILURE);
-                goto cleanup;
+                goto done;
             }
 #endif
             flags &= ~SPSVCINST_STOPSERVICE;
+        }
+
+        if (!(ret = SetupFindFirstLineW( hinf, sectionname, NULL, &ContextService )))
+        {
+            SetLastError( ERROR_SECTION_NOT_FOUND );
+            goto done;
         }
 
         ret = SetupFindFirstLineW(hinf, sectionname, AddService, &ContextService);
         while (ret)
         {
             if (!GetStringField(&ContextService, 1, &ServiceName))
-                goto nextservice;
+                goto done;
 
             ret = SetupGetIntField(
                 &ContextService,
@@ -2122,20 +2143,19 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             }
 
             if (!GetStringField(&ContextService, 3, &ServiceSection))
-                goto nextservice;
+                goto done;
 
             ret = InstallOneService(list, hinf, ServiceSection, ServiceName, (ServiceFlags & ~SPSVCINST_ASSOCSERVICE) | flags);
             if (!ret)
-                goto nextservice;
+                goto done;
 
             if (ServiceFlags & SPSVCINST_ASSOCSERVICE)
             {
                 ret = SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet, DeviceInfoData, SPDRP_SERVICE, (LPBYTE)ServiceName, (strlenW(ServiceName) + 1) * sizeof(WCHAR));
                 if (!ret)
-                    goto nextservice;
+                    goto done;
             }
 
-nextservice:
             HeapFree(GetProcessHeap(), 0, ServiceName);
             HeapFree(GetProcessHeap(), 0, ServiceSection);
             ServiceName = ServiceSection = NULL;
@@ -2148,7 +2168,7 @@ nextservice:
             SetLastError(ERROR_SUCCESS);
         ret = TRUE;
     }
-
+done:
     TRACE("Returning %d\n", ret);
     return ret;
 }
@@ -2172,6 +2192,7 @@ BOOL WINAPI SetupCopyOEMInfA(
     PWSTR DestinationInfFileNameW = NULL;
     PWSTR DestinationInfFileNameComponentW = NULL;
     BOOL ret = FALSE;
+    DWORD size;
 
     TRACE("%s %s 0x%lx 0x%lx %p 0%lu %p %p\n",
         SourceInfFileName, OEMSourceMediaLocation, OEMSourceMediaType,
@@ -2203,10 +2224,13 @@ BOOL WINAPI SetupCopyOEMInfA(
             CopyStyle,
             DestinationInfFileNameW,
             DestinationInfFileNameSize,
-            RequiredSize,
+            &size,
             DestinationInfFileNameComponent ? &DestinationInfFileNameComponentW : NULL);
         if (!ret)
+        {
+            if (RequiredSize) *RequiredSize = size;
             goto cleanup;
+        }
 
         if (DestinationInfFileNameSize != 0)
         {
@@ -2282,8 +2306,6 @@ BOOL WINAPI SetupCopyOEMInfW(
     if (!SourceInfFileName)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (OEMSourceMediaType != SPOST_NONE && OEMSourceMediaType != SPOST_PATH && OEMSourceMediaType != SPOST_URL)
-        SetLastError(ERROR_INVALID_PARAMETER);
-    else if (OEMSourceMediaType != SPOST_NONE && !OEMSourceMediaLocation)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY))
     {

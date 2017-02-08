@@ -16,67 +16,52 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-
 #include "mshtml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 /**********************************************************
  * IHlinkTarget implementation
  */
 
-#define HLINKTRG_THIS(iface) DEFINE_THIS(HTMLDocument, HlinkTarget, iface)
+static inline HTMLDocument *impl_from_IHlinkTarget(IHlinkTarget *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLDocument, IHlinkTarget_iface);
+}
 
 static HRESULT WINAPI HlinkTarget_QueryInterface(IHlinkTarget *iface, REFIID riid, void **ppv)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
-    return IHTMLDocument2_QueryInterface(HTMLDOC(This), riid, ppv);
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
+    return htmldoc_query_interface(This, riid, ppv);
 }
 
 static ULONG WINAPI HlinkTarget_AddRef(IHlinkTarget *iface)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
-    return IHTMLDocument2_AddRef(HTMLDOC(This));
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
+    return htmldoc_addref(This);
 }
 
 static ULONG WINAPI HlinkTarget_Release(IHlinkTarget *iface)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
-    return IHTMLDocument2_Release(HTMLDOC(This));
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
+    return htmldoc_release(This);
 }
 
 static HRESULT WINAPI HlinkTarget_SetBrowseContext(IHlinkTarget *iface, IHlinkBrowseContext *pihlbc)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
     FIXME("(%p)->(%p)\n", This, pihlbc);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HlinkTarget_GetBrowseContext(IHlinkTarget *iface, IHlinkBrowseContext **ppihlbc)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
     FIXME("(%p)->(%p)\n", This, ppihlbc);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HlinkTarget_Navigate(IHlinkTarget *iface, DWORD grfHLNF, LPCWSTR pwzJumpLocation)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
 
     TRACE("(%p)->(%08x %s)\n", This, grfHLNF, debugstr_w(pwzJumpLocation));
 
@@ -85,13 +70,16 @@ static HRESULT WINAPI HlinkTarget_Navigate(IHlinkTarget *iface, DWORD grfHLNF, L
     if(pwzJumpLocation)
         FIXME("JumpLocation not supported\n");
 
-    return IOleObject_DoVerb(OLEOBJ(This), OLEIVERB_SHOW, NULL, NULL, -1, NULL, NULL);
+    if(!This->doc_obj->client)
+        return navigate_new_window(This->window, This->window->uri, NULL, NULL, NULL);
+
+    return IOleObject_DoVerb(&This->IOleObject_iface, OLEIVERB_SHOW, NULL, NULL, -1, NULL, NULL);
 }
 
 static HRESULT WINAPI HlinkTarget_GetMoniker(IHlinkTarget *iface, LPCWSTR pwzLocation, DWORD dwAssign,
         IMoniker **ppimkLocation)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
     FIXME("(%p)->(%s %08x %p)\n", This, debugstr_w(pwzLocation), dwAssign, ppimkLocation);
     return E_NOTIMPL;
 }
@@ -99,7 +87,7 @@ static HRESULT WINAPI HlinkTarget_GetMoniker(IHlinkTarget *iface, LPCWSTR pwzLoc
 static HRESULT WINAPI HlinkTarget_GetFriendlyName(IHlinkTarget *iface, LPCWSTR pwzLocation,
         LPWSTR *ppwzFriendlyName)
 {
-    HTMLDocument *This = HLINKTRG_THIS(iface);
+    HTMLDocument *This = impl_from_IHlinkTarget(iface);
     FIXME("(%p)->(%s %p)\n", This, debugstr_w(pwzLocation), ppwzFriendlyName);
     return E_NOTIMPL;
 }
@@ -117,5 +105,5 @@ static const IHlinkTargetVtbl HlinkTargetVtbl = {
 
 void HTMLDocument_Hlink_Init(HTMLDocument *This)
 {
-    This->lpHlinkTargetVtbl = &HlinkTargetVtbl;
+    This->IHlinkTarget_iface.lpVtbl = &HlinkTargetVtbl;
 }

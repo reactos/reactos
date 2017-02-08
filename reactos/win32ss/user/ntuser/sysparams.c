@@ -2,7 +2,7 @@
  * COPYRIGHT:        GPL, see COPYING in the top level directory
  * PROJECT:          ReactOS win32 kernel mode subsystem server
  * PURPOSE:          System parameters functions
- * FILE:             subsystems/win32/win32k/ntuser/sysparams.c
+ * FILE:             win32ss/user/ntuser/sysparams.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -186,7 +186,7 @@ SpiLoadFont(PLOGFONTW plfOut, LPWSTR pwszValueName, PLOGFONTW plfDefault)
 
 static
 VOID
-SpiFixupValues()
+SpiFixupValues(VOID)
 {
     /* Fixup values */
     gspv.ncm.iCaptionWidth = max(gspv.ncm.iCaptionWidth, 8);
@@ -210,7 +210,7 @@ SpiFixupValues()
 
 static
 VOID
-SpiUpdatePerUserSystemParameters()
+SpiUpdatePerUserSystemParameters(VOID)
 {
     static LOGFONTW lf1 = {-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE,
                            FALSE, ANSI_CHARSET, 0, 0, DEFAULT_QUALITY,
@@ -295,6 +295,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bMenuDropAlign = 1;
     gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
+    gspv.dwForegroundFlashCount = 3;
 
     gspv.iScrSaverTimeout = SpiLoadTimeOut();
     gspv.bScrSaverActive = FALSE;
@@ -319,7 +320,7 @@ SpiUpdatePerUserSystemParameters()
 }
 
 BOOL
-InitSysParams()
+InitSysParams(VOID)
 {
     SpiUpdatePerUserSystemParameters();
     gbSpiInitialized = TRUE;
@@ -373,7 +374,7 @@ SpiStoreSz(PCWSTR pwszKey, PCWSTR pwszValue, PCWSTR pwsz)
                         pwszValue,
                         REG_SZ,
                         (PWSTR)pwsz,
-                        wcslen(pwsz) * sizeof(WCHAR));
+                        (wcslen(pwsz) + 1) * sizeof(WCHAR));
 }
 
 static
@@ -569,14 +570,18 @@ SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
     if (fl & SPIF_UPDATEINIFILE)
     {
         /* Read current value */
-        RegReadUserSetting(KEY_DESKTOP,
-                           VAL_USERPREFMASK,
-                           REG_BINARY,
-                           &dwRegMask,
-                           sizeof(DWORD));
+        if (!RegReadUserSetting(KEY_DESKTOP,
+                                VAL_USERPREFMASK,
+                                REG_BINARY,
+                                &dwRegMask,
+                                sizeof(DWORD)))
+        {
+            WARN("Failed to read UserPreferencesMask setting\n");
+            dwRegMask = 0;
+        }
 
         /* Set or clear bit according to bValue */
-        dwRegMask = bValue ? dwRegMask | dwMask : dwRegMask & ~dwMask;
+        dwRegMask = bValue ? (dwRegMask | dwMask) : (dwRegMask & ~dwMask);
 
         /* write back value */
         RegWriteUserSetting(KEY_DESKTOP,
@@ -680,7 +685,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         /* Yes, Windows really loads the current setting from the registry. */
         ulTile = SpiLoadInt(KEY_DESKTOP, L"TileWallpaper", 0);
         ulStyle = SpiLoadInt(KEY_DESKTOP, L"WallpaperStyle", 0);
-        TRACE("SpiSetWallpaper: ulTile=%ld, ulStyle=%d\n", ulTile, ulStyle);
+        TRACE("SpiSetWallpaper: ulTile=%lu, ulStyle=%lu\n", ulTile, ulStyle);
 
         /* Check the values we found in the registry */
         if(ulTile && !ulStyle)
@@ -719,7 +724,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
 }
 
 static BOOL
-SpiNotifyNCMetricsChanged()
+SpiNotifyNCMetricsChanged(VOID)
 {
     PWND pwndDesktop, pwndCurrent;
     HWND *ahwnd;
@@ -1544,7 +1549,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             break;
 
         default:
-            ERR("Invalid SPI value: %d\n", uiAction);
+            ERR("Invalid SPI value: %u\n", uiAction);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
     }
@@ -1619,7 +1624,7 @@ NtUserSystemParametersInfo(
 {
     BOOL bResult;
 
-    TRACE("Enter NtUserSystemParametersInfo(%d)\n", uiAction);
+    TRACE("Enter NtUserSystemParametersInfo(%u)\n", uiAction);
     UserEnterExclusive();
 
     // FIXME: Get rid of the flags and only use this from um. kernel can access data directly.

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        apps/utils/net/netstat/netstat.c
+ * FILE:        base/applications/network/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
@@ -83,9 +83,9 @@ DWORD DoFormatMessage(DWORD ErrorCode)
  */
 BOOL ParseCmdline(int argc, char* argv[])
 {
+    LPSTR Proto;
+    CHAR c;
     INT i;
-
-    TCHAR Proto[5];
 
     if ((argc == 1) || (_istdigit(*argv[1])))
         bNoOptions = TRUE;
@@ -93,10 +93,8 @@ BOOL ParseCmdline(int argc, char* argv[])
     /* Parse command line for options we have been given. */
     for (i = 1; i < argc; i++)
     {
-        if ( (argc > 1)&&(argv[i][0] == '-') )
+        if ((argc > 1) && (argv[i][0] == '-' || argv[i][0] == '/'))
         {
-            TCHAR c;
-
             while ((c = *++argv[i]) != '\0')
             {
                 switch (tolower(c))
@@ -113,30 +111,28 @@ BOOL ParseCmdline(int argc, char* argv[])
                     case 'n' :
                         bDoShowNumbers = TRUE;
                         break;
-                    case 's' :
-                        bDoShowProtoStats = TRUE;
-                        break;
                     case 'p' :
                         bDoShowProtoCons = TRUE;
-
-                        strncpy(Proto, (++argv)[i], sizeof(Proto));
-                        if (!_tcsicmp( "IP", Proto ))
+                        Proto = argv[i+1];
+                        if (!_stricmp("IP", Proto))
                             Protocol = IP;
-                        else if (!_tcsicmp( "ICMP", Proto ))
+                        else if (!_stricmp("ICMP", Proto))
                             Protocol = ICMP;
-                        else if (!_tcsicmp( "TCP", Proto ))
+                        else if (!_stricmp("TCP", Proto))
                             Protocol = TCP;
-                        else if (!_tcsicmp( "UDP", Proto ))
+                        else if (!_stricmp("UDP", Proto))
                             Protocol = UDP;
                         else
                         {
                             Usage();
                             return EXIT_FAILURE;
                         }
-                        --i; /* move pointer back down to previous argv */
                         break;
                     case 'r' :
                         bDoShowRouteTable = TRUE;
+                        break;
+                    case 's' :
+                        bDoShowProtoStats = TRUE;
                         break;
                     case 'v' :
                         _tprintf(_T("got v\n"));
@@ -243,7 +239,7 @@ BOOL DisplayOutput()
         _tprintf(_T("\nActive Connections\n"));
         _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
         ShowTcpTable();
-		if (bDoShowAllCons)
+        if (bDoShowAllCons)
             ShowUdpTable();
     }
     return EXIT_SUCCESS;
@@ -452,11 +448,18 @@ VOID ShowTcpTable()
             /* I've split this up so it's easier to follow */
             GetIpHostName(TRUE, tcpTable->table[i].dwLocalAddr, HostIp, HOSTNAMELEN);
             GetPortName(tcpTable->table[i].dwLocalPort, "tcp", HostPort, PORTNAMELEN);
-            GetIpHostName(FALSE, tcpTable->table[i].dwRemoteAddr, RemoteIp, HOSTNAMELEN);
-            GetPortName(tcpTable->table[i].dwRemotePort, "tcp", RemotePort, PORTNAMELEN);
-
             sprintf(Host, "%s:%s", HostIp, HostPort);
-            sprintf(Remote, "%s:%s", RemoteIp, RemotePort);
+
+            if (tcpTable->table[i].dwState ==  MIB_TCP_STATE_LISTEN)
+            {
+                sprintf(Remote, "%s:0", HostIp);
+            }
+            else
+            {
+                GetIpHostName(FALSE, tcpTable->table[i].dwRemoteAddr, RemoteIp, HOSTNAMELEN);
+                GetPortName(tcpTable->table[i].dwRemotePort, "tcp", RemotePort, PORTNAMELEN);
+                sprintf(Remote, "%s:%s", RemoteIp, RemotePort);
+            }
 
             _tprintf(_T("  %-6s %-22s %-22s %s\n"), _T("TCP"),
             Host, Remote, TcpState[tcpTable->table[i].dwState]);
@@ -585,7 +588,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
 VOID Usage()
 {
     _tprintf(_T("\nDisplays current TCP/IP protocol statistics and network connections.\n\n"
-    "NETSTAT [-a] [-e] [-n] [-s] [-p proto] [-r] [interval]\n\n"
+    "NETSTAT [-a] [-e] [-n] [-p proto] [-r] [-s] [interval]\n\n"
     "  -a            Displays all connections and listening ports.\n"
     "  -e            Displays Ethernet statistics. May be combined with -s\n"
     "                option\n"

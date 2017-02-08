@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/iowork.c
+ * FILE:            ntoskrnl/io/iomgr/iowork.c
  * PURPOSE:         I/O Wrappers for the Executive Work Item Functions
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Robert Dickenson (odin@pnc.com.au)

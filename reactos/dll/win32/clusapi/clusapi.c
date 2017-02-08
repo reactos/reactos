@@ -30,6 +30,20 @@
 WINE_DEFAULT_DEBUG_CHANNEL(clusapi);
 
 /***********************************************************************
+ *             GetClusterInformation   (CLUSAPI.@)
+ *
+ */
+DWORD WINAPI GetClusterInformation(HCLUSTER hCluster, LPWSTR lpszClusterName,
+                                   LPDWORD lpcchClusterName, LPCLUSTERVERSIONINFO lpClusterInfo)
+{
+    FIXME("(%p, %p, %p, %p) stub!\n", hCluster, lpszClusterName, lpcchClusterName, lpClusterInfo);
+
+    *lpcchClusterName = 0;
+
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
  *             GetNodeClusterState   (CLUSAPI.@)
  *
  * PARAMS

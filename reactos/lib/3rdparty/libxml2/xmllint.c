@@ -168,6 +168,7 @@ static int nodefdtd = 0;
 #endif
 #ifdef LIBXML_PUSH_ENABLED
 static int push = 0;
+static int pushsize = 4096;
 #endif /* LIBXML_PUSH_ENABLED */
 #ifdef HAVE_MMAP
 static int memory = 0;
@@ -1836,8 +1837,12 @@ static void streamFile(char *filename) {
 	if ((fd = open(filename, O_RDONLY)) < 0)
 	    return;
 	base = mmap(NULL, info.st_size, PROT_READ, MAP_SHARED, fd, 0) ;
-	if (base == (void *) MAP_FAILED)
+	if (base == (void *) MAP_FAILED) {
+	    close(fd);
+	    fprintf(stderr, "mmap failure for file %s\n", filename);
+	    progresult = XMLLINT_ERR_RDFILE;
 	    return;
+	}
 
 	reader = xmlReaderForMemory(base, info.st_size, filename,
 	                            NULL, options);
@@ -1874,7 +1879,8 @@ static void streamFile(char *filename) {
 	    xmlTextReaderSetParserProp(reader, XML_PARSER_VALIDATE, 1);
 	else
 #endif /* LIBXML_VALID_ENABLED */
-	    xmlTextReaderSetParserProp(reader, XML_PARSER_LOADDTD, 1);
+	    if (loaddtd)
+		xmlTextReaderSetParserProp(reader, XML_PARSER_LOADDTD, 1);
 #ifdef LIBXML_SCHEMAS_ENABLED
 	if (relaxng != NULL) {
 	    if ((timing) && (!repeat)) {
@@ -2188,21 +2194,22 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 
 #if defined(_WIN32) || defined (__DJGPP__) && !defined (__CYGWIN__)
 	f = fopen(filename, "rb");
+#elif defined(__OS400__)
+	f = fopen(filename, "rb");
 #else
 	f = fopen(filename, "r");
 #endif
         if (f != NULL) {
-            int res, size = 3;
+            int res;
             char chars[4096];
             htmlParserCtxtPtr ctxt;
 
-            /* if (repeat) */
-                size = 4096;
             res = fread(chars, 1, 4, f);
             if (res > 0) {
                 ctxt = htmlCreatePushParserCtxt(NULL, NULL,
                             chars, res, filename, XML_CHAR_ENCODING_NONE);
-                while ((res = fread(chars, 1, size, f)) > 0) {
+                xmlCtxtUseOptions(ctxt, options);
+                while ((res = fread(chars, 1, pushsize, f)) > 0) {
                     htmlParseChunk(ctxt, chars, res, 0);
                 }
                 htmlParseChunk(ctxt, chars, 0, 1);
@@ -2223,8 +2230,12 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	if ((fd = open(filename, O_RDONLY)) < 0)
 	    return;
 	base = mmap(NULL, info.st_size, PROT_READ, MAP_SHARED, fd, 0) ;
-	if (base == (void *) MAP_FAILED)
+	if (base == (void *) MAP_FAILED) {
+	    close(fd);
+	    fprintf(stderr, "mmap failure for file %s\n", filename);
+	    progresult = XMLLINT_ERR_RDFILE;
 	    return;
+	}
 
 	doc = htmlReadMemory((char *) base, info.st_size, filename,
 	                     NULL, options);
@@ -2250,6 +2261,8 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	      f = stdin;
 	    } else {
 #if defined(_WIN32) || defined (__DJGPP__) && !defined (__CYGWIN__)
+		f = fopen(filename, "rb");
+#elif defined(__OS400__)
 		f = fopen(filename, "rb");
 #else
 		f = fopen(filename, "r");
@@ -2291,6 +2304,8 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	        FILE *f;
 
 #if defined(_WIN32) || defined (__DJGPP__) && !defined (__CYGWIN__)
+		f = fopen(filename, "rb");
+#elif defined(__OS400__)
 		f = fopen(filename, "rb");
 #else
 		f = fopen(filename, "r");
@@ -2338,8 +2353,12 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	    if ((fd = open(filename, O_RDONLY)) < 0)
 		return;
 	    base = mmap(NULL, info.st_size, PROT_READ, MAP_SHARED, fd, 0) ;
-	    if (base == (void *) MAP_FAILED)
+	    if (base == (void *) MAP_FAILED) {
+	        close(fd);
+	        fprintf(stderr, "mmap failure for file %s\n", filename);
+		progresult = XMLLINT_ERR_RDFILE;
 	        return;
+	    }
 
 	    if (rectxt == NULL)
 		doc = xmlReadMemory((char *) base, info.st_size,
@@ -2561,7 +2580,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		    fprintf(stderr, "Failed to canonicalize\n");
 		    progresult = XMLLINT_ERR_OUT;
 		}
-	    } else if (canonical) {
+	    } else if (canonical_11) {
 	        xmlChar *result = NULL;
 		int size;
 
@@ -2990,7 +3009,7 @@ static void usage(const char *name) {
     printf("\t--noenc : ignore any encoding specified inside the document\n");
     printf("\t--noout : don't output the result tree\n");
     printf("\t--path 'paths': provide a set of paths for resources\n");
-    printf("\t--load-trace : print trace of all external entites loaded\n");
+    printf("\t--load-trace : print trace of all external entities loaded\n");
     printf("\t--nonet : refuse to fetch DTDs or entities over network\n");
     printf("\t--nocompact : do not generate compact text nodes\n");
     printf("\t--htmlout : output results as HTML\n");
@@ -3017,6 +3036,7 @@ static void usage(const char *name) {
 #endif
 #ifdef LIBXML_PUSH_ENABLED
     printf("\t--push : use the push mode of the parser\n");
+    printf("\t--pushsmall : use the push mode of the parser using tiny increments\n");
 #endif /* LIBXML_PUSH_ENABLED */
 #ifdef HAVE_MMAP
     printf("\t--memory : parse from memory\n");
@@ -3026,7 +3046,7 @@ static void usage(const char *name) {
     printf("\t--noblanks : drop (ignorable?) blanks spaces\n");
     printf("\t--nocdata : replace cdata section with text nodes\n");
 #ifdef LIBXML_OUTPUT_ENABLED
-    printf("\t--format : reformat/reindent the input\n");
+    printf("\t--format : reformat/reindent the output\n");
     printf("\t--encode encoding : output in the given encoding\n");
     printf("\t--dropdtd : remove the DOCTYPE of the input docs\n");
     printf("\t--pretty STYLE : pretty-print in a particular style\n");
@@ -3076,7 +3096,7 @@ static void usage(const char *name) {
     printf("\t--sax: do not build a tree but work just at the SAX level\n");
     printf("\t--oldxml10: use XML-1.0 parsing rules before the 5th edition\n");
 #ifdef LIBXML_XPATH_ENABLED
-    printf("\t--xpath expr: evaluate the XPath expression, inply --noout\n");
+    printf("\t--xpath expr: evaluate the XPath expression, imply --noout\n");
 #endif
 
     printf("\nLibxml project home page: http://xmlsoft.org/\n");
@@ -3086,6 +3106,10 @@ static void usage(const char *name) {
 static void registerNode(xmlNodePtr node)
 {
     node->_private = malloc(sizeof(long));
+    if (node->_private == NULL) {
+        fprintf(stderr, "Out of memory in xmllint:registerNode()\n");
+	exit(XMLLINT_ERR_MEM);
+    }
     *(long*)node->_private = (long) 0x81726354;
     nbregister++;
 }
@@ -3247,6 +3271,11 @@ main(int argc, char **argv) {
 	else if ((!strcmp(argv[i], "-push")) ||
 	         (!strcmp(argv[i], "--push")))
 	    push++;
+	else if ((!strcmp(argv[i], "-pushsmall")) ||
+	         (!strcmp(argv[i], "--pushsmall"))) {
+	    push++;
+            pushsize = 10;
+        }
 #endif /* LIBXML_PUSH_ENABLED */
 #ifdef HAVE_MMAP
 	else if ((!strcmp(argv[i], "-memory")) ||
@@ -3366,11 +3395,13 @@ main(int argc, char **argv) {
 	         (!strcmp(argv[i], "--pretty"))) {
 	     i++;
 #ifdef LIBXML_OUTPUT_ENABLED
-	     format = atoi(argv[i]);
-	     if (format == 1) {
-	         noblanks++;
-	         xmlKeepBlanksDefault(0);
-	     }
+       if (argv[i] != NULL) {
+	         format = atoi(argv[i]);
+	         if (format == 1) {
+	             noblanks++;
+	             xmlKeepBlanksDefault(0);
+	         }
+       }
 #endif /* LIBXML_OUTPUT_ENABLED */
 	}
 #ifdef LIBXML_READER_ENABLED

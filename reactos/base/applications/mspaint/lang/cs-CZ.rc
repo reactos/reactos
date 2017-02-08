@@ -1,9 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/cs-CZ.rc
- * PURPOSE:     Czech Language resource file
- * TRANSLATORS: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/cs-CZ.rc
+ * PURPOSE:    Czech Language resource file
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -17,13 +17,16 @@ BEGIN
         MENUITEM "Uložit\tCtrl+S", IDM_FILESAVE
         MENUITEM "Uložit jako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page View", IDM_FILEPAGEVIEW
+        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
         MENUITEM "Nastavit jako pozadí (vedle sebe)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Nastavit jako pozadí (na střed)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Nastavit jako pozadí (roztáhnout)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "Ukončit\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "Úpr&avy"
     BEGIN
         MENUITEM "Zpět\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +42,6 @@ BEGIN
         MENUITEM "Kopírovat do...", IDM_EDITCOPYTO
         MENUITEM "Vložit z...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Zobrazit"
     BEGIN
         MENUITEM "Panel nástrojů\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,23 +67,23 @@ BEGIN
         END
         MENUITEM "Celá obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Obrázek"
     BEGIN
         MENUITEM "Překlopit nebo otočit...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Změnit velikost...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Oříznout", IDM_IMAGECROP
         MENUITEM "Inverovat barvy\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atributy...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Vymazat obrázek", IDM_IMAGEDELETEIMAGE
         MENUITEM "Kreslit neprůhledně", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Barvy"
     BEGIN
         MENUITEM "Upravit paletu...", IDM_COLORSEDITPALETTE
+        MENUITEM SEPARATOR
+        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
+        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&Nápověda"
     BEGIN
         MENUITEM "Témata nápovědy", IDM_HELPHELPTOPICS
@@ -107,7 +109,7 @@ BEGIN
     "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
-    "^W", IDM_IMAGECHANGESIZE
+    "^W", IDM_IMAGESTRETCHSKEW
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
@@ -156,51 +158,65 @@ BEGIN
     PUSHBUTTON "Výchozí", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
-IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
+IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Změnit velikost"
+CAPTION "Stretch and skew image"
 BEGIN
-    GROUPBOX "Změnit velikost", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
-    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "Vodorovně:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
-    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "Svisle:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
+    LTEXT "Vodorovně:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
+    LTEXT "Svisle:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
+    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
+    LTEXT "Vodorovně:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
+    LTEXT "Svisle:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
+    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Storno", IDCANCEL, 170, 24, 48, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Malování"
-    IDS_WINDOWTITLE, "%s - Malování"
-    IDS_INFOTITLE, "ReactOS Malování"
-    IDS_INFOTEXT, "ReactOS Malování je dostupné pod licencí GNU Lesser General Public License (LGPL) verze 3 (viz. www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Chcete uložit provedené změny v %s?"
-    IDS_DEFAULTFILENAME, "Bez názvu.bmp"
-    IDS_MINIATURETITLE, "Miniatura"
-    IDS_TOOLTIP1, "Volný výběr"
-    IDS_TOOLTIP2, "Výběr"
-    IDS_TOOLTIP3, "Guma"
-    IDS_TOOLTIP4, "Vyplnit barvou"
-    IDS_TOOLTIP5, "Zvolit barvu"
-    IDS_TOOLTIP6, "Lupa"
-    IDS_TOOLTIP7, "Tužka"
-    IDS_TOOLTIP8, "Štětec"
-    IDS_TOOLTIP9, "Sprej"
-    IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "Čára"
-    IDS_TOOLTIP12, "Beziérova křivka"
-    IDS_TOOLTIP13, "Obdélník"
-    IDS_TOOLTIP14, "Polygon"
-    IDS_TOOLTIP15, "Elipsa"
-    IDS_TOOLTIP16, "Zaoblený obdélník"
-    IDS_OPENFILTER, "Soubory bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Všechny soubory (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24bitová bitmapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bajtů"
-    IDS_PRINTRES, "%d x %d pixelů na metr"
+    IDS_PROGRAMNAME "Malování"
+    IDS_WINDOWTITLE "%s - Malování"
+    IDS_INFOTITLE "ReactOS Malování"
+    IDS_INFOTEXT "ReactOS Malování je dostupné pod licencí GNU Lesser General Public License (LGPL, viz. www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Chcete uložit provedené změny v %s?"
+    IDS_DEFAULTFILENAME "Bez názvu.bmp"
+    IDS_MINIATURETITLE "Miniatura"
+    IDS_TOOLTIP1 "Volný výběr"
+    IDS_TOOLTIP2 "Výběr"
+    IDS_TOOLTIP3 "Guma"
+    IDS_TOOLTIP4 "Vyplnit barvou"
+    IDS_TOOLTIP5 "Zvolit barvu"
+    IDS_TOOLTIP6 "Lupa"
+    IDS_TOOLTIP7 "Tužka"
+    IDS_TOOLTIP8 "Štětec"
+    IDS_TOOLTIP9 "Sprej"
+    IDS_TOOLTIP10 "Text"
+    IDS_TOOLTIP11 "Čára"
+    IDS_TOOLTIP12 "Beziérova křivka"
+    IDS_TOOLTIP13 "Obdélník"
+    IDS_TOOLTIP14 "Polygon"
+    IDS_TOOLTIP15 "Elipsa"
+    IDS_TOOLTIP16 "Zaoblený obdélník"
+    IDS_OPENFILTER "Soubory bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Všechny soubory (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24bitová bitmapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d bajtů"
+    IDS_PRINTRES "%d x %d pixelů na metr"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
 END

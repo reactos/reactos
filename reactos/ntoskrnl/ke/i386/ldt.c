@@ -77,8 +77,7 @@ KeSetBaseGdtSelector(ULONG Entry,
    KIRQL oldIrql;
    PUSHORT Gdt;
 
-   DPRINT("KeSetBaseGdtSelector(Entry %x, Base %x)\n",
-	   Entry, Base);
+   DPRINT("KeSetBaseGdtSelector(Entry %x, Base %p)\n", Entry, Base);
 
    KeAcquireSpinLock(&GdtLock, &oldIrql);
 

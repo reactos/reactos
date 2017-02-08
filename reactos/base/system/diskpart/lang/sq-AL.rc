@@ -1,0 +1,395 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+/* Basic application information */
+STRINGTABLE
+BEGIN
+    IDS_APP_HEADER "ReactOS DiskPart"
+    IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
+Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
+/S filename\tRuns the given script.\n\
+/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
+/?\t\tDisplay this help message.\n\n"
+    IDS_APP_LICENSE, "Liçensuar mbi GNU GPLv2\n"
+    IDS_APP_CURR_COMPUTER, "Në kompjuter: %s\n\n"
+    IDS_APP_LEAVING, "\nDil DiskPart...\n"
+    IDS_APP_PROMPT, "DISKPART> "
+END
+
+/* Disk Information Labels */
+STRINGTABLE
+BEGIN
+    IDS_DETAIL_INFO_DISK_ID "Disk"
+    IDS_DETAIL_INFO_TYPE "Tipi"
+    IDS_DETAIL_INFO_STATUS "Gjendja"
+    IDS_DETAIL_INFO_PATH "Rrugë"
+    IDS_DETAIL_INFO_TARGET "Objektivi"
+    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_LOC_PATH "Rruga e vendndodhjes"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Read-only Gjendja aktuale"
+    IDS_DETAIL_INFO_RO "Read-only"
+    IDS_DETAIL_INFO_BOOT_DSK "Boot Disk"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Faqja dokumenteve Disk"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Hibernimi i dokumeteve Disk"
+    IDS_DETAIL_INFO_CRASH_DSK "Hedhja e te dhenave Disk"
+    IDS_DETAIL_INFO_CLST_DSK "Grupimet ne Disk"
+END
+
+/* Detail header titles */
+STRINGTABLE
+BEGIN
+    IDS_LIST_DISK_HEAD "\n  Disk ###  Status      Size     Free     Dyn  Gpt\n"
+    IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
+    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "\n  Partition      Type              Size     Offset\n"
+    IDS_LIST_PARTITION_LINE "%c -------------  ----------------  -------  -------\n"
+    IDS_LIST_PARTITION_FORMAT "  Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
+    IDS_LIST_VOLUME_HEAD "Volume ###\tLtr\tLabel\n"
+END
+
+/* RESCAN command string */
+STRINGTABLE
+BEGIN
+    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
+    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+END
+
+/* SELECT command strings */
+STRINGTABLE
+BEGIN
+    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
+    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
+    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
+    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+END
+
+/* Disk Status */
+STRINGTABLE
+BEGIN
+    IDS_STATUS_YES "Po"
+    IDS_STATUS_NO "Jo"
+    IDS_STATUS_DISK_HEALTHY "Shëndetshem"
+    IDS_STATUS_DISK_SICK "Sëmur"
+    IDS_STATUS_UNAVAILABLE "I PADISPONUESHEM"
+    IDS_STATUS_ONLINE "Online"
+    IDS_STATUS_OFFLINE "Offline"
+    IDS_STATUS_NO_MEDIA "Ska Media"
+END
+
+/* CMD Messages for commands */
+STRINGTABLE
+BEGIN
+    IDS_MSG_ARG_SYNTAX_ERROR "Argumente(t) e specifikuara per kete komande nuk jane të vlefshme.\nPër më shume informacione mbi komanden shkruani:"
+END
+
+/* Help Command Descripions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- Shënon particionin ndarjen zgjedhur si aktive.\n"
+    IDS_HELP_CMD_DESC_ADD "ADD\t\t- Shto një pasqyrë të një vëllim të thjeshtë.\n"
+    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- Të caktojë një letër driverit apo pikën e ngarkimit për vëllimin e përzgjedhur.\n"
+    IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- Bashkangjet një dokument diskut virtual.\n"
+    IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- Manipulon volumet ose atributet e diskut.\n"
+    IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- Mundeson ose heq ngarkimin automatik e volumeve fillestar.\n"
+    IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- Thyen nje sere lidhjesh.\n"
+    IDS_HELP_CMD_DESC_CLEAN "CLEAN\t\t- Pastron iformacionet e konfigurimit, ose të gjitha informacionet, e\n\t\t  diskut.\n"
+    IDS_HELP_CMD_DESC_COMPACT "COMPACT\t\t- Tenton te ul masen fizike te dokumentit.\n"
+    IDS_HELP_CMD_DESC_CONVERT "CONVERT\t\t- Konverton formatet e ndryshme ne disk.\n"
+    IDS_HELP_CMD_DESC_CREATE "CREATE\t\t- Krijon një volum, particion, ose disk virtual.\n"
+    IDS_HELP_CMD_DESC_DELETE "DELETE\t\t- Fshin një objekt.\n"
+    IDS_HELP_CMD_DESC_DETACH "DETACH\t\t- Heq nga lidhja nje dokument nga disku virtual.\n"
+    IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- Shfaq detaje mbi një objekt.\n"
+    IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- Dil DiskPart.\n"
+    IDS_HELP_CMD_DESC_EXPAND "EXPAND\t\t- Zgjeron masen maksimale te mundshme ne diskun virtual.\n"
+    IDS_HELP_CMD_DESC_EXTEND "EXTEND\t\t- Zgjeron një volum.\n"
+    IDS_HELP_CMD_DESC_FS "FILESYSTEMS\t- Shfaq dokumentet e sistemit ne volum te suportuara aktualisht.\n"
+    IDS_HELP_CMD_DESC_FORMAT "FORMAT\t\t- Formato volumin ose particionin.\n"
+    IDS_HELP_CMD_DESC_GPT "GPT\t\t- Cakton atributet particionet GPT te perzgjedhur.\n"
+    IDS_HELP_CMD_DESC_HELP "HELP\t\t- Shfaq një listë komandash.\n"
+    IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- Importon një disk grup.\n"
+    IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t- Mark the selected partition as inactive.\n"
+    IDS_HELP_CMD_DESC_LIST "LIST\t\t- Shfaq një listë objektesh.\n"
+    IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- Shkrin nje disk dytesor tek kryesori.\n"
+    IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- Offline një objekt që është momentalish i markuar si online.\n"
+    IDS_HELP_CMD_DESC_ONLINE "ONLINE\t\t- Online një objekt që është momentalish i markuar si offline.\n"
+    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- Rifreskon gjendjen e të gjith disqeve në paketen invalide,\n\t\t  dhe risinkronizon volumet mirror dhe volumet RAID5\n\t\t  që kanë laster plex ose bazari ne data.\n"
+    IDS_HELP_CMD_DESC_REM "REM\t\t- Mos bëj gjë. Kjo përdoret për komente në skripta.\n"
+    IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- Hiq një germë nga driveri ose monto një pike të caktuar.\n"
+    IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- Riparo një volum RAID-5 me një antar të dështuar.\n"
+    IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- Skano përsëri kompjuterin pë disqe dhe volume.\n"
+    IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- Vëndos një particion të mbajtur nën një volum të thjesht.\n"
+    IDS_HELP_CMD_DESC_SAN "SAN\t\t- Shfaq ose vendos SAN policy për OS'n që ndizet momentalisht.\n"
+    IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- Zhvendeso fokusin tek një objekt.\n"
+    IDS_HELP_CMD_DESC_SETID "SETID\t\t- Ndrysho tipin e particionit.\n"
+    IDS_HELP_CMD_DESC_SHRINK "SHRINK\t\t- Ul masen e volumit të përzgjedhur.\n"
+    IDS_HELP_CMD_DESC_UNIQUEID "UNIQUEID\t- Shfaq ose vendos tabelen e particionit GUID - (GPT) identifikues\n\t\t  ose master boot record (MBR) firmen e një disku."
+END
+
+/* Common Error Messages */
+STRINGTABLE
+BEGIN
+    IDS_ERROR_MSG_NO_SCRIPT "Error në hapjen e skriptes: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "Error argumenti i procesimit: %s\n"
+    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
+END
+
+/* Active help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ACTIVE "\n\
+<Shto tekstin e ndihmes për komandën «active»>\n\n"
+END
+
+/* Add help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ADD "\n\
+<Shto tekstin e ndihmes për komandën «add»>\n\n"
+END
+
+/* Assign help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ASSIGN "\n\
+<Shto tekstin e ndihmes për komandën «assign»>\n\n"
+END
+
+/* Attach help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ATTACH "\n\
+<Shto tekstin e ndihmes për komandën «attach»>\n\n"
+END
+
+/* Attributes Command Messages */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ATTRIBUTES "\n\
+<Shto tekstin e ndihmes për komandën «attributes»>\n\n"
+END
+
+/* Automount help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_AUTOMOUNT "\n\
+<Shto tekstin e ndihmes për komandën «automount»>\n\n"
+END
+
+/* Break help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_BREAK "\n\
+<Shto tekstin e ndihmes për komandën «break»>\n\n"
+END
+
+/* Clean help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_CLEAN "\n\
+<Shto tekstin e ndihmes për komandën «clean»>\n\n"
+END
+
+/* Compact help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_COMPACT "\n\
+<Shto tekstin e ndihmes për komandën «compact»>\n\n"
+END
+
+/* Convert help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_CONVERT "\n\
+<Shto tekstin e ndihmes për komandën «convert»>\n\n"
+END
+
+/* Convert help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_CREATE "\n\
+<Shto tekstin e ndihmes për komandën «create»>\n\n"
+END
+
+/* Delete help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DELETE "\n\
+<Shto tekstin e ndihmes për komandën «delete»>\n\n"
+END
+
+/* Delete help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DETAIL "\n\
+<Shto tekstin e ndihmes për komandën «detail»>\n\n"
+END
+
+/* Detach help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DETACH "\n\
+<Shto tekstin e ndihmes për komandën «detach»>\n\n"
+END
+
+/* Expand help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_EXPAND "\n\
+<Shto tekstin e ndihmes për komandën «expand»>\n\n"
+END
+
+/* Extend help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_EXTEND "\n\
+<Shto tekstin e ndihmes për komandën «extend»>\n\n"
+END
+
+/* Filesystems help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_FILESYSTEMS "\n\
+<Shto tekstin e ndihmes për komandën «filesystems»>\n\n"
+END
+
+/* Format help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_FORMAT "\n\
+<Shto tekstin e ndihmes për komandën «format»>\n\n"
+END
+
+/* GPT help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_GPT "\n\
+<Shto tekstin e ndihmes për komandën «gpt»>\n\n"
+END
+
+/* Help help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_HELP "\n\
+<Shto tekstin e ndihmes për komandën «help»>\n\n"
+END
+
+/* Import help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_IMPORT "\n\
+<Shto tekstin e ndihmes për komandën «import»>\n\n"
+END
+
+/* Inactive help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_INACTIVE "\n\
+<Shto tekstin e ndihmes për komandën «inactive»>\n\n"
+END
+
+/* List help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_LIST "\n\
+<Shto tekstin e ndihmes për komandën «list»>\n\n"
+END
+
+/* Merge help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_MERGE "\n\
+<Shto tekstin e ndihmes për komandën «merge»>\n\n"
+END
+
+/* Offline help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_OFFLINE "\n\
+<Shto tekstin e ndihmes për komandën «OFFLINE»>\n\n"
+END
+
+/* Online help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ONLINE "\n\
+<Shto tekstin e ndihmes për komandën «ONLINE»>\n\n"
+END
+
+/* Recover help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_RECOVER "\n\
+<Shto tekstin e ndihmes për komandën «RECOVER»>\n\n"
+END
+
+/* Remove help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_REMOVE "\n\
+<Shto tekstin e ndihmes për komandën «REMOVE»>\n\n"
+END
+
+/* Repair help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_REPAIR "\n\
+<Shto tekstin e ndihmes për komandën «REPAIR»>\n\n"
+END
+
+/* Rescan help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_RESCAN "\n\
+<Shto tekstin e ndihmes për komandën «RESCAN»>\n\n"
+END
+
+/* Retain help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_RETAIN "\n\
+<Shto tekstin e ndihmes për komandën «RETAIN»>\n\n"
+END
+
+/* San help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SAN "\n\
+<Shto tekstin e ndihmes për komandën «SAN»>\n\n"
+END
+
+/* Select help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SELECT "\n\
+<Shto tekstin e ndihmes për komandën «SELECT»>\n\n"
+END
+
+/* Setid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SETID "\n\
+<Shto tekstin e ndihmes për komandën «SETID»>\n\n"
+END
+
+/* Setid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SHRINK "\n\
+<Shto tekstin e ndihmes për komandën «SHRINK»>\n\n"
+END
+
+/* Uniqueid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_UNIQUEID "\n\
+<Shto tekstin e ndihmes për komandën «UNIQUEID»>\n\n"
+END

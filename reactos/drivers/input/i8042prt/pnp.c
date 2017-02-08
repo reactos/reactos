@@ -11,6 +11,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 /* This is all pretty confusing. There's more than one way to
@@ -110,7 +112,7 @@ i8042BasicDetect(
         }
         else if (Value == KBD_RESEND)
         {
-            TRACE_(I8042PRT, "Resending...\n", Value);
+            TRACE_(I8042PRT, "Resending...\n");
             KeStallExecutionProcessor(50);
         }
         else
@@ -145,7 +147,7 @@ i8042DetectKeyboard(
         WARN_(I8042PRT, "Warning: can't write SET_LEDS (0x%08lx)\n", Status);
     }
 
-    /* Turn on translation and SF (Some machines don't reboot if SF is not set, see ReactOS bug #1842) */
+    /* Turn on translation and SF (Some machines don't reboot if SF is not set, see ReactOS bug CORE-1713) */
     if (!i8042ChangeMode(DeviceExtension, 0, CCB_TRANSLATE | CCB_SYSTEM_FLAG))
         return;
 
@@ -388,7 +390,7 @@ static NTSTATUS
 StartProcedure(
     IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     UCHAR FlagsToDisable = 0;
     UCHAR FlagsToEnable = 0;
     KIRQL Irql;
@@ -435,6 +437,7 @@ StartProcedure(
         Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
         if (!NT_SUCCESS(Status))
         {
+            WARN_(I8042PRT, "EnableInterrupts failed: %lx\n", Status);
             DeviceExtension->Flags &= ~(KEYBOARD_PRESENT | MOUSE_PRESENT);
             return Status;
         }
@@ -452,6 +455,10 @@ StartProcedure(
         {
             DeviceExtension->Flags |= KEYBOARD_INITIALIZED;
         }
+        else
+        {
+            WARN_(I8042PRT, "i8042ConnectKeyboardInterrupt failed: %lx\n", Status);
+        }
     }
 
     if (DeviceExtension->Flags & MOUSE_PRESENT &&
@@ -465,10 +472,20 @@ StartProcedure(
         {
             DeviceExtension->Flags |= MOUSE_INITIALIZED;
         }
+        else
+        {
+            WARN_(I8042PRT, "i8042ConnectMouseInterrupt failed: %lx\n", Status);
+        }
 
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
+        /* HACK: the mouse has already been reset in i8042DetectMouse. This second
+           reset prevents some touchpads/mice from working (Dell D531, D600).
+           See CORE-6901 */
+        if (!(i8042HwFlags & FL_INITHACK))
+        {
+            i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
+        }
         KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
     }
 
@@ -484,7 +501,7 @@ i8042PnpStartDevice(
     PFDO_DEVICE_EXTENSION DeviceExtension;
     PPORT_DEVICE_EXTENSION PortDeviceExtension;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor, ResourceDescriptorTranslated;
-    INTERRUPT_DATA InterruptData;
+    INTERRUPT_DATA InterruptData = { NULL };
     BOOLEAN FoundDataPort = FALSE;
     BOOLEAN FoundControlPort = FALSE;
     BOOLEAN FoundIrq = FALSE;
@@ -531,7 +548,7 @@ i8042PnpStartDevice(
             {
                 if (ResourceDescriptor->u.Port.Length == 1)
                 {
-                    /* We assume that the first ressource will
+                    /* We assume that the first resource will
                      * be the control port and the second one
                      * will be the data port...
                      */
@@ -549,8 +566,8 @@ i8042PnpStartDevice(
                     }
                     else
                     {
-                        WARN_(I8042PRT, "Too much I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
-                        return STATUS_INVALID_PARAMETER;
+                        /* FIXME: implement PS/2 Active Multiplexing */
+                        ERR_(I8042PRT, "Unhandled I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
                     }
                 }
                 else
@@ -630,6 +647,26 @@ i8042PnpStartDevice(
     return Status;
 }
 
+static VOID
+i8042RemoveDevice(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PI8042_DRIVER_EXTENSION DriverExtension;
+    KIRQL OldIrql;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+
+    DriverExtension = (PI8042_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, DeviceObject->DriverObject);
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    KeAcquireSpinLock(&DriverExtension->DeviceListLock, &OldIrql);
+    RemoveEntryList(&DeviceExtension->ListEntry);
+    KeReleaseSpinLock(&DriverExtension->DeviceListLock, OldIrql);
+
+    IoDetachDevice(DeviceExtension->LowerDevice);
+
+    IoDeleteDevice(DeviceObject);
+}
+
 NTSTATUS NTAPI
 i8042Pnp(
     IN PDEVICE_OBJECT DeviceObject,
@@ -671,19 +708,8 @@ i8042Pnp(
             {
                 case BusRelations:
                 {
-                    PDEVICE_RELATIONS DeviceRelations;
-
                     TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    DeviceRelations = ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
-                    if (DeviceRelations)
-                    {
-                        DeviceRelations->Count = 0;
-                        Information = (ULONG_PTR)DeviceRelations;
-                        Status = STATUS_SUCCESS;
-                    }
-                    else
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                    break;
+                    return ForwardIrpAndForget(DeviceObject, Irp);
                 }
                 case RemovalRelations:
                 {
@@ -693,7 +719,6 @@ i8042Pnp(
                 default:
                     ERR_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                         Stack->Parameters.QueryDeviceRelations.Type);
-                    ASSERT(FALSE);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
             break;
@@ -701,17 +726,29 @@ i8042Pnp(
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0x0d */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
-            /* Nothing to do */
-            Status = Irp->IoStatus.Status;
-            break;
+            return ForwardIrpAndForget(DeviceObject, Irp);
         }
         case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
-            /* Nothing much to tell */
-            Information = 0;
-            Status = STATUS_SUCCESS;
-            break;
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_REMOVE_DEVICE\n");
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_CANCEL_REMOVE_DEVICE\n");
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            Status = ForwardIrpAndForget(DeviceObject, Irp);
+            i8042RemoveDevice(DeviceObject);
+            return Status;
         }
         default:
         {

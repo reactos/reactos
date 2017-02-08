@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "imagehlp.h"
-//#include <wine/debug.h>
+#include "precomp.h"
 
 /**********************************************************************/
 DECLSPEC_HIDDEN HANDLE IMAGEHLP_hHeap = NULL;
@@ -42,10 +35,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       IMAGEHLP_hHeap = HeapCreate(0, 0x10000, 0);
       break;
     case DLL_PROCESS_DETACH:
+      if (lpvReserved) break;
       HeapDestroy(IMAGEHLP_hHeap);
-      IMAGEHLP_hHeap = NULL;
-      break;
-    default:
       break;
     }
   return TRUE;

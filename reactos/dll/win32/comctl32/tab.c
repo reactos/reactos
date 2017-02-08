@@ -52,21 +52,7 @@
  *
  */
 
-#include <assert.h>
-//#include <stdarg.h>
-//#include <string.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/debug.h>
-//#include <math.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(tab);
 
@@ -252,22 +238,29 @@ static inline LRESULT TAB_SetCurSel (TAB_INFO *infoPtr, INT iItem)
 
   TRACE("(%p %d)\n", infoPtr, iItem);
 
-  if (iItem < 0)
-      infoPtr->iSelected = -1;
-  else if (iItem >= infoPtr->uNumItem)
+  if (iItem >= (INT)infoPtr->uNumItem)
       return -1;
-  else {
-      if (prevItem != iItem) {
-          if (prevItem != -1)
-              TAB_GetItem(infoPtr, prevItem)->dwState &= ~TCIS_BUTTONPRESSED;
-          TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_BUTTONPRESSED;
 
+  if (prevItem != iItem) {
+      if (prevItem != -1)
+          TAB_GetItem(infoPtr, prevItem)->dwState &= ~TCIS_BUTTONPRESSED;
+
+      if (iItem >= 0)
+      {
+          TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_BUTTONPRESSED;
           infoPtr->iSelected = iItem;
           infoPtr->uFocus = iItem;
-          TAB_EnsureSelectionVisible(infoPtr);
-          TAB_InvalidateTabArea(infoPtr);
       }
+      else
+      {
+          infoPtr->iSelected = -1;
+          infoPtr->uFocus = -1;
+      }
+
+      TAB_EnsureSelectionVisible(infoPtr);
+      TAB_InvalidateTabArea(infoPtr);
   }
+
   return prevItem;
 }
 
@@ -1023,37 +1016,18 @@ static void TAB_SetupScrolling(
     /*
      * Calculate the position of the scroll control.
      */
-    if(infoPtr->dwStyle & TCS_VERTICAL)
-    {
-      controlPos.right = clientRect->right;
-      controlPos.left  = controlPos.right - 2 * GetSystemMetrics(SM_CXHSCROLL);
+    controlPos.right = clientRect->right;
+    controlPos.left  = controlPos.right - 2 * GetSystemMetrics(SM_CXHSCROLL);
 
-      if (infoPtr->dwStyle & TCS_BOTTOM)
-      {
-        controlPos.top    = clientRect->bottom - infoPtr->tabHeight;
-        controlPos.bottom = controlPos.top + GetSystemMetrics(SM_CYHSCROLL);
-      }
-      else
-      {
-        controlPos.bottom = clientRect->top + infoPtr->tabHeight;
-        controlPos.top    = controlPos.bottom - GetSystemMetrics(SM_CYHSCROLL);
-      }
+    if (infoPtr->dwStyle & TCS_BOTTOM)
+    {
+      controlPos.top    = clientRect->bottom - infoPtr->tabHeight;
+      controlPos.bottom = controlPos.top + GetSystemMetrics(SM_CYHSCROLL);
     }
     else
     {
-      controlPos.right = clientRect->right;
-      controlPos.left  = controlPos.right - 2 * GetSystemMetrics(SM_CXHSCROLL);
-
-      if (infoPtr->dwStyle & TCS_BOTTOM)
-      {
-        controlPos.top    = clientRect->bottom - infoPtr->tabHeight;
-        controlPos.bottom = controlPos.top + GetSystemMetrics(SM_CYHSCROLL);
-      }
-      else
-      {
-        controlPos.bottom = clientRect->top + infoPtr->tabHeight;
-        controlPos.top    = controlPos.bottom - GetSystemMetrics(SM_CYHSCROLL);
-      }
+      controlPos.bottom = clientRect->top + infoPtr->tabHeight;
+      controlPos.top    = controlPos.bottom - GetSystemMetrics(SM_CYHSCROLL);
     }
 
     /*
@@ -1917,9 +1891,8 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     /* Draw the text */
     if(infoPtr->dwStyle & TCS_VERTICAL) /* if we are vertical rotate the text and each character */
     {
-      static const WCHAR ArialW[] = { 'A','r','i','a','l',0 };
       LOGFONTW logfont;
-      HFONT hFont = 0;
+      HFONT hFont;
       INT nEscapement = 900;
       INT nOrientation = 900;
 
@@ -1930,21 +1903,9 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
       }
 
       /* to get a font with the escapement and orientation we are looking for, we need to */
-      /* call CreateFontIndirectA, which requires us to set the values of the logfont we pass in */
-      if (!GetObjectW((infoPtr->hFont) ?
-                infoPtr->hFont : GetStockObject(SYSTEM_FONT),
-                sizeof(LOGFONTW),&logfont))
-      {
-        INT iPointSize = 9;
-
-        lstrcpyW(logfont.lfFaceName, ArialW);
-        logfont.lfHeight = -MulDiv(iPointSize, GetDeviceCaps(hdc, LOGPIXELSY),
-                                    72);
-        logfont.lfWeight = FW_NORMAL;
-        logfont.lfItalic = 0;
-        logfont.lfUnderline = 0;
-        logfont.lfStrikeOut = 0;
-      }
+      /* call CreateFontIndirect, which requires us to set the values of the logfont we pass in */
+      if (!GetObjectW(infoPtr->hFont, sizeof(logfont), &logfont))
+        GetObjectW(GetStockObject(DEFAULT_GUI_FONT), sizeof(logfont), &logfont);
 
       logfont.lfEscapement = nEscapement;
       logfont.lfOrientation = nOrientation;

@@ -1,0 +1,9 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nTastați ""CLIP /?"" pentru informațiile de utilizare.\n"
+    IDS_HELP "\nRedirecționează în clipboard ieșirea programelor linie-de-comandă.\n\n\
+CLIP [/?]\n\n\
+    /?  Afișează acest mesaj.\n"
+END

@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Boot Data implementation
  * FILE:            lib/rtl/bootdata.c
@@ -706,6 +707,7 @@ RtlCreateBootStatusDataFile(VOID)
                                NULL);
 
     AllocationSize.QuadPart = 0x800;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(AllocationSize);
 
     /* Create the boot status data file */
     Status = ZwCreateFile(&FileHandle,

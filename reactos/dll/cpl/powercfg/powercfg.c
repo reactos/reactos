@@ -1,17 +1,20 @@
 /*
  * PROJECT:         ReactOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/powershemes.c
+ * FILE:            dll/cpl/powercfg/powercfg.c
  * PURPOSE:         initialization of applet
  * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
- *                  Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Martin Rottensteiner
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
 #include "powercfg.h"
 
-#define NUM_APPLETS	(1)
+#include <winreg.h>
+#include <regstr.h>
+
+#define NUM_APPLETS (1)
 
 static LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
@@ -98,9 +101,9 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   if (GetPwrCapabilities(&spc))
   {
     if (spc.SystemBatteriesPresent)
-	{
-	  InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, (DLGPROC)AlarmsDlgProc);
-	}
+    {
+      InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, (DLGPROC)AlarmsDlgProc);
+    }
   }
   InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC)AdvancedDlgProc);
   InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, (DLGPROC)HibernateDlgProc);

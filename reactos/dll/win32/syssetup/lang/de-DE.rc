@@ -1,132 +1,91 @@
-/*
- * Copyright (C) 2004 Filip Navara
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-
-IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Willkommen beim ReactOS-Setupassistenten.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. Der Assistent benötigt einige Informationen, um ReactOS installieren zu können.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Willkommen beim ReactOS Installationsassistenten.", IDC_WELCOMETITLE, 115, 9, 189, 31
+    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. Dazu werden einige Informationen von Ihnen benötigt.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 115, 160, 189, 31
 END
 
-
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Die ReactOS-Programmierer möchten folgende Open-Source-Projekte anerkennen, die (teils) verwendet wurden, um ReactOS zu erstellen:",
-                    IDC_STATIC,15,7,286,19
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS ist unter der GPL veröffentlicht, wenn Sie (Teile von) ReactOS wiederverwenden oder wiederveröffentlichen wollen, müssen Sie die Bestimmungen der GPL anerkennen.",
-                    IDC_STATIC,15,110,227,24
-    PUSHBUTTON      "GPL &ansehen...",IDC_VIEWGPL,251,110,55,19
-    LTEXT           "Klicken Sie auf Weiter, um mit der Einrichtung fortzufahren.",IDC_STATIC,15,136,
-                    195,17
+    LTEXT "Die Entwicklung von ReactOS wurde teilweise durch folgende Open-Source-Projekte ermöglicht:", IDC_STATIC, 15, 7, 286, 19
+    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT "ReactOS ist unter der GNU General Public License (GPL) veröffentlicht. Wenn Sie ReactOS oder Teile davon weiterverwenden wollen, müssen Sie die Bestimmungen der GPL anerkennen.", IDC_STATIC, 15, 110, 227, 24
+    PUSHBUTTON "GPL &ansehen...", IDC_VIEWGPL, 251, 110, 55, 19
+    LTEXT "Klicken Sie auf Weiter, um mit der Einrichtung fortzufahren.", IDC_STATIC, 15, 136, 195, 17
 END
 
-
-IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben Sie Ihren Namen und den Namen Ihrer Firma ein.",
-          IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Bitte geben Sie Ihren Namen und den Namen Ihrer Firma oder Organisation ein.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "Na&me:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Organisation:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
-
-IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben Sie einen Computernamen ein (maximal 15 Zeichen). Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
-          IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Bitte geben Sie einen Computernamen maximal 15 Zeichen ein. Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Das Setup wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
-          IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 14 Zeichen ein.",
-          IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Das Installationsprogramm wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 127 Zeichen ein.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Administratorpasswort:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Passwort bestätigen:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
-
-IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "Die Spracheinstellungen des Systems sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die Nutzereinstellungen geben vor, wie Zahlen, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
-    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.",
-          IDC_STATIC, 53, 57, 188, 15
+    LTEXT "Klicken Sie auf Einstellen, um die regionalen Einstellungen zu ändern.", IDC_STATIC, 53, 57, 188, 16
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.",
-          IDC_STATIC, 53, 86, 253, 8
+    LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.",
-          IDC_STATIC, 53, 126, 189, 8
-    PUSHBUTTON "&Einstellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+    LTEXT "Klicken Sie auf Einstellen, um das Tastaturlayout zu ändern.", IDC_STATIC, 53, 122, 188, 16
+    PUSHBUTTON "Eins&tellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
-
-IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Datum und Zeit", IDC_STATIC, 53, 7, 253, 8
-    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
-    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
-            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    LTEXT "Datum und Uhrzeit", IDC_STATIC, 53, 7, 253, 8
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
     LTEXT "Zeitzone", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
-             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "&Uhr automatisch auf Sommer-/Winterzeit umstellen",
-                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "&Uhr automatisch auf Sommer-/Winterzeit umstellen", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
-
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-Setup"
+CAPTION "ReactOS-Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -134,164 +93,83 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
 
-
-IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Fertigstellung des ReactOS-Setups"
+CAPTION "Fertigstellung der Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fertigstellung des ReactOS-Setupassistenten",IDC_FINISHTITLE,115,9,195,37
-    LTEXT "Das ReactOS-Setup wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Fertigstellung des ReactOS Installationsassistenten", IDC_FINISHTITLE, 115, 9, 195, 37
+    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Entfernen Sie die CD, wenn vorhanden. Danach klicken Sie auf Beenden, um den Computer neu zu starten.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Entfernen Sie die CD und klicken Sie auf Beenden, um den Computer neuzustarten.", IDC_STATIC, 115, 160, 195, 31
 END
-
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GNU General Public License"
+CAPTION "GNU General Public License (GPL)"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
-                    ES_READONLY | WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
+    EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON "Schließen", IDOK, 141, 209, 50, 14
 END
 
-
-IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Bitte warten..."
-FONT 8,"MS Shell Dlg 2",400,0,1
+FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
+    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Anerkennungen"
-    IDS_ACKSUBTITLE      "Das Fundament, auf dem ReactOS gebaut ist, und Lizenzinformationen"
-    IDS_OWNERTITLE       "Personalisieren Sie Ihre Software"
-    IDS_OWNERSUBTITLE    "Das Setup nutzt diese Informationen über Sie, um ReactOS zu personalisieren."
-    IDS_COMPUTERTITLE    "Computername und Administratorpasswort"
+    IDS_ACKTITLE "Danksagungen"
+    IDS_ACKSUBTITLE "Informationen über die Entwickler und Softwarelizenzen"
+    IDS_OWNERTITLE "Personalisieren Sie Ihre Software"
+    IDS_OWNERSUBTITLE "Das Setup nutzt diese Informationen über Sie, um ReactOS zu personalisieren."
+    IDS_COMPUTERTITLE "Computername und Administratorpasswort"
     IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für Ihren Computer festlegen."
-    IDS_LOCALETITLE      "Regionale Einstellungen"
-    IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
-    IDS_DATETIMETITLE    "Datum und Uhrzeit"
-    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für Ihren Computer."
-    IDS_PROCESSTITLE     "Registriere Komponenten"
-    IDS_PROCESSSUBTITLE  "Bitte warten..."
+    IDS_LOCALETITLE "Regionale Einstellungen"
+    IDS_LOCALESUBTITLE "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
+    IDS_DATETIMETITLE "Datum und Uhrzeit"
+    IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
+    IDS_PROCESSTITLE "Komponenten werden registriert"
+    IDS_PROCESSSUBTITLE "Bitte warten..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Herunterladen und Installieren verschiedener Anwendungen"
+    IDS_REACTOS_SETUP "ReactOS-Installation"
+    IDS_UNKNOWN_ERROR "Unbekannter Fehler"
+    IDS_REGISTERING_COMPONENTS "Registriere Komponenten..."
+    IDS_LOADLIBRARY_FAILED "LoadLibrary fehlgeschlagen: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr fehlgeschlagen: "
+    IDS_REGSVR_FAILED "DllRegisterServer fehlgeschlagen: "
+    IDS_DLLINSTALL_FAILED "DllInstall fehlgeschlagen: "
+    IDS_TIMEOUT "Zeitüberschreitung während der Registrierung"
+    IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_MACHINE_OWNER_NAME "Besitzer"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Zubehör"
-    IDS_CMT_CALC        "Starte Taschenrechner"
-    IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
-    IDS_CMT_EXPLORER    "Starte Explorer"
-    IDS_CMT_NOTEPAD     "Starte Texteditor"
-    IDS_CMT_REGEDIT     "Starte Registrierungseditor"
-    IDS_CMT_WORDPAD     "Starte Dokumenteneditor"
-    IDS_CMT_SCREENSHOT  "Screenshot erstellen"
-    IDS_CMT_DEVMGMT     "Starte Gerätemanager"
-    IDS_CMT_SERVMAN     "Starte Dienstmanager"
-    IDS_CMT_RDESKTOP    "Starte Remote Desktop"
-    IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
-    IDS_CMT_MSCONFIG    "Starte Systemkonfigurationsprogramm"
-    IDS_CMT_PAINT       "Starte Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES		"Spiele"
-    IDS_CMT_SOLITAIRE	"Solitär"
-    IDS_CMT_WINEMINE	"WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Systemprogramme"
-	IDS_CMT_CHARMAP      "Zeichentabelle"
-	IDS_CMT_KBSWITCH     "Tastaturlayout-Umschalter"
-    IDS_CMT_DXDIAG       "Starte ReactX-Diagnoseprogramm"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Eingabehilfen"
-	IDS_CMT_MAGNIFY      	     "Bildschirmlupe"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Unterhaltung"
-    IDS_CMT_MPLAY32             "Starte Multimedia-Player"
-    IDS_CMT_SNDVOL32            "Starte Lautstärkeregelung"
-    IDS_CMT_SNDREC32            "Starte Audiorekorder"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_REACTOS_SETUP		"ReactOS-Setup"
-    IDS_UNKNOWN_ERROR           "Unbekannter Fehler"
-    IDS_REGISTERING_COMPONENTS  "Registriere Komponenten..."
-    IDS_LOADLIBRARY_FAILED	"LoadLibrary fehlgeschlagen: "
-    IDS_GETPROCADDR_FAILED	"GetProcAddr fehlgeschlagen: "
-    IDS_REGSVR_FAILED           "DllRegisterServer fehlgeschlagen: "
-    IDS_DLLINSTALL_FAILED	"DllInstall fehlgeschlagen: "
-    IDS_TIMEOUT			"Zeitüberschreitung während der Registrierung"
-    IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Eingabeaufforderung.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Anwendungsmanager.lnk"
-    IDS_SHORT_SERVICE    "Dienste-Manager.lnk"
-    IDS_SHORT_DEVICE     "Geräte-Manager.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia-Player.lnk"
-    IDS_SHORT_CALC       "Rechner.lnk"
-    IDS_SHORT_REGEDIT    "Registrierungseditor.lnk"
-    IDS_SHORT_NOTEPAD    "Editor.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitär.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "Zeichentabelle.lnk"
-    IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
-    IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
-    IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
-    IDS_SHORT_SNDVOL32   "Lautstärkeregelung.lnk"
-    IDS_SHORT_SNDREC32   "Audiorekorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX-Diagnose.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_WZD_NAME         "Setup kann erst fortgesetzt werden, wenn ein Name eingegeben wurde."
-    IDS_WZD_SETCOMPUTERNAME  "Setup konnte den Computernamen nicht setzen."
-    IDS_WZD_COMPUTERNAME  "Setup kann erst fortgesetzt werden, wenn ein Computername eingegeben wurde."
-    IDS_WZD_PASSWORDEMPTY  "Sie müssen ein Passwort setzen!"
-    IDS_WZD_PASSWORDMATCH  "Die Passwörter sind nicht gleich. Bitte setzen Sie die Passwörter erneut."
-    IDS_WZD_PASSWORDCHAR  "Das Passwort, das Sie setzten, enthält ungültige Zeichen. Bitte setzen Sie ein gültiges Passwort."
-    IDS_WZD_LOCALTIME    "Setup konnte die lokale Zeit nicht setzen."
+    IDS_WZD_NAME "Die Installation kann erst fortgesetzt werden, wenn ein Name eingegeben wurde."
+    IDS_WZD_SETCOMPUTERNAME "Das Installationsprogramm konnte den Computernamen nicht einstellen."
+    IDS_WZD_COMPUTERNAME "Die Installation kann erst fortgesetzt werden, wenn ein Computername eingegeben wurde."
+    IDS_WZD_PASSWORDEMPTY "Sie müssen ein Passwort vergeben!"
+    IDS_WZD_PASSWORDMATCH "Die Passwörter sind nicht identisch. Bitte geben Sie die Passwörter erneut ein."
+    IDS_WZD_PASSWORDCHAR "Das Passwort enthält ungültige Zeichen. Bitte wählen Sie ein gültiges Passwort."
+    IDS_WZD_LOCALTIME "Das Installationsprogramm konnte die lokale Zeit nicht einstellen."
 END
 
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Geräte werden installiert..."
 END
-
-/* EOF */

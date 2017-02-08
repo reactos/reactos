@@ -22,13 +22,16 @@
 #define WINE_PRODUCTVERSION_STR "8.90.1101.0"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 /* @makedep: msxml3.manifest */
 WINE_MANIFEST 24 msxml3.manifest
 
-1 TYPELIB msxml3_v1.tlb
-1 WINE_REGISTRY msxml3_v1.rgs
-2 WINE_REGISTRY xmlparser.rgs
+1 TYPELIB "msxml3_v1.tlb"
+1 WINE_REGISTRY "msxml3_v1.rgs"
+2 WINE_REGISTRY "xmlparser.rgs"
 
 #include "schemas.rc"
+#ifdef __REACTOS__
+    #include "resources.rc"
+#endif

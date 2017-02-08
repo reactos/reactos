@@ -139,7 +139,7 @@ KiIdleLoop(VOID)
         /* Check if a new thread is scheduled for execution */
         if (Prcb->NextThread)
         {
-            /* Enable interupts */
+            /* Enable interrupts */
             _enable();
 
             /* Capture current thread data */
@@ -452,15 +452,6 @@ KiCallUserMode(
     __debugbreak();
     return STATUS_UNSUCCESSFUL;
 }
-
-#undef ExQueryDepthSList
-NTKERNELAPI
-USHORT
-ExQueryDepthSList(IN PSLIST_HEADER ListHead)
-{
-    return (USHORT)(ListHead->Alignment & 0xffff);
-}
-
 
 ULONG ProcessCount;
 BOOLEAN CcPfEnablePrefetcher;

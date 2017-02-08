@@ -18,25 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <shlwapi.h>
-//#include "oleauto.h"
-#include <rpcproxy.h>
 #include "msipriv.h"
-#include <msiserver.h>
 
-#include <wine/debug.h>
+#include <rpcproxy.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -80,6 +64,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         IsWow64Process( GetCurrentProcess(), &is_wow64 );
         break;
     case DLL_PROCESS_DETACH:
+        if (lpvReserved) break;
         msi_dialog_unregister_class();
         msi_free_handle_table();
         msi_free( gszLogFile );

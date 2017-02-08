@@ -20,16 +20,16 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
-#define DPRINT_NONE         0  // No debug print
-#define DPRINT_WARNING      1  // debugger messages and other misc stuff
-#define DPRINT_MEMORY       2  // memory management messages
-#define DPRINT_FILESYSTEM   3  // file system messages
-#define DPRINT_INIFILE      4  // .ini file messages
-#define DPRINT_UI           5  // user interface messages
-#define DPRINT_DISK         6  // disk messages
-#define DPRINT_CACHE        7 // cache messages
-#define DPRINT_REGISTRY     8  // registry messages
-#define DPRINT_REACTOS      9  // ReactOS messages
+#define DPRINT_NONE         0   // No debug print
+#define DPRINT_WARNING      1   // debugger messages and other misc stuff
+#define DPRINT_MEMORY       2   // memory management messages
+#define DPRINT_FILESYSTEM   3   // file system messages
+#define DPRINT_INIFILE      4   // .ini file messages
+#define DPRINT_UI           5   // user interface messages
+#define DPRINT_DISK         6   // disk messages
+#define DPRINT_CACHE        7   // cache messages
+#define DPRINT_REGISTRY     8   // registry messages
+#define DPRINT_REACTOS      9   // ReactOS messages
 #define DPRINT_LINUX        10  // Linux messages
 #define DPRINT_HWDETECT     11  // hardware detection messages
 #define DPRINT_WINDOWS      12  // messages from Windows loader
@@ -40,11 +40,11 @@
 
 #if DBG && !defined(_M_ARM)
 
-	VOID	DebugInit(VOID);
+    VOID    DebugInit(BOOLEAN MainInit);
     ULONG   DbgPrint(const char *Format, ...);
     VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
-	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
-	VOID    DbgParseDebugChannels(PCHAR Value);
+    VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
+    VOID    DbgParseDebugChannels(PCHAR Value);
 
     #define ERR_LEVEL      0x1
     #define FIXME_LEVEL    0x2
@@ -67,33 +67,33 @@
 
     #define UNIMPLEMENTED DbgPrint("(%s:%d) WARNING: %s is UNIMPLEMENTED!\n", __FILE__, __LINE__, __FUNCTION__);
 
-	#define BugCheck(fmt, ...)              do { DbgPrint("(%s:%d) Fatal Error in %s: " fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); for (;;); } while (0)
-	#define DbgDumpBuffer(mask, buf, len)	DebugDumpBuffer(mask, buf, len)
+    #define BugCheck(fmt, ...)              do { DbgPrint("(%s:%d) Fatal Error in %s: " fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); for (;;); } while (0)
+    #define DbgDumpBuffer(mask, buf, len)    DebugDumpBuffer(mask, buf, len)
 
 #ifdef __i386__
 
-	// Debugging support functions:
-	//
-	// BREAKPOINT() - Inserts an "int 3" instruction
-	// INSTRUCTION_BREAKPOINTX(x) - Enters exception handler right before instruction at address "x" is executed
-	// MEMORY_READWRITE_BREAKPOINTX(x) - Enters exception handler when a read or write occurs at address "x"
-	// MEMORY_WRITE_BREAKPOINTX(x) - Enters exception handler when a write occurs at address "x"
-	//
-	// You may have as many BREAKPOINT()'s as you like but you may only
-	// have up to four of any of the others.
-#define	BREAKPOINT()				__asm__ ("int $3");
-void	INSTRUCTION_BREAKPOINT1(unsigned long addr);
-void	MEMORY_READWRITE_BREAKPOINT1(unsigned long addr);
-void	MEMORY_WRITE_BREAKPOINT1(unsigned long addr);
-void	INSTRUCTION_BREAKPOINT2(unsigned long addr);
-void	MEMORY_READWRITE_BREAKPOINT2(unsigned long addr);
-void	MEMORY_WRITE_BREAKPOINT2(unsigned long addr);
-void	INSTRUCTION_BREAKPOINT3(unsigned long addr);
-void	MEMORY_READWRITE_BREAKPOINT3(unsigned long addr);
-void	MEMORY_WRITE_BREAKPOINT3(unsigned long addr);
-void	INSTRUCTION_BREAKPOINT4(unsigned long addr);
-void	MEMORY_READWRITE_BREAKPOINT4(unsigned long addr);
-void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
+    // Debugging support functions:
+    //
+    // BREAKPOINT() - Inserts an "int 3" instruction
+    // INSTRUCTION_BREAKPOINTX(x) - Enters exception handler right before instruction at address "x" is executed
+    // MEMORY_READWRITE_BREAKPOINTX(x) - Enters exception handler when a read or write occurs at address "x"
+    // MEMORY_WRITE_BREAKPOINTX(x) - Enters exception handler when a write occurs at address "x"
+    //
+    // You may have as many BREAKPOINT()'s as you like but you may only
+    // have up to four of any of the others.
+#define    BREAKPOINT()                __asm__ ("int $3");
+void    INSTRUCTION_BREAKPOINT1(unsigned long addr);
+void    MEMORY_READWRITE_BREAKPOINT1(unsigned long addr);
+void    MEMORY_WRITE_BREAKPOINT1(unsigned long addr);
+void    INSTRUCTION_BREAKPOINT2(unsigned long addr);
+void    MEMORY_READWRITE_BREAKPOINT2(unsigned long addr);
+void    MEMORY_WRITE_BREAKPOINT2(unsigned long addr);
+void    INSTRUCTION_BREAKPOINT3(unsigned long addr);
+void    MEMORY_READWRITE_BREAKPOINT3(unsigned long addr);
+void    MEMORY_WRITE_BREAKPOINT3(unsigned long addr);
+void    INSTRUCTION_BREAKPOINT4(unsigned long addr);
+void    MEMORY_READWRITE_BREAKPOINT4(unsigned long addr);
+void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // defined __i386__
 
@@ -113,10 +113,10 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
     #define UNIMPLEMENTED
 
-	#define DebugInit()
-	#define BugCheck(fmt, ...)
-	#define DbgDumpBuffer(mask, buf, len)
-	#define DbgParseDebugChannels(val)
+    #define DebugInit(init)
+    #define BugCheck(fmt, ...)
+    #define DbgDumpBuffer(mask, buf, len)
+    #define DbgParseDebugChannels(val)
 
 #endif // DBG
 
@@ -124,12 +124,21 @@ void
 NTAPI
 FrLdrBugCheck(ULONG BugCode);
 
+VOID
+FrLdrBugCheckWithMessage(
+    ULONG BugCode,
+    PCHAR File,
+    ULONG Line,
+    PSTR Format,
+    ...);
+
 /* Bugcheck codes */
 enum _FRLDR_BUGCHECK_CODES
 {
     TEST_BUGCHECK,
     MISSING_HARDWARE_REQUIREMENTS,
     FREELDR_IMAGE_CORRUPTION,
+    MEMORY_INIT_FAILURE,
 };
 
 extern char *BugCodeStrings[];

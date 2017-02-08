@@ -19,8 +19,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-#ifndef __MINITAPE_H
-#define __MINITAPE_H
+#ifndef _MINITAPE_
+#define _MINITAPE_
 
 #ifdef __cplusplus
 extern "C" {
@@ -153,32 +153,32 @@ typedef struct _MODE_CAPABILITIES_PAGE {
   UCHAR Reserved11[2];
 } MODE_CAPABILITIES_PAGE, *PMODE_CAPABILITIES_PAGE;
 
-typedef BOOLEAN NTAPI
-(*TAPE_VERIFY_INQUIRY_ROUTINE)(
-  IN PINQUIRYDATA InquiryData,
-  IN PMODE_CAPABILITIES_PAGE ModeCapabilitiesPage);
+typedef BOOLEAN
+(NTAPI *TAPE_VERIFY_INQUIRY_ROUTINE)(
+  _In_ PINQUIRYDATA InquiryData,
+  _In_ PMODE_CAPABILITIES_PAGE ModeCapabilitiesPage);
 
-typedef VOID NTAPI
-(*TAPE_EXTENSION_INIT_ROUTINE)(
-  IN PVOID MinitapeExtension,
-  IN PINQUIRYDATA InquiryData,
-  IN PMODE_CAPABILITIES_PAGE ModeCapabilitiesPage);
+typedef VOID
+(NTAPI *TAPE_EXTENSION_INIT_ROUTINE)(
+  _In_ PVOID MinitapeExtension,
+  _In_ PINQUIRYDATA InquiryData,
+  _In_ PMODE_CAPABILITIES_PAGE ModeCapabilitiesPage);
 
-typedef VOID NTAPI
-(*TAPE_ERROR_ROUTINE)(
-  IN PVOID MinitapeExtension,
-  IN PSCSI_REQUEST_BLOCK Srb,
-  IN OUT PTAPE_STATUS TapeStatus);
+typedef VOID
+(NTAPI *TAPE_ERROR_ROUTINE)(
+  _In_ PVOID MinitapeExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb,
+  _Inout_ PTAPE_STATUS TapeStatus);
 
-typedef TAPE_STATUS NTAPI
-(*TAPE_PROCESS_COMMAND_ROUTINE)(
-  IN OUT PVOID MinitapeExtension,
-  IN OUT PVOID CommandExtension,
-  IN OUT PVOID CommandParameters,
-  IN OUT PSCSI_REQUEST_BLOCK Srb,
-  IN ULONG CallNumber,
-  IN TAPE_STATUS StatusOfLastCommand,
-  IN OUT PULONG RetryFlags);
+typedef TAPE_STATUS
+(NTAPI *TAPE_PROCESS_COMMAND_ROUTINE)(
+  _Inout_ PVOID MinitapeExtension,
+  _Inout_ PVOID CommandExtension,
+  _Inout_ PVOID CommandParameters,
+  _Inout_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ ULONG CallNumber,
+  _In_ TAPE_STATUS StatusOfLastCommand,
+  _Inout_ PULONG RetryFlags);
 
 #define TAPE_RETRY_MASK                   0x0000FFFF
 #define IGNORE_ERRORS                     0x00010000
@@ -217,4 +217,4 @@ typedef struct _TAPE_PHYS_POSITION {
 }
 #endif
 
-#endif /* __MINITAPE_H */
+#endif /* _MINITAPE_ */

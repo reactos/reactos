@@ -8,45 +8,41 @@
  *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
+#ifndef _FMIFS_PCH_
+#define _FMIFS_PCH_
+
 /* INCLUDES ******************************************************************/
 
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
-#define UNICODE
-#define _UNICODE
-
 #include <stdio.h>
+
+#define WIN32_NO_STATUS
 
 /* PSDK/NDK Headers */
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <ndk/cmfuncs.h>
-#include <ndk/obfuncs.h>
+
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 
 /* FMIFS Public Header */
 #include <fmifs/fmifs.h>
 
-/* VFATLIB Public Header */
-//#include <fslib/vfatlib.h>
-
 extern LIST_ENTRY ProviderListHead;
 
 typedef struct _IFS_PROVIDER
 {
-	LIST_ENTRY ListEntry;
+    LIST_ENTRY ListEntry;
 
-	CHKDSKEX ChkdskEx;
-	PVOID Extend;
-	FORMATEX FormatEx;
+    CHKDSKEX ChkdskEx;
+    PVOID Extend;
+    FORMATEX FormatEx;
 
-	WCHAR Name[1];
+    WCHAR Name[1];
 } IFS_PROVIDER, *PIFS_PROVIDER;
 
 /* init.c */
 PIFS_PROVIDER
 GetProvider(
-	IN PWCHAR FileSytem);
+    IN PWCHAR FileSytem);
 
-/* EOF */
+#endif /* _FMIFS_PCH_ */

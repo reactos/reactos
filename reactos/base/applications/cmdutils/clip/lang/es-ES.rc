@@ -1,0 +1,11 @@
+/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nPara ver los argumentos y opciones de uso escribe ""CLIP /?"".\n"
+    IDS_HELP "\nRedirije la salida de programas de línea de comandos al portapapeles.\n\n\
+CLIP [/?]\n\n\
+    /?  Muestra este mensaje de ayuda.\n"
+END

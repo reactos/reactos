@@ -9,6 +9,8 @@
 
 #include "serenum.h"
 
+#include <debug.h>
+
 static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
 
 /* I really want PCSZ strings as last arguments because

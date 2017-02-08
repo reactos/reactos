@@ -1,0 +1,107 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2013 Ardit Dani <ardit.dani@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+MAIN_MENU MENU
+{
+ POPUP "&File" {
+  MENUITEM "Hap", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Printo", MNID_FILE_PRINT
+  MENUITEM "Printo &setup...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "Dil", MNID_FILE_EXIT
+ }
+ POPUP "Modifiko" {
+   MENUITEM "Kopjo...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "Shenime...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Bookmark" {
+   MENUITEM "Percakto...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Opsione" {
+  MENUITEM "Perhere lart", MNID_HELP_HELPTOP
+  MENUITEM "Histori",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Vogel",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Madhe",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "Ndihmë" {
+   MENUITEM "Ndihmë &per ndihmen", MNID_HELP_HELPON
+   MENUITEM "Rreth ndihmes Wine", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Shenime...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopjo",                MNID_CTXT_COPY
+		MENUITEM "Printo...",            MNID_CTXT_PRINT
+		POPUP    "Fonts"
+		BEGIN
+			MENUITEM "Vogel",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normale",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Madhe",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"ReactOS ndihme"
+STID_WHERROR, 		"ERROR"
+STID_WARNING,  		"KuJDES"
+STID_INFO,  		"Informacion"
+STID_NOT_IMPLEMENTED, 	"Jo e implementuar"
+STID_HLPFILE_ERROR_s, 	"Error gjate hapjes se dokumentit `%s'"
+STID_INDEX, 		"&Index"
+STID_CONTENTS,		"Permbledhje"
+STID_BACK, 		"Prapa"
+STID_ALL_FILES, 	"Te gjith dokumentat (*.*)"
+STID_HELP_FILES_HLP, 	"Dokumentet e ndihmes (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Nuk gjindet '%s'. Do ta gjeni vet kete dokument?"
+STID_NO_RICHEDIT	"Nuk gjendet nje implementim richedit... Nderprej"
+STID_PSH_INDEX,		"Ndihme me teme: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Kerko"
+{
+    LTEXT  "Jo e implementuar", -1, 10, 10, 180, 150
+}

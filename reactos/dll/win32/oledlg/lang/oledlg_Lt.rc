@@ -1,0 +1,102 @@
+/*
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+  IDS_RESULTOBJDESC     "Įterpia naują objektą „%s“ į jūsų dokumentą"
+  IDS_RESULTFILEOBJDESC "Įterpia failo turinį kaip objektą į jūsų dokumentą, kad galėtumėte jį aktyvuoti naudodami programą, kuri jį sukūrė."
+  IDS_BROWSE            "Parinkti"
+  IDS_NOTOLEMOD         "Panašu, kad failas nėra galiojantis OLE modulis. Nepavyko užregistruoti OLE valdiklio."
+  IDS_NOTOLEMODCAPTION  "Pridėti valdiklį"
+  IDS_VERBMENU_OBJECT   "&Object"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
+  IDS_VERBMENU_CONVERT  "&Convert..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+}
+
+STRINGTABLE
+{
+    IDS_PS_PASTE_DATA                     "Įterpia iškarpinės turinį į jūsų dokumentą kaip %s."
+    IDS_PS_PASTE_OBJECT                   "Įterpia iškarpinės turinį į jūsų dokumentą, kad galėtumėte jį aktyvuoti naudodami %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Įterpia iškarpinės turinį į jūsų dokumentą, kad galėtumėte jį aktyvuoti naudodami %s. Jis bus rodomas kaip piktograma."
+    IDS_PS_PASTE_LINK_DATA                "Įterpia iškarpinės turinį į jūsų dokumentą kaip %s. Duomenys yra susieti su šaltinio failu, todėl failo pakeitimai bus atspindėti jūsų dokumente."
+    IDS_PS_PASTE_LINK_OBJECT              "Įterpia iškarpinės turinio paveikslą į jūsų dokumentą. Paveikslas yra susietas su šaltinio failu, todėl failo pakeitimai bus atspindėti jūsų dokumente."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Įterpia nuorodą, kuri rodo į iškarpinės turinį. Nuoroda yra susieta su šaltinio failu, todėl failo pakeitimai bus atspindėti jūsų dokumente."
+    IDS_PS_NON_OLE                        "Įterpia iškarpinės turinį į jūsų dokumentą."
+    IDS_PS_UNKNOWN_TYPE                   "Nežinomas tipas"
+    IDS_PS_UNKNOWN_SRC                    "Nežinomas šaltinis"
+    IDS_PS_UNKNOWN_APP                    "programa, kuri jį sukūrė"
+}
+
+UIINSERTOBJECT DIALOGEX  0, 0, 304, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Įterpti objektą"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Objekto tipas:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "Gerai",IDOK,231,7,66,14
+    PUSHBUTTON      "Atsisakyti",IDCANCEL,231,24,66,14
+    GROUPBOX        "Rezultatas",IDC_RESULT,7,103,218,41
+    CONTROL         "Sukurti naują",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,7,20,84,10
+    CONTROL         "Sukurti valdiklį",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
+    CONTROL         "Sukurti iš failo",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,84,10
+    LTEXT           "",IDC_RESULTDESC,49,112,169,26
+    PUSHBUTTON      "&Pridėti valdiklį...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    CONTROL         "Rodyti kaip piktogramą",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
+    PUSHBUTTON      "Parinkti...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
+    LTEXT           "Failas:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+IDD_PASTESPECIAL4 DIALOGEX 3, 15, 304, 160
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Įdėti kaip"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "Šaltinis:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "Į&dėti", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 73, 10
+    CONTROL       "Įdėti &saitą", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 73, 10
+    LTEXT         "&Kaip:", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "Gerai", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
+    CONTROL       "Atsisakyti", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
+    CONTROL       "&Žinynas", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
+    CONTROL       "&Rodyti kaip piktogramą", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
+    CONTROL       "Keisti &piktogramą...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 121, 42, 34
+    CONTROL       "", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 120, 159, 35
+    CONTROL       "Rezultatas", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 110, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END

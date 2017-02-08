@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Some convenience conversions (specification).                        */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __PSCONV_H__
-#define __PSCONV_H__
+#ifndef PSCONV_H_
+#define PSCONV_H_
 
 
 #include <ft2build.h>
@@ -26,20 +26,20 @@
 FT_BEGIN_HEADER
 
 
-  FT_LOCAL( FT_Int )
+  FT_LOCAL( FT_Long )
   PS_Conv_Strtol( FT_Byte**  cursor,
                   FT_Byte*   limit,
-                  FT_Int     base );
+                  FT_Long    base );
 
 
-  FT_LOCAL( FT_Int )
+  FT_LOCAL( FT_Long )
   PS_Conv_ToInt( FT_Byte**  cursor,
                  FT_Byte*   limit );
 
   FT_LOCAL( FT_Fixed )
   PS_Conv_ToFixed( FT_Byte**  cursor,
                    FT_Byte*   limit,
-                   FT_Int     power_ten );
+                   FT_Long    power_ten );
 
 #if 0
   FT_LOCAL( FT_UInt )
@@ -65,7 +65,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PSCONV_H__ */
+#endif /* PSCONV_H_ */
 
 
 /* END */

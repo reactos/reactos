@@ -38,7 +38,6 @@ VfIsVerificationEnabled(
 );
 
 VOID
-NTAPI
 VfFailDeviceNode(
     _In_ PDEVICE_OBJECT PhysicalDeviceObject,
     _In_ ULONG BugCheckMajorCode,

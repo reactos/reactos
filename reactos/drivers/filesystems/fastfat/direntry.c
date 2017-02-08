@@ -10,12 +10,15 @@
 
 /*  -------------------------------------------------------  INCLUDES  */
 
-#define NDEBUG
 #include "vfat.h"
 
+#define NDEBUG
+#include <debug.h>
+
 ULONG
-vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
-                             PDIR_ENTRY  pFatDirEntry)
+vfatDirEntryGetFirstCluster(
+    PDEVICE_EXTENSION pDeviceExt,
+    PDIR_ENTRY pFatDirEntry)
 {
     ULONG cluster;
 
@@ -38,7 +41,8 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
 
 static
 BOOLEAN
-FATIsDirectoryEmpty(PVFATFCB Fcb)
+FATIsDirectoryEmpty(
+    PVFATFCB Fcb)
 {
     LARGE_INTEGER FileOffset;
     PVOID Context = NULL;
@@ -101,7 +105,8 @@ FATIsDirectoryEmpty(PVFATFCB Fcb)
 
 static
 BOOLEAN
-FATXIsDirectoryEmpty(PVFATFCB Fcb)
+FATXIsDirectoryEmpty(
+    PVFATFCB Fcb)
 {
     LARGE_INTEGER FileOffset;
     PVOID Context = NULL;
@@ -154,7 +159,8 @@ FATXIsDirectoryEmpty(PVFATFCB Fcb)
 }
 
 BOOLEAN
-VfatIsDirectoryEmpty(PVFATFCB Fcb)
+VfatIsDirectoryEmpty(
+    PVFATFCB Fcb)
 {
     if (Fcb->Flags & FCB_IS_FATX_ENTRY)
         return FATXIsDirectoryEmpty(Fcb);
@@ -163,11 +169,12 @@ VfatIsDirectoryEmpty(PVFATFCB Fcb)
 }
 
 NTSTATUS
-FATGetNextDirEntry(PVOID *pContext,
-                   PVOID *pPage,
-                   IN PVFATFCB pDirFcb,
-                   PVFAT_DIRENTRY_CONTEXT DirContext,
-                   BOOLEAN First)
+FATGetNextDirEntry(
+    PVOID *pContext,
+    PVOID *pPage,
+    IN PVFATFCB pDirFcb,
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    BOOLEAN First)
 {
     ULONG dirMap;
     PWCHAR pName;
@@ -404,112 +411,112 @@ FATGetNextDirEntry(PVOID *pContext,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
-                             PVOID * pPage,
-                             IN PVFATFCB pDirFcb,
-                             PVFAT_DIRENTRY_CONTEXT DirContext,
-                             BOOLEAN First)
+NTSTATUS
+FATXGetNextDirEntry(
+    PVOID *pContext,
+    PVOID *pPage,
+    IN PVFATFCB pDirFcb,
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    BOOLEAN First)
 {
-   LARGE_INTEGER FileOffset;
-   PFATX_DIR_ENTRY fatxDirEntry;
-   OEM_STRING StringO;
-   ULONG DirIndex = DirContext->DirIndex;
+    LARGE_INTEGER FileOffset;
+    PFATX_DIR_ENTRY fatxDirEntry;
+    OEM_STRING StringO;
+    ULONG DirIndex = DirContext->DirIndex;
 
-   FileOffset.u.HighPart = 0;
+    FileOffset.u.HighPart = 0;
 
-   UNREFERENCED_PARAMETER(First);
+    UNREFERENCED_PARAMETER(First);
 
-   if (!vfatFCBIsRoot(pDirFcb))
-   {
-      /* need to add . and .. entries */
-      switch (DirContext->DirIndex)
-      {
-         case 0: /* entry . */
-         {
-            DirContext->ShortNameU.Buffer[0] = 0;
-            DirContext->ShortNameU.Length = 0;
-            wcscpy(DirContext->LongNameU.Buffer, L".");
-            DirContext->LongNameU.Length = sizeof(WCHAR);
-            RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
-            DirContext->DirEntry.FatX.Filename[0] = '.';
-            DirContext->DirEntry.FatX.FilenameLength = 1;
-            DirContext->StartIndex = 0;
-            return STATUS_SUCCESS;
-         }
-         case 1: /* entry .. */
-         {
-            DirContext->ShortNameU.Buffer[0] = 0;
-            DirContext->ShortNameU.Length = 0;
-            wcscpy(DirContext->LongNameU.Buffer, L"..");
-            DirContext->LongNameU.Length = 2 * sizeof(WCHAR);
-            RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
-            DirContext->DirEntry.FatX.Filename[0] = DirContext->DirEntry.FatX.Filename[1] = '.';
-            DirContext->DirEntry.FatX.FilenameLength = 2;
-            DirContext->StartIndex = 1;
-            return STATUS_SUCCESS;
-         }
-         default:
-            DirIndex -= 2;
-      }
-   }
+    if (!vfatFCBIsRoot(pDirFcb))
+    {
+        /* need to add . and .. entries */
+        switch (DirContext->DirIndex)
+        {
+            case 0: /* entry . */
+                DirContext->ShortNameU.Buffer[0] = 0;
+                DirContext->ShortNameU.Length = 0;
+                wcscpy(DirContext->LongNameU.Buffer, L".");
+                DirContext->LongNameU.Length = sizeof(WCHAR);
+                RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
+                DirContext->DirEntry.FatX.Filename[0] = '.';
+                DirContext->DirEntry.FatX.FilenameLength = 1;
+                DirContext->StartIndex = 0;
+                return STATUS_SUCCESS;
 
-   if (*pContext == NULL || (DirIndex % FATX_ENTRIES_PER_PAGE) == 0)
-   {
-      if (*pContext != NULL)
-      {
-         CcUnpinData(*pContext);
-      }
-      FileOffset.u.LowPart = ROUND_DOWN(DirIndex * sizeof(FATX_DIR_ENTRY), PAGE_SIZE);
-      if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
-          !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
-      {
-         *pContext = NULL;
-         return STATUS_NO_MORE_ENTRIES;
-      }
-   }
+            case 1: /* entry .. */
+                DirContext->ShortNameU.Buffer[0] = 0;
+                DirContext->ShortNameU.Length = 0;
+                wcscpy(DirContext->LongNameU.Buffer, L"..");
+                DirContext->LongNameU.Length = 2 * sizeof(WCHAR);
+                RtlCopyMemory(&DirContext->DirEntry.FatX, &pDirFcb->entry.FatX, sizeof(FATX_DIR_ENTRY));
+                DirContext->DirEntry.FatX.Filename[0] = DirContext->DirEntry.FatX.Filename[1] = '.';
+                DirContext->DirEntry.FatX.FilenameLength = 2;
+                DirContext->StartIndex = 1;
+                return STATUS_SUCCESS;
 
-   fatxDirEntry = (PFATX_DIR_ENTRY)(*pPage) + DirIndex % FATX_ENTRIES_PER_PAGE;
+            default:
+                DirIndex -= 2;
+        }
+    }
 
-   DirContext->StartIndex = DirContext->DirIndex;
-
-   while (TRUE)
-   {
-      if (FATX_ENTRY_END(fatxDirEntry))
-      {
-          CcUnpinData(*pContext);
-          *pContext = NULL;
-          return STATUS_NO_MORE_ENTRIES;
-      }
-
-      if (!FATX_ENTRY_DELETED(fatxDirEntry))
-      {
-          RtlCopyMemory(&DirContext->DirEntry.FatX, fatxDirEntry, sizeof(FATX_DIR_ENTRY));
-          break;
-      }
-      DirContext->DirIndex++;
-      DirContext->StartIndex++;
-      DirIndex++;
-      if ((DirIndex % FATX_ENTRIES_PER_PAGE) == 0)
-      {
-         CcUnpinData(*pContext);
-         FileOffset.u.LowPart += PAGE_SIZE;
-         if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
-             !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
-         {
+    if (*pContext == NULL || (DirIndex % FATX_ENTRIES_PER_PAGE) == 0)
+    {
+        if (*pContext != NULL)
+        {
+            CcUnpinData(*pContext);
+        }
+        FileOffset.u.LowPart = ROUND_DOWN(DirIndex * sizeof(FATX_DIR_ENTRY), PAGE_SIZE);
+        if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+            !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+        {
             *pContext = NULL;
-   	    return STATUS_NO_MORE_ENTRIES;
-         }
-         fatxDirEntry = (PFATX_DIR_ENTRY)*pPage;
-      }
-      else
-      {
-         fatxDirEntry++;
-      }
-   }
-   DirContext->ShortNameU.Buffer[0] = 0;
-   DirContext->ShortNameU.Length = 0;
-   StringO.Buffer = (PCHAR)fatxDirEntry->Filename;
-   StringO.Length = StringO.MaximumLength = fatxDirEntry->FilenameLength;
-   RtlOemStringToUnicodeString(&DirContext->LongNameU, &StringO, FALSE);
-   return STATUS_SUCCESS;
+            return STATUS_NO_MORE_ENTRIES;
+        }
+    }
+
+    fatxDirEntry = (PFATX_DIR_ENTRY)(*pPage) + DirIndex % FATX_ENTRIES_PER_PAGE;
+
+    DirContext->StartIndex = DirContext->DirIndex;
+
+    while (TRUE)
+    {
+        if (FATX_ENTRY_END(fatxDirEntry))
+        {
+            CcUnpinData(*pContext);
+            *pContext = NULL;
+            return STATUS_NO_MORE_ENTRIES;
+        }
+
+        if (!FATX_ENTRY_DELETED(fatxDirEntry))
+        {
+            RtlCopyMemory(&DirContext->DirEntry.FatX, fatxDirEntry, sizeof(FATX_DIR_ENTRY));
+            break;
+        }
+        DirContext->DirIndex++;
+        DirContext->StartIndex++;
+        DirIndex++;
+        if ((DirIndex % FATX_ENTRIES_PER_PAGE) == 0)
+        {
+            CcUnpinData(*pContext);
+            FileOffset.u.LowPart += PAGE_SIZE;
+            if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+                !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+            {
+                *pContext = NULL;
+                return STATUS_NO_MORE_ENTRIES;
+            }
+            fatxDirEntry = (PFATX_DIR_ENTRY)*pPage;
+        }
+        else
+        {
+            fatxDirEntry++;
+        }
+    }
+    DirContext->ShortNameU.Buffer[0] = 0;
+    DirContext->ShortNameU.Length = 0;
+    StringO.Buffer = (PCHAR)fatxDirEntry->Filename;
+    StringO.Length = StringO.MaximumLength = fatxDirEntry->FilenameLength;
+    RtlOemStringToUnicodeString(&DirContext->LongNameU, &StringO, FALSE);
+    return STATUS_SUCCESS;
 }

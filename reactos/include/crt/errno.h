@@ -69,6 +69,8 @@ extern "C" {
 
 #define EDEADLOCK EDEADLK
 
+#define EWOULDBLOCK 140
+
 #ifdef __cplusplus
 }
 #endif

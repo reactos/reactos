@@ -35,7 +35,7 @@ typedef struct tagKL
     UINT iBaseCharset;
     USHORT CodePage;
     WCHAR wchDiacritic;
-    //PIMEINFOEX piiex;
+    PIMEINFOEX piiex;
 } KL, *PKL;
 
 typedef struct _ATTACHINFO
@@ -63,7 +63,7 @@ INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);
 BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
 DWORD NTAPI CreateSystemThreads(UINT Type);
 NTSTATUS FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
-PTHREADINFO FASTCALL IsThreadAttach(PTHREADINFO);
+BOOL FASTCALL IsRemoveAttachThread(PTHREADINFO);
 VOID FASTCALL DoTheScreenSaver(VOID);
 #define ThreadHasInputAccess(W32Thread) (TRUE)
 
@@ -81,6 +81,11 @@ WORD FASTCALL UserGetMouseButtonsState(VOID);
 VOID NTAPI UserProcessMouseInput(PMOUSE_INPUT_DATA pMouseInputData);
 BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
 
+/* IMM */
+UINT FASTCALL IntImmProcessKey(PUSER_MESSAGE_QUEUE, PWND, UINT, WPARAM, LPARAM);
+
+extern DWORD gSystemFS;
+extern UINT gSystemCPCharSet; 
 extern HANDLE ghKeyboardDevice;
 extern PTHREADINFO ptiRawInput;
 extern BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
@@ -97,6 +102,5 @@ extern BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
                                                               ((ks)[GET_KS_BYTE(vk)] | GET_KS_LOCK_BIT(vk)) : \
                                                               ((ks)[GET_KS_BYTE(vk)] & ~GET_KS_LOCK_BIT(vk)))
 
-
 extern PKL gspklBaseLayout;
-
+extern KEYBOARD_ATTRIBUTES gKeyboardInfo;

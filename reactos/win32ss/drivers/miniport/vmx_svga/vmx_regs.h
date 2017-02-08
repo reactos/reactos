@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/video/miniport/vmx_svga/vmware.h
+ * FILE:            win32ss/drivers/miniport/vmx_svga/vmx_regs.h
  * PURPOSE:         VMWARE SVGA-II Card Registers and Definitions
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

@@ -1,0 +1,58 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Geçersiz değişken sayısı - Yardım için xcopy /? kullanınız\n"
+    STRING_INVPARM,  "Geçersiz değişken: ""%1"" - Yardım için xcopy /? kullanınız\n"
+    STRING_PAUSE,    "Çoğaltmaya başlamak için Giriş'e basınız\n"
+    STRING_SIMCOPY,  "%1!d! kütük çoğaltılacak\n"
+    STRING_COPY,     "%1!d! kütük çoğaltıldı\n"
+    STRING_QISDIR,   """%1"", bir kütük adı ya da varıştaki\n\
+                     dizin mi?\n\
+                     (K - Kütük, D - Dizin)\n"
+    STRING_SRCPROMPT,"%1? (Evet|Hayır)\n"
+    STRING_OVERWRITE,"Üzerine yaz: %1? (Evet|Hayır|Tümü)\n"
+    STRING_COPYFAIL, """%1"" kütüğünün ""%2"" varışına çoğaltılması r/c %3!d! ile başarısız oldu\n"
+    STRING_OPENFAIL, "Açma başarısız oldu: ""%1""\n"
+    STRING_READFAIL, """%1"" kütüğünün okunması esnâsında başarısız oldu\n"
+    STRING_YES_CHAR, "E"
+    STRING_NO_CHAR,  "H"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"K"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Kaynak kütüklerini veyâ dizin ağaçlarını bir varışa çoğaltır.\n\
+\n\
+Yazım:\n\
+XCOPY kaynak [varış] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Nereye:\n\
+\n\
+[/I]  Varış yoksa ve iki ya da daha çok kütük çoğaltmada\n\
+\tdizin varsay.\n\
+[/S]  Dizinleri ve alt dizinleri çoğalt.\n\
+[/E]  Tüm boş olanları kapsayarak dizinleri ve alt dizinleri çoğalt.\n\
+[/Q]  Çoğaltma esnâsında adları dizelgeleme, bu sessiz olmaktır.\n\
+[/F]  Çoğaltma esnâsında eksiksiz kaynak ve varış adlarını göster.\n\
+[/L]  Çoğaltılacak adları göstererek işlem taklidini et.\n\
+[/W]  Çoğaltma işlemine başlamadan önce sorar.\n\
+[/T]  Boş dizin yapısını oluşturur ama kütükleri çoğaltmaz.\n\
+[/Y]  Kütüklerin üzerine yazarken sorma.\n\
+[/-Y] Kütüklerin üzerine yazarken sormayı etkinleştir.\n\
+[/P]  Çoğlatmadan önce tüm kaynak kütükler için sorar.\n\
+[/N]  Kısa adlar kullanarak çoğalt.\n\
+[/U]  Yalnızca varışta önceden olan kütükleri çoğalt.\n\
+[/R]  Tüm yalnızca okunur kütüklerin üzerlerine yaz.\n\
+[/H]  Çoğaltmada gizli ve dizge kütüklerini kapsa.\n\
+[/C]  Çoğaltma esnâsında bir yanlışlık oluşsa bile sürdür.\n\
+[/A]  Yalnızca belgelik öz niteliği ayarlı kütükleri çoğalt.\n\
+[/M]  Yalnızca belgelik öz niteliği ayarlı kütükleri çoğalt,\n\
+\tbelgelik öz niteliğini siler.\n\
+[/D | /D:m-d-y] Yeni kütükleri veyâ onların verilen târihten sonra değiştirilmişlerini çoğalt.\n\
+\t\tBir târih verilmemişse yalnızca varış kaynaktan eskiyse çoğalt.\n\n"
+
+}

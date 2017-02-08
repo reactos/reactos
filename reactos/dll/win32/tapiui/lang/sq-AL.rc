@@ -1,0 +1,450 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  06-02-2014
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+101 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Rregullat Thirrjes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 201, 2000, 7, 7, 21, 20
+    LTEXT "Lista e mëposhtme tregon vendet që keni specifikuar. Zgjidhni vendin nga i cili ju po formoni numrin.", -1, 35, 7, 210, 16
+    LTEXT "&Vendndodhje:", -1, 7, 35, 210, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&E'Re...", 1030, 87, 155, 50, 14
+    PUSHBUTTON "&Modifiko...", 1031, 141, 155, 50, 14
+    PUSHBUTTON "&Fshi", 1032, 195, 155, 50, 14
+    LTEXT "Numri Telefonik do të thirret si:", 1052, 7, 181, 100, 8
+    LTEXT "", 1053, 14, 195, 224, 16
+END
+
+102 DIALOGEX 0, 0, 252, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 202, 2000, 7, 7, 20, 20
+    LTEXT "Vendndodhja &emri:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
+    LTEXT "Specifikoni vendin nga të cili ju do të formoni numrin.", 2001, 7, 33, 238, 8
+    LTEXT "Shteti/&rajon:", -1, 7, 49, 161, 8
+    COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "Zonë &kodi:", -1, 190, 49, 48, 8
+    EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
+    GROUPBOX "Rregullat thirrjes", 2002, 7, 80, 238, 92
+    LTEXT "Kur thirrni nga ky vend, përdorni rregullat e mëposhtme:", 2003, 14, 92, 224, 8
+    LTEXT "Për të hyrë në një linjë të jashtme &thirrje lokale, thirr:", -1, 14, 106, 170, 8
+    EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Për të hyrë në një linjë të jashtme për &thirrje-të gjata në distancë, thirr:", -1, 14, 122, 170, 8
+    EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Përdor këtë kod shërbimi për thirrje-të gjata në distancë:", -1, 14, 138, 170, 8
+    EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Përdor këtë kod shërbimi për &thirrjet ndërkombëtare:", -1, 14, 154, 170, 8
+    EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Për të çaktivizuar thirrje &pritje, thirr:", 1035, 14, 177, 170, 10
+    COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
+    LTEXT "Thirr duke përdorur:", -1, 14, 195, 40, 8
+    AUTORADIOBUTTON "&Tonalitet", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Pulse", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
+    LTEXT "Numri telefonik do të thirret si:", 1052, 7, 219, 100, 8
+    LTEXT "", 1053, 14, 232, 224, 16
+END
+
+103 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Rregullat Pre-fiksit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Një pre-fiks i zonës përcakton se si numrat e telefonit thirren nga pre-fiksi i zonës tuaj të tanishme për tek pre-fikset e zonave të tjera brenda pre-fikseve zonës tuaj.", 2000, 7, 7, 238, 16
+    LTEXT "Rregullat &pre-fikseve:", -1, 7, 31, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&E're...", 1030, 87, 147, 50, 14
+    PUSHBUTTON "&Modifiko...", 1031, 141, 147, 50, 14
+    PUSHBUTTON "&Fshi", 1032, 195, 147, 50, 14
+    GROUPBOX "Përshkrim", 2006, 7, 166, 238, 45
+    LTEXT "", 1039, 14, 180, 224, 24
+END
+
+104 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Kartë Thirrje"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni kartë e thirrjeve që ju do të përdorni, ose kliko E're për të shtuar një kartë tjetër.", 2000, 7, 7, 238, 8
+    LTEXT "&Tipi Kartës:", -1, 7, 23, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&E're...", 1030, 87, 103, 50, 14
+    PUSHBUTTON "&Modifiko...", 1031, 141, 103, 50, 14
+    PUSHBUTTON "&Fshi", 1032, 195, 103, 50, 14
+    LTEXT "Numri llogarisë:", -1, 7, 127, 91, 8
+    EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
+    LTEXT "Numër &Personal ID (PIN):", -1, 7, 145, 91, 8
+    EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
+    GROUPBOX "Numrat e telefonit për", 2001, 7, 158, 238, 53
+    LTEXT "Thirrje të largëta në distancë:", -1, 14, 172, 84, 8
+    LTEXT "", 1042, 102, 172, 136, 8
+    LTEXT "Thirrje ndërkombëtare:", -1, 14, 184, 84, 8
+    LTEXT "", 1043, 102, 184, 136, 8
+    LTEXT "Thirrje lokale:", -1, 14, 196, 84, 8
+    LTEXT "", 1051, 102, 196, 136, 8
+END
+
+105 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 203, 2000, 7, 7, 20, 20
+    LTEXT "Emri Kartës Thirrëse:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Numri llogarisë:", -1, 7, 35, 238, 8
+    EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Numri &Personal Identifikues (PIN):", -1, 7, 68, 238, 8
+    EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Kjo kartë thirrëse do të përdoret kur:", 1056, 14, 117, 224, 8
+    GROUPBOX "Detajet e kartës thirrëse", 2001, 7, 105, 238, 66
+    LTEXT "", 1000, 22, 131, 216, 8
+    LTEXT "", 1001, 22, 143, 216, 8
+    LTEXT "", 1002, 22, 155, 216, 8
+END
+
+106 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Distancë e Gjatë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Numri thirrës për distanca të &gjata telefonuese:", -1, 7, 7, 238, 8
+    EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formues të numrit për të bërë thirrje në distancë të gjatë.  Shkruani këto hapa në mënyrë të saktë si ato të shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 238, 24
+    LTEXT "Hapat thirrjes kartës telefonuese:", -1, 7, 72, 80, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Lëviz Poshtë", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Fshi", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Numër Hyrës", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Numër Llogarie", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Numri Destinacioni...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Prisni për Prompt...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Specifikoni shifra...", 1021, 101, 197, 90, 14
+END
+
+107 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Ndërkombëtarë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Numër hyrës për telefonata &ndërkombëtare:", -1, 7, 7, 238, 8
+    EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formimit të numrit për të bërë telefonata ndërkombëtare.  Shkruani këto hapa në mënyrë të saktë si ato që shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 244, 24
+    LTEXT "Kartë thirrëse hapat formim numrit:", -1, 7, 72, 80, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Lëviz Poshtë", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Fshi", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numër Hyrës", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Numër Llogarie", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Numri Destinacinit...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Prisni për Prompt...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Specifikoni shifrat...", 1021, 101, 197, 90, 14
+END
+
+108 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Thirrje Lokale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Numri hyrës për &thirrje lokale:", -1, 7, 7, 238, 8
+    EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formues numrit për të bërë thirrje lokale. Shkruani këto hapa në mënyrë të saktë si ato që shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 238, 24
+    LTEXT "Hapat thirrës për kartën telefonuese:", -1, 7, 72, 238, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Lëviz Poshtë", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Fshi", 1024, 195, 119, 50, 14
+    PUSHBUTTON "Numër Hyrës", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Numër Llogarie", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Numër Destinacioni...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&prisni për Prompt...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Specifikoni shifrat...", 1021, 101, 197, 90, 14
+END
+
+109 DIALOGEX 0, 0, 252, 257
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Rregulli i Ri Pre-Fiksit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ky pre-fiks i zonës do të aplikohet vetëm për thirrjet e bëra në pre-fiksin dhe kombinimi pre-fiksi që ke dhënë më poshtë.", 2000, 7, 6, 238, 16
+    LTEXT "Prefiksi i rrethit që jeni duke thirrur:", -1, 7, 31, 110, 8
+    LTEXT "Prefiksi i zonës:", -1, 7, 47, 36, 8
+    EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
+    LTEXT "Specifiko the pre-fiksin për tu përdorur në këtë rregull pre-fiks zonë.", -1, 14, 78, 224, 8
+    AUTORADIOBUTTON "&Përfshij të gjithë pre-fikset pre-fiks i rrethit", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Përfshij &vetëm pre-fikset në listën poshtë:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
+    LTEXT "&Prefixes to include:", 1057, 26, 117, 119, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Shto...", 1005, 95, 128, 50, 14
+    PUSHBUTTON "Fshi", 1024, 95, 146, 50, 14
+    LTEXT "Kur formoni numrat e telefonit që përmbajnë pre-fikset e mësipërme:", -1, 14, 184, 224, 8
+    AUTOCHECKBOX "&Thirr:", 1012, 14, 198, 30, 12
+    EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Përfshini kodin e zonës", 1029, 14, 214, 85, 12
+    DEFPUSHBUTTON "OK", 1, 141, 236, 50, 14
+    PUSHBUTTON "Anulo", 2, 195, 236, 50, 14
+    RTEXT "Pre-fiksi i rrethit", 2001, 133, 31, 51, 8
+    LTEXT "Pre-fiksi", 2002, 200, 31, 45, 8
+    CONTROL "", 2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
+    CONTROL "", 2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
+    RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
+    GROUPBOX "Pre-fiksi", -1, 7, 64, 238, 102
+    GROUPBOX "Rregullat", -1, 7, 170, 238, 60
+END
+
+110 DIALOGEX 0, 0, 227, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", 1003, 7, 7, 213, 8
+    LTEXT "", 1039, 7, 23, 213, 8
+    EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 116, 62, 50, 14
+    PUSHBUTTON "Anulo", 2, 170, 62, 50, 14
+END
+
+111 DIALOGEX 0, 0, 252, 124
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Prisni për"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni llojin e shpejtë për të pritur për para se të vazhdoni me rend formimi të numrit të.", 2000, 7, 7, 238, 16
+    AUTORADIOBUTTON "Prisni për një &tingull thirrje", 1009, 7, 31, 238, 10, WS_GROUP
+    AUTORADIOBUTTON "Prisni për një &mesazhi me zë për të përfunduar", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Prisni për një gjatësi specifik të kohës:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
+    LTEXT "&sekonda", -1, 58, 81, 187, 8
+    DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
+    PUSHBUTTON "Anulo", 2, 195, 103, 50, 14
+END
+
+112 DIALOGEX 0, 0, 252, 111
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Numri Destinacionit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ky hap do të vendos numrin e destinacionit që ju do formoni në sekuencën thirrëse të kartës. Kur formoni numrin e destinacionit, cilat pjesë të numrit ju doni të thirrni?", 2000, 7, 7, 238, 24
+    AUTOCHECKBOX "Thirrni &shteti/kodi rajonit", 1027, 7, 39, 238, 10
+    AUTOCHECKBOX "Thirrni &pre-fiksin zonës", 1034, 7, 55, 238, 10
+    AUTOCHECKBOX "Thirr &numrin", 1008, 7, 71, 238, 10, WS_DISABLED
+    DEFPUSHBUTTON "OK", 1, 141, 92, 50, 14
+    PUSHBUTTON "Anulo", 2, 195, 92, 50, 14
+END
+
+113 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Përparuar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 201, 2000, 7, 7, 20, 20
+    LTEXT "Ofruesit e mëposhtme telefonisë janë instaluar në këtë kompjuter:", -1, 40, 7, 205, 8
+    LTEXT "&Ofruesit:", -1, 7, 35, 238, 8
+    LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
+    PUSHBUTTON "Shto...", 1005, 87, 197, 50, 14
+    PUSHBUTTON "&Hiq", 1024, 141, 197, 50, 14
+    PUSHBUTTON "&Konfiguro...", 1031, 195, 197, 50, 14
+END
+
+114 DIALOGEX 20, 15, 252, 127
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Shto Ofrues"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni ofruesin që ju dëshironi të instaloni nga lista më poshtë, dhe klikoni Shto.", 2000, 7, 7, 241, 8
+    LTEXT "&Ofrues Telefonie:", -1, 7, 23, 144, 10
+    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Shto", 1005, 141, 106, 50, 14
+    DEFPUSHBUTTON "Anulo", 2, 195, 106, 50, 14
+END
+
+115 DIALOGEX 10, 10, 303, 228
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Informacione Vendndodhja"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
+    LTEXT "Para se ju mund të bëni ndonjë telefonatë ose lidhjeve modemi, ReactOS ka nevojë për informacionin e mëposhtëm në lidhje me vendndodhjen tuaj të tanishme.", 2000, 107, 15, 188, 25
+    LTEXT "&Cili Shtet/rajoni jeni në tani?", -1, 107, 43, 189, 10
+    COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "Çfarë pre-fiks zone(ose kodi qytetit) jeni në tani?", -1, 107, 74, 189, 10
+    EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
+    LTEXT "Nëse ju duhet të specifikoni një kod shërbyesi, çfarë është ajo?", -1, 107, 105, 189, 10
+    EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Nëse ju thirrni një numër për të hyrë në një linjë të jashtme, çfarë është ajo?", -1, 107, 137, 189, 10
+    EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Sistemi Telefonisë në këtë vend përdor:", -1, 107, 168, 189, 10
+    AUTORADIOBUTTON "&Tingulli thirrës", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Pulse thirrës", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", 1, 192, 204, 50, 14
+    PUSHBUTTON "Anulo", 2, 246, 204, 50, 14
+END
+
+400 DIALOGEX 0, 0, 290, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
+    LTEXT "Para se ju mund të bëni ndonjë telefonatë ose lidhjeve modemi, ReactOS ka nevojë për informacionin e mëposhtëm në lidhje me vendndodhjen tuaj të tanishme.", 2000, 95, 2, 188, 25
+    LTEXT "&Cili Shtet/rajoni jeni në tani?", -1, 95, 30, 188, 10
+    COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "Çfarë pre-fiks zone(ose kodi qytetit) jeni në tani?", -1, 95, 61, 188, 10
+    EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
+    LTEXT "Nëse ju duhet të specifikoni një kod shërbyesi, çfarë është ajo?", -1, 95, 96, 188, 10
+    EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Sistemi Telefonisë në këtë vend përdor:", -1, 95, 129, 159, 10
+    AUTORADIOBUTTON "&Tingulli thirrës", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Pulse thirrës", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+END
+
+500 DIALOGEX 0, 0, 235, 88
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "ReactOS Eksplorues"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 504, 501, 13, 14, 21, 20
+    LTEXT "", 502, 47, 15, 180, 32
+    AUTOCHECKBOX "&In the future, always trust this page", 503, 50, 47, 147, 12
+    DEFPUSHBUTTON "&OK", 505, 110, 65, 50, 14
+    PUSHBUTTON "&Anulo", 506, 164, 65, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    1 "Alternativa Telefoni dhe Modemi"
+    2 "Konfiguro rregullat formuese të numrit dhe pronat për të përdorur modemin tuaj."
+    3 "Vendndodhja"
+    4 "Për të krijuar një vendndodhje të re, kliko E're."
+    5 "Vendndodhje e Re"
+    6 "Modifiko Vendndodhjen"
+    7 "Kartë e Re Telefonike"
+    8 "Modifiko Kartën Telefonike"
+    9 "Pre-Fiksi Zonës"
+    10 "Pre-fikse"
+    11 "Rregulla"
+    12 "Karakteri që dhatë është i pavlefshëm.\n\nKaraktere të vlefshme janë 0 deri 9, *, #, dhe presje."
+    13 "Karakteri që dhatë është i pavlefshëm.\n\nKaraktere të vlefshme janë 0 deri 9, *, #, hapësirë, dhe presje."
+    14 "Karakteri që dhatë është i pavlefshëm.\n\nKaraktere të vlefshme janë 0 deri 9."
+    15 "Karakteri që dhatë është i pavlefshëm."
+    16 "Thirr %1"
+    17 "Thirr %1 plus kodi zonës"
+    18 "Thirr kodi zonës"
+    19 "Thirr vetëm numrat"
+    20 "Të Gjithë"
+    21 "Zgjedhurat"
+    22 "Modifiko rregullat e kodit zonës"
+    23 "Zgjidh një rregull në listën e mësipërme për të parë përshkrimin e saj, ose klikoni E're për të shtuar një rregull."
+    24 "Thirr '%2' plus kodi i zonës para numrit për të gjitha thirrjet brenda %1 kodi zonës."
+    25 "Thirr '%2' para numrit për të gjitha thirrjet brenda %1 kodi zonës."
+    26 "Thirr kodi i zonës para numrit për të gjitha thirrjet brenda %1 kodi zonës."
+    27 "Thirr vetëm numra për të gjitha thirrjet brenda %1 kodi zonës."
+    28 "Thirr '%2' plus kodi i zonës para numrit për thirrjet brenda %1 kodit zonës, përmban pre-fikset që ju specifikuara."
+    29 "Thirr '%2' para numrit për thirrjet brenda %1 kodi zonës, përmban pre-fikset që ju specifikuara."
+    30 "Thirr kodi i zonës para numrit për thirrjet brenda %1 kodi zonës, përmban pre-fikset që ju specifikuara."
+    31 "Thirr vetëm numri për thirrjet brenda %1 kodi zonës, përmban pre-fikset që ju specifikuara."
+    32 "Thirr një '1' para se të thërrasësh brenda të gjitha kodet e tjera zonës, dhe përfshin kodin e zonës për të gjitha pre-fikset."
+    33 "Shto Pre-fiks"
+    34 "Shkruaj një ose më shumë pre-fikse të ndara nga hapësira apo presje."
+    35 "Specifikoni shifra"
+    36 "Shkruaj një ose më shumë shifra (përfshirë * dhe #) për tu thirr."
+    37 "Ju u përpoq për të futur në një karakter pavlefshëm.\n\nKaraktere të vlefshme janë 0 deri 9 dhe hapësirë."
+    38 "Prisni për %1!d! sekonda."
+    39 "Thirr numri hyrës."
+    40 "Thirr numri i llogarisë."
+    41 "Thirr numrin PIN."
+    42 "Prisni për një tingull thirrje."
+    43 "Prisni për një mesazh zanor për t'i dhënë fund."
+    44 "Thirr shtetin/kodi rajonit, kodi zonës, dhe numër."
+    45 "Thirr the shtetin/kodi rajonit dhe numër."
+    46 "Thirr kodin e zonës dhe numrin."
+    47 "Thirr the shtetin/kodi rajonal."
+    48 "Thirr kodin zonës."
+    49 "Thirr numrin."
+    50 "formimi numrit për thirrje në distancë."
+    51 "formimi i numrit për thirrjet ndërkombëtare."
+    52 "formimi i numrit për thirrjet lokale."
+    53 "Nuk ka rregulla të përcaktuara për mënyrën se si kjo kartë thirrje duhet të përdoret."
+    54 "Ju duhet të shkruani kodin në distancë të gjatë për këtë vend."
+    55 "Ju duhet të jepni një emër për këtë vend."
+    56 "Ju duhet të shkruani kodin e zonës për këtë vend."
+    57 "Ju duhet të zgjedhin numrin për të thirrur për të çaktivizuar thirrje në pritje."
+    58 "Ju duhet të zgjidhni shtetin ose rajonin që ju jeni duke e quajtur nga."
+    59 "Informacione Zhdukur"
+    60 "Emri vendndodhjes që ju keni futur është tashmë në përdorim.  Ju lutem shkruani një emër të veçantë."
+    61 "Kjo kartë thirrëse mungon disa informacione të kërkuara. Për të përdorur këtë kartë, kliko Modifiko për të siguruar më shumë informacion, ose zgjidhni një kartë tjetër."
+    62 "Duhet të zgjidhni një kartë thirrëse të parazgjedhur. Zgjidh një kartë nga lista, ose klikoni E're për të krijuar një kartë të re."
+    63 "Ju duhet të shkruani emrin kartës thirrëse."
+    64 "Ju duhet të fusni numrin e llogarisë."
+    65 "Ju duhet të fusni numrin PIN."
+    66 "Nuk ka rregulla të përcaktuara për këtë kartë thirrëse. Për të krijuar një rregull, zgjidhni distancë të gjatë, Ndërkombëtare, apo thirrjet lokale."
+    67 "Rregulli i juaj për në distancë të gjatë kërkon numrin e kartës tuaj të distancës."
+    68 "Rregulli i juaj ndërkombëtare kërkon numër kartës ndërkombëtare tuaj të thirrjes."
+    69 "Rregulli i juaj lokal kërkon numër kartës lokale tuaj duke bërë thirrje të numrit."
+    70 "Asnjë"
+    71 "Jeni te sigurte qe doni te hiqni zgjedhjen Ofruesin Shërbimit Telefonisë?"
+    72 "<ofruesi i shërbimit nuk është i instaluar>"
+    73 "Ju duhet të fusni një pre-fiks për të cilat zbatohet ky rregull."
+    74 "&Shifrat:"
+    75 "&Pre-fikse:"
+    76 "Ju u përpoq për të futur në një karakter pavlefshëm.\n\nKaraktere të vlefshme janë 0 deri 9, hapësirë dhe presje."
+    77 "Konfirmo Fshij"
+    78 "Jeni te sigurte qe doni te fshini ketë vendndodhje?"
+    79 "Jeni te sigurte qe doni te fshini ketë kartë e thirrjeve?"
+    80 "Jeni te sigurte qe doni te fshini këtë rregull të kodit të zonës?"
+    81 "Ju duhet të fusni në shifra të thirrni."
+    82 "Emri kartës thirrëse që ju keni futur është tashmë në përdorim. Ju lutem shkruani një emër të veçantë."
+    83 "ReactOS ka nevojë për informacion në lidhje me vendndodhjen e telefonit nga të cilat ju do të formoni numrin. Nëse anuloni pa dhënë këtë informacion, ky program nuk mund të funksionojë si duhet, kur formoni numrin. Përveç kësaj, disa aplikacione i përgjigjen anulimit tuaj këtë kuti dialogu nga menjëherë ri-postim atë.\nJeni te sigurte qe doni te anuloni?"
+    84 "Konfirmo Anulimin"
+    85 "Vendndodhja e mia"
+    86 "<nuk ka ofruesit të shërbimeve që janë në dispozicion për instalim>"
+    87 "Karakteri që dhatë është i pavlefshëm.\n\nKaraktere të vlefshme janë 0 deri në 9, A deri D, *, #, +, !, hapësirë, dhe presje."
+    88 "Ju duhet të shkruani kodin ndërkombëtar thirrës për këtë vend."
+    89 "Ju duhet të shkruani kodin thirrës për këtë vend."
+    90 "Kjo faqe është duke u përpjekur për të bërë ose të monitoruar thirrje telefonike ose lidhje të tjera multimediale në kompjuterin tuaj.\nA doni të lejojë që ajo të vazhdojë?"
+    91 "Kjo faqe është duke u përpjekur për të hyrë në informacionin e skedarit në rrjetin tuaj.\nA doni të lejojë që ajo të vazhdojë?"
+    92 "Kjo faqe është duke u përpjekur për të hyrë ose të ndryshojë informacion e rrjetit konferencës.\nA doni të lejojë që ajo të vazhdojë?"
+    93 "Kjo faqe është duke u përpjekur për të hyrë ose të ndryshojë informacionin e regjistrit.\nA doni të lejojë që ajo të vazhdojë?"
+    1064 "Paneli Kontrollit të Telefonit Dhe Modemit nuk mund të hapen. Ju mund të keni një problem duke filluar shërbimin telefonik."
+    1065 "Hiq Ofruesin"
+    15800 "23"
+    15801 "0,""Asnjë (Thirrje Direkt)"","""","""","""","""","""","""","""","""",1"
+    15802 "1,""AT&T Thirrje Direkt nëpërmjet 1010ATT1"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010288"",""1010288"",1"
+    15803 "2,""AT&T nëpërmjet 1010ATT0"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010288"",""1010288"",1"
+    15804 "3,""AT&T nëpërmjet 1-800-321-0288"","""",""G"",""J$TFG$TH"",""J$T01EFG$TH"","""","""",""18003210288"",""18003210288"",1"
+    15805 "4,""MCI Thirrje Direkt nëpërmjet 10102221"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010222"",""1010222"",1"
+    15806 "5,""MCI nëpërmjet 10102220"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010222"",""1010222"",1"
+    15807 "6,""MCI nëpërmjet 1-800-888-8000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18008888000"",""18008888000"",1"
+    15808 "7,""MCI nëpërmjet 1-800-674-0700"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006740700"",""18006740700"",1"
+    15809 "8,""MCI nëpërmjet 1-800-674-7000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006747000"",""18006747000"",1"
+    15810 "9,""US Sprint Thirrje Direkt nëpërmjet 10103331"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010333"",""1010333"",1"
+    15811 "10,""US Sprint nëpërmjet 10103330"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010333"",""1010333"",1"
+    15812 "11,""US Sprint nëpërmjet 1-800-877-8000"","""",""G"",""J,,,T0FG,,H"",""J,,,T01EFG#,H"","""","""",""18008778000"",""18008778000"",1"
+    15813 "12,""Calling Card nëpërmjet 0"","""",""G"",""0FG$TH"",""01EFG$TH"","""","""","""","""",1"
+    15814 "13,""Kartë France Telecom"","""",""T3010,H,0FG#"",""T3010,H,0FG#"",""T3010,H,00EFG#"","""","""","""","""",1"
+    15815 "14,""Mercury (UK)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,0FG"","""",""0500800800"",""0500800800"",""0500800800"",1"
+    15816 "15,""British Telecom (UK)"","""",""J$H,0FG"",""J$H,0FG"",""J$H,00EFG"","""",""144"",""144"".""144"",1"
+    15817 "16,""CLEAR Communications (New Zealand)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,00EFG"","""",""0502333"",""0502333"",""0502333"",1"
+    15818 "17,""Telekom New Zealand"","""",""J,0FG?H"",""J,0FG?H"",""J,00EFG?H"","""",""012"",""012"",""012"",1"
+    15819 "18,""Global Kartë (Taiwan to USA)"","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1"
+    15820 "19,""Telstra (Australia) nëpërmjet 1818 (voice)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0011EFG#"","""",""1818"",""1818"",""1818"",1"
+    15821 "20,""Telstra (Australia) nëpërmjet 1818 (fax)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0015EFG#"","""",""1818"",""1818"",""1818"",1"
+    15822 "21,""Optus (Australia) nëpërmjet 1812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""1812"",1"
+    15823 "22,""Optus (Australia) nëpërmjet 008551812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""008551812"",1"
+END

@@ -34,6 +34,8 @@
 #include <windef.h>
 #include <winnt.h>
 
+/* We need the full structure with all non-volatile */
+#define _SEH3$_FRAME_ALL_NONVOLATILES 1
 #include "pseh3.h"
 #include "pseh3_asmdef.h"
 
@@ -43,13 +45,24 @@ C_ASSERT(SEH3_REGISTRATION_FRAME_Handler == FIELD_OFFSET(SEH3$_REGISTRATION_FRAM
 C_ASSERT(SEH3_REGISTRATION_FRAME_EndOfChain == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, EndOfChain));
 C_ASSERT(SEH3_REGISTRATION_FRAME_ScopeTable == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ScopeTable));
 C_ASSERT(SEH3_REGISTRATION_FRAME_ExceptionPointers == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ExceptionPointers));
+C_ASSERT(SEH3_REGISTRATION_FRAME_ExceptionCode == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ExceptionCode));
 C_ASSERT(SEH3_REGISTRATION_FRAME_Esp == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Esp));
 C_ASSERT(SEH3_REGISTRATION_FRAME_Ebp == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Ebp));
+C_ASSERT(SEH3_REGISTRATION_FRAME_AllocaFrame == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, AllocaFrame));
+#ifdef _SEH3$_FRAME_ALL_NONVOLATILES
+C_ASSERT(SEH3_REGISTRATION_FRAME_Ebx == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Ebx));
+C_ASSERT(SEH3_REGISTRATION_FRAME_Esi == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Esi));
+C_ASSERT(SEH3_REGISTRATION_FRAME_Edi == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, Edi));
+#endif
+#ifdef __clang__
+C_ASSERT(SEH3_REGISTRATION_FRAME_ReturnAddress == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, ReturnAddress));
+#endif
 C_ASSERT(SEH3_SCOPE_TABLE_Filter == FIELD_OFFSET(SEH3$_SCOPE_TABLE, Filter));
 C_ASSERT(SEH3_SCOPE_TABLE_Target == FIELD_OFFSET(SEH3$_SCOPE_TABLE, Target));
 
-static inline
-void _SEH3$_Unregister(
+void
+__attribute__((regparm(1)))
+_SEH3$_Unregister(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
     if (Frame->Handler)
@@ -60,8 +73,8 @@ void _SEH3$_Unregister(
 
 static inline
 LONG
-_SEH3$_InvokeFilter(
-    PVOID Record,
+_SEH3$_InvokeNestedFunctionFilter(
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame,
     PVOID Filter)
 {
     LONG FilterResult;
@@ -75,16 +88,74 @@ _SEH3$_InvokeFilter(
         /* The result is the frame base address that we passed in (0) plus the
            offset to the registration record. */
         "negl %%eax\n\t"
-        "addl %[Record], %%eax\n\t"
+        "addl %[RegistrationFrame], %%eax\n\t"
 
         /* Second call to get the filter result */
         "mov $1, %%ecx\n\t"
-        "call *%[Filter]\n\t"
-        : "=a"(FilterResult)
-        : [Record] "m" (Record), [Filter] "m" (Filter)
+        "call *%[Filter]"
+        : "=a" (FilterResult)
+        : [RegistrationFrame] "m" (RegistrationFrame), [Filter] "m" (Filter)
         : "ecx", "edx");
 
     return FilterResult;
+}
+
+long
+__attribute__((regparm(1)))
+_SEH3$_InvokeEmbeddedFilter(
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame);
+
+long
+__attribute__((regparm(1)))
+_SEH3$_InvokeEmbeddedFilterFromRegistration(
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame);
+
+static inline
+LONG
+_SEH3$_InvokeFilter(
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame,
+    PVOID Filter)
+{
+    LONG FilterResult;
+
+    if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_NESTED_HANDLER)
+    {
+        return _SEH3$_InvokeNestedFunctionFilter(RegistrationFrame, Filter);
+    }
+    else if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_CPP_HANDLER)
+    {
+        /* Call the embedded filter function */
+        return _SEH3$_InvokeEmbeddedFilter(RegistrationFrame);
+    }
+    else if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_CLANG_HANDLER)
+    {
+        return _SEH3$_InvokeEmbeddedFilterFromRegistration(RegistrationFrame);
+    }
+    else
+    {
+        /* Should not happen! Skip this handler */
+        FilterResult = EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    return FilterResult;
+}
+
+void
+__attribute__((regparm(1)))
+_SEH3$_AutoCleanup(
+    volatile SEH3$_REGISTRATION_FRAME *Frame)
+{
+    if (Frame->Handler)
+        _SEH3$_UnregisterFrame(Frame);
+    else
+        _SEH3$_UnregisterTryLevel(Frame);
+
+    /* Check for __finally frames */
+    if (Frame->ScopeTable->Target == NULL)
+    {
+       _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter);
+    }
+
 }
 
 static inline
@@ -133,49 +204,61 @@ void
 _SEH3$_JumpToTarget(
     PSEH3$_REGISTRATION_FRAME RegistrationFrame)
 {
-    asm volatile (
-        /* Load the registers */
-        "movl 20(%%ecx), %%esp\n"
-        "movl 24(%%ecx), %%ebp\n"
+    if (RegistrationFrame->ScopeTable->HandlerType == _SEH3$_CLANG_HANDLER)
+    {
+        asm volatile (
+            /* Load the registers */
+            "movl 24(%%ecx), %%esp\n\t"
+            "movl 28(%%ecx), %%ebp\n\t"
 
-        /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
-        "addl $4, %%esp\n"
+            "movl 36(%%ecx), %%ebx\n\t"
+            "movl 40(%%ecx), %%esi\n\t"
+            "movl 44(%%ecx), %%edi\n\t"
 
-        /* Jump into the exception handler */
-        "jmp *%[Target]\n"
-        : :
-        "c" (RegistrationFrame),
-        "a" (RegistrationFrame->ScopeTable),
-         [Target] "m" (RegistrationFrame->ScopeTable->Target)
-    );
+            /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
+            "addl $4, %%esp\n\t"
+
+            /* Jump into the exception handler */
+            "jmp *%[Target]"
+            : :
+            "c" (RegistrationFrame),
+            "a" (RegistrationFrame->ScopeTable),
+             [Target] "m" (RegistrationFrame->ScopeTable->Target)
+        );
+    }
+    else
+    {
+        asm volatile (
+            /* Load the registers */
+            "movl 24(%%ecx), %%esp\n\t"
+            "movl 28(%%ecx), %%ebp\n\t"
+
+            /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
+            "addl $4, %%esp\n\t"
+
+            /* Jump into the exception handler */
+            "jmp *%[Target]"
+            : :
+            "c" (RegistrationFrame),
+            "a" (RegistrationFrame->ScopeTable),
+             [Target] "m" (RegistrationFrame->ScopeTable->Target)
+        );
+    }
 
     __builtin_unreachable();
 }
 
-static inline
 void
+__fastcall
 _SEH3$_CallRtlUnwind(
-    PSEH3$_REGISTRATION_FRAME RegistrationFrame)
-{
-    LONG ClobberedEax;
+    PSEH3$_REGISTRATION_FRAME RegistrationFrame);
 
-    asm volatile(
-        "push %%ebp\n"
-        "push $0\n"
-        "push $0\n"
-        "push $0\n"
-        "push %[TargetFrame]\n"
-        "call _RtlUnwind@16\n"
-        "pop %%ebp\n"
-        : "=a" (ClobberedEax)
-        : [TargetFrame] "a" (RegistrationFrame)
-        : "ebx", "ecx", "edx", "esi",
-          "edi", "flags", "memory");
-}
 
 EXCEPTION_DISPOSITION
 __cdecl
+#ifndef __clang__
 __attribute__ ((__target__ ("cld")))
+#endif
 _SEH3$_except_handler(
     struct _EXCEPTION_RECORD * ExceptionRecord,
     PSEH3$_REGISTRATION_FRAME EstablisherFrame,
@@ -187,7 +270,11 @@ _SEH3$_except_handler(
     LONG FilterResult;
 
     /* Clear the direction flag. */
-    asm volatile ("cld\n" : : : "memory");
+    asm volatile ("cld" : : : "memory");
+
+    /* Save the exception pointers on the stack */
+    ExceptionPointers.ExceptionRecord = ExceptionRecord;
+    ExceptionPointers.ContextRecord = ContextRecord;
 
     /* Check if this is an unwind */
     if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWINDING)
@@ -197,10 +284,6 @@ _SEH3$_except_handler(
     }
     else
     {
-        /* Save the exception pointers on the stack */
-        ExceptionPointers.ExceptionRecord = ExceptionRecord;
-        ExceptionPointers.ContextRecord = ContextRecord;
-
         /* Loop all frames for this registration */
         CurrentFrame = EstablisherFrame->EndOfChain;
         for (;;)
@@ -208,8 +291,9 @@ _SEH3$_except_handler(
             /* Check if we have an exception handler */
             if (CurrentFrame->ScopeTable->Target != NULL)
             {
-                /* Set exception pointers for this frame */
+                /* Set exception pointers and code for this frame */
                 CurrentFrame->ExceptionPointers = &ExceptionPointers;
+                CurrentFrame->ExceptionCode = ExceptionRecord->ExceptionCode;
 
                 /* Get the filter result */
                 FilterResult = _SEH3$_GetFilterResult(CurrentFrame);
@@ -250,8 +334,9 @@ _SEH3$_except_handler(
         /* Check if this is an unwind frame */
         if (CurrentFrame->ScopeTable->Target == NULL)
         {
-            /* Set exception pointers for this frame */
+            /* Set exception pointers and code for this frame */
             CurrentFrame->ExceptionPointers = &ExceptionPointers;
+            CurrentFrame->ExceptionCode = ExceptionRecord->ExceptionCode;
 
             /* Call the finally function */
             _SEH3$_CallFinally(CurrentFrame);

@@ -46,6 +46,7 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     {
         /* Get the Image Headers */
         Headers = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
+        if (!Headers) return STATUS_INVALID_IMAGE_FORMAT;
 
         /* If we didn't get the parameters, find them ourselves */
         if (!StackReserve) StackReserve = Headers->OptionalHeader.
@@ -60,14 +61,16 @@ RtlpCreateUserStack(IN HANDLE hProcess,
         if (!StackCommit) StackCommit = SystemBasicInfo.PageSize;
     }
 
+    /* Check if the commit is higher than the reserve*/
+    if (StackCommit >= StackReserve)
+    {
+        /* Grow the reserve beyond the commit, up to 1MB alignment */
+        StackReserve = ROUND_UP(StackCommit, 1024 * 1024);
+    }
+
     /* Align everything to Page Size */
     StackReserve = ROUND_UP(StackReserve, SystemBasicInfo.AllocationGranularity);
     StackCommit = ROUND_UP(StackCommit, SystemBasicInfo.PageSize);
-
-    // FIXME: Remove once Guard Page support is here
-    #if 1
-    StackCommit = StackReserve;
-    #endif
 
     /* Reserve memory for the stack */
     Status = ZwAllocateVirtualMemory(hProcess,
@@ -121,7 +124,7 @@ RtlpCreateUserStack(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status)) return Status;
 
         /* Update the Stack Limit keeping in mind the Guard Page */
-        InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit -
+        InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit +
                                          GuardPageSize);
     }
 
@@ -155,7 +158,7 @@ RtlpFreeUserStack(IN HANDLE Process,
  * @implemented
  */
 NTSTATUS
-NTAPI
+__cdecl
 RtlSetThreadIsCritical(IN BOOLEAN NewValue,
                        OUT PBOOLEAN OldValue OPTIONAL,
                        IN BOOLEAN NeedBreaks)

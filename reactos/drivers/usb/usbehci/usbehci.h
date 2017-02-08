@@ -1,36 +1,9 @@
 #ifndef USBEHCI_H__
 #define USBEHCI_H__
 
-#include <ntddk.h>
-#define NDEBUG
-#include <debug.h>
-#include <hubbusif.h>
-#include <usbbusif.h>
-#include <usbioctl.h>
+#include <libusb.h>
 
-extern "C"
-{
-#include <usbdlib.h>
-}
-
-
-
-//
-// FIXME: 
-// #include <usbprotocoldefs.h>
-//
-#include <usb.h>
-#include <stdio.h>
-#include <wdmguid.h>
-
-//
-// FIXME:
-// the following includes are required to get kcom to compile
-//
-#include <portcls.h>
-#include <dmusicks.h>
-#include <kcom.h>
-
+#include "hardware.h"
 #include "interfaces.h"
 
 //
@@ -60,4 +33,4 @@ NTSTATUS NTAPI CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
 //
 NTSTATUS NTAPI InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
 
-#endif
+#endif /* USBEHCI_H__ */

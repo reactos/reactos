@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #undef InterlockedExchangePte
 #define InterlockedExchangePte(pte1, pte2) \
@@ -134,57 +134,6 @@ MiFlushTlb(PMMPTE Pte, PVOID Address)
     else
     {
         __invlpg(Address);
-    }
-}
-
-static
-VOID
-MmDeletePageTablePfn(PFN_NUMBER PageFrameNumber, ULONG Level)
-{
-    PMMPTE PageTable;
-    KIRQL OldIrql;
-    PMMPFN PfnEntry;
-    ULONG i, NumberEntries;
-
-    /* Check if this is a page table */
-    if (Level > 0)
-    {
-        NumberEntries = (Level == 4) ? MiAddressToPxi(MmHighestUserAddress)+1 : 512;
-
-        /* Map the page table in hyperspace */
-        PageTable = (PMMPTE)MmCreateHyperspaceMapping(PageFrameNumber);
-
-        /* Loop all page table entries */
-        for (i = 0; i < NumberEntries; i++)
-        {
-            /* Check if the entry is valid */
-            if (PageTable[i].u.Hard.Valid)
-            {
-                /* Recursively free the page that backs it */
-                MmDeletePageTablePfn(PageTable[i].u.Hard.PageFrameNumber, Level - 1);
-            }
-        }
-
-        /* Delete the hyperspace mapping */
-        MmDeleteHyperspaceMapping(PageTable);
-    }
-
-    /* Check if this is a legacy allocation */
-    PfnEntry = MiGetPfnEntry(PageFrameNumber);
-    if (MI_IS_ROS_PFN(PfnEntry))
-    {
-        /* Free it using the legacy API */
-        MmReleasePageMemoryConsumer(MC_SYSTEM, PageFrameNumber);
-    }
-    else
-    {
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-        /* Free it using the ARM3 API */
-        MI_SET_PFN_DELETED(PfnEntry);
-        MiDecrementShareCount(PfnEntry, PageFrameNumber);
-
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     }
 }
 
@@ -348,27 +297,6 @@ MmGetPfnForProcess(PEPROCESS Process,
     return Pte.u.Hard.Valid ? Pte.u.Hard.PageFrameNumber : 0;
 }
 
-PHYSICAL_ADDRESS
-NTAPI
-MmGetPhysicalAddress(PVOID Address)
-{
-    PHYSICAL_ADDRESS p;
-    MMPTE Pte;
-
-    Pte.u.Long = MiGetPteValueForProcess(NULL, Address);
-    if (Pte.u.Hard.Valid)
-    {
-        p.QuadPart = Pte.u.Hard.PageFrameNumber * PAGE_SIZE;
-        p.u.LowPart |= (ULONG_PTR)Address & (PAGE_SIZE - 1);
-    }
-    else
-    {
-        p.QuadPart = 0;
-    }
-
-    return p;
-}
-
 BOOLEAN
 NTAPI
 MmIsPagePresent(PEPROCESS Process, PVOID Address)
@@ -518,35 +446,11 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     MiFlushTlb(Pte, Address);
 }
 
-
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
 VOID
 NTAPI
 MmDeleteVirtualMapping(
     PEPROCESS Process,
     PVOID Address,
-    BOOLEAN FreePage,
     BOOLEAN* WasDirty,
     PPFN_NUMBER Page)
 {
@@ -564,9 +468,6 @@ MmDeleteVirtualMapping(
         if (OldPte.u.Hard.Valid)
         {
             Pfn = OldPte.u.Hard.PageFrameNumber;
-
-            //if (FreePage)
-                //MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
         }
         else
             Pfn = 0;
@@ -579,7 +480,7 @@ MmDeleteVirtualMapping(
 
     /* Return information to the caller */
     if (WasDirty)
-        *WasDirty = (BOOLEAN)OldPte.u.Hard.Dirty;;
+        *WasDirty = (BOOLEAN)OldPte.u.Hard.Dirty;
 
     if (Page)
         *Page = Pfn;
@@ -594,15 +495,6 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 {
     UNIMPLEMENTED;
 }
-
-
-VOID
-NTAPI
-MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
 
 NTSTATUS
 NTAPI

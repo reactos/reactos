@@ -29,15 +29,7 @@
  *     http://members.ozemail.com.au/~geoffch/samples/win32/shell/comctl32  
  */
 
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <commctrl.h>
-
 #include "comctl32.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsa);
 
@@ -100,7 +92,7 @@ HDSA WINAPI DSA_Create (INT nSize, INT nGrow)
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI DSA_Destroy (const HDSA hdsa)
+BOOL WINAPI DSA_Destroy (HDSA hdsa)
 {
     TRACE("(%p)\n", hdsa);
 
@@ -128,7 +120,7 @@ BOOL WINAPI DSA_Destroy (const HDSA hdsa)
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI DSA_GetItem (const HDSA hdsa, INT nIndex, LPVOID pDest)
+BOOL WINAPI DSA_GetItem (HDSA hdsa, INT nIndex, LPVOID pDest)
 {
     LPVOID pSrc;
 
@@ -159,7 +151,7 @@ BOOL WINAPI DSA_GetItem (const HDSA hdsa, INT nIndex, LPVOID pDest)
  *     Success: pointer to an item
  *     Failure: NULL
  */
-LPVOID WINAPI DSA_GetItemPtr (const HDSA hdsa, INT nIndex)
+LPVOID WINAPI DSA_GetItemPtr (HDSA hdsa, INT nIndex)
 {
     LPVOID pSrc;
 
@@ -192,7 +184,7 @@ LPVOID WINAPI DSA_GetItemPtr (const HDSA hdsa, INT nIndex)
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI DSA_SetItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
+BOOL WINAPI DSA_SetItem (HDSA hdsa, INT nIndex, LPVOID pSrc)
 {
     INT  nSize, nNewItems;
     LPVOID pDest, lpTemp;
@@ -248,7 +240,7 @@ BOOL WINAPI DSA_SetItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
  *     Success: position of the new item
  *     Failure: -1
  */
-INT WINAPI DSA_InsertItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
+INT WINAPI DSA_InsertItem (HDSA hdsa, INT nIndex, LPVOID pSrc)
 {
     INT   nNewItems, nSize;
     LPVOID  lpTemp, lpDest;
@@ -309,7 +301,7 @@ INT WINAPI DSA_InsertItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
  *     Success: number of the deleted element
  *     Failure: -1
  */
-INT WINAPI DSA_DeleteItem (const HDSA hdsa, INT nIndex)
+INT WINAPI DSA_DeleteItem (HDSA hdsa, INT nIndex)
 {
     LPVOID lpDest,lpSrc;
     INT  nSize;
@@ -361,7 +353,7 @@ INT WINAPI DSA_DeleteItem (const HDSA hdsa, INT nIndex)
  *     Success: TRUE
  *     Failure: FALSE
  */
-BOOL WINAPI DSA_DeleteAllItems (const HDSA hdsa)
+BOOL WINAPI DSA_DeleteAllItems (HDSA hdsa)
 {
     TRACE("(%p)\n", hdsa);
 
@@ -433,4 +425,60 @@ void WINAPI DSA_DestroyCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc,
 
     DSA_EnumCallback (hdsa, enumProc, lParam);
     DSA_Destroy (hdsa);
+}
+
+/**************************************************************************
+ * DSA_Clone [COMCTL32.@]
+ *
+ * Creates a copy of a dsa
+ *
+ * PARAMS
+ *     hdsa [I] handle to the dynamic storage array
+ *
+ * RETURNS
+ *     Cloned dsa
+ */
+HDSA WINAPI DSA_Clone(HDSA hdsa)
+{
+    HDSA dest;
+    INT i;
+
+    TRACE("(%p)\n", hdsa);
+
+    if (!hdsa)
+        return NULL;
+
+    dest = DSA_Create (hdsa->nItemSize, hdsa->nGrow);
+    if (!dest)
+        return NULL;
+
+    for (i = 0; i < hdsa->nItemCount; i++) {
+        void *ptr = DSA_GetItemPtr (hdsa, i);
+        if (DSA_InsertItem (dest, DA_LAST, ptr) == -1) {
+            DSA_Destroy (dest);
+            return NULL;
+        }
+    }
+
+    return dest;
+}
+
+/**************************************************************************
+ * DSA_GetSize [COMCTL32.@]
+ *
+ * Returns allocated memory size for this array
+ *
+ * PARAMS
+ *     hdsa [I] handle to the dynamic storage array
+ *
+ * RETURNS
+ *     Size
+ */
+ULONGLONG WINAPI DSA_GetSize(HDSA hdsa)
+{
+    TRACE("(%p)\n", hdsa);
+
+    if (!hdsa) return 0;
+
+    return sizeof(*hdsa) + (ULONGLONG)hdsa->nMaxCount*hdsa->nItemSize;
 }

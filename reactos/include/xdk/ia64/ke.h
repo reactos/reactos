@@ -17,7 +17,7 @@ $if (_WDMDDK_)
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
-extern volatile LARGE_INTEGER KeTickCount;
+extern NTKERNELAPI volatile LARGE_INTEGER KeTickCount;
 
 #define PAUSE_PROCESSOR __yield();
 

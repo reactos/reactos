@@ -16,29 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-
-#include <assert.h>
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winreg.h"
-#include <wingdi.h>
-#include <objbase.h>
-#include <wincodec.h>
-
 #include "wincodecs_private.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+#include <assert.h>
 
 typedef struct {
     DWORD bc2Size;
@@ -167,22 +147,35 @@ static HRESULT WINAPI BmpFrameDecode_GetPixelFormat(IWICBitmapFrameDecode *iface
 
 static HRESULT BmpHeader_GetResolution(BITMAPV5HEADER *bih, double *pDpiX, double *pDpiY)
 {
+    LONG resx = 0, resy = 0;
+
     switch (bih->bV5Size)
     {
+    default:
     case sizeof(BITMAPCOREHEADER):
-        *pDpiX = 96.0;
-        *pDpiY = 96.0;
-        return S_OK;
+        break;
+
     case sizeof(BITMAPCOREHEADER2):
     case sizeof(BITMAPINFOHEADER):
     case sizeof(BITMAPV4HEADER):
     case sizeof(BITMAPV5HEADER):
-        *pDpiX = bih->bV5XPelsPerMeter * 0.0254;
-        *pDpiY = bih->bV5YPelsPerMeter * 0.0254;
-        return S_OK;
-    default:
-        return E_FAIL;
+        resx = bih->bV5XPelsPerMeter;
+        resy = bih->bV5YPelsPerMeter;
+        break;
     }
+
+    if (!resx || !resy)
+    {
+        *pDpiX = 96.0;
+        *pDpiY = 96.0;
+    }
+    else
+    {
+        *pDpiX = resx * 0.0254;
+        *pDpiY = resy * 0.0254;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI BmpFrameDecode_GetResolution(IWICBitmapFrameDecode *iface,
@@ -1176,16 +1169,14 @@ static HRESULT BmpDecoder_Create(int packed, int icoframe, BmpDecoder **ppDecode
     return S_OK;
 }
 
-static HRESULT BmpDecoder_Construct(int packed, int icoframe, IUnknown *pUnkOuter, REFIID iid, void** ppv)
+static HRESULT BmpDecoder_Construct(int packed, int icoframe, REFIID iid, void** ppv)
 {
     BmpDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     ret = BmpDecoder_Create(packed, icoframe, &This);
     if (FAILED(ret)) return ret;
@@ -1196,14 +1187,14 @@ static HRESULT BmpDecoder_Construct(int packed, int icoframe, IUnknown *pUnkOute
     return ret;
 }
 
-HRESULT BmpDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT BmpDecoder_CreateInstance(REFIID iid, void** ppv)
 {
-    return BmpDecoder_Construct(FALSE, FALSE, pUnkOuter, iid, ppv);
+    return BmpDecoder_Construct(FALSE, FALSE, iid, ppv);
 }
 
-HRESULT DibDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT DibDecoder_CreateInstance(REFIID iid, void** ppv)
 {
-    return BmpDecoder_Construct(TRUE, FALSE, pUnkOuter, iid, ppv);
+    return BmpDecoder_Construct(TRUE, FALSE, iid, ppv);
 }
 
 HRESULT IcoDibDecoder_CreateInstance(BmpDecoder **ppDecoder)

@@ -40,15 +40,15 @@ typedef struct _NOTIFYEVENT
    DWORD flags; 
 } NOTIFYEVENT, *PNOTIFYEVENT;
 
-LRESULT FASTCALL co_CallHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
-LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
-LRESULT FASTCALL co_EVENT_CallEvents(DWORD, HWND, UINT_PTR, LONG_PTR);
-VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
-VOID FASTCALL EVENT_DestroyThreadEvents(PETHREAD Thread);
+LRESULT APIENTRY co_CallHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
+LRESULT APIENTRY co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
+LRESULT APIENTRY co_EVENT_CallEvents(DWORD, HWND, UINT_PTR, LONG_PTR);
 PHOOK FASTCALL IntGetHookObject(HHOOK);
 PHOOK FASTCALL IntGetNextHook(PHOOK Hook);
-LRESULT FASTCALL UserCallNextHookEx( PHOOK pHook, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
+LRESULT APIENTRY UserCallNextHookEx( PHOOK pHook, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 BOOL FASTCALL IntUnhookWindowsHook(int,HOOKPROC);
+BOOLEAN IntRemoveHook(PVOID Object);
+BOOLEAN IntRemoveEvent(PVOID Object);
 
 BOOL FASTCALL UserLoadApiHook(VOID);
 BOOL IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload);

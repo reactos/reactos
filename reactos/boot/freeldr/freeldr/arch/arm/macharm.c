@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/arch/arm/marcharm.c
+ * FILE:            boot/freeldr/freeldr/arch/arm/macharm.c
  * PURPOSE:         Provides abstraction between the ARM Boot Loader and FreeLDR
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -29,8 +29,9 @@ ULONG SecondLevelDcacheFillSize;
 ULONG SecondLevelIcacheSize;
 ULONG SecondLevelIcacheFillSize;
 
-ARC_DISK_SIGNATURE reactos_arc_disk_info;
-ULONG reactos_disk_count;
+extern ULONG reactos_disk_count;
+extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
+extern CHAR reactos_arc_strings[32][256];
 
 ULONG SizeBits[] =
 {
@@ -59,6 +60,16 @@ ULONG LenBits[] =
 };
 
 /* FUNCTIONS ******************************************************************/
+
+VOID DiskStopFloppyMotor(VOID)
+{
+}
+
+VOID
+FrLdrCheckCpuCompatiblity(VOID)
+{
+    /* Nothing for now */
+}
 
 VOID
 ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
@@ -100,13 +111,6 @@ ArmDiskGetBootPath(OUT PCHAR BootPath,
     return TRUE;
 }
 
-BOOLEAN
-ArmInitializeBootDevices(VOID)
-{
-    /* Emulate old behavior */
-    return (ArmHwDetect() != NULL);
-}
-
 PCONFIGURATION_COMPONENT_DATA
 ArmHwDetect(VOID)
 {
@@ -140,13 +144,23 @@ ArmHwDetect(VOID)
     RamDiskInitialize();
 
     /* Fill out the ARC disk block */
-    reactos_arc_disk_info.Signature = 0xBADAB00F;
-    reactos_arc_disk_info.CheckSum = 0xDEADBABE;
-    reactos_arc_disk_info.ArcName = "ramdisk(0)";
-    reactos_disk_count = 1;
+    reactos_arc_disk_info[reactos_disk_count].Signature = 0xBADAB00F;
+    reactos_arc_disk_info[reactos_disk_count].CheckSum = 0xDEADBABE;
+    strcpy(reactos_arc_strings[reactos_disk_count], "ramdisk(0)");
+    reactos_arc_disk_info[reactos_disk_count].ArcName =
+        reactos_arc_strings[reactos_disk_count];
+    reactos_disk_count++;
+    ASSERT(reactos_disk_count == 1);
 
     /* Return the root node */
     return RootNode;
+}
+
+BOOLEAN
+ArmInitializeBootDevices(VOID)
+{
+    /* Emulate old behavior */
+    return (ArmHwDetect() != NULL);
 }
 
 FREELDR_MEMORY_DESCRIPTOR ArmMemoryMap[32];
@@ -154,6 +168,7 @@ FREELDR_MEMORY_DESCRIPTOR ArmMemoryMap[32];
 PFREELDR_MEMORY_DESCRIPTOR
 ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
 {
+    ULONG i;
     ASSERT(ArmBoardBlock->MemoryMapEntryCount <= 32);
 
     /* Return whatever the board returned to us (CS0 Base + Size and FLASH0) */
@@ -167,7 +182,10 @@ ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
             ArmMemoryMap[i].MemoryType = MemoryFirmwarePermanent;
     }
 
-    return ArmBoardBlock->MemoryMapEntryCount;
+    *MemoryMapSize = ArmBoardBlock->MemoryMapEntryCount;
+
+    // FIXME
+    return NULL;
 }
 
 VOID

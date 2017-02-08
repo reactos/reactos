@@ -8,19 +8,19 @@
 @ stub AsrpGetLocalVolumeInfo
 @ stub AsprRestoreNonCriticalDisksW
 @ stub CdromPropPageProvider
-@ stub ComputerClassInstaller
+@ stdcall ComputerClassInstaller(long ptr ptr)
 @ stub CreateLocalAdminAccount
 @ stub CreateLocalAdminAccountEx
 @ stub CreateLocalUserAccount
-@ stub CriticalDeviceCoInstaller
+@ stdcall CriticalDeviceCoInstaller(long ptr ptr ptr)
 @ stub DevInstallW
-@ stub DeviceBayClassInstaller
+@ stdcall DeviceBayClassInstaller(long ptr ptr)
 @ stub DiskPropPageProvider
 @ stub DoInstallComponentInfs
-@ stub EisaUpHalCoInstaller
+@ stdcall EisaUpHalCoInstaller(long ptr ptr ptr)
 @ stub EisaUpHalPropPageProvider
 @ stub GenerateName
-@ stub HdcClassInstaller
+@ stdcall HdcClassInstaller(long ptr ptr)
 @ stdcall InitializeSetupActionLog(long)
 @ stdcall InstallLiveCD(ptr)
 @ stdcall InstallReactOS(ptr)
@@ -29,7 +29,7 @@
 @ stub LegacyDriverPropPageProvider
 @ stub MigrateExceptionPackages
 @ stdcall MouseClassInstaller(long ptr ptr)
-@ stub NtApmClassInstaller
+@ stdcall NtApmClassInstaller(long ptr ptr)
 @ stub OpkCheckVersion
 @ stub PS2MousePropPageProvider
 @ stub PnPInitializationThread
@@ -37,7 +37,7 @@
 @ stub RepairStartMenuItems
 @ stub ReportError
 @ stub RunOEMExtraTasks
-@ stub ScsiClassInstaller
+@ stdcall ScsiClassInstaller(long ptr ptr)
 @ stub SetAccountDomainSid
 @ stub SetupAddOrRemoveTestCertificate
 @ stdcall SetupChangeFontSize(ptr wstr)
@@ -72,15 +72,16 @@
 @ stub SetupSetRegisteredOsComponentsOrder
 @ stub SetupSetSetupInfo
 @ stub SetupShellSettings
-@ stub SetupStartService
+@ stdcall SetupStartService(wstr long)
 @ stub SetupUnregisterOsComponent
-@ stub StorageCoInstaller
+@ stdcall StorageCoInstaller(long ptr ptr ptr)
 @ stub SystemUpdateUserProfileDirectory
-@ stub TapeClassInstaller
+@ stdcall TapeClassInstaller(long ptr ptr)
 @ stub TapePropPageProvider
 @ stdcall TerminateSetupActionLog()
 @ stub UpdatePnpDeviceDrivers
 @ stub UpgradePrinters
 @ stub ViewSetupActionLog
-@ stub pSetupDebugPrint
+@ stdcall VolumeClassInstaller(long ptr ptr)
+@ varargs pSetupDebugPrint(wstr long wstr wstr)
 @ stub pSetuplogSfcError

@@ -5,21 +5,10 @@
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
 
-
-
 #ifndef _AUDIO_DEF__H_
 #define _AUDIO_DEF__H_
 
-
-//#include <iostream>
-
-
-
-//
-// Defaults
-//
-
-
+/* Defaults */
 
 #define _AUDIO_DEFAULT_FORMAT A44100_16BIT_STEREO
 
@@ -31,40 +20,16 @@
 
 #define _AUDIO_DEFAULT_BUFSECS 1.0f
 
-
-
-//
-// Namespace stuff
-//
-
+/* Namespace stuff */
 #define _AUDIO_NAMESPACE_START_ namespace snd {
 #define _AUDIO_NAMESPACE_END_ };
 
-
-
-
-
-//
-// Platform depend stuff
-//
-
-//#include <windows.h>
-#include <mmsystem.h> //Windows MultiMedia (WINMM) audio apis
-#include <mmreg.h> //codecs stuff
-#include <msacm.h> //codecs stuff
-
-
-
-
+/* Platform depend stuff */
+#include <mmsystem.h> // Windows MultiMedia (WINMM) audio apis
+#include <mmreg.h> // codecs stuff
+#include <msacm.h> // codecs stuff
 
 //#pragma comment(lib, "winmm.lib")
 //#pragma comment(lib, "msacm32.lib")
-
-
-
-
-
-
-
 
 #endif //ifdef _AUDIO_DEF__H_

@@ -29,10 +29,8 @@
  *
  * Directory Printing Support
  */
-#include "tiffiop.h"
-#include <stdio.h>
 
-#include <ctype.h>
+#include <precomp.h>
 
 static void
 _TIFFprintAsciiBounded(FILE* fd, const char* cp, int max_chars);

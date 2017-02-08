@@ -1,12 +1,14 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-add_definitions(
-    -D__WINESRC__
-    -D_SHLWAPI_)
+project(SHELL)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(
+    -D__WINESRC__
+    -D_SHLWAPI_)
+
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -18,20 +20,24 @@ list(APPEND SOURCE
     path.c
     reg.c
     regstream.c
+    rosordinal.c
     shlwapi_main.c
     stopwatch.c
     string.c
     thread.c
     url.c
-    wsprintf.c
+    precomp.h)
+
+add_library(shlwapi SHARED
+    ${SOURCE}
     shlwapi.rc
+    wsprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
-add_library(shlwapi SHARED ${SOURCE})
 set_module_type(shlwapi win32dll)
-target_link_libraries(shlwapi wine uuid)
-add_delay_importlibs(shlwapi userenv oleaut32 ole32 comctl32 comdlg32 mpr mlang urlmon shell32 winmm version)
-add_importlibs(shlwapi user32 gdi32 advapi32 msvcrt wininet kernel32 ntdll)
+target_link_libraries(shlwapi uuid wine)
+add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
+add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
+add_pch(shlwapi precomp.h SOURCE)
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
-

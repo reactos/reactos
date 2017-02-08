@@ -15,8 +15,8 @@ extern "C" {
 
 #if defined(MINGW_HAS_SECURE_API)
 
-  _CRTIMP errno_t __cdecl _ftime32_s(struct __timeb32 *_Time);
-  _CRTIMP errno_t __cdecl _ftime64_s(struct __timeb64 *_Time);
+  _CRTIMP errno_t __cdecl _ftime32_s(_Out_ struct __timeb32 *_Time);
+  _CRTIMP errno_t __cdecl _ftime64_s(_Out_ struct __timeb64 *_Time);
 
 #ifndef _USE_32BIT_TIME_T
 #define _ftime_s _ftime64_s

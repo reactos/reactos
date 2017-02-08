@@ -18,6 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
+
+#ifndef _USP10_INTERNAL_H_
+#define _USP10_INTERNAL_H_
+
+#include <config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <usp10.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
 #define MS_MAKE_TAG( _x1, _x2, _x3, _x4 ) \
           ( ( (ULONG)_x4 << 24 ) |     \
             ( (ULONG)_x3 << 16 ) |     \
@@ -169,7 +189,7 @@ typedef struct {
     OUTLINETEXTMETRICW *otm;
     SCRIPT_FONTPROPERTIES sfp;
     BOOL sfnt;
-    CacheGlyphPage *page[0x10];
+    CacheGlyphPage *page[0x11];
     ABC *widths[GLYPH_MAX / GLYPH_BLOCK_SIZE];
     LPVOID GSUB_Table;
     LPVOID GDEF_Table;
@@ -208,7 +228,7 @@ static inline BOOL is_consonant( int type )
     return (type == lex_Ra || type == lex_Consonant);
 }
 
-static inline WCHAR get_table_entry( const unsigned short *table, WCHAR ch )
+static inline unsigned short get_table_entry( const unsigned short *table, WCHAR ch )
 {
     return table[table[table[ch >> 8] + ((ch >> 4) & 0x0f)] + (ch & 0xf)];
 }
@@ -224,7 +244,7 @@ typedef void (*reorder_function)(LPWSTR pwChar, IndicSyllable *syllable, lexical
 int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target) DECLSPEC_HIDDEN;
 
 BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
-                const SCRIPT_CONTROL *c, WORD *lpOutLevels ) DECLSPEC_HIDDEN;
+                const SCRIPT_CONTROL *c, WORD *lpOutLevels, WORD *lpOutOverrides ) DECLSPEC_HIDDEN;
 BOOL BIDI_GetStrengths(LPCWSTR lpString, INT uCount, const SCRIPT_CONTROL *c,
                       WORD* lpStrength) DECLSPEC_HIDDEN;
 INT BIDI_ReorderV2lLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse) DECLSPEC_HIDDEN;
@@ -251,3 +271,5 @@ INT OpenType_apply_GPOS_lookup(ScriptCache *psc, LPOUTLINETEXTMETRICW lpotm, LPL
 HRESULT OpenType_GetFontScriptTags(ScriptCache *psc, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags) DECLSPEC_HIDDEN;
 HRESULT OpenType_GetFontLanguageTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pLanguageTags, int *pcTags) DECLSPEC_HIDDEN;
 HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag, BOOL filtered, OPENTYPE_TAG searchingFor, char tableType, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags, LoadedFeature** feature) DECLSPEC_HIDDEN;
+
+#endif /* _USP10_INTERNAL_H_ */

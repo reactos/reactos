@@ -1,9 +1,21 @@
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            boot/freeldr/freeldr/arch/i386/ntoskrnl.c
+ * PURPOSE:         NTOS glue routines for the MINIHAL library
+ * PROGRAMMERS:     Hervé Poussineau  <hpoussin@reactos.org>
+ */
+
+/* INCLUDES ******************************************************************/
+
 #include <ntoskrnl.h>
 
 /* For KeStallExecutionProcessor */
 #if defined(_M_IX86) || defined(_M_AMD64)
 #include <arch/pc/pcbios.h>
 #endif
+
+/* FUNCTIONS *****************************************************************/
 
 VOID
 NTAPI
@@ -37,7 +49,6 @@ KeSetTimeIncrement(
 {
 }
 
-NTKERNELAPI
 VOID
 FASTCALL
 IoAssignDriveLetters(
@@ -48,7 +59,6 @@ IoAssignDriveLetters(
 {
 }
 
-NTKERNELAPI
 NTSTATUS
 FASTCALL
 IoSetPartitionInformation(
@@ -60,7 +70,18 @@ IoSetPartitionInformation(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTKERNELAPI
+/*
+ * NTSTATUS
+ * FASTCALL
+ * IoReadPartitionTable(
+ *     IN PDEVICE_OBJECT DeviceObject,
+ *     IN ULONG SectorSize,
+ *     IN BOOLEAN ReturnRecognizedPartitions,
+ *     OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+ *
+ * See boot/freeldr/freeldr/disk/partition.c
+ */
+
 NTSTATUS
 FASTCALL
 IoWritePartitionTable(
@@ -68,12 +89,11 @@ IoWritePartitionTable(
     IN ULONG SectorSize,
     IN ULONG SectorsPerTrack,
     IN ULONG NumberOfHeads,
-    IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+    IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTHALAPI
 VOID
 NTAPI
 KeStallExecutionProcessor(

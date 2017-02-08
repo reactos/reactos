@@ -1,0 +1,27 @@
+/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "İç"
+    IDS_GROUP_NONE_NAME "Yok"
+    IDS_GROUP_NONE_COMMENT "Bayağı Kullanıcılar"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Yöneticiler"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Yöneticiler, bilgisayara veyâ etki alanına kısıtlı olmayan erişime iyedir."
+    IDS_ALIAS_GUESTS_NAME "Konuklar"
+    IDS_ALIAS_GUESTS_COMMENT "Konuklar, ön tanımlı olarak Kullanıcılar takımının üyeleriyle eşit yetkilere iyedir."
+    IDS_ALIAS_POWER_USERS_NAME "Güçlü Kullanıcılar"
+    IDS_ALIAS_POWER_USERS_COMMENT "Güçlü Kullanıcılar, birtakım kısıtlamalarla çoğu yönetim yetkilerine iyedir."
+    IDS_ALIAS_USERS_NAME "Kullanıcılar"
+    IDS_ALIAS_USERS_COMMENT "Kullanıcılar, dizge değişiklikleri yapmaktan alıkonulmuştur."
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Yönetici"
+    IDS_USER_ADMINISTRATOR_COMMENT "Bilgisayarı veyâ etki alanını yönetmek için kullanılan iç hesap."
+    IDS_USER_GUEST_NAME "Konuk"
+    IDS_USER_GUEST_COMMENT "Bilgisayara veyâ etki alanına konuk erişimi için iç hesap."
+END

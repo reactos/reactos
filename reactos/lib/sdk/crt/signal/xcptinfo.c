@@ -1,9 +1,9 @@
-#include <stdlib.h>
+#include <precomp.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
-void **__pxcptinfoptrs (void)
+void** __pxcptinfoptrs(void)
 {
-        return NULL;
+    return (void**)&msvcrt_get_thread_data()->xcptinfo;
 }

@@ -40,6 +40,8 @@
 
 #include "precomp.h"
 
+#include <debug.h>
+
 /* Global CSQ struct that the CSQ functions initialize and use */
 IO_CSQ Csq;
 
@@ -171,4 +173,3 @@ CsqInsertIrp(PIO_CSQ UnusedCsq, PIRP Irp)
     InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
     KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);
 }
-

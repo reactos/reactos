@@ -1,0 +1,64 @@
+/*
+ * Copyright: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Nesneyi ilk türe dönüştürmede yanlışlık."
+    IDS_INVALID_CALL_ARG    "Geçersiz yordam çağrısı ya da geçersiz yordam değiştirgeni."
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Alt indis aralık dışında."
+    IDS_OBJECT_REQUIRED     "Nesne gerekli."
+    IDS_CREATE_OBJ_ERROR    "Öz devinim sunucusu nesne oluşturamıyor."
+    IDS_NO_PROPERTY         "Nesne bu husûsiyeti/yöntemi desteklemiyor."
+    IDS_UNSUPPORTED_ACTION  "Nesne bu işlemi desteklemiyor."
+    IDS_ARG_NOT_OPT         "Değiştirgen seçimlik değil."
+    IDS_SYNTAX_ERROR        "Söz dizimi yanlışlığı."
+    IDS_SEMICOLON           """;"" bekleniyordu."
+    IDS_LBRACKET            """("" bekleniyordu."
+    IDS_RBRACKET            """)"" bekleniyordu."
+    IDS_EXPECTED_IDENTIFIER "Tanımlayıcı bekleniyordu."
+    IDS_EXPECTED_ASSIGN     """="" bekleniyordu."
+    IDS_INVALID_CHAR        "Geçersiz damga."
+    IDS_UNTERMINATED_STR    "Sonlandırılmamış dizgi değişmezi."
+    IDS_MISPLACED_RETURN    """return"" deyişi işlecin dışında."
+    IDS_INVALID_BREAK       "Döngü dışında ""break"" olamaz."
+    IDS_INVALID_CONTINUE    "Döngü dışında ""continue"" olamaz."
+    IDS_LABEL_REDEFINED     "Etiket yeniden tanımlandı."
+    IDS_LABEL_NOT_FOUND     "Etiket bulunamadı."
+    IDS_EXPECTED_CCEND      """@end"" bekleniyordu."
+    IDS_DISABLED_CC         "Şartlı derleme kapalı."
+    IDS_EXPECTED_AT         """@"" bekleniyordu."
+    IDS_NOT_FUNC            "İşleç bekleniyordu."
+    IDS_NOT_DATE            """[nesne]"" bir zaman nesnesi değil."
+    IDS_NOT_NUM             "Sayı bekleniyordu."
+    IDS_OBJECT_EXPECTED     "Nesne bekleniyordu."
+    IDS_ILLEGAL_ASSIGN      "Geçersiz atama."
+    IDS_UNDEFINED           """|"" tanımlı değil."
+    IDS_NOT_BOOL            "Boole nesnesi bekleniyordu."
+    IDS_INVALID_DELETE      """|"" silinemez."
+    IDS_NOT_VBARRAY         "VBArray nesnesi bekleniyordu."
+    IDS_JSCRIPT_EXPECTED    "JScript nesnesi bekleniyordu."
+    IDS_REGEXP_SYNTAX_ERROR "Düzenli deyişte söz dizimi yanlışlığı."
+    IDS_URI_INVALID_CODING  "Çözülecek URI geçersiz."
+    IDS_URI_INVALID_CHAR    "Kodlanacak URI geçersiz damgalar içeriyor."
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Kesir basamaklarının sayısı aralık dışında."
+    IDS_PRECISION_OUT_OF_RANGE "Duyarlılık aralık dışında."
+    IDS_INVALID_LENGTH      "Dizi büyüklüğü bir sonlu artı tam sayı olmalı."
+    IDS_ARRAY_EXPECTED      "Dizi nesnesi bekleniyordu."
+}

@@ -6,8 +6,12 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#include "precomp.h"
 
-#include "priv.h"
+#define NDEBUG
+#include <debug.h>
+
+#define TAG_KS 'ssKK'
 
 VOID
 CompleteRequest(
@@ -27,7 +31,7 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_KS);
     if (!Item)
         return Item;
 
@@ -101,7 +105,7 @@ KspCopyCreateRequest(
     OUT PVOID * Result)
 {
     PIO_STACK_LOCATION IoStack;
-    ULONG ObjectLength, ParametersLength;
+    SIZE_T ObjectLength, ParametersLength;
     PVOID Buffer;
 
     /* get current irp stack */
@@ -127,7 +131,7 @@ KspCopyCreateRequest(
 
     /* store result */
     *Result = Buffer;
-    *Size = ParametersLength;
+    *Size = (ULONG)ParametersLength;
 
     return STATUS_SUCCESS;
 }
@@ -197,7 +201,7 @@ KsGetOuterUnknown(
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
     /* sanity check */
-    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory ||
            BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
     /* return objects outer unknown */

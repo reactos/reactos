@@ -7,7 +7,7 @@ typedef int BOOL, *PBOOL, *LPBOOL;
 typedef unsigned char BYTE, *PBYTE, *LPBYTE;
 typedef unsigned long DWORD, *PDWORD, *LPDWORD;
 cpp_quote("#endif")
-cpp_quote("#ifndef _BASETSD_H")
+cpp_quote("#ifndef _BASETSD_H_")
 typedef unsigned int DWORD32;
 typedef unsigned __int64 DWORD64;
 cpp_quote("#endif")
@@ -15,13 +15,13 @@ cpp_quote("#endif")
 cpp_quote("#ifndef _WINDEF_H")
 typedef int INT, *LPINT;
 cpp_quote("#endif")
-cpp_quote("#ifndef _BASETSD_H")
+cpp_quote("#ifndef _BASETSD_H_")
 typedef signed char INT8;
 typedef signed short INT16;
 typedef signed int INT32;
 typedef signed __int64 INT64;
 cpp_quote("#endif")
-cpp_quote("#ifndef _BASETSD_H")
+cpp_quote("#ifndef _BASETSD_H_")
 typedef signed int LONG32;
 typedef signed __int64 LONG64;
 cpp_quote("#endif")
@@ -37,7 +37,7 @@ cpp_quote("#endif")
 cpp_quote("#ifndef _WINDEF_H")
 typedef unsigned int UINT;
 cpp_quote("#endif")
-cpp_quote("#ifndef _BASETSD_H")
+cpp_quote("#ifndef _BASETSD_H_")
 typedef unsigned char UINT8;
 typedef unsigned short UINT16;
 typedef unsigned int UINT32;
@@ -46,7 +46,7 @@ cpp_quote("#endif")
 cpp_quote("#ifndef _WINNT_")
 typedef unsigned long ULONG, *PULONG;
 cpp_quote("#endif")
-cpp_quote("#ifndef _BASETSD_H")
+cpp_quote("#ifndef _BASETSD_H_")
 typedef unsigned int ULONG32;
 typedef unsigned __int64 ULONG64;
 cpp_quote("#endif")
@@ -77,7 +77,7 @@ cpp_quote("#endif")
 cpp_quote("#ifndef _WINNT_")
 typedef BYTE BOOLEAN, *PBOOLEAN;
 cpp_quote("#endif")
-cpp_quote("#ifndef _BASETSD_H")
+cpp_quote("#ifndef _BASETSD_H_")
 #ifdef _WIN64
 typedef __int64 LONG_PTR;
 typedef unsigned __int64 ULONG_PTR;
@@ -184,12 +184,6 @@ typedef struct _UINT128 {
 typedef struct _ULARGE_INTEGER {
     ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
-
-typedef struct _UNICODE_STRING {
-    USHORT Length;
-    USHORT MaximumLength;
-    [size_is(MaximumLength/2), length_is(Length/2)] LPWSTR Buffer;
-} UNICODE_STRING, *PUNICODE_STRING;
 
 cpp_quote("#endif")
 

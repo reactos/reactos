@@ -2,17 +2,27 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "Программа просмотра изображений и факсов"
+    IDS_APPTITLE "Программа просмотра изображений и факсов"
     IDS_SETASDESKBG "Установить как фон рабочего стола"
-    IDS_PREVIEW     "Предпросмотр"
-
+    IDS_PREVIEW "Предпросмотр"
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Следующее изображение"
-    IDS_TOOLTIP_PREV_PIC   "Предыдущее изображение"
-    IDS_TOOLTIP_ZOOM_IN    "Увеличить (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Уменьшить (-)"
+    IDS_TOOLTIP_NEXT_PIC "Следующее изображение"
+    IDS_TOOLTIP_PREV_PIC "Предыдущее изображение"
+    IDS_TOOLTIP_ZOOM_IN "Увеличить (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Уменьшить (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Повернуть по часовой стрелке (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Повернуть против часовой стрелки (Ctrl+L)"
-    IDS_TOOLTIP_PRINT      "Печать (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Сохранить как... (Ctrl+S)"
+    IDS_TOOLTIP_PRINT "Печать (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Сохранить как... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF изображение"
+    IDS_GIF_FILE    "GIF изображение"
+    IDS_JPG_FILE    "JPEG изображение"
+    IDS_BMP_FILE    "Bitmap изображение"
+    IDS_PNG_FILE    "PNG изображение"
+    IDS_TIF_FILE    "TIF изображение"
+    IDS_WMF_FILE    "WMF изображение"
 END

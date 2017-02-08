@@ -26,6 +26,10 @@ Author:
 #include <arch/mmtypes.h>
 #include <extypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Page-Rounding Macros
 //
@@ -169,7 +173,8 @@ typedef enum _MEMORY_INFORMATION_CLASS
     MemoryBasicInformation,
     MemoryWorkingSetList,
     MemorySectionName,
-    MemoryBasicVlmInformation
+    MemoryBasicVlmInformation,
+    MemoryWorkingSetExList
 } MEMORY_INFORMATION_CLASS;
 
 //
@@ -343,32 +348,33 @@ typedef struct _SECTION_IMAGE_INFORMATION
     USHORT ImageCharacteristics;
     USHORT DllCharacteristics;
     USHORT Machine;
-    UCHAR ImageContainsCode;
-    UCHAR Spare1;
+    BOOLEAN ImageContainsCode;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        struct
+        {
+            UCHAR ComPlusNativeReady:1;
+            UCHAR ComPlusILOnly:1;
+            UCHAR ImageDynamicallyRelocated:1;
+            UCHAR ImageMappedFlat:1;
+            UCHAR Reserved:4;
+        };
+        UCHAR ImageFlags;
+    };
+#else
+    BOOLEAN Spare1;
+#endif
     ULONG LoaderFlags;
     ULONG ImageFileSize;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CheckSum;
+#else
     ULONG Reserved[1];
+#endif
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #ifndef NTOS_MODE_USER
-
-//
-// PTE Structures
-//
-typedef struct _MMPTE
-{
-    union
-    {
-        ULONG_PTR Long;
-        HARDWARE_PTE Flush;
-        MMPTE_HARDWARE Hard;
-        MMPTE_PROTOTYPE Proto;
-        MMPTE_SOFTWARE Soft;
-        MMPTE_TRANSITION Trans;
-        MMPTE_SUBSECTION Subsect;
-        MMPTE_LIST List;
-    } u;
-} MMPTE, *PMMPTE;
 
 //
 // Section Extension Information
@@ -615,6 +621,7 @@ typedef struct _SECTION_OBJECT
 {
     PVOID StartingVa;
     PVOID EndingVa;
+    PVOID Parent;
     PVOID LeftChild;
     PVOID RightChild;
     PSEGMENT_OBJECT Segment;
@@ -818,14 +825,14 @@ typedef struct _SECTION
 //
 typedef struct _MMWSLENTRY
 {
-    ULONG Valid:1;
-    ULONG LockedInWs:1;
-    ULONG LockedInMemory:1;
-    ULONG Protection:5;
-    ULONG Hashed:1;
-    ULONG Direct:1;
-    ULONG Age:2;
-    ULONG VirtualPageNumber:20;
+    ULONG_PTR Valid:1;
+    ULONG_PTR LockedInWs:1;
+    ULONG_PTR LockedInMemory:1;
+    ULONG_PTR Protection:5;
+    ULONG_PTR Hashed:1;
+    ULONG_PTR Direct:1;
+    ULONG_PTR Age:2;
+    ULONG_PTR VirtualPageNumber: MM_PAGE_FRAME_NUMBER_SIZE;
 } MMWSLENTRY, *PMMWSLENTRY;
 
 typedef struct _MMWSLE
@@ -833,7 +840,7 @@ typedef struct _MMWSLE
     union
     {
         PVOID VirtualAddress;
-        ULONG Long;
+        ULONG_PTR Long;
         MMWSLENTRY e1;
     } u1;
 } MMWSLE, *PMMWSLE;
@@ -1016,5 +1023,9 @@ extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 #endif
 
 #endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // _MMTYPES_H

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/servman/tv2_dependencies.c
+ * FILE:        base/applications/mscutils/servman/dependencies_tv2.c
  * PURPOSE:     Helper functions for service dependents
  * COPYRIGHT:   Copyright 2009 Ged Murphy <gedmurphy@reactos.org>
  *
@@ -17,14 +17,14 @@ TV2_HasDependantServices(LPWSTR lpServiceName)
     DWORD dwBytesNeeded, dwCount;
     BOOL bRet = FALSE;
 
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager)
     {
-        hService = OpenService(hSCManager,
-                               lpServiceName,
-                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
+        hService = OpenServiceW(hSCManager,
+                                lpServiceName,
+                                SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
         if (hService)
         {
             /* Does this have any dependencies? */
@@ -41,6 +41,8 @@ TV2_HasDependantServices(LPWSTR lpServiceName)
                      bRet = TRUE;
                  }
             }
+
+            CloseServiceHandle(hService);
         }
 
         CloseServiceHandle(hSCManager);
@@ -118,11 +120,11 @@ TV2_GetDependants(LPWSTR lpServiceName,
 VOID
 TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         HTREEITEM hParent,
-                        LPTSTR lpServiceName)
+                        LPWSTR lpServiceName)
 {
 
     LPENUM_SERVICE_STATUSW lpServiceStatus;
-    LPTSTR lpNoDepends;
+    LPWSTR lpNoDepends;
     DWORD count, i;
     BOOL bHasChildren;
 
@@ -163,9 +165,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                               0,
                               FALSE);
 
-            HeapFree(ProcessHeap,
-                     0,
-                     lpNoDepends);
+            LocalFree(lpNoDepends);
 
             /* Disable the window */
             EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
@@ -175,7 +175,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
 
 BOOL
 TV2_Initialize(PSERVICEPROPSHEET pDlgInfo,
-               LPTSTR lpServiceName)
+               LPWSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 

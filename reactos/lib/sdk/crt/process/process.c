@@ -152,13 +152,14 @@ argvtosT(const _TCHAR* const* argv, _TCHAR delim)
 static _TCHAR*
 valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
 {
-   va_list alist2 = alist;
+   va_list alist2;
    _TCHAR *ptr, *str;
    size_t len;
 
    if (arg0 == NULL)
       return NULL;
 
+   va_copy(alist2, alist);
    ptr = (_TCHAR*)arg0;
    len = 0;
    do
@@ -170,7 +171,10 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
 
    str = (_TCHAR*) malloc((len + 1) * sizeof(_TCHAR));
    if (str == NULL)
+   {
+      va_end(alist2);
       return NULL;
+   }
 
    ptr = str;
    do
@@ -184,6 +188,7 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
    while(arg0 != NULL);
    *ptr = 0;
 
+   va_end(alist2);
    return str;
 }
 
@@ -344,6 +349,7 @@ intptr_t _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
       ret = do_spawnT(mode, cmdname, args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -398,6 +404,7 @@ intptr_t _tspawnle(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ... /*, 
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 
 }
@@ -459,6 +466,7 @@ intptr_t _tspawnlp(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, N
       ret = do_spawnT(mode, find_execT(cmdname, pathname), args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -495,6 +503,7 @@ intptr_t _tspawnlpe(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, 
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -529,6 +538,7 @@ intptr_t _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
       ret = do_spawnT(_P_OVERLAY, cmdname, args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -572,6 +582,7 @@ intptr_t _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char*
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -604,6 +615,7 @@ intptr_t _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
       ret = do_spawnT(_P_OVERLAY, find_execT(cmdname, pathname), args, NULL);
       free(args);
    }
+   va_end(argp);
    return ret;
 }
 
@@ -648,6 +660,7 @@ intptr_t _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char
    {
       free(envs);
    }
+   va_end(argp);
    return ret;
 }
 

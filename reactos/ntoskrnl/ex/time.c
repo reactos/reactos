@@ -48,9 +48,7 @@ ULONG ExpTimerResolutionCount = 0;
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireTimeRefreshLock(
-    IN BOOLEAN Wait
-    )
+ExAcquireTimeRefreshLock(IN BOOLEAN Wait)
 {
     /* Block APCs */
     KeEnterCriticalRegion();
@@ -82,9 +80,7 @@ ExAcquireTimeRefreshLock(
  *--*/
 VOID
 NTAPI
-ExReleaseTimeRefreshLock(
-    VOID
-    )
+ExReleaseTimeRefreshLock(VOID)
 {
     /* Release the lock and re-enable APCs */
     ExReleaseResourceLite(&ExpTimeRefreshLock);
@@ -421,7 +417,6 @@ NTAPI
 NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Check if we were called from user-mode */
@@ -433,16 +428,16 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
             ProbeForWriteLargeInteger(SystemTime);
 
             /*
-             * It's safe to pass the pointer directly to KeQuerySystemTime as
-             * it's just a basic copy to this pointer. If it raises an
+             * It's safe to pass the pointer directly to KeQuerySystemTime
+             * as it's just a basic copy to this pointer. If it raises an
              * exception nothing dangerous can happen!
              */
             KeQuerySystemTime(SystemTime);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
@@ -452,8 +447,8 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
         KeQuerySystemTime(SystemTime);
     }
 
-    /* Return status to caller */
-    return Status;
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -476,6 +471,125 @@ ExSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
                         PLARGE_INTEGER LocalTime)
 {
     LocalTime->QuadPart = SystemTime->QuadPart - ExpTimeZoneBias.QuadPart;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtQueryTimerResolution(OUT PULONG MinimumResolution,
+                       OUT PULONG MaximumResolution,
+                       OUT PULONG ActualResolution)
+{
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    /* Check if the call came from user-mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe the parameters */
+            ProbeForWriteUlong(MinimumResolution);
+            ProbeForWriteUlong(MaximumResolution);
+            ProbeForWriteUlong(ActualResolution);
+
+            /*
+             * Set the parameters to the actual values.
+             *
+             * NOTE:
+             * MinimumResolution corresponds to the biggest time increment and
+             * MaximumResolution corresponds to the smallest time increment.
+             */
+            *MinimumResolution = KeMaximumIncrement;
+            *MaximumResolution = KeMinimumIncrement;
+            *ActualResolution  = KeTimeIncrement;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* Set the parameters to the actual values */
+        *MinimumResolution = KeMaximumIncrement;
+        *MaximumResolution = KeMinimumIncrement;
+        *ActualResolution  = KeTimeIncrement;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtSetTimerResolution(IN ULONG DesiredResolution,
+                     IN BOOLEAN SetResolution,
+                     OUT PULONG CurrentResolution)
+{
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PEPROCESS Process = PsGetCurrentProcess();
+    ULONG NewResolution;
+
+    /* Check if the call came from user-mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe the parameter */
+            ProbeForWriteUlong(CurrentResolution);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* Set and return the new resolution */
+    NewResolution = ExSetTimerResolution(DesiredResolution, SetResolution);
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            *CurrentResolution = NewResolution;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        *CurrentResolution = NewResolution;
+    }
+
+    if (SetResolution || Process->SetTimerResolution)
+    {
+        /* The resolution has been changed now or in an earlier call */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* The resolution hasn't been changed */
+        Status = STATUS_TIMER_RESOLUTION_NOT_SET;
+    }
+
+    /* Update the flag */
+    Process->SetTimerResolution = SetResolution;
+
+    return Status;
 }
 
 /* EOF */

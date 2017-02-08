@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/ob_x.h
+* FILE:            ntoskrnl/include/internal/ob_x.h
 * PURPOSE:         Intenral Inlined Functions for the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
@@ -16,6 +16,24 @@
 #define OBP_LOCK_STATE_INITIALIZED                  0xFFFF1234
 
 #define OBP_NAME_LOOKASIDE_MAX_SIZE 248
+
+FORCEINLINE
+ULONG
+ObpValidateAttributes(IN ULONG Attributes,
+                      IN KPROCESSOR_MODE PreviousMode)
+{
+    if (PreviousMode == KernelMode)
+    {
+        /* For kernel, allow any valid attributes */
+        return Attributes & OBJ_VALID_KERNEL_ATTRIBUTES;
+    }
+    else
+    {
+        /* For user, mask out kernel-only attributes */
+        return (Attributes & OBJ_VALID_ATTRIBUTES) &
+               ~(OBJ_KERNEL_HANDLE);
+    }
+}
 
 FORCEINLINE
 ULONG

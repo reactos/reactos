@@ -1,3 +1,2 @@
-@ stdcall BatteryClassCoInstaller(long ptr ptr ptr)
-@ stdcall BatteryClassInstall(long ptr ptr)
-
+1 stdcall BatteryClassCoInstaller(long ptr ptr ptr)
+2 stdcall BatteryClassInstall(long ptr ptr)

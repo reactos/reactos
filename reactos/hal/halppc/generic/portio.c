@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/portio.c
+ * FILE:            hal/halppc/generic/portio.c
  * PURPOSE:         Port I/O functions
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:

@@ -1,95 +1,50 @@
+/*
+ * Copyright 2010 Christian Costa
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
 #include "d3dx9.h"
 
-#ifndef __D3DX9SHAPES_H__
-#define __D3DX9SHAPES_H__
+#ifndef __D3DX9SHAPE_H__
+#define __D3DX9SHAPE_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-HRESULT WINAPI
-  D3DXCreateBox(
-  LPDIRECT3DDEVICE9 pDevice,
-  FLOAT Width,
-  FLOAT Height,
-  FLOAT Depth,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency);
-
-HRESULT WINAPI
-  D3DXCreateCylinder(
-  LPDIRECT3DDEVICE9 pDevice,
-  FLOAT Radius1,
-  FLOAT Radius2,
-  FLOAT Length,
-  UINT Slices,
-  UINT Stacks,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency);
-
-HRESULT WINAPI
-D3DXCreatePolygon(
-  LPDIRECT3DDEVICE9 pDevice,
-  FLOAT Length,
-  UINT Sides,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency);
-
-HRESULT WINAPI
-D3DXCreateSphere(
-  LPDIRECT3DDEVICE9 pDevice,
-  FLOAT Radius,
-  UINT Slices,
-  UINT Stacks,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency);
-
-HRESULT WINAPI
-D3DXCreateTeapot(
-  LPDIRECT3DDEVICE9 pDevice,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency);
-
-HRESULT WINAPI
-D3DXCreateTextA(
-  LPDIRECT3DDEVICE9 pDevice,
-  HDC hDC,
-  LPCSTR pText,
-  FLOAT Deviation,
-  FLOAT Extrusion,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency,
-  LPGLYPHMETRICSFLOAT pGlyphMetrics);
-
-HRESULT WINAPI
-D3DXCreateTextW(
-  LPDIRECT3DDEVICE9 pDevice,
-  HDC hDC,
-  LPCWSTR pText,
-  FLOAT Deviation,
-  FLOAT Extrusion,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency,
-  LPGLYPHMETRICSFLOAT pGlyphMetrics);
-
-HRESULT WINAPI
-D3DXCreateTorus(
-  LPDIRECT3DDEVICE9 pDevice,
-  FLOAT InnerRadius,
-  FLOAT OuterRadius,
-  UINT Sides,
-  UINT Rings,
-  LPD3DXMESH* ppMesh,
-  LPD3DXBUFFER* ppAdjacency);
-
-#ifdef UNICODE
-  #define D3DXCreateText D3DXCreateTextW
-#else
-  #define D3DXCreateText D3DXCreateTextA
-#endif
+HRESULT WINAPI D3DXCreateBox(struct IDirect3DDevice9 *device, float width, float height,
+        float depth, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
+HRESULT WINAPI D3DXCreateCylinder(struct IDirect3DDevice9 *device, float radius1, float radius2,
+        float length, UINT slices, UINT stacks, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
+HRESULT WINAPI D3DXCreatePolygon(struct IDirect3DDevice9 *device, float length, UINT sides, struct ID3DXMesh **mesh,
+        ID3DXBuffer **adjacency);
+HRESULT WINAPI D3DXCreateSphere(struct IDirect3DDevice9 *device, float radius, UINT slices,
+        UINT stacks, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
+HRESULT WINAPI D3DXCreateTeapot(struct IDirect3DDevice9 *device,
+        struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency);
+HRESULT WINAPI D3DXCreateTextA(struct IDirect3DDevice9 *device, HDC hdc, const char *text, float deviation,
+        float extrusion, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency, GLYPHMETRICSFLOAT *glyphmetrics);
+HRESULT WINAPI D3DXCreateTextW(struct IDirect3DDevice9 *device, HDC hdc, const WCHAR *text, float deviation,
+        FLOAT extrusion, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency, GLYPHMETRICSFLOAT *glyphmetrics);
+HRESULT WINAPI D3DXCreateTorus(struct IDirect3DDevice9 *device,
+        float innerradius, float outerradius, UINT sides, UINT rings, struct ID3DXMesh **mesh, ID3DXBuffer **adjacency);
+#define D3DXCreateText WINELIB_NAME_AW(D3DXCreateText)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* __D3DX9SHAPE_H__ */

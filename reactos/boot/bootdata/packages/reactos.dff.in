@@ -13,15 +13,18 @@
 [Version]
 Signature = "$ReactOS$"
 
+; Directories relative to the installation directory.
+; For specifying absolute directories, use the SystemPartitionFiles section,
+; or use names starting with \.
 [Directories]
 1 = system32
 2 = system32\drivers
 3 = Fonts
-4 =
+4 = "\"
 5 = system32\drivers\etc
 6 = inf
 7 = bin
-8 = bin\data
+8 = bin\testdata
 9 = media
 10 = Microsoft.NET
 11 = Microsoft.NET\Framework
@@ -30,6 +33,42 @@ Signature = "$ReactOS$"
 14 = Microsoft.NET\Framework\v2.0.50727
 15 = Resources
 16 = Resources\Themes
+17 = system32\wbem
+18 = Resources\Themes\Lautus
+19 = Help
+20 = Config
+21 = Cursors
+22 = system32\ShellExt
+23 = Temp
+24 = system32\spool
+25 = system32\spool\drivers
+26 = system32\spool\drivers\color
+27 = system32\spool\drivers\w32x86
+28 = system32\spool\drivers\w32x86\3
+29 = system32\spool\prtprocs
+30 = system32\spool\prtprocs\w32x86
+31 = system32\spool\PRINTERS
+32 = system32\wbem\Repository
+33 = system32\wbem\Repository\FS
+34 = system32\wbem\mof\good
+35 = system32\wbem\mof\bad
+36 = system32\wbem\AdStatus
+37 = system32\wbem\xml
+38 = system32\wbem\Logs
+39 = system32\wbem\AutoRecover
+40 = system32\wbem\snmp
+41 = system32\wbem\Performance
+42 = twain_32
+43 = repair
+44 = Web
+45 = Web\Wallpaper
+46 = Prefetch
+47 = security
+48 = security\Database
+49 = security\logs
+50 = security\templates
+51 = system32\CatRoot
+52 = system32\CatRoot2
 
 .InfEnd
 
@@ -39,27 +78,32 @@ Signature = "$ReactOS$"
 .InfEnd
 
 ; Optional/proprietary files
-modules\optional\DroidSansFallback.ttf              3  optional
-modules\optional\NOTICE_for_Droid_Font.txt          4  optional
-modules\optional\netkvm2k.inf                       6  optional
-modules\optional\netkvm2k.cat                       6  optional
-modules\optional\netkvm.sys                         2  optional
-modules\optional\alcxwdm.inf                        6  optional
-modules\optional\alcxwdm.sys                        2  optional
-modules\optional\mfc42.dll                          1  optional
-modules\optional\mfc42u.dll                         1  optional
-modules\optional\mfc71.dll                          1  optional
-modules\optional\mfc71u.dll                         1  optional
-modules\optional\msvbvm50.dll                       1  optional
-modules\optional\msvbvm60.dll                       1  optional
-modules\optional\msvcirt.dll                        1  optional
-modules\optional\msvcp71.dll                        1  optional
-modules\optional\msvcr71.dll                        1  optional
-modules\optional\vmx_fb.dll                         1  optional
-modules\optional\vmx_mode.dll                       1  optional
-modules\optional\vmx_svga.inf                       6  optional
-modules\optional\vmx_svga.sys                       2  optional
-modules\optional\wine_gecko-1.0.0-x86.cab           4  optional
-boot\bootdata\bootcdregtest\AHKAppTests.cmd         7  optional
-
-modules\wallpaper\Angelus_02_ROSWP.bmp              4   optional
+"modules/optional/DroidSansFallback.ttf"              3  optional
+"modules/optional/NOTICE_for_Droid_Font.txt"          4  optional
+"modules/optional/netkvm2k.inf"                       6  optional
+"modules/optional/netkvm2k.cat"                       6  optional
+"modules/optional/netkvm.sys"                         2  optional
+"modules/optional/b57win32.inf"                       6  optional
+"modules/optional/b57win32.cat"                       6  optional
+"modules/optional/b57xp32.sys"                        2  optional
+"modules/optional/bcmwl5.inf"                         6  optional
+"modules/optional/bcm43xx.cat"                        6  optional
+"modules/optional/bcmwl5.sys"                         2  optional
+"modules/optional/alcxwdm.inf"                        6  optional
+"modules/optional/alcxwdm.sys"                        2  optional
+"modules/optional/mfc42.dll"                          1  optional
+"modules/optional/mfc42u.dll"                         1  optional
+"modules/optional/mfc71.dll"                          1  optional
+"modules/optional/mfc71u.dll"                         1  optional
+"modules/optional/msvbvm50.dll"                       1  optional
+"modules/optional/msvbvm60.dll"                       1  optional
+"modules/optional/msvcirt.dll"                        1  optional
+"modules/optional/msvcp71.dll"                        1  optional
+"modules/optional/msvcr71.dll"                        1  optional
+"modules/optional/vmx_fb.dll"                         1  optional
+"modules/optional/vmx_mode.dll"                       1  optional
+"modules/optional/vmx_svga.inf"                       6  optional
+"modules/optional/vmx_svga.sys"                       2  optional
+"modules/optional/wine_gecko-2.40-x86.msi"            4  optional
+"boot/bootdata/bootcdregtest/AHKAppTests.cmd"         7  optional
+; DON'T REMOVE THE FOLLOWING NEW LINE ! THIS MEANS YOU !

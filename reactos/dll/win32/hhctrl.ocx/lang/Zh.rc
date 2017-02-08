@@ -1,0 +1,131 @@
+/*
+ * HTML Help (Simplified and Traditional Chinese Resources)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Proper&ties", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "Cu&t", MIID_CUT
+        MENUITEM "&Copy", MIID_COPY
+        MENUITEM "Paste", MIID_PASTE
+        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "&Print", IDTB_PRINT
+    }
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_CONTENTS     "内容(&C)"
+    IDS_INDEX        "目录(&N)"
+    IDS_SEARCH       "搜寻(&S)"
+    IDS_FAVORITES    "最爱(&I)"
+
+    IDS_HIDETABS     "隐藏选项卡(&T)"
+    IDS_SHOWTABS     "显示选项卡(&T)"
+END
+
+STRINGTABLE
+BEGIN
+    IDTB_EXPAND      "显示"
+    IDTB_CONTRACT    "隐藏"
+    IDTB_STOP        "停止"
+    IDTB_REFRESH     "刷新"
+    IDTB_BACK        "向后"
+    IDTB_HOME        "首页"
+    IDTB_SYNC        "同步"
+    IDTB_PRINT       "打印"
+    IDTB_OPTIONS     "选项"
+    IDTB_FORWARD     "向前"
+END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "同步(&Y)", IDTB_SYNC
+        MENUITEM "返回(&B)", IDTB_BACK
+        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM "首页(&H)", IDTB_HOME
+        MENUITEM "停止(&S)", IDTB_STOP
+        MENUITEM "刷新(&R)", IDTB_REFRESH
+        MENUITEM "打印...(&P)", IDTB_PRINT
+    }
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_CONTENTS     "內容(&C)"
+    IDS_INDEX        "目錄(&N)"
+    IDS_SEARCH       "搜尋(&S)"
+    IDS_FAVORITES    "最愛(&I)"
+END
+
+STRINGTABLE
+BEGIN
+    IDTB_EXPAND      "顯示"
+    IDTB_CONTRACT    "隱藏"
+    IDTB_STOP        "停止"
+    IDTB_REFRESH     "刷新"
+    IDTB_BACK        "向後"
+    IDTB_HOME        "首頁"
+    IDTB_SYNC        "同步"
+    IDTB_PRINT       "列印"
+    IDTB_OPTIONS     "選項"
+    IDTB_FORWARD     "向前"
+END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "同步(&Y)", IDTB_SYNC
+        MENUITEM "返回(&B)", IDTB_BACK
+        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM "首頁(&H)", IDTB_HOME
+        MENUITEM "停止(&S)", IDTB_STOP
+        MENUITEM "刷新(&R)", IDTB_REFRESH
+        MENUITEM "列印...(&P)", IDTB_PRINT
+    }
+}

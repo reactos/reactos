@@ -4,8 +4,8 @@
 /*                                                                         */
 /*    FreeType's TrueTypeGX/AAT validation module implementation (body).   */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006                                             */
-/*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
+/*  Copyright 2004-2016 by                                                 */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -58,8 +58,8 @@
 
 
     error = FT_Load_Sfnt_Table( face, tag, 0, NULL, table_len );
-    if ( error == GXV_Err_Table_Missing )
-      return GXV_Err_Ok;
+    if ( FT_ERR_EQ( error, Table_Missing ) )
+      return FT_Err_Ok;
     if ( error )
       goto Exit;
 
@@ -112,7 +112,7 @@
   {
     FT_Memory volatile        memory = FT_FACE_MEMORY( face );
 
-    FT_Error                  error = GXV_Err_Ok;
+    FT_Error                  error = FT_Err_Ok;
     FT_ValidatorRec volatile  valid;
 
     FT_UInt  i;
@@ -200,7 +200,7 @@
     /* without volatile on `error' GCC 4.1.1. emits:                         */
     /*  warning: variable 'error' might be clobbered by 'longjmp' or 'vfork' */
     /* this warning seems spurious but ---                                   */
-    FT_Error volatile         error = GXV_Err_Ok;
+    FT_Error volatile         error;
     FT_ValidatorRec volatile  valid;
 
 
@@ -235,14 +235,14 @@
   static
   const FT_Service_GXvalidateRec  gxvalid_interface =
   {
-    gxv_validate
+    gxv_validate              /* validate */
   };
 
 
   static
   const FT_Service_CKERNvalidateRec  ckernvalid_interface =
   {
-    classic_kern_validate
+    classic_kern_validate     /* validate */
   };
 
 
@@ -269,7 +269,7 @@
   const FT_Module_Class  gxv_module_class =
   {
     0,
-    sizeof( FT_ModuleRec ),
+    sizeof ( FT_ModuleRec ),
     "gxvalid",
     0x10000L,
     0x20000L,

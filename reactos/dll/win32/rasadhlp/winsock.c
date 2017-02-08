@@ -5,10 +5,10 @@
  * PURPOSE:     DLL Initialization
  */
 
-/* INCLUDES ******************************************************************/
 #include "precomp.h"
 
-/* DATA **********************************************************************/
+#include <winnls.h>
+#include <nsp_dns.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -134,4 +134,3 @@ WSNoteSuccessfulHostentLookup(IN CONST CHAR FAR *Name,
     AutodialConnection.Ip4Address = Address;
     AcsHlpNoteNewConnection(&AutodialAdddress, &AutodialConnection);
 }
-

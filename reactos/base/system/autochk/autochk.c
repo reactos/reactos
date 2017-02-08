@@ -1,4 +1,5 @@
-/* PROJECT:         ReactOS Kernel
+/*
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/autochk/autochk.c
  * PURPOSE:         Filesystem checker
@@ -167,59 +168,59 @@ ChkdskCallback(
     switch(Command)
     {
     case UNKNOWN2:
-        DPRINT("UNKNOWN2\r");
+        DPRINT("UNKNOWN2\n");
         break;
 
     case UNKNOWN3:
-        DPRINT("UNKNOWN3\r");
+        DPRINT("UNKNOWN3\n");
         break;
 
     case UNKNOWN4:
-        DPRINT("UNKNOWN4\r");
+        DPRINT("UNKNOWN4\n");
         break;
 
     case UNKNOWN5:
-        DPRINT("UNKNOWN5\r");
+        DPRINT("UNKNOWN5\n");
         break;
 
     case UNKNOWN9:
-        DPRINT("UNKNOWN9\r");
+        DPRINT("UNKNOWN9\n");
         break;
 
     case UNKNOWNA:
-        DPRINT("UNKNOWNA\r");
+        DPRINT("UNKNOWNA\n");
         break;
 
     case UNKNOWNC:
-        DPRINT("UNKNOWNC\r");
+        DPRINT("UNKNOWNC\n");
         break;
 
     case UNKNOWND:
-        DPRINT("UNKNOWND\r");
+        DPRINT("UNKNOWND\n");
         break;
 
     case INSUFFICIENTRIGHTS:
-        DPRINT("INSUFFICIENTRIGHTS\r");
+        DPRINT("INSUFFICIENTRIGHTS\n");
         break;
 
     case FSNOTSUPPORTED:
-        DPRINT("FSNOTSUPPORTED\r");
+        DPRINT("FSNOTSUPPORTED\n");
         break;
 
     case VOLUMEINUSE:
-        DPRINT("VOLUMEINUSE\r");
+        DPRINT("VOLUMEINUSE\n");
         break;
 
     case STRUCTUREPROGRESS:
-        DPRINT("STRUCTUREPROGRESS\r");
+        DPRINT("STRUCTUREPROGRESS\n");
         break;
 
     case DONEWITHSTRUCTURE:
-        DPRINT("DONEWITHSTRUCTURE\r");
+        DPRINT("DONEWITHSTRUCTURE\n");
         break;
 
     case CLUSTERSIZETOOSMALL:
-        DPRINT("CLUSTERSIZETOOSMALL\r");
+        DPRINT("CLUSTERSIZETOOSMALL\n");
         break;
 
     case PROGRESS:
@@ -236,8 +237,8 @@ ChkdskCallback(
         Status = (PBOOLEAN)Argument;
         if (*Status == TRUE)
         {
-            PrintString("Autochk was unable to complete successfully.\n\n");
-            //Error = TRUE;
+            PrintString("Autochk was unable to complete successfully.\r\n\r\n");
+            // Error = TRUE;
         }
         break;
     }
@@ -263,6 +264,16 @@ LoadProvider(
              || wcscmp(FileSystem, L"FAT32") == 0)
     {
       RtlInitUnicodeString(&ProviderDll, L"ufat.dll");
+    }
+    else if (wcscmp(FileSystem, L"EXT2") == 0
+             || wcscmp(FileSystem, L"EXT3") == 0
+             || wcscmp(FileSystem, L"EXT4") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"uext2.dll");
+    }
+    else if (wcscmp(FileSystem, L"Btrfs") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"ubtrfs.dll");
     }
     else
     {
@@ -290,11 +301,11 @@ CheckVolume(
     /* Get the file system */
     Status = GetFileSystem(DrivePath,
                            FileSystem,
-                           sizeof(FileSystem) / sizeof(FileSystem[0]));
+                           ARRAYSIZE(FileSystem));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("GetFileSystem() failed with status 0x%08lx\n", Status);
-        PrintString("  Unable to get file system of %S\n", DrivePath);
+        PrintString("  Unable to get file system of %S\r\n", DrivePath);
         return Status;
     }
 
@@ -303,7 +314,7 @@ CheckVolume(
     if (Provider == NULL)
     {
         DPRINT1("LoadProvider() failed\n");
-        PrintString("  Unable to verify a %S volume\n", FileSystem);
+        PrintString("  Unable to verify a %S volume\r\n", FileSystem);
         return STATUS_DLL_NOT_FOUND;
     }
 
@@ -315,19 +326,19 @@ CheckVolume(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("LdrGetProcedureAddress() failed with status 0x%08lx\n", Status);
-        PrintString("  Unable to verify a %S volume\n", FileSystem);
+        PrintString("  Unable to verify a %S volume\r\n", FileSystem);
         LdrUnloadDll(Provider);
         return Status;
     }
 
     /* Call provider */
-    //PrintString("  Verifying volume %S\n", DrivePath);
+    // PrintString("  Verifying volume %S\r\n", DrivePath);
     swprintf(NtDrivePath, L"\\??\\");
     wcscat(NtDrivePath, DrivePath);
     NtDrivePath[wcslen(NtDrivePath)-1] = 0;
     RtlInitUnicodeString(&DrivePathU, NtDrivePath);
 
-    DPRINT("AUTOCHK: Checking %wZ\n", &DrivePathU);
+    DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
                         TRUE, // Verbose
@@ -384,7 +395,7 @@ _main(int argc,
             CheckVolume(DrivePath);
         }
     }
-    //PrintString("  Done\n\n");
+    // PrintString("  Done\r\n\r\n");
     return 0;
 }
 

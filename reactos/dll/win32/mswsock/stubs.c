@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+#include <ws2spi.h>
+#include <nspapi.h>
+
 typedef DWORD (* LPFN_NSPAPI)(VOID);
 typedef struct _NS_ROUTINE {
     DWORD        dwFunctionCount;

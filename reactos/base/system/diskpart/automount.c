@@ -5,19 +5,11 @@
  * PURPOSE:         Manages all the partitions of the OS in an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL automount_main(INT argc, WCHAR **argv)
+BOOL automount_main(INT argc, LPWSTR *argv)
 {
     printf("Automount\n");
     return TRUE;
-}
-
-/*
- * help_automount():
- * Shows the description and explains each argument type of the automount command
- */
-VOID help_automount(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_AUTOMOUNT);
 }

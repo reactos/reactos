@@ -6,7 +6,8 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ******************************************************************/
+#ifndef _SECUR32_PCH_
+#define _SECUR32_PCH_
 
 #include <stdarg.h>
 
@@ -17,9 +18,14 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
+#include <winreg.h>
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
-#include <lsass/lsass.h>
 
 #include <secext.h>
 #include <security.h>
+
+#include "secur32_priv.h"
+#include "thunks.h"
+
+#endif /* _SECUR32_PCH_ */

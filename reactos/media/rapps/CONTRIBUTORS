@@ -1,0 +1,12 @@
+Translations:
+German translation by Daniel Reimer (dreimer) daniel.reimer@reactos.org
+Polish translation by wojo664
+Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+Simplified Chinese translation by Henry Tang Ih (henrytang5247) (henrytang2@hotmail.com)
+
+Maintenance:
+Maintained by Daniel Reimer (dreimer) daniel.reimer@reactos.org
+
+Other:
+Base Python script for SHA1 sync by Ismael Ferreras Morezuelas
+Extended Python script with ini parsing, size calculating, dead link detection and language specific namings by Christopher Reimer

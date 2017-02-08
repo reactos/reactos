@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/window.c
+ * FILE:            win32ss/user/user32/windows/window.c
  * PURPOSE:         Window management
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -15,7 +15,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );
 
 /* FUNCTIONS *****************************************************************/
@@ -120,8 +119,8 @@ CloseWindow(HWND hWnd)
     return HandleToUlong(hWnd);
 }
 
-VOID
 FORCEINLINE
+VOID
 RtlInitLargeString(
     OUT PLARGE_STRING plstr,
     LPCVOID psz,
@@ -169,7 +168,9 @@ User32CreateWindowEx(DWORD dwExStyle,
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
-    BOOL Unicode;
+    HMODULE hLibModule = NULL;
+    DWORD save_error;
+    BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;
 
 #if 0
@@ -178,7 +179,7 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       ERR("User32CreateWindowEx RegisterSystemControls\n");
+       TRACE("RegisterSystemControls\n");
        RegisterSystemControls();
     }
 
@@ -200,7 +201,7 @@ User32CreateWindowEx(DWORD dwExStyle,
                 return (HWND)0;
             }
         }
-        
+
         /* Copy it to a LARGE_STRING */
         lstrClassName.Buffer = ClassName.Buffer;
         lstrClassName.Length = ClassName.Length;
@@ -217,7 +218,7 @@ User32CreateWindowEx(DWORD dwExStyle,
         NTSTATUS Status;
         PSTR AnsiBuffer = WindowName.Buffer;
         ULONG AnsiLength = WindowName.Length;
-        
+
         WindowName.Length = 0;
         WindowName.MaximumLength = AnsiLength * sizeof(WCHAR);
         WindowName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -262,21 +263,42 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!Unicode) dwExStyle |= WS_EX_SETANSICREATOR;
 
-    Handle = NtUserCreateWindowEx(dwExStyle,
-                                  plstrClassName,
-                                  NULL,
-                                  &WindowName,
-                                  dwStyle,
-                                  x,
-                                  y,
-                                  nWidth,
-                                  nHeight,
-                                  hWndParent,
-                                  hMenu,
-                                  hInstance,
-                                  lpParam,
-                                  dwFlags,
-                                  NULL);
+    for(;;)
+    {
+       Handle = NtUserCreateWindowEx(dwExStyle,
+                                     plstrClassName,
+                                     NULL,
+                                     &WindowName,
+                                     dwStyle,
+                                     x,
+                                     y,
+                                     nWidth,
+                                     nHeight,
+                                     hWndParent,
+                                     hMenu,
+                                     hInstance,
+                                     lpParam,
+                                     dwFlags,
+                                     NULL);
+       if (Handle) break;
+       if (!ClassFound)
+       {
+          save_error = GetLastError();
+          if ( save_error == ERROR_CANNOT_FIND_WND_CLASS )
+          {
+              ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
+              if (ClassFound) continue;
+          }
+       }
+       if (hLibModule)
+       {
+          save_error = GetLastError();
+          FreeLibrary(hLibModule);
+          SetLastError(save_error);
+          hLibModule = 0;
+       }
+       break;
+    }
 
 #if 0
     DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
@@ -288,7 +310,7 @@ cleanup:
         {
             RtlFreeUnicodeString(&ClassName);
         }
-        
+
         RtlFreeLargeString(&WindowName);
     }
 
@@ -299,7 +321,9 @@ cleanup:
 /*
  * @implemented
  */
-HWND WINAPI
+HWND
+WINAPI
+DECLSPEC_HOTPATCH
 CreateWindowExA(DWORD dwExStyle,
                 LPCSTR lpClassName,
                 LPCSTR lpWindowName,
@@ -318,7 +342,7 @@ CreateWindowExA(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       ERR("CreateWindowExA RegisterSystemControls\n");
+       TRACE("CreateWindowExA RegisterSystemControls\n");
        RegisterSystemControls();
     }
 
@@ -422,7 +446,9 @@ CreateWindowExA(DWORD dwExStyle,
 /*
  * @implemented
  */
-HWND WINAPI
+HWND
+WINAPI
+DECLSPEC_HOTPATCH
 CreateWindowExW(DWORD dwExStyle,
                 LPCWSTR lpClassName,
                 LPCWSTR lpWindowName,
@@ -461,7 +487,7 @@ CreateWindowExW(DWORD dwExStyle,
            WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
            return NULL;
         }
-        
+
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
         */
@@ -653,7 +679,7 @@ User32EnumWindows(HDESK hDesktop,
     if (!dwCount)
     {
        if (!dwThreadId)
-          return FALSE; 
+          return FALSE;
        else
           return TRUE;
     }
@@ -665,7 +691,7 @@ User32EnumWindows(HDESK hDesktop,
         /* FIXME I'm only getting NULLs from Thread Enumeration, and it's
          * probably because I'm not doing it right in NtUserBuildHwndList.
          * Once that's fixed, we shouldn't have to check for a NULL HWND
-         * here 
+         * here
          * This is now fixed in revision 50205. (jt)
          */
         if (!pHwnd[i]) /* don't enumerate a NULL HWND */
@@ -845,7 +871,7 @@ FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetAltTabInfoA(HWND hwnd,
@@ -854,13 +880,12 @@ GetAltTabInfoA(HWND hwnd,
                LPSTR pszItemText,
                UINT cchItemText)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return NtUserGetAltTabInfo(hwnd,iItem,pati,(LPWSTR)pszItemText,cchItemText,TRUE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetAltTabInfoW(HWND hwnd,
@@ -869,8 +894,7 @@ GetAltTabInfoW(HWND hwnd,
                LPWSTR pszItemText,
                UINT cchItemText)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return NtUserGetAltTabInfo(hwnd,iItem,pati,pszItemText,cchItemText,FALSE);
 }
 
 
@@ -882,7 +906,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 {
     HWND Ret = NULL;
     PWND Ancestor, Wnd;
-    
+
     Wnd = ValidateHwnd(hwnd);
     if (!Wnd)
         return NULL;
@@ -935,7 +959,7 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
        lpRect->bottom = GetSystemMetrics(SM_CYMINIMIZED);
        return TRUE;
     }
-    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
+    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
 /*        lpRect->left = lpRect->top = 0;
         lpRect->right = Wnd->rcClient.right - Wnd->rcClient.left;
@@ -952,7 +976,7 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 /* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
         lpRect->right = GetSystemMetrics(SM_CXSCREEN);
         lpRect->bottom = GetSystemMetrics(SM_CYSCREEN);
-*/    } 
+*/    }
     return TRUE;
 }
 
@@ -1078,7 +1102,7 @@ GetWindow(HWND hWnd,
                 if (Wnd->spwndPrev != NULL)
                     FoundWnd = DesktopPtrToUser(Wnd->spwndPrev);
                 break;
-   
+
             case GW_CHILD:
                 if (Wnd->spwndChild != NULL)
                     FoundWnd = DesktopPtrToUser(Wnd->spwndChild);
@@ -1122,7 +1146,9 @@ GetTopWindow(HWND hWnd)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetWindowInfo(HWND hWnd,
               PWINDOWINFO pwi)
 {
@@ -1150,7 +1176,7 @@ GetWindowInfo(HWND hWnd,
        pwi->cxWindowBorders = Size.cx;
        pwi->cyWindowBorders = Size.cy;
        pwi->dwWindowStatus = 0;
-       if (pWnd->state & WNDS_ACTIVEFRAME)
+       if (pWnd->state & WNDS_ACTIVEFRAME || (GetActiveWindow() == hWnd))
           pwi->dwWindowStatus = WS_ACTIVECAPTION;
        pwi->atomWindowType = (pCls ? pCls->atomClassName : 0 );
 
@@ -1216,7 +1242,6 @@ GetWindowModuleFileNameW(HWND hwnd,
     return GetModuleFileNameW( Wnd->hModule, lpszFileName, cchFileNameMax );
 }
 
-
 /*
  * @implemented
  */
@@ -1243,7 +1268,6 @@ GetWindowRect(HWND hWnd,
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
@@ -1251,68 +1275,34 @@ int WINAPI
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
     PWND Wnd;
-    PCWSTR Buffer;
     INT Length = 0;
 
-    if (lpString == NULL)
+    if (lpString == NULL || nMaxCount == 0)
         return 0;
 
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
         return 0;
 
-    _SEH2_TRY
+    lpString[0] = '\0';
+
+    if (!TestWindowProcess( Wnd))
     {
-        if (!TestWindowProcess( Wnd))
-        {
-            if (nMaxCount > 0)
-            {
-                /* do not send WM_GETTEXT messages to other processes */
-                Length = Wnd->strName.Length / sizeof(WCHAR);
-                if (Length != 0)
-                {
-                    Buffer = DesktopPtrToUser(Wnd->strName.Buffer);
-                    if (Buffer != NULL)
-                    {
-                        if (!WideCharToMultiByte(CP_ACP,
-                                               0,
-                                               Buffer,
-                                               Length + 1,
-                                               lpString,
-                                               nMaxCount,
-                                               NULL,
-                                               NULL))
-                        {
-                            lpString[nMaxCount - 1] = '\0';
-                        }
-                    }
-                    else
-                    {
-                        Length = 0;
-                        lpString[0] = '\0';
-                    }
-                }
-                else
-                    lpString[0] = '\0';
-            }
-
-            Wnd = NULL; /* Don't send a message */
-        }
+       _SEH2_TRY
+       {
+           Length = DefWindowProcA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+           Length = 0;
+       }
+       _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        lpString[0] = '\0';
-        Length = 0;
-        Wnd = NULL; /* Don't send a message */
-    }
-    _SEH2_END;
-
-    if (Wnd != NULL)
-        Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
-
+    else
+       Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    //ERR("GWTA Len %d : %s\n",Length,lpString);
     return Length;
 }
-
 
 /*
  * @implemented
@@ -1323,7 +1313,6 @@ GetWindowTextLengthA(HWND hWnd)
     return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
 }
 
-
 /*
  * @implemented
  */
@@ -1333,7 +1322,6 @@ GetWindowTextLengthW(HWND hWnd)
     return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
 }
 
-
 /*
  * @implemented
  */
@@ -1341,57 +1329,32 @@ int WINAPI
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
     PWND Wnd;
-    PCWSTR Buffer;
     INT Length = 0;
 
-    if (lpString == NULL)
+    if (lpString == NULL || nMaxCount == 0)
         return 0;
 
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
         return 0;
 
-    _SEH2_TRY
+    lpString[0] = L'\0';
+
+    if (!TestWindowProcess( Wnd))
     {
-        if (!TestWindowProcess( Wnd))
-        {
-            if (nMaxCount > 0)
-            {
-                /* do not send WM_GETTEXT messages to other processes */
-                Length = Wnd->strName.Length / sizeof(WCHAR);
-                if (Length != 0)
-                {
-                    Buffer = DesktopPtrToUser(Wnd->strName.Buffer);
-                    if (Buffer != NULL)
-                    {
-                        RtlCopyMemory(lpString,
-                                      Buffer,
-                                      (Length + 1) * sizeof(WCHAR));
-                    }
-                    else
-                    {
-                        Length = 0;
-                        lpString[0] = '\0';
-                    }
-                }
-                else
-                    lpString[0] = '\0';
-            }
-
-            Wnd = NULL; /* Don't send a message */
-        }
+       _SEH2_TRY
+       {
+           Length = DefWindowProcW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+           Length = 0;
+       }
+       _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        lpString[0] = '\0';
-        Length = 0;
-        Wnd = NULL; /* Don't send a message */
-    }
-    _SEH2_END;
-
-    if (Wnd != NULL)
-        Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
-
+    else
+       Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    //ERR("GWTW Len %d : %S\n",Length,lpString);
     return Length;
 }
 
@@ -1406,7 +1369,7 @@ GetWindowThreadProcessId(HWND hWnd,
     if (!pWnd) return Ret;
 
     ti = pWnd->head.pti;
- 
+
     if (ti)
     {
         if (ti == GetW32ThreadInfo())
@@ -1678,7 +1641,9 @@ return NtUserCallOneParam( (DWORD_PTR)dwDefaultLayout, ONEPARAM_ROUTINE_SETPROCD
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 SetWindowTextA(HWND hWnd,
                LPCSTR lpString)
 {
@@ -1701,7 +1666,9 @@ SetWindowTextA(HWND hWnd,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 SetWindowTextW(HWND hWnd,
                LPCWSTR lpString)
 {
@@ -1745,8 +1712,11 @@ UpdateLayeredWindow( HWND hwnd,
                      BLENDFUNCTION *pbl,
                      DWORD dwFlags)
 {
-  if ( dwFlags & ULW_EX_NORESIZE)
-     dwFlags = ~(ULW_EX_NORESIZE|ULW_OPAQUE|ULW_ALPHA|ULW_COLORKEY);
+  if (dwFlags & ULW_EX_NORESIZE)  /* only valid for UpdateLayeredWindowIndirect */
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return FALSE;
+  }
   return NtUserUpdateLayeredWindow( hwnd,
                                     hdcDst,
                                     pptDst,

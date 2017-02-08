@@ -18,14 +18,6 @@
  */
 
 #include "urlmon_main.h"
-//#include "wininet.h"
-
-#define NO_SHLWAPI_REG
-#include <shlwapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
     Protocol base;
@@ -282,7 +274,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
         HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     HttpProtocol *This = impl_from_Protocol(prot);
-    LPWSTR addl_header = NULL, post_cookie = NULL;
+    WCHAR *addl_header = NULL, *post_cookie = NULL, *rootdoc_url = NULL;
     IServiceProvider *service_provider = NULL;
     IHttpNegotiate2 *http_negotiate2 = NULL;
     BSTR url, host, user, pass, path;
@@ -324,6 +316,13 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
     if(!This->base.connection) {
         WARN("InternetConnect failed: %d\n", GetLastError());
         return INET_E_CANNOT_CONNECT;
+    }
+
+    num = 0;
+    hres = IInternetBindInfo_GetBindString(bind_info, BINDSTRING_ROOTDOC_URL, &rootdoc_url, 1, &num);
+    if(hres == S_OK && num) {
+        FIXME("Use root doc URL %s\n", debugstr_w(rootdoc_url));
+        CoTaskMemFree(rootdoc_url);
     }
 
     num = sizeof(accept_mimes)/sizeof(accept_mimes[0])-1;

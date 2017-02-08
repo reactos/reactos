@@ -8,8 +8,11 @@
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
-#define INITGUID
 #include "serial.h"
+
+#include <stdio.h>
+#include <ndk/haltypes.h>
+#include <debug.h>
 
 NTSTATUS NTAPI
 SerialAddDeviceInternal(

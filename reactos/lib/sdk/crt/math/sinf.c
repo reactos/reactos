@@ -7,7 +7,12 @@
 #include <math.h>
 #undef sinf
 
-float sinf(float _X)
+#if defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_AMD64))
+#pragma warning(suppress:4164) /* intrinsic not declared */
+#pragma function(sinf)
+#endif /* _MSC_VER */
+
+float sinf(float x)
 {
-  return ((float) sin ((double) _X));
+    return ((float)sin((double)x));
 }

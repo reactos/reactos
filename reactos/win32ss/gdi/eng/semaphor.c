@@ -6,73 +6,88 @@
 /*
  * @implemented
  */
+__drv_allocatesMem(Mem)
+_Post_writable_byte_size_(sizeof(ERESOURCE))
 HSEMAPHORE
 APIENTRY
-EngCreateSemaphore ( VOID )
+EngCreateSemaphore(
+    VOID)
 {
-  // www.osr.com/ddk/graphics/gdifncs_95lz.htm
-  PERESOURCE psem = ExAllocatePoolWithTag( NonPagedPool, sizeof(ERESOURCE), GDITAG_SEMAPHORE );
-  if ( !psem )
-    return NULL;
-  if ( !NT_SUCCESS(ExInitializeResourceLite ( psem )) )
-  {
-    ExFreePoolWithTag ( psem, GDITAG_SEMAPHORE );
-    return NULL;
-  }
-  return (HSEMAPHORE)psem;
-}
+    // www.osr.com/ddk/graphics/gdifncs_95lz.htm
+    PERESOURCE psem = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(ERESOURCE),
+                                            GDITAG_SEMAPHORE);
+    if (!psem)
+        return NULL;
 
-VOID
-FASTCALL
-IntGdiAcquireSemaphore ( HSEMAPHORE hsem )
-{
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite ( (PERESOURCE)hsem, TRUE );
+    if (!NT_SUCCESS(ExInitializeResourceLite(psem)))
+    {
+        ExFreePoolWithTag(psem, GDITAG_SEMAPHORE );
+        return NULL;
+    }
+
+    return (HSEMAPHORE)psem;
 }
 
 /*
  * @implemented
  */
+_Requires_lock_not_held_(*hsem)
+_Acquires_exclusive_lock_(*hsem)
+_Acquires_lock_(_Global_critical_region_)
 VOID
 APIENTRY
-EngAcquireSemaphore ( IN HSEMAPHORE hsem )
+EngAcquireSemaphore(
+    _Inout_ HSEMAPHORE hsem)
 {
-  // www.osr.com/ddk/graphics/gdifncs_14br.htm
-  PTHREADINFO W32Thread;
-  ASSERT(hsem);
-  IntGdiAcquireSemaphore ( hsem );
-  W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
-  if (W32Thread) W32Thread->dwEngAcquireCount++;
-}
+    // www.osr.com/ddk/graphics/gdifncs_14br.htm
+    PTHREADINFO W32Thread;
 
+    /* On Windows a NULL hsem is ignored */
+    if (hsem == NULL)
+    {
+        DPRINT1("EngAcquireSemaphore called with hsem == NULL!\n");
+        return;
+    }
 
-VOID
-FASTCALL
-IntGdiReleaseSemaphore ( HSEMAPHORE hsem )
-{
-  ExReleaseResourceLite ( (PERESOURCE)hsem );
-  KeLeaveCriticalRegion();
+    ExEnterCriticalRegionAndAcquireResourceExclusive((PERESOURCE)hsem);
+    W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
+    if (W32Thread) W32Thread->dwEngAcquireCount++;
 }
 
 /*
  * @implemented
  */
+_Requires_lock_held_(*hsem)
+_Releases_lock_(*hsem)
+_Releases_lock_(_Global_critical_region_)
 VOID
 APIENTRY
-EngReleaseSemaphore ( IN HSEMAPHORE hsem )
+EngReleaseSemaphore(
+    _Inout_ HSEMAPHORE hsem)
 {
-  // www.osr.com/ddk/graphics/gdifncs_5u3r.htm
-  PTHREADINFO W32Thread;
-  ASSERT(hsem);
-  W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
-  if (W32Thread) --W32Thread->dwEngAcquireCount;
-  IntGdiReleaseSemaphore ( hsem );
+    // www.osr.com/ddk/graphics/gdifncs_5u3r.htm
+    PTHREADINFO W32Thread;
+
+    /* On Windows a NULL hsem is ignored */
+    if (hsem == NULL)
+    {
+        DPRINT1("EngReleaseSemaphore called with hsem == NULL!\n");
+        return;
+    }
+
+    W32Thread = PsGetThreadWin32Thread(PsGetCurrentThread());
+    if (W32Thread) --W32Thread->dwEngAcquireCount;
+    ExReleaseResourceAndLeaveCriticalRegion((PERESOURCE)hsem);
 }
 
+_Acquires_lock_(_Global_critical_region_)
+_Requires_lock_not_held_(*hsem)
+_Acquires_shared_lock_(*hsem)
 VOID
 NTAPI
 EngAcquireSemaphoreShared(
-    IN HSEMAPHORE hsem)
+     _Inout_ HSEMAPHORE hsem)
 {
     PTHREADINFO pti;
 
@@ -85,16 +100,17 @@ EngAcquireSemaphoreShared(
 /*
  * @implemented
  */
+_Requires_lock_not_held_(*hsem)
 VOID
 APIENTRY
-EngDeleteSemaphore ( IN HSEMAPHORE hsem )
+EngDeleteSemaphore(
+    _Inout_ __drv_freesMem(Mem) HSEMAPHORE hsem)
 {
-  // www.osr.com/ddk/graphics/gdifncs_13c7.htm
-  ASSERT ( hsem );
+    // www.osr.com/ddk/graphics/gdifncs_13c7.htm
+    ASSERT(hsem);
 
-  ExDeleteResourceLite((PERESOURCE)hsem);
-
-  ExFreePoolWithTag( (PVOID)hsem, GDITAG_SEMAPHORE);
+    ExDeleteResourceLite((PERESOURCE)hsem);
+    ExFreePoolWithTag((PVOID)hsem, GDITAG_SEMAPHORE);
 }
 
 /*
@@ -102,11 +118,12 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
  */
 BOOL
 APIENTRY
-EngIsSemaphoreOwned ( IN HSEMAPHORE hsem )
+EngIsSemaphoreOwned(
+    _In_ HSEMAPHORE hsem)
 {
-  // www.osr.com/ddk/graphics/gdifncs_6wmf.htm
-  ASSERT(hsem);
-  return (((PERESOURCE)hsem)->ActiveCount > 0);
+    // www.osr.com/ddk/graphics/gdifncs_6wmf.htm
+    ASSERT(hsem);
+    return (((PERESOURCE)hsem)->ActiveCount > 0);
 }
 
 /*
@@ -114,59 +131,62 @@ EngIsSemaphoreOwned ( IN HSEMAPHORE hsem )
  */
 BOOL
 APIENTRY
-EngIsSemaphoreOwnedByCurrentThread ( IN HSEMAPHORE hsem )
+EngIsSemaphoreOwnedByCurrentThread(
+    _In_ HSEMAPHORE hsem)
 {
-  // www.osr.com/ddk/graphics/gdifncs_9yxz.htm
-  ASSERT(hsem);
-  return ExIsResourceAcquiredExclusiveLite ( (PERESOURCE)hsem );
+    // www.osr.com/ddk/graphics/gdifncs_9yxz.htm
+    ASSERT(hsem);
+    return ExIsResourceAcquiredExclusiveLite((PERESOURCE)hsem);
 }
 
 /*
  * @implemented
  */
-BOOL APIENTRY
+BOOL
+APIENTRY
 EngInitializeSafeSemaphore(
-   OUT ENGSAFESEMAPHORE *Semaphore)
+    _Out_ ENGSAFESEMAPHORE *Semaphore)
 {
-   HSEMAPHORE hSem;
+    HSEMAPHORE hSem;
 
-   if (InterlockedIncrement(&Semaphore->lCount) == 1)
-   {
-      /* Create the semaphore */
-      hSem = EngCreateSemaphore();
-      if (hSem == 0)
-      {
-         InterlockedDecrement(&Semaphore->lCount);
-         return FALSE;
-      }
-      /* FIXME: Not thread-safe! Check result of InterlockedCompareExchangePointer
-                and delete semaphore if already initialized! */
-      (void)InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, hSem);
-   }
-   else
-   {
-      /* Wait for the other thread to create the semaphore */
-      ASSERT(Semaphore->lCount > 1);
-      ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
-      while (Semaphore->hsem == NULL);
-   }
+    if (InterlockedIncrement(&Semaphore->lCount) == 1)
+    {
+        /* Create the semaphore */
+        hSem = EngCreateSemaphore();
+        if (hSem == 0)
+        {
+            InterlockedDecrement(&Semaphore->lCount);
+            return FALSE;
+        }
+        /* FIXME: Not thread-safe! Check result of InterlockedCompareExchangePointer
+                  and delete semaphore if already initialized! */
+        (void)InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, hSem);
+    }
+    else
+    {
+        /* Wait for the other thread to create the semaphore */
+        ASSERT(Semaphore->lCount > 1);
+        ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
+        while (Semaphore->hsem == NULL);
+    }
 
-   return TRUE;
+    return TRUE;
 }
 
 /*
  * @implemented
  */
-VOID APIENTRY
+VOID
+APIENTRY
 EngDeleteSafeSemaphore(
-   IN OUT ENGSAFESEMAPHORE *Semaphore)
+    _Inout_ _Post_invalid_ ENGSAFESEMAPHORE *pssem)
 {
-   if (InterlockedDecrement(&Semaphore->lCount) == 0)
-   {
-      /* FIXME: Not thread-safe! Use result of InterlockedCompareExchangePointer! */
-      EngDeleteSemaphore(Semaphore->hsem);
-      (void)InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, NULL);
-   }
+    if (InterlockedDecrement(&pssem->lCount) == 0)
+    {
+        /* FIXME: Not thread-safe! Use result of InterlockedCompareExchangePointer! */
+        EngDeleteSemaphore(pssem->hsem);
+        (void)InterlockedExchangePointer((volatile PVOID *)&pssem->hsem, NULL);
+    }
 }
 
 /* EOF */

@@ -1,0 +1,23 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+* DATE OF TR: 29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im ProcessName | /pid ProcessID]\n"
+    STRING_INVALID_OPTION, "Gabim: Panjohur ose i pavlefshëm opsioni linjes komandes i specifikuar.\n"
+    STRING_INVALID_PARAM, "Gabim: Pavlefshëm parametri i specifikuar ne linjen e komandes.\n"
+    STRING_MISSING_OPTION, "Gabim: Njera nga opsionet /im ose /pid duhet te specifikohet.\n"
+    STRING_MISSING_PARAM, "Gabim: Opsioni %1 kalon parametrin i linjes se komandes.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Gabim: Opsioni /im dhe /pid janë exclusiv reciprokisht.\n"
+    STRING_CLOSE_PID_SEARCH, "Mbyll mesazhin e derguar ne dritaren e nivelin-lart te proceseve me PID %1!u!.\n"
+    STRING_CLOSE_PROC_SRCH, "Mbyll mesazhin e derguar ne dritaren e nivelin-lart te proceseve ""%1"" me PID %2!u!.\n"
+    STRING_TERM_PID_SEARCH, "Proceso me PID %1!u! u mbyll me force.\n"
+    STRING_TERM_PROC_SEARCH, "Proces ""%1"" me PID %2!u! u mbyll me force.\n"
+    STRING_SEARCH_FAILED, "Gabim: Nuk u gjend procesi ""%1"".\n"
+    STRING_ENUM_FAILED, "Gabim: Në pamundësi për të numëruar listën proceseve.\n"
+    STRING_TERMINATE_FAILED, "Gabim: Pamundur mbyllja e proceseve ""%1"".\n"
+    STRING_SELF_TERMINATION, "Gabim: Procesi vetë-përfundimi nuk është i lejuar.\n"
+}

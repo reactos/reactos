@@ -1,6 +1,6 @@
 /*
  * PROJECT:         Keyboard Layout Switcher
- * FILE:            base\applications\kbswitch\kbswitch.c
+ * FILE:            base/applications/kbswitch/kbswitch.c
  * PURPOSE:         Switching Keyboard Layouts
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck (mail@colinfinck.de)
@@ -43,7 +43,7 @@ CreateTrayIcon(LPTSTR szLCID)
                       szBuf,
                       sizeof(szBuf) / sizeof(TCHAR)) == 0)
     {
-        lstrcpy(szBuf, _T("??\0"));
+        lstrcpy(szBuf, _T("??"));
     }
 
     hdcsrc = GetDC(NULL);
@@ -113,7 +113,7 @@ AddTrayIcon(HWND hwnd)
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
 
-    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
+    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip) / sizeof(TCHAR));
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
 }
@@ -142,7 +142,7 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
 
-    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
+    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip) / sizeof(TCHAR));
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
 }
@@ -300,7 +300,7 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 }
 
 static HMENU
-BuildLeftPopupMenu()
+BuildLeftPopupMenu(VOID)
 {
     HMENU hMenu;
     HKEY hKey;
@@ -334,7 +334,7 @@ BuildLeftPopupMenu()
 }
 
 BOOL
-SetHooks()
+SetHooks(VOID)
 {
     hDllLib = LoadLibrary(_T("kbsdll.dll"));
     if (!hDllLib) return FALSE;
@@ -349,14 +349,14 @@ SetHooks()
 }
 
 VOID
-DeleteHooks()
+DeleteHooks(VOID)
 {
     if (KbSwitchDeleteHooks) KbSwitchDeleteHooks();
     if (hDllLib) FreeLibrary(hDllLib);
 }
 
 ULONG
-GetNextLayout()
+GetNextLayout(VOID)
 {
     TCHAR szLayoutNum[3 + 1], szLayoutID[CCH_LAYOUT_ID + 1];
     ULONG Ret = ulCurrentLayoutNum;
@@ -390,6 +390,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static HMENU hRightPopupMenu;
     static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
+    static UINT s_uTaskbarRestart;
 
     switch (Message)
     {
@@ -400,6 +401,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             hRightPopupMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
 
             ActivateLayout(hwnd, ulCurrentLayoutNum);
+            s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
 
             return 0;
         }
@@ -432,18 +434,17 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_NOTIFYICONMSG:
             switch (lParam)
             {
-                case WM_RBUTTONDOWN:
-                case WM_LBUTTONDOWN:
+                case WM_RBUTTONUP:
+                case WM_LBUTTONUP:
                 {
                     POINT pt;
 
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
 
-                    if (lParam == WM_LBUTTONDOWN)
+                    if (lParam == WM_LBUTTONUP)
                     {
                         HMENU hLeftPopupMenu;
-
                         /* Rebuild the left popup menu on every click to take care of keyboard layout changes */
                         hLeftPopupMenu = BuildLeftPopupMenu();
                         TrackPopupMenu(hLeftPopupMenu, 0, pt.x, pt.y, 0, hwnd, NULL);
@@ -506,6 +507,11 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             return 0;
         }
+
+        default:
+            if(Message == s_uTaskbarRestart)
+                AddTrayIcon(hwnd);
+            break;
     }
 
     return DefWindowProc(hwnd, Message, wParam, lParam);
@@ -517,6 +523,15 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     WNDCLASS WndClass = {0};
     MSG msg;
     HANDLE hMutex;
+
+    switch (GetUserDefaultUILanguage())
+    {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
+    default:
+      break;
+    }
 
     hMutex = CreateMutex(NULL, FALSE, szKbSwitcherName);
     if (!hMutex)
@@ -532,7 +547,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     hProcessHeap = GetProcessHeap();
 
     WndClass.style = 0;
-    WndClass.lpfnWndProc   = (WNDPROC)WndProc;
+    WndClass.lpfnWndProc   = WndProc;
     WndClass.cbClsExtra    = 0;
     WndClass.cbWndExtra    = 0;
     WndClass.hInstance     = hInstance;

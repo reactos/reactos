@@ -6,9 +6,10 @@
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
 
-/* DEFINITIONS ***************************************************************/
+#ifndef _BLUE_PCH_
+#define _BLUE_PCH_
 
-#include <ntddk.h>
+#include <wdm.h>
 
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 
@@ -131,3 +132,5 @@ typedef struct _CFFILE
 
 void ScrLoadFontTable(UINT32 CodePage);
 NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField);
+
+#endif /* _BLUE_PCH_ */

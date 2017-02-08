@@ -10,6 +10,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI

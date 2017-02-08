@@ -1,5 +1,5 @@
 /*
- * FILE:            ntoskrnl/ke/i386/trap.S
+ * FILE:            hal/halx86/generic/trap.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Traps, Entrypoints and Exitpoints
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

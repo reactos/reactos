@@ -1,81 +1,115 @@
 
-add_subdirectory(kbda1)
-add_subdirectory(kbda2)
-add_subdirectory(kbda3)
-add_subdirectory(kbdal)
-add_subdirectory(kbdarme)
-add_subdirectory(kbdarmw)
-add_subdirectory(kbdaze)
-add_subdirectory(kbdazel)
-add_subdirectory(kbdbe)
-add_subdirectory(kbdbga)
-add_subdirectory(kbdbgm)
-add_subdirectory(kbdbgt)
-add_subdirectory(kbdblr)
-add_subdirectory(kbdbr)
-add_subdirectory(kbdbur)
-add_subdirectory(kbdcan)
-add_subdirectory(kbdcr)
-add_subdirectory(kbdcz)
-add_subdirectory(kbdcz1)
-add_subdirectory(kbdda)
-add_subdirectory(kbddv)
-add_subdirectory(kbdes)
-add_subdirectory(kbdest)
-add_subdirectory(kbdfc)
-add_subdirectory(kbdfi)
-add_subdirectory(kbdfr)
-add_subdirectory(kbdgeo)
-add_subdirectory(kbdgerg)
-add_subdirectory(kbdgneo)
-add_subdirectory(kbdgr)
-add_subdirectory(kbdgrist)
-add_subdirectory(kbdhe)
-add_subdirectory(kbdheb)
-add_subdirectory(kbdhu)
-add_subdirectory(kbdic)
-add_subdirectory(kbdinasa)
-add_subdirectory(kbdinben)
-add_subdirectory(kbdindev)
-add_subdirectory(kbdinguj)
-add_subdirectory(kbdinmal)
-add_subdirectory(kbdir)
-add_subdirectory(kbdit)
-add_subdirectory(kbdja)
-add_subdirectory(kbdkaz)
-add_subdirectory(kbdko)
-add_subdirectory(kbdla)
-add_subdirectory(kbdlt1)
-add_subdirectory(kbdlv)
-add_subdirectory(kbdmac)
-add_subdirectory(kbdne)
-add_subdirectory(kbdno)
-add_subdirectory(kbdpl)
-add_subdirectory(kbdpl1)
-add_subdirectory(kbdpo)
-add_subdirectory(kbdro)
-add_subdirectory(kbdru)
-add_subdirectory(kbdru1)
-add_subdirectory(kbdsg)
-add_subdirectory(kbdsk)
-add_subdirectory(kbdsk1)
-add_subdirectory(kbdsw)
-add_subdirectory(kbdtat)
-add_subdirectory(kbdth0)
-add_subdirectory(kbdth1)
-add_subdirectory(kbdth2)
-add_subdirectory(kbdth3)
-add_subdirectory(kbdtuf)
-add_subdirectory(kbdtuq)
-add_subdirectory(kbduk)
-add_subdirectory(kbdur)
-add_subdirectory(kbdurs)
-add_subdirectory(kbdus)
-add_subdirectory(kbdusa)
-add_subdirectory(kbdusl)
-add_subdirectory(kbdusr)
-add_subdirectory(kbdusx)
-add_subdirectory(kbduzb)
-add_subdirectory(kbdvntc)
-add_subdirectory(kbdycc)
-add_subdirectory(kbdycl)
+list(APPEND _keyboard_layouts
+    kbda1
+    kbda2
+    kbda3
+    kbdal
+    kbdarme
+    kbdarmw
+    kbdaze
+    kbdazel
+    kbdbe
+    kbdbga
+    kbdbgm
+    kbdbgt
+    kbdblr
+    kbdbr
+    kbdbur
+    kbdcan
+    kbdcr
+    kbdcz
+    kbdcz1
+    kbdda
+    kbddv
+    kbdes
+    kbdest
+    kbdfc
+    kbdfi
+    kbdfr
+    kbdgeo
+    kbdgerg
+    kbdgneo
+    kbdgr
+    kbdgrist
+    kbdhe
+    kbdheb
+    kbdhu
+    kbdic
+    kbdinasa
+    kbdinben
+    kbdindev
+    kbdinguj
+    kbdinmal
+    kbdir
+    kbdit
+    kbdja
+    kbdkaz
+    kbdko
+    kbdla
+    kbdlt1
+    kbdlv
+    kbdmac
+    kbdne
+    kbdno
+    kbdpl
+    kbdpl1
+    kbdpo
+    kbdro
+    kbdru
+    kbdru1
+    kbdsg
+    kbdsk
+    kbdsk1
+    kbdsw
+    kbdtat
+    kbdth0
+    kbdth1
+    kbdth2
+    kbdth3
+    kbdtuf
+    kbdtuq
+    kbduk
+    kbdur
+    kbdurs
+    kbdus
+    kbdusa
+    kbdusl
+    kbdusr
+    kbdusx
+    kbduzb
+    kbdvntc
+    kbdycc
+    kbdycl)
+
+foreach(_keyboard_layout ${_keyboard_layouts})
+    spec2def(${_keyboard_layout}.dll ${_keyboard_layout}/${_keyboard_layout}.spec)
+
+    add_library(${_keyboard_layout} SHARED
+        ${_keyboard_layout}/${_keyboard_layout}.c
+        ${_keyboard_layout}/${_keyboard_layout}.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def)
+
+    target_include_directories(${_keyboard_layout} PRIVATE ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
+    set_entrypoint(${_keyboard_layout} 0)
+    set_image_base(${_keyboard_layout} 0x5FFF0000)
+    set_subsystem(${_keyboard_layout} native)
+
+    if(MSVC)
+        # Merge the .text and .rdata section into the .data section
+        add_target_link_flags(${_keyboard_layout} "/ignore:4254 /SECTION:.data,ER /MERGE:.text=.data /MERGE:.rdata=.data /MERGE:.bss=.data /MERGE:.edata=.data")
+    else()
+        # Use a custom linker script
+        add_target_link_flags(${_keyboard_layout} "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
+    endif()
+
+    if (STACK_PROTECTOR)
+        target_link_libraries(${_keyboard_layout} gcc_ssp)
+    endif()
+
+    if(RUNTIME_CHECKS)
+        target_link_libraries(${_keyboard_layout} runtmchk)
+    endif()
+
+    add_dependencies(${_keyboard_layout} psdk)
+    add_cd_file(TARGET ${_keyboard_layout} DESTINATION reactos/system32 FOR all)
+endforeach()

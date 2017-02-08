@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Surace Functions
- * FILE:              subsys/win32k/eng/surface.c
+ * FILE:              win32ss/gdi/eng/surface.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
  * TESTING TO BE DONE:
@@ -62,9 +62,9 @@ BitmapFormat(ULONG cBits, ULONG iCompression)
     }
 }
 
-BOOL
+VOID
 NTAPI
-SURFACE_Cleanup(PVOID ObjectBody)
+SURFACE_vCleanup(PVOID ObjectBody)
 {
     PSURFACE psurf = (PSURFACE)ObjectBody;
     PVOID pvBits = psurf->SurfObj.pvBits;
@@ -108,8 +108,6 @@ SURFACE_Cleanup(PVOID ObjectBody)
     {
         PALETTE_ShareUnlockPalette(psurf->ppal);
     }
-
-    return TRUE;
 }
 
 
@@ -122,6 +120,7 @@ SURFACE_AllocSurface(
     _In_ ULONG iFormat,
     _In_ ULONG fjBitmap,
     _In_opt_ ULONG cjWidth,
+    _In_opt_ ULONG cjBufSize,
     _In_opt_ PVOID pvBits)
 {
     ULONG cBitsPixel, cjBits, cjObject;
@@ -129,7 +128,9 @@ SURFACE_AllocSurface(
     SURFOBJ *pso;
     PVOID pvSection;
 
-    ASSERT(!pvBits || (iType == STYPE_BITMAP));
+    NT_ASSERT(!pvBits || (iType == STYPE_BITMAP));
+    NT_ASSERT((iFormat <= BMF_32BPP) || (cjBufSize != 0));
+    NT_ASSERT((LONG)cy > 0);
 
     /* Verify format */
     if ((iFormat < BMF_1BPP) || (iFormat > BMF_PNG))
@@ -153,8 +154,35 @@ SURFACE_AllocSurface(
         cjWidth = WIDTH_BYTES_ALIGN32(cx, cBitsPixel);
     }
 
-    /* Calculate the bitmap size in bytes */
-    cjBits = cjWidth * cy;
+    /* Is this an uncompressed format? */
+    if (iFormat <= BMF_32BPP)
+    {
+        /* Calculate the correct bitmap size in bytes */
+        if (!NT_SUCCESS(RtlULongMult(cjWidth, cy, &cjBits)))
+        {
+            DPRINT1("Overflow calculating size: cjWidth %lu, cy %lu\n",
+                    cjWidth, cy);
+            return NULL;
+        }
+
+        /* Did we get a buffer and size? */
+        if ((pvBits != NULL) && (cjBufSize != 0))
+        {
+            /* Make sure the buffer is large enough */
+            if (cjBufSize < cjBits)
+            {
+                DPRINT1("Buffer is too small, required: %lu, got %lu\n",
+                        cjBits, cjBufSize);
+                return NULL;
+            }
+        }
+    }
+    else
+    {
+        /* Compressed format, use the provided size */
+        NT_ASSERT(cjBufSize != 0);
+        cjBits = cjBufSize;
+    }
 
     /* Check if we need an extra large object */
     if ((iType == STYPE_BITMAP) && (pvBits == NULL) &&
@@ -170,9 +198,10 @@ SURFACE_AllocSurface(
     }
 
     /* Check for arithmetic overflow */
-    if ((cjBits < cjWidth) || (cjObject < sizeof(SURFACE)))
+    if (cjObject < sizeof(SURFACE))
     {
         /* Fail! */
+        DPRINT1("Overflow calculating cjObject: cjBits %lu\n", cjBits);
         return NULL;
     }
 
@@ -291,6 +320,7 @@ EngCreateBitmap(
                                  iFormat,
                                  fl,
                                  lWidth,
+                                 0,
                                  pvBits);
     if (!psurf)
     {
@@ -329,6 +359,7 @@ EngCreateDeviceBitmap(
                                  iFormat,
                                  0,
                                  0,
+                                 0,
                                  NULL);
     if (!psurf)
     {
@@ -365,6 +396,7 @@ EngCreateDeviceSurface(
                                  sizl.cx,
                                  sizl.cy,
                                  iFormat,
+                                 0,
                                  0,
                                  0,
                                  NULL);
@@ -436,26 +468,26 @@ EngModifySurface(
     _In_ FLONG flHooks,
     _In_ FLONG flSurface,
     _In_ DHSURF dhsurf,
-    _In_ VOID *pvScan0,
+    _In_ PVOID pvScan0,
     _In_ LONG lDelta,
-    _Reserved_ VOID *pvReserved)
+    _Reserved_ PVOID pvReserved)
 {
     SURFOBJ *pso;
     PSURFACE psurf;
     PDEVOBJ* ppdev;
     PPALETTE ppal;
 
+    /* Lock the surface */
     psurf = SURFACE_ShareLockSurface(hsurf);
     if (psurf == NULL)
     {
+        DPRINT1("Failed to reference surface %p\n", hsurf);
         return FALSE;
     }
 
     ppdev = (PDEVOBJ*)hdev;
     pso = &psurf->SurfObj;
     pso->dhsurf = dhsurf;
-    pso->lDelta = lDelta;
-    pso->pvScan0 = pvScan0;
 
     /* Associate the hdev */
     pso->hdev = hdev;
@@ -469,6 +501,54 @@ EngModifySurface(
     ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
     SURFACE_vSetPalette(psurf, ppal);
     PALETTE_ShareUnlockPalette(ppal);
+
+    /* Update surface flags */
+    if (flSurface & MS_NOTSYSTEMMEMORY)
+         pso->fjBitmap |= BMF_NOTSYSMEM;
+    else
+        pso->fjBitmap &= ~BMF_NOTSYSMEM;
+    if (flSurface & MS_SHAREDACCESS)
+         psurf->flags |= SHAREACCESS_SURFACE;
+    else
+        psurf->flags &= ~SHAREACCESS_SURFACE;
+
+    /* Check if the caller passed bitmap bits */
+    if ((pvScan0 != NULL) && (lDelta != 0))
+    {
+        /* Update the fields */
+        pso->pvScan0 = pvScan0;
+        pso->lDelta = lDelta;
+
+        /* This is a bitmap now! */
+        pso->iType = STYPE_BITMAP;
+
+        /* Check memory layout */
+        if (lDelta > 0)
+        {
+            /* Topdown is the normal way */
+            pso->cjBits = lDelta * pso->sizlBitmap.cy;
+            pso->pvBits = pso->pvScan0;
+            pso->fjBitmap |= BMF_TOPDOWN;
+        }
+        else
+        {
+            /* Inversed bitmap (bottom up) */
+            pso->cjBits = (-lDelta) * pso->sizlBitmap.cy;
+            pso->pvBits = (PCHAR)pso->pvScan0 - pso->cjBits - lDelta;
+            pso->fjBitmap &= ~BMF_TOPDOWN;
+        }
+    }
+    else
+    {
+        /* Set bits to NULL */
+        pso->pvBits = NULL;
+        pso->pvScan0 = NULL;
+        pso->lDelta = 0;
+
+        /* Set appropriate surface type */
+        if (pso->iType != STYPE_DEVICE)
+            pso->iType = STYPE_DEVBITMAP;
+    }
 
     SURFACE_ShareUnlockSurface(psurf);
 
@@ -486,7 +566,7 @@ EngDeleteSurface(
     psurf = SURFACE_ShareLockSurface(hsurf);
     if (!psurf)
     {
-        DPRINT1("Could not reference surface to delete\n");
+        DPRINT1("Could not reference surface %p to delete\n", hsurf);
         return FALSE;
     }
 
@@ -526,12 +606,15 @@ EngLockSurface(
     return psurf ? &psurf->SurfObj : NULL;
 }
 
-VOID
+__kernel_entry
+NTSTATUS
 APIENTRY
-NtGdiEngUnlockSurface(IN SURFOBJ *pso)
+NtGdiEngUnlockSurface(
+    _In_ SURFOBJ *pso)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID

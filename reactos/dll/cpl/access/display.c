@@ -3,15 +3,15 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/display.c
  * PURPOSE:         Display-related accessibility settings
- * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
+ * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
  */
 
 #include "access.h"
 
+#include <wingdi.h>
 
 #define ID_BLINK_TIMER 346
-
 
 static VOID
 FillColorSchemeComboBox(HWND hwnd)

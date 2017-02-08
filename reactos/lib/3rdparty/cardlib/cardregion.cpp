@@ -4,15 +4,8 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-//#include <windows.h>
-
-#define WIN32_NO_STATUS
-#include <windef.h>
 
 #include "cardlib.h"
-//#include "cardregion.h"
-//#include "cardwindow.h"
-//#include "cardcolor.h"
 
 HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, int width, int height);
 

@@ -1,6 +1,11 @@
 
-add_library(vfatxlib fatx.c vfatxlib.c)
-add_pch(vfatxlib vfatxlib.h)
+list(APPEND SOURCE
+    fatx.c
+    vfatxlib.c
+    vfatxlib.h)
+
+add_library(vfatxlib ${SOURCE})
+add_pch(vfatxlib vfatxlib.h SOURCE)
 target_link_libraries(vfatxlib chkstk)
 
 if(NOT MSVC)

@@ -1,0 +1,24 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "终止程序 - "
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT "正在终止程序... 请等待", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "进程", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "如果您选择立即终止程序，您将失去所有未保存的数据。若要立即结束程序，单击“立即终止”。", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "立即终止(&E)", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "终止程序 - "
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "取消", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "立即终止(&E)", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "此程序并未响应", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "若要返回至 ReactOS 并检查该程序的状态，请点击“取消”。", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "如果您选择立即终止程序，您将失去所有未保存的数据。若要立即结束程序，单击“立即终止”。", IDC_STATIC, 7, 53, 178, 26
+END

@@ -16,16 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-
-#include <ieframe.h>
-
-#include <mshtmdid.h>
-#include <idispids.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
+#include "ieframe.h"
 
 static inline DocHost *impl_from_IOleClientSite(IOleClientSite *iface)
 {
@@ -297,7 +288,7 @@ static HRESULT WINAPI InPlaceSite_OnInPlaceActivateEx(IOleInPlaceSiteEx *iface,
     TRACE("(%p)->(%p, %x)\n", This, pfNoRedraw, dwFlags);
 
     /* FIXME: Avoid redraw, when possible */
-    pfNoRedraw = FALSE;
+    *pfNoRedraw = FALSE;
 
     if (dwFlags) {
         FIXME("dwFlags not supported (%x)\n", dwFlags);

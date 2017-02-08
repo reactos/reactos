@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "fs_rec.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -161,6 +162,12 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
 
             /* Send EXT2 command */
             Status = FsRecExt2FsControl(DeviceObject, Irp);
+            break;
+
+        case FS_TYPE_BTRFS:
+
+            /* Send BTRFS command */
+            Status = FsRecBtrfsFsControl(DeviceObject, Irp);
             break;
 
         default:
@@ -372,14 +379,24 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register EXT2 */
-    /*Status = FsRecRegisterFs(DriverObject,
+    Status = FsRecRegisterFs(DriverObject,
                              NULL,
                              NULL,
-                             L"\\Ext2",
+                             L"\\Ext2fs",
                              L"\\FileSystem\\Ext2Recognizer",
                              FS_TYPE_EXT2,
                              FILE_DEVICE_DISK_FILE_SYSTEM);
-    if (NT_SUCCESS(Status)) DeviceCount++;*/
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register BTRFS */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\Btrfs",
+                             L"\\FileSystem\\BtrfsRecognizer",
+                             FS_TYPE_BTRFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Return appropriate Status */
     return (DeviceCount > 0) ? STATUS_SUCCESS : STATUS_IMAGE_ALREADY_LOADED;

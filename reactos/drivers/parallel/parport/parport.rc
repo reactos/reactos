@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "Parallel Port Function Driver"
+#define REACTOS_STR_INTERNAL_NAME     "parport"
+#define REACTOS_STR_ORIGINAL_FILENAME "parport.sys"
+#include <reactos/version.rc>

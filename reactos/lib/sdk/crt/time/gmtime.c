@@ -123,20 +123,21 @@ _gmtime64_s(
    struct tm* ptm,
    const __time64_t* ptime)
 {
-    __time64_t time = *ptime;
+    __time64_t time;
+
     if (!ptm)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptm == NULL");
+        MSVCRT_INVALID_PMT("ptm == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 
     if (!ptime)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptime == NULL");
+        MSVCRT_INVALID_PMT("ptime == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
+
+    time = *ptime;
 
     _gmtime_worker(ptm, time, 0);
 
@@ -167,15 +168,13 @@ _gmtime32_s(
     __time64_t time = *ptime;
     if (!ptm)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptm == NULL");
+        MSVCRT_INVALID_PMT("ptm == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 
     if (!ptime)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptime == NULL");
+        MSVCRT_INVALID_PMT("ptime == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 

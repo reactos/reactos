@@ -31,4 +31,5 @@ typedef struct IPFRAGMENT_CONTEXT {
 
 
 NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE);
+
 /* EOF */

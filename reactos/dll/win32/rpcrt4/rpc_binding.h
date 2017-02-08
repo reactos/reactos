@@ -21,11 +21,7 @@
 #ifndef __WINE_RPC_BINDING_H
 #define __WINE_RPC_BINDING_H
 
-//#include "rpcndr.h"
-#include <security.h>
-#include <wine/list.h>
 #include "rpc_defs.h"
-
 
 enum secure_packet_direction
 {
@@ -61,6 +57,7 @@ struct connection_ops;
 
 typedef struct _RpcConnection
 {
+  LONG ref;
   BOOL server;
   LPSTR NetworkAddr;
   LPSTR Endpoint;
@@ -77,6 +74,7 @@ typedef struct _RpcConnection
   ULONG encryption_auth_len;
   ULONG signature_auth_len;
   RpcQualityOfService *QOS;
+  LPWSTR CookieAuth;
 
   /* client-only */
   struct list conn_pool_entry;
@@ -102,6 +100,7 @@ struct connection_ops {
   int (*write)(RpcConnection *conn, const void *buffer, unsigned int len);
   int (*close)(RpcConnection *conn);
   void (*cancel_call)(RpcConnection *conn);
+  RPC_STATUS (*is_server_listening)(const char *endpoint);
   int (*wait_for_incoming_data)(RpcConnection *conn);
   size_t (*get_top_of_tower)(unsigned char *tower_data, const char *networkaddr, const char *endpoint);
   RPC_STATUS (*parse_top_of_tower)(const unsigned char *tower_data, size_t tower_size, char **networkaddr, char **endpoint);
@@ -133,6 +132,7 @@ typedef struct _RpcBinding
   /* authentication */
   RpcAuthInfo *AuthInfo;
   RpcQualityOfService *QOS;
+  LPWSTR CookieAuth;
 } RpcBinding;
 
 LPSTR RPCRT4_strndupA(LPCSTR src, INT len) DECLSPEC_HIDDEN;
@@ -152,10 +152,14 @@ ULONG RpcQualityOfService_AddRef(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
 ULONG RpcQualityOfService_Release(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
 BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQualityOfService *qos2) DECLSPEC_HIDDEN;
 
-RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq, LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo, RpcQualityOfService *QOS) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq,
+    LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo,
+    RpcQualityOfService *QOS, LPCWSTR CookieAuth) DECLSPEC_HIDDEN;
+RpcConnection *RPCRT4_GrabConnection( RpcConnection *conn ) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_ReleaseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_OpenClientConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_IsServerListening(const char *protseq, const char *endpoint) DECLSPEC_HIDDEN;
 
 RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid) DECLSPEC_HIDDEN;

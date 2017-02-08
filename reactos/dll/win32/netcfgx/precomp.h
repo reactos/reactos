@@ -1,36 +1,27 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
 #include <windef.h>
-#include <winreg.h>
 #include <winbase.h>
-#include <winnls.h>
+#include <winreg.h>
 #include <objbase.h>
-#include <winsock2.h>
-#define NTOS_MODE_USER
-#include <ndk/iofuncs.h>
-#include <ndk/rtlfuncs.h>
 #include <netcfgx.h>
 #include <setupapi.h>
-#include <stdio.h>
-#include <iphlpapi.h>
-#include <dhcpcsdk.h>
-#include <dhcpcapi.h>
-#include <olectl.h>
 #include <netcfgn.h>
-#include "resource.h"
-//#include <prsht.h>
-
-//#include <initguid.h>
 #include <devguid.h>
+#include <commctrl.h>
+
+#include "resource.h"
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {
@@ -72,4 +63,4 @@ HRESULT WINAPI TcpipConfigNotify_Constructor (IUnknown * pUnkOuter, REFIID riid,
 
 extern const GUID CLSID_TcpipConfigNotifyObject;
 
-#endif
+#endif /* _PRECOMP_H__ */

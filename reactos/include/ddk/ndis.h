@@ -608,7 +608,7 @@ typedef struct _NDIS_RW_LOCK {
     UCHAR Reserved[16];
   };
   __MINGW_EXTENSION union {
-    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS]; 
+    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS];
     ULONG RefCountEx[sizeof(NDIS_RW_LOCK_REFCOUNT)/sizeof(ULONG) * MAXIMUM_PROCESSORS];
     __MINGW_EXTENSION struct {
       KSPIN_LOCK RefCountLock;
@@ -2168,7 +2168,11 @@ typedef VOID
   NDIS50_MINIPORT_CHARACTERISTICS  Ndis50Chars; \
   W_CANCEL_SEND_PACKETS_HANDLER  CancelSendPacketsHandler; \
   W_PNP_EVENT_NOTIFY_HANDLER  PnPEventNotifyHandler; \
-  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler;
+  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler; \
+  PVOID Reserved1; \
+  PVOID Reserved2; \
+  PVOID Reserved3; \
+  PVOID Reserved4;
 
 #else
 
@@ -2176,7 +2180,11 @@ typedef VOID
   NDIS50_MINIPORT_CHARACTERISTICS_S \
   W_CANCEL_SEND_PACKETS_HANDLER  CancelSendPacketsHandler; \
   W_PNP_EVENT_NOTIFY_HANDLER  PnPEventNotifyHandler; \
-  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler;
+  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler; \
+  PVOID Reserved1; \
+  PVOID Reserved2; \
+  PVOID Reserved3; \
+  PVOID Reserved4;
 
 #endif
 
@@ -3263,7 +3271,7 @@ NdisCopyBuffer(
   { \
     if ((MacOptions) & NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA) \
     { \
-      RtlCopyMemory(_Destination, _Source, _Length); \
+      RtlCopyMemory(Destination, Source, Length); \
     } \
     else \
     { \

@@ -39,6 +39,7 @@ BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 BOOL FASTCALL IntIsWindow(HWND hWnd);
 HWND* FASTCALL IntWinListChildren(PWND Window);
 VOID FASTCALL IntGetClientRect (PWND WindowObject, RECTL *Rect);
+INT FASTCALL  IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints);
 BOOL FASTCALL IntIsChildWindow (PWND Parent, PWND Child);
 VOID FASTCALL IntUnlinkWindow(PWND Wnd);
 VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev);
@@ -54,6 +55,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                         PWND OwnerWindow,
                                         PVOID acbiBuffer,
                                         PDESKTOP pdeskCreated);
+PWND FASTCALL co_UserCreateWindowEx(CREATESTRUCTW* Cs,
+                                    PUNICODE_STRING ClassName,
+                                    PLARGE_STRING WindowName,
+                                    PVOID acbiBuffer);
 BOOL FASTCALL IntEnableWindow(HWND,BOOL);
 BOOL FASTCALL IntIsWindowVisible(PWND);
 DWORD FASTCALL GetNCHitEx(PWND,POINT);
@@ -61,5 +66,7 @@ ULONG FASTCALL IntSetStyle(PWND,ULONG,ULONG);
 PWND FASTCALL VerifyWnd(PWND);
 PWND FASTCALL IntGetNonChildAncestor(PWND);
 LONG FASTCALL co_UserSetWindowLong(HWND,DWORD,LONG,BOOL);
+HWND FASTCALL IntGetWindow(HWND,UINT);
+LRESULT co_UserFreeWindow(PWND,PPROCESSINFO,PTHREADINFO,BOOLEAN);
 
 /* EOF */

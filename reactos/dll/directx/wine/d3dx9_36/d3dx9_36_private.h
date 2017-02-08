@@ -22,117 +22,112 @@
 #ifndef __WINE_D3DX9_36_PRIVATE_H
 #define __WINE_D3DX9_36_PRIVATE_H
 
+#include <config.h>
+#include <wine/port.h>
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-
 #define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-#include <winnls.h>
 #include <winuser.h>
 #include <d3dx9.h>
 
-/* for internal use */
-typedef enum _FormatType {
-    FORMAT_ARGB,   /* unsigned */
-    FORMAT_UNKNOWN
-} FormatType;
+#include <wine/unicode.h>
 
-typedef struct _PixelFormatDesc {
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+
+#define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
+
+struct vec4
+{
+    float x, y, z, w;
+};
+
+struct volume
+{
+    UINT width;
+    UINT height;
+    UINT depth;
+};
+
+/* for internal use */
+enum format_type {
+    FORMAT_ARGB,   /* unsigned */
+    FORMAT_ARGBF16,/* float 16 */
+    FORMAT_ARGBF,  /* float */
+    FORMAT_DXT,
+    FORMAT_INDEX,
+    FORMAT_UNKNOWN
+};
+
+struct pixel_format_desc {
     D3DFORMAT format;
     BYTE bits[4];
     BYTE shift[4];
     UINT bytes_per_pixel;
-    FormatType type;
-} PixelFormatDesc;
+    UINT block_width;
+    UINT block_height;
+    UINT block_byte_count;
+    enum format_type type;
+    void (*from_rgba)(const struct vec4 *src, struct vec4 *dst);
+    void (*to_rgba)(const struct vec4 *src, struct vec4 *dst, const PALETTEENTRY *palette);
+};
 
-HRESULT map_view_of_file(LPCWSTR filename, LPVOID *buffer, DWORD *length);
-HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, LPVOID *buffer, DWORD *length);
+HRESULT map_view_of_file(const WCHAR *filename, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
+HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
 
-const PixelFormatDesc *get_format_info(D3DFORMAT format);
+HRESULT write_buffer_to_file(const WCHAR *filename, ID3DXBuffer *buffer) DECLSPEC_HIDDEN;
 
+const struct pixel_format_desc *get_format_info(D3DFORMAT format) DECLSPEC_HIDDEN;
+const struct pixel_format_desc *get_format_info_idx(int idx) DECLSPEC_HIDDEN;
 
-extern const ID3DXBufferVtbl D3DXBuffer_Vtbl;
+void copy_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pitch,
+    BYTE *dst, UINT dst_row_pitch, UINT dst_slice_pitch, const struct volume *size,
+    const struct pixel_format_desc *format) DECLSPEC_HIDDEN;
+void convert_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pitch,
+    const struct volume *src_size, const struct pixel_format_desc *src_format,
+    BYTE *dst, UINT dst_row_pitch, UINT dst_slice_pitch, const struct volume *dst_size,
+    const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette) DECLSPEC_HIDDEN;
+void point_filter_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pitch,
+    const struct volume *src_size, const struct pixel_format_desc *src_format,
+    BYTE *dst, UINT dst_row_pitch, UINT dst_slice_pitch, const struct volume *dst_size,
+    const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette) DECLSPEC_HIDDEN;
 
-/* ID3DXBUFFER */
-typedef struct ID3DXBufferImpl
-{
-    /* IUnknown fields */
-    const ID3DXBufferVtbl *lpVtbl;
-    LONG           ref;
+HRESULT load_texture_from_dds(IDirect3DTexture9 *texture, const void *src_data, const PALETTEENTRY *palette,
+        DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info, unsigned int skip_levels,
+        unsigned int *loaded_miplevels) DECLSPEC_HIDDEN;
+HRESULT load_cube_texture_from_dds(IDirect3DCubeTexture9 *cube_texture, const void *src_data,
+    const PALETTEENTRY *palette, DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
+HRESULT load_volume_from_dds(IDirect3DVolume9 *dst_volume, const PALETTEENTRY *dst_palette,
+    const D3DBOX *dst_box, const void *src_data, const D3DBOX *src_box, DWORD filter, D3DCOLOR color_key,
+    const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
+HRESULT load_volume_texture_from_dds(IDirect3DVolumeTexture9 *volume_texture, const void *src_data,
+    const PALETTEENTRY *palette, DWORD filter, DWORD color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
+HRESULT save_dds_texture_to_memory(ID3DXBuffer **dst_buffer, IDirect3DBaseTexture9 *src_texture,
+    const PALETTEENTRY *src_palette) DECLSPEC_HIDDEN;
 
-    /* ID3DXBuffer fields */
-    DWORD         *buffer;
-    DWORD          bufferSize;
-} ID3DXBufferImpl;
+unsigned short float_32_to_16(const float in) DECLSPEC_HIDDEN;
+float float_16_to_32(const unsigned short in) DECLSPEC_HIDDEN;
 
+/* debug helpers */
+const char *debug_d3dxparameter_class(D3DXPARAMETER_CLASS c) DECLSPEC_HIDDEN;
+const char *debug_d3dxparameter_type(D3DXPARAMETER_TYPE t) DECLSPEC_HIDDEN;
+const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r) DECLSPEC_HIDDEN;
 
-/* ID3DXFont */
-typedef struct ID3DXFontImpl
-{
-    /* IUnknown fields */
-    const ID3DXFontVtbl *lpVtbl;
-    LONG ref;
+/* parameter type conversion helpers */
+void set_number(void *outdata, D3DXPARAMETER_TYPE outtype,
+        const void *indata, D3DXPARAMETER_TYPE intype) DECLSPEC_HIDDEN;
 
-    /* ID3DXFont fields */
-    IDirect3DDevice9 *device;
-    D3DXFONT_DESCW desc;
-
-    HDC hdc;
-    HFONT hfont;
-} ID3DXFontImpl;
-
-/* ID3DXMatrixStack */
-typedef struct ID3DXMatrixStackImpl
-{
-  /* IUnknown fields */
-  const ID3DXMatrixStackVtbl *lpVtbl;
-  LONG                   ref;
-
-  /* ID3DXMatrixStack fields */
-  unsigned int current;
-  unsigned int stack_size;
-  D3DXMATRIX *stack;
-} ID3DXMatrixStackImpl;
-
-/*ID3DXSprite */
-typedef struct _SPRITE {
-    LPDIRECT3DTEXTURE9 texture;
-    UINT texw, texh;
-    RECT rect;
-    D3DXVECTOR3 center;
-    D3DXVECTOR3 pos;
-    D3DCOLOR color;
-} SPRITE;
-
-typedef struct ID3DXSpriteImpl
-{
-    /* IUnknown fields */
-    const ID3DXSpriteVtbl *lpVtbl;
-    LONG ref;
-
-    /* ID3DXSprite fields */
-    IDirect3DDevice9 *device;
-    IDirect3DVertexDeclaration9 *vdecl;
-    IDirect3DStateBlock9 *stateblock;
-    D3DXMATRIX transform;
-    D3DXMATRIX view;
-    DWORD flags;
-    BOOL ready;
-
-    /* Store the relevant caps to prevent multiple GetDeviceCaps calls */
-    DWORD texfilter_caps;
-    DWORD maxanisotropy;
-    DWORD alphacmp_caps;
-
-    SPRITE *sprites;
-    int sprite_count;      /* number of sprites to be drawn */
-    int allocated_sprites; /* number of (pre-)allocated sprites */
-} ID3DXSpriteImpl;
-
+HRESULT create_dummy_skin(ID3DXSkinInfo **iface) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_D3DX9_36_PRIVATE_H */

@@ -23,17 +23,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <string.h>
-
 #include "ieframe.h"
-
-//#include "htiframe.h"
-#include <idispids.h>
-#include <mshtmdid.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 /* shlwapi.dll */
 HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent);
@@ -47,6 +37,22 @@ static LRESULT resize_window(WebBrowser *This, LONG width, LONG height)
                      SWP_NOZORDER | SWP_NOACTIVATE);
 
     return 0;
+}
+
+static void notify_on_focus(WebBrowser *This, BOOL got_focus)
+{
+    IOleControlSite *control_site;
+    HRESULT hres;
+
+    if(!This->client)
+        return;
+
+    hres = IOleClientSite_QueryInterface(This->client, &IID_IOleControlSite, (void**)&control_site);
+    if(FAILED(hres))
+        return;
+
+    IOleControlSite_OnFocus(control_site, got_focus);
+    IOleControlSite_Release(control_site);
 }
 
 static LRESULT WINAPI shell_embedding_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -67,6 +73,12 @@ static LRESULT WINAPI shell_embedding_proc(HWND hwnd, UINT msg, WPARAM wParam, L
         return resize_window(This, LOWORD(lParam), HIWORD(lParam));
     case WM_DOCHOSTTASK:
         return process_dochost_tasks(&This->doc_host);
+    case WM_SETFOCUS:
+        notify_on_focus(This, TRUE);
+        break;
+    case WM_KILLFOCUS:
+        notify_on_focus(This, FALSE);
+        break;
     }
 
     return DefWindowProcW(hwnd, msg, wParam, lParam);
@@ -203,6 +215,7 @@ static HRESULT activate_ui(WebBrowser *This, IOleClientSite *active_site)
         IOleInPlaceFrame_SetMenu(This->doc_host.frame, NULL, NULL, This->shell_embedding_hwnd);
 
     SetFocus(This->shell_embedding_hwnd);
+    notify_on_focus(This, TRUE);
 
     return S_OK;
 }
@@ -264,6 +277,11 @@ static void release_client_site(WebBrowser *This)
 {
     release_dochost_client(&This->doc_host);
 
+    if(This->client) {
+        IOleClientSite_Release(This->client);
+        This->client = NULL;
+    }
+
     if(This->shell_embedding_hwnd) {
         DestroyWindow(This->shell_embedding_hwnd);
         This->shell_embedding_hwnd = NULL;
@@ -283,17 +301,12 @@ static void release_client_site(WebBrowser *This)
         IOleInPlaceUIWindow_Release(This->uiwindow);
         This->uiwindow = NULL;
     }
-
-    if(This->client) {
-        IOleClientSite_Release(This->client);
-        This->client = NULL;
-    }
 }
 
 typedef struct {
     IEnumOLEVERB IEnumOLEVERB_iface;
-
     LONG ref;
+    LONG iter;
 } EnumOLEVERB;
 
 static inline EnumOLEVERB *impl_from_IEnumOLEVERB(IEnumOLEVERB *iface)
@@ -348,10 +361,20 @@ static HRESULT WINAPI EnumOLEVERB_Next(IEnumOLEVERB *iface, ULONG celt, OLEVERB 
 {
     EnumOLEVERB *This = impl_from_IEnumOLEVERB(iface);
 
+    static const OLEVERB verbs[] =
+        {{OLEIVERB_PRIMARY},{OLEIVERB_INPLACEACTIVATE},{OLEIVERB_UIACTIVATE},{OLEIVERB_SHOW},{OLEIVERB_HIDE}};
+
     TRACE("(%p)->(%u %p %p)\n", This, celt, rgelt, pceltFetched);
 
+    /* There are a few problems with this implementation, but that's how it seems to work in native. See tests. */
     if(pceltFetched)
         *pceltFetched = 0;
+
+    if(This->iter == sizeof(verbs)/sizeof(*verbs))
+        return S_FALSE;
+
+    if(celt)
+        *rgelt = verbs[This->iter++];
     return S_OK;
 }
 
@@ -365,7 +388,10 @@ static HRESULT WINAPI EnumOLEVERB_Skip(IEnumOLEVERB *iface, ULONG celt)
 static HRESULT WINAPI EnumOLEVERB_Reset(IEnumOLEVERB *iface)
 {
     EnumOLEVERB *This = impl_from_IEnumOLEVERB(iface);
+
     TRACE("(%p)\n", This);
+
+    This->iter = 0;
     return S_OK;
 }
 
@@ -417,6 +443,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
 {
     WebBrowser *This = impl_from_IOleObject(iface);
     IDocHostUIHandler *hostui;
+    IOleCommandTarget *olecmd;
     IOleContainer *container;
     IDispatch *disp;
     HRESULT hres;
@@ -429,6 +456,9 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
     release_client_site(This);
 
     if(!pClientSite) {
+        on_commandstate_change(&This->doc_host, CSC_NAVIGATEBACK, FALSE);
+        on_commandstate_change(&This->doc_host, CSC_NAVIGATEFORWARD, FALSE);
+
         if(This->doc_host.document)
             deactivate_document(&This->doc_host);
         return S_OK;
@@ -458,8 +488,18 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
             ITargetContainer_Release(target_container);
         }
 
+        hres = IOleContainer_QueryInterface(container, &IID_IOleCommandTarget, (void**)&olecmd);
+        if(FAILED(hres))
+            olecmd = NULL;
+
         IOleContainer_Release(container);
+    }else {
+        hres = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget, (void**)&olecmd);
+        if(FAILED(hres))
+            olecmd = NULL;
     }
+
+    This->doc_host.olecmd = olecmd;
 
     create_shell_embedding_hwnd(This);
 
@@ -513,10 +553,11 @@ static HRESULT WINAPI OleObject_Close(IOleObject *iface, DWORD dwSaveOption)
     if(This->uiwindow)
         IOleInPlaceUIWindow_SetActiveObject(This->uiwindow, NULL, NULL);
 
-    if(This->inplace) {
+    if(This->inplace)
         IOleInPlaceSiteEx_OnUIDeactivate(This->inplace, FALSE);
+    notify_on_focus(This, FALSE);
+    if(This->inplace)
         IOleInPlaceSiteEx_OnInPlaceDeactivate(This->inplace);
-    }
 
     return IOleObject_SetClientSite(iface, NULL);
 }
@@ -599,6 +640,7 @@ static HRESULT WINAPI OleObject_EnumVerbs(IOleObject *iface, IEnumOLEVERB **ppEn
 
     ret->IEnumOLEVERB_iface.lpVtbl = &EnumOLEVERBVtbl;
     ret->ref = 1;
+    ret->iter = 0;
 
     *ppEnumOleVerb = &ret->IEnumOLEVERB_iface;
     return S_OK;
@@ -795,7 +837,7 @@ static HRESULT WINAPI OleInPlaceObject_SetObjectRects(IOleInPlaceObject *iface,
 {
     WebBrowser *This = impl_from_IOleInPlaceObject(iface);
 
-    TRACE("(%p)->(%p %p)\n", This, lprcPosRect, lprcClipRect);
+    TRACE("(%p)->(%s %s)\n", This, wine_dbgstr_rect(lprcPosRect), wine_dbgstr_rect(lprcClipRect));
 
     This->pos_rect = *lprcPosRect;
 
@@ -1082,8 +1124,8 @@ static HRESULT WINAPI WBOleCommandTarget_Exec(IOleCommandTarget *iface,
         VARIANT *pvaOut)
 {
     WebBrowser *This = impl_from_IOleCommandTarget(iface);
-    FIXME("(%p)->(%s %d %d %p %p)\n", This, debugstr_guid(pguidCmdGroup), nCmdID,
-          nCmdexecopt, pvaIn, pvaOut);
+    FIXME("(%p)->(%s %d %d %s %p)\n", This, debugstr_guid(pguidCmdGroup), nCmdID,
+          nCmdexecopt, debugstr_variant(pvaIn), pvaOut);
     return E_NOTIMPL;
 }
 

@@ -18,10 +18,6 @@
 
 #include "ieframe.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
-
 static inline InternetExplorer *impl_from_IWebBrowser2(IWebBrowser2 *iface)
 {
     return CONTAINING_RECORD(iface, InternetExplorer, IWebBrowser2_iface);
@@ -50,7 +46,10 @@ static HRESULT WINAPI InternetExplorer_QueryInterface(IWebBrowser2 *iface, REFII
         *ppv = &This->IWebBrowser2_iface;
     }else if(IsEqualGUID(&IID_IConnectionPointContainer, riid)) {
         TRACE("(%p)->(IID_IConnectionPointContainer %p)\n", This, ppv);
-        *ppv = &This->doc_host->doc_host.cps.IConnectionPointContainer_iface;
+        *ppv = &This->doc_host.cps.IConnectionPointContainer_iface;
+    }else if(IsEqualGUID(&IID_IExternalConnection, riid)) {
+        TRACE("(%p)->(IID_IExternalConnection %p)\n", This, ppv);
+        *ppv = &This->IExternalConnection_iface;
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
         *ppv = &This->IServiceProvider_iface;
@@ -83,14 +82,8 @@ static ULONG WINAPI InternetExplorer_Release(IWebBrowser2 *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        if(This->doc_host) {
-            deactivate_document(&This->doc_host->doc_host);
-            DocHost_Release(&This->doc_host->doc_host);
-            if(This->doc_host) {
-                This->doc_host->ie = NULL;
-                This->doc_host->doc_host.container_vtbl->release(&This->doc_host->doc_host);
-            }
-        }
+        deactivate_document(&This->doc_host);
+        DocHost_Release(&This->doc_host);
 
         if(This->frame_hwnd)
             DestroyWindow(This->frame_hwnd);
@@ -143,21 +136,21 @@ static HRESULT WINAPI InternetExplorer_GoBack(IWebBrowser2 *iface)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
     TRACE("(%p)\n", This);
-    return go_back(&This->doc_host->doc_host);
+    return go_back(&This->doc_host);
 }
 
 static HRESULT WINAPI InternetExplorer_GoForward(IWebBrowser2 *iface)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    TRACE("(%p)\n", This);
+    return go_forward(&This->doc_host);
 }
 
 static HRESULT WINAPI InternetExplorer_GoHome(IWebBrowser2 *iface)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
     TRACE("(%p)\n", This);
-    return go_home(&This->doc_host->doc_host);
+    return go_home(&This->doc_host);
 }
 
 static HRESULT WINAPI InternetExplorer_GoSearch(IWebBrowser2 *iface)
@@ -173,10 +166,10 @@ static HRESULT WINAPI InternetExplorer_Navigate(IWebBrowser2 *iface, BSTR szUrl,
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
 
-    TRACE("(%p)->(%s %p %p %p %p)\n", This, debugstr_w(szUrl), Flags, TargetFrameName,
-          PostData, Headers);
+    TRACE("(%p)->(%s %s %s %s %s)\n", This, debugstr_w(szUrl), debugstr_variant(Flags),
+          debugstr_variant(TargetFrameName), debugstr_variant(PostData), debugstr_variant(Headers));
 
-    return navigate_url(&This->doc_host->doc_host, szUrl, Flags, TargetFrameName, PostData, Headers);
+    return navigate_url(&This->doc_host, szUrl, Flags, TargetFrameName, PostData, Headers);
 }
 
 static HRESULT WINAPI InternetExplorer_Refresh(IWebBrowser2 *iface)
@@ -185,14 +178,16 @@ static HRESULT WINAPI InternetExplorer_Refresh(IWebBrowser2 *iface)
 
     TRACE("(%p)\n", This);
 
-    return refresh_document(&This->doc_host->doc_host);
+    return refresh_document(&This->doc_host, NULL);
 }
 
 static HRESULT WINAPI InternetExplorer_Refresh2(IWebBrowser2 *iface, VARIANT *Level)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, Level);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(Level));
+
+    return refresh_document(&This->doc_host, Level);
 }
 
 static HRESULT WINAPI InternetExplorer_Stop(IWebBrowser2 *iface)
@@ -313,7 +308,7 @@ static HRESULT WINAPI InternetExplorer_get_LocationURL(IWebBrowser2 *iface, BSTR
 
     TRACE("(%p)->(%p)\n", This, LocationURL);
 
-    return get_location_url(&This->doc_host->doc_host, LocationURL);
+    return get_location_url(&This->doc_host, LocationURL);
 }
 
 static HRESULT WINAPI InternetExplorer_get_Busy(IWebBrowser2 *iface, VARIANT_BOOL *pBool)
@@ -340,7 +335,7 @@ static HRESULT WINAPI InternetExplorer_ClientToWindow(IWebBrowser2 *iface, int *
 static HRESULT WINAPI InternetExplorer_PutProperty(IWebBrowser2 *iface, BSTR szProperty, VARIANT vtValue)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(szProperty));
+    FIXME("(%p)->(%s %s)\n", This, debugstr_w(szProperty), debugstr_variant(&vtValue));
     return E_NOTIMPL;
 }
 
@@ -358,11 +353,14 @@ static HRESULT WINAPI InternetExplorer_get_Name(IWebBrowser2 *iface, BSTR *Name)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, LONG *pHWND)
+static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, SHANDLE_PTR *pHWND)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, pHWND);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, pHWND);
+
+    *pHWND = (SHANDLE_PTR)This->frame_hwnd;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_get_FullName(IWebBrowser2 *iface, BSTR *FullName)
@@ -485,7 +483,8 @@ static HRESULT WINAPI InternetExplorer_Navigate2(IWebBrowser2 *iface, VARIANT *U
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
 
-    TRACE("(%p)->(%p %p %p %p %p)\n", This, URL, Flags, TargetFrameName, PostData, Headers);
+    TRACE("(%p)->(%s %s %s %s %s)\n", This, debugstr_variant(URL), debugstr_variant(Flags),
+        debugstr_variant(TargetFrameName), debugstr_variant(PostData), debugstr_variant(Headers));
 
     if(!URL)
         return S_OK;
@@ -495,7 +494,7 @@ static HRESULT WINAPI InternetExplorer_Navigate2(IWebBrowser2 *iface, VARIANT *U
         return E_INVALIDARG;
     }
 
-    return navigate_url(&This->doc_host->doc_host, V_BSTR(URL), Flags, TargetFrameName, PostData, Headers);
+    return navigate_url(&This->doc_host, V_BSTR(URL), Flags, TargetFrameName, PostData, Headers);
 }
 
 static HRESULT WINAPI InternetExplorer_QueryStatusWB(IWebBrowser2 *iface, OLECMDID cmdID, OLECMDF *pcmdf)
@@ -509,7 +508,7 @@ static HRESULT WINAPI InternetExplorer_ExecWB(IWebBrowser2 *iface, OLECMDID cmdI
         OLECMDEXECOPT cmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d %d %p %p)\n", This, cmdID, cmdexecopt, pvaIn, pvaOut);
+    FIXME("(%p)->(%d %d %s %p)\n", This, cmdID, cmdexecopt, debugstr_variant(pvaIn), pvaOut);
     return E_NOTIMPL;
 }
 
@@ -517,7 +516,8 @@ static HRESULT WINAPI InternetExplorer_ShowBrowserBar(IWebBrowser2 *iface, VARIA
         VARIANT *pvarShow, VARIANT *pvarSize)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p %p %p)\n", This, pvaClsid, pvarShow, pvarSize);
+    FIXME("(%p)->(%s %s %s)\n", This, debugstr_variant(pvaClsid), debugstr_variant(pvarShow),
+        debugstr_variant(pvarSize));
     return E_NOTIMPL;
 }
 
@@ -705,6 +705,86 @@ static const IWebBrowser2Vtbl InternetExplorerVtbl =
     InternetExplorer_put_Resizable
 };
 
+static inline InternetExplorer *impl_from_IExternalConnection(IExternalConnection *iface)
+{
+    return CONTAINING_RECORD(iface, InternetExplorer, IExternalConnection_iface);
+}
+
+/*
+ * Document may keep references to InternetExplorer object causing circular references.
+ * We keep track of external references and release the document object when all
+ * external references are released. A visible main window is also considered as
+ * an external reference.
+ */
+DWORD release_extern_ref(InternetExplorer *This, BOOL last_closes)
+{
+    LONG ref = InterlockedDecrement(&This->extern_ref);
+
+    TRACE("ref = %d\n", ref);
+
+    if(ref)
+        return ref;
+
+    if(!last_closes) {
+        WARN("Last external connection released with FALSE last_closes.\n");
+        return ref;
+    }
+
+    deactivate_document(&This->doc_host);
+    return ref;
+}
+
+static HRESULT WINAPI ExternalConnection_QueryInterface(IExternalConnection *iface, REFIID riid, void **ppv)
+{
+    InternetExplorer *This = impl_from_IExternalConnection(iface);
+    return IWebBrowser2_QueryInterface(&This->IWebBrowser2_iface, riid, ppv);
+}
+
+static ULONG WINAPI ExternalConnection_AddRef(IExternalConnection *iface)
+{
+    InternetExplorer *This = impl_from_IExternalConnection(iface);
+    return IWebBrowser2_AddRef(&This->IWebBrowser2_iface);
+}
+
+static ULONG WINAPI ExternalConnection_Release(IExternalConnection *iface)
+{
+    InternetExplorer *This = impl_from_IExternalConnection(iface);
+    return IWebBrowser2_Release(&This->IWebBrowser2_iface);
+}
+
+static DWORD WINAPI ExternalConnection_AddConnection(IExternalConnection *iface, DWORD extconn, DWORD reserved)
+{
+    InternetExplorer *This = impl_from_IExternalConnection(iface);
+
+    TRACE("(%p)->(%x %x)\n", This, extconn, reserved);
+
+    if(extconn != EXTCONN_STRONG)
+        return 0;
+
+    return InterlockedIncrement(&This->extern_ref);
+}
+
+static DWORD WINAPI ExternalConnection_ReleaseConnection(IExternalConnection *iface, DWORD extconn,
+        DWORD reserved, BOOL fLastReleaseCloses)
+{
+    InternetExplorer *This = impl_from_IExternalConnection(iface);
+
+    TRACE("(%p)->(%x %x %x)\n", This, extconn, reserved, fLastReleaseCloses);
+
+    if(extconn != EXTCONN_STRONG)
+        return 0;
+
+    return release_extern_ref(This, fLastReleaseCloses);
+}
+
+static const IExternalConnectionVtbl ExternalConnectionVtbl = {
+    ExternalConnection_QueryInterface,
+    ExternalConnection_AddRef,
+    ExternalConnection_Release,
+    ExternalConnection_AddConnection,
+    ExternalConnection_ReleaseConnection
+};
+
 static inline InternetExplorer *impl_from_IServiceProvider(IServiceProvider *iface)
 {
     return CONTAINING_RECORD(iface, InternetExplorer, IServiceProvider_iface);
@@ -736,7 +816,7 @@ static HRESULT WINAPI IEServiceProvider_QueryService(IServiceProvider *iface,
 
     if(IsEqualGUID(&SID_SHTMLWindow, riid)) {
         TRACE("(%p)->(SID_SHTMLWindow)\n", This);
-        return IHTMLWindow2_QueryInterface(&This->doc_host->doc_host.html_window.IHTMLWindow2_iface, riid, ppv);
+        return IHTMLWindow2_QueryInterface(&This->doc_host.html_window.IHTMLWindow2_iface, riid, ppv);
     }
 
     FIXME("(%p)->(%s, %s %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);
@@ -755,5 +835,6 @@ static const IServiceProviderVtbl ServiceProviderVtbl =
 void InternetExplorer_WebBrowser_Init(InternetExplorer *This)
 {
     This->IWebBrowser2_iface.lpVtbl = &InternetExplorerVtbl;
+    This->IExternalConnection_iface.lpVtbl = &ExternalConnectionVtbl;
     This->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
 }

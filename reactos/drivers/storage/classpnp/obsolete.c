@@ -24,7 +24,6 @@ Revision History:
 --*/
 
 #include "classp.h"
-#include "debug.h"
 
 PIRP NTAPI ClassRemoveCScanList(IN PCSCAN_LIST List);
 VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List);
@@ -346,7 +345,6 @@ RetryRequest(
     ULONG RetryInterval
     )
 {
-    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
     PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
     ULONG transferByteCount;
@@ -847,7 +845,6 @@ Return Value:
 --*/            
 
 {
-    PCLASS_PRIVATE_FDO_DATA privateData = FdoExtension->PrivateFdoData;
     PCOMMON_DEVICE_EXTENSION commonExt = &FdoExtension->CommonExtension;
     //KIRQL oldIrql;
     //PIRP blockedIrp;
@@ -873,7 +870,7 @@ Return Value:
         ClasspFreeSrb(FdoExtension, Srb);
     }
     else {
-        DBGERR(("ClassFreeOrReuseSrb: someone is trying to use an uninitialized SrbLookasideList !!!"));;
+        DBGERR(("ClassFreeOrReuseSrb: someone is trying to use an uninitialized SrbLookasideList !!!"));
         ExFreePool(Srb);
     }
 }

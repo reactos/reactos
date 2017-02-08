@@ -26,57 +26,57 @@
 #include "rs232.h"
 
 
-HANDLE	hPortHandle = NULL;
+HANDLE    hPortHandle = NULL;
 
 
 BOOL Rs232OpenPortWin32(TCHAR* CommPort)
 {
-	TCHAR	PortName[MAX_PATH];
-	DWORD	ErrorCode;
+    TCHAR    PortName[MAX_PATH];
+    DWORD    ErrorCode;
 
-	// First check and make sure they don't already have the
-	// OBD2 connection open. We don't want to open things twice.
-	if (hPortHandle != NULL)
-	{
-		_tprintf(TEXT("Port handle not NULL. Must be already open. Returning FALSE...\n"));
-		return FALSE;
-	}
+    // First check and make sure they don't already have the
+    // OBD2 connection open. We don't want to open things twice.
+    if (hPortHandle != NULL)
+    {
+        _tprintf(TEXT("Port handle not NULL. Must be already open. Returning FALSE...\n"));
+        return FALSE;
+    }
 
-	_stprintf(PortName, TEXT("\\\\.\\%s"), CommPort);
+    _stprintf(PortName, TEXT("\\\\.\\%s"), CommPort);
 
-	hPortHandle = CreateFile(PortName,
-							GENERIC_READ|GENERIC_WRITE,
-							0,
-							0,
-							OPEN_EXISTING,
-							0,
-							0);
+    hPortHandle = CreateFile(PortName,
+                            GENERIC_READ|GENERIC_WRITE,
+                            0,
+                            0,
+                            OPEN_EXISTING,
+                            0,
+                            0);
 
-	if (hPortHandle == INVALID_HANDLE_VALUE)
-	{
-		hPortHandle = NULL;
-		ErrorCode = GetLastError();
+    if (hPortHandle == INVALID_HANDLE_VALUE)
+    {
+        hPortHandle = NULL;
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("CreateFile(\"%s\") failed. GetLastError() = %lu.\n"), PortName, ErrorCode);
+        _tprintf(TEXT("CreateFile(\"%s\") failed. GetLastError() = %lu.\n"), PortName, ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 BOOL Rs232ClosePortWin32(VOID)
 {
-	HANDLE	hTempPortHandle = hPortHandle;
+    HANDLE    hTempPortHandle = hPortHandle;
 
-	hPortHandle = NULL;
+    hPortHandle = NULL;
 
-	if (hTempPortHandle == NULL)
-	{
-		return FALSE;
-	}
+    if (hTempPortHandle == NULL)
+    {
+        return FALSE;
+    }
 
-	return CloseHandle(hTempPortHandle);
+    return CloseHandle(hTempPortHandle);
 }
 
 // DeviceControlString
@@ -95,65 +95,65 @@ BOOL Rs232ClosePortWin32(VOID)
 //   For further information on mode command syntax, refer to the end-user documentation for your operating system.
 BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
 {
-	DCB		dcb;
-	DWORD	ErrorCode;
+    DCB        dcb;
+    DWORD    ErrorCode;
 
-	/*if (!GetCommState(hPortHandle, &dcb))
-	{
-		ErrorCode = GetLastError();
+    /*if (!GetCommState(hPortHandle, &dcb))
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("GetCommState() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("GetCommState() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	dcb.BaudRate = BaudRate;
-	dcb.ByteSize = DataBits;
-	dcb.Parity = Parity;
-	dcb.StopBits = StopBits;
-	dcb.fBinary = TRUE;
-	dcb.fDsrSensitivity = FALSE;
-	dcb.fParity = (Parity == NOPARITY) ? FALSE : TRUE;
-	dcb.fOutX = FALSE;
-	dcb.fInX = FALSE;
-	dcb.fNull = FALSE;
-	dcb.fAbortOnError = TRUE;
-	dcb.fOutxCtsFlow = FALSE;
-	dcb.fOutxDsrFlow = FALSE;
-	dcb.fDtrControl = DTR_CONTROL_DISABLE;
-	dcb.fDsrSensitivity = FALSE;
-	dcb.fRtsControl = RTS_CONTROL_DISABLE;
-	dcb.fOutxCtsFlow = FALSE;
-	dcb.fOutxCtsFlow = FALSE;*/
+    dcb.BaudRate = BaudRate;
+    dcb.ByteSize = DataBits;
+    dcb.Parity = Parity;
+    dcb.StopBits = StopBits;
+    dcb.fBinary = TRUE;
+    dcb.fDsrSensitivity = FALSE;
+    dcb.fParity = (Parity == NOPARITY) ? FALSE : TRUE;
+    dcb.fOutX = FALSE;
+    dcb.fInX = FALSE;
+    dcb.fNull = FALSE;
+    dcb.fAbortOnError = TRUE;
+    dcb.fOutxCtsFlow = FALSE;
+    dcb.fOutxDsrFlow = FALSE;
+    dcb.fDtrControl = DTR_CONTROL_DISABLE;
+    dcb.fDsrSensitivity = FALSE;
+    dcb.fRtsControl = RTS_CONTROL_DISABLE;
+    dcb.fOutxCtsFlow = FALSE;
+    dcb.fOutxCtsFlow = FALSE;*/
 
 
-	memset(&dcb, 0, sizeof(DCB));
-	dcb.DCBlength = sizeof(dcb);
-	if (!BuildCommDCB(DeviceControlString, &dcb))
-	{
-		ErrorCode = GetLastError();
+    memset(&dcb, 0, sizeof(DCB));
+    dcb.DCBlength = sizeof(dcb);
+    if (!BuildCommDCB(DeviceControlString, &dcb))
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("BuildCommDCB() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("BuildCommDCB() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	if (!SetCommState(hPortHandle, &dcb))
-	{
-		ErrorCode = GetLastError();
+    if (!SetCommState(hPortHandle, &dcb))
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("SetCommState() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("SetCommState() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	// Set the timeouts
-	if (!Rs232SetCommunicationTimeoutsWin32(MAXDWORD, 0, 0, 0, 0))
-	{
-		return FALSE;
-	}
+    // Set the timeouts
+    if (!Rs232SetCommunicationTimeoutsWin32(MAXDWORD, 0, 0, 0, 0))
+    {
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 // Members
@@ -181,77 +181,77 @@ BOOL Rs232ConfigurePortWin32(TCHAR* DeviceControlString)
 //   If no character arrives within the time specified by ReadTotalTimeoutConstant, ReadFile times out.
 BOOL Rs232SetCommunicationTimeoutsWin32(DWORD ReadIntervalTimeout, DWORD ReadTotalTimeoutMultiplier, DWORD ReadTotalTimeoutConstant, DWORD WriteTotalTimeoutMultiplier, DWORD WriteTotalTimeoutConstant)
 {
-	COMMTIMEOUTS	ct;
-	DWORD			ErrorCode;
+    COMMTIMEOUTS    ct;
+    DWORD            ErrorCode;
 
-	if (!GetCommTimeouts(hPortHandle, &ct))
-	{
-		ErrorCode = GetLastError();
+    if (!GetCommTimeouts(hPortHandle, &ct))
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("GetCommTimeouts() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("GetCommTimeouts() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	ct.ReadIntervalTimeout = ReadIntervalTimeout;
-	ct.ReadTotalTimeoutConstant = ReadTotalTimeoutConstant;
-	ct.ReadTotalTimeoutMultiplier = ReadTotalTimeoutMultiplier;
-	ct.WriteTotalTimeoutConstant = WriteTotalTimeoutConstant;
-	ct.WriteTotalTimeoutMultiplier = WriteTotalTimeoutMultiplier;
+    ct.ReadIntervalTimeout = ReadIntervalTimeout;
+    ct.ReadTotalTimeoutConstant = ReadTotalTimeoutConstant;
+    ct.ReadTotalTimeoutMultiplier = ReadTotalTimeoutMultiplier;
+    ct.WriteTotalTimeoutConstant = WriteTotalTimeoutConstant;
+    ct.WriteTotalTimeoutMultiplier = WriteTotalTimeoutMultiplier;
 
-	if (!SetCommTimeouts(hPortHandle, &ct))
-	{
-		ErrorCode = GetLastError();
+    if (!SetCommTimeouts(hPortHandle, &ct))
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("SetCommTimeouts() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("SetCommTimeouts() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 BOOL Rs232ReadByteWin32(BYTE* DataByte)
 {
-	DWORD	BytesRead = 0;
-	DWORD	ErrorCode;
+    DWORD    BytesRead = 0;
+    DWORD    ErrorCode;
 
-	// If ReadFile() fails then report error
-	if (!ReadFile(hPortHandle, DataByte, 1, &BytesRead, NULL))
-	{
-		ErrorCode = GetLastError();
+    // If ReadFile() fails then report error
+    if (!ReadFile(hPortHandle, DataByte, 1, &BytesRead, NULL))
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("ReadFile() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("ReadFile() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	// If ReadFile() succeeds, but BytesRead isn't 1
-	// then a timeout occurred.
-	if (BytesRead != 1)
-	{
-		return FALSE;
-	}
+    // If ReadFile() succeeds, but BytesRead isn't 1
+    // then a timeout occurred.
+    if (BytesRead != 1)
+    {
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 BOOL Rs232WriteByteWin32(BYTE DataByte)
 {
-	DWORD	BytesWritten = 0;
-	BOOL	Success;
-	DWORD	ErrorCode;
+    DWORD    BytesWritten = 0;
+    BOOL    Success;
+    DWORD    ErrorCode;
 
-	Success = WriteFile(hPortHandle, &DataByte, 1, &BytesWritten, NULL);
+    Success = WriteFile(hPortHandle, &DataByte, 1, &BytesWritten, NULL);
 
-	if (!Success || BytesWritten != 1)
-	{
-		ErrorCode = GetLastError();
+    if (!Success || BytesWritten != 1)
+    {
+        ErrorCode = GetLastError();
 
-		_tprintf(TEXT("WriteFile() failed. GetLastError() = %lu.\n"), ErrorCode);
+        _tprintf(TEXT("WriteFile() failed. GetLastError() = %lu.\n"), ErrorCode);
 
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }

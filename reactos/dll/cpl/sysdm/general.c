@@ -9,8 +9,10 @@
  *
  */
 
-
 #include "precomp.h"
+
+#include <winnls.h>
+#include <powrprof.h>
 
 #define ANIM_STEP 2
 #define ANIM_TIME 50
@@ -20,12 +22,14 @@ typedef struct _IMGINFO
     HBITMAP hBitmap;
     INT cxSource;
     INT cySource;
+    INT iPLanes;
+    INT iBits;
 } IMGINFO, *PIMGINFO;
 
 PIMGINFO pImgInfo = NULL;
+BLENDFUNCTION BlendFunc = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
 
-void
-ShowLastWin32Error(HWND hWndOwner)
+VOID ShowLastWin32Error(HWND hWndOwner)
 {
     LPTSTR lpMsg;
     DWORD LastError;
@@ -51,39 +55,86 @@ ShowLastWin32Error(HWND hWndOwner)
 }
 
 
-static VOID
-InitImageInfo(PIMGINFO ImgInfo)
+static VOID InitLogo(HWND hwndDlg)
 {
-    BITMAP bitmap;
+    BITMAP logoBitmap;
+    BITMAP maskBitmap;
+    BITMAPINFO bmpi;
+    HDC hDC = GetDC(hwndDlg);
+    HDC hDCLogo = CreateCompatibleDC(NULL);
+    HDC hDCMask = CreateCompatibleDC(NULL);
+    HBITMAP hMask, hLogo, hAlphaLogo = NULL;
+    COLORREF *pBits;
+    INT line, column;
 
-    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
+    ZeroMemory(pImgInfo, sizeof(*pImgInfo));
+    ZeroMemory(&bmpi, sizeof(bmpi));
 
-    ImgInfo->hBitmap = LoadImage(hApplet,
-                                 MAKEINTRESOURCE(IDB_ROSBMP),
-                                 IMAGE_BITMAP,
-                                 0,
-                                 0,
-                                 LR_DEFAULTCOLOR);
+    hLogo = (HBITMAP)LoadImage(hApplet, MAKEINTRESOURCE(IDB_ROSBMP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+    hMask = (HBITMAP)LoadImage(hApplet, MAKEINTRESOURCE(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (ImgInfo->hBitmap != NULL)
+    if (hLogo != NULL && hMask != NULL)
     {
-        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+        GetObject(hLogo, sizeof(BITMAP), &logoBitmap);
+        GetObject(hMask, sizeof(BITMAP), &maskBitmap);
 
-        ImgInfo->cxSource = bitmap.bmWidth;
-        ImgInfo->cySource = bitmap.bmHeight;
+        if(logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
+            return;
+
+        pImgInfo->cxSource = logoBitmap.bmWidth;
+        pImgInfo->cySource = logoBitmap.bmHeight;
+
+        bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
+        bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
+        bmpi.bmiHeader.biHeight = logoBitmap.bmHeight;
+        bmpi.bmiHeader.biPlanes = 1;
+        bmpi.bmiHeader.biBitCount = 32;
+        bmpi.bmiHeader.biCompression = BI_RGB;
+        bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
+
+        hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
+
+        if(!hAlphaLogo)
+            return;
+
+        SelectObject(hDCLogo, hLogo);
+        SelectObject(hDCMask, hMask);
+
+        for(line = logoBitmap.bmHeight - 1; line >= 0; line--)
+        {
+            for(column = 0; column < logoBitmap.bmWidth; column++)
+            {
+                COLORREF alpha = GetPixel(hDCMask, column, line) & 0xFF;
+                COLORREF Color = GetPixel(hDCLogo, column, line);
+                DWORD r, g, b;
+
+                r = GetRValue(Color) * alpha / 255;
+                g = GetGValue(Color) * alpha / 255;
+                b = GetBValue(Color) * alpha / 255;
+
+                *pBits++ =  b | g << 8 | r << 16 | alpha << 24;
+            }
+          }
     }
+
+    pImgInfo->hBitmap = hAlphaLogo;
+    pImgInfo->cxSource = logoBitmap.bmWidth;
+    pImgInfo->cySource = logoBitmap.bmHeight;
+    pImgInfo->iBits = logoBitmap.bmBitsPixel;
+    pImgInfo->iPLanes = logoBitmap.bmPlanes;
+
+    DeleteObject(hLogo);
+    DeleteObject(hMask);
+    DeleteDC(hDCLogo);
+    DeleteDC(hDCMask);
+
 }
 
 LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static UINT timerid = 0, top = 0, offset;
-    static HBITMAP hBitmap2;
-    RECT r;
-    NONCLIENTMETRICS ncm;
-    HFONT hfont;
-    BITMAP bitmap;
-    HDC dc, sdc;
-    TCHAR devtext[2048];
+    static HBITMAP hCreditsBitmap;
+
     switch (uMsg)
     {
         case WM_LBUTTONDBLCLK:
@@ -91,51 +142,65 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             {
                 if (timerid == 0)
                 {
-                    top = 0; // Set top
+                    HDC hCreditsDC, hLogoDC;
+                    HFONT hFont;
+                    NONCLIENTMETRICS ncm;
+                    RECT rcCredits;
+                    TCHAR szCredits[2048];
+                    INT iDevsHeight;
 
-                    // Build new bitmap
-                    GetObject(pImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
-                    dc = CreateCompatibleDC(GetDC(NULL));
-                    if (dc == NULL)
-                    {
+                    top = 0;
+                    offset = 0;
+                    hCreditsDC = CreateCompatibleDC(GetDC(NULL));
+                    hLogoDC = CreateCompatibleDC(hCreditsDC);
+
+                    if (hCreditsDC == NULL || hLogoDC == NULL)
                         break;
-                    }
-                    sdc = CreateCompatibleDC(dc);
-                    if (sdc == NULL)
-                    {
-                        DeleteDC(dc);
-                        break;
-                    }
+
+                    SetRect(&rcCredits, 0, 0, 0, 0);
+
                     ncm.cbSize = sizeof(NONCLIENTMETRICS);
                     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 
-                    hfont = CreateFontIndirect(&ncm.lfMessageFont);
-                    SelectObject(dc, hfont);
-                    SetRect(&r, 0, 0, 0, 0);
-                    LoadString(hApplet, IDS_DEVS, devtext, sizeof(devtext) / sizeof(TCHAR));
-                    DrawText(dc, devtext, -1, &r, DT_CALCRECT);
-                    hBitmap2 = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + (r.bottom + 1 - r.top), bitmap.bmPlanes, bitmap.bmBitsPixel, NULL);
-                    SelectObject(sdc, pImgInfo->hBitmap);
-                    SelectObject(dc, hBitmap2);
-                    offset = 0;
-                    BitBlt(dc, 0, offset, bitmap.bmWidth, bitmap.bmHeight, sdc, 0, 0, SRCCOPY);
-                    offset += bitmap.bmHeight;
+                    hFont = CreateFontIndirect(&ncm.lfMessageFont);
+                    SelectObject(hCreditsDC, hFont);
 
-                    SetRect(&r, 0, offset, bitmap.bmWidth, offset + (r.bottom - r.top) + 1);
-                    FillRect(dc, &r, GetSysColorBrush(COLOR_3DFACE));
-                    SetBkMode(dc, TRANSPARENT);
-                    OffsetRect(&r, 1, 1);
-                    SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
-                    DrawText(dc, devtext, -1, &r, DT_CENTER);
-                    OffsetRect(&r, -1, -1);
-                    SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-                    DrawText(dc, devtext, -1, &r, DT_CENTER);
-                    offset += r.bottom - r.top;
+                    LoadString(hApplet, IDS_DEVS, szCredits, sizeof(szCredits) / sizeof(TCHAR));
+                    DrawText(hCreditsDC, szCredits, -1, &rcCredits, DT_CALCRECT);
 
-                    BitBlt(dc, 0, offset, bitmap.bmWidth, bitmap.bmHeight, sdc, 0, 0, SRCCOPY);
-                    offset += bitmap.bmHeight;
-                    DeleteDC(sdc);
-                    DeleteDC(dc);
+                    iDevsHeight = rcCredits.bottom - rcCredits.top;
+
+                    hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPLanes, pImgInfo->iBits, NULL);
+
+                    if(!hCreditsBitmap)
+                        break;
+
+                    SelectObject(hLogoDC, pImgInfo->hBitmap);
+                    SelectObject(hCreditsDC, hCreditsBitmap);
+
+                    offset += pImgInfo->cySource;
+
+                    SetRect(&rcCredits, 0, 0, pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1);
+                    FillRect(hCreditsDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+
+                    SetRect(&rcCredits, 0, offset, pImgInfo->cxSource, offset + iDevsHeight + 1);
+                    SetBkMode(hCreditsDC, TRANSPARENT);
+
+                    OffsetRect(&rcCredits, 1, 1);
+                    SetTextColor(hCreditsDC, GetSysColor(COLOR_BTNSHADOW));
+                    DrawText(hCreditsDC, szCredits, -1, &rcCredits, DT_CENTER);
+
+                    OffsetRect(&rcCredits, -1, -1);
+                    SetTextColor(hCreditsDC, GetSysColor(COLOR_WINDOWTEXT));
+                    DrawText(hCreditsDC, szCredits, -1, &rcCredits, DT_CENTER);
+
+                    offset += iDevsHeight;
+
+                    AlphaBlend(hCreditsDC, 0, 0, pImgInfo->cxSource, pImgInfo->cySource, hLogoDC, 0,  0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+                    AlphaBlend(hCreditsDC, 0, offset, pImgInfo->cxSource, pImgInfo->cySource, hLogoDC, 0,  0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+
+                    DeleteDC(hLogoDC);
+                    DeleteDC(hCreditsDC);
 
                     timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
                 }
@@ -144,22 +209,40 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         case WM_LBUTTONDOWN:
             if (timerid)
             {
+                RECT rcCredits;
+                HDC hDC = GetDC(hwnd);
+
+                GetClientRect(hwnd, &rcCredits);
+                SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
+                FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+
                 KillTimer(hwnd, timerid);
+                DeleteObject(hCreditsBitmap);
+                InvalidateRect(hwnd, NULL, FALSE);
+
                 top = 0;
                 timerid = 0;
-                DeleteObject(hBitmap2);
-                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_TIMER:
             top += ANIM_STEP;
-            if (top > offset - pImgInfo->cySource)
+
+            if (top > offset)
             {
+                RECT rcCredits;
+                HDC hDC = GetDC(hwnd);
+
+                GetClientRect(hwnd, &rcCredits);
+                SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
+                FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+
                 KillTimer(hwnd, timerid);
+                DeleteObject(hCreditsBitmap);
+
                 top = 0;
                 timerid = 0;
-                DeleteObject(hBitmap2);
             }
+
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_PAINT:
@@ -167,15 +250,10 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             PAINTSTRUCT PS;
             HDC hdcMem, hdc;
             LONG left;
-            if (wParam != 0)
-            {
-                hdc = (HDC)wParam;
-            }
-            else
-            {
-                hdc = BeginPaint(hwnd,&PS);
-            }
-            GetClientRect(hwnd,&PS.rcPaint);
+
+            hdc = wParam != 0 ? (HDC)wParam : BeginPaint(hwnd, &PS);
+
+            GetClientRect(hwnd, &PS.rcPaint);
 
             /* Position image in center of dialog */
             left = (PS.rcPaint.right - pImgInfo->cxSource) / 2;
@@ -183,16 +261,17 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
             if (hdcMem != NULL)
             {
-                SelectObject(hdcMem, timerid ? hBitmap2 : pImgInfo->hBitmap);
-                BitBlt(hdc,
-                       left,
-                       PS.rcPaint.top,
-                       PS.rcPaint.right - PS.rcPaint.left,
-                       PS.rcPaint.top + pImgInfo->cySource,
-                       hdcMem,
-                       0,
-                       top,
-                       SRCCOPY);
+                if(timerid != 0)
+                {
+                    SelectObject(hdcMem, hCreditsBitmap);
+                    BitBlt(hdc, left, PS.rcPaint.top, PS.rcPaint.right - PS.rcPaint.left, PS.rcPaint.top + pImgInfo->cySource, hdcMem, 0, top, SRCCOPY);
+                }
+                else
+                {
+                    SelectObject(hdcMem, pImgInfo->hBitmap);
+                    AlphaBlend(hdc, left, PS.rcPaint.top, pImgInfo->cxSource, pImgInfo->cySource, hdcMem, 0, 0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+                }
+
                 DeleteDC(hdcMem);
             }
 
@@ -204,53 +283,27 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     return TRUE;
 }
 
-static VOID
-SetRegTextData(HWND hwnd,
-               HKEY hKey,
-               LPTSTR Value,
-               UINT uID)
+static VOID SetRegTextData(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
     LPTSTR lpBuf = NULL;
     DWORD BufSize = 0;
     DWORD Type;
 
-    if (RegQueryValueEx(hKey,
-                        Value,
-                        NULL,
-                        &Type,
-                        NULL,
-                        &BufSize) == ERROR_SUCCESS)
+    if (RegQueryValueEx(hKey, Value, NULL, &Type, NULL, &BufSize) == ERROR_SUCCESS)
     {
-        lpBuf = HeapAlloc(GetProcessHeap(),
-                          0,
-                          BufSize);
+        lpBuf = HeapAlloc(GetProcessHeap(), 0, BufSize);
+
         if (!lpBuf)
             return;
 
-        if (RegQueryValueEx(hKey,
-                            Value,
-                            NULL,
-                            &Type,
-                            (PBYTE)lpBuf,
-                            &BufSize) == ERROR_SUCCESS)
-        {
-            SetDlgItemText(hwnd,
-                           uID,
-                           lpBuf);
-        }
+        if (RegQueryValueEx(hKey, Value, NULL, &Type, (PBYTE)lpBuf, &BufSize) == ERROR_SUCCESS)
+            SetDlgItemText(hwnd, uID, lpBuf);
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpBuf);
+        HeapFree(GetProcessHeap(), 0, lpBuf);
     }
 }
 
-static INT
-SetProcNameString(HWND hwnd,
-                  HKEY hKey,
-                  LPTSTR Value,
-                  UINT uID1,
-                  UINT uID2)
+static INT SetProcNameString(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID1, UINT uID2)
 {
     LPTSTR lpBuf = NULL;
     DWORD BufSize = 0;
@@ -260,25 +313,14 @@ SetProcNameString(HWND hwnd,
     TCHAR* szLastSpace;
     INT LastSpace = 0;
 
-    if (RegQueryValueEx(hKey,
-                        Value,
-                        NULL,
-                        &Type,
-                        NULL,
-                        &BufSize) == ERROR_SUCCESS)
+    if (RegQueryValueEx(hKey, Value, NULL, &Type, NULL, &BufSize) == ERROR_SUCCESS)
     {
-        lpBuf = HeapAlloc(GetProcessHeap(),
-                          0,
-                          BufSize);
+        lpBuf = HeapAlloc(GetProcessHeap(), 0, BufSize);
+
         if (!lpBuf)
             return 0;
 
-        if (RegQueryValueEx(hKey,
-                            Value,
-                            NULL,
-                            &Type,
-                            (PBYTE)lpBuf,
-                            &BufSize) == ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey, Value, NULL, &Type, (PBYTE)lpBuf, &BufSize) == ERROR_SUCCESS)
         {
             if (BufSize > ((30 + 1) * sizeof(TCHAR)))
             {
@@ -306,39 +348,26 @@ SetProcNameString(HWND hwnd,
 
                 _tcsncpy(szBuf, lpBuf, LastSpace);
 
-                SetDlgItemText(hwnd,
-                               uID1,
-                               szBuf);
-
-                SetDlgItemText(hwnd,
-                               uID2,
-                               lpBuf+LastSpace+1);
+                SetDlgItemText(hwnd, uID1, szBuf);
+                SetDlgItemText(hwnd, uID2, lpBuf+LastSpace+1);
 
                 /* Return the number of used lines */
                 Ret = 2;
             }
             else
             {
-                SetDlgItemText(hwnd,
-                             uID1,
-                             lpBuf);
-
+                SetDlgItemText(hwnd, uID1, lpBuf);
                 Ret = 1;
             }
         }
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpBuf);
+        HeapFree(GetProcessHeap(), 0, lpBuf);
     }
 
     return Ret;
 }
 
-static VOID
-MakeFloatValueString(double* dFloatValue,
-                     LPTSTR szOutput,
-                     LPTSTR szAppend)
+static VOID MakeFloatValueString(DOUBLE* dFloatValue, LPTSTR szOutput, LPTSTR szAppend)
 {
     TCHAR szDecimalSeparator[4];
 
@@ -356,32 +385,21 @@ MakeFloatValueString(double* dFloatValue,
     }
 }
 
-static VOID
-SetProcSpeed(HWND hwnd,
-             HKEY hKey,
-             LPTSTR Value,
-             UINT uID)
+static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
     TCHAR szBuf[64];
     DWORD BufSize = sizeof(DWORD);
     DWORD Type = REG_SZ;
     PROCESSOR_POWER_INFORMATION ppi;
 
-    ZeroMemory(&ppi,
-               sizeof(ppi));
+    ZeroMemory(&ppi, sizeof(ppi));
 
     if ((CallNtPowerInformation(ProcessorInformation,
                                 NULL,
                                 0,
                                 (PVOID)&ppi,
                                 sizeof(ppi)) == STATUS_SUCCESS &&
-         ppi.CurrentMhz != 0) ||
-         RegQueryValueEx(hKey,
-                         Value,
-                         NULL,
-                         &Type,
-                         (PBYTE)&ppi.CurrentMhz,
-                         &BufSize) == ERROR_SUCCESS)
+         ppi.CurrentMhz != 0) || RegQueryValueEx(hKey, Value, NULL, &Type, (PBYTE)&ppi.CurrentMhz, &BufSize) == ERROR_SUCCESS)
     {
         if (ppi.CurrentMhz < 1000)
         {
@@ -393,14 +411,11 @@ SetProcSpeed(HWND hwnd,
             MakeFloatValueString(&flt, szBuf, _T("GHz"));
         }
 
-        SetDlgItemText(hwnd,
-                       uID,
-                       szBuf);
+        SetDlgItemText(hwnd, uID, szBuf);
     }
 }
 
-static VOID
-GetSystemInformation(HWND hwnd)
+static VOID GetSystemInformation(HWND hwnd)
 {
     HKEY hKey;
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
@@ -414,16 +429,9 @@ GetSystemInformation(HWND hwnd)
      * directly out of the registry instead of via setupapi as it
      * contains all the info we need, and should remain static
      */
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     ProcKey,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, ProcKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        SetRegTextData(hwnd,
-                       hKey,
-                       _T("VendorIdentifier"),
-                       CurMachineLine);
+        SetRegTextData(hwnd, hKey, _T("VendorIdentifier"), CurMachineLine);
         CurMachineLine++;
 
         CurMachineLine += SetProcNameString(hwnd,
@@ -432,16 +440,13 @@ GetSystemInformation(HWND hwnd)
                                             CurMachineLine,
                                             CurMachineLine + 1);
 
-        SetProcSpeed(hwnd,
-                     hKey,
-                     _T("~MHz"),
-                     CurMachineLine);
+        SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
         CurMachineLine++;
     }
 
-
     /* Get total physical RAM */
     MemStat.dwLength = sizeof(MemStat);
+
     if (GlobalMemoryStatusEx(&MemStat))
     {
         TCHAR szStr[32];
@@ -450,11 +455,7 @@ GetSystemInformation(HWND hwnd)
         if (MemStat.ullTotalPhys > 1024 * 1024 * 1024)
         {
             UINT i = 0;
-            static const UINT uStrId[] = {
-                IDS_GIGABYTE,
-                IDS_TERABYTE,
-                IDS_PETABYTE
-            };
+            static const UINT uStrId[] = { IDS_GIGABYTE, IDS_TERABYTE, IDS_PETABYTE};
 
             // We're dealing with GBs or more
             MemStat.ullTotalPhys /= 1024 * 1024;
@@ -499,13 +500,8 @@ GetSystemInformation(HWND hwnd)
 
 
 /* Property page dialog callback */
-INT_PTR CALLBACK
-GeneralPageProc(HWND hwndDlg,
-                UINT uMsg,
-                WPARAM wParam,
-                LPARAM lParam)
+INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
 
@@ -519,7 +515,7 @@ GeneralPageProc(HWND hwndDlg,
                 return FALSE;
             }
 
-            InitImageInfo(pImgInfo);
+            InitLogo(hwndDlg);
             SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWL_WNDPROC, (LONG)RosImageProc);
             GetSystemInformation(hwndDlg);
             break;
@@ -531,10 +527,7 @@ GeneralPageProc(HWND hwndDlg,
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_LICENCE)
             {
-                DialogBox(hApplet,
-                          MAKEINTRESOURCE(IDD_LICENCE),
-                          hwndDlg,
-                          LicenceDlgProc);
+                DialogBox(hApplet, MAKEINTRESOURCE(IDD_LICENCE), hwndDlg, LicenceDlgProc);
 
                 return TRUE;
             }
@@ -542,8 +535,8 @@ GeneralPageProc(HWND hwndDlg,
 
         case WM_DRAWITEM:
         {
-            LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+
             if (lpDrawItem->CtlID == IDC_ROSIMG)
             {
                 HDC hdcMem;
@@ -579,12 +572,7 @@ GeneralPageProc(HWND hwndDlg,
             {
                 PNMLINK nml = (PNMLINK)nmhdr;
 
-                ShellExecuteW(hwndDlg,
-                              L"open",
-                              nml->item.szUrl,
-                              NULL,
-                              NULL,
-                              SW_SHOWNORMAL);
+                ShellExecuteW(hwndDlg, L"open", nml->item.szUrl, NULL, NULL, SW_SHOWNORMAL);
             }
             break;
         }

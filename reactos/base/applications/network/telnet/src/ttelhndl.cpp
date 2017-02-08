@@ -40,6 +40,8 @@
 
 #include "precomp.h"
 
+#include "telnet.h"
+
 int naws_string(char *buf, int width, int height);
 
 // This helps make the code more readable (Paul Brannan 1/1/99)

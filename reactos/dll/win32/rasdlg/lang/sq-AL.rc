@@ -1,0 +1,2377 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  23-01-2014
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+102 DIALOGEX 0, 0, 255, 265
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Numrat alternative Telefoni"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Specifikoni numra telefoni alternative që ju dëshironi të përdorni për të bërë këtë lidhje.", 1018, 7, 5, 243, 16
+    LTEXT "&Numra Telefoni:", 1019, 7, 27, 238, 8
+    CONTROL "", 1012, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000848D, 7, 38, 217, 144
+    PUSHBUTTON "Leviz &lart", 1017, 230, 40, 18, 16, BS_ICON
+    PUSHBUTTON "Leviz &poshtë", 1015, 230, 61, 18, 16, BS_ICON
+    PUSHBUTTON "&Shto...", 1013, 7, 187, 70, 14
+    PUSHBUTTON "&Modifiko...", 1016, 81, 187, 70, 14
+    PUSHBUTTON "&Fshi", 1014, 154, 187, 70, 14
+    AUTOCHECKBOX "Nëse &numri dështon, provo numrin tjetër", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Leviz numrat e suksesshëm në krye të listës", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "OK", 1, 122, 245, 60, 14
+    PUSHBUTTON "Anulo", 2, 188, 245, 60, 14
+END
+
+103 DIALOGEX 6, 18, 250, 170
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Lidhja Rrjetit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", 1029, 5, 5, 241, 35, NOT WS_GROUP
+    LTEXT "Lidhje:", -1, 5, 46, 238, 10
+    CONTROL "List1", 1677, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 5, 57, 240, 57
+    AUTOCHECKBOX "&Mos më pyesni përsëri deri në herën tjetër që unë lidhem", 1022, 8, 125, 235, 10
+    PUSHBUTTON "&Cilësime", 1026, 7, 149, 60, 14
+    DEFPUSHBUTTON "&Lidhu...", 1024, 117, 149, 60, 14
+    PUSHBUTTON "Anulo", 1025, 183, 149, 60, 14
+END
+
+104 DIALOGEX 6, 18, 269, 263
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Gabimet bundling Linje"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 32516, 1031, 7, 7, 20, 20
+    LTEXT "Një ose më shumë linja të tjera nuk e lidhën. ", 1033, 37, 8, 216, 20
+    CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
+    AUTOCHECKBOX "&Mos u përpjek me linja të dështuara në të ardhmen", 1030, 38, 226, 222, 10
+    DEFPUSHBUTTON "&Prano", 1, 135, 242, 60, 14
+    PUSHBUTTON "&Mbyllu", 2, 201, 242, 60, 14
+    LTEXT "Në qoftë se vetëm një linjë e vetme të lidh, serveri nuk mund të jetë konfiguruar për të pranuar thirrje multi-link. Kontrollo 'Mos u përpiqni me linjat e dështuara' për të shmangur akuza të panevojshme të lidhjes në një rast të tillë.", -1, 37, 36, 224, 44
+END
+
+105 DIALOGEX 0, 0, 261, 253
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësime Sigurie Avancuara"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Siguria Hyrjes", 1547, 7, 33, 246, 191
+    LTEXT "&Kriptim T'dhanash:", 1546, 7, 5, 247, 10
+    COMBOBOX 1495, 7, 17, 247, 76, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Përdor &Protokolli Zgjatur Vërtetimit (EAP)", 1544, 17, 47, 226, 8, WS_GROUP
+    LTEXT "EAP Tipi", -1, 18, 64, 35, 8, NOT WS_VISIBLE | NOT WS_GROUP
+    COMBOBOX 1034, 53, 62, 191, 42, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "Karakteristikat", 1035, 184, 77, 60, 14
+    AUTORADIOBUTTON "Lejo këeto &protokolle", 1545, 17, 92, 224, 10
+    AUTOCHECKBOX "&Fjalëkalime të Pakrituara (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Protokolli i Vërtetimit Fjalëkalimeve &Shiva (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Sfido Protokollin e Vertetimit ShtrongimDuarsh (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Lejo versione të vjetra MS-CHAP për &Win 95 servers", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "M&icrosoft CHAP Versioni 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
+    AUTOCHECKBOX "&Për protokollet bazë MS-CHAP , përdor emrin e përdoruesit dhe fjalëkalimin e ReactOS (dhe domain nëse ka)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
+    PUSHBUTTON "Anulo", 2, 192, 232, 60, 14
+END
+
+106 DIALOGEX 6, 18, 255, 109
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Lidhja Kompletua"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", 1, 97, 91, 60, 14
+    ICON 563, 1046, 7, 7, 20, 20
+    LTEXT "'Emri lidhjes' është lidhur tani.", 1047, 40, 7, 212, 16
+    LTEXT "Për të kontrolluar statusin e kësaj lidhje ose shkëputje, klikim-djathtë ikonën e saj në dosje Lidhjet Rrjetit, ose klikoni ikonën e saj në tabelën menuse (nëse është i pranishëm).", -1, 40, 30, 212, 34
+    AUTOCHECKBOX "&Mos e shfaq këtë mesazh përsëri", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
+END
+
+107 DIALOGEX 0, 0, 258, 167
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Numri telefonit", 1053, 7, 5, 243, 92
+    LTEXT "&Area code:", 1055, 18, 17, 54, 8
+    COMBOBOX 1049, 17, 30, 55, 129, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "&Numri telefonit:", 1057, 77, 17, 166, 8, NOT WS_GROUP
+    EDITTEXT 1051, 77, 30, 163, 14, ES_AUTOHSCROLL
+    LTEXT "&Shteti/kodi rajonit:", 1056, 18, 48, 221, 8, NOT WS_GROUP
+    COMBOBOX 1054, 17, 61, 224, 93, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "&Përdor rregullat e thirrjes", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
+    GROUPBOX "Ko&mento", 1052, 7, 102, 243, 36
+    EDITTEXT 1050, 17, 115, 224, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 127, 147, 60, 14
+    PUSHBUTTON "Anulo", 2, 191, 147, 60, 14
+END
+
+108 DIALOGEX 6, 18, 222, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Ndrysho Fjalëkalimi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Fjalëkalimi juaj në rrjet të largët ka skaduar. Shkruani fjalëkalimin, pastaj shtypni OK për të vendosur një të ri.", 1062, 7, 5, 210, 24
+    LTEXT "&Fjalëkalimi i'ri:", 1064, 8, 43, 108, 8
+    EDITTEXT 1060, 118, 38, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Konfirmo fjalëkalimi i'ri:", 1061, 8, 61, 102, 8
+    EDITTEXT 1058, 118, 57, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 90, 84, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 154, 84, 60, 14
+END
+
+109 DIALOGEX 6, 18, 223, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Ndrysho Fjalëkalimi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Fjalëkalimi juaj në rrjet të largët ka skaduar. Shkruani fjalëkalimin, pastaj shtypni OK për të vendosur një të ri.", 1062, 7, 5, 212, 29
+    LTEXT "&Fjalëkalimi vjetër:", 1063, 7, 42, 108, 8
+    EDITTEXT 1059, 116, 38, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalimi i'ri:", 1064, 7, 60, 108, 8
+    EDITTEXT 1060, 116, 56, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Konfirmo fjalëkalimi i'ri:", 1061, 7, 78, 108, 8
+    EDITTEXT 1058, 116, 74, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 92, 101, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 156, 101, 60, 14
+END
+
+110 DIALOGEX 12, 16, 230, 105
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ThirreMbrapa "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju keni 'Vendoset nga telefonuesi'  privilegjet e thirre mbrapa në server. Shtypni OK dhe serveri do t'ju thirrë mbrapa në numrin e mëposhtëm. Shtypni Anulo për të kaluar së thirruri mbrapa.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "&Enter your modem's phone number:", 1067, 5, 46, 222, 8, NOT WS_GROUP
+    EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 164, 85, 60, 14
+END
+
+111 DIALOGEX 6, 19, 265, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Gabim ne Lidhjen me %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 32515, 1068, 7, 7, 20, 20, WS_GROUP
+    LTEXT "", 1070, 34, 7, 226, 105
+    DEFPUSHBUTTON "Mos i bjer=88", 1, 4, 117, 128, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 136, 117, 60, 14
+    PUSHBUTTON "&Më shum Info", 1069, 200, 117, 60, 14
+END
+
+112 DIALOGEX 6, 18, 263, 219
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Thirrje dhe Mbyllje Automatike"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS automatikisht mund të thërras dhe të ul pajisjen e receptorit të telefonit në varësi të qfarë informacion është duke u dërguar dhe marrë.", 1085, 9, 7, 253, 30
+    GROUPBOX "Thirrje Automatike", -1, 6, 38, 249, 71
+    LTEXT "Thirr një tjetër linjë kur kjo lidhje plotëson dy kushtet e mëposhtme:", 1083, 16, 51, 237, 16, NOT WS_GROUP
+    LTEXT "Aktivizo të &paktën:", -1, 16, 73, 100, 8
+    COMBOBOX 1079, 117, 70, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "&Kohëzgjatja të paktën:", 1084, 16, 92, 99, 8, NOT WS_GROUP
+    COMBOBOX 1080, 117, 89, 90, 162, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "Mbyllje Automatike", -1, 6, 113, 248, 81
+    LTEXT "Mbyll pajisjet që përdoren për këtë lidhje kur ajo i plotëson të dy kushtet e mëposhtme:", 1086, 16, 127, 230, 18, NOT WS_GROUP
+    LTEXT "Aktivitet jo më shumë se:", -1, 16, 150, 92, 8
+    COMBOBOX 1081, 115, 146, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Kohëzgjatja të paktën:", 1087, 16, 168, 92, 8, NOT WS_GROUP
+    COMBOBOX 1082, 115, 166, 90, 151, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", 1, 131, 199, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 194, 199, 60, 14
+END
+
+113 DIALOGEX 21, 46, 225, 65
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Duke u Lidhur %1..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 563, 1417, 7, 7, 20, 20
+    LTEXT "", 1097, 36, 7, 185, 35, SS_NOPREFIX
+    PUSHBUTTON "Anulo", 2, 83, 47, 60, 14
+END
+
+114 DIALOGEX 6, 18, 225, 60
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Rrjeti Merr-tel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
+    LTEXT "Përpjekja merr-automatiksiht dështoi. A doni të çaktivizoni merr-automatikisht nga ky vend?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+    PUSHBUTTON "&Po", 1, 60, 42, 50, 14
+    DEFPUSHBUTTON "&Jo", 2, 115, 42, 50, 14
+END
+
+115 DIALOGEX 0, 0, 263, 124
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 263, 50
+    LTEXT "Bjeri:", 1412, 9, 60, 68, 8
+    COMBOBOX 1416, 88, 56, 165, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Bjeri &nga:", 1415, 9, 77, 71, 8
+    COMBOBOX 1414, 88, 75, 89, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Regullat telefonates", 1108, 181, 75, 72, 14
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 96, 245, 1
+    DEFPUSHBUTTON "&Bjeri", 1590, 8, 103, 61, 14
+    PUSHBUTTON "Anulo", 1591, 70, 103, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 132, 103, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 194, 103, 60, 14
+END
+
+116 DIALOGEX 0, 0, 265, 176
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 8, 60, 88, 8
+    EDITTEXT 1104, 103, 57, 154, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1112, 8, 79, 88, 8
+    EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
+    AUTOCHECKBOX "&Ruaj këtë emër përdoruesi dhe fjalëkalim për përdoruesit e mëposhtme:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Vetëm unë", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Kushdo që e përdor këtë kompjuter", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
+    DEFPUSHBUTTON "&Bjeri", 1590, 8, 156, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 1591, 71, 156, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 133, 156, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 195, 156, 60, 14
+END
+
+117 DIALOGEX 0, 0, 263, 192
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 9, 61, 92, 8
+    EDITTEXT 1104, 102, 57, 154, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1112, 9, 80, 92, 8
+    EDITTEXT 1103, 102, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "Do&main:", 1110, 9, 99, 91, 8
+    EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
+    AUTOCHECKBOX "&Ruaj këtë emër përdoruesi dhe fjalëkalim për përdoruesit e mëposhtme:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Vetëm unë", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Kushdo që e përdor këtë kompjuter", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
+    DEFPUSHBUTTON "&Bjeri", 1590, 8, 173, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 1591, 71, 173, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 133, 173, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 195, 173, 60, 14
+END
+
+118 DIALOGEX 0, 0, 265, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 61, 92, 8
+    EDITTEXT 1104, 104, 57, 154, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1112, 10, 80, 92, 8
+    EDITTEXT 1103, 104, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "Do&main:", 1110, 10, 100, 92, 8
+    EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
+    AUTOCHECKBOX "&Ruaj këtë emër përdoruesi dhe fjalëkalim për përdoruesit e mëposhtme:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Vetëm unë", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Kushdo që e përdor këtë kompjuter", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
+    LTEXT "Bjeri:", 1412, 10, 177, 90, 8
+    COMBOBOX 1416, 102, 173, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 192, 247, 1
+    DEFPUSHBUTTON "&Bjeri", 1590, 10, 199, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 1591, 72, 199, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 134, 199, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 196, 199, 60, 14
+END
+
+119 DIALOGEX 0, 0, 265, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 62, 91, 8
+    EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1112, 10, 81, 92, 8
+    EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
+    AUTOCHECKBOX "&Ruaj këtë emër përdoruesi dhe fjalëkalim për përdoruesit e mëposhtme:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Vetëm unë", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&ushdo që e përdor këtë kompjuter", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
+    LTEXT "Bjeri:", 1412, 13, 157, 88, 8
+    COMBOBOX 1416, 103, 154, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 173, 247, 1
+    DEFPUSHBUTTON "&Bjeri", 1590, 10, 180, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 1591, 72, 180, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 134, 180, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 197, 180, 60, 14
+END
+
+121 DIALOGEX 6, 18, 230, 131
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN Konfigurim"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Tipi linjes:", 1155, 9, 9, 65, 8
+    COMBOBOX 1153, 76, 7, 148, 42, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Negocimi llojit linjës", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
+    AUTOCHECKBOX "&Përdorimi protokoll e vjetër të cilësimeve", 1149, 17, 48, 102, 10, BS_TOP | BS_MULTILINE
+    LTEXT "&Kanale për përdorim:", 1154, 16, 65, 100, 8, NOT WS_GROUP
+    EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Aktivizo kompresimin e pajisjeve lektronike", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "OK", 1, 99, 109, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 163, 109, 60, 14
+END
+
+122 DIALOGEX 6, 18, 220, 68
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN Konfigurim"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Tipi linjes:", 1155, 9, 11, 55, 8
+    COMBOBOX 1153, 67, 7, 148, 43, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Negocimi llojit linjës", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "OK", 1, 90, 49, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 154, 49, 60, 14
+END
+
+123 DIALOGEX 11, 20, 350, 275
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT 1161, 5, 5, 338, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
+    LTEXT "Adresa I&P:", 1163, 7, 253, 68, 8
+    CONTROL "", 1160, "RASIPADDRESS", WS_TABSTOP, 76, 250, 117, 14
+    DEFPUSHBUTTON "", 1162, 197, 252, 16, 13, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON "&e'bërë", 1, 219, 252, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 283, 252, 60, 14
+END
+
+124 DIALOGEX 6, 17, 350, 266
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT 1161, 5, 4, 340, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
+    DEFPUSHBUTTON "", 1162, 7, 247, 50, 14, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON "&e'bërë", 1, 222, 247, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 286, 247, 60, 14
+END
+
+125 DIALOGEX 12, 16, 261, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Modem Konfigurim"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 15102, 1238, 7, 7, 20, 20
+    LTEXT "Modem", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
+    EDITTEXT 1235, 40, 7, 214, 16, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    LTEXT "Shpejtësi &Maximale (bps):", 1243, 7, 36, 110, 8
+    COMBOBOX 1239, 119, 34, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "&protokolli Modemit", 1244, 7, 52, 111, 8
+    COMBOBOX 1245, 119, 50, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "Paraqitje pjesëve elektronike", 1237, 6, 70, 248, 61, WS_GROUP
+    AUTOCHECKBOX "Mundëso kontrollin e rrjedhjes pjesëve elektronike", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Mundëso kontrollin gabimeve të modemit", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Mundëso ngjeshjen e m&odemit", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Shfaq dritaren e terminalit", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Mundëso boxet e mo&demit", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "OK", 1, 129, 171, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 194, 171, 60, 14
+END
+
+126 DIALOGEX 0, 0, 270, 117
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Zgjidhni Llojin e Komponenteve të Rrjetit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Kliko llojin e komponentit të rrjetit që dëshironi të instaloni:", -1, 8, 7, 258, 8
+    CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 8, 20, 188, 58
+    GROUPBOX "", -1, 8, 81, 188, 30
+    LTEXT "", 1250, 12, 90, 177, 17
+    DEFPUSHBUTTON "&Shto...", 1252, 205, 20, 60, 14
+    PUSHBUTTON "Anulo", 2, 205, 38, 60, 14
+END
+
+127 DIALOGEX 16, 20, 260, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "NetWare ose Lidhjet Compatible"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
+    LTEXT "Ju keni lidhje një rrjet NetWare compatible. Këto lidhje do të jenë të mbyllura kur lidhja PPP IPX është themeluar.", 1279, 42, 7, 215, 37
+    LTEXT "Para se të formoni i numrin, për të shmangur humbjen e të dhënave, ose mbyllni të gjitha dosjet duke përdorur këtë lidhje ose zgjidhni IPX në parametrat e Protokollit të rrjetit hyrjes.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    AUTOCHECKBOX "&Mos e shfaq këtë mesazh në të ardhmen", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "OK", 1, 65, 112, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 134, 112, 60, 14
+END
+
+128 DIALOGEX 7, 22, 236, 90
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Bjeri Manualisht"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Merr telefonin dhe thirrni (ose kërkoni operatorit të thirrni). Pas formimit të numrit plotësisht, klikoni OK. Dëgjoni telefonin derisa të heshtin, dhe pastaj e mbyllni.", 1281, 8, 8, 219, 32
+    LTEXT "Numri Telefonit:", 1282, 8, 46, 91, 8
+    LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
+    DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 168, 70, 60, 14
+END
+
+129 DIALOGEX 6, 20, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Protokolli Rrjeti Lidhja e Rezultateve"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 32516, 1328, 7, 7, 21, 20, WS_GROUP
+    LTEXT "", 1329, 38, 7, 216, 24, NOT WS_GROUP
+    AUTOCHECKBOX "&Mos kërkoni protokollet të dështuar herën tjetër", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "&Prano", 1, 129, 64, 60, 14
+    PUSHBUTTON "&Prano", 2, 193, 64, 60, 14
+END
+
+133 DIALOGEX 6, 18, 231, 211
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "X.25 Cilësime Hyrese"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni ofruesin e rrjetit tuaj X.25 dhe shkruani adresën X.121 e server në distancë:", 1408, 7, 4, 220, 27
+    LTEXT "&Rrjeti:", 1410, 9, 35, 213, 8, NOT WS_GROUP
+    COMBOBOX 1406, 9, 46, 215, 125, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "X.121&adresa:", 1407, 9, 66, 213, 8, NOT WS_GROUP
+    EDITTEXT 1402, 8, 77, 215, 14, ES_AUTOHSCROLL
+    GROUPBOX "Fakultative", 1405, 8, 95, 215, 79
+    LTEXT "&T'dhënat Përdoruesit:", 1411, 19, 109, 182, 8, NOT WS_GROUP
+    EDITTEXT 1404, 19, 120, 193, 14, ES_AUTOHSCROLL
+    LTEXT "&Lehtësira:", 1409, 19, 138, 182, 8, NOT WS_GROUP
+    EDITTEXT 1403, 19, 149, 193, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 100, 189, 60, 14
+    PUSHBUTTON "Anulo", 2, 164, 189, 60, 14
+END
+
+146 DIALOGEX 6, 18, 230, 210
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Thirr-Auto"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Nëse ju do të shkëputeni nga një rrjet, thirr-auto përpiqet për tu lidhur në një rrjet sa herë që ju të përpiqeni për të hyrë në informacionin e largët.", -1, 7, 4, 219, 32
+    LTEXT "&Mundëso thirr-auto me vendndodhje:", 1006, 8, 42, 213, 8
+    CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
+    AUTOCHECKBOX "Përhere pyet para thirr-automa", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Gjzmto thirr-auto ndërsa unë jam i lidhur", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
+END
+
+147 DIALOGEX 6, 18, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Formo Numrin"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "këto preferenca zbatohet për 'Login përdorur Dial-Up Networking' në Ctrl-Alt-Del login. Ju, si një administrator, të kenë qasje në këtë fletë.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "&Numri i përpjekjeve bjeri-prap:", 1005, 7, 55, 154, 8
+    EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
+    LTEXT "&Sekonda ndërmjet përpjekjeve bjeri-prap:", 1009, 7, 73, 156, 8, NOT WS_GROUP
+    EDITTEXT 1003, 164, 70, 60, 14, ES_AUTOHSCROLL
+    LTEXT "Sekonda pushim para se ta mbyllesh:", 1008, 7, 91, 154, 8, NOT WS_GROUP
+    EDITTEXT 1002, 164, 88, 60, 14, ES_AUTOHSCROLL
+END
+
+148 DIALOGEX 6, 18, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Thirr Prapa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Kur ju thirrni në një server, ajo mund të ofrojë për t'ju thërras prapa për të reduktuar faturat e telefonit tuaj. Specifikoni nëse doni thirrjen prap. (Thirrja prapa nuk është i mbështetur për lidhjet e rrjeteve virtual private (VPN).)", 1043, 8, 4, 219, 43
+    AUTORADIOBUTTON "&Ho Thirrjes-prapa", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Më pyet gjatë thirrjeve kur serveri ofron", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "Përhere më thirr prapa tek numrat(ë) më poshtë:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
+    CONTROL "", 1037, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 16, 88, 204, 94
+    PUSHBUTTON "&Modifiko...", 1039, 96, 190, 60, 14
+    PUSHBUTTON "&Delete", 1038, 159, 190, 60, 14
+END
+
+149 DIALOGEX 6, 18, 317, 142
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju duhet të vendosni formo-në kredencialet që ruterat e largët do të përdorin kur lidhen me këtë ndërfaqe. Një llogari përdoruesi do të krijohet në këtë router me informacionin që ju të hyni këtu.", 1094, 8, 5, 307, 35
+    LTEXT "&Përdorues:", 1078, 8, 47, 124, 8, NOT WS_GROUP
+    EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "&Fjalëkalim:", 1077, 8, 68, 124, 8, NOT WS_GROUP
+    EDITTEXT 1073, 135, 66, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Konfirmo fjalëkalimin:", 1075, 8, 90, 124, 8, NOT WS_GROUP
+    EDITTEXT 1071, 135, 87, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+END
+
+150 DIALOGEX 6, 18, 321, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju duhet të vendosni mbyllni-në kredencialet që ruoterat e largët do të përdorin kur lidhen me këtë ndërfaqe. Këto kredencialet duhen të përputhen me formo në kredencialet e konfiguruara në routerin e largët.", 1094, 8, 5, 308, 33
+    LTEXT "&Përdorues:", 1096, 8, 43, 130, 8, NOT WS_GROUP
+    EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
+    LTEXT "&Domain:", 1093, 8, 63, 130, 8, NOT WS_GROUP
+    EDITTEXT 1089, 140, 60, 175, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1095, 8, 81, 130, 8, NOT WS_GROUP
+    EDITTEXT 1090, 140, 78, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Konfirmo fjalëkalimin:", 1092, 8, 99, 130, 8, NOT WS_GROUP
+    EDITTEXT 1088, 140, 96, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+END
+
+153 DIALOGEX 0, 0, 315, 140
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruaj një emër që ju dëshironi për këtë lidhje:", -1, 8, 4, 190, 8
+    EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
+    LTEXT "Kliko Mbaro për të ruajtur atë në dosjen Lidhjes Rrjetit.", -1, 8, 38, 193, 8
+    LTEXT "Për të ndryshuar këtë lidhje më vonë, zgjidhni atë, klikoni dokumentin menu, dhe pastaj klikoni Karakteristikat.", -1, 8, 58, 193, 16
+END
+
+155 DIALOGEX 0, 0, 231, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Cilësime"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Lidhu përdor:", 1124, 7, 5, 219, 8
+    CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 198, 44, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Lart", 1132, 210, 18, 16, 14, BS_ICON
+    PUSHBUTTON "&Poshtë", 1131, 210, 36, 16, 14, BS_ICON
+    AUTOCHECKBOX "T'gjithë pajisjet telefononi të njëjtin numer", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "K&onfiguro..", 1130, 144, 66, 60, 14
+    GROUPBOX "Tipi shëmbullit", 1125, 8, 84, 215, 100, WS_GROUP
+    LTEXT "Kodi zonës:", 1133, 17, 102, 52, 8
+    COMBOBOX 1122, 17, 112, 52, 110, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "&Numri telefonit:", 1135, 71, 102, 139, 8
+    EDITTEXT 1123, 73, 112, 79, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Alter&noj", 1129, 154, 112, 60, 14
+    LTEXT "Shteti/Kodi ra&jonal:", 1134, 17, 132, 197, 8
+    COMBOBOX 1126, 17, 143, 193, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Përdor rregullat telefonuese", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Rregullat telefonike", 1136, 151, 161, 60, 14
+    AUTOCHECKBOX "Shfaq ikonën në zonën e njoftimit kur i lidhur", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
+END
+
+156 DIALOGEX 0, 0, 231, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Cilësime"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "K&onfiguro...", 1130, 164, 38, 60, 14
+    GROUPBOX "Tipi shëmbullit", 1125, 8, 55, 217, 100, WS_GROUP
+    LTEXT "Kodi zonës:", 1133, 17, 72, 48, 8
+    COMBOBOX 1122, 17, 83, 48, 119, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "&Numri telefonit:", 1135, 71, 72, 146, 8
+    EDITTEXT 1123, 71, 83, 81, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Alter&naoj", 1129, 155, 83, 63, 14
+    LTEXT "Shteti/Kodi ra&jonal:", 1134, 17, 103, 193, 8
+    COMBOBOX 1126, 17, 114, 201, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Përdor rregullat telefonuese", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Rregullat telefonike", 1136, 157, 132, 60, 14
+    AUTOCHECKBOX "Trego ikonën në zonën e njoftimit kur i lidhur", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
+    LTEXT "Lidhu përdor:", 1124, 8, 5, 217, 8
+    CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 217, 15
+END
+
+157 DIALOGEX 6, 18, 235, 160
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Aparenca"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "&Numrat e telefonit shikim paraprak para telefonates", 1142, 8, 10, 224, 10, WS_GROUP
+    AUTOCHECKBOX "Trego cilësimet e vendndodhjes para formimit të numrit", 1139, 8, 27, 224, 10
+    AUTOCHECKBOX "Lejo redaktimet vend gjatë hyrjes", 1140, 21, 43, 212, 10
+    AUTOCHECKBOX "Shfaq &progresin lidhjes, ndërsa formoni numrin", 1143, 8, 59, 224, 10
+    AUTOCHECKBOX "Mbylle në formim të numrit", 1137, 8, 76, 224, 10
+    AUTOCHECKBOX "Lejo redaktimet Librit numrave gjatë hyrjes", 1141, 8, 94, 224, 10
+    AUTOCHECKBOX "&Përdorimi magjistar për të krijuar të hyrje të re në librin numrave", 1144, 22, 111, 210, 10
+END
+
+158 DIALOGEX 6, 18, 235, 160
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Aparenca"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "&Numrat e telefonit shikim paraprak para telefonates", 1142, 8, 10, 223, 10, WS_GROUP
+    AUTOCHECKBOX "Trego cilësimet e vendndodhjes para formimit të numrit", 1139, 8, 27, 206, 10
+    AUTOCHECKBOX "Fillo monitorimin e rrjetit telefono para thirrjes telefonuse", 1138, 8, 44, 226, 10
+    AUTOCHECKBOX "Shfaq &progresin lidhjes, ndërsa formoni numrin", 1143, 8, 61, 224, 10
+    AUTOCHECKBOX "Mbylle në formim të numrit", 1137, 8, 79, 220, 10
+    AUTOCHECKBOX "&Përdorimi magjistar për të krijuar të hyrje të re në librin numrave", 1144, 8, 97, 220, 10
+    AUTOCHECKBOX "përhere shfaq para thirrjes telefonike", 1136, 8, 114, 220, 10
+END
+
+160 DIALOGEX 6, 18, 320, 145
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni një emër për këtë ndërfaqe kërkese telefonuese. Një praktikë e zakonshme është të emrërojmë ndërfaqen pas rrjetit apo router-it për të cilën ata lidhen.", 1158, 7, 5, 309, 29
+    LTEXT "Emri &Ndërfaqes:", 1159, 17, 41, 285, 8, NOT WS_GROUP
+    EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Unë i di të gjitha për ndërfaqettë kërkesës-telefono dhe më parë do të redaktoni cilësimet direkt", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+END
+
+162 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Siguria"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Opsionet Sigurisë", 1580, 8, 3, 215, 139
+    AUTORADIOBUTTON "&Tipike (cilësimet rekomanduara)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "A&vancuar (cilësimet parazgjedhura)", 1541, 14, 102, 198, 8, BS_NOTIFY
+    LTEXT "&Vlereso identitetin tim si vijon:", 1537, 26, 29, 187, 8, NOT WS_GROUP
+    COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Automatikisht përdor emrin tim hzres ReactOS dhe fjalëkalimin (dhe domain nëse ka)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Kërkojnë të dhënat kryptuara (shkëputu nëse ska)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Duke përdorur këto cilësime kërkoni një njohuri të protokolleve të sigurisë.", 1539, 15, 114, 134, 20
+    PUSHBUTTON "&Cilësime...", 1180, 151, 115, 60, 14
+    GROUPBOX "Hzrje interaktive dhe e shkruar", 1177, 8, 146, 215, 62, WS_GROUP
+    AUTOCHECKBOX "S&hfaq dritaren e terminalit", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Ekzekuto skriptin:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
+    COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Modifiko...", 1182, 87, 187, 60, 14
+    PUSHBUTTON "&Shfleto...", 1181, 151, 187, 60, 14
+END
+
+163 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju keni më shumë se një pajisje telefonuse në kompjuterin tuaj.", -1, 6, 3, 307, 13
+    LTEXT "&Zgjidhni pajisjet për të përdorur në lidhje me këtë:", -1, 6, 15, 307, 11
+    CONTROL "", 1228, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 7, 28, 304, 77
+END
+
+165 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Rrjeti"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Tip&i telefonues i serverit që po thirr:", 1583, 7, 4, 219, 8
+    COMBOBOX 1418, 7, 17, 215, 46, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Cilësime", 1419, 160, 35, 60, 14
+    LTEXT "Kjo lidhje përdorë artikujt e mëposhtëm:", 1684, 8, 64, 219, 10
+    CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
+    PUSHBUTTON "I&nstalo...", 1252, 7, 133, 67, 14
+    PUSHBUTTON "&Ç'install", 1254, 80, 133, 67, 14
+    PUSHBUTTON "Cilësime", 1253, 153, 133, 67, 14
+    GROUPBOX "Përshkrime", 1585, 9, 158, 213, 43
+    LTEXT "", 1250, 18, 167, 195, 25
+END
+
+166 DIALOGEX 6, 18, 320, 145
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruani adresën IP të një DNS ose WINS serveri në rrjetin e largët, ose lëre si 0.0.0.0 nëse ju presin router-in e largët për t'i pajisur ato, apo nuk e di.", 1275, 7, 2, 311, 25
+    LTEXT "&DNS server:", 1274, 7, 29, 160, 8, NOT WS_GROUP
+    CONTROL "", 1272, "RASIPADDRESS", WS_TABSTOP, 21, 41, 85, 12
+    LTEXT "&WINS server:", 1276, 7, 65, 166, 8, NOT WS_GROUP
+    CONTROL "", 1273, "RASIPADDRESS", WS_TABSTOP, 21, 77, 85, 12
+END
+
+167 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Alternativa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Alternativa thirrje", 1289, 7, 2, 213, 64
+    AUTOCHECKBOX "&Shfaq përparim ndërsa lidhesh", 1284, 16, 14, 201, 10
+    AUTOCHECKBOX "&Shfaq për emrin dhe fjalëkalimin, certifikata, etj.", 1554, 16, 27, 201, 10
+    AUTOCHECKBOX "Përfshijë hzrjen në domain &ReactOS", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "Shfaq &number telefonit", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
+    GROUPBOX "Alternativa thirrje", 1290, 6, 72, 213, 79
+    LTEXT "&Përpjekje thirrje:", 1300, 16, 87, 123, 8
+    EDITTEXT 1287, 141, 84, 69, 14, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "&Koha mes përpjekje thirrjeve:", 1301, 16, 103, 123, 8
+    COMBOBOX 1292, 141, 101, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Koha pushim para mbylljes telefonates:", 1299, 16, 120, 123, 8
+    COMBOBOX 1291, 141, 116, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Merr prapë nëse &linja bie", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
+    GROUPBOX "Shumë Pajisje", 1288, 7, 156, 213, 32
+    COMBOBOX 1551, 16, 169, 128, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "K&onfiguro...", 1293, 150, 168, 60, 14
+    PUSHBUTTON "&X.25", 1295, 7, 194, 50, 14
+    PUSHBUTTON "&Virtuale ""tuneli"" lidhja", 1294, 62, 194, 120, 14, NOT WS_VISIBLE | WS_DISABLED
+END
+
+168 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes T're"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruaj numrin e telefonit poshtë. ", -1, 7, 4, 306, 14
+    LTEXT "&Numri telefonit:", 1308, 7, 19, 130, 8
+    EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
+    LTEXT "Ju mund të kenë nevojë për të përfshirë një ""1"" ose kodin e zonës, ose të dyja. Nëse ju nuk jeni të sigurt që ju duhen numra shtesë, thirrni numrin e telefonit në telefonin tuaj. Nëse ju dëgjoni një tingull modemi, numri i thirrur është e saktë.", -1, 20, 50, 291, 53
+END
+
+169 DIALOGEX 6, 18, 235, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Regjistër Numerave"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Përdor këtë regjistër numerave:", 1326, 8, 8, 222, 8
+    AUTORADIOBUTTON "Regjistri numerave &sistemit", 1325, 14, 22, 216, 10, WS_GROUP
+    AUTORADIOBUTTON "Regjistri numereve &personal", 1324, 14, 34, 216, 10
+    AUTORADIOBUTTON "A&lternimi regjistrit numerave:", 1323, 14, 46, 217, 10
+    COMBOBOX 1321, 26, 61, 201, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON "&Shfleto...", 1322, 167, 81, 60, 14
+END
+
+170 DIALOGEX 6, 18, 235, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Regjistër Numrave"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Përdor këtë regjistër numerave:", 1326, 8, 8, 223, 8
+    AUTORADIOBUTTON "Regjistri numerave &sistemit", 1325, 14, 22, 217, 10, WS_GROUP
+    AUTORADIOBUTTON "A&lternimi regjistrit numerave:", 1323, 14, 36, 216, 10
+    COMBOBOX 1321, 26, 51, 203, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON "&Shfleto...", 1322, 169, 69, 60, 14
+END
+
+171 DIALOGEX 6, 18, 317, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruani adresën IP-së këtij routeri në rrjetin e largët, ose në qoftë se ju prisni që routeri i largët t'ju japë adresën, të lënë si 0.0.0.0. Zakonisht operatori i rrjetit të largët apo routeri do të ju tregojnë se çfarë për të përdorur.", 1331, 5, 4, 308, 35
+    LTEXT "Adresa &IP-së time:", 1332, 4, 51, 100, 8, NOT WS_GROUP
+    CONTROL "", 1330, "RASIPADDRESS", WS_TABSTOP, 21, 62, 104, 12
+    LTEXT "Shënim: Nëse ju keni një përshtatës rrjeti të instaluar, ju nuk duhet të zgjedhni të njëjtën adresë si përshtatës të rrjetit tuaj.", 1333, 5, 94, 306, 36, NOT WS_GROUP
+END
+
+172 DIALOGEX 6, 18, 317, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Disa servera dial-up dhe routers kërkojnë një hyrje interaktive pas lidhen. Ju mund të përdorni një script automatike të përgjigjet për ju.", 1339, 5, 3, 309, 27
+    AUTOCHECKBOX "Shfaq dritaren &terminalit", 1462, 15, 31, 162, 10
+    AUTOCHECKBOX "&Ekzekuto skripten:", 1463, 15, 45, 58, 10
+    COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Modifiko...", 1335, 180, 77, 60, 14
+    PUSHBUTTON "&Shfleto...", 1465, 244, 77, 60, 14
+END
+
+173 DIALOGEX 6, 18, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Formo Numrin"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Politika Telefonatë", 1344, 9, 4, 213, 53, WS_GROUP
+    LTEXT "&Numri i përpjekjeve telefonatës:", 1349, 16, 22, 140, 8, NOT WS_GROUP
+    EDITTEXT 1340, 158, 19, 56, 14, ES_AUTOHSCROLL
+    LTEXT "&Sekonda ndërmjet përpjekjeve telefonatës:", 1351, 16, 38, 140, 8, NOT WS_GROUP
+    EDITTEXT 1342, 158, 36, 56, 14, ES_AUTOHSCROLL
+    GROUPBOX "Tipi lidhjes", 1343, 9, 63, 213, 56, WS_GROUP
+    LTEXT "Pusho sekonda para se ta mbyllni:", 1350, 28, 88, 124, 8, NOT WS_GROUP
+    AUTORADIOBUTTON "&Kërko lidhjen e telefonatës", 1347, 16, 78, 135, 10, WS_GROUP
+    AUTORADIOBUTTON "Këmbëngul për lidhjen", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
+    EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "ThirrMbrapa...", 1345, 150, 125, 70, 14, WS_GROUP
+    PUSHBUTTON "Shumë Linja...", 1346, 74, 125, 70, 14
+END
+
+174 DIALOGEX 0, 0, 215, 226
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Router"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ CTEXT "NYI...duhen specifikimet nga KCrocker", -1, 57, 86, 106, 28
+END
+
+175 DIALOGEX 6, 18, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Plotësimi i kërkesës të magjistarit ndërfaqes telefonuese.", 1352, 122, 5, 192, 32
+    LTEXT "Për të krijuar këtë ndërfaqe dhe të mundësojë atë në router, kliko Mbaro.", 1354, 122, 41, 192, 26, NOT WS_GROUP
+    LTEXT "Për të ndryshuar këtë ndërfaqe në Router dhe Menaxhuesin e Hyrjes në Distance, zgjidhni atë në ndërfaqes e Routerit dhe klikoni Cilësime.", 1355, 122, 68, 190, 39, NOT WS_GROUP
+END
+
+179 DIALOGEX 6, 18, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni modemin ose përshtatësin që kjo ndërfaqe do të përdorë.", 1356, 7, 4, 306, 11
+    CONTROL "", 1355, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 6, 15, 305, 80
+    LTEXT "Lista tregon pajisje të ndërtuar për routerin.", 1357, 15, 98, 288, 37, NOT WS_GROUP
+END
+
+180 DIALOGEX 6, 18, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruani numrin e telefonit e serverit formues ose router që ju kanë kërkuar. Numra telefoni alternative, nëse ka, janë të formuar automatikisht nëse numri primar nuk mund të arrihet.", 1360, 7, 4, 305, 42
+    LTEXT "&Numri telefonit ose adresën:", 1361, 7, 50, 275, 8, NOT WS_GROUP
+    EDITTEXT 1358, 7, 62, 304, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Alternoj...", 1359, 250, 80, 60, 14
+END
+
+181 DIALOGEX 6, 18, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Siguria"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Policia vërtetimit dhe kriptimit", 1367, 6, 8, 216, 103, WS_GROUP
+    AUTORADIOBUTTON "Prano çdo vërtetim përfshirë edhe tekst qartë", 1370, 16, 20, 195, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "Prano vetëm kriptime të vërtetuara", 1373, 16, 36, 195, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "Prano vetëm Kriptime MS të vertetuara", 1374, 16, 52, 195, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Kërkon informacionet e kriptimit", 1363, 27, 65, 184, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Kërkon informacionet e kriptimit të fortë", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Përdor dy rrugë vërtetimi", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Fjalëkalime të paruajtura", 1369, 59, 117, 80, 14, WS_GROUP
+    PUSHBUTTON "A&vanuar...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "&Zbulo dokumentat dhe ndarjen e printerave para formimit të numrit", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+END
+
+182 DIALOGEX 6, 18, 248, 148
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Siguria"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Policia vërtetimit dhe kriptimit", 1367, 7, 8, 200, 98, WS_GROUP
+    AUTORADIOBUTTON "Prano çdo vërtetim përfshirë edhe tekst qartë", 1370, 14, 24, 183, 10
+    AUTORADIOBUTTON "Prano vetëm kriptime të vërtetuara", 1373, 14, 39, 183, 10
+    AUTORADIOBUTTON "Prano vetëm Kriptime MS të vertetuara", 1374, 14, 53, 184, 10
+    AUTOCHECKBOX "Kërkon informacionet e kriptimit", 1363, 33, 67, 165, 10, WS_GROUP
+    AUTOCHECKBOX "Kërkon informacionet e kriptimit të fortë", 1364, 48, 79, 152, 10
+    AUTOCHECKBOX "Përdor përdorues dhe fjalekalime aktuale ", 1366, 31, 91, 165, 10
+    PUSHBUTTON "Fjalëkalime të paruajtura", 1369, 6, 114, 100, 14, WS_GROUP
+    PUSHBUTTON "&Avancuar...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "Zbulo dokumentat dhe ndarjen e printerave para formimit të numrit", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
+END
+
+183 DIALOGEX 6, 18, 317, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Kontrollo të gjithqka që aplikohet:", 1388, 7, 4, 296, 9
+    AUTOCHECKBOX "Paketat në këtë ndërqafe të Routerit dhe &IP've.", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Paketat në këtë ndërqafe të Routerit dhe IP&X.", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Shto një llogari përdoruesi kështu që një router i largët mund të elefonoj.", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Dërgo një dhe fjalëkalim tekst-qartë, nëse kjo është e vetmja mënyrë për tu lidhur.", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Përdorimi scripting për të përfunduar lidhjen me router largët.", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
+END
+
+184 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+186 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Së Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Një lidhje që është krijuar për përdorimin tuaj të vetëm është ruajtur në llogarinë tuaj të përdoruesit dhe nuk është në dispozicion nëse nuk keni hyrë.", -1, 7, 4, 306, 23
+    LTEXT "Krijo këtë lidhje për:", -1, 14, 27, 288, 12
+    AUTORADIOBUTTON "&Përdorim ndonjërit", 1400, 26, 40, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Përdorim im vetëm", 1401, 26, 55, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+END
+
+498 DIALOGEX 12, 16, 215, 126
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS nuk ishte në gjendje për tu lidhur në rrjet duke përdorur emrin e përdoruesit dhe fjalëkalimin që ju keni dhënë. Ju lutem ri-shkruani emrin e përdoruesit dhe fjalëkalimin.", 1396, 7, 6, 206, 36
+    LTEXT "&Përdorues:", 1399, 8, 51, 49, 8
+    EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1397, 8, 70, 49, 8, NOT WS_GROUP
+    EDITTEXT 1393, 66, 64, 143, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Ruaj fjalëkalimin", 1391, 66, 84, 143, 10
+    CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 98, 200, 1
+    DEFPUSHBUTTON "OK", 1, 81, 104, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 145, 104, 60, 14
+END
+
+500 DIALOGEX 12, 16, 215, 173
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS nuk ishte në gjendje për tu lidhur në rrjet duke përdorur emrin e përdoruesit dhe fjalëkalimin që ju keni dhënë. Ju lutem ri-shkruani emrin e përdoruesit dhe fjalëkalimin.", 1396, 7, 6, 209, 26
+    LTEXT "&Përdorues:", 1399, 7, 72, 44, 8
+    EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1397, 7, 90, 45, 8, NOT WS_GROUP
+    EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Domain:", 1395, 7, 108, 53, 8, NOT WS_GROUP
+    EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Ruaj përdoruesin dhe fjalëkalimin", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "OK", 1, 87, 146, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 151, 146, 60, 14
+    CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
+    LTEXT "Ju mund të jepni një emër domain ose të lini fushën e domain bosh.\n(emrat e Domain nuk janë të nevojshme për lidhjet me internet)", -1, 8, 38, 209, 26
+END
+
+502 DIALOGEX 20, 60, 215, 73
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "PPP Cilësime"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "&Mundëso shtojcat LCP", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Mundëso ngjeshjen e programeve", 1424, 9, 22, 201, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Negocio lidhje-shumta për lidhje teke", 1557, 9, 37, 202, 10, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "OK", 1, 82, 53, 60, 14
+    PUSHBUTTON "Anulo", 2, 148, 53, 60, 14
+END
+
+509 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Magjistari Lidhjes Së Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni rolin që ju dëshironi për këtë kompjuter:", -1, 10, 5, 275, 9
+    AUTORADIOBUTTON "&Pritës", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Ftuar", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Ky kompjuter ka informatat që ju dëshironi për të parë.", -1, 43, 31, 253, 13, NOT WS_GROUP | WS_TABSTOP
+    LTEXT "Ky kompjuter përdoret për të aksesuar informacionin në kompjuterit pritës.", -1, 43, 56, 253, 23, NOT WS_GROUP
+END
+
+511 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Zgjidh një pajisje:", -1, 8, 5, 261, 8
+    COMBOBOX 1485, 9, 18, 302, 62, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+528 DIALOGEX 0, 0, 227, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Lidhje"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Privilegje hyresë", 1582, 8, 10, 213, 63
+    LTEXT "Jo-administratorët mund të lejohen për të krijuar ose modifikuar lidhjet e para hyrjes në.", 1581, 16, 21, 194, 30
+    AUTOCHECKBOX "Lejo krijimin dhe modifikimin lidhjeve para hyrjes", 1497, 16, 56, 195, 10, BS_TOP | BS_MULTILINE
+END
+
+532 DIALOGEX 0, 0, 263, 263
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Router Thirrmbrapa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Kur ju thirrni në një router, ajo mund të ofrojë për t'ju marrë mbrapa për të reduktuar faturat e telefonit tuaj ose për të rritur sigurinë. Specifikoni nëse doni thirrmbrapa apo jo.", 1043, 7, 5, 253, 24
+    AUTORADIOBUTTON "&Jo thirrmbrapa", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Gjithmonë më telefononi mbrapa në numri më poshtëm:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
+    CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
+    PUSHBUTTON "&Modifiko...", 1504, 131, 213, 60, 14
+    PUSHBUTTON "&Fshi", 1505, 194, 213, 60, 14
+    CONTROL "", -1, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
+    DEFPUSHBUTTON "OK", 1, 132, 242, 60, 14
+    PUSHBUTTON "Anulo", 2, 196, 242, 60, 14
+END
+
+534 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Alternativa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Tipi lidhjes", 1289, 7, 7, 215, 55
+    AUTORADIOBUTTON "&Kërkesë thirrje", 1506, 16, 20, 199, 9, BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Ora pushim para mbylljes telefonit:", 1299, 27, 33, 99, 8, NOT WS_GROUP
+    COMBOBOX 1291, 144, 30, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Lidhje këmbëngulëse", 1507, 16, 47, 197, 9, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    GROUPBOX "Politika thirrjeve", 1290, 7, 66, 215, 48
+    LTEXT "&Përpjektje rithirrje:", 1300, 14, 79, 123, 8
+    EDITTEXT 1287, 143, 76, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "Inter&vale mesatare rithirrje:", 1301, 14, 96, 123, 8
+    COMBOBOX 1292, 143, 94, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "Disa pajisje", 1288, 7, 116, 215, 35
+    COMBOBOX 1551, 16, 130, 128, 41, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "K&onfiguro...", 1293, 150, 129, 65, 14
+    PUSHBUTTON "Thirrm&brapa", 1302, 8, 195, 60, 14
+    PUSHBUTTON "&X.25", 1295, 73, 195, 50, 14
+END
+
+539 DIALOGEX 0, 0, 265, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 14, 64, 84, 8
+    EDITTEXT 1104, 102, 62, 154, 14, ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 82, 247, 1
+    DEFPUSHBUTTON "&Dial", 1590, 8, 89, 60, 14
+    PUSHBUTTON "Anulo", 1591, 71, 89, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 133, 89, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 195, 89, 60, 14
+END
+
+540 DIALOGEX 0, 0, 265, 133
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 64, 90, 8
+    EDITTEXT 1104, 105, 60, 154, 14, ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 80, 252, 1
+    LTEXT "Th&irr:", 1412, 10, 91, 92, 10
+    COMBOBOX 1416, 105, 88, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 107, 251, 1
+    DEFPUSHBUTTON "&Dial", 1590, 8, 113, 60, 14
+    PUSHBUTTON "Anulo", 1591, 71, 113, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 134, 113, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 197, 113, 60, 14
+END
+
+541 DIALOGEX 0, 0, 265, 157
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 67, 87, 8
+    EDITTEXT 1104, 103, 63, 154, 14, ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 84, 248, 1
+    LTEXT "Th&irr:", 1412, 11, 96, 48, 8
+    COMBOBOX 1416, 103, 92, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Thirr &nga:", 1415, 10, 114, 46, 8
+    COMBOBOX 1414, 103, 110, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Regullat thirrjeve", 1108, 193, 110, 64, 14
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 130, 250, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 6, 136, 60, 14
+    PUSHBUTTON "Anulo", 1591, 69, 136, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 132, 136, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 196, 136, 60, 14
+END
+
+544 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ndarja Lidhjes Internetit lejon kompjuterat e tjerë në rrjetin tuaj vendorë për të hyrë në burimet e jashtme përmes kësaj lidhje.", -1, 10, 5, 300, 22
+    AUTOCHECKBOX "&Aktivizo Ndarësin e Lidhjes Internetit për këtë lidhje", 1512, 21, 31, 272, 10
+    LTEXT "Për ti thirre automatikisht me këtë lidhje kur një kompjuter në rrjetin tuaj vendorë përpiqet për të hyrë në burimet e jashtme, zgjidhni kutinë e mëposhtme kontrolli.", 1514, 10, 56, 294, 22
+    AUTOCHECKBOX "Mundëso thirrje me kërkesë", 1513, 21, 86, 260, 10
+END
+
+545 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Aksesi ndarës lejon kompjutera të tjerë në rrjetin tuaj vendorë për të hyrë në burimet e jashtme përmes kësaj lidhje dial-up. Ju mund të mundësojë mundësoni aksesin ndarës për një lidhje dhe një rrjet vendorë në një kohë.", -1, 10, 5, 300, 25
+    LTEXT "&Zgjidhni rrjetin vendorë që do të kenë akses në burimet përmes kësaj lidhje:", -1, 21, 35, 285, 8
+    COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+546 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju mund të konfiguroni këtë lidhje për të përdorur kartën tuaj smart të hyni ju në rrjetin e largët. Përzgjidhni nëse do të përdorni kartën tuaj smart me këtë lidhje.", -1, 10, 5, 303, 22
+    AUTORADIOBUTTON "&Përdorni kartën time smart ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Mos përdorni kartën time smart ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+END
+
+547 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Magjistari Ndërfaqes Kërkuese Thirr"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Mirë se vini në Magjistarin Ndërfaqorë Kërko Thirrje.", 1530, 122, 8, 192, 32
+    LTEXT "Duke përdorur këtë asistent ju mund të krijoni një ndërfaqe kërkese thirr për të lidhur këtë router me routerat e tjerë.", 1531, 122, 43, 192, 37
+    LTEXT "Shtypni Tjetri për të vazhduar.", 1532, 122, 85, 191, 29
+END
+
+548 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Lidhu duke përdorur një modem dhe, përshtatës ISDN, ose pajisje të tjera fizike.", 1531, 21, 17, 290, 15, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Lidhu duke përdorur rrjetë privatë &virtual (VPN)", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Lidhu duke përdorur ethernet përmes PPP (PPPoE)", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
+END
+
+550 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Futni emrin ose adresën IP e routerit në të cilin ju jeni lidhur.", 1535, 10, 8, 289, 18
+    LTEXT "Emri &hostit ose adresa IP'së (si reactos.org ose 145.52.0.1):", 1537, 21, 35, 285, 8
+    EDITTEXT 1536, 21, 47, 285, 14, ES_AUTOHSCROLL
+END
+
+551 DIALOGEX 0, 0, 265, 127
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 12, 62, 89, 8
+    EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
+    LTEXT "Faqe:", 1110, 12, 82, 90, 8
+    EDITTEXT 1102, 104, 79, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 99, 248, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 9, 106, 61, 14
+    PUSHBUTTON "Anulo", 1591, 72, 106, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 135, 106, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 198, 106, 60, 14
+END
+
+552 DIALOGEX 0, 0, 265, 159
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 67, 91, 10
+    EDITTEXT 1104, 104, 64, 154, 14, ES_AUTOHSCROLL
+    LTEXT "Faqe:", 1110, 10, 86, 91, 8
+    EDITTEXT 1102, 104, 83, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 103, 248, 1
+    LTEXT "Th&irr:", 1412, 10, 115, 91, 8
+    COMBOBOX 1416, 104, 111, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 132, 248, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 8, 139, 60, 14
+    PUSHBUTTON "Anulo", 1591, 71, 139, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 134, 139, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 198, 139, 60, 14
+END
+
+553 DIALOGEX 0, 0, 265, 183
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 68, 92, 10
+    EDITTEXT 1104, 104, 65, 154, 14, ES_AUTOHSCROLL
+    LTEXT "Faqe:", 1110, 10, 90, 91, 8
+    EDITTEXT 1102, 104, 86, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 106, 248, 1
+    LTEXT "Th&irr:", 1412, 10, 118, 92, 8
+    COMBOBOX 1416, 104, 114, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Thirr &nga:", 1415, 10, 137, 91, 8
+    COMBOBOX 1414, 104, 134, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Regullat thirrjeve", 1108, 194, 134, 65, 14
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 154, 248, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 8, 162, 60, 14
+    PUSHBUTTON "Anulo", 1591, 71, 162, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 134, 162, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 198, 162, 60, 14
+END
+
+554 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Lidhu duke përdorur:", 1124, 7, 4, 193, 8
+    CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 195, 44, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Lart", 1132, 208, 18, 16, 14, BS_ICON
+    PUSHBUTTON "&Poshtë", 1131, 208, 36, 16, 14, BS_ICON
+    AUTOCHECKBOX "Të gjitha pajisjet thërrasin të njëjtin numer", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "K&onfiguro...", 1130, 140, 66, 60, 14
+    GROUPBOX "Tipi shëmbullit", 1125, 7, 87, 213, 56, WS_GROUP
+    LTEXT "&Numri telefonit:", 1135, 19, 102, 191, 8
+    EDITTEXT 1123, 17, 112, 138, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Alter&nativa", 1129, 161, 112, 50, 14
+    AUTOCHECKBOX "Shfaq ikonat në zonën e njoftimin kur të jeni lidhur", 1120, 11, 194, 212, 20, BS_TOP | BS_MULTILINE
+END
+
+555 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "K&onfiguro...", 1130, 160, 38, 60, 14
+    LTEXT "&Numri telefonit:", 1135, 8, 72, 194, 8
+    EDITTEXT 1123, 8, 83, 148, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "Alter&nativa", 1129, 160, 83, 60, 14
+    AUTOCHECKBOX "Shfaq ikonat në zonën e njoftimin kur të jeni lidhur", 1120, 11, 194, 213, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Lidhu duke përdorur:", 1124, 8, 5, 214, 8
+    CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 214, 15
+END
+
+556 DIALOGEX 0, 0, 220, 165
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësimet Programit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Përshkrimi i programit gjatë punës në rrjetin tuaj:", -1, 7, 5, 203, 8
+    EDITTEXT 1565, 7, 17, 206, 14, ES_AUTOHSCROLL
+    LTEXT "Numri portit serverit të &Internetit:", -1, 7, 35, 202, 8
+    EDITTEXT 1566, 7, 47, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
+    AUTORADIOBUTTON "&TCP", 1548, 128, 49, 30, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&UDP", 1567, 166, 49, 31, 10, NOT WS_TABSTOP
+    LTEXT "&Dëgjoni për përgjigjuni server'it të Internetiit në port ose varg portesh:\n(për shëmbull: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
+    LTEXT "T&CP:", -1, 7, 100, 28, 8
+    EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
+    LTEXT "UD&P:", -1, 7, 121, 30, 8
+    EDITTEXT 1551, 50, 117, 162, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 90, 144, 60, 14
+    PUSHBUTTON "Anulo", 2, 154, 144, 60, 14
+END
+
+557 DIALOGEX 0, 0, 217, 164
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësime Pajisjesh"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Përshkrimi i shërbimit:", -1, 7, 5, 203, 8
+    EDITTEXT 1552, 7, 18, 205, 14, ES_AUTOHSCROLL
+    LTEXT "&Emri ose adresa IP (për shëmmbull 192.168.0.12) e kompjuterit strehues për këtë shërbim në rrjetin tuaj:", -1, 7, 37, 208, 16
+    EDITTEXT 1556, 7, 57, 203, 14, ES_AUTOHSCROLL
+    LTEXT "&Numrin e portit ku ky shërbim banon:", -1, 7, 85, 203, 8
+    EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
+    AUTORADIOBUTTON "&TCP", 1554, 128, 99, 30, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&UDP", 1555, 166, 99, 31, 10, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", 1, 86, 143, 60, 14
+    PUSHBUTTON "Anulo", 2, 150, 143, 60, 14
+END
+
+558 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Programe"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Lidhja internetit në këtë kompjuter ka qenë e përshtatur për të lejuar programet e mëposhtme për të punuar si duhet mbi rrjetin tuaj:", -1, 7, 7, 218, 28
+    CONTROL "Lista1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Shto...", 1538, 7, 197, 67, 14
+    PUSHBUTTON "Modifiko...", 1559, 80, 197, 67, 14
+    PUSHBUTTON "Fshi", 1568, 153, 197, 67, 14
+END
+
+559 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Shërbime"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Zgjidhni shërbimet që punojnë për rrjetin tuaj që përdoruesit e internetit mund të kenë akses.", -1, 7, 5, 216, 22
+    LTEXT "Shërbime:", -1, 7, 27, 143, 8
+    CONTROL "Lista1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Shto...", 1561, 7, 197, 67, 14
+    PUSHBUTTON "Modifiko...", 1563, 80, 197, 67, 14
+    PUSHBUTTON "Fshi", 1562, 153, 197, 67, 14
+END
+
+560 DIALOGEX 6, 18, 240, 88
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Lidhaj Fillestare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&Po", 6, 68, 68, 50, 14
+    PUSHBUTTON "&Jo", 7, 125, 68, 50, 14
+    ICON 32516, 1575, 7, 7, 20, 20
+    LTEXT "", 1576, 40, 7, 190, 33
+    AUTOCHECKBOX "&Mos shfaq këtë kujtues përsëri", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
+END
+
+567 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruaj emrin e shërbimit tuaj në kutinë e tekstit në vijim. Në qoftë se leni kutinë tekstit bosh, ReactOS automatikisht do të zbulojë dhe të konfigurojë shërbimin tuaj, kur ju lidheni.", -1, 10, 7, 301, 25
+    LTEXT "Emri &Sherbimit (opsional):", -1, 22, 32, 229, 8
+    EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
+END
+
+568 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Emri &Sherbimit:", 1686, 7, 5, 217, 10
+    EDITTEXT 1594, 7, 17, 217, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Shfa&q ikona në zonën e njoftimit kur i lidhur", 1120, 9, 196, 215, 8
+END
+
+569 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Siguria"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Opsionet e sigurisë", 1580, 8, 4, 213, 151
+    AUTORADIOBUTTON "&Tipike (Cilësime Rekomandume)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "A&vancuar (Cilësime parazgjedhura)", 1541, 14, 100, 197, 8, BS_NOTIFY
+    LTEXT "&Vlereso identitetin tim si vijon:", 1537, 26, 29, 183, 8, NOT WS_GROUP
+    COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Automatikisht përdor emrin dhe fjalëkalimin tim hyres ReactOS (dhe domain nëse ka)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Kërkojnë të dhënat e kriptume (shkëput nëse ska)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Duke përdorur këto cilësime kërko një njohuri të protokolleve të sigurisë.", 1539, 26, 111, 136, 20
+    PUSHBUTTON "&Cilësime...", 1180, 151, 134, 60, 14
+    PUSHBUTTON "I&PSec Cilësime...", 1598, 126, 163, 85, 14
+END
+
+570 DIALOGEX 0, 0, 265, 126
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësimet IPSec"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", 1, 151, 104, 50, 14
+    PUSHBUTTON "Anulo", 2, 207, 104, 50, 14
+    AUTOCHECKBOX "&Përdorni tastin para-shpërndar[s për autentikim", 1604, 21, 15, 217, 10
+    LTEXT "&Çelës:", 1602, 20, 31, 44, 12
+    EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Lejo certifikata nga dyqan im përdorues përveç certifikatave të makinës", 1606, 20, 50, 242, 13, WS_DISABLED
+    AUTOCHECKBOX "Përdorni një certifikatë të veçantë", 1607, 20, 67, 239, 10, WS_DISABLED
+    PUSHBUTTON "Përzgjedh", 1608, 31, 84, 50, 14, WS_DISABLED
+    COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+571 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Hyrje e Sigurtë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Alternativa Hyrëse:", -1, 6, 8, 216, 47
+    AUTOCHECKBOX "Hyrja e pasukseshme &përpjekje përbrenda lidhjes", 1642, 14, 22, 201, 10
+    AUTOCHECKBOX "Hyrje e suksesshme &lidhjet Jashtë", 1641, 14, 37, 200, 10
+    GROUPBOX "Alternativë dokumentesh hyres:", -1, 7, 64, 215, 91
+    LTEXT "&Emri:", -1, 14, 78, 199, 8
+    EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
+    PUSHBUTTON "&Shfleto...", 1639, 153, 108, 60, 14
+    LTEXT "&Limiti masës:", -1, 14, 133, 67, 8
+    EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "KB", -1, 140, 133, 20, 8
+    PUSHBUTTON "&Rikthe Parazgjedhjet", 1643, 135, 197, 85, 14
+END
+
+572 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "ICMP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Internet Control Message Protocol (ICMP) i lejon kompjuterave në një rrjet për të ndarë gabimin dhe informacionin dhe statusin. Zgjidhni kërkesat për informacion nga interneti se ky kompjuter do të përgjigjen:", -1, 7, 5, 215, 37
+    CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
+    GROUPBOX "Përshkrim:", -1, 7, 153, 215, 55
+    LTEXT "", 1645, 14, 171, 199, 32
+END
+
+574 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Avancuar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", 575, 7, 60, 213, 100
+END
+
+577 DIALOGEX 0, 0, 312, 144
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Se"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Lloji emrit të ISP'së në kutinë e mëposhtme tekstit.", 1681, 10, 3, 296, 11
+    LTEXT "Emri:", 1690, 18, 20, 127, 10
+    EDITTEXT 1680, 17, 32, 222, 14, ES_AUTOHSCROLL
+    LTEXT "Emri që shkruani këtu do të jetë emri i lidhjes që ju po krijoni.", 1683, 17, 52, 282, 42
+END
+
+580 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Përzgjedhja &automatike", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Pikë në pikë Tunel Protokol (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Shtresa 2 Tunel Protokol (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+END
+
+1420 DIALOGEX 0, 0, 265, 108
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "D&ial:", 1412, 14, 63, 86, 8
+    COMBOBOX 1416, 104, 60, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 80, 248, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 9, 87, 60, 14
+    PUSHBUTTON "Anulo", 1591, 72, 87, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 135, 87, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 198, 87, 60, 14
+END
+
+1421 DIALOGEX 0, 0, 265, 223
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 61, 90, 8
+    EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1112, 11, 81, 90, 8
+    EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
+    AUTOCHECKBOX "&Ruaj këtë emër përdoruesi dhe fjalëkalim për përdoruesin e mëposhtem:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Vetëm unë", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Kushdo që e përdor këtë kompjuter", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
+    LTEXT "Thirr:", 1412, 14, 161, 87, 8
+    COMBOBOX 1416, 104, 157, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Thirr &nga:", 1415, 14, 178, 88, 8
+    COMBOBOX 1414, 104, 175, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Regullat thirrëse", 1108, 193, 175, 65, 14
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 196, 248, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 9, 202, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 1591, 72, 202, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 135, 202, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 198, 202, 60, 14
+END
+
+1422 DIALOGEX 0, 0, 265, 242
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Lidhu %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+    LTEXT "&Përdorues:", 1413, 10, 67, 91, 8
+    EDITTEXT 1104, 104, 63, 154, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1112, 10, 85, 92, 8
+    EDITTEXT 1103, 104, 82, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "Faqja:", 1110, 10, 104, 92, 8
+    EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
+    AUTOCHECKBOX "&Ruaj këtë emër përdoruesi dhe fjalëkalim për përdoruesit e mëposhtme:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Vetëm Unë", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Kushdo që e përdorë këtë kompjuter", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
+    LTEXT "Thirr:", 1412, 14, 182, 87, 8
+    COMBOBOX 1416, 104, 178, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Thirr &nga:", 1415, 14, 198, 87, 8
+    COMBOBOX 1414, 104, 195, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Regullat thirrëse", 1108, 193, 195, 65, 14
+    CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 215, 248, 1
+    DEFPUSHBUTTON "&Thirr", 1590, 8, 221, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 1591, 71, 221, 60, 14
+    PUSHBUTTON "Karakteristika", 1107, 134, 221, 60, 14
+    PUSHBUTTON "&Ndihmë", 1592, 198, 221, 60, 14
+END
+
+1425 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Emri &Host-it ose adresa IP'së ose destinacioni (si psh reactos.org ose 145.52.0.1):", 1430, 7, 5, 217, 18
+    EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
+    GROUPBOX "Lidhja parë", 1431, 9, 48, 213, 78
+    LTEXT "ReactOS parë mund të lidhë rrjetin publik, të tilla si internet, para se të përpiqet për të krijuar këtë lidhje virtuale.", 1432, 17, 63, 199, 24
+    AUTOCHECKBOX "&Thirr një lidhje tjetër të parë:", 1428, 19, 89, 183, 10
+    COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Shfaq ikonën në zonën e njoftimit kur i lidhur", 1120, 10, 192, 213, 13
+END
+
+1426 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Alternativa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Alternativa thirrje", 1289, 8, 7, 214, 56
+    AUTOCHECKBOX "&Shfaq përparim ndërsa lidhesh", 1284, 16, 17, 199, 10
+    AUTOCHECKBOX "Shfaq për emrin dhe fjalëkalimin, certifikatë, etj.", 1554, 16, 32, 199, 10
+    AUTOCHECKBOX "Përfshijë &ReactOS hyrje në domain", 1555, 16, 47, 178, 10
+    GROUPBOX "Alternativa ri-thirrje", 1290, 8, 68, 214, 89
+    LTEXT "Përpjekje &Rithirrje:", 1300, 16, 81, 121, 8
+    EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "&Koha ndërmjet përpjekjeve rithirrjes:", 1301, 16, 99, 121, 8
+    COMBOBOX 1292, 141, 95, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Ora pushim para mbylljes telefonit:", 1299, 16, 117, 121, 8
+    COMBOBOX 1291, 141, 113, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Rithirr nëse &linja bie", 1286, 16, 138, 199, 10, BS_TOP | BS_MULTILINE
+END
+
+1427 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shënoni emrin host'it ose adresen e Internet Protocol (IP) të kompjuterit në të cilën ju jeni lidhur.", -1, 10, 6, 275, 16
+    LTEXT "Emri &Host'it ose adresa IP (për shëmbull, reactos.org ose 145.52.0.1 ):", -1, 21, 28, 277, 11
+    EDITTEXT 1433, 21, 42, 275, 14, ES_AUTOHSCROLL
+END
+
+1428 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS automatikisht mund të thirr lidhjen fillestare në internet ose rrjet tjetër publik, para krijimit të lidhjes virtuale.", -1, 10, 6, 275, 24
+    AUTORADIOBUTTON "&Mos thirrni lidhje fillestar.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Automatikisht thirr këtë lidhje fillestar:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+1436 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Përzgjidhni një pajisje:", 1597, 8, 5, 213, 8
+    COMBOBOX 1437, 7, 17, 217, 166, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+    AUTOCHECKBOX "Shfaq ikonën në zonën e njoftimit kur i lidhur", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "K&onfiguro...", 1130, 160, 34, 60, 14
+END
+
+1448 DIALOGEX 10, 20, 265, 71
+STYLE DS_SHELLFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Lidhje Rrjeti"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjith një lidhje rrjeti:", 1456, 7, 7, 251, 10
+    COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    DEFPUSHBUTTON "&Lidhu...", 1449, 7, 50, 60, 14
+    PUSHBUTTON "Anulo", 1455, 70, 50, 60, 14
+    PUSHBUTTON "&E're...", 1459, 134, 50, 60, 14
+    PUSHBUTTON "Karakteristikat", 1460, 198, 50, 60, 14
+END
+
+1466 DIALOGEX 6, 18, 265, 262
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shëmbull teksti", 1469, 7, 7, 251, 8
+    EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&Shto", 1471, 77, 36, 60, 14
+    PUSHBUTTON "&Zëvenëso", 1472, 141, 36, 60, 14
+    LTEXT "Shëmbull teksti", 1473, 7, 57, 193, 8
+    LISTBOX 1474, 7, 68, 193, 145, WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+    PUSHBUTTON "&Poshtë", 1476, 206, 86, 51, 14, BS_BITMAP
+    PUSHBUTTON "Fshi", 1477, 141, 215, 60, 14
+    CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
+    PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 196, 242, 60, 14
+END
+
+1467 DIALOGEX 6, 18, 263, 263
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shëmbull teksti", 1469, 7, 7, 197, 8
+    EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&Shto", 1471, 76, 36, 60, 14
+    PUSHBUTTON "&Zëvenëso", 1472, 141, 36, 60, 14
+    LTEXT "Shëmbull teksti", 1473, 7, 57, 193, 8
+    LISTBOX 1474, 7, 68, 193, 135, WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "&Lart", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+    PUSHBUTTON "&Poshtë", 1476, 206, 86, 51, 14, BS_BITMAP
+    PUSHBUTTON "Fshi", 1477, 141, 204, 60, 14
+    AUTOCHECKBOX "Shëmbull teksti", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 196, 242, 60, 14
+END
+
+1468 DIALOGEX 6, 18, 263, 263
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shëmbull teksti", 1469, 7, 5, 249, 8
+    EDITTEXT 1470, 7, 17, 249, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&Shto", 1471, 132, 36, 60, 14
+    PUSHBUTTON "&Zëvenëso", 1472, 196, 36, 60, 14
+    LTEXT "Shëmbull teksti", 1473, 7, 55, 251, 8
+    LISTBOX 1474, 7, 68, 249, 140, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "Fshi", 1477, 196, 214, 60, 14, WS_GROUP
+    CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
+    PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 196, 242, 60, 14
+END
+
+1469 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Thirr një rrjet &privat.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Lidhuni me një rrjet privat përmes internetit.", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Lidhuni direkt me një kompjuter.", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Lidhja me rrjetin nëpërmjet broadband", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
+    LTEXT "Lidhu duke përdorur linjë tim të telefonit (modem ose ISDN).", -1, 45, 21, 156, 8
+    LTEXT "Krijo një Rrjet Privat Virtual (VPN) lidhje ose tunel përmes internetit.", -1, 45, 46, 266, 8
+    LTEXT "Lidhu duke përdorur serial, paralel, ose infra të kuqe portin tim.", -1, 45, 71, 266, 8
+    LTEXT "Lidhu me anë të lidhjes broadband time.", -1, 45, 95, 266, 8
+END
+
+1480 DIALOGEX 0, 0, 230, 61
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Numri telefonit Editor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Ju lutem shkruani numrin e ri të telefonit:", 1481, 7, 7, 218, 8
+    EDITTEXT 1482, 7, 17, 217, 15, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", 1, 99, 40, 60, 14
+    PUSHBUTTON "Anulo", 2, 163, 40, 60, 14
+END
+
+1481 DIALOGEX 0, 0, 321, 157
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Magjistari Lidhjes Re"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Shkruaj një emër llogari ISP dhe fjalëkalimin, pastaj shkruani këtë informacion dhe ruani atë në një vend të sigurt. (Nëse keni harruar një emër llogarie ekzistuese apo fjalëkalimin, kontaktoni ISP-në tuaj.)", 1689, 10, 4, 308, 25
+    LTEXT "&Përdorues:", 1636, 23, 35, 89, 15
+    EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", 1637, 23, 55, 90, 13
+    EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Konfirmo fjalëkalimin:", 1638, 23, 74, 88, 13
+    EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
+    AUTOCHECKBOX "Përdorni këtë emer llogarie dhe fjalëkalimin kur dikush lidhet me internet nga ky kompjuter", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Bëni këtë lidhje interneti parazgjedhur", 1595, 23, 112, 288, 14
+    AUTOCHECKBOX "Ndizni MurinMbrojtës Lidhjes të Internetit për këtë lidhje", 1682, 23, 133, 290, 14
+END
+
+1660 DIALOGEX 0, 0, 258, 78
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "MuriMbrojtës Lidhjes Internetit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 32515, -1, 7, 7, 20, 20
+    LTEXT "Fikja e MuritMbrojtës Lidhjes Internetit und të ekspozojë kompjuterin tuaj për akses të paautorizuar në Internet. Jeni te sigurte qe doni te fikni atë?", -1, 44, 5, 212, 24
+    AUTOCHECKBOX "&Mos e tregoni këtë dialog përsëri", 1662, 42, 40, 210, 10
+    DEFPUSHBUTTON "&Po", 6, 74, 60, 50, 14
+    PUSHBUTTON "&Jo", 7, 128, 60, 50, 14
+END
+
+7000 DIALOGEX 0, 0, 215, 103
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Përdorues:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
+    EDITTEXT 7001, 101, 7, 108, 14, ES_AUTOHSCROLL
+    LTEXT "&Emri Plotë:", -1, 7, 26, 90, 12
+    EDITTEXT 7002, 101, 25, 108, 14, ES_AUTOHSCROLL
+    LTEXT "&Fjalëkalim:", -1, 7, 44, 90, 12
+    EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT "&Konfirmo fjalëkalimin:", -1, 7, 62, 91, 12
+    EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
+    PUSHBUTTON "OK", 1, 84, 82, 60, 14
+    PUSHBUTTON "Anulo", 2, 149, 82, 60, 14
+END
+
+7005 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
+CAPTION "ThhirrMbrapa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "&Mos lejo thirrje mbrapa", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Lejo thirrësin për të vendosur numrin e thirrmbrapa", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Përhere përdor numrin e mëtejshëm për thirr mbrapa:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    EDITTEXT 7008, 19, 49, 204, 14, ES_AUTOHSCROLL | WS_GROUP
+END
+
+7010 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Lidhje Hyrese", -1, 7, 4, 214, 110, WS_GROUP
+    LTEXT "Lejo lidhjet hyrëse në këto pajisje.", -1, 17, 17, 195, 8
+    LTEXT "&Pajisje:", -1, 17, 29, 29, 8
+    CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
+    AUTOCHECKBOX "&Mundëso shumëlink", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "Karakteristika", 7013, 145, 94, 65, 14, WS_GROUP
+    GROUPBOX "Rrjeti Privat Virtual", -1, 6, 122, 214, 49, WS_GROUP
+    AUTOCHECKBOX "Të lejojë të tjerët për të bërë lidhje private në kompjuterin tim nga tunelet nëpërmjet internetit ose rrjetet e tjera", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Shfaq ikonën në zonën e njoftimit kur i lidhur", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+END
+
+7016 DIALOGEX 0, 0, 265, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësimet Hyrëse TCP/IP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Aksesi Rrjetit", -1, 6, 5, 252, 32
+    AUTOCHECKBOX "Lejo telefonuesit te aksesojnë zonën e rrjetit vendorë", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+    GROUPBOX "TCP/IP adresa detyrueshme", -1, 6, 42, 250, 122
+    AUTORADIOBUTTON "Cakto adresat TCP/IP automatike duke përdorur DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "S&pecifiko adresat TCP/IP", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
+    LTEXT "&Nga:", -1, 29, 88, 53, 8
+    CONTROL "", 7018, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 85, 103, 13
+    LTEXT "&Për:", -1, 29, 105, 53, 8
+    CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
+    LTEXT "Totali:", -1, 29, 124, 53, 10
+    LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
+    AUTOCHECKBOX "Lejo duke e quajtur kompjuterin për të specifikuar vetë adresën e saj IP", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "OK", 1, 133, 169, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 197, 169, 60, 14
+END
+
+7025 DIALOGEX 0, 0, 250, 157
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësime hyrëse IPX"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Akses Rrjeti", -1, 8, 6, 234, 32
+    AUTOCHECKBOX "Lejo telefonuesit te aksesojnë zonën e rrjetit vendorë", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+    GROUPBOX "Numri Rrjeti detyruar", -1, 8, 43, 234, 87
+    AUTOCHECKBOX "&Cakto numër të njëjtë për të gjithë kompjuterat e rrjetit", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Caktojë numrat e rrjetit automatikisht", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Specifikoni numrat e rrjetit:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
+    AUTOCHECKBOX "Lejo telefonuesit për të specifikuar numrin e tyre nyje", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "OK", 1, 116, 136, 60, 14, WS_GROUP
+    PUSHBUTTON "Anulo", 2, 181, 136, 60, 14
+END
+
+7033 DIALOGEX 0, 0, 220, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Cilësimet Hyrëse Protokollare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "Lejo telefonuesit te aksesojnë zonën e rrjetit vendorë", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "OK", 1, 86, 30, 60, 14
+    PUSHBUTTON "Anulo", 2, 151, 30, 60, 14
+END
+
+7035 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Rrjeti"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Komponente Rrjeti:", -1, 7, 7, 217, 9
+    CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Instalo...", 7037, 9, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "&Ç'install", 7038, 80, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "Cilësime", 7039, 153, 110, 67, 14, WS_GROUP
+    GROUPBOX "Përshkrime", -1, 7, 138, 213, 69
+    LTEXT "<përshkrime protokolli>", 7040, 17, 150, 193, 48
+END
+
+7042 DIALOGEX 0, 0, 230, 215
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
+CAPTION "Përdorues"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Përdoruesit e lejuar për tu lidhur:", -1, 7, 5, 213, 8
+    CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&E're...", 7044, 7, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "&Fshi", 7045, 80, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "Cilësime", 7046, 153, 107, 67, 14, WS_GROUP
+    AUTOCHECKBOX "Kërko të gjithë përdoruesve për të siguruar fjalëkalimet dhe të dhënat e tyre.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Gjithmonë lejo pajisjet e lidhura direkt të tilla si kompjutera palmtop të lidhen pa ofruar një fjalëkalim.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+    LTEXT "Vini re se faktorë të tjerë, të tilla si një llogari të përdoruesit me aftësi të kufizuara, mund të ndikojnë në aftësinë e përdoruesit për tu lidhur.", -1, 9, 126, 212, 23
+END
+
+7049 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni kutinë e kontrollit pranë çdo përdorues i cili duhet të lejohet të lidhet me këtë kompjuter. Vini re se faktorë të tjerë, të tilla si një llogari të përdoruesit me aftësi të kufizuara, mund të ndikojnë në aftësinë e përdoruesit për tu lidhur.", -1, 10, 1, 275, 27
+    LTEXT "&Përdoruesit e lejuar për tu lidhur:", -1, 10, 28, 275, 8
+    CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
+    PUSHBUTTON "&Shto...", 7044, 10, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Hiq", 7045, 79, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Cilësime", 7046, 147, 122, 65, 14, WS_GROUP
+END
+
+7050 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni kutinë e kontrollit pranë çdo pajisje që ju dëshironi të përdorni për lidhjet hyrëse.", -1, 10, 4, 299, 10
+    LTEXT "&Pajisjet e lidhëse:", -1, 10, 16, 275, 8
+    CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
+    PUSHBUTTON "Cilësime", 7013, 243, 120, 65, 14, WS_GROUP
+END
+
+7051 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zgjidhni kutinë e kontrollit pranë çdo lloj programi rrjeti që duhet aktivizuar për lidhjet hyrëse.", -1, 10, 1, 288, 20
+    LTEXT "&Programe rrjeti:", -1, 10, 24, 274, 8
+    CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
+    PUSHBUTTON "&Instalo...", 7037, 108, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "&Ç'install", 7038, 172, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "&Cilësime", 7039, 236, 71, 60, 14, WS_GROUP
+    LTEXT "<përshkrime protokolli>", 7040, 21, 105, 273, 38
+    LTEXT "Përshkrime:", -1, 21, 95, 275, 8
+END
+
+7052 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Lidhjet virtuale private në kompjuterin tuaj nëpërmjet internetit janë të mundshme vetëm në qoftë se kompjuteri juaj ka një emër të njohur ose adresën IP në internet.", -1, 10, 4, 290, 20
+    AUTORADIOBUTTON "&Lejo lidhjet virtuale private", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Mos lejoni lidhjet virtuale private", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "A doni të lejoni lidhjet virtuale private në këtë kompjuter?", -1, 17, 49, 275, 8
+    LTEXT "Nëse ju lejojnë lidhjet VPN, ReactOS do të ndryshojë MurinMbrojtës Lidhjes Internetit për të lejuar kompjuterin tuaj të dërgojë dhe të merrë pako VPN.", -1, 10, 25, 293, 25
+END
+
+7055 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Pajisje për këtë lidhje:", -1, 23, 24, 275, 8
+    COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Pajisjet e tjera përveç asaj që keni zgjedhur nuk do të preken dhe mund të përdoret për qëllime të tjera.", -1, 10, 4, 275, 17
+    PUSHBUTTON "&Properties", 7061, 232, 53, 65, 14, WS_GROUP
+END
+
+7379 DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+19900 DIALOGEX 0, 0, 156, 44
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Rrjeti Telefonues"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 563, 19901, 10, 10, 18, 20
+    LTEXT "Duke pritur për shërbime për të filluar...", 19902, 34, 16, 120, 8
+END
+
+STRINGTABLE
+BEGIN
+    187 "&Jo, mos i bjerë\0"
+    188 "Ju (ose nje program) keni kërkuar informacio nga %1. Cilen lidhje doni të përdorni?\0"
+    189 "Shto Numra Alternativ telefoni\0"
+    190 "Thirr vetem pajisjes e para të mundësuara\0"
+    191 "Thirr të gjitha pajisjet\0"
+    192 "Thirr pajisjet sipas nevojave\0"
+    193 "Futni një emër përdoruesi dhe fjalëkalim me të drejta në domenin e rrjetit të largët.\0"
+    194 "Përkthimi i Adresa të Rrjeti (NAT) aktualisht është instaluar si një protokoll konfiguruar,\ndhe duhet të hiqet para se të bëjë të mundur Shpërndarjen e Lidhjes së Internetit.\nPër të hequr Përkthimin e Adreses së Rrjetit, hapni Konfigurimin dhe Menaxhuesin e Të Dreltave në Distancë\nkapë dhe zgjero hyrjen e router-it në panelin e majtë.\nFshi Përkthimin e Adresave të Rrjetit së protokollit Router-it nga lista e protokolleve \nrouti-m IP've.\0"
+    195 "Kodi i zonës duhet të përmbajë vetëm shifra 0 tek 9.\0"
+    196 "Emri hyrjes duhet të përmbajë të paktën një karakter jo-bosh dhe nuk mund të fillojë me një periudhë. Zgjidhni një emër tjetër..\0"
+    197 "Ju duhet të zgjidhni një vlerë prej %1 tek %2 për këtë fushë.\0"
+    198 "Konfigurimi DLL vertetimit i parazgjedhur nuk mund të ngarkohet. Sigurohuni që paketa vertetuese parazgjedhur është instaluar si duhet.\0"
+    199 "Lidhja zgjedhur është themeluar nga router me shumë protokolle.\nJu lutemi përdorni 'Routing dhe RAS Admin 'mjet për të mbyllur lidhjen'.\0"
+    200 "Komente\0"
+    201 "Konfigurimi Paketës së vërtetuar parazgjedhur dështoi.\0"
+    202 "TCP/IP'ja nuk është i instaluar, ose është i paaftë për Routim dhe Mundësim të Largët. Në Panelin e Kontrollit, fillo Rrjetin, shkoni në faqen e Shërbimeve, zgjidhni 'Routim dhe Shërbime Mundësuare në Distancë' Cilësime, dhe shtypni butonin Rrjeti.\0"
+    203 "IPX nuk është i instaluar, ose është i paaftë për Routinm dhe Mundësim të Largët. Ju mund të instaloni/mundësoni IPX me shikimin e vetive në çdo lidhje në ""Lidhjet"" skedarin.\0"
+    204 "Hiq pajisjes e zgjedhura nga lista?\0"
+    205 "Fshi %1 nga libri i numrave?\0"
+    206 "Shkëput nga %1?\0"
+    207 "Një dokument me emrin %1 tashmë ekziston.  Mbi-shkruaje atë?\0"
+    208 "Gabime sintakse u gjendën në skripte. A doni të shihni shënimet e gabimit?\0"
+    209 "'%1' është i lidhur tani.  \0"
+    210 "kliko-djathtas Monitorimin e Formuesit të Rrjetit në tabelën e punëve për ta mbyllur ose kontrolluar statusin e lidhjes suaj.\0"
+    212 "Lidhja me sukses.\0"
+    213 "Metoda vërtetimi e parazgjedhur duhet të niset duke shtypur Cilësime.\0"
+    214 "lnk\0"
+    215 "Thirr ikona dokumenteve (*.rnk)\0"
+    216 "*.rnk\0"
+    217 "Krijo ikona thirrjes\0"
+    218 "Lidhja me %1 dështoi.  Rilidhja në pritje...\0"
+    219 "Nuk mund të marrim informacion inkuadrim.\0"
+    220 "Nuk mund të marrë informacione të portit.\0"
+    221 "Nuk mund të marrë informacione në projektim.\0"
+    222 "Nuk mund të ngarkojë listën e lidhjes.\0"
+    223 "Klient:\0"
+    224 "Detaje\0"
+    225 "Pajisje:\0"
+    226 "Rrjeti:\0"
+    227 "(Jo i lidhur)\0"
+    228 "&Lidhu...\0"
+    229 "Mbylle\0"
+    230 "Lidhja thirrjes\0"
+    231 "Konfigurimi Modemit vendosur nr standard\0"
+    232 "COM1\0"
+    233 "Router në distancë\0"
+    234 "Modemi ose pajisje\0"
+    235 "Ju lutem shkruani një emër përdoruesi për llogarinë e ndër-faqes në router'in e largët.\0"
+    236 "Një hyrje me emrin %1 tashmë ekziston.  Zgjidhni një emër tjetër.\0"
+    237 "Ju mund të dëshironi të lejoni dërgimin e fjalëkalimin tuaj pa kryptim.\0"
+    238 "Kryptimi Fjalëkalimit\0"
+    239 "Magjistar është i gatshëm për të krijuar lidhjen tuaj.\0"
+    240 "Mbaroi\0"
+    241 "&Numrat telefonik:\0"
+    242 "Më Thirr Mbrapa Tel\0"
+    243 "Modifiko Alternativat e Numrave Telefonik\0"
+    244 "Me që kjo lidhje është aktualisht aktive, disa konfigurime nuk do të hyjë në fuqi deri në herën tjetër që ju thirrni atë.\0"
+    245 "Nuk ka lidhje në dispozicion për të gjithë përdoruesit.  Ju duhet të futeni para se të thirrni.\0"
+    246 "Libri Telefonit është bosh.\n\nShtypni OK për të shtuar një shënim.\0"
+    247 "Për shkak të kufizimeve të import/eksportit, të dhënat e kryptimit nuk janë në dispozicion në këtë version të ReactOS.\0"
+    248 "Ju lutem fusni një X.25 adresë në ekranin tjetër.\0"
+    249 "Gabim %1: %2\0"
+    250 "%1\n\nGabim %2: %3\0"
+    251 "%1\n\nGabim %2: %3\nDiagnostikim: %4\0"
+    252 "%1\n\nGabim %2: %3\nKodi Dështoi: %4\0"
+    253 "%1\n\nGabim %2: %3\n\nShtypni F1 për më shumë informacione.\0"
+    254 "%1\n\nGabim %2: %3\nEmri: %4\0"
+    255 "%1\n\n%4\0"
+    256 "%1\n\nGabim %2: %3\nPërgjigje: %4\0"
+    257 "Kodi Dështoi: 0x%1\n\0"
+    258 "Emri: %1\n\0"
+    259 "%1 CP raportoj gabim %2: %3\n\0"
+    260 "%1 CP u lidh me sukses.\n\0"
+    261 "Mund të zgjidhni cilin protokoll thirrës të përdorni.\0"
+    262 "Zgjidh Protokollin Thirrës\0"
+    263 "Kliko Mbaro për të ruajtur '%1'.\0"
+    264 "netcfg.hlp\0"
+    265 "&Masë numëri suksesshëm në majë të lista në lidhje\0"
+    266 "&Numer Telefoni i Ri:\0"
+    267 "&Numer Telefoni:\0"
+    268 "Numer Telefoni\0"
+    269 "Ju mund të hyni në një adresë IP fikse.\0"
+    270 "IP Adresë\0"
+    271 "Protokollet Interneti (TCP/IP), nuk janë instaluar ose janë të paaftë për Mundësim në Distancë. Në Panelin e Kontrollit, të fillojë Rrjeti, shkoni në faqen e Shërbimeve, zgjidhni Cilësime 'Shërbime të Largëta Mundësimi, dhe shtypni butonin Rrjeti.\0"
+    272 "TCP/IP\0"
+    273 "IPSec, Politika e parazgjedhur\0"
+    274 "IPX/SPX ose pajtueshëm\0"
+    275 " (vendndodhja e tanishme)\0"
+    276 "ISDN\0"
+    277 "Të gjithë linjat shumë-lidheshe ISDN në dispozicion\0"
+    278 "64K Digjital\0"
+    279 "56K Digjital\0"
+    280 "56K Zëri\0"
+    281 "Ju mund t'ju duhet një procedurë të veçantë para se të lidheni.\0"
+    282 "Zgjidh Opsionet Hyrëse\0"
+    283 "%d%%\0"
+    284 "Numri Telefonit për %s\0"
+    285 "&Vendndodhje e Re :\0"
+    286 "&Vendndodhje:\0"
+    287 "Vendndodhje\0"
+    288 "Kjo është pajisja që do të përdoret për të bërë lidhjen.\0"
+    289 "Zgjidh një Pajisje\0"
+    290 "Shumë Linja nuk mund të jenë deng nëse ju po thërrisni një server PPP.\0"
+    291 "Modeme\0"
+    292 "Modemi nuk është instaluar.\0"
+    293 "MS Pikë-në-Pikë Kryptim, 128 bit RSA/RC4\0"
+    294 "MS Pikë-në-Pikë Kryptim, 40 bit RSA/RC4\0"
+    295 "Shumë Linja\0"
+    296 "(Shtypni Konfiguro për të vendosur)\0"
+    297 "Ju mund të fusni DNS dhe WINS adresash fikse.\0"
+    298 "Emri Adreses Serverit\0"
+    299 "Niveli-poshtë RAS\0"
+    300 "PPP\0"
+    301 "PPP shumë-lidhje\0"
+    302 "SLIP\0"
+    303 "NetBEUI\0"
+    304 "Një LiberKontakti personal është krijuar dhe fillon me përmbajtjen e sistemit LibriKontakteve.\0"
+    305 "Nuk ka LiberKontakti alternativ që është zgjedhur.\0"
+    306 "Ajo pajisje nuk mund të konfigurohet dinamike.\0"
+    307 "Hyrja nuk mund të fshihet sepse është e lidhur.\0"
+    308 "Nuk ka hyrje të zgjedhur.  Shtypni butonin e Ri për të krijuar një hyrje.\0"
+    309 "Një adresë IP jo-zero duhet furnizuar kur 'specifiko një adresë IP' është zgjedhur.\0"
+    310 "Një X.25 Adresë kërkohet kur një X.25 rrjet thirrës apo X.25 pajisje është zgjedhur.\0"
+    311 "(asnjë)\0"
+    312 "'%1' është tashmë në listë.\0"
+    313 "Siguro fjalëkalimin tim dhe të dhënat e mia\0"
+    314 "Protokolli %1 nuk mund të përzgjidhet sepse nuk është instaluar ose është i gjymtuar Akses në Distancë.  Për ndryshim, në Panelin e Kontrollit fillo Rrjetin, zgjidhni faqen Shebimëve, Cilësimet Aksesit në Distancë, dhe shtypni butonin Rrjeti.\0"
+    315 "Nuk mund te ruaj fjalëkalimin.\0"
+    316 "Nuk mund të shfaq data.\0"
+    317 "Nuk mund të marrë informacion thirrje-automa.\0"
+    318 "Nuk mund të ngarkojë dialogun.\0"
+    319 "Nuk mund të gjymtojë aksesin shpërndarës.\0"
+    320 "Nuk mund të ngarkojë faqen pronës.\0"
+    321 "Nuk mund të ngarkojë LibriKontakteve.\0"
+    322 "Nuk mund të ngarkojë Menaxhuesin informativ të port'it RAS.\0"
+    323 "Nuk mund të lexojë preferencat e përdoruesit nga regjistri.\0"
+    324 "Nuk mund të ngarkojë informacionin e skriptes.\0"
+    325 "Nuk mund të vëzhgojë script.log me notepad.exe\0"
+    326 "Nuk mund të modifikojë switch.inf me notepad.exe\0"
+    327 "Nuk mund të ngarkojë informacionet TAPI.\0"
+    328 "Nuk mund të ngarkojë informacionet  X.25.\0"
+    329 "Nuk mund të krijojë një LibërKontaktesh të ri.\0"
+    330 "Nuk mund të  mundësojë akses shpërndarës.\0"
+    331 "Nuk mund të lidhet me hyrjen e LibritKontakteve.\0"
+    332 "Nuk mund të marrë dërgo/merr buffer.\0"
+    333 "Nuk mund të marrë status informacioni për një port.\0"
+    334 "Nuk mund të rifitoj informacion protokolli.\0"
+    335 "Nuk mund të rifitoj buffer nga pajisja.\0"
+    336 "Nuk mund të dërgojë buffer tek pajisja.\0"
+    337 "Nuk mund të  rifitoj të dhënat.\0"
+    338 "Nuk mund të ruaj informacionin TAPI.\0"
+    339 "Nuk mund të ruaj të dhëna.\0"
+    340 "Skripte ka ndaluar.\0"
+    341 "Skripte ka ndaluar për shkak të një gabimi. Dëshironi të vëzhgoni gabimin e Do you wish to view the error log?\0"
+    342 "Nuk mund të vendosë informacionet thirr-auto.\0"
+    343 "Nuk mund të fshij fjalëkalime të ruajtura.\0"
+    344 "Nuk mund të shkruaj librin e kontakteve.\0"
+    345 "Duke shkruar preferencat në regjistër\0"
+    346 "Nuk mund të shkruaj ikonë dokumenti.\0"
+    347 "OK\0"
+    348 "Çfarë është ISP'ja numrit telefonik tuaj?\0"
+    349 "Numri telefonik për tu thirrur\0"
+    350 "Fushat fjalëkalim dhe konfirmo fjalëkalimin nuk janë të pranueshme.\0"
+    351 "Fjalëkalimi i ri dhe fusha konfirmo fjalëkalimin e ri nuk përputhen.\0"
+    352 "pbk\0"
+    353 "Dokumenti LibriTelefonik (*.pbk)\0"
+    354 "*.pbk\0"
+    355 "Hap LibriTelefonik\0"
+    356 "Mbyll LibriTelefonik hyrës\0"
+    357 "Modifiko LibriTelefonik hyrës\0"
+    358 "Hyrje e re në LibriTelefonik\0"
+    359 "Numri Telefonik\0"
+    360 "Numrat Telefonik\0"
+    361 "Lidhje Rrjeti\0"
+    362 "Ju duhet të zgjidhni të paktën një protokoll rrjeti.\0"
+    363 "Para se ju mund të telefononi server-at PPP duhet të instaloni një protokoll rrjeti me aplikacionet e Kontrollit të Rrjetit.\0"
+    364 "Prefiks i &Ri:\0"
+    365 "&Prefisë:\0"
+    366 "Prefiksi Numrit Telefonit\0"
+    367 "Një ose më shumë protokolle të kërkuara rrjetit nuk u lidhën me sukses.\n\n\0"
+    368 "Shtypni Prano për të përdorur lidhjen si është, ose Mbyllni për shkëputje.\0"
+    369 "Pkë-në-Pikë konfigurim protokolli për të përdorur kur %1 fillon një lidhje formo kërkesa për ndër-faqe %2:\0"
+    370 "[Për të ndryshuar fjalëkalimin e ruajtur, klikoni këtu]\0"
+    405 "Protokolli NetBEUI është e nevojshme për të thirrur serverat e vjetra RAS.\0"
+    406 "Para se ju mund të telefononi serverat e vjeter Ras ju duhet ta instaloni protokollin NetBEUI. NetBEUI mund të instalohet me aplikacione Kontroll Panel Rrjeti.\0"
+    407 "&Riformo\0"
+    408 "Ju keni zgjedhur për të çaktivizuar një ose më shumë transporte. Duke bërë kështu kërkohen menaxherët router dhe protokollet router për transportet me aftësi të kufizuara që të hiqet nga kjo kërkesë-thirrëse ndërfaqe.\nKlikoni Po në qoftë se ju doni të vazhd\n\n\n\n\n\n\noni, apo Jo në qoftë se ju dëshironi të ri-mundësoni transportin.\0"
+    409 "Shpërndarja Lidhjes Internetit\0"
+    410 "Kërkues-formimi ndërfaqe llogari thirrëse.\0"
+    411 "Ju tani duhet për të vendosur kredencialet thirje-dalëse të ndërfaqes '%1' që do të përdorni kur lidheni me router të largët. Këto kredencialet duhet të përputhen me kredencialet e konfiguruara në router të largët për thirrje-hyrëse . Kur të lidheni me një \n\n\n\n\n\n\nWin NT4/2000 router, emri i përdoruesit duhet të përputhen me emrin e ndërfaqes router të largët.\0"
+    412 "mpradmin.hlp\0"
+    413 "&Leviz numrin ose adresën e suksesshme në krye të listës për lidhjen\0"
+    414 "Numër telefoni i ri ose adresë:\0"
+    415 "Numra telefonine ose adresa:\0"
+    416 "Numra dhe addresa\0"
+    417 "PPP: Win 95/98/NT4/2000, Internet\0"
+    418 "Asnjë\0"
+    419 "SLIP: Lidhje Unix\0"
+    420 "Të gjitha pajisjet e lidhura.\0"
+    421 "Merr rezultatin e regjistrimit...\0"
+    422 "Dërgo informacione thirrmbrapa...\0"
+    423 "Dërgo fjalëkalimin e ri...\0"
+    424 "Dhogaritë shpejtësinë e lidhjes...\0"
+    425 "Kontrolli statusin e verifikimit...\0"
+    426 "Regjistro kompjuterin tuaj një rrjet...\0"
+    427 "Rigjykimi verifikimit...\0"
+    428 "Verifiko përdoruesin dhe fjalëkalimin...\0"
+    429 "Vertetuar.\0"
+    430 "Duke u lidhur nëpërmjet %1...\0"
+    431 "Formo Numrin...\0"
+    432 "Lidhaj Modem...\0"
+    433 "Lidhaj me kabull...\0"
+    434 "Formo Numrin %1...\0"
+    435 "Lidhu mbi X.25 tek %1...\0"
+    436 "Pas-lidhëse përmes %1...\0"
+    437 "Para-lidhëse përmes %1...\0"
+    438 "Lidhur.\0"
+    439 "Pajisja lidhur.\0"
+    440 "Shkëputur.\0"
+    441 "Modemi lidhur.\0"
+    442 "Kabulli lidhur.\0"
+    443 "Hap portin...\0"
+    444 "X.25 lidhur.\0"
+    445 "Porti hapur.\0"
+    446 "Pas-lidhja plotë.\0"
+    447 "Para-lidhja plotë.\0"
+    448 "Përgatitje për thirrmbrapa...\0"
+    449 "Kontrollimi i lidhjeve të protokollit të rrjetit...\0"
+    450 "Verifiko përdoruesin dhe fjalëkalimin...\0"
+    451 "Lidhur, dëng linjash shtesë\0"
+    452 "Gjëndje panjohur.\0"
+    453 "Pritje për thirrjen mbrapa...\0"
+    454 "Pritje për rivendosur modemin...\0"
+    455 "Make the phone number change permanent?\0"
+    456 "scp\0"
+    457 "*.scp\0"
+    458 "Skriptë dokumenti thirr (*.scp)\0"
+    459 "Shfleto skriptën formo numrin\0"
+    460 "Ju duhet të kontrolloni të paktën një modem ose përshtatës.\0"
+    461 "Numër telefonik\0"
+    462 "Protokolli TCP/IP është i nevojshëm të thërrasë SLIP servers.\0"
+    463 "Para se ju mund të telefononi serverat SLIP ju duhet ta instaloni protokollin TCP/IP. TCP/IP mund të instalohet me aplikacionin Kontroll Paneli Rrjetit.\0"
+    464 "Gjëndja\0"
+    465 "Prapashtesë e Re:\0"
+    466 "Prapashtesa:\0"
+    467 "Prapashtesë Numër Telefoni\0"
+    468 "Ju mund të shkoni për të zgjedhur parametrat e veçanta, nëse është e nevojshme.\0"
+    469 "Parametra Parazgjedhur\0"
+    470 "Manual Modem Komandë Terminal\0"
+    471 "Pas Terminalit Formues\0"
+    472 "Para Terminalit Formues\0"
+    473 "SLIP Terminal Hyrës\0"
+    474 "10 minuta\0"
+    475 "10 sekonda\0"
+    476 "1 orë\0"
+    477 "1 minuta\0"
+    478 "24 orë\0"
+    479 "2 orë\0"
+    480 "2 minuta\0"
+    481 "30 minuta\0"
+    482 "30 sekonda\0"
+    483 "3 sekonda\0"
+    484 "4 orë\0"
+    485 "4 minuta\0"
+    486 "5 minuta\0"
+    487 "5 sekonda\0"
+    488 "8 orë\0"
+    489 "kurr\0"
+    490 "Ju mund të bëni lidhje e re në dispozicion për çdo përdorues ose vetëm për veten tuaj.\0"
+    491 "Disponueshmëria Lidhjes\0"
+    492 "Hedh cilësimet e shumta të linjës  për hyrjen?\0"
+    493 "Pajisja pa-disponueshëm\0"
+    494 "Preferencat Hyrëse\0"
+    495 "Preferencat Formo-numrin\0"
+    496 "X.25\0"
+    497 "X.25 PAD\0"
+    498 "Ju mund të leni burimet kompjutera të tjerë akses përmes kësaj lidhje formuese.\0"
+    499 "Përzgjedhje VPN Server\0"
+    500 "Nuk mund të mundësojë mbi-kërkesën formimi i numrit.\0"
+    501 "Cili është emri ose adresa e serverit VPN?\0"
+    502 "Nuk mund të gjymtojë mbi-kërkesën formimi i numrit.\0"
+    503 "Rrjeti Publik\0"
+    504 "ReactOS mund të sigurohet që rrjet publik është e lidhur së pari.\0"
+    505 "VPN1\0"
+    506 "Shpërndarja Lidhjes Internetit\0"
+    507 "Ju mund të leni një burim vendëro të aksesit të rrjetit përmes kësaj lidhje formuese.\0"
+    508 "Pritëse ose Vizitori?\0"
+    509 "Shpërndarja Lidhjes Internetit është aktivizuar aktualisht për lidhje '%1'.\n\nEdhe tani do të jenë të aktivizuara për lidhje '%2' në vend.\0"
+    510 "Për të lidhur dy kompjutera, kompjuteri juaj duhet të identifikohet si një pritës ose një vizitor.\0"
+    511 "Kur Lidhaj Shpërndarëse Internetit është aktivizuar, përshtatësi LAN juaj do të jetë i vendosur për të përdorur adresën IP 192.168.0.1. Kompjuteri juaj mund të humbasë lidhjen me kompjutera të tjerë në rrjetin tuaj. Nëse këta kompjuterë të tjerë kanë IP adresa statike, ju duhet vendosur ato për të marrë IP adresat e tyre automatikisht. Jeni te sigurte qe doni te mundësuar Lidhjen Shpërndarëse Internetit?\0"
+    512 "Zgjidh një pajisjes\0"
+    513 "Kjo është pajisja që do të përdoret për të bërë lidhjen.\0"
+    514 "&Lidhu\0"
+    515 "Le të përcaktojë serveri kryptimin\0"
+    516 "Përherë krypto të dhënat e mia\0"
+    517 "Përdor MPPE-40 kriptim të dhënash\0"
+    518 "Përdor MPPE-128 kryptim të dhënash\0"
+    519 "Përzgjedhja aktuale e kryptimin kërkon vertetim MS-CHAP ose EAP.\0"
+    520 "Mesazhe Vertetimi Parapërzgjedhur\0"
+    521 "Duke u lidhur tek %1...\0"
+    522 "Emri Lidhjes\0"
+    523 "Automatike\0"
+    524 "PPTP VPN\0"
+    525 "L2TP IPSec VPN\0"
+    526 "Zgjidh tipin e lidhjes.\0"
+    527 "Tipi i lidhjes\0"
+    528 "hh.exe netcfg.chm::/trouble_all.htm\0"
+    529 "Lidhja Private Virtuale\0"
+    530 "Përdorni çdo formë të vërtetimit të kërkuar përfshirë tekst të qartë. Mos kriptoni të dhëna të.\0"
+    531 "Përdorni çdo formë të vërtetimi që kërkon fjalëkalimet për të koduara.  Mos kriptoni të dhëna të.\0"
+    532 "Ju lutem shkruani një emër për hyrjen.\0"
+    533 "Krypto fjalëkalimin dhe të dhënat.\0"
+    534 "Ju lutem shkruani një numër porti ndërmjet 1 dhe 65535.\0"
+    535 "Specifikoni vërtetimin doganore e të dhënave kryptume me butonin Konfiguro.\0"
+    536 "Përdorni çdo formë vërtetimi që kërkon fjalëkalimet e kriptuara.  Mos kriptoni të dhëna.\0"
+    537 "Kripto fjalëkalimin dhe të dhënat.\0"
+    538 "Specifikoni vertetimin parapërgjedhës dhe të dhënat e kriptimit me butonin Konfiguro.\0"
+    539 "Numrin e portit është përdorur tashmë nga një tjetër hyrje.\nJu lutemi shkruani një numër unik portit.\0"
+    540 "Ju lutem shkruani një ose më shumë portet për përgjigjet hyrëse.\0"
+    541 "Ju lutemi zgjidhni hyrjen që të fshihet.\0"
+    542 "1 sekond\0"
+    543 "Ju lutemi zgjidhni hyrjen që duhet modifikuar.\0"
+    549 "Cili është emri i kompjuterit tjetër që ju jeni lidh me të?\0"
+    576 "20 minutë\0"
+    579 "Specifikoni një emër për lidhjen në vendin tuaj të punës.\0"
+    581 "Aplikacioni Konfigurues i Rrjetit\0"
+    582 "Shkruaj një emër për këtë lidhje në kutinë e mëposhtme.\0"
+    583 "Shkruani emrin e kompjuterit tjetër në kutinë e mëposhtme.\0"
+    584 "Shkruaj një emër e ISP'së në kutinë e mëposhtme.\0"
+    585 "Cili është emri i shërbimit që ofron lidhja juaj e internetit?\0"
+    586 "Ju lutemi shkruani adresën IP të kompjuterit server në rrjetin privat.\0"
+    587 "Konfigurime Avancuara\0"
+    588 "Emri hyrjes fillon me një periudhë. ose përmban disa shenja të pavlefshme. \nZgjidhni një emër tjetër.\0"
+    589 "Cilësime\0"
+    1512 "Porti Komunikues\0"
+    1523 " kanali\0"
+    1526 "Karta Smart\0"
+    1527 "Ju mund të përdorni kartën tuaj smart me këtë lidhje.\0"
+    1528 "Lidhje Direkt\0"
+    1529 "Ju lutem zgjidhni një pajisje për këtë lidhje.\0"
+    1530 "Verdana Bold\0"
+    1531 "12\0"
+    1532 "Tipi Lidhjes\0"
+    1533 "Zgjidhni llojin e ndërfaqes formuese kërkesa që ju dëshironi për të krijuar.\0"
+    1534 "Zgjidhni një pajisje\0"
+    1535 "Kjo është pajisja që do të përdoret për të bërë lidhjen.\0"
+    1536 "Numri Telefonik\0"
+    1537 "Shkruani numrin e telefonit të serverit në distancë apo router që ju po thirrni.\0"
+    1538 "Tipi VPN\0"
+    1539 "Përzgjidhni llojin e VPN ndërfaqe që ju dëshironi për të krijuar.\0"
+    1540 "Adresa Destinacionit\0"
+    1541 "Cili është emri ose adresa e routerit të largët?\0"
+    1544 "IP Adresa\0"
+    1545 "Konfiguro adresën IP të këtij routeri për këtë ndërfaqe.\0"
+    1546 "Adresa Emrit Serverit\0"
+    1547 "Konfiguro adresat DNS dhe WINS për përdorim nga kjo ndërfaqe.\0"
+    1548 "Router Scripting\0"
+    1549 "Ju mund të krijoni një skriptë për lidhjen me router të largët.\0"
+    1550 "Formo Kredencialet\0"
+    1551 "Konfiguro emrin e përdoruesit dhe fjalëkalimin që routeri i largët do të përdorë kur ajo lidhet në të këtë server.\0"
+    1552 "Shkëput Kredencialet\0"
+    1553 "Konfiguro emri i përdoruesit dhe fjalëkalimin që do të përdoret kur lidhet me routerin e largët.\0"
+    1554 "Emri Ndërfaqes\0"
+    1555 "Zgjidhni emrin me të cilin kjo ndërfaqe e re do të jetë i njohur.\0"
+    1556 "Nuk ka pajisje në dispozicion\0"
+    1557 "Një llogari përdoruesi %1 tashmë ekziston në kompjuter vendorë. A duhet kërkesa e ndërfaqes formuese të jetë konfiguruar për të përdorur këtë llogari përdoruesi?\0"
+    1558 "Nuk ka parametrat e protokollit të sigurisë për lidhje SLIP në server.\0"
+    1559 "Lejo fjalëkalimin pasigurta\0"
+    1560 "Kërkojnë fjalëkalimin siguruara\0"
+    1561 "Përdor kartën smart\0"
+    1562 "Ju duhet të zgjidhni të paktën një protokoll verifikues fjalëkalimi.\0"
+    1563 "Nuk lejohet kriptimi (serveri do të shkëputet në qoftë se ajo kërkon kriptim)\0"
+    1564 "Kriptim opsional (lidhu edhe në qoftë se nuk ka kriptim)\0"
+    1565 "Kërkojnë kriptim (shkëputu nëse server refuzon)\0"
+    1566 "Kriptim maksimal force (shkëput nëse serveri refuzon)\0"
+    1567 " (kriptimi aktivizuar)\0"
+    1568 "Llogaria Informuese Internetit\0"
+    1569 "Ju do ju duhet një emer llogarie dhe fjalëkalimin për të nënshkruar te llogaria juaj e internetit.\0"
+    1570 "Paketa e zgjedhur PAA nuk jep çelësat kriptume. Zgjidh një paketë PAA që do të ofrojnë çelësat ose zgjidhni të mos kriptoni.\0"
+    1571 "Përzgjedhja e tanishme kriptimit kërkon EAP-it ose ndonjë version të MS-djalë metodave të sigurisë hyrëse.\0"
+    1572 "Protokolle dhe Siguria\0"
+    1573 "Zgjidhni transporto dhe opsione të sigurisë për këtë lidhje.\0"
+    1574 "Protokollet që keni përzgjedhur përfshijnë PAP, SPAP, dhe/ose CHAP. Nëse një nga këto është negociuar, kriptimit i të dhënave nuk do të ndodhë. A doni ju të mbani këto rregullime?\0"
+    1575 "Për t'u lidhur me '%1', ju së pari duhet të jeni i lidhur me '%2'. A doni të lidheni '%2' tani?\0"
+    1576 "Lidhur mbi kabllo paralele...\0"
+    1577 "Lidhur mbi infrared...\0"
+    1578 "Kabllo paralele të lidhur.\0"
+    1579 "Lidhja Infrared.\0"
+    1580 "Kjo lidhje është konfiguruar për të përdorur një forcë të dhënash të kriptume që nuk janë pajisur me software të instaluar. Pronat sigurisë të kësaj lidhje janë rivendosur në pikat e forta kriptimit në dispozicion.\0"
+    1581 "Tipi i VPN:\0"
+    1582 "Ju lutem fusni një përdorues.\0"
+    1583 "Ky përdorues dhe fjalëkalimi do të ruhen për përdorimin tuaj. Ka tashmë një përdorues dhe fjalëkalimin të ruajtur për të gjithë përdoruesit e tjerë të kësaj lidhje. A doni të fshini përdoruesin dhe fjalëkalimin e ruajtur për të gjithë përdoruesit e tjerë?\0"
+    1584 "Për shembull, ju mund të shkruani emrin e vendin tuaj të punës ose emrin e një server që ju do të lidheni me.\0"
+    1585 "Informacionet e Llogarisë\0"
+    1586 "Kontrollet në këtë fletë të pronës janë me aftësi të kufizuara për shkak se sistemi i parë duhet të restartohet para se të mund të bëhen ndryshime të konfigurimit.\0"
+    1587 "Kontrollet në këtë fletë të pronës janë të paaftë për shkak se një ose më shumë fletë të tjera të pronës e rrjetit janë tashmë të hapura. Për të përdorur këto kontrolle, mbyllni të gjitha këto fletë pronësore dhe pastaj të rihapë këtë.\0"
+    1588 "Disa nga kontrollet mbi këtë fletë të pronës janë me aftësi të kufizuara për shkak se ju nuk keni privilegje të mjaftueshme për të hyrë në ato.\0"
+    1589 "Mesazhi i mëposhtëm është marrë nga ofruesi juaj i shërbimit:\r\n\r\n%1\0"
+    1590 "Rilidhu %1\0"
+    1591 "Emri Shërbimit\0"
+    1592 "Cili është emri i shërbimit që ofron lidhjen tuaj broadband?\0"
+    1593 "Ju do ju duhet një emer e llogarisë dhe fjalëkalimin për të hyrë në llogarinë tuaj\0"
+    1594 "PPPOE1-0\0"
+    1595 "Pikë-në-Pikë Protokoll mbi Ethernet (PPPoE)\0"
+    1596 "Lloji i dhe lidhje &broadband për të bërë:\0"
+    1611 "Lidhja Broadband\0"
+    1612 "Ju keni zgjedhur për të përdorur një çelës para-shpërndarës, por ju nuk e keni futur një të tillë.\nJu lutemi fusni një çelës para-shpërndarës.\0"
+    1613 "Nuk mund të Dorëzojë letrat kredenciale\0"
+    1634 "Për shkak se shërbimi i Menaximit të Instrumentëve Windows-i (WMI) ka qenë me aftësi të kufizuara, ReactOS nuk mund të shfaqin vetitë e kësaj lidhje ose rrjetit në shtëpi.\n\nPër të konfiguruar vetitë e kësaj lidhje ose rrjetit tuaj në shtëpi, ju duhet së pari të mundësoni shërbimin WMI. Për ta bërë këtë, ne Veglat Administrative të panelit të kontrollit, klikoni dy herë Shërbimet, klikoni me të djathtën në Menaxhimin e Orkestrimit Windows, dhe pastaj klikoni Fillo.\0"
+    1635 "ReactOS nuk mund të shfaqin vetitë e kësaj lidhje. Menaxhimi Instrumental Windows (WMI) Informues mund të jetë i korruptuar. Për të korrigjuar këtë, përdorimi Restauro Sistemin për të rivendosur ReactOS një kohë më parë (e quajtur një pikë të rivendosur). Restaurimi Sistemit është e vendosur në Dosjen e Veglave të Sistemit në Aksesore.\0"
+    1646 "Lejo hyrjen kërkesë e përsëritur hyrëse\0"
+    1647 "Lejo hyrjen kërkesë kohëstampe\0"
+    1648 "Lejo hyrjen kërkesë maske\0"
+    1649 "Lejo hyrjen kërkesë routeri\0"
+    1650 "Lejo daljen destinacion i pakapshëm\0"
+    1651 "Lejo daljen shuaj burim\0"
+    1652 "Lejo daljen problem parametrash\0"
+    1653 "Lejo daljen koha tejkaluar\0"
+    1654 "Lejo përcjellëse\0"
+    1655 "log\0"
+    1656 "*.log\0"
+    1657 "MuriMbrojtës i dokumentave (*.log)\0"
+    1658 "Shfleto\0"
+    1663 "Zgjidh një lidhje rrjeti private\0"
+    1664 "Për të mundësuar shpërndarjen e lidhjes internetit një lidhje duhet të zgjidhet për rrjetin privat. Ju lutem, përzgjidhni një lidhje nga lista e lidhjeve në dispozicion.\0"
+    1665 "Mesazhet e dërguara në këtë kompjuter do të përsëriten përsëri mbrapa tek dërguesi. Kjo zakonisht është përdorur për kontrolluar problemet, për shembull, të ping një makinë.\0"
+    1666 "Të dhënat e dërguara në këtë kompjuter mund të njihen me një mesazh konfirmimi treguar kohën që të dhënat janë marrë.\0"
+    1667 "Ky kompjuter do të dëgjojë për dhe do përgjigjet kërkesave për më shumë informacion rreth rrjetit publik për të cilin ajo është e bashkangjitur.\0"
+    1668 "Ky kompjuter do të përgjigjet ndaj kërkesave për informacion në lidhje me rrugët që njeh.\0"
+    1669 "Të dhënat e dërguara në internet që dështojnë për të arritur këtë kompjuter për shkak të një gabimi do të hiqen dhe pranohen me një mesazh ""destinacion pakapshëm"" që shpjegon dështimin.\0"
+    1670 "Kur aftësia e këtij kompjuterit për përpunimin e të dhënave në hyrje nuk mund të mbajnë deri me normën e transmetimit, të dhënat do të hiqen dhe dërguesi do të kërkohet për të ngadalësuar.\0"
+    1671 "Kur ky kompjuter kthen të dhënave që ka marrë për shkak të një goditje me kokë problematike, ajo do të përgjigjen për dërguesin me një ""kokë të keqe"" mesazh gabimi.\0"
+    1672 "Kur ky kompjuter kthen një transmetim të dhënash jo të plota, sepse i gjithë transmetimi kërkoi më shumë kohë se sa e lejuar, ajo do të përgjigjet për të dërguesit me një ""kohë të skaduar "" mesazh.\0"
+    1673 "Të dhënat e dërguara nga ky kompjuter do të ri-routohen nëse rruga e parazgjedhur ndryshon.\0"
+    1675 "Vlera hyrëse për madhësinë e dokumentit shënime nuk është e vlefshme. Futni një vlerë në mes të 1 dhe 32767 k.\0"
+    1685 "Llogaria juaj e përdoruesit nuk duhet lejuar për të përdorur këtë lidhje. Zakonisht, kjo është për shkak se ju jeni regjistruar si Vizitor.\0"
+    1686 "Shkruani një emër dhe fjalëkalimin. (Nëse keni harruar emrin e llogarise ekzistuese apo fjalëkalimin, kontaktoni administratorin e rrjetit tuaj.)\0"
+    1687 "Emri Kompjuterit\0"
+    1688 "Emri ISP\0"
+    1689 "Emri Kompanisë\0"
+    1690 "Cili është numri i telefonit që ju do të përdorni për të bërë këtë lidhje?\n\0"
+    7301 "Hyrje Cilësime TCP/IP\0"
+    7302 "Ju duhet të zgjidhni një vlerë prej 1% në 2% për këtë fushë.\0"
+    7306 "Gabimi Lidhjes Hyrëse\0"
+    7307 "Gabim i përgjithshëm Lidhjes Hyrës\0"
+    7308 "Lidhje Hyrëse\0"
+    7309 "Gabim në Lidhjen Hyrëse Rrjetit\0"
+    7310 "Gabim Gjendjen ShumëLidhëse Hyrëse\0"
+    7311 "Gabimi Lidhjes Hyrëse\0"
+    7312 "Gabim Fillimin e Lidhjes Hyrëse\0"
+    7313 "Gabim Cilësimi Lidhjes TCP/IP Hyrëse\0"
+    7314 "Gabim Cilësimi Lidhjes IPX Hyrëse\0"
+    7315 "Gabimi Lidhjes Hyrëse\0"
+    7316 "Gjenerik\0"
+    7317 "Pajisje\0"
+    7318 "Përzierje Bazë të dhënash\0"
+    7319 "Përdoruesi i Bazës të dhënave\0"
+    7320 "Protokolli i Bazës të dhënave\0"
+    7321 "Ju duhet të shkruani një emër Hyrës për përdoruesin e ri ose shtypni anuloj.\0"
+    7322 "Fjalëkalimi që dhatë është shumë e shkurtër.\0"
+    7323 "Fjalëkalimet e futura nuk janë të njëjta. Ju lutem ri-shkruani ato.\0"
+    7324 "Një gabim i brendshëm ka ndodhur.  \0"
+    7325 "Listo\0"
+    7326 "Një gabim ka ndodhur gjatë përpjekjes për të kryer ndryshimet që keni bërë në bazën e të dhënave lokale e përdoruesit.  \0"
+    7327 "Ju duhet privelegje të pamjaftueshme për të shtuar një përdorues që bazën e të dhënave të sistemit lokal.  \0"
+    7328 "Përdoruesin që ju jeni duke u përpjekur për të krijuar tashmë ekziston në bazën e të dhënave lokale e përdoruesit.\0"
+    7329 "Shfrytëzuesi nuk është shtuar në bazën e të dhënave lokale përdoruesit, sepse fjalëkalimi që dhatë është refuzuar.\0"
+    7330 "Në pamundësi për të rifreskuar bazën e të dhënave të përdoruesit të sistemit për shkak të një gabimi të brendshëm.\0"
+    7331 "Një gabim i brendshëm ka ndodhur: Baza e të dhënave lokale të përdoruesve është e korruptuar.\0"
+    7332 "Në pamundësi për të ngarkuar burime të nevojshme për të shfaqur tab'in e përdoruesit.\0"
+    7333 "Ndodhi një gabim i brendshëm gjatë përpjekjes për të rikthyer ndryshimet që keni bërë në bazën e të dhënave lokale e përdoruesit.  \0"
+    7334 "Pajisja trajtimit së Bazës e të dhënave është i korruptuar.\0"
+    7335 "Në pamundësi për të ngarkuar burimet e nevojshme për të shfaqur tab'in e përgjithshëm.\0"
+    7336 "Një gabim ka ndodhur gjatë përpjekjes për të kryer disa nga ndryshimet tek pajisjet/VPN të bëra.  \0"
+    7337 "Ndodhi një gabim i brendshëm.\0"
+    7338 "Një gabim i brendshëm ndodhi: Baza e të dhënave Komponenti rrjeteve trajtuar është i korruptuar.\0"
+    7339 "Një gabim i brendshëm ka ndodhur.  \0"
+    7340 "Një gabim ka ndodhur gjatë përpjekjes për të kryer ndryshimet që keni bërë për të komponentëve të rrjetit.\0"
+    7341 "Një gabim i brendshëm ka ndodhur.\0"
+    7342 "Në pamundësi për të kryer ndryshimet që keni bërë për të TCP/IP protokollit të sistemit.  \0"
+    7343 "Në pamundësi për të ruajtur ndryshimet që keni bërë për të protokollit IPX me sistemin.  \0"
+    7344 "Në pamundësi për të shfaqur TCP/IP cilësimet.\0"
+    7345 "Në pamundësi për të shfaqur vetitë IPX.\0"
+    7346 "Në pamundësi për të ngarkuar TCP/IP cilësimet nga sistemi.  \0"
+    7347 "Në pamundësi për të ngarkuar cilësimet IPX nga sistemi.  \0"
+    7348 "Lidhjet në hyrje të varet nga Routime dhe Shërbimin Aksesit Largët i cili nuk ishte në gjendje për të filluar. Për më shumë informacion, shikoni shënimet e ngjarjes të sistemit.\0"
+    7349 "Në pamundësi për të lejuar modifikimin e komponentëve të rrjetit në këtë kohë, sepse ata janë duke u modifikuar diku tjetër.\0"
+    7350 "Përdorues të ri që dhatë nuk është shtuar në bazën e të dhënave lokale të përdoruesve, sepse emri ose fjalëkalimi futur shkel politikën e sistemit (kjo ishte shumë e madhe, shumë e vogël, apo keq-formuar).  \0"
+    7351 "Sistemi nuk është në gjendje të fshi përdoruesit e kërkuar.  \0"
+    7352 "Në pamundësi për të hequr komponentin e zgjedhur të rrjetit për shkak se ajo është në përdorim.\0"
+    7353 "Paralajmërim Lidhjet Hyrëse\0"
+    7354 "Çdo përdoruesit që ju fshini do të hiqet përgjithmonë nga sistemi edhe nëse anulo është shtypur. Jeni te sigurte qe doni ta hiqni përherë %s? \0"
+    7355 "Ju jeni gati për të kaluar në një sistem menaxhimi konsol. Kjo lidhje e cilësuar do të mbyllet dhe çdo ndryshim që mund të keni bërë do të angazhohen në sistemin. A jeni dakord për të vazhduar?\0"
+    7356 "Vlera juaj Maskës Rrjetit ka ndryshuar. Një zero bit në një maskë mund të ndiqet vetëm nga zero copa të tjera. Për shembull, një vlerë Rrjeti maskë, e shprehur në simbol dhjetore me pika, e 255.255.0.0, është i vlefshëm, por nuk është 255.0.255.0.  \n\0"
+    7357 "Lejet Përdoruesi\0"
+    7358 "Ju mund të specifikoni përdoruesit të cilët mund të lidheni në këtë kompjuter.\0"
+    7359 "Pajisje për lidhjet hyrëse\0"
+    7360 "Ju mund të zgjidhni pajisjet kompjuterike tuaja që përdor për të pranuar lidhjet hyrëse.\0"
+    7361 "Lidhja Hyrëse Private Rrjetit (VPN)\0"
+    7362 "Një kompjuter mund të lidheni me kompjuterin tuajat përmes një lidhje VPN\0"
+    7363 "Programi Rrjetit\0"
+    7364 "Programi Rrjetit lejon këtë kompjuter të pranojë lidhje nga kompjutera të llojeve e tjera.\0"
+    7365 "Kompletimi Magjistarit të Lidhjes së Re\0"
+    7366 " \0"
+    7367 "Lidhjet Hyrëse\0"
+    7371 "Ska pajisje në gjëndje të pranojnë thirrjeve që është instaluar.\0"
+    7372 " \0"
+    7373 "Cakto numrin e rrjetit specifikuar:\0"
+    7374 "Cakto rrjetit numrat sekuenciale nga:\0"
+    7375 "Përdorues Ri\0"
+    7376 "Lidh Pajisjen\0"
+    7377 "Çfarë pajisje ju dëshironi të përdorni për të bërë këtë lidhje?\0"
+    7378 "Nuk ka pajisje të aftë për të pranuar lidhjet e drejtpërdrejta janë të instaluara aktualisht.\0"
+    7379 "Paralajmërim Lidhjes të Re Hyrëse\0"
+    7380 "Për shkak se ky Win 2000 Server i përket ose kontrollon një domain, ju duhet të përdorni Routim dhe Akses Distancë sistemit tastierë për të konfiguruar këtë makinë për të marrë lidhjet hyrëse. Anulo ndryshime dhe kaloni në këtë konsol?\n\0"
+    7381 "Cakto numrin e rrjetit automatikisht\0"
+    7382 "Caktojë numrat e rrjetit automatikisht\0"
+    7383 "Lidhjet hyrëse nuk mund të lëshojnë numrat e rrjetit IPX 00000000 ose FFFFFFFF. Ju lutemi të ndryshoni numrat që janë caktuar të rrjetit ose përdorni caktimin e numrit të rrjetit automatik.\0"
+    7384 "to\0"
+    7385 "Porti Komunikues(%s)\0"
+    7386 "Lidhjet Rrjetit nuk shfaqin disa opsione të specializuara për lidhjet përbrenda që janë të përcaktuara duke përdorur Përdoruesin Vendorë Futboll apo Politika Aksesi në Distancë konsole. Për informacion të plotë dhe të saktë për lidhjet hyrëse, ju do të duhet të përdorin këtë konsole.\0"
+    7387 "Mënyra thirrmbrapa e përdoruesit që keni zgjedhur kërkon që ju të shkruani në një numër të vlefshme për thirrmbrapa.\0"
+    7388 "ReactOS duhet të riniset për të përfunduar operacionin. A është mire të riniset tani?\0"
+    7389 "Pajisja zgjedhur aktualisht nuk ka opsionet e konfigurimit në dispozicion.\0"
+    7390 "Gama e pavlefshme\0"
+    7391 "Ju keni kërkuar që '%1' të jetë me aftësi të kufizuara për lidhjet hyrëse. Për të çaktivizuar këtë, ju duhet të ndaloni shërbimit 'Serverit'. Pasi u ndal, çdo skedarë i përbashkët ose printera në këtë kompjuter nuk do të jenë në dispozicion të çdo kompjuter tjetër. A doni të sjellë tastierën një sistem që do t'ju lejojë të ndaloni shërbimin 'Server'?\r\n\nPoshtë Menaxhimit Komputerit, klikoni Veglat Sistemit dhe pastaj kliko Shërbimet. Në panelin djathtas, klikoni me të djathtën Server dhe klikoni ndalo.\0"
+    7392 "Ky port serial nuk është aktivizuar për përdorim në një lidhje të drejtpërdrejtë me një kompjuter tjetër. Kjo do të mundësohet pasi të keni përfunduar këtë asistent. Ju pastaj mund të konfiguroni shpejtësinë e portit dhe cilësime të tjera me të drejtë-duke klikuar ikonën për këtë lidhje dhe duke zgjedhur Cilësime.\n\0"
+    7393 "Lidhje Hyrëse\0"
+    7394 "Adresa IP'së që ju keni dhënë është i pavlefshëm.\0"
+    7395 "Maskë me kusht është i pavlefshëm.\0"
+    7396 "Adresa Fillimi hyrëse për TCP/IP është e pavlefshme. Ajo duhet të shtrihet në mes 1.0.0.0 dhe 224.0.0.0 dhe nuk duhet të jetë në formë 127.x.x.x.\0"
+    7397 "The TCP/IP pool entered is invalid because the address is more specific than the mask.\0"
+    7398 "Adresa fillimit duhet të jetë më pak se adresa e fundit.\0"
+    7399 "Routiimi dhe Shërbimi Aksesit në Distancë është në proces të ndalur. Derisa të ndalet, opsione Lidhjeve Hyrëse nuk është në dispozicion. Ju lutem prisni disa momente dhe riprovoni.\0"
+    7400 "%s (%s)\0"
+    7401 "%s (%d kanale)\0"
+    7402 "Lidhjet Hyrëse VPN (PPTP)\0"
+    7403 "Lidhjet Hyrëse VPN (L2TP)\0"
+    7404 "Siguria IP (IKE)\0"
+    7405 "127.0.0.1\0"
+    7406 "Ju nuk keni privilegje të mjaftueshme për të ngritur lidhjet hyrëse\0"
+    29900 "Nuk mund të ngarkoni Shërbimin Menaxhues Lidhjes Aksesit Distancë.\0"
+    29901 "nuk mund të ngarkojë dokumentin MPRAPI.DLL në skedarin system32.\0"
+END

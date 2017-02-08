@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI BitBlt Functions
- * FILE:             subsystems/win32/win32k/eng/bitblt.c
+ * FILE:             win32ss/gdi/eng/bitblt.c
  * PROGRAMER:        Jason Filby
  *                   Timo Kreuzer
  */
@@ -14,7 +14,17 @@
 
 XCLIPOBJ gxcoTrivial =
 {
-    {0, {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, DC_TRIVIAL, FC_RECT, TC_RECTANGLES, 0},
+    /* CLIPOBJ */
+    {
+        {
+            0, /* iUniq */
+            {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, /* rclBounds */
+            DC_TRIVIAL,    /* idCOmplexity */
+            FC_RECT,       /* iFComplexity */
+            TC_RECTANGLES, /* iMode */
+            0              /* fjOptions */
+        },
+    },
     0, 0, 0
 };
 
@@ -41,7 +51,7 @@ BltMask(SURFOBJ* psoDest,
         POINTL* pptlBrush,
         ROP4 Rop4)
 {
-    LONG x, y;
+    LONG x, y, cx, cy;
     BYTE *pjMskLine, *pjMskCurrent;
     BYTE fjMaskBit0, fjMaskBit;
     /* Pattern brushes */
@@ -55,8 +65,7 @@ BltMask(SURFOBJ* psoDest,
     DWORD fgndRop, bkgndRop;
 
     ASSERT(IS_VALID_ROP4(Rop4));
-
-    if (!psoMask) return FALSE;
+    ASSERT(psoMask->iBitmapFormat == BMF_1BPP);
 
     fgndRop = ROP4_FGND(Rop4);
     bkgndRop = ROP4_BKGND(Rop4);
@@ -76,6 +85,14 @@ BltMask(SURFOBJ* psoDest,
     }
     else
         psoPattern = NULL;
+
+    cx = prclDest->right - prclDest->left;
+    cy = prclDest->bottom - prclDest->top;
+    if ((pptlMask->x + cx > psoMask->sizlBitmap.cx) ||
+        (pptlMask->y + cy > psoMask->sizlBitmap.cy))
+    {
+        return FALSE;
+    }
 
     pjMskLine = (PBYTE)psoMask->pvScan0 + pptlMask->y * psoMask->lDelta + (pptlMask->x >> 3);
     fjMaskBit0 = 0x80 >> (pptlMask->x & 0x07);
@@ -447,6 +464,19 @@ EngBitBlt(
     else
     {
         clippingType = pco->iDComplexity;
+    }
+
+    /* Check if we need a mask but have no mask surface */
+    if (UsesMask && (psoMask == NULL))
+    {
+        /* Check if the BRUSHOBJ can provide the mask */
+        psoMask = BRUSHOBJ_psoMask(pbo);
+        if (psoMask == NULL)
+        {
+            /* We have no mask, assume the mask is all foreground */
+            rop4 = (rop4 & 0xFF) | ((rop4 & 0xFF) << 8);
+            UsesMask = FALSE;
+        }
     }
 
     if (UsesMask)
@@ -974,64 +1004,142 @@ EngMaskBitBlt(SURFOBJ *psoDest,
     return Ret;
 }
 
-BOOL APIENTRY
-IntEngMaskBlt(SURFOBJ *psoDest,
-              SURFOBJ *psoMask,
-              CLIPOBJ *ClipRegion,
-              XLATEOBJ *DestColorTranslation,
-              XLATEOBJ *SourceColorTranslation,
-              RECTL *DestRect,
-              POINTL *pptlMask,
-              BRUSHOBJ *pbo,
-              POINTL *BrushOrigin)
+BOOL
+APIENTRY
+IntEngMaskBlt(
+    _Inout_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoMask,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxloDest,
+    _In_ XLATEOBJ *pxloSource,
+    _In_ RECTL *prclDest,
+    _In_ POINTL *pptlMask,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg)
 {
     BOOLEAN ret;
-    RECTL OutputRect;
-    POINTL InputPoint = {0,0};
-    //SURFACE *psurfDest;
+    RECTL rcDest;
+    POINTL ptMask = {0,0};
+    PSURFACE psurfTemp;
+    RECTL rcTemp;
 
+    ASSERT(psoDest);
     ASSERT(psoMask);
+
+    /* Is this a 1 BPP mask? */
+    if (psoMask->iBitmapFormat == BMF_1BPP)
+    {
+        /* Use IntEngBitBlt with an appropriate ROP4 */
+        return IntEngBitBlt(psoDest,
+                            NULL,
+                            psoMask,
+                            pco,
+                            pxloDest,
+                            prclDest,
+                            NULL,
+                            pptlMask,
+                            pbo,
+                            pptlBrushOrg,
+                            ROP4_MASKPAINT);
+    }
+
+    ASSERT(psoMask->iBitmapFormat == BMF_8BPP);
 
     if (pptlMask)
     {
-        InputPoint = *pptlMask;
+        ptMask = *pptlMask;
     }
 
     /* Clip against the bounds of the clipping region so we won't try to write
      * outside the surface */
-    if (NULL != ClipRegion)
+    if (pco != NULL)
     {
-        if (!RECTL_bIntersectRect(&OutputRect, DestRect, &ClipRegion->rclBounds))
+        /* Intersect with the clip bounds and check if everything was clipped */
+        if (!RECTL_bIntersectRect(&rcDest, prclDest, &pco->rclBounds))
         {
             return TRUE;
         }
-        InputPoint.x += OutputRect.left - DestRect->left;
-        InputPoint.y += OutputRect.top - DestRect->top;
+
+        /* Adjust the mask point */
+        ptMask.x += rcDest.left - prclDest->left;
+        ptMask.y += rcDest.top - prclDest->top;
     }
     else
     {
-        OutputRect = *DestRect;
+        rcDest = *prclDest;
     }
 
-    /* No success yet */
-    ret = FALSE;
-    ASSERT(psoDest);
-    //psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+    /* Check if the target surface is device managed */
+    if (psoDest->iType != STYPE_BITMAP)
+    {
+        rcTemp.left = 0;
+        rcTemp.top = 0;
+        rcTemp.right = rcDest.right - rcDest.left;
+        rcTemp.bottom = rcDest.bottom - rcDest.top;
 
-    /* Dummy BitBlt to let driver know that it should flush its changes.
-       This should really be done using a call to DrvSynchronizeSurface,
-       but the VMware driver doesn't hook that call. */
-    IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
-                   DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   ROP4_NOOP);
+        /* Allocate a temporary surface */
+        psurfTemp = SURFACE_AllocSurface(STYPE_BITMAP,
+                                         rcTemp.right,
+                                         rcTemp.bottom,
+                                         psoDest->iBitmapFormat,
+                                         0,
+                                         0,
+                                         0,
+                                         NULL);
+        if (psurfTemp == NULL)
+        {
+            return FALSE;
+        }
 
-    ret = EngMaskBitBlt(psoDest, psoMask, ClipRegion, DestColorTranslation, SourceColorTranslation,
-                        &OutputRect, &InputPoint, pbo, BrushOrigin);
+        /* Copy the current target surface bits to the temp surface */
+        ret = EngCopyBits(&psurfTemp->SurfObj,
+                          psoDest,
+                          NULL, // pco
+                          NULL, // pxlo
+                          &rcTemp,
+                          (PPOINTL)&rcDest);
 
-    /* Dummy BitBlt to let driver know that something has changed. */
-    IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
-                   DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   ROP4_NOOP);
+        if (ret)
+        {
+            /* Do the operation on the temp surface */
+            ret = EngMaskBitBlt(&psurfTemp->SurfObj,
+                                psoMask,
+                                NULL,
+                                pxloDest,
+                                pxloSource,
+                                &rcTemp,
+                                &ptMask,
+                                pbo,
+                                pptlBrushOrg);
+        }
+
+        if (ret)
+        {
+            /* Copy the result back to the dest surface */
+            ret = EngCopyBits(psoDest,
+                              &psurfTemp->SurfObj,
+                              pco,
+                              NULL,
+                              &rcDest,
+                              (PPOINTL)&rcTemp);
+        }
+
+        /* Delete the temp surface */
+        GDIOBJ_vDeleteObject(&psurfTemp->BaseObject);
+    }
+    else
+    {
+        /* Do the operation on the target surface */
+        ret = EngMaskBitBlt(psoDest,
+                            psoMask,
+                            pco,
+                            pxloDest,
+                            pxloSource,
+                            &rcDest,
+                            &ptMask,
+                            pbo,
+                            pptlBrushOrg);
+    }
 
     return ret;
 }

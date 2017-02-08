@@ -20,7 +20,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include "precomp.h"
+
+#include <winnls.h>
+#include <shellapi.h>
+#include <windowsx.h>
+
 #include "fontview.h"
+#include "resource.h"
 
 HINSTANCE g_hInstance;
 EXTLOGFONTW g_ExtLogFontW;
@@ -28,8 +35,8 @@ LPCWSTR g_fileName;
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
-/* Tye definition for the GetFontResourceInfo function */
-typedef BOOL (WINAPI *PGFRI)(LPCWSTR, DWORD *, LPVOID, DWORD);
+/* GetFontResourceInfoW is undocumented */
+BOOL WINAPI GetFontResourceInfoW(LPCWSTR lpFileName, DWORD *pdwBufSize, void* lpBuffer, DWORD dwType);
 
 DWORD
 FormatString(
@@ -59,7 +66,7 @@ FormatString(
 }
 
 static void
-ErrorMsgBox(HWND hParent, DWORD dwCaptionID, DWORD dwMessageId, ...)
+ErrorMsgBox(HWND hParent, DWORD dwMessageId, ...)
 {
 	HLOCAL hMemCaption = NULL;
 	HLOCAL hMemText = NULL;
@@ -71,7 +78,7 @@ ErrorMsgBox(HWND hParent, DWORD dwCaptionID, DWORD dwMessageId, ...)
 	va_end(args);
 
 	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
-	              NULL, dwCaptionID, 0, (LPWSTR)&hMemCaption, 0, NULL);
+	              NULL, IDS_ERROR, 0, (LPWSTR)&hMemCaption, 0, NULL);
 
 	MessageBoxW(hParent, hMemText, hMemCaption, MB_ICONERROR);
 
@@ -87,13 +94,22 @@ WinMain (HINSTANCE hThisInstance,
 {
 	int argc;
 	WCHAR** argv;
+	WCHAR szFileName[MAX_PATH] = L"";
 	DWORD dwSize;
 	HWND hMainWnd;
 	MSG msg;
 	WNDCLASSEXW wincl;
-	HINSTANCE hDLL;
-	PGFRI GetFontResourceInfoW;
 	LPCWSTR fileName;
+
+    switch (GetUserDefaultUILanguage())
+    {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
+
+    default:
+      break;
+    }
 
 	g_hInstance = hThisInstance;
 
@@ -102,12 +118,10 @@ WinMain (HINSTANCE hThisInstance,
 	if (argc < 2)
 	{
 		OPENFILENAMEW fontOpen;
-		WCHAR szFileName[MAX_PATH] = L"";
-		HLOCAL dialogTitle = NULL;
+        WCHAR filter[MAX_PATH], dialogTitle[MAX_PATH];
 
-		/* Gets the title for the dialog box ready */
-		FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		          NULL, IDS_OPEN, 0, (LPWSTR)&dialogTitle, 0, NULL);
+		LoadStringW(NULL, IDS_OPEN, dialogTitle, MAX_PATH);
+		LoadStringW(NULL, IDS_FILTER_LIST, filter, MAX_PATH);
 
 		/* Clears out any values of fontOpen before we use it */
 		ZeroMemory(&fontOpen, sizeof(fontOpen));
@@ -115,8 +129,7 @@ WinMain (HINSTANCE hThisInstance,
 		/* Sets up the open dialog box */
 		fontOpen.lStructSize = sizeof(fontOpen);
 		fontOpen.hwndOwner = NULL;
-		fontOpen.lpstrFilter = L"TrueType Font (*.ttf)\0*.ttf\0"
-			L"All Files (*.*)\0*.*\0";
+		fontOpen.lpstrFilter = filter;
 		fontOpen.lpstrFile = szFileName;
 		fontOpen.lpstrTitle = dialogTitle;
 		fontOpen.nMaxFile = MAX_PATH;
@@ -133,8 +146,6 @@ WinMain (HINSTANCE hThisInstance,
 			exiting the program altogether */
 			return 0;
 		}
-
-		LocalFree(dialogTitle);
 	}
 	else
 	{
@@ -145,32 +156,28 @@ WinMain (HINSTANCE hThisInstance,
 
 	if (!AddFontResourceW(fileName))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
+		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
-
-	/* Load the GetFontResourceInfo function from gdi32.dll */
-	hDLL = LoadLibraryW(L"GDI32.DLL");
-	GetFontResourceInfoW = (PGFRI)GetProcAddress(hDLL, "GetFontResourceInfoW");
 
 	/* Get the font name */
 	dwSize = sizeof(g_ExtLogFontW.elfFullName);
 	if (!GetFontResourceInfoW(fileName, &dwSize, g_ExtLogFontW.elfFullName, 1))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
+		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
 
 	dwSize = sizeof(LOGFONTW);
 	if (!GetFontResourceInfoW(fileName, &dwSize, &g_ExtLogFontW.elfLogFont, 2))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
+		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
 
 	if (!Display_InitClass(hThisInstance))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOCLASS);
+		ErrorMsgBox(0, IDS_ERROR_NOCLASS);
 		return -1;
 	}
 
@@ -181,17 +188,17 @@ WinMain (HINSTANCE hThisInstance,
 	wincl.cbClsExtra = 0;
 	wincl.cbWndExtra = 0;
 	wincl.hInstance = hThisInstance;
-	wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
+	wincl.hIcon = LoadIcon (GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_TT));
 	wincl.hCursor = LoadCursor (NULL, IDC_ARROW);
 	wincl.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
 	wincl.lpszMenuName = NULL;
 	wincl.lpszClassName = g_szFontViewClassName;
-	wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
+	wincl.hIconSm = LoadIcon (GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_TT));
 
 	/* Register the window class, and if it fails quit the program */
 	if (!RegisterClassExW (&wincl))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOCLASS);
+		ErrorMsgBox(0, IDS_ERROR_NOCLASS);
 		return 0;
 	}
 
@@ -255,7 +262,7 @@ MainWnd_OnCreate(HWND hwnd)
 	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_ExtLogFontW);
 	ShowWindow(hDisplay, SW_SHOWNORMAL);
 
-	/* Create the quit button */
+	/* Create the install button */
 	LoadStringW(g_hInstance, IDS_INSTALL, szQuit, MAX_BUTTONNAME);
 	hButtonInstall = CreateWindowExW(
 				0,						/* Extended style */
@@ -331,7 +338,7 @@ MainWnd_OnInstall(HWND hwnd)
 	fontExists = GetFileAttributes((LPCSTR)g_fileName);
 	if (fontExists != 0xFFFFFFFF) /* If the file does not exist */
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, g_fileName);
+		ErrorMsgBox(0, IDS_ERROR_NOFONT, g_fileName);
 		return -1;
 	}
 

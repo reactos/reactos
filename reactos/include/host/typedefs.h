@@ -14,6 +14,20 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#ifndef _MSC_VER
+#include <stdint.h>
+#else
+typedef __int8  int8_t;
+typedef __int16 int16_t;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
+
+typedef unsigned __int8  uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#endif
+
 /* Function attributes for GCC */
 #if !defined(_MSC_VER) && !defined(__fastcall)
 #define __fastcall __attribute__((fastcall))
@@ -28,7 +42,7 @@
 /* Basic definitions */
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
 #define ASSERT(x) assert(x)
-#define ASSERTMSG(x, m) assert(x)
+#define ASSERTMSG(m, x) assert(x)
 #define DPRINT if (0) printf
 #define DPRINT1 printf
 
@@ -46,22 +60,33 @@
 
 /* Basic types
    Emulate a LLP64 memory model using a LP64 compiler */
-typedef void VOID, *PVOID;
-typedef char CHAR, CCHAR, *PCHAR, *PSTR;
+typedef void VOID, *PVOID, *LPVOID;
+typedef char CHAR, CCHAR, *PCHAR, *PSTR, *LPSTR;
 typedef const char *PCSTR, *LPCSTR;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE, BOOLEAN, *PBOOLEAN;
-typedef short SHORT, *PSHORT;
-typedef unsigned short USHORT, *PUSHORT, WORD, *PWORD, *LPWORD, WCHAR, *PWCHAR, *PWSTR, *LPWSTR;
-typedef const unsigned short *PCWSTR, *LPCWSTR;
-typedef int INT, LONG, *PLONG, *LPLONG, BOOL;
-typedef unsigned int UINT, *PUINT, *LPUINT, ULONG, *PULONG, DWORD, *LPDWORD;
-typedef long LONG_PTR, *PLONG_PTR, INT_PTR, *PINT_PTR;
-typedef unsigned long ULONG_PTR, DWORD_PTR, *PULONG_PTR, UINT_PTR, *PUINT_PTR;
-typedef long long LONGLONG;
-typedef unsigned long long ULONGLONG;
+typedef int16_t SHORT, *PSHORT;
+typedef uint16_t USHORT, *PUSHORT, WORD, *PWORD, *LPWORD, WCHAR, *PWCHAR, *PWSTR, *LPWSTR, UINT16;
+typedef const uint16_t *PCWSTR, *LPCWSTR;
+typedef int32_t INT, LONG, *PLONG, *LPLONG, BOOL, WINBOOL;
+typedef uint32_t UINT, *PUINT, *LPUINT, ULONG, *PULONG, DWORD, *PDWORD, *LPDWORD, UINT32;
+#if defined(_LP64) || defined(_WIN64)
+typedef int64_t LONG_PTR, *PLONG_PTR, INT_PTR, *PINT_PTR;
+typedef uint64_t ULONG_PTR, DWORD_PTR, *PULONG_PTR, UINT_PTR, *PUINT_PTR;
+#else
+typedef int32_t LONG_PTR, *PLONG_PTR, INT_PTR, *PINT_PTR;
+typedef uint32_t ULONG_PTR, DWORD_PTR, *PULONG_PTR, UINT_PTR, *PUINT_PTR;
+#endif
+typedef uint64_t ULONG64, DWORD64, *PDWORD64, UINT64, ULONGLONG;
+typedef int64_t LONGLONG, LONG64;
+typedef float FLOAT;
+typedef double DOUBLE;
 
 /* Derived types */
-typedef PVOID HANDLE, HKEY, *PHKEY;
+typedef PVOID HANDLE;
+#ifndef _HAVE_HKEY
+typedef HANDLE HKEY, *PHKEY;
+#endif
+typedef HANDLE HMODULE, HINSTANCE;
 typedef INT NTSTATUS, POOL_TYPE;
 typedef LONG HRESULT;
 typedef ULONG_PTR SIZE_T, *PSIZE_T;
@@ -71,6 +96,7 @@ typedef WORD LANGID;
 
 /* Widely used structures */
 #include <pshpack4.h>
+#ifndef _HAVE_RTL_BITMAP
 typedef struct _RTL_BITMAP
 {
     ULONG  SizeOfBitMap;
@@ -82,23 +108,34 @@ typedef struct _RTL_BITMAP_RUN
     ULONG StartingIndex;
     ULONG NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
+#endif
 
+#ifndef _HAVE_LARGE_INTEGER
 typedef union _LARGE_INTEGER
 {
     struct
     {
-        DWORD LowPart;
-        LONG  HighPart;
+        ULONG LowPart;
+        LONG HighPart;
     };
+    struct
+    {
+        ULONG LowPart;
+        LONG HighPart;
+    } u;
     LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
+#endif
 
+#ifndef _HAVE_LIST_ENTRY
 typedef struct _LIST_ENTRY
 {
     struct _LIST_ENTRY *Flink;
     struct _LIST_ENTRY *Blink;
 } LIST_ENTRY,*PLIST_ENTRY;
+#endif
 
+#ifndef _HAVE_ANSI_STRING
 typedef struct _ANSI_STRING
 {
     USHORT Length;
@@ -112,8 +149,11 @@ typedef struct _UNICODE_STRING
     USHORT MaximumLength;
     PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
+#endif
+
 #include <poppack.h>
 
+#ifndef _HAVE_LIST_ENTRY
 /* List Functions */
 static __inline
 VOID
@@ -207,8 +247,11 @@ RemoveTailList(
     Blink->Flink = ListHead;
     return Entry;
 }
+#endif
 
+#ifndef _HAVE_ANSI_STRING
 typedef const UNICODE_STRING *PCUNICODE_STRING;
+#endif
 
 /* Widely used macros */
 #define LOBYTE(w)               ((BYTE)(w))
@@ -243,3 +286,4 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 #define RTL_H
 
 #endif
+

@@ -10,6 +10,7 @@ cpu.inf
 disk.inf
 display.inf
 fdc.inf
+flpydisk.inf
 hal.inf
 hdc.inf
 input.inf
@@ -34,6 +35,7 @@ AddReg=Classes
 [OleControlDlls]
 11,,atl.dll,1
 11,,actxprxy.dll,1
+;11,,acppage.dll,1
 11,,amstream.dll,1
 11,,avifil32.dll,1
 11,,browseui.dll,1
@@ -41,6 +43,7 @@ AddReg=Classes
 11,,comctl32.dll,2
 11,,cryptdlg.dll,1
 11,,cryptnet.dll,1
+11,,d3dxof.dll,1
 11,,ddraw.dll,1
 11,,devenum.dll,1
 11,,dinput.dll,1
@@ -52,12 +55,14 @@ AddReg=Classes
 11,,hhctrl.ocx,1
 11,,hlink.dll,1
 11,,hnetcfg.dll,1
+11,,ieframe.dll,1
 11,,inetcomm.dll,1
 11,,inseng.dll,1
 11,,itss.dll,1
 11,,jscript.dll,1
-11,,ksproxy.ax,1
+;11,,ksproxy.ax,1
 11,,mlang.dll,1
+;11,,mmdevapi.dll,1
 11,,mscat32.dll,1
 11,,msctf.dll,1
 11,,mshtml.dll,3
@@ -72,6 +77,7 @@ AddReg=Classes
 11,,msxml6.dll,1
 11,,netcfgx.dll,1
 11,,netshell.dll,1
+11,,ntobjshex.dll,1
 11,,objsel.dll,1
 11,,ole32.dll,1
 11,,oleacc.dll,1
@@ -86,17 +92,28 @@ AddReg=Classes
 11,,rpcrt4.dll,1
 11,,rsabase.dll,1
 11,,rsaenh.dll,1
+11,,scrrun.dll,1
 11,,shdocvw.dll,3
 11,,shell32.dll,3
 11,,softpub.dll,1
 11,,sti.dll,1
+11,,stobject.dll,1
 11,,urlmon.dll,3
+11,,vbscript.dll,1
 11,,windowscodecs.dll,1
 11,,winhttp.dll,1
 11,,wininet.dll,2
 11,,wintrust.dll,1
+11,wbem,wmiutils.dll,1
+11,,wshom.ocx,1
 11,,wuapi.dll,1
-11,,ieframe.dll,1
+11,wbem,wbemdisp.dll,1
+11,wbem,wbemprox.dll,1
+
+[TypeLibraries]
+stdole2.tlb
+stdole32.tlb
+mshtml.tlb
 
 [Strings]
 MciExtStr="Software\Microsoft\Windows NT\CurrentVersion\MCI Extensions"

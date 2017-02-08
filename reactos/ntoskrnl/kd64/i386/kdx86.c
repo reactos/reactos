@@ -95,17 +95,17 @@ KdpSysReadMsr(IN ULONG Msr,
               OUT PLARGE_INTEGER MsrValue)
 {
     /* Wrap this in SEH in case the MSR doesn't exist */
-    //_SEH2_TRY
+    _SEH2_TRY
     {
         /* Read from the MSR */
-        MsrValue->QuadPart = RDMSR(Msr);
+        MsrValue->QuadPart = __readmsr(Msr);
     }
-    //_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Invalid MSR */
-        //_SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
+        _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
-    //_SEH2_END;
+    _SEH2_END;
 
     /* Success */
     return STATUS_SUCCESS;
@@ -117,17 +117,17 @@ KdpSysWriteMsr(IN ULONG Msr,
                IN PLARGE_INTEGER MsrValue)
 {
     /* Wrap this in SEH in case the MSR doesn't exist */
-    //_SEH2_TRY
+    _SEH2_TRY
     {
         /* Write to the MSR */
-        WRMSR(Msr, MsrValue->QuadPart);
+        __writemsr(Msr, MsrValue->QuadPart);
     }
-    //_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Invalid MSR */
-        //_SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
+        _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
-    //_SEH2_END;
+    _SEH2_END;
 
     /* Success */
     return STATUS_SUCCESS;

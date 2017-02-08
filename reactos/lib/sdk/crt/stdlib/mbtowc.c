@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/stdlib/mbtowc.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -10,36 +10,39 @@
 
 #include <precomp.h>
 
-
-/*
- * @implemented
+/*********************************************************************
+ *		_mbtowc_l(MSVCRT.@)
  */
-
-int mbtowc (wchar_t *charptr, const char *address, size_t number)
+int CDECL _mbtowc_l(wchar_t *dst, const char* str, size_t n, _locale_t locale)
 {
-    int bytes;
+    MSVCRT_pthreadlocinfo locinfo;
+    wchar_t tmpdst = '\0';
 
-    if (address == 0)
-	return 0;
+    if(!locale)
+        locinfo = get_locinfo();
+    else
+        locinfo = (MSVCRT_pthreadlocinfo)(locale->locinfo);
 
-    if ((bytes = mblen (address, number)) < 0)
-	return bytes;
+    if(n <= 0 || !str)
+        return 0;
+    if(!locinfo->lc_codepage)
+        tmpdst = (unsigned char)*str;
+    else if(!MultiByteToWideChar(locinfo->lc_codepage, 0, str, n, &tmpdst, 1))
+        return -1;
+    if(dst)
+        *dst = tmpdst;
+    /* return the number of bytes from src that have been used */
+    if(!*str)
+        return 0;
+    if(n >= 2 && _isleadbyte_l((unsigned char)*str, locale) && str[1])
+        return 2;
+    return 1;
+}
 
-    if (charptr) {
-	switch (bytes) {
-	case 0:
-	    if (number > 0) 
-		*charptr = (wchar_t) '\0';
-	    break;
-	case 1:
-	    *charptr = (wchar_t) ((unsigned char) address[0]);
-	    break;
-	case 2:
-	    *charptr = (wchar_t) (((unsigned char) address[0] << 8)
-				  | (unsigned char) address[1]);
-	    break;
-	}
-    }
-
-    return bytes;
+/*********************************************************************
+ *              mbtowc(MSVCRT.@)
+ */
+int CDECL mbtowc(wchar_t *dst, const char* str, size_t n)
+{
+    return _mbtowc_l(dst, str, n, NULL);
 }

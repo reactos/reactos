@@ -7,6 +7,7 @@
 
 #include <precomp.h>
 #include <tchar.h>
+#include <mbctype.h>
 
 #if IS_SECAPI
 #define _FAILURE -1
@@ -99,12 +100,24 @@ _tsplitpath_x(
             drive[2] = '\0';
         }
         path += 2;
-	}
+    }
 
     /* Scan the rest of the string */
     dir_start = path;
     while (*path != '\0')
     {
+#if !defined(_UNICODE) && !defined(_LIBCNT_)
+        /* Check for multibyte lead bytes */
+        if (_ismbblead((unsigned char)*path))
+        {
+            /* Check for unexpected end of string */
+            if (path[1] == 0) break;
+
+            /* Skip the lead byte and the following byte */
+            path += 2;
+            continue;
+        }
+#endif
         /* Remember last path separator and last dot */
         if ((*path == '\\') || (*path == '/')) file_start = path + 1;
         if (*path == '.') ext_start = path;
@@ -114,14 +127,14 @@ _tsplitpath_x(
     /* Check if we got a file name / extension */
     if (!file_start)
         file_start = dir_start;
-    if (!ext_start || ext_start < file_start)
+    if (!ext_start || (ext_start < file_start))
         ext_start = path;
 
     if (dir)
     {
         src = dir_start;
         count = dir_size - 1;
-        while (src < file_start && count--) *dir++ = *src++;
+        while ((src < file_start) && count--) *dir++ = *src++;
         *dir = '\0';
     }
 

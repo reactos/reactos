@@ -33,6 +33,8 @@
 
 #include "ndissys.h"
 
+#include <ntifs.h>
+
 #define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */
 
 /*
@@ -213,14 +215,19 @@ NdisOpenConfiguration(
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
     PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
     HANDLE RootKeyHandle = WrapperContext->RegistryHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING NoName = RTL_CONSTANT_STRING(L"");
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
     *ConfigurationHandle = NULL;
 
-    *Status = ZwDuplicateObject(NtCurrentProcess(), RootKeyHandle,
-                                NtCurrentProcess(), &KeyHandle, 0, 0,
-                                DUPLICATE_SAME_ACCESS);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NoName,
+                               OBJ_KERNEL_HANDLE,
+                               RootKeyHandle,
+                               NULL);
+    *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
     if(!NT_SUCCESS(*Status))
     {
         NDIS_DbgPrint(MIN_TRACE, ("Failed to open registry configuration for this miniport\n"));
@@ -289,7 +296,7 @@ NdisOpenProtocolConfiguration(
 
     RtlCopyUnicodeString(&KeyNameU, ProtocolSection);
     RtlAppendUnicodeToString(&KeyNameU, PARAMETERS_KEY);
-    InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
@@ -643,6 +650,13 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
         (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
     }
+    else if (KeyInformation->Type == REG_DWORD)
+    {
+        ASSERT(KeyInformation->DataLength == sizeof(ULONG));
+        NDIS_DbgPrint(MAX_TRACE, ("NdisParameterInteger\n"));
+        (*ParameterValue)->ParameterType = NdisParameterInteger;
+        (*ParameterValue)->ParameterData.IntegerData = * (ULONG *) &KeyInformation->Data[0];
+    }
     else if (KeyInformation->Type == REG_SZ)
     {
          UNICODE_STRING str;
@@ -747,6 +761,7 @@ NdisReadNetworkAddress(
     NDIS_STRING Keyword;
     UINT *IntArray = 0;
     UINT i,j = 0;
+    WCHAR Buff[11];
     NDIS_STRING str;
 
     NdisInitUnicodeString(&Keyword, L"NetworkAddress");
@@ -760,8 +775,6 @@ NdisReadNetworkAddress(
 
     if (ParameterValue->ParameterType == NdisParameterInteger)
     {
-        WCHAR Buff[11];
-
         NDIS_DbgPrint(MAX_TRACE, ("Read integer data %lx\n",
                                   ParameterValue->ParameterData.IntegerData));
 
@@ -899,7 +912,7 @@ NdisOpenConfigurationKeyByIndex(
     wcsncpy(KeyName->Buffer, KeyInformation->Name, KeyName->MaximumLength/sizeof(WCHAR));
     KeyName->Length = (USHORT)min(KeyInformation->NameLength, KeyName->MaximumLength);
 
-    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, NULL);
+    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, ConfigurationHandle, NULL);
 
     *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
@@ -962,7 +975,7 @@ NdisOpenConfigurationKeyByName(
 
     *KeyHandle = NULL;
 
-    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, 0);
+    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, ConfigurationHandle, 0);
     *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
     if(*Status != STATUS_SUCCESS)

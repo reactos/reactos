@@ -1,0 +1,24 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "編輯"
+    IDS_MARK "標記"
+    IDS_COPY "複製\tEnter"
+    IDS_PASTE "黏貼"
+    IDS_SELECTALL "全部選擇"
+    IDS_SCROLL "滾動"
+    IDS_FIND "尋找..."
+    IDS_DEFAULTS "預設"
+    IDS_PROPERTIES "屬性"
+/*
+    IDS_SCROLLHERE "滾動到此 "
+    IDS_SCROLLTOP "滾動到頂置"
+    IDS_SCROLLBOTTOM "滾動到末端"
+    IDS_SCROLLPAGE_UP "上一頁"
+    IDS_SCROLLPAGE_DOWN "下一頁"
+    IDS_SCROLLUP "向上滾動"
+    IDS_SCROLLDOWN "向下滾動"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END

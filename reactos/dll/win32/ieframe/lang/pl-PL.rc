@@ -1,0 +1,78 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "&Plik"
+    {
+        POPUP "&Nowy"
+        {
+            MENUITEM "O&kno",                 ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "&Otwórz...",                    ID_BROWSE_OPEN
+        MENUITEM "&Zapisz",                       ID_BROWSE_SAVE
+        MENUITEM "Zapisz &jako...",                 ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Ustawienia strony...",            ID_BROWSE_PRINT_FORMAT
+        MENUITEM "&Drukuj...",                   ID_BROWSE_PRINT
+        MENUITEM "Podgląd wydruku...",              ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "Właś&ciwości",                 ID_BROWSE_PROPERTIES
+        MENUITEM "Z&akończ",                      ID_BROWSE_QUIT
+    }
+    POPUP "&Widok"
+    {
+        POPUP "Paski &narzędzi"
+        {
+            MENUITEM "&Pasek menu",           ID_BROWSE_BAR_STD
+            MENUITEM "Pasek &adresu",            ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "&Ulubione"
+    {
+        MENUITEM "&Dodaj do ulubionych...",        ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "Pomo&c"
+    {
+        MENUITEM "&Internet Explorer - informacje", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "Wstecz"
+    IDS_TB_FORWARD          "Dalej"
+    IDS_TB_STOP             "Zatrzymaj"
+    IDS_TB_REFRESH          "Odśwież"
+    IDS_TB_HOME             "Strona główna"
+    IDS_TB_PRINT            "Drukuj..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "Adres"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "Szukanie %s"
+    IDS_BEGINDOWNLOADDATA   "Rozpocznij pobieranie %s"
+    IDS_ENDDOWNLOADDATA     "Pobieranie %s"
+    IDS_SENDINGREQUEST      "Pytanie o %s"
+}
+
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+CAPTION "Otwieranie"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Wpisz adres internetowy dokumentu, a program Internet Explorer otworzy go automatycznie.",-1, 35,5,160,25
+    LTEXT "&Otwórz:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "OK", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 145, 50, 50, 14
+}

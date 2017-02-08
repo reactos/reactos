@@ -4,16 +4,8 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-//#include <windows.h>
-//#include <tchar.h>
-
-#define WIN32_NO_STATUS
-#include <windef.h>
 
 #include "cardlib.h"
-//#include "cardwindow.h"
-//#include "cardbutton.h"
-#include "cardcolor.h"
 
 HPALETTE UseNicePalette(HDC, HPALETTE);
 void     RestorePalette(HDC, HPALETTE);
@@ -83,7 +75,7 @@ void CardButton::DrawRect(HDC hdc, RECT *rect, bool fNormal)
     if(fNormal)
         hOld = SelectObject(hdc, hhi);
     else
-        hOld = SelectObject(hdc, hhi);
+        hOld = SelectObject(hdc, hsh);
 
     MoveToEx(hdc, x, y+height, 0);
     LineTo(hdc, x, y);

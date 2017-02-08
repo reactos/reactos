@@ -24,6 +24,8 @@
  *                  15-Feb-2004 vizzini - Created
  */
 
+#pragma once
+
 #define MAX_DEVICE_NAME 255
 #define MAX_ARC_PATH_LEN 255
 #define MAX_DRIVES_PER_CONTROLLER 4
@@ -123,4 +125,3 @@ StopMotor(PCONTROLLER_INFO ControllerInfo);
 #define GEOMETRY_144_TRACKSPERCYLINDER 2
 #define GEOMETRY_144_SECTORSPERTRACK 18
 #define GEOMETRY_144_BYTESPERSECTOR 512
-

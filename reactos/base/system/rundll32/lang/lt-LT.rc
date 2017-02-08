@@ -1,8 +1,8 @@
 /* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary nepavyko paleisti '%s'"
-    IDS_MissingEntry,   "Trūksta įėjimo taško:%s\nIn %s"
+    IDS_DllNotLoaded "LoadLibrary nepavyko paleisti '%s'"
+    IDS_MissingEntry "Trūksta įėjimo taško:%s\nIn %s"
 END

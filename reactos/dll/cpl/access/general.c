@@ -3,12 +3,11 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/general.c
  * PURPOSE:         General accessibility settings
- * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
+ * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
  */
 
 #include "access.h"
-
 
 #define BAUDTICKS 6
 static UINT nBaudArray[BAUDTICKS] = {300, 1200, 2400, 4800, 9600, 19200};

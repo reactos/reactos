@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL, See COPYING in the top level directory
- * FILE:            hal/halx86/generic/amd64/x86bios.c
+ * FILE:            hal/halx86/amd64/x86bios.c
  * PURPOSE:         
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -135,7 +135,7 @@ x86BiosAllocateBuffer(
     *Segment = 0x2000;
     *Offset = 0;
 
-    return STATUS_SUCCESS;;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -159,7 +159,7 @@ x86BiosFreeBuffer(
     }
 
     /* Buffer is freed, nothing more to do */
-    return STATUS_SUCCESS;;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

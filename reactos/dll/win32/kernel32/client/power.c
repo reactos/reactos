@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/power.c
+ * FILE:            dll/win32/kernel32/client/power.c
  * PURPOSE:         Power Management Functions
  * PROGRAMMER:      Dmitry Chapyshev <dmitry@reactos.org>
  *
@@ -11,6 +11,8 @@
  */
 
 #include <k32.h>
+
+#include <ndk/pofuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -53,7 +55,7 @@ GetSystemPowerStatus(IN LPSYSTEM_POWER_STATUS PowerStatus)
     {
         if (Current <= Max)
         {
-            PowerStatus->BatteryLifePercent = (100 * Current + Max / 2) / Max;
+            PowerStatus->BatteryLifePercent = (UCHAR)((100 * Current + Max / 2) / Max);
         }
         else
         {
@@ -85,9 +87,8 @@ SetSystemPowerState(IN BOOL fSuspend,
 {
     NTSTATUS Status;
 
-    Status = NtInitiatePowerAction(PowerActionSleep,
-                                   (fSuspend != FALSE) ?
-                                   PowerSystemSleeping1 : PowerSystemHibernate,
+    Status = NtInitiatePowerAction((fSuspend != FALSE) ? PowerActionSleep     : PowerActionHibernate,
+                                   (fSuspend != FALSE) ? PowerSystemSleeping1 : PowerSystemHibernate,
                                    fForce != TRUE,
                                    FALSE);
     if (!NT_SUCCESS(Status))

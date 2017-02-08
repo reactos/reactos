@@ -17,37 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <assert.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winnls.h"
-#include <winreg.h>
-#include <ole2.h>
-#include <shellapi.h>
-
-#include <cor.h>
-//#include "mscoree.h"
-#include <metahost.h>
-//#include "corhdr.h"
-#include <cordebug.h>
-#include <wine/list.h>
 #include "mscoree_private.h"
 
-#include <wine/debug.h>
-#include <wine/unicode.h>
-//#include "wine/list.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL( mscoree );
-
+#include <assert.h>
+#include <shellapi.h>
 #include <initguid.h>
 
 DEFINE_GUID(IID__AppDomain, 0x05f696dc,0x2b29,0x3663,0xad,0x8b,0xc4,0x38,0x9c,0xf2,0xa7,0x13);
@@ -1232,6 +1205,7 @@ HRESULT RuntimeHost_Destroy(RuntimeHost *This)
 }
 
 #define CHARS_IN_GUID 39
+#undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 HRESULT create_monodata(REFIID riid, LPVOID *ppObj )
@@ -1244,7 +1218,7 @@ HRESULT create_monodata(REFIID riid, LPVOID *ppObj )
     WCHAR path[CHARS_IN_GUID + ARRAYSIZE(wszCLSIDSlash) + ARRAYSIZE(wszInprocServer32) - 1];
     MonoDomain *domain;
     MonoAssembly *assembly;
-    ICLRRuntimeInfo *info;
+    ICLRRuntimeInfo *info = NULL;
     RuntimeHost *host;
     HRESULT hr;
     HKEY key;

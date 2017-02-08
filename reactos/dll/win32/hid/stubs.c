@@ -8,7 +8,11 @@
  * UPDATE HISTORY:
  *      07/12/2004  Created
  */
+
 #include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @unimplemented
@@ -99,7 +103,7 @@ HidP_GetSpecificButtonCaps(IN HIDP_REPORT_TYPE ReportType,
                            IN USHORT LinkCollection,
                            IN USAGE Usage,
                            OUT PHIDP_BUTTON_CAPS ButtonCaps,
-                           IN OUT PULONG ButtonCapsLength,
+                           IN OUT PUSHORT ButtonCapsLength,
                            IN PHIDP_PREPARSED_DATA PreparsedData)
 {
   UNIMPLEMENTED;
@@ -117,7 +121,7 @@ HidP_GetSpecificValueCaps(IN HIDP_REPORT_TYPE ReportType,
                           IN USHORT LinkCollection,
                           IN USAGE Usage,
                           OUT PHIDP_VALUE_CAPS ValueCaps,
-                          IN OUT PULONG ValueCapsLength,
+                          IN OUT PUSHORT ValueCapsLength,
                           IN PHIDP_PREPARSED_DATA PreparsedData)
 {
   UNIMPLEMENTED;

@@ -16,16 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-
 #include "mstask_private.h"
-//#include "objbase.h"
+
 #include <rpcproxy.h>
-
-#include <wine/debug.h>
-
-
-WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
 static HINSTANCE hInst;
 LONG dll_ref = 0;
@@ -41,8 +34,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             hInst = hinstDLL;
-            break;
-        case DLL_PROCESS_DETACH:
             break;
     }
 

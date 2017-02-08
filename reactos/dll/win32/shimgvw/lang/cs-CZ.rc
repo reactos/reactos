@@ -1,23 +1,33 @@
-/* FILE:        dll/win32/shimgvw/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-06-24
+/* FILE:       dll/win32/shimgvw/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2008-06-24
  */
  
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "ReactOS prohlížeč obrázků a faxů"
+    IDS_APPTITLE "ReactOS prohlížeč obrázků a faxů"
     IDS_SETASDESKBG "Nastavit jako pozadí plochy"
-    IDS_PREVIEW     "Náhled"
-
+    IDS_PREVIEW "Náhled"
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Další obrázek"
-    IDS_TOOLTIP_PREV_PIC   "Předchozí obrázek"
-    IDS_TOOLTIP_ZOOM_IN    "Přiblížit (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Oddálit (-)"
+    IDS_TOOLTIP_NEXT_PIC "Další obrázek"
+    IDS_TOOLTIP_PREV_PIC "Předchozí obrázek"
+    IDS_TOOLTIP_ZOOM_IN "Přiblížit (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Oddálit (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Otočit po směru hodinových ručiček (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Otočit proti směru hodinových ručiček (Ctrl+L)"
-    IDS_TOOLTIP_PRINT      "Tisk (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Uložit jako... (Ctrl+S)"
+    IDS_TOOLTIP_PRINT "Tisk (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Uložit jako... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF Image"
+    IDS_GIF_FILE    "GIF Image"
+    IDS_JPG_FILE    "JPEG Image"
+    IDS_BMP_FILE    "Bitmap Image"
+    IDS_PNG_FILE    "PNG Image"
+    IDS_TIF_FILE    "TIF Image"
+    IDS_WMF_FILE    "WMF Image"
 END

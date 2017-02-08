@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/sc/query.c
+ * FILE:        base/applications/sc/query.c
  * PURPOSE:     queries service info
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -135,14 +135,17 @@ EnumServices(ENUM_SERVICE_STATUS_PROCESS **pServiceStatus,
                                      &ResumeHandle,
                                      0))
             {
+                CloseServiceHandle(hSCManager);
                 return NumServices;
             }
         }
     }
 
     ReportLastError();
-    if (pServiceStatus)
+    if (*pServiceStatus)
         HeapFree(GetProcessHeap(), 0, *pServiceStatus);
+
+    CloseServiceHandle(hSCManager);
 
     return NumServices;
 }
@@ -236,9 +239,6 @@ Query(LPCTSTR *ServiceArgs,
                          bExtended);
         }
     }
-
-    if (pServiceStatus)
-        HeapFree(GetProcessHeap(), 0, pServiceStatus);
 
     return TRUE;
 }

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Setup
- * FILE:            \base\setup\usetup\lang\sv-SE.h  
+ * FILE:            base/setup/usetup/lang/sv-SE.h  
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly plus perhaps GreatLord if blame and translate.reactos.se is consulted.
  */
@@ -164,42 +164,12 @@ static MUI_ENTRY svSEIntroPageEntries[] =
     {
         8,
         13,
-        "- Setup kan ej hantera mer „n 1 prim„r partition per h†rddisk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Setup kan ej radera en prim„r partition fr†n en h†rddisk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  om ut”kade partitioner existerar p† h†rddisken.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Setup kan ej radera den f”rsta ut”kade partitionen fr†n en h†rddisk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  om andra ut”kade partitioner existerar p† h†rddisken.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Setup st”der endast filsystem av typen FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- Kontrollering av h†rddiskens filsystem st”ds („nnu) ej.",
         TEXT_STYLE_NORMAL
     },
@@ -509,6 +479,7 @@ static MUI_ENTRY svSERepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY svSEComputerPageEntries[] =
 {
     {
@@ -826,12 +797,25 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tryck C f”r att skapa en ny partition.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Tryck C f”r att skapa en ny partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Tryck D f”r att ta bort en befintlig partititon.",
         TEXT_STYLE_NORMAL
     },
@@ -840,6 +824,100 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
         0,
         "   Var V„nlig V„nta...",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY svSEConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1286,6 +1364,10 @@ static MUI_ENTRY svSERegistryEntries[] =
 MUI_ERROR svSEErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS installerades inte fullst„ndigt p† din\n"
         "dator. Om du avslutar Setup nu, kommer du att beh”va\n"
@@ -1293,7 +1375,7 @@ MUI_ERROR svSEErrorEntries[] =
         "\n"
         "  \x07  Tryck ENTER f”r att forts„tta Setup.\n"
         "  \x07  Tryck F3 f”r att avsluta Setup.",
-        "F3= Avsluta  ENTER = Forts„tta"
+        "F3 = Avsluta  ENTER = Forts„tta"
     },
     {
         //ERROR_NO_HDD
@@ -1359,7 +1441,7 @@ MUI_ERROR svSEErrorEntries[] =
         "\n"
         "  \x07  Tryck F3 f”r att avsluta Setup."
         "  \x07  Tryck ENTER f”r att forts„tta.",
-        "F3= Avsluta  ENTER = Forts„tt"
+        "F3 = Avsluta  ENTER = Forts„tt"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1490,10 +1572,38 @@ MUI_ERROR svSEErrorEntries[] =
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Inte tillr„ckligt mycket fritt utrymme p† den valda partitionen.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Tryck valfri tangent f”r att forts„tta.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
@@ -1542,6 +1652,10 @@ MUI_PAGE svSEPages[] =
     {
         SELECT_PARTITION_PAGE,
         svSESelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        svSEConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1606,13 +1720,23 @@ MUI_STRING svSEStrings[] =
     {STRING_PLEASEWAIT,
      "   Var v„nlig v„nta..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Installera   C = Skapa Partition   F3 = Avsluta"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Installera   C = Skapa Partition   F3 = Avsluta"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installera   D = Ta bort Partition   F3 = Avsluta"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Storlek p† den nya partitionen:"},
     {STRING_CHOOSENEWPARTITION,
-     "Du har valt att skapa en ny partiton p†"},
+     "You have chosen to create a primary partition on"},
+//     "Du har valt att skapa en ny partition p†"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "V„nligen skriv in storleken av den nya partitionen i megabytes."},
     {STRING_CREATEPARTITION,
@@ -1621,12 +1745,18 @@ MUI_STRING svSEStrings[] =
     "Denna Partition kommer att bli formaterad h„rn„st."},
     {STRING_NONFORMATTEDPART,
     "Du valde att installera ReactOS p† en oformaterad partition."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installerar ReactOS till Partitionen"},
     {STRING_CHECKINGPART,
     "Setup unders”ker nu den valda partitionen."},
+    {STRING_CONTINUE,
+    "ENTER = Forts„tt"},
     {STRING_QUITCONTINUE,
-    "F3= Avsluta  ENTER = Forts„tt"},
+    "F3 = Avsluta  ENTER = Forts„tt"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Starta om datorn"},
     {STRING_TXTSETUPFAILED,
@@ -1652,11 +1782,11 @@ MUI_STRING svSEStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Starta om datorn"},
     {STRING_CONSOLEFAIL1,
-    "Det g†r inte ”ppna Konsollen\n\n"},
+    "Det g†r inte ”ppna Konsollen\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Den vanligaste orsaken till detta „r att ett USB tangentbord anv„nds\n"},
+    "Den vanligaste orsaken till detta „r att ett USB tangentbord anv„nds\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB tangentbord „r itne helt st”tt „n\n"},
+    "USB tangentbord „r itne helt st”tt „n\r\n"},
     {STRING_FORMATTINGDISK,
     "Setup formaterar din disk"},
     {STRING_CHECKINGDISK,
@@ -1672,7 +1802,7 @@ MUI_STRING svSEStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Typ %lu    %I64u %s"},
+    "   %c%c  Typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "on %I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1680,11 +1810,11 @@ MUI_STRING svSEStrings[] =
     {STRING_HDINFOPARTZEROED,
     "H†rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Typ %lu    %I64u %s"},
+    "%c%c  Typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "p† H†rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Typ %-3u                         %6lu %s"},
+    "%c%c %c %sTyp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %S"},
     {STRING_HDDINFOUNK6,
@@ -1692,9 +1822,11 @@ MUI_STRING svSEStrings[] =
     {STRING_NEWPARTITION,
     "Setup skapade en ny partition p†"},
     {STRING_UNPSPACE,
-    "    Opartitionerat utrymme              %6lu %s"},
+    "    %sOpartitionerat utrymme%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Ny (Oformaterad)"},
     {STRING_FORMATUNUSED,

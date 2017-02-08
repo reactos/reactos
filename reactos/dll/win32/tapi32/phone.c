@@ -18,17 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <tapi.h>
-#include <wine/debug.h>
+#include "precomp.h"
 
 /*
  * Additional TSPI functions:
@@ -38,7 +28,6 @@
  * - TSPI_ProviderEnumDevices
  * - TSPI_ProviderConfig
 */
-WINE_DEFAULT_DEBUG_CHANNEL(tapi);
 
 /***********************************************************************
  *		phoneClose (TAPI32.@)
@@ -160,6 +149,15 @@ DWORD WINAPI phoneGetLamp(HPHONE hPhone, DWORD dwButtonLampID,
 }
 
 /***********************************************************************
+ *              phoneGetMessage (TAPI32.@)
+ */
+DWORD WINAPI phoneGetMessage(HPHONEAPP hPhoneApp, LPPHONEMESSAGE lpMessage, DWORD dwTimeout)
+{
+    FIXME("(%p, %p, %08x): stub.\n", hPhoneApp, lpMessage, dwTimeout);
+    return 0;
+}
+
+/***********************************************************************
  *		phoneGetRing (TAPI32.@)
  */
 DWORD WINAPI phoneGetRing(HPHONE hPhone, LPDWORD lpdwRingMode, LPDWORD lpdwVolume)
@@ -205,6 +203,26 @@ DWORD WINAPI phoneGetVolume(HPHONE hPhone, DWORD dwHookSwitchDevs,
 DWORD WINAPI phoneInitialize(LPHPHONEAPP lphPhoneApp, HINSTANCE hInstance, PHONECALLBACK lpfnCallback, LPCSTR lpszAppName, LPDWORD lpdwNumDevs)
 {
     FIXME("(%p, %p, %p, %s, %p): stub.\n", lphPhoneApp, hInstance, lpfnCallback, lpszAppName, lpdwNumDevs);
+    return 0;
+}
+
+/***********************************************************************
+ *              phoneInitializeiExA (TAPI32.@)
+ */
+DWORD WINAPI phoneInitializeExA(LPHPHONEAPP lphPhoneApp, HINSTANCE hInstance, PHONECALLBACK lpfnCallback, LPCSTR lpszAppName, LPDWORD lpdwNumDevs, LPDWORD lpdwAPIVersion, LPPHONEINITIALIZEEXPARAMS lpPhoneInitializeExParams)
+{
+    FIXME("(%p, %p, %p, %s, %p, %p, %p): stub.\n", lphPhoneApp, hInstance, lpfnCallback, lpszAppName, lpdwNumDevs, lpdwAPIVersion, lpPhoneInitializeExParams);
+    *lpdwNumDevs = 0;
+    return 0;
+}
+
+/***********************************************************************
+ *              phoneInitializeiExW (TAPI32.@)
+ */
+DWORD WINAPI phoneInitializeExW(LPHPHONEAPP lphPhoneApp, HINSTANCE hInstance, PHONECALLBACK lpfnCallback, LPCWSTR lpszAppName, LPDWORD lpdwNumDevs, LPDWORD lpdwAPIVersion, LPPHONEINITIALIZEEXPARAMS lpPhoneInitializeExParams)
+{
+    FIXME("(%p, %p, %p, %s, %p, %p, %p): stub.\n", lphPhoneApp, hInstance, lpfnCallback, debugstr_w(lpszAppName), lpdwNumDevs, lpdwAPIVersion, lpPhoneInitializeExParams);
+    *lpdwNumDevs = 0;
     return 0;
 }
 

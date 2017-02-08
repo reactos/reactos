@@ -21,7 +21,7 @@
 #ifndef __WINE_SHLWAPI_H
 #define __WINE_SHLWAPI_H
 
-/* FIXME: #include <specstrings.h> */
+#include <specstrings.h>
 #include <objbase.h>
 #include <shtypes.h>
 
@@ -35,55 +35,205 @@ extern "C" {
 
 /* Registry functions */
 
-DWORD WINAPI SHDeleteEmptyKeyA(HKEY,LPCSTR);
-DWORD WINAPI SHDeleteEmptyKeyW(HKEY,LPCWSTR);
+DWORD WINAPI SHDeleteEmptyKeyA(_In_ HKEY, _In_opt_ LPCSTR);
+DWORD WINAPI SHDeleteEmptyKeyW(_In_ HKEY, _In_opt_ LPCWSTR);
 #define SHDeleteEmptyKey WINELIB_NAME_AW(SHDeleteEmptyKey)
 
-DWORD WINAPI SHDeleteKeyA(HKEY,LPCSTR);
-DWORD WINAPI SHDeleteKeyW(HKEY,LPCWSTR);
+DWORD WINAPI SHDeleteKeyA(_In_ HKEY, _In_opt_ LPCSTR);
+DWORD WINAPI SHDeleteKeyW(_In_ HKEY, _In_opt_ LPCWSTR);
 #define SHDeleteKey WINELIB_NAME_AW(SHDeleteKey)
 
-DWORD WINAPI SHDeleteValueA(HKEY,LPCSTR,LPCSTR);
-DWORD WINAPI SHDeleteValueW(HKEY,LPCWSTR,LPCWSTR);
+DWORD WINAPI SHDeleteValueA(_In_ HKEY, _In_opt_ LPCSTR, _In_ LPCSTR);
+DWORD WINAPI SHDeleteValueW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ LPCWSTR);
 #define SHDeleteValue WINELIB_NAME_AW(SHDeleteValue)
 
-DWORD WINAPI SHGetValueA(HKEY,LPCSTR,LPCSTR,LPDWORD,LPVOID,LPDWORD);
-DWORD WINAPI SHGetValueW(HKEY,LPCWSTR,LPCWSTR,LPDWORD,LPVOID,LPDWORD);
+DWORD
+WINAPI
+SHGetValueA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_opt_(*pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
+DWORD
+WINAPI
+SHGetValueW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_opt_(*pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
 #define SHGetValue WINELIB_NAME_AW(SHGetValue)
 
-DWORD WINAPI SHSetValueA(HKEY,LPCSTR,LPCSTR,DWORD,LPCVOID,DWORD);
-DWORD WINAPI SHSetValueW(HKEY,LPCWSTR,LPCWSTR,DWORD,LPCVOID,DWORD);
+DWORD
+WINAPI
+SHSetValueA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD,
+  _In_reads_bytes_opt_(cbData) LPCVOID,
+  _In_ DWORD cbData);
+
+DWORD
+WINAPI
+SHSetValueW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD,
+  _In_reads_bytes_opt_(cbData) LPCVOID,
+  _In_ DWORD cbData);
+
 #define SHSetValue WINELIB_NAME_AW(SHSetValue)
 
-DWORD WINAPI SHQueryValueExA(HKEY,LPCSTR,LPDWORD,LPDWORD,LPVOID,LPDWORD);
-DWORD WINAPI SHQueryValueExW(HKEY,LPCWSTR,LPDWORD,LPDWORD,LPVOID,LPDWORD);
+DWORD
+WINAPI
+SHQueryValueExA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _Reserved_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
+DWORD
+WINAPI
+SHQueryValueExW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _Reserved_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
 #define SHQueryValueEx WINELIB_NAME_AW(SHQueryValueEx)
 
-LONG WINAPI SHEnumKeyExA(HKEY,DWORD,LPSTR,LPDWORD);
-LONG WINAPI SHEnumKeyExW(HKEY,DWORD,LPWSTR,LPDWORD);
+LONG
+WINAPI
+SHEnumKeyExA(
+  _In_ HKEY,
+  _In_ DWORD,
+  _Out_writes_(*pcchName) LPSTR,
+  _Inout_ LPDWORD pcchName);
+
+LONG
+WINAPI
+SHEnumKeyExW(
+  _In_ HKEY,
+  _In_ DWORD,
+  _Out_writes_(*pcchName) LPWSTR,
+  _Inout_ LPDWORD pcchName);
+
 #define SHEnumKeyEx WINELIB_NAME_AW(SHEnumKeyEx)
 
-LONG WINAPI SHEnumValueA(HKEY,DWORD,LPSTR,LPDWORD,LPDWORD,LPVOID,LPDWORD);
-LONG WINAPI SHEnumValueW(HKEY,DWORD,LPWSTR,LPDWORD,LPDWORD,LPVOID,LPDWORD);
+LONG
+WINAPI
+SHEnumValueA(
+  _In_ HKEY,
+  _In_ DWORD,
+  _Out_writes_opt_(*pcchValueName) LPSTR,
+  _Inout_opt_ LPDWORD pcchValueName,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
+LONG
+WINAPI
+SHEnumValueW(
+  _In_ HKEY,
+  _In_ DWORD,
+  _Out_writes_opt_(*pcchValueName) LPWSTR,
+  _Inout_opt_ LPDWORD pcchValueName,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
 #define SHEnumValue WINELIB_NAME_AW(SHEnumValue)
 
-LONG WINAPI SHQueryInfoKeyA(HKEY,LPDWORD,LPDWORD,LPDWORD,LPDWORD);
-LONG WINAPI SHQueryInfoKeyW(HKEY,LPDWORD,LPDWORD,LPDWORD,LPDWORD);
+LONG
+WINAPI
+SHQueryInfoKeyA(
+  _In_ HKEY,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD);
+
+LONG
+WINAPI
+SHQueryInfoKeyW(
+  _In_ HKEY,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD);
+
 #define SHQueryInfoKey WINELIB_NAME_AW(SHQueryInfoKey)
 
-DWORD WINAPI SHRegGetPathA(HKEY,LPCSTR,LPCSTR,LPSTR,DWORD);
-DWORD WINAPI SHRegGetPathW(HKEY,LPCWSTR,LPCWSTR,LPWSTR,DWORD);
+DWORD
+WINAPI
+SHRegGetPathA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _Out_writes_(MAX_PATH) LPSTR,
+  _In_ DWORD);
+
+DWORD
+WINAPI
+SHRegGetPathW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _Out_writes_(MAX_PATH) LPWSTR,
+  _In_ DWORD);
+
 #define SHRegGetPath WINELIB_NAME_AW(SHRegGetPath)
 
-DWORD WINAPI SHRegSetPathA(HKEY,LPCSTR,LPCSTR,LPCSTR,DWORD);
-DWORD WINAPI SHRegSetPathW(HKEY,LPCWSTR,LPCWSTR,LPCWSTR,DWORD);
+DWORD
+WINAPI
+SHRegSetPathA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ LPCSTR,
+  _In_ DWORD);
+
+DWORD
+WINAPI
+SHRegSetPathW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_ DWORD);
+
 #define SHRegSetPath WINELIB_NAME_AW(SHRegSetPath)
 
-DWORD WINAPI SHCopyKeyA(HKEY,LPCSTR,HKEY,DWORD);
-DWORD WINAPI SHCopyKeyW(HKEY,LPCWSTR,HKEY,DWORD);
+DWORD
+WINAPI
+SHCopyKeyA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_ HKEY,
+  _Reserved_ DWORD);
+
+DWORD
+WINAPI
+SHCopyKeyW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_ HKEY,
+  _Reserved_ DWORD);
+
 #define SHCopyKey WINELIB_NAME_AW(SHCopyKey)
 
-HKEY WINAPI  SHRegDuplicateHKey(HKEY);
+HKEY WINAPI  SHRegDuplicateHKey(_In_ HKEY);
 
 /* SHRegGetValue flags */
 typedef INT SRRF;
@@ -109,8 +259,28 @@ typedef INT SRRF;
 #define SRRF_ZEROONFAILURE 0x20000000
 #define SRRF_NOVIRT 0x40000000
 
-LSTATUS WINAPI SHRegGetValueA(HKEY,LPCSTR,LPCSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
-LSTATUS WINAPI SHRegGetValueW(HKEY,LPCWSTR,LPCWSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
+LSTATUS
+WINAPI
+SHRegGetValueA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ SRRF,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
+LSTATUS
+WINAPI
+SHRegGetValueW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ SRRF,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData);
+
 #define SHRegGetValue WINELIB_NAME_AW(SHRegGetValue)
 
 /* Undocumented registry functions */
@@ -147,65 +317,263 @@ typedef enum
 typedef HANDLE HUSKEY;
 typedef HUSKEY *PHUSKEY;
 
-LONG WINAPI SHRegCreateUSKeyA(LPCSTR,REGSAM,HUSKEY,PHUSKEY,DWORD);
-LONG WINAPI SHRegCreateUSKeyW(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,DWORD);
+LONG
+WINAPI
+SHRegCreateUSKeyA(
+  _In_ LPCSTR,
+  _In_ REGSAM,
+  _In_opt_ HUSKEY,
+  _Out_ PHUSKEY,
+  _In_ DWORD);
+
+LONG
+WINAPI
+SHRegCreateUSKeyW(
+  _In_ LPCWSTR,
+  _In_ REGSAM,
+  _In_opt_ HUSKEY,
+  _Out_ PHUSKEY,
+  _In_ DWORD);
+
 #define SHRegCreateUSKey WINELIB_NAME_AW(SHRegCreateUSKey)
 
-LONG WINAPI SHRegOpenUSKeyA(LPCSTR,REGSAM,HUSKEY,PHUSKEY,BOOL);
-LONG WINAPI SHRegOpenUSKeyW(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,BOOL);
+LONG
+WINAPI
+SHRegOpenUSKeyA(
+  _In_ LPCSTR,
+  _In_ REGSAM,
+  _In_opt_ HUSKEY,
+  _Out_ PHUSKEY,
+  _In_ BOOL);
+
+LONG
+WINAPI
+SHRegOpenUSKeyW(
+  _In_ LPCWSTR,
+  _In_ REGSAM,
+  _In_opt_ HUSKEY,
+  _Out_ PHUSKEY,
+  _In_ BOOL);
+
 #define SHRegOpenUSKey WINELIB_NAME_AW(SHRegOpenUSKey)
 
-LONG WINAPI SHRegQueryUSValueA(HUSKEY,LPCSTR,LPDWORD,LPVOID,LPDWORD,
-                               BOOL,LPVOID,DWORD);
-LONG WINAPI SHRegQueryUSValueW(HUSKEY,LPCWSTR,LPDWORD,LPVOID,LPDWORD,
-                               BOOL,LPVOID,DWORD);
+LONG
+WINAPI
+SHRegQueryUSValueA(
+  _In_ HUSKEY,
+  _In_opt_ LPCSTR,
+  _Inout_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData,
+  _In_ BOOL,
+  _In_reads_bytes_opt_(dwDefaultDataSize) LPVOID,
+  _In_opt_ DWORD dwDefaultDataSize);
+
+LONG
+WINAPI
+SHRegQueryUSValueW(
+  _In_ HUSKEY,
+  _In_opt_ LPCWSTR,
+  _Inout_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData,
+  _In_ BOOL,
+  _In_reads_bytes_opt_(dwDefaultDataSize) LPVOID,
+  _In_opt_ DWORD dwDefaultDataSize);
+
 #define SHRegQueryUSValue WINELIB_NAME_AW(SHRegQueryUSValue)
 
-LONG WINAPI SHRegWriteUSValueA(HUSKEY,LPCSTR,DWORD,LPVOID,DWORD,DWORD);
-LONG WINAPI SHRegWriteUSValueW(HUSKEY,LPCWSTR,DWORD,LPVOID,DWORD,DWORD);
+LONG
+WINAPI
+SHRegWriteUSValueA(
+  _In_ HUSKEY,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_reads_bytes_(cbData) LPVOID,
+  _In_ DWORD cbData,
+  _In_ DWORD);
+
+LONG
+WINAPI
+SHRegWriteUSValueW(
+  _In_ HUSKEY,
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_reads_bytes_(cbData) LPVOID,
+  _In_ DWORD cbData,
+  _In_ DWORD);
+
 #define SHRegWriteUSValue WINELIB_NAME_AW(SHRegWriteUSValue)
 
-LONG WINAPI SHRegDeleteUSValueA(HUSKEY,LPCSTR,SHREGDEL_FLAGS);
-LONG WINAPI SHRegDeleteUSValueW(HUSKEY,LPCWSTR,SHREGDEL_FLAGS);
+LONG
+WINAPI
+SHRegDeleteUSValueA(
+  _In_ HUSKEY,
+  _In_ LPCSTR,
+  _In_ SHREGDEL_FLAGS);
+
+LONG
+WINAPI
+SHRegDeleteUSValueW(
+  _In_ HUSKEY,
+  _In_ LPCWSTR,
+  _In_ SHREGDEL_FLAGS);
+
 #define SHRegDeleteUSValue WINELIB_NAME_AW(SHRegDeleteUSValue)
 
-LONG WINAPI SHRegDeleteEmptyUSKeyA(HUSKEY,LPCSTR,SHREGDEL_FLAGS);
-LONG WINAPI SHRegDeleteEmptyUSKeyW(HUSKEY,LPCWSTR,SHREGDEL_FLAGS);
+LONG
+WINAPI
+SHRegDeleteEmptyUSKeyA(
+  _In_ HUSKEY,
+  _In_ LPCSTR,
+  _In_ SHREGDEL_FLAGS);
+
+LONG
+WINAPI
+SHRegDeleteEmptyUSKeyW(
+  _In_ HUSKEY,
+  _In_ LPCWSTR,
+  _In_ SHREGDEL_FLAGS);
+
 #define SHRegDeleteEmptyUSKey WINELIB_NAME_AW(SHRegDeleteEmptyUSKey)
 
-LONG WINAPI SHRegEnumUSKeyA(HUSKEY,DWORD,LPSTR,LPDWORD,SHREGENUM_FLAGS);
-LONG WINAPI SHRegEnumUSKeyW(HUSKEY,DWORD,LPWSTR,LPDWORD,SHREGENUM_FLAGS);
+LONG
+WINAPI
+SHRegEnumUSKeyA(
+  _In_ HUSKEY,
+  _In_ DWORD,
+  _Out_writes_to_(*pcchName, *pcchName) LPSTR,
+  _Inout_ LPDWORD pcchName,
+  _In_ SHREGENUM_FLAGS);
+
+LONG
+WINAPI
+SHRegEnumUSKeyW(
+  _In_ HUSKEY,
+  _In_ DWORD,
+  _Out_writes_to_(*pcchName, *pcchName) LPWSTR,
+  _Inout_ LPDWORD pcchName,
+  _In_ SHREGENUM_FLAGS);
+
 #define SHRegEnumUSKey WINELIB_NAME_AW(SHRegEnumUSKey)
 
-LONG WINAPI SHRegEnumUSValueA(HUSKEY,DWORD,LPSTR,LPDWORD,LPDWORD,
-                              LPVOID,LPDWORD,SHREGENUM_FLAGS);
-LONG WINAPI SHRegEnumUSValueW(HUSKEY,DWORD,LPWSTR,LPDWORD,LPDWORD,
-                              LPVOID,LPDWORD,SHREGENUM_FLAGS);
+LONG
+WINAPI
+SHRegEnumUSValueA(
+  _In_ HUSKEY,
+  _In_ DWORD,
+  _Out_writes_to_(*pcchValueName, *pcchValueName) LPSTR,
+  _Inout_ LPDWORD pcchValueName,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData,
+  _In_ SHREGENUM_FLAGS);
+
+LONG
+WINAPI
+SHRegEnumUSValueW(
+  _In_ HUSKEY,
+  _In_ DWORD,
+  _Out_writes_to_(*pcchValueName, *pcchValueName) LPWSTR,
+  _Inout_ LPDWORD pcchValueName,
+  _Out_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData,
+  _In_ SHREGENUM_FLAGS);
+
 #define SHRegEnumUSValue WINELIB_NAME_AW(SHRegEnumUSValue)
 
-LONG WINAPI SHRegQueryInfoUSKeyA(HUSKEY,LPDWORD,LPDWORD,LPDWORD,
-                                 LPDWORD,SHREGENUM_FLAGS);
-LONG WINAPI SHRegQueryInfoUSKeyW(HUSKEY,LPDWORD,LPDWORD,LPDWORD,
-                                 LPDWORD,SHREGENUM_FLAGS);
+LONG
+WINAPI
+SHRegQueryInfoUSKeyA(
+  _In_ HUSKEY,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _In_ SHREGENUM_FLAGS);
+
+LONG
+WINAPI
+SHRegQueryInfoUSKeyW(
+  _In_ HUSKEY,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _Out_opt_ LPDWORD,
+  _In_ SHREGENUM_FLAGS);
+
 #define SHRegQueryInfoUSKey WINELIB_NAME_AW(SHRegQueryInfoUSKey)
 
-LONG WINAPI SHRegCloseUSKey(HUSKEY);
+LONG WINAPI SHRegCloseUSKey(_In_ HUSKEY);
 
-LONG WINAPI SHRegGetUSValueA(LPCSTR,LPCSTR,LPDWORD,LPVOID,LPDWORD,
-                             BOOL,LPVOID,DWORD);
-LONG WINAPI SHRegGetUSValueW(LPCWSTR,LPCWSTR,LPDWORD,LPVOID,LPDWORD,
-                             BOOL,LPVOID,DWORD);
+LONG
+WINAPI
+SHRegGetUSValueA(
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _Inout_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData,
+  _In_ BOOL,
+  _In_reads_bytes_opt_(dwDefaultDataSize) LPVOID,
+  _In_ DWORD dwDefaultDataSize);
+
+LONG
+WINAPI
+SHRegGetUSValueW(
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _Inout_opt_ LPDWORD,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _Inout_opt_ LPDWORD pcbData,
+  _In_ BOOL,
+  _In_reads_bytes_opt_(dwDefaultDataSize) LPVOID,
+  _In_ DWORD dwDefaultDataSize);
+
 #define SHRegGetUSValue WINELIB_NAME_AW(SHRegGetUSValue)
 
-LONG WINAPI SHRegSetUSValueA(LPCSTR,LPCSTR,DWORD,LPVOID,DWORD,DWORD);
-LONG WINAPI SHRegSetUSValueW(LPCWSTR,LPCWSTR,DWORD,LPVOID,DWORD,DWORD);
+LONG
+WINAPI
+SHRegSetUSValueA(
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_reads_bytes_opt_(cbData) LPVOID,
+  _In_opt_ DWORD cbData,
+  _In_opt_ DWORD);
+
+LONG
+WINAPI
+SHRegSetUSValueW(
+  _In_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_reads_bytes_opt_(cbData) LPVOID,
+  _In_opt_ DWORD cbData,
+  _In_opt_ DWORD);
+
 #define SHRegSetUSValue WINELIB_NAME_AW(SHRegSetUSValue)
 
-BOOL WINAPI SHRegGetBoolUSValueA(LPCSTR,LPCSTR,BOOL,BOOL);
-BOOL WINAPI SHRegGetBoolUSValueW(LPCWSTR,LPCWSTR,BOOL,BOOL);
+BOOL
+WINAPI
+SHRegGetBoolUSValueA(
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ BOOL,
+  _In_ BOOL);
+
+BOOL
+WINAPI
+SHRegGetBoolUSValueW(
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ BOOL,
+  _In_ BOOL);
+
 #define SHRegGetBoolUSValue WINELIB_NAME_AW(SHRegGetBoolUSValue)
 
-int WINAPI SHRegGetIntW(HKEY,LPCWSTR,int);
+int WINAPI SHRegGetIntW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ int);
 
 /* IQueryAssociation and helpers */
 enum
@@ -282,11 +650,11 @@ DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQueryAssociations methods ***/
-    STDMETHOD(Init)(THIS_ ASSOCF  flags, LPCWSTR  pszAssoc, HKEY  hkProgid, HWND  hwnd) PURE;
-    STDMETHOD(GetString)(THIS_ ASSOCF  flags, ASSOCSTR  str, LPCWSTR  pszExtra, LPWSTR  pszOut, DWORD * pcchOut) PURE;
-    STDMETHOD(GetKey)(THIS_ ASSOCF  flags, ASSOCKEY  key, LPCWSTR  pszExtra, HKEY * phkeyOut) PURE;
-    STDMETHOD(GetData)(THIS_ ASSOCF  flags, ASSOCDATA  data, LPCWSTR  pszExtra, LPVOID  pvOut, DWORD * pcbOut) PURE;
-    STDMETHOD(GetEnum)(THIS_ ASSOCF  flags, ASSOCENUM  assocenum, LPCWSTR  pszExtra, REFIID  riid, LPVOID * ppvOut) PURE;
+    STDMETHOD(Init)(THIS_ _In_ ASSOCF flags, _In_opt_ LPCWSTR pszAssoc, _In_opt_ HKEY hkProgid, _In_opt_ HWND hwnd) PURE;
+    STDMETHOD(GetString)(THIS_ _In_ ASSOCF flags, _In_ ASSOCSTR str, _In_opt_ LPCWSTR pszExtra, _Out_writes_opt_(*pcchOut) LPWSTR pszOut, _Inout_ DWORD *pcchOut) PURE;
+    STDMETHOD(GetKey)(THIS_ _In_ ASSOCF flags, _In_ ASSOCKEY key, _In_opt_ LPCWSTR pszExtra, _Out_ HKEY *phkeyOut) PURE;
+    STDMETHOD(GetData)(THIS_ _In_ ASSOCF flags, _In_ ASSOCDATA data, _In_opt_ LPCWSTR pszExtra, _Out_writes_bytes_opt_(*pcbOut) LPVOID pvOut, _Inout_opt_ DWORD *pcbOut) PURE;
+    STDMETHOD(GetEnum)(THIS_ _In_ ASSOCF flags, _In_ ASSOCENUM assocenum, _In_opt_ LPCWSTR pszExtra, _In_ REFIID riid, _Outptr_ LPVOID *ppvOut) PURE;
 };
 #undef INTERFACE
 
@@ -301,26 +669,100 @@ DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
 #define IQueryAssociations_GetEnum(p,a,b,c,d,e)    (p)->lpVtbl->GetEnum(p,a,b,c,d,e)
 #endif
 
-HRESULT WINAPI AssocCreate(CLSID,REFIID,LPVOID*);
+HRESULT WINAPI AssocCreate(_In_ CLSID, _In_ REFIID, _Outptr_ LPVOID*);
 
-HRESULT WINAPI AssocQueryStringA(ASSOCF,ASSOCSTR,LPCSTR,LPCSTR,LPSTR,LPDWORD);
-HRESULT WINAPI AssocQueryStringW(ASSOCF,ASSOCSTR,LPCWSTR,LPCWSTR,LPWSTR,LPDWORD);
+HRESULT
+WINAPI
+AssocQueryStringA(
+  _In_ ASSOCF,
+  _In_ ASSOCSTR,
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _Out_writes_opt_(*pcchOut) LPSTR,
+  _Inout_ LPDWORD pcchOut);
+
+HRESULT
+WINAPI
+AssocQueryStringW(
+  _In_ ASSOCF,
+  _In_ ASSOCSTR,
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _Out_writes_opt_(*pcchOut) LPWSTR,
+  _Inout_ LPDWORD pcchOut);
+
 #define AssocQueryString WINELIB_NAME_AW(AssocQueryString)
 
-HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF,ASSOCSTR,HKEY,LPCSTR,LPSTR,LPDWORD);
-HRESULT WINAPI AssocQueryStringByKeyW(ASSOCF,ASSOCSTR,HKEY,LPCWSTR,LPWSTR,LPDWORD);
+HRESULT
+WINAPI
+AssocQueryStringByKeyA(
+  _In_ ASSOCF,
+  _In_ ASSOCSTR,
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _Out_writes_opt_(*pcchOut) LPSTR,
+  _Inout_ LPDWORD pcchOut);
+
+HRESULT
+WINAPI
+AssocQueryStringByKeyW(
+  _In_ ASSOCF,
+  _In_ ASSOCSTR,
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _Out_writes_opt_(*pcchOut) LPWSTR,
+  _Inout_ LPDWORD pcchOut);
+
 #define AssocQueryStringByKey WINELIB_NAME_AW(AssocQueryStringByKey)
 
-HRESULT WINAPI AssocQueryKeyA(ASSOCF,ASSOCKEY,LPCSTR,LPCSTR,PHKEY);
-HRESULT WINAPI AssocQueryKeyW(ASSOCF,ASSOCKEY,LPCWSTR,LPCWSTR,PHKEY);
+HRESULT
+WINAPI
+AssocQueryKeyA(
+  _In_ ASSOCF,
+  _In_ ASSOCKEY,
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _Out_ PHKEY);
+
+HRESULT
+WINAPI
+AssocQueryKeyW(
+  _In_ ASSOCF,
+  _In_ ASSOCKEY,
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _Out_ PHKEY);
+
 #define AssocQueryKey WINELIB_NAME_AW(AssocQueryKey)
 
-BOOL WINAPI AssocIsDangerous(LPCWSTR);
+BOOL WINAPI AssocIsDangerous(_In_ LPCWSTR);
 
 #endif /* NO_SHLWAPI_REG */
 
-HRESULT WINAPI IUnknown_SetSite(IUnknown *punk, IUnknown *punkSite);
-HRESULT WINAPI IUnknown_QueryService(IUnknown *punk, REFGUID guidService, REFIID riid, void **ppvOut);
+void WINAPI IUnknown_Set(_Inout_ IUnknown **ppunk, _In_opt_ IUnknown *punk);
+void WINAPI IUnknown_AtomicRelease(_Inout_opt_ IUnknown **punk);
+HRESULT WINAPI IUnknown_GetWindow(_In_ IUnknown *punk, _Out_ HWND *phwnd);
+
+HRESULT
+WINAPI
+IUnknown_SetSite(
+  _In_ IUnknown *punk,
+  _In_opt_ IUnknown *punkSite);
+
+HRESULT
+WINAPI
+IUnknown_GetSite(
+  _In_ IUnknown *punk,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
+
+HRESULT
+WINAPI
+IUnknown_QueryService(
+  _In_opt_ IUnknown *punk,
+  _In_ REFGUID guidService,
+  _In_ REFIID riid,
+  _Outptr_ void **ppvOut);
 
 /* Path functions */
 #ifndef NO_SHLWAPI_PATH
@@ -332,228 +774,366 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown *punk, REFGUID guidService, REFIID
 #define GCT_WILD        0x4
 #define GCT_SEPARATOR   0x8
 
-LPSTR  WINAPI PathAddBackslashA(LPSTR);
-LPWSTR WINAPI PathAddBackslashW(LPWSTR);
+LPSTR  WINAPI PathAddBackslashA(_Inout_updates_(MAX_PATH) LPSTR);
+LPWSTR WINAPI PathAddBackslashW(_Inout_updates_(MAX_PATH) LPWSTR);
 #define PathAddBackslash WINELIB_NAME_AW(PathAddBackslash)
 
-BOOL WINAPI PathAddExtensionA(LPSTR,LPCSTR);
-BOOL WINAPI PathAddExtensionW(LPWSTR,LPCWSTR);
+BOOL
+WINAPI
+PathAddExtensionA(
+  _Inout_updates_(MAX_PATH) LPSTR,
+  _In_opt_ LPCSTR);
+
+BOOL
+WINAPI
+PathAddExtensionW(
+  _Inout_updates_(MAX_PATH) LPWSTR,
+  _In_opt_ LPCWSTR);
+
 #define PathAddExtension WINELIB_NAME_AW(PathAddExtension)
 
-BOOL WINAPI PathAppendA(LPSTR,LPCSTR);
-BOOL WINAPI PathAppendW(LPWSTR,LPCWSTR);
+BOOL WINAPI PathAppendA(_Inout_updates_(MAX_PATH) LPSTR, _In_ LPCSTR);
+BOOL WINAPI PathAppendW(_Inout_updates_(MAX_PATH) LPWSTR, _In_ LPCWSTR);
 #define PathAppend WINELIB_NAME_AW(PathAppend)
 
-LPSTR  WINAPI PathBuildRootA(LPSTR,int);
-LPWSTR WINAPI PathBuildRootW(LPWSTR,int);
+LPSTR  WINAPI PathBuildRootA(_Out_writes_(4) LPSTR, int);
+LPWSTR WINAPI PathBuildRootW(_Out_writes_(4) LPWSTR, int);
 #define PathBuildRoot WINELIB_NAME_AW(PathBuiltRoot)
 
-BOOL WINAPI PathCanonicalizeA(LPSTR,LPCSTR);
-BOOL WINAPI PathCanonicalizeW(LPWSTR,LPCWSTR);
+BOOL WINAPI PathCanonicalizeA(_Out_writes_(MAX_PATH) LPSTR, _In_ LPCSTR);
+BOOL WINAPI PathCanonicalizeW(_Out_writes_(MAX_PATH) LPWSTR, _In_ LPCWSTR);
 #define PathCanonicalize WINELIB_NAME_AW(PathCanonicalize)
 
-LPSTR  WINAPI PathCombineA(LPSTR,LPCSTR,LPCSTR);
-LPWSTR WINAPI PathCombineW(LPWSTR,LPCWSTR,LPCWSTR);
+LPSTR
+WINAPI
+PathCombineA(
+  _Out_writes_(MAX_PATH) LPSTR,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR);
+
+LPWSTR
+WINAPI
+PathCombineW(
+  _Out_writes_(MAX_PATH) LPWSTR,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR);
+
 #define PathCombine WINELIB_NAME_AW(PathCombine)
 
-BOOL WINAPI PathCompactPathA(HDC,LPSTR,UINT);
-BOOL WINAPI PathCompactPathW(HDC,LPWSTR,UINT);
+BOOL
+WINAPI
+PathCompactPathA(
+  _In_opt_ HDC,
+  _Inout_updates_(MAX_PATH) LPSTR,
+  _In_ UINT);
+
+BOOL
+WINAPI
+PathCompactPathW(
+  _In_opt_ HDC,
+  _Inout_updates_(MAX_PATH) LPWSTR,
+  _In_ UINT);
+
 #define PathCompactPath WINELIB_NAME_AW(PathCompactPath)
 
-BOOL WINAPI PathCompactPathExA(LPSTR,LPCSTR,UINT,DWORD);
-BOOL WINAPI PathCompactPathExW(LPWSTR,LPCWSTR,UINT,DWORD);
+BOOL
+WINAPI
+PathCompactPathExA(
+  _Out_writes_(cchMax) LPSTR,
+  _In_ LPCSTR,
+  _In_ UINT cchMax,
+  _In_ DWORD);
+
+BOOL
+WINAPI
+PathCompactPathExW(
+  _Out_writes_(cchMax) LPWSTR,
+  _In_ LPCWSTR,
+  _In_ UINT cchMax,
+  _In_ DWORD);
+
 #define PathCompactPathEx WINELIB_NAME_AW(PathCompactPathEx)
 
-int WINAPI PathCommonPrefixA(LPCSTR,LPCSTR,LPSTR);
-int WINAPI PathCommonPrefixW(LPCWSTR,LPCWSTR,LPWSTR);
+int
+WINAPI
+PathCommonPrefixA(
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _Out_writes_opt_(MAX_PATH) LPSTR);
+
+int
+WINAPI
+PathCommonPrefixW(
+  _In_ LPCWSTR,
+  _In_ LPCWSTR,
+  _Out_writes_opt_(MAX_PATH) LPWSTR);
+
 #define PathCommonPrefix WINELIB_NAME_AW(PathCommonPrefix)
 
-HRESULT WINAPI PathCreateFromUrlA(LPCSTR pszUrl, LPSTR pszPath, LPDWORD pcchPath, DWORD dwReserved);
-HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath, LPDWORD pcchPath, DWORD dwReserved);
+HRESULT
+WINAPI
+PathCreateFromUrlA(
+  _In_ LPCSTR,
+  _Out_writes_to_(*pcchPath, *pcchPath) LPSTR,
+  _Inout_ LPDWORD pcchPath,
+  DWORD);
+
+HRESULT
+WINAPI
+PathCreateFromUrlW(
+  _In_ LPCWSTR,
+  _Out_writes_to_(*pcchPath, *pcchPath) LPWSTR,
+  _Inout_ LPDWORD pcchPath,
+  DWORD);
+
 #define PathCreateFromUrl WINELIB_NAME_AW(PathCreateFromUrl)
 
-BOOL WINAPI PathFileExistsA(LPCSTR);
-BOOL WINAPI PathFileExistsW(LPCWSTR);
+HRESULT WINAPI PathCreateFromUrlAlloc(_In_ LPCWSTR, _Outptr_ LPWSTR*, DWORD);
+
+BOOL WINAPI PathFileExistsA(_In_ LPCSTR);
+BOOL WINAPI PathFileExistsW(_In_ LPCWSTR);
 #define PathFileExists WINELIB_NAME_AW(PathFileExists)
 
-BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD *dwAttr);
-BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD *dwAttr);
+BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR,DWORD*);
+BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR,DWORD*);
 #define PathFileExistsAndAttributes WINELIB_NAME_AW(PathFileExistsAndAttributes)
 
-LPSTR  WINAPI PathFindExtensionA(LPCSTR);
-LPWSTR WINAPI PathFindExtensionW(LPCWSTR);
+LPSTR  WINAPI PathFindExtensionA(_In_ LPCSTR);
+LPWSTR WINAPI PathFindExtensionW(_In_ LPCWSTR);
 #define PathFindExtension WINELIB_NAME_AW(PathFindExtension)
 
-LPSTR  WINAPI PathFindFileNameA(LPCSTR);
-LPWSTR WINAPI PathFindFileNameW(LPCWSTR);
+LPSTR  WINAPI PathFindFileNameA(_In_ LPCSTR);
+LPWSTR WINAPI PathFindFileNameW(_In_ LPCWSTR);
 #define PathFindFileName WINELIB_NAME_AW(PathFindFileName)
 
-LPSTR  WINAPI PathFindNextComponentA(LPCSTR);
-LPWSTR WINAPI PathFindNextComponentW(LPCWSTR);
+LPSTR  WINAPI PathFindNextComponentA(_In_ LPCSTR);
+LPWSTR WINAPI PathFindNextComponentW(_In_ LPCWSTR);
 #define PathFindNextComponent WINELIB_NAME_AW(PathFindNextComponent)
 
-BOOL WINAPI PathFindOnPathA(LPSTR,LPCSTR*);
-BOOL WINAPI PathFindOnPathW(LPWSTR,LPCWSTR*);
+BOOL WINAPI PathFindOnPathA(_Inout_updates_(MAX_PATH) LPSTR, _In_opt_ LPCSTR*);
+BOOL WINAPI PathFindOnPathW(_Inout_updates_(MAX_PATH) LPWSTR, _In_opt_ LPCWSTR*);
 #define PathFindOnPath WINELIB_NAME_AW(PathFindOnPath)
 
-LPSTR  WINAPI PathGetArgsA(LPCSTR);
-LPWSTR WINAPI PathGetArgsW(LPCWSTR);
+LPSTR  WINAPI PathGetArgsA(_In_ LPCSTR);
+LPWSTR WINAPI PathGetArgsW(_In_ LPCWSTR);
 #define PathGetArgs WINELIB_NAME_AW(PathGetArgs)
 
-UINT WINAPI PathGetCharTypeA(UCHAR);
-UINT WINAPI PathGetCharTypeW(WCHAR);
+UINT WINAPI PathGetCharTypeA(_In_ UCHAR);
+UINT WINAPI PathGetCharTypeW(_In_ WCHAR);
 #define PathGetCharType WINELIB_NAME_AW(PathGetCharType)
 
-int WINAPI PathGetDriveNumberA(LPCSTR);
-int WINAPI PathGetDriveNumberW(LPCWSTR);
+int WINAPI PathGetDriveNumberA(_In_ LPCSTR);
+int WINAPI PathGetDriveNumberW(_In_ LPCWSTR);
 #define PathGetDriveNumber WINELIB_NAME_AW(PathGetDriveNumber)
 
-BOOL WINAPI PathIsDirectoryA(LPCSTR);
-BOOL WINAPI PathIsDirectoryW(LPCWSTR);
+BOOL WINAPI PathIsDirectoryA(_In_ LPCSTR);
+BOOL WINAPI PathIsDirectoryW(_In_ LPCWSTR);
 #define PathIsDirectory WINELIB_NAME_AW(PathIsDirectory)
 
-BOOL WINAPI PathIsDirectoryEmptyA(LPCSTR);
-BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR);
+BOOL WINAPI PathIsDirectoryEmptyA(_In_ LPCSTR);
+BOOL WINAPI PathIsDirectoryEmptyW(_In_ LPCWSTR);
 #define PathIsDirectoryEmpty WINELIB_NAME_AW(PathIsDirectoryEmpty)
 
-BOOL WINAPI PathIsFileSpecA(LPCSTR);
-BOOL WINAPI PathIsFileSpecW(LPCWSTR);
+BOOL WINAPI PathIsFileSpecA(_In_ LPCSTR);
+BOOL WINAPI PathIsFileSpecW(_In_ LPCWSTR);
 #define PathIsFileSpec WINELIB_NAME_AW(PathIsFileSpec);
 
-BOOL WINAPI PathIsPrefixA(LPCSTR,LPCSTR);
-BOOL WINAPI PathIsPrefixW(LPCWSTR,LPCWSTR);
+BOOL WINAPI PathIsPrefixA(_In_ LPCSTR, _In_ LPCSTR);
+BOOL WINAPI PathIsPrefixW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define PathIsPrefix WINELIB_NAME_AW(PathIsPrefix)
 
-BOOL WINAPI PathIsRelativeA(LPCSTR);
-BOOL WINAPI PathIsRelativeW(LPCWSTR);
+BOOL WINAPI PathIsRelativeA(_In_ LPCSTR);
+BOOL WINAPI PathIsRelativeW(_In_ LPCWSTR);
 #define PathIsRelative WINELIB_NAME_AW(PathIsRelative)
 
-BOOL WINAPI PathIsRootA(LPCSTR);
-BOOL WINAPI PathIsRootW(LPCWSTR);
+BOOL WINAPI PathIsRootA(_In_ LPCSTR);
+BOOL WINAPI PathIsRootW(_In_ LPCWSTR);
 #define PathIsRoot WINELIB_NAME_AW(PathIsRoot)
 
-BOOL WINAPI PathIsSameRootA(LPCSTR,LPCSTR);
-BOOL WINAPI PathIsSameRootW(LPCWSTR,LPCWSTR);
+BOOL WINAPI PathIsSameRootA(_In_ LPCSTR, _In_ LPCSTR);
+BOOL WINAPI PathIsSameRootW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define PathIsSameRoot WINELIB_NAME_AW(PathIsSameRoot)
 
-BOOL WINAPI PathIsUNCA(LPCSTR);
-BOOL WINAPI PathIsUNCW(LPCWSTR);
+BOOL WINAPI PathIsUNCA(_In_ LPCSTR);
+BOOL WINAPI PathIsUNCW(_In_ LPCWSTR);
 #define PathIsUNC WINELIB_NAME_AW(PathIsUNC)
 
-BOOL WINAPI PathIsUNCServerA(LPCSTR);
-BOOL WINAPI PathIsUNCServerW(LPCWSTR);
+BOOL WINAPI PathIsUNCServerA(_In_ LPCSTR);
+BOOL WINAPI PathIsUNCServerW(_In_ LPCWSTR);
 #define PathIsUNCServer WINELIB_NAME_AW(PathIsUNCServer)
 
-BOOL WINAPI PathIsUNCServerShareA(LPCSTR);
-BOOL WINAPI PathIsUNCServerShareW(LPCWSTR);
+BOOL WINAPI PathIsUNCServerShareA(_In_ LPCSTR);
+BOOL WINAPI PathIsUNCServerShareW(_In_ LPCWSTR);
 #define PathIsUNCServerShare WINELIB_NAME_AW(PathIsUNCServerShare)
 
-BOOL WINAPI PathIsContentTypeA(LPCSTR,LPCSTR);
-BOOL WINAPI PathIsContentTypeW(LPCWSTR,LPCWSTR);
+BOOL WINAPI PathIsContentTypeA(_In_ LPCSTR, _In_ LPCSTR);
+BOOL WINAPI PathIsContentTypeW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define PathIsContentType WINELIB_NAME_AW(PathIsContentType)
 
-BOOL WINAPI PathIsURLA(LPCSTR);
-BOOL WINAPI PathIsURLW(LPCWSTR);
+BOOL WINAPI PathIsURLA(_In_ LPCSTR);
+BOOL WINAPI PathIsURLW(_In_ LPCWSTR);
 #define PathIsURL WINELIB_NAME_AW(PathIsURL)
 
-BOOL WINAPI PathMakePrettyA(LPSTR);
-BOOL WINAPI PathMakePrettyW(LPWSTR);
+BOOL WINAPI PathMakePrettyA(_Inout_ LPSTR);
+BOOL WINAPI PathMakePrettyW(_Inout_ LPWSTR);
 #define PathMakePretty WINELIB_NAME_AW(PathMakePretty)
 
-BOOL WINAPI PathMatchSpecA(LPCSTR,LPCSTR);
-BOOL WINAPI PathMatchSpecW(LPCWSTR,LPCWSTR);
+BOOL WINAPI PathMatchSpecA(_In_ LPCSTR, _In_ LPCSTR);
+BOOL WINAPI PathMatchSpecW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define PathMatchSpec WINELIB_NAME_AW(PathMatchSpec)
 
-int WINAPI PathParseIconLocationA(LPSTR);
-int WINAPI PathParseIconLocationW(LPWSTR);
+int WINAPI PathParseIconLocationA(_Inout_ LPSTR);
+int WINAPI PathParseIconLocationW(_Inout_ LPWSTR);
 #define PathParseIconLocation WINELIB_NAME_AW(PathParseIconLocation)
 
-VOID WINAPI PathQuoteSpacesA(LPSTR);
-VOID WINAPI PathQuoteSpacesW(LPWSTR);
+VOID WINAPI PathQuoteSpacesA(_Inout_updates_(MAX_PATH) LPSTR);
+VOID WINAPI PathQuoteSpacesW(_Inout_updates_(MAX_PATH) LPWSTR);
 #define PathQuoteSpaces WINELIB_NAME_AW(PathQuoteSpaces)
 
-BOOL WINAPI PathRelativePathToA(LPSTR,LPCSTR,DWORD,LPCSTR,DWORD);
-BOOL WINAPI PathRelativePathToW(LPWSTR,LPCWSTR,DWORD,LPCWSTR,DWORD);
+BOOL
+WINAPI
+PathRelativePathToA(
+  _Out_writes_(MAX_PATH) LPSTR,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_ LPCSTR,
+  _In_ DWORD);
+
+BOOL
+WINAPI
+PathRelativePathToW(
+  _Out_writes_(MAX_PATH) LPWSTR,
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_ LPCWSTR,
+  _In_ DWORD);
+
 #define PathRelativePathTo WINELIB_NAME_AW(PathRelativePathTo)
 
-VOID WINAPI PathRemoveArgsA(LPSTR);
-VOID WINAPI PathRemoveArgsW(LPWSTR);
+VOID WINAPI PathRemoveArgsA(_Inout_ LPSTR);
+VOID WINAPI PathRemoveArgsW(_Inout_ LPWSTR);
 #define PathRemoveArgs WINELIB_NAME_AW(PathRemoveArgs)
 
-LPSTR  WINAPI PathRemoveBackslashA(LPSTR);
-LPWSTR WINAPI PathRemoveBackslashW(LPWSTR);
+LPSTR  WINAPI PathRemoveBackslashA(_Inout_ LPSTR);
+LPWSTR WINAPI PathRemoveBackslashW(_Inout_ LPWSTR);
 #define PathRemoveBackslash WINELIB_NAME_AW(PathRemoveBackslash)
 
-VOID WINAPI PathRemoveBlanksA(LPSTR);
-VOID WINAPI PathRemoveBlanksW(LPWSTR);
+VOID WINAPI PathRemoveBlanksA(_Inout_ LPSTR);
+VOID WINAPI PathRemoveBlanksW(_Inout_ LPWSTR);
 #define PathRemoveBlanks WINELIB_NAME_AW(PathRemoveBlanks)
 
-VOID WINAPI PathRemoveExtensionA(LPSTR);
-VOID WINAPI PathRemoveExtensionW(LPWSTR);
+VOID WINAPI PathRemoveExtensionA(_Inout_ LPSTR);
+VOID WINAPI PathRemoveExtensionW(_Inout_ LPWSTR);
 #define PathRemoveExtension WINELIB_NAME_AW(PathRemoveExtension)
 
-BOOL WINAPI PathRemoveFileSpecA(LPSTR);
-BOOL WINAPI PathRemoveFileSpecW(LPWSTR);
+BOOL WINAPI PathRemoveFileSpecA(_Inout_ LPSTR);
+BOOL WINAPI PathRemoveFileSpecW(_Inout_ LPWSTR);
 #define PathRemoveFileSpec WINELIB_NAME_AW(PathRemoveFileSpec)
 
-BOOL WINAPI PathRenameExtensionA(LPSTR,LPCSTR);
-BOOL WINAPI PathRenameExtensionW(LPWSTR,LPCWSTR);
+BOOL
+WINAPI
+PathRenameExtensionA(
+  _Inout_updates_(MAX_PATH) LPSTR,
+  _In_ LPCSTR);
+
+BOOL
+WINAPI
+PathRenameExtensionW(
+  _Inout_updates_(MAX_PATH) LPWSTR,
+  _In_ LPCWSTR);
+
 #define PathRenameExtension WINELIB_NAME_AW(PathRenameExtension)
 
-BOOL WINAPI PathSearchAndQualifyA(LPCSTR,LPSTR,UINT);
-BOOL WINAPI PathSearchAndQualifyW(LPCWSTR,LPWSTR,UINT);
+BOOL
+WINAPI
+PathSearchAndQualifyA(
+  _In_ LPCSTR,
+  _Out_writes_(cchBuf) LPSTR,
+  _In_ UINT cchBuf);
+
+BOOL
+WINAPI
+PathSearchAndQualifyW(
+  _In_ LPCWSTR,
+  _Out_writes_(cchBuf) LPWSTR,
+  _In_ UINT cchBuf);
+
 #define PathSearchAndQualify WINELIB_NAME_AW(PathSearchAndQualify)
 
-VOID WINAPI PathSetDlgItemPathA(HWND,int,LPCSTR);
-VOID WINAPI PathSetDlgItemPathW(HWND,int,LPCWSTR);
+VOID WINAPI PathSetDlgItemPathA(_In_ HWND, int, LPCSTR);
+VOID WINAPI PathSetDlgItemPathW(_In_ HWND, int, LPCWSTR);
 #define PathSetDlgItemPath WINELIB_NAME_AW(PathSetDlgItemPath)
 
-LPSTR  WINAPI PathSkipRootA(LPCSTR);
-LPWSTR WINAPI PathSkipRootW(LPCWSTR);
+LPSTR  WINAPI PathSkipRootA(_In_ LPCSTR);
+LPWSTR WINAPI PathSkipRootW(_In_ LPCWSTR);
 #define PathSkipRoot WINELIB_NAME_AW(PathSkipRoot)
 
-VOID WINAPI PathStripPathA(LPSTR);
-VOID WINAPI PathStripPathW(LPWSTR);
+VOID WINAPI PathStripPathA(_Inout_ LPSTR);
+VOID WINAPI PathStripPathW(_Inout_ LPWSTR);
 #define PathStripPath WINELIB_NAME_AW(PathStripPath)
 
-BOOL WINAPI PathStripToRootA(LPSTR);
-BOOL WINAPI PathStripToRootW(LPWSTR);
+BOOL WINAPI PathStripToRootA(_Inout_ LPSTR);
+BOOL WINAPI PathStripToRootW(_Inout_ LPWSTR);
 #define PathStripToRoot WINELIB_NAME_AW(PathStripToRoot)
 
-VOID WINAPI PathUnquoteSpacesA(LPSTR);
-VOID WINAPI PathUnquoteSpacesW(LPWSTR);
+VOID WINAPI PathUnquoteSpacesA(_Inout_ LPSTR);
+VOID WINAPI PathUnquoteSpacesW(_Inout_ LPWSTR);
 #define PathUnquoteSpaces WINELIB_NAME_AW(PathUnquoteSpaces)
 
-BOOL WINAPI PathMakeSystemFolderA(LPCSTR);
-BOOL WINAPI PathMakeSystemFolderW(LPCWSTR);
+BOOL WINAPI PathMakeSystemFolderA(_In_ LPCSTR);
+BOOL WINAPI PathMakeSystemFolderW(_In_ LPCWSTR);
 #define PathMakeSystemFolder WINELIB_NAME_AW(PathMakeSystemFolder)
 
-BOOL WINAPI PathUnmakeSystemFolderA(LPCSTR);
-BOOL WINAPI PathUnmakeSystemFolderW(LPCWSTR);
+BOOL WINAPI PathUnmakeSystemFolderA(_In_ LPCSTR);
+BOOL WINAPI PathUnmakeSystemFolderW(_In_ LPCWSTR);
 #define PathUnmakeSystemFolder WINELIB_NAME_AW(PathUnmakeSystemFolder)
 
-BOOL WINAPI PathIsSystemFolderA(LPCSTR,DWORD);
-BOOL WINAPI PathIsSystemFolderW(LPCWSTR,DWORD);
+BOOL WINAPI PathIsSystemFolderA(_In_opt_ LPCSTR, _In_ DWORD);
+BOOL WINAPI PathIsSystemFolderW(_In_opt_ LPCWSTR, _In_ DWORD);
 #define PathIsSystemFolder WINELIB_NAME_AW(PathIsSystemFolder)
 
-BOOL WINAPI PathIsNetworkPathA(LPCSTR);
-BOOL WINAPI PathIsNetworkPathW(LPCWSTR);
+BOOL WINAPI PathIsNetworkPathA(_In_ LPCSTR);
+BOOL WINAPI PathIsNetworkPathW(_In_ LPCWSTR);
 #define PathIsNetworkPath WINELIB_NAME_AW(PathIsNetworkPath)
 
-BOOL WINAPI PathIsLFNFileSpecA(LPCSTR);
-BOOL WINAPI PathIsLFNFileSpecW(LPCWSTR);
+BOOL WINAPI PathIsLFNFileSpecA(_In_ LPCSTR);
+BOOL WINAPI PathIsLFNFileSpecW(_In_ LPCWSTR);
 #define PathIsLFNFileSpec WINELIB_NAME_AW(PathIsLFNFileSpec)
 
-LPCSTR WINAPI PathFindSuffixArrayA(LPCSTR,LPCSTR *,int);
-LPCWSTR WINAPI PathFindSuffixArrayW(LPCWSTR,LPCWSTR *,int);
+LPCSTR
+WINAPI
+PathFindSuffixArrayA(
+  _In_ LPCSTR,
+  _In_reads_(iArraySize) LPCSTR *,
+  int iArraySize);
+
+LPCWSTR
+WINAPI
+PathFindSuffixArrayW(
+  _In_ LPCWSTR,
+  _In_reads_(iArraySize) LPCWSTR *,
+  int iArraySize);
+
 #define PathFindSuffixArray WINELIB_NAME_AW(PathFindSuffixArray)
 
-VOID WINAPI PathUndecorateA(LPSTR);
-VOID WINAPI PathUndecorateW(LPWSTR);
+VOID WINAPI PathUndecorateA(_Inout_ LPSTR);
+VOID WINAPI PathUndecorateW(_Inout_ LPWSTR);
 #define PathUndecorate WINELIB_NAME_AW(PathUndecorate)
 
-BOOL WINAPI PathUnExpandEnvStringsA(LPCSTR,LPSTR,UINT);
-BOOL WINAPI PathUnExpandEnvStringsW(LPCWSTR,LPWSTR,UINT);
+BOOL
+WINAPI
+PathUnExpandEnvStringsA(
+  _In_ LPCSTR,
+  _Out_writes_(cchBuf) LPSTR,
+  _In_ UINT cchBuf);
+
+BOOL
+WINAPI
+PathUnExpandEnvStringsW(
+  _In_ LPCWSTR,
+  _Out_writes_(cchBuf) LPWSTR,
+  _In_ UINT cchBuf);
+
 #define PathUnExpandEnvStrings WINELIB_NAME_AW(PathUnExpandEnvStrings)
 
 /* Url functions */
@@ -640,28 +1220,87 @@ typedef enum {
 #define URL_UNESCAPE_INPLACE         0x00100000
 
 #define URL_FILE_USE_PATHURL         0x00010000
+#define URL_ESCAPE_AS_UTF8           0x00040000
 
 #define URL_ESCAPE_SEGMENT_ONLY      0x00002000
 #define URL_ESCAPE_PERCENT           0x00001000
 
-HRESULT WINAPI UrlApplySchemeA(LPCSTR,LPSTR,LPDWORD,DWORD);
-HRESULT WINAPI UrlApplySchemeW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
+HRESULT
+WINAPI
+UrlApplySchemeA(
+  _In_ LPCSTR,
+  _Out_writes_(*pcchOut) LPSTR,
+  _Inout_ LPDWORD pcchOut,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlApplySchemeW(
+  _In_ LPCWSTR,
+  _Out_writes_(*pcchOut) LPWSTR,
+  _Inout_ LPDWORD pcchOut,
+  DWORD);
+
 #define UrlApplyScheme WINELIB_NAME_AW(UrlApplyScheme)
 
-HRESULT WINAPI UrlCanonicalizeA(LPCSTR,LPSTR,LPDWORD,DWORD);
-HRESULT WINAPI UrlCanonicalizeW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
+HRESULT
+WINAPI
+UrlCanonicalizeA(
+  _In_ LPCSTR,
+  _Out_writes_to_(*pcchCanonicalized, *pcchCanonicalized) LPSTR,
+  _Inout_ LPDWORD pcchCanonicalized,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlCanonicalizeW(
+  _In_ LPCWSTR,
+  _Out_writes_to_(*pcchCanonicalized, *pcchCanonicalized) LPWSTR,
+  _Inout_ LPDWORD pcchCanonicalized,
+  DWORD);
+
 #define UrlCanonicalize WINELIB_NAME_AW(UrlCanonicalize)
 
-HRESULT WINAPI UrlCombineA(LPCSTR,LPCSTR,LPSTR,LPDWORD,DWORD);
-HRESULT WINAPI UrlCombineW(LPCWSTR,LPCWSTR,LPWSTR,LPDWORD,DWORD);
+HRESULT
+WINAPI
+UrlCombineA(
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _Out_writes_to_opt_(*pcchCombined, *pcchCombined) LPSTR,
+  _Inout_ LPDWORD pcchCombined,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlCombineW(
+  _In_ LPCWSTR,
+  _In_ LPCWSTR,
+  _Out_writes_to_opt_(*pcchCombined, *pcchCombined) LPWSTR,
+  _Inout_ LPDWORD pcchCombined,
+  DWORD);
+
 #define UrlCombine WINELIB_NAME_AW(UrlCombine)
 
-INT WINAPI UrlCompareA(LPCSTR,LPCSTR,BOOL);
-INT WINAPI UrlCompareW(LPCWSTR,LPCWSTR,BOOL);
+INT WINAPI UrlCompareA(_In_ LPCSTR, _In_ LPCSTR, BOOL);
+INT WINAPI UrlCompareW(_In_ LPCWSTR, _In_ LPCWSTR, BOOL);
 #define UrlCompare WINELIB_NAME_AW(UrlCompare)
 
-HRESULT WINAPI UrlEscapeA(LPCSTR,LPSTR,LPDWORD,DWORD);
-HRESULT WINAPI UrlEscapeW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
+HRESULT
+WINAPI
+UrlEscapeA(
+  _In_ LPCSTR,
+  _Out_writes_to_(*pcchEscaped, *pcchEscaped) LPSTR,
+  _Inout_ LPDWORD pcchEscaped,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlEscapeW(
+  _In_ LPCWSTR,
+  _Out_writes_to_(*pcchEscaped, *pcchEscaped) LPWSTR,
+  _Inout_ LPDWORD pcchEscaped,
+  DWORD);
+
 #define UrlEscape WINELIB_NAME_AW(UrlEscape)
 
 #define UrlEscapeSpacesA(x,y,z) UrlCanonicalizeA(x, y, z, \
@@ -670,38 +1309,86 @@ HRESULT WINAPI UrlEscapeW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
                          URL_DONT_ESCAPE_EXTRA_INFO|URL_ESCAPE_SPACES_ONLY)
 #define UrlEscapeSpaces WINELIB_NAME_AW(UrlEscapeSpaces)
 
-LPCSTR  WINAPI UrlGetLocationA(LPCSTR);
-LPCWSTR WINAPI UrlGetLocationW(LPCWSTR);
+LPCSTR  WINAPI UrlGetLocationA(_In_ LPCSTR);
+LPCWSTR WINAPI UrlGetLocationW(_In_ LPCWSTR);
 #define UrlGetLocation WINELIB_NAME_AW(UrlGetLocation)
 
-HRESULT WINAPI UrlGetPartA(LPCSTR,LPSTR,LPDWORD,DWORD,DWORD);
-HRESULT WINAPI UrlGetPartW(LPCWSTR,LPWSTR,LPDWORD,DWORD,DWORD);
+HRESULT
+WINAPI
+UrlGetPartA(
+  _In_ LPCSTR,
+  _Out_writes_(*pcchOut) LPSTR,
+  _Inout_ LPDWORD pcchOut,
+  DWORD,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlGetPartW(
+  _In_ LPCWSTR,
+  _Out_writes_(*pcchOut) LPWSTR,
+  _Inout_ LPDWORD pcchOut,
+  DWORD,
+  DWORD);
+
 #define UrlGetPart WINELIB_NAME_AW(UrlGetPart)
 
-HRESULT WINAPI HashData(const unsigned char *,DWORD,unsigned char *lpDest,DWORD);
+HRESULT
+WINAPI
+HashData(
+  _In_reads_bytes_(cbData) const unsigned char *,
+  DWORD cbData,
+  _Out_writes_bytes_(cbHash) unsigned char *lpDest,
+  DWORD cbHash);
 
-HRESULT WINAPI UrlHashA(LPCSTR,unsigned char *,DWORD);
-HRESULT WINAPI UrlHashW(LPCWSTR,unsigned char *,DWORD);
+HRESULT
+WINAPI
+UrlHashA(
+  _In_ LPCSTR,
+  _Out_writes_bytes_(cbHash) unsigned char *,
+  DWORD cbHash);
+
+HRESULT
+WINAPI
+UrlHashW(
+  _In_ LPCWSTR,
+  _Out_writes_bytes_(cbHash) unsigned char *,
+  DWORD cbHash);
+
 #define UrlHash WINELIB_NAME_AW(UrlHash)
 
-BOOL    WINAPI UrlIsA(LPCSTR,URLIS);
-BOOL    WINAPI UrlIsW(LPCWSTR,URLIS);
+BOOL    WINAPI UrlIsA(_In_ LPCSTR, URLIS);
+BOOL    WINAPI UrlIsW(_In_ LPCWSTR, URLIS);
 #define UrlIs WINELIB_NAME_AW(UrlIs)
 
-BOOL    WINAPI UrlIsNoHistoryA(LPCSTR);
-BOOL    WINAPI UrlIsNoHistoryW(LPCWSTR);
+BOOL    WINAPI UrlIsNoHistoryA(_In_ LPCSTR);
+BOOL    WINAPI UrlIsNoHistoryW(_In_ LPCWSTR);
 #define UrlIsNoHistory WINELIB_NAME_AW(UrlIsNoHistory)
 
-BOOL    WINAPI UrlIsOpaqueA(LPCSTR);
-BOOL    WINAPI UrlIsOpaqueW(LPCWSTR);
+BOOL    WINAPI UrlIsOpaqueA(_In_ LPCSTR);
+BOOL    WINAPI UrlIsOpaqueW(_In_ LPCWSTR);
 #define UrlIsOpaque WINELIB_NAME_AW(UrlIsOpaque)
 
 #define UrlIsFileUrlA(x) UrlIsA(x, URLIS_FILEURL)
-#define UrlIsFileUrlW(y) UrlIsW(x, URLIS_FILEURL)
+#define UrlIsFileUrlW(x) UrlIsW(x, URLIS_FILEURL)
 #define UrlIsFileUrl WINELIB_NAME_AW(UrlIsFileUrl)
 
-HRESULT WINAPI UrlUnescapeA(LPSTR,LPSTR,LPDWORD,DWORD);
-HRESULT WINAPI UrlUnescapeW(LPWSTR,LPWSTR,LPDWORD,DWORD);
+HRESULT
+WINAPI
+UrlUnescapeA(
+  _Inout_ LPSTR,
+  _Out_writes_to_opt_(*pcchUnescaped, *pcchUnescaped) LPSTR,
+  _Inout_opt_ LPDWORD pcchUnescaped,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlUnescapeW(
+  _Inout_ LPWSTR,
+  _Out_writes_to_opt_(*pcchUnescaped, *pcchUnescaped) LPWSTR,
+  _Inout_opt_ LPDWORD pcchUnescaped,
+  DWORD);
+
 #define UrlUnescape WINELIB_NAME_AW(UrlUnescape)
 
 #define UrlUnescapeInPlaceA(x,y) UrlUnescapeA(x, NULL, NULL, \
@@ -710,8 +1397,22 @@ HRESULT WINAPI UrlUnescapeW(LPWSTR,LPWSTR,LPDWORD,DWORD);
                                               y | URL_UNESCAPE_INPLACE)
 #define UrlUnescapeInPlace WINELIB_NAME_AW(UrlUnescapeInPlace)
 
-HRESULT WINAPI UrlCreateFromPathA(LPCSTR,LPSTR,LPDWORD,DWORD);
-HRESULT WINAPI UrlCreateFromPathW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
+HRESULT
+WINAPI
+UrlCreateFromPathA(
+  _In_ LPCSTR,
+  _Out_writes_to_(*pcchUrl, *pcchUrl) LPSTR,
+  _Inout_ LPDWORD pcchUrl,
+  DWORD);
+
+HRESULT
+WINAPI
+UrlCreateFromPathW(
+  _In_ LPCWSTR,
+  _Out_writes_to_(*pcchUrl, *pcchUrl) LPWSTR,
+  _Inout_ LPDWORD pcchUrl,
+  DWORD);
+
 #define UrlCreateFromPath WINELIB_NAME_AW(UrlCreateFromPath)
 
 typedef struct tagPARSEDURLA {
@@ -732,8 +1433,8 @@ typedef struct tagPARSEDURLW {
     UINT nScheme;
 } PARSEDURLW, *PPARSEDURLW;
 
-HRESULT WINAPI ParseURLA(LPCSTR pszUrl, PARSEDURLA *ppu);
-HRESULT WINAPI ParseURLW(LPCWSTR pszUrl, PARSEDURLW *ppu);
+HRESULT WINAPI ParseURLA(_In_ LPCSTR pszUrl, _Inout_ PARSEDURLA *ppu);
+HRESULT WINAPI ParseURLW(_In_ LPCWSTR pszUrl, _Inout_ PARSEDURLW *ppu);
 #define ParseURL WINELIB_NAME_AW(ParseUrl)
 
 #endif /* NO_SHLWAPI_PATH */
@@ -750,74 +1451,110 @@ BOOL WINAPI ChrCmpIA (WORD,WORD);
 BOOL WINAPI ChrCmpIW (WCHAR,WCHAR);
 #define ChrCmpI WINELIB_NAME_AW(ChrCmpI)
 
-INT WINAPI StrCSpnA(LPCSTR,LPCSTR);
-INT WINAPI StrCSpnW(LPCWSTR,LPCWSTR);
+INT WINAPI StrCSpnA(_In_ LPCSTR, _In_ LPCSTR);
+INT WINAPI StrCSpnW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrCSpn WINELIB_NAME_AW(StrCSpn)
 
-INT WINAPI StrCSpnIA(LPCSTR,LPCSTR);
-INT WINAPI StrCSpnIW(LPCWSTR,LPCWSTR);
+INT WINAPI StrCSpnIA(_In_ LPCSTR, _In_ LPCSTR);
+INT WINAPI StrCSpnIW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrCSpnI WINELIB_NAME_AW(StrCSpnI)
 
 #define StrCatA lstrcatA
-LPWSTR WINAPI StrCatW(LPWSTR,LPCWSTR);
+LPWSTR WINAPI StrCatW(_Inout_ LPWSTR, _In_ LPCWSTR);
 #define StrCat WINELIB_NAME_AW(StrCat)
 
-LPSTR WINAPI StrCatBuffA(LPSTR,LPCSTR,INT);
-LPWSTR WINAPI StrCatBuffW(LPWSTR,LPCWSTR,INT);
+LPSTR
+WINAPI
+StrCatBuffA(
+  _Inout_updates_(cchDestBuffSize) LPSTR,
+  _In_ LPCSTR,
+  INT cchDestBuffSize);
+
+LPWSTR
+WINAPI
+StrCatBuffW(
+  _Inout_updates_(cchDestBuffSize) LPWSTR,
+  _In_ LPCWSTR,
+  INT cchDestBuffSize);
+
 #define StrCatBuff WINELIB_NAME_AW(StrCatBuff)
 
-DWORD WINAPI StrCatChainW(LPWSTR,DWORD,DWORD,LPCWSTR);
+DWORD
+WINAPI
+StrCatChainW(
+  _Out_writes_(cchDst) LPWSTR,
+  DWORD cchDst,
+  DWORD,
+  _In_ LPCWSTR);
 
-LPSTR WINAPI StrChrA(LPCSTR,WORD);
-LPWSTR WINAPI StrChrW(LPCWSTR,WCHAR);
+LPSTR WINAPI StrChrA(_In_ LPCSTR, WORD);
+LPWSTR WINAPI StrChrW(_In_ LPCWSTR, WCHAR);
 #define StrChr WINELIB_NAME_AW(StrChr)
 
-LPSTR WINAPI StrChrIA(LPCSTR,WORD);
-LPWSTR WINAPI StrChrIW(LPCWSTR,WCHAR);
+LPSTR WINAPI StrChrIA(_In_ LPCSTR, WORD);
+LPWSTR WINAPI StrChrIW(_In_ LPCWSTR, WCHAR);
 #define StrChrI WINELIB_NAME_AW(StrChrI)
 
 #define StrCmpA lstrcmpA
-int WINAPI StrCmpW(LPCWSTR,LPCWSTR);
+int WINAPI StrCmpW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrCmp WINELIB_NAME_AW(StrCmp)
 
 #define StrCmpIA lstrcmpiA
-int WINAPI StrCmpIW(LPCWSTR,LPCWSTR);
+int WINAPI StrCmpIW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrCmpI WINELIB_NAME_AW(StrCmpI)
 
 #define StrCpyA lstrcpyA
-LPWSTR WINAPI StrCpyW(LPWSTR,LPCWSTR);
+LPWSTR WINAPI StrCpyW(_Out_ LPWSTR, _In_ LPCWSTR);
 #define StrCpy WINELIB_NAME_AW(StrCpy)
 
 #define StrCpyNA lstrcpynA
-LPWSTR WINAPI StrCpyNW(LPWSTR,LPCWSTR,int);
+LPWSTR WINAPI StrCpyNW(_Out_writes_(cchMax) LPWSTR, _In_ LPCWSTR, int cchMax);
 #define StrCpyN WINELIB_NAME_AW(StrCpyN)
 #define StrNCpy WINELIB_NAME_AW(StrCpyN)
 
-INT WINAPI StrCmpLogicalW(LPCWSTR,LPCWSTR);
+INT WINAPI StrCmpLogicalW(_In_ LPCWSTR, _In_ LPCWSTR);
 
-INT WINAPI StrCmpNA(LPCSTR,LPCSTR,INT);
-INT WINAPI StrCmpNW(LPCWSTR,LPCWSTR,INT);
+INT WINAPI StrCmpNA(_In_ LPCSTR, _In_ LPCSTR, INT);
+INT WINAPI StrCmpNW(_In_ LPCWSTR, _In_ LPCWSTR, INT);
 #define StrCmpN WINELIB_NAME_AW(StrCmpN)
 #define StrNCmp WINELIB_NAME_AW(StrCmpN)
 
-INT WINAPI StrCmpNIA(LPCSTR,LPCSTR,INT);
-INT WINAPI StrCmpNIW(LPCWSTR,LPCWSTR,INT);
+INT WINAPI StrCmpNIA(_In_ LPCSTR, _In_ LPCSTR, INT);
+INT WINAPI StrCmpNIW(_In_ LPCWSTR, _In_ LPCWSTR, INT);
 #define StrCmpNI WINELIB_NAME_AW(StrCmpNI)
 #define StrNCmpI WINELIB_NAME_AW(StrCmpNI)
 
-LPSTR WINAPI StrDupA(LPCSTR);
-LPWSTR WINAPI StrDupW(LPCWSTR);
+LPSTR WINAPI StrDupA(_In_ LPCSTR);
+LPWSTR WINAPI StrDupW(_In_ LPCWSTR);
 #define StrDup WINELIB_NAME_AW(StrDup)
 
-HRESULT WINAPI SHStrDupA(LPCSTR,WCHAR**);
-HRESULT WINAPI SHStrDupW(LPCWSTR,WCHAR**);
+HRESULT WINAPI SHStrDupA(_In_ LPCSTR, _Outptr_ WCHAR**);
+HRESULT WINAPI SHStrDupW(_In_ LPCWSTR, _Outptr_ WCHAR**);
 #define SHStrDup WINELIB_NAME_AW(SHStrDup)
 
-LPSTR WINAPI StrFormatByteSizeA (DWORD,LPSTR,UINT);
+LPSTR
+WINAPI
+StrFormatByteSizeA(
+  DWORD,
+  _Out_writes_(cchBuf) LPSTR,
+  UINT cchBuf);
 
 /* A/W Pairing is broken for this function */
-LPSTR WINAPI StrFormatByteSize64A (LONGLONG,LPSTR,UINT);
-LPWSTR WINAPI StrFormatByteSizeW (LONGLONG,LPWSTR,UINT);
+
+LPSTR
+WINAPI
+StrFormatByteSize64A(
+  LONGLONG,
+  _Out_writes_(cchBuf) LPSTR,
+  UINT cchBuf);
+
+LPWSTR
+WINAPI
+StrFormatByteSizeW(
+  LONGLONG,
+  _Out_writes_(cchBuf) LPWSTR,
+  UINT cchBuf);
+
 #ifndef WINE_NO_UNICODE_MACROS
 #ifdef UNICODE
 #define StrFormatByteSize StrFormatByteSizeW
@@ -826,16 +1563,42 @@ LPWSTR WINAPI StrFormatByteSizeW (LONGLONG,LPWSTR,UINT);
 #endif
 #endif
 
-LPSTR WINAPI StrFormatKBSizeA(LONGLONG,LPSTR,UINT);
-LPWSTR WINAPI StrFormatKBSizeW(LONGLONG,LPWSTR,UINT);
+LPSTR
+WINAPI
+StrFormatKBSizeA(
+  LONGLONG,
+  _Out_writes_(cchBuf) LPSTR,
+  UINT cchBuf);
+
+LPWSTR
+WINAPI
+StrFormatKBSizeW(
+  LONGLONG,
+  _Out_writes_(cchBuf) LPWSTR,
+  UINT cchBuf);
+
 #define StrFormatKBSize WINELIB_NAME_AW(StrFormatKBSize)
 
-int WINAPI StrFromTimeIntervalA(LPSTR,UINT,DWORD,int);
-int WINAPI StrFromTimeIntervalW(LPWSTR,UINT,DWORD,int);
+int
+WINAPI
+StrFromTimeIntervalA(
+  _Out_writes_(cchMax) LPSTR,
+  UINT cchMax,
+  DWORD,
+  int);
+
+int
+WINAPI
+StrFromTimeIntervalW(
+  _Out_writes_(cchMax) LPWSTR,
+  UINT cchMax,
+  DWORD,
+  int);
+
 #define StrFromTimeInterval WINELIB_NAME_AW(StrFromTimeInterval)
 
-BOOL WINAPI StrIsIntlEqualA(BOOL,LPCSTR,LPCSTR,int);
-BOOL WINAPI StrIsIntlEqualW(BOOL,LPCWSTR,LPCWSTR,int);
+BOOL WINAPI StrIsIntlEqualA(BOOL, _In_ LPCSTR, _In_ LPCSTR, int);
+BOOL WINAPI StrIsIntlEqualW(BOOL, _In_ LPCWSTR, _In_ LPCWSTR, int);
 #define StrIsIntlEqual WINELIB_NAME_AW(StrIsIntlEqual)
 
 #define StrIntlEqNA(a,b,c) StrIsIntlEqualA(TRUE,a,b,c)
@@ -844,68 +1607,119 @@ BOOL WINAPI StrIsIntlEqualW(BOOL,LPCWSTR,LPCWSTR,int);
 #define StrIntlEqNIA(a,b,c) StrIsIntlEqualA(FALSE,a,b,c)
 #define StrIntlEqNIW(a,b,c) StrIsIntlEqualW(FALSE,a,b,c)
 
-LPSTR  WINAPI StrNCatA(LPSTR,LPCSTR,int);
-LPWSTR WINAPI StrNCatW(LPWSTR,LPCWSTR,int);
+LPSTR  WINAPI StrNCatA(_Inout_updates_(cchMax) LPSTR, LPCSTR, int cchMax);
+LPWSTR WINAPI StrNCatW(_Inout_updates_(cchMax) LPWSTR, LPCWSTR, int cchMax);
 #define StrNCat WINELIB_NAME_AW(StrNCat)
 #define StrCatN WINELIB_NAME_AW(StrNCat)
 
-LPSTR  WINAPI StrPBrkA(LPCSTR,LPCSTR);
-LPWSTR WINAPI StrPBrkW(LPCWSTR,LPCWSTR);
+LPSTR  WINAPI StrPBrkA(_In_ LPCSTR, _In_ LPCSTR);
+LPWSTR WINAPI StrPBrkW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrPBrk WINELIB_NAME_AW(StrPBrk)
 
-LPSTR  WINAPI StrRChrA(LPCSTR,LPCSTR,WORD);
-LPWSTR WINAPI StrRChrW(LPCWSTR,LPCWSTR,WORD);
+LPSTR  WINAPI StrRChrA(_In_ LPCSTR, _In_opt_ LPCSTR, WORD);
+LPWSTR WINAPI StrRChrW(_In_ LPCWSTR, _In_opt_ LPCWSTR, WCHAR);
 #define StrRChr WINELIB_NAME_AW(StrRChr)
 
-LPSTR  WINAPI StrRChrIA(LPCSTR,LPCSTR,WORD);
-LPWSTR WINAPI StrRChrIW(LPCWSTR,LPCWSTR,WORD);
+LPSTR  WINAPI StrRChrIA(_In_ LPCSTR, _In_opt_ LPCSTR, WORD);
+LPWSTR WINAPI StrRChrIW(_In_ LPCWSTR, _In_opt_ LPCWSTR, WCHAR);
 #define StrRChrI WINELIB_NAME_AW(StrRChrI)
 
-LPSTR  WINAPI StrRStrIA(LPCSTR,LPCSTR,LPCSTR);
-LPWSTR WINAPI StrRStrIW(LPCWSTR,LPCWSTR,LPCWSTR);
+LPSTR  WINAPI StrRStrIA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ LPCSTR);
+LPWSTR WINAPI StrRStrIW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ LPCWSTR);
 #define StrRStrI WINELIB_NAME_AW(StrRStrI)
 
-int WINAPI StrSpnA(LPCSTR,LPCSTR);
-int WINAPI StrSpnW(LPCWSTR,LPCWSTR);
+int WINAPI StrSpnA(_In_ LPCSTR, _In_ LPCSTR);
+int WINAPI StrSpnW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrSpn WINELIB_NAME_AW(StrSpn)
 
-LPSTR  WINAPI StrStrA(LPCSTR,LPCSTR);
-LPWSTR WINAPI StrStrW(LPCWSTR,LPCWSTR);
+LPSTR  WINAPI StrStrA(_In_ LPCSTR, _In_ LPCSTR);
+LPWSTR WINAPI StrStrW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrStr WINELIB_NAME_AW(StrStr)
 
-LPSTR  WINAPI StrStrIA(LPCSTR,LPCSTR);
-LPWSTR WINAPI StrStrIW(LPCWSTR,LPCWSTR);
+LPSTR  WINAPI StrStrIA(_In_ LPCSTR, _In_ LPCSTR);
+LPWSTR WINAPI StrStrIW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define StrStrI WINELIB_NAME_AW(StrStrI)
 
-int WINAPI StrToIntA(LPCSTR);
-int WINAPI StrToIntW(LPCWSTR);
+LPWSTR WINAPI StrStrNW(_In_ LPCWSTR, _In_ LPCWSTR, UINT);
+LPWSTR WINAPI StrStrNIW(_In_ LPCWSTR, _In_ LPCWSTR, UINT);
+
+int WINAPI StrToIntA(_In_ LPCSTR);
+int WINAPI StrToIntW(_In_ LPCWSTR);
 #define StrToInt WINELIB_NAME_AW(StrToInt)
 #define StrToLong WINELIB_NAME_AW(StrToInt)
 
-BOOL WINAPI StrToIntExA(LPCSTR,DWORD,int*);
-BOOL WINAPI StrToIntExW(LPCWSTR,DWORD,int*);
+BOOL WINAPI StrToIntExA(_In_ LPCSTR, DWORD, _Out_ int*);
+BOOL WINAPI StrToIntExW(_In_ LPCWSTR, DWORD, _Out_ int*);
 #define StrToIntEx WINELIB_NAME_AW(StrToIntEx)
 
-BOOL WINAPI StrToInt64ExA(LPCSTR,DWORD,LONGLONG*);
-BOOL WINAPI StrToInt64ExW(LPCWSTR,DWORD,LONGLONG*);
+BOOL WINAPI StrToInt64ExA(_In_ LPCSTR, DWORD, _Out_ LONGLONG*);
+BOOL WINAPI StrToInt64ExW(_In_ LPCWSTR, DWORD, _Out_ LONGLONG*);
 #define StrToIntEx64 WINELIB_NAME_AW(StrToIntEx64)
 
-BOOL WINAPI StrTrimA(LPSTR,LPCSTR);
-BOOL WINAPI StrTrimW(LPWSTR,LPCWSTR);
+BOOL WINAPI StrTrimA(_Inout_ LPSTR, _In_ LPCSTR);
+BOOL WINAPI StrTrimW(_Inout_ LPWSTR, _In_ LPCWSTR);
 #define StrTrim WINELIB_NAME_AW(StrTrim)
 
-INT WINAPI wvnsprintfA(LPSTR,INT,LPCSTR,__ms_va_list);
-INT WINAPI wvnsprintfW(LPWSTR,INT,LPCWSTR,__ms_va_list);
+INT
+WINAPI
+wvnsprintfA(
+  _Out_writes_(cchDest) LPSTR,
+  _In_ INT cchDest,
+  _In_ _Printf_format_string_ LPCSTR,
+  _In_ __ms_va_list);
+
+INT
+WINAPI
+wvnsprintfW(
+  _Out_writes_(cchDest) LPWSTR,
+  _In_ INT cchDest,
+  _In_ _Printf_format_string_ LPCWSTR,
+  _In_ __ms_va_list);
+
 #define wvnsprintf WINELIB_NAME_AW(wvnsprintf)
 
-INT WINAPIV wnsprintfA(LPSTR,INT,LPCSTR, ...);
-INT WINAPIV wnsprintfW(LPWSTR,INT,LPCWSTR, ...);
+INT
+WINAPIV
+wnsprintfA(
+  _Out_writes_(cchDest) LPSTR,
+  _In_ INT cchDest,
+  _In_ _Printf_format_string_ LPCSTR,
+  ...);
+
+INT
+WINAPIV
+wnsprintfW(
+  _Out_writes_(cchDest) LPWSTR,
+  _In_ INT cchDest,
+  _In_ _Printf_format_string_ LPCWSTR,
+  ...);
+
 #define wnsprintf WINELIB_NAME_AW(wnsprintf)
 
-HRESULT WINAPI SHLoadIndirectString(LPCWSTR,LPWSTR,UINT,PVOID*);
+HRESULT
+WINAPI
+SHLoadIndirectString(
+  _In_ LPCWSTR,
+  _Out_writes_(cchOutBuf) LPWSTR,
+  _In_ UINT cchOutBuf,
+  _Reserved_ PVOID*);
 
-BOOL WINAPI IntlStrEqWorkerA(BOOL,LPCSTR,LPCSTR,int);
-BOOL WINAPI IntlStrEqWorkerW(BOOL,LPCWSTR,LPCWSTR,int);
+BOOL
+WINAPI
+IntlStrEqWorkerA(
+  BOOL,
+  _In_reads_(nChar) LPCSTR,
+  _In_reads_(nChar) LPCSTR,
+  int nChar);
+
+BOOL
+WINAPI
+IntlStrEqWorkerW(
+  BOOL,
+  _In_reads_(nChar) LPCWSTR,
+  _In_reads_(nChar) LPCWSTR,
+  int nChar);
+
 #define IntlStrEqWorker WINELIB_NAME_AW(IntlStrEqWorker)
 
 #define IntlStrEqNA(s1,s2,n) IntlStrEqWorkerA(TRUE,s1,s2,n)
@@ -916,15 +1730,50 @@ BOOL WINAPI IntlStrEqWorkerW(BOOL,LPCWSTR,LPCWSTR,int);
 #define IntlStrEqNIW(s1,s2,n) IntlStrEqWorkerW(FALSE,s1,s2,n)
 #define IntlStrEqNI WINELIB_NAME_AW(IntlStrEqNI)
 
-HRESULT WINAPI StrRetToStrA(STRRET*,LPCITEMIDLIST,LPSTR*);
-HRESULT WINAPI StrRetToStrW(STRRET*,LPCITEMIDLIST,LPWSTR*);
+HRESULT
+WINAPI
+StrRetToStrA(
+  _Inout_ STRRET*,
+  _In_opt_ LPCITEMIDLIST,
+  _Outptr_ LPSTR*);
+
+HRESULT
+WINAPI
+StrRetToStrW(
+  _Inout_ STRRET*,
+  _In_opt_ LPCITEMIDLIST,
+  _Outptr_ LPWSTR*);
+
 #define StrRetToStr WINELIB_NAME_AW(StrRetToStr)
 
-HRESULT WINAPI StrRetToBufA(STRRET*,LPCITEMIDLIST,LPSTR,UINT);
-HRESULT WINAPI StrRetToBufW(STRRET*,LPCITEMIDLIST,LPWSTR,UINT);
+HRESULT
+WINAPI
+StrRetToBufA(
+  _Inout_ STRRET*,
+  _In_opt_ LPCITEMIDLIST,
+  _Out_writes_(cchBuf) LPSTR,
+  UINT cchBuf);
+
+HRESULT
+WINAPI
+StrRetToBufW(
+  _Inout_ STRRET*,
+  _In_opt_ LPCITEMIDLIST,
+  _Out_writes_(cchBuf) LPWSTR,
+  UINT cchBuf);
+
 #define StrRetToBuf WINELIB_NAME_AW(StrRetToBuf)
 
-HRESULT WINAPI StrRetToBSTR(STRRET*,LPCITEMIDLIST,BSTR*);
+HRESULT
+WINAPI
+StrRetToBSTR(
+  _Inout_ STRRET*,
+  _In_opt_ LPCITEMIDLIST,
+  _Outptr_ BSTR*);
+
+BOOL WINAPI IsCharSpaceA(CHAR);
+BOOL WINAPI IsCharSpaceW(WCHAR);
+#define IsCharSpace WINELIB_NAME_AW(IsCharSpace)
 
 #endif /* NO_SHLWAPI_STRFCNS */
 
@@ -932,37 +1781,121 @@ HRESULT WINAPI StrRetToBSTR(STRRET*,LPCITEMIDLIST,BSTR*);
 /* GDI functions */
 #ifndef NO_SHLWAPI_GDI
 
-HPALETTE WINAPI SHCreateShellPalette(HDC);
+HPALETTE WINAPI SHCreateShellPalette(_In_opt_ HDC);
 
 COLORREF WINAPI ColorHLSToRGB(WORD,WORD,WORD);
 
 COLORREF WINAPI ColorAdjustLuma(COLORREF,int,BOOL);
 
-VOID WINAPI ColorRGBToHLS(COLORREF,LPWORD,LPWORD,LPWORD);
+VOID WINAPI ColorRGBToHLS(COLORREF, _Out_ LPWORD, _Out_ LPWORD, _Out_ LPWORD);
 
 #endif /* NO_SHLWAPI_GDI */
 
+/* Security functions */
+BOOL WINAPI IsInternetESCEnabled(void);
 
 /* Stream functions */
 #ifndef NO_SHLWAPI_STREAM
 
-struct IStream * WINAPI SHOpenRegStreamA(HKEY,LPCSTR,LPCSTR,DWORD);
-struct IStream * WINAPI SHOpenRegStreamW(HKEY,LPCWSTR,LPCWSTR,DWORD);
+struct IStream *
+WINAPI
+SHOpenRegStreamA(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD);
+
+struct IStream *
+WINAPI
+SHOpenRegStreamW(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD);
+
 #define SHOpenRegStream WINELIB_NAME_AW(SHOpenRegStream2) /* Uses version 2 */
 
-struct IStream * WINAPI SHOpenRegStream2A(HKEY,LPCSTR,LPCSTR,DWORD);
-struct IStream * WINAPI SHOpenRegStream2W(HKEY,LPCWSTR,LPCWSTR,DWORD);
+struct IStream *
+WINAPI
+SHOpenRegStream2A(
+  _In_ HKEY,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD);
+
+struct IStream *
+WINAPI
+SHOpenRegStream2W(
+  _In_ HKEY,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD);
+
 #define SHOpenRegStream2 WINELIB_NAME_AW(SHOpenRegStream2)
 
-HRESULT WINAPI SHCreateStreamOnFileA(LPCSTR,DWORD,struct IStream**);
-HRESULT WINAPI SHCreateStreamOnFileW(LPCWSTR,DWORD,struct IStream**);
+HRESULT
+WINAPI
+SHCreateStreamOnFileA(
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _Outptr_ struct IStream**);
+
+HRESULT
+WINAPI
+SHCreateStreamOnFileW(
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _Outptr_ struct IStream**);
+
 #define SHCreateStreamOnFile WINELIB_NAME_AW(SHCreateStreamOnFile)
 
-HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR,DWORD,DWORD,BOOL,struct IStream*,struct IStream**);
+HRESULT
+WINAPI
+SHCreateStreamOnFileEx(
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_ BOOL,
+  _In_opt_ struct IStream*,
+  _Outptr_ struct IStream**);
 
 HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
 #endif /* NO_SHLWAPI_STREAM */
+
+#ifndef NO_SHLWAPI_SHARED
+
+// These functions are only included in this file starting with the Windows 7 platform SDK
+
+HANDLE
+WINAPI
+SHAllocShared(
+    _In_opt_  const void *pvData,
+    _In_      DWORD dwSize,
+    _In_      DWORD dwDestinationProcessId
+    );
+
+PVOID
+WINAPI
+SHLockShared(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId
+    );
+
+BOOL
+WINAPI
+SHUnlockShared(
+    _In_  void *pvData
+    );
+
+BOOL
+WINAPI
+SHFreeShared(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId
+    );
+
+#endif /* NO_SHLWAPI_SHARED */
 
 /* SHAutoComplete flags */
 #define SHACF_DEFAULT               0x00000000
@@ -978,11 +1911,12 @@ HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 #define SHACF_AUTOAPPEND_FORCE_ON   0x40000000
 #define SHACF_AUTOAPPEND_FORCE_OFF  0x80000000
 
-HRESULT WINAPI SHAutoComplete(HWND,DWORD);
+HRESULT WINAPI SHAutoComplete(_In_ HWND, DWORD);
 
 /* Threads */
-HRESULT WINAPI SHGetThreadRef(IUnknown**);
-HRESULT WINAPI SHSetThreadRef(IUnknown*);
+HRESULT WINAPI SHCreateThreadRef(_Inout_ LONG*, _Outptr_ IUnknown**);
+HRESULT WINAPI SHGetThreadRef(_Outptr_ IUnknown**);
+HRESULT WINAPI SHSetThreadRef(_In_opt_ IUnknown*);
 HRESULT WINAPI SHReleaseThreadRef(void);
 
 /* SHCreateThread flags */
@@ -994,9 +1928,15 @@ HRESULT WINAPI SHReleaseThreadRef(void);
 #define CTF_REF_COUNTED     0x20 /* Thread is ref counted */
 #define CTF_WAIT_ALLOWCOM   0x40 /* Allow marshalling */
 
-BOOL WINAPI SHCreateThread(LPTHREAD_START_ROUTINE,void*,DWORD,LPTHREAD_START_ROUTINE);
+BOOL
+WINAPI
+SHCreateThread(
+  _In_ LPTHREAD_START_ROUTINE,
+  _In_opt_ void*,
+  _In_ DWORD,
+  _In_opt_ LPTHREAD_START_ROUTINE);
 
-BOOL WINAPI SHSkipJunction(struct IBindCtx*,const CLSID*);
+BOOL WINAPI SHSkipJunction(_In_opt_ struct IBindCtx*, _In_ const CLSID*);
 
 /* Version Information */
 
@@ -1032,7 +1972,7 @@ typedef struct _DLLVERSIONINFO2 {
 #define MAKEDLLVERULL(mjr, mnr, bld, qfe) (((ULONGLONG)(mjr)<< 48)| \
   ((ULONGLONG)(mnr)<< 32) | ((ULONGLONG)(bld)<< 16) | (ULONGLONG)(qfe))
 
-HRESULT WINAPI DllInstall(BOOL,LPCWSTR) DECLSPEC_HIDDEN;
+HRESULT WINAPI DllInstall(BOOL, _In_opt_ LPCWSTR) DECLSPEC_HIDDEN;
 
 
 #if (_WIN32_IE >= 0x0600)
@@ -1049,7 +1989,15 @@ HRESULT WINAPI DllInstall(BOOL,LPCWSTR) DECLSPEC_HIDDEN;
 #define SHGVSPB_USERDEFAULTS     (SHGVSPB_PERUSER | SHGVSPB_ALLFOLDERS)
 #define SHGVSPB_GLOBALDEAFAULTS  (SHGVSPB_ALLUSERS | SHGVSPB_ALLFOLDERS)
 
-HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name, DWORD flags, REFIID riid, void **ppv);
+HRESULT
+WINAPI
+SHGetViewStatePropertyBag(
+  _In_opt_ LPCITEMIDLIST pidl,
+  _In_opt_ LPWSTR bag_name,
+  DWORD flags,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
+
 #endif  /* (_WIN32_IE >= 0x0600) */
 
 
@@ -1117,7 +2065,16 @@ typedef struct
     int        dwOffset;
 } QITAB, *LPQITAB;
 
-HRESULT WINAPI QISearch(void* base, const QITAB *pqit, REFIID riid, void **ppv);
+HRESULT
+WINAPI
+QISearch(
+  _Inout_ void* base,
+  _In_ const QITAB *pqit,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
+
+#define OFFSETOFCLASS(base, derived) \
+    ((DWORD)(DWORD_PTR)(static_cast<base*>((derived*)8))-8)
 
 #include <poppack.h> 
 

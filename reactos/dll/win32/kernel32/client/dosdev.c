@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/dosdev.c
+ * FILE:            dll/win32/kernel32/client/dosdev.c
  * PURPOSE:         Dos device functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+
 #define NDEBUG
 #include <debug.h>
 #include <dbt.h>
@@ -34,22 +35,18 @@ DefineDosDeviceA(
     BOOL Result;
 
     if (lpDeviceName &&
-        ! RtlCreateUnicodeStringFromAsciiz(&DeviceNameU,
-        (LPSTR)lpDeviceName))
+        !RtlCreateUnicodeStringFromAsciiz(&DeviceNameU, lpDeviceName))
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
     if (lpTargetPath &&
-        ! RtlCreateUnicodeStringFromAsciiz(&TargetPathU,
-        (LPSTR)lpTargetPath))
+        !RtlCreateUnicodeStringFromAsciiz(&TargetPathU, lpTargetPath))
     {
         if (DeviceNameU.Buffer)
         {
-            RtlFreeHeap(RtlGetProcessHeap (),
-                        0,
-                        DeviceNameU.Buffer);
+            RtlFreeUnicodeString(&DeviceNameU);
         }
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
@@ -61,16 +58,12 @@ DefineDosDeviceA(
 
     if (TargetPathU.Buffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap (),
-                    0,
-                    TargetPathU.Buffer);
+        RtlFreeUnicodeString(&TargetPathU);
     }
 
     if (DeviceNameU.Buffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap (),
-                    0,
-                    DeviceNameU.Buffer);
+        RtlFreeUnicodeString(&DeviceNameU);
     }
     return Result;
 }
@@ -92,7 +85,6 @@ DefineDosDeviceW(
     BASE_API_MESSAGE ApiMessage;
     PBASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest = &ApiMessage.Data.DefineDosDeviceRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    NTSTATUS Status;
     UNICODE_STRING NtTargetPathU;
     UNICODE_STRING DeviceNameU;
     UNICODE_STRING DeviceUpcaseNameU;
@@ -113,7 +105,7 @@ DefineDosDeviceW(
 
     ArgumentCount = 1;
     BufferSize = 0;
-    if (! lpTargetPath)
+    if (!lpTargetPath)
     {
         RtlInitUnicodeString(&NtTargetPathU,
                              NULL);
@@ -127,10 +119,10 @@ DefineDosDeviceW(
         }
         else
         {
-            if (! RtlDosPathNameToNtPathName_U(lpTargetPath,
-                                               &NtTargetPathU,
-                                               0,
-                                               0))
+            if (!RtlDosPathNameToNtPathName_U(lpTargetPath,
+                                              &NtTargetPathU,
+                                              NULL,
+                                              NULL))
             {
                 WARN("RtlDosPathNameToNtPathName_U() failed\n");
                 BaseSetLastNTError(STATUS_OBJECT_NAME_INVALID);
@@ -150,17 +142,17 @@ DefineDosDeviceW(
 
     CaptureBuffer = CsrAllocateCaptureBuffer(ArgumentCount,
                                              BufferSize);
-    if (! CaptureBuffer)
+    if (!CaptureBuffer)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         Result = FALSE;
     }
     else
     {
-        DefineDosDeviceRequest->dwFlags = dwFlags;
+        DefineDosDeviceRequest->Flags = dwFlags;
 
         CsrCaptureMessageBuffer(CaptureBuffer,
-                                (PVOID)DeviceUpcaseNameU.Buffer,
+                                DeviceUpcaseNameU.Buffer,
                                 DeviceUpcaseNameU.Length,
                                 (PVOID*)&DefineDosDeviceRequest->DeviceName.Buffer);
 
@@ -172,25 +164,25 @@ DefineDosDeviceW(
         if (NtTargetPathU.Buffer)
         {
             CsrCaptureMessageBuffer(CaptureBuffer,
-                                    (PVOID)NtTargetPathU.Buffer,
+                                    NtTargetPathU.Buffer,
                                     NtTargetPathU.Length,
-                                    (PVOID*)&DefineDosDeviceRequest->TargetName.Buffer);
+                                    (PVOID*)&DefineDosDeviceRequest->TargetPath.Buffer);
         }
-        DefineDosDeviceRequest->TargetName.Length =
+        DefineDosDeviceRequest->TargetPath.Length =
             NtTargetPathU.Length;
-        DefineDosDeviceRequest->TargetName.MaximumLength =
+        DefineDosDeviceRequest->TargetPath.MaximumLength =
             NtTargetPathU.Length;
 
-        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepDefineDosDevice),
-                                     sizeof(BASE_DEFINE_DOS_DEVICE));
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                            CaptureBuffer,
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepDefineDosDevice),
+                            sizeof(*DefineDosDeviceRequest));
         CsrFreeCaptureBuffer(CaptureBuffer);
 
-        if (!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(ApiMessage.Status))
         {
-            WARN("CsrClientCallServer() failed (Status %lx)\n", Status);
-            BaseSetLastNTError(Status);
+            WARN("CsrClientCallServer() failed (Status %lx)\n", ApiMessage.Status);
+            BaseSetLastNTError(ApiMessage.Status);
             Result = FALSE;
         }
         else
@@ -211,7 +203,7 @@ DefineDosDeviceW(
                         dbcv.dbcv_size = sizeof(DEV_BROADCAST_VOLUME);
                         dbcv.dbcv_devicetype = DBT_DEVTYP_VOLUME;
                         dbcv.dbcv_reserved = 0;
-                        dbcv.dbcv_unitmask |= 
+                        dbcv.dbcv_unitmask |=
                             (1 << (DeviceUpcaseNameU.Buffer[0] - L'A'));
                         dbcv.dbcv_flags = DBTF_NET;
                         (void) BSM_ptr(BSF_SENDNOTIFYMESSAGE | BSF_FLUSHDISK,
@@ -226,7 +218,8 @@ DefineDosDeviceW(
         }
     }
 
-    if (NtTargetPathU.Buffer)
+    if (NtTargetPathU.Buffer &&
+        NtTargetPathU.Buffer != lpTargetPath)
     {
         RtlFreeHeap(RtlGetProcessHeap(),
                     0,
@@ -292,7 +285,7 @@ QueryDosDeviceA(
     {
       CurrentLength = min (ucchMax, MAXUSHORT / 2);
       TargetPathU.MaximumLength = TargetPathU.Length = (USHORT)CurrentLength * sizeof(WCHAR);
-     
+
       TargetPathA.Length = 0;
       TargetPathA.MaximumLength = (USHORT)CurrentLength;
 

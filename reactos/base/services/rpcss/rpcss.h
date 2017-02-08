@@ -22,9 +22,20 @@
 #define __WINE_RPCSS_H
 
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
 #include <windef.h>
 #include <winbase.h>
-#include <winsvc.h>
 
+#include <irot_s.h>
+#include <epm_s.h>
+
+#include <wine/list.h>
 
 #endif /* __WINE_RPCSS_H */

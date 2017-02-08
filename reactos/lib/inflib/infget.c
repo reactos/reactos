@@ -19,6 +19,18 @@ InfpSubstituteString(PINFCACHE Inf,
                      WCHAR *buffer,
                      unsigned int size);
 
+static void
+ShortToHex(PWCHAR Buffer,
+           USHORT Value)
+{
+    WCHAR HexDigits[] = L"0123456789abcdef";
+
+    Buffer[0] = HexDigits[Value >> 12 & 0xf];
+    Buffer[1] = HexDigits[Value >>  8 & 0xf];
+    Buffer[2] = HexDigits[Value >>  4 & 0xf];
+    Buffer[3] = HexDigits[Value >>  0 & 0xf];
+}
+
 /* retrieve the string substitution for a given string, or NULL if not found */
 /* if found, len is set to the substitution length */
 static PCWSTR
@@ -33,7 +45,7 @@ InfpGetSubstitutionString(PINFCACHE Inf,
     PINFCONTEXT Context = NULL;
     PWCHAR Data = NULL;
     WCHAR ValueName[MAX_INF_STRING_LENGTH +1];
-    WCHAR StringLangId[13];
+    WCHAR StringLangId[] = L"Strings.XXXX";
 
     if (!*len)  /* empty string (%%) is replaced by single percent */
     {
@@ -48,9 +60,8 @@ InfpGetSubstitutionString(PINFCACHE Inf,
 
     if (Inf->LanguageId != 0)
     {
-        swprintf(StringLangId,
-                 L"Strings.%04hx",
-                 Inf->LanguageId);
+        ShortToHex(&StringLangId[sizeof("Strings.") - 1],
+                   Inf->LanguageId);
 
         Status = InfpFindFirstLine(Inf,
                                    StringLangId,
@@ -58,9 +69,8 @@ InfpGetSubstitutionString(PINFCACHE Inf,
                                    &Context);
         if (Status != INF_STATUS_SUCCESS)
         {
-            swprintf(StringLangId,
-                     L"Strings.%04hx",
-                     MAKELANGID(PRIMARYLANGID(Inf->LanguageId), SUBLANG_NEUTRAL));
+            ShortToHex(&StringLangId[sizeof("Strings.") - 1],
+                       MAKELANGID(PRIMARYLANGID(Inf->LanguageId), SUBLANG_NEUTRAL));
 
             Status = InfpFindFirstLine(Inf,
                                        StringLangId,

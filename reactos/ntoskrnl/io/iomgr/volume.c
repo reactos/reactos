@@ -277,8 +277,8 @@ IopMountInitializeVpb(IN PDEVICE_OBJECT DeviceObject,
 /*
  * @implemented
  */
-VOID
 FORCEINLINE
+VOID
 IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
                           IN BOOLEAN DriverActive)
 {
@@ -1365,7 +1365,7 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
      * name lengths than MAXUSHORT, we can't use
      * them, because we have to return this in an UNICODE_STRING
      * that stores length on USHORT.
-     */ 
+     */
     Length = VolumePath.MultiSzLength + sizeof(VolumePath);
     if (Length > MAXUSHORT)
     {

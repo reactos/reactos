@@ -378,7 +378,7 @@ int main(int argc, char **argv)
    {
       /* Update section flags */
       for (i = 0, section_header = IMAGE_FIRST_SECTION(nt_header);
-           i < dtohl(nt_header->OptionalHeader.NumberOfRvaAndSizes);
+           i < dtohl(nt_header->FileHeader.NumberOfSections);
            i++, section_header++)
       {
          if (!strcmp((char*)section_header->Name, ".text") ||

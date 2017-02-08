@@ -18,23 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <winnls.h>
-#include <objbase.h>
-//#include "ole2.h"
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -162,4 +146,22 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 	TRACE("returning %p\n",hmem);
 
 	return hmem;
+}
+
+/***********************************************************************
+ *      CoGetActivationState (ole32.@)
+ */
+HRESULT WINAPI CoGetActivationState(GUID guid, DWORD unknown, DWORD *unknown2)
+{
+    FIXME("%s, %x, %p\n", debugstr_guid(&guid), unknown, unknown2);
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      CoGetCallState (ole32.@)
+ */
+HRESULT WINAPI CoGetCallState(int unknown, PULONG unknown2)
+{
+    FIXME("%d, %p\n", unknown, unknown2);
+    return E_NOTIMPL;
 }

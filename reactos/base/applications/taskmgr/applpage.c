@@ -41,6 +41,8 @@ static int      nApplicationPageHeight;
 static BOOL     bSortAscending = TRUE;
 DWORD WINAPI    ApplicationPageRefreshThread(void *lpParameter);
 BOOL            noApps;
+BOOL            bApplicationPageSelectionMade = FALSE;
+
 BOOL CALLBACK   EnumWindowsProc(HWND hWnd, LPARAM lParam);
 void            AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung);
 void            ApplicationPageUpdate(void);
@@ -86,6 +88,23 @@ GetSystemColorDepth(VOID)
 
     return ColorDepth;
 }
+
+void AppPageCleanup(void)
+{
+    int i;
+    LV_ITEM item;
+    LPAPPLICATION_PAGE_LIST_ITEM pData;
+    for (i = 0; i < ListView_GetItemCount(hApplicationPageListCtrl); i++)
+    {
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        (void)ListView_GetItem(hApplicationPageListCtrl, &item);
+        pData = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
+        HeapFree(GetProcessHeap(), 0, pData);
+    }
+}
+
 
 INT_PTR CALLBACK
 ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -138,6 +157,10 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef RUN_APPS_PAGE
         hApplicationThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, &dwApplicationThread);
 #endif
+
+        /* Refresh page */
+        ApplicationPageUpdate();
+
         return TRUE;
 
     case WM_DESTROY:
@@ -145,6 +168,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef RUN_APPS_PAGE
         EndLocalThread(&hApplicationThread, dwApplicationThread);
 #endif
+        AppPageCleanup();
         break;
 
     case WM_COMMAND:
@@ -184,21 +208,21 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRect(hApplicationPageListCtrl, NULL, TRUE);
 
         GetClientRect(hApplicationPageEndTaskButton, &rc);
-        MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageEndTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageEndTaskButton, NULL, TRUE);
 
         GetClientRect(hApplicationPageSwitchToButton, &rc);
-        MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageSwitchToButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageSwitchToButton, NULL, TRUE);
 
         GetClientRect(hApplicationPageNewTaskButton, &rc);
-        MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageNewTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
@@ -272,7 +296,10 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
             noApps = TRUE;
             EnumWindows(EnumWindowsProc, 0);
             if (noApps)
+            {
                 (void)ListView_DeleteAllItems(hApplicationPageListCtrl);
+                bApplicationPageSelectionMade = FALSE;
+            }
 
             /* Get the image lists */
             hImageListLarge = ListView_GetImageList(hApplicationPageListCtrl, LVSIL_NORMAL);
@@ -332,11 +359,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     WCHAR   szText[260];
     BOOL    bLargeIcon;
     BOOL    bHung = FALSE;
-    HICON*  xhIcon = (HICON*)&hIcon;
 
     typedef int (FAR __stdcall *IsHungAppWindowProc)(HWND);
     IsHungAppWindowProc IsHungAppWindow;
-
 
     /* Skip our window */
     if (hWnd == hMainWnd)
@@ -357,20 +382,21 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     }
 
     noApps = FALSE;
+
     /* Get the icon for this window */
     hIcon = NULL;
-    SendMessageTimeoutW(hWnd, WM_GETICON,bLargeIcon ? ICON_BIG /*1*/ : ICON_SMALL /*0*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
-
+    SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG : ICON_SMALL, 0, 0, 1000, (PDWORD_PTR)&hIcon);
     if (!hIcon)
     {
+        /* We failed, try to retrieve other icons... */
         hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
         if (!hIcon) hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)xhIcon);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL /*0*/ : ICON_BIG /*1*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
-    }
+        if (!hIcon) SendMessageTimeoutW(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)&hIcon);
+        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL : ICON_BIG, 0, 0, 1000, (PDWORD_PTR)&hIcon);
 
-    if (!hIcon)
-        hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
+        /* If we still do not have any icon, load the default one */
+        if (!hIcon) hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
+    }
 
     bHung = FALSE;
 
@@ -458,7 +484,20 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
         item.lParam = (LPARAM)pAPLI;
         (void)ListView_InsertItem(hApplicationPageListCtrl, &item);
     }
-    return;
+
+    /* Select first item if any */
+    if ((ListView_GetNextItem(hApplicationPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) && 
+        (ListView_GetItemCount(hApplicationPageListCtrl) > 0) && !bApplicationPageSelectionMade)
+    {
+        ListView_SetItemState(hApplicationPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+        bApplicationPageSelectionMade = TRUE;
+    }
+    /*
+    else
+    {
+        bApplicationPageSelectionMade = FALSE;
+    }
+    */
 }
 
 void ApplicationPageUpdate(void)
@@ -555,11 +594,11 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             {
                 if (pAPLI->bHung)
                 {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_Not_Responding , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    LoadStringW( GetModuleHandleW(NULL), IDS_NOT_RESPONDING , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                 }
                 else
                 {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_Running, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    LoadStringW( GetModuleHandleW(NULL), IDS_RUNNING, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                 }
                 wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
             }
@@ -869,6 +908,9 @@ void ApplicationPage_OnEndTask(void)
     LV_ITEM                       item;
     int                           i;
 
+    /* Trick: on Windows, pressing the CTRL key forces the task to be ended */
+    BOOL ForceEndTask = !!(GetKeyState(VK_CONTROL) & 0x8000);
+
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
         memset(&item, 0, sizeof(LV_ITEM));
         item.mask = LVIF_STATE|LVIF_PARAM;
@@ -878,7 +920,7 @@ void ApplicationPage_OnEndTask(void)
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
             if (pAPLI) {
-                PostMessageW(pAPLI->hWnd, WM_CLOSE, 0, 0);
+                EndTask(pAPLI->hWnd, 0, ForceEndTask);
             }
         }
     }

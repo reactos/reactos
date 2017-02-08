@@ -49,6 +49,16 @@ static void add_cmdline_defines(void)
     }
 }
 
+static void del_cmdline_defines(void)
+{
+    struct define *def;
+
+    for (def = cmdline_defines; def; def = def->next)
+    {
+        if (def->value) pp_del_define( def->name );
+    }
+}
+
 static void add_special_defines(void)
 {
     time_t now = time(NULL);
@@ -68,6 +78,14 @@ static void add_special_defines(void)
     ppp = pp_add_define( "__LINE__", "" );
     if(ppp)
         ppp->type = def_special;
+}
+
+static void del_special_defines(void)
+{
+    pp_del_define( "__DATE__" );
+    pp_del_define( "__TIME__" );
+    pp_del_define( "__FILE__" );
+    pp_del_define( "__LINE__" );
 }
 
 
@@ -182,11 +200,13 @@ int wpp_parse( const char *input, FILE *output )
     else if (!(pp_status.file = wpp_callbacks->open(input, 1)))
     {
         ppy_error("Could not open %s\n", input);
+        del_special_defines();
+        del_cmdline_defines();
         pp_pop_define_state();
         return 2;
     }
 
-    pp_status.input = input;
+    pp_status.input = input ? pp_xstrdup(input) : NULL;
 
     ppy_out = output;
     pp_writestring("# 1 \"%s\" 1\n", input ? input : "");
@@ -195,9 +215,15 @@ int wpp_parse( const char *input, FILE *output )
     /* If there were errors during processing, return an error code */
     if (!ret && pp_status.state) ret = pp_status.state;
 
-    if (input) wpp_callbacks->close(pp_status.file);
+    if (input)
+    {
+	wpp_callbacks->close(pp_status.file);
+	free(pp_status.input);
+    }
     /* Clean if_stack, it could remain dirty on errors */
     while (pp_get_if_depth()) pp_pop_if();
+    del_special_defines();
+    del_cmdline_defines();
     pp_pop_define_state();
     return ret;
 }

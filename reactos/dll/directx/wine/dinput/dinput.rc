@@ -1,0 +1,60 @@
+/*
+ * Copyright 2001 Ove Kaaven
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+1 WINE_REGISTRY dinput_classes.rgs
+
+#define WINE_FILEDESCRIPTION_STR "Wine DirectInput"
+#define WINE_FILENAME_STR "dinput.dll"
+#define WINE_FILEVERSION 5,1,2600,881
+#define WINE_FILEVERSION_STR "5.1.2600.881"
+#define WINE_PRODUCTVERSION 5,1,2600,881
+#define WINE_PRODUCTVERSION_STR "5.1"
+
+#include <wine/wine_common_ver.rc>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_ACTIONCOLUMN       "Action"
+    IDS_OBJECTCOLUMN       "Object"
+END
+
+IDD_CONFIGUREDEVICES DIALOG 0, 0, 270, 260
+STYLE DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE
+CAPTION "Configure Devices"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "OK", IDOK, 10, 236, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 65, 236, 50, 14
+    PUSHBUTTON      "Reset", IDC_RESET, 210, 236, 50, 14
+    COMBOBOX        IDC_PLAYERCOMBO, 10, 50, 90, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS
+    COMBOBOX        IDC_CONTROLLERCOMBO, 10, 20, 90, 30, CBS_DROPDOWNLIST | CBS_HASSTRINGS
+    LTEXT           "Player", IDC_PLAYERTEXT, 10, 40, 90, 8, SS_LEFT
+    LTEXT           "Device", IDC_DEVICETEXT, 10, 10, 90, 8, SS_LEFT
+    LTEXT           "Actions", IDC_ACTIONTEXT, 10, 70, 90, 8, SS_LEFT
+    LTEXT           "Mapping", IDC_MAPPINGTEXT, 120, 8, 90, 8, SS_LEFT
+    LISTBOX         IDC_ACTIONLIST, 10, 80, 90, 130, WS_TABSTOP | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    AUTOCHECKBOX    "Show Assigned First", IDC_CHECKBOXSORT, 120, 215, 90, 8
+    CONTROL         "", IDC_DEVICEOBJECTSLIST,  "SysListView32", LVS_REPORT | LVS_AUTOARRANGE | LVS_ALIGNLEFT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP, 120, 20, 140, 190
+}

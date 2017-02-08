@@ -1,7 +1,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Заставка ""Вход в систему"""
-    IDS_TEXT        "Эта заставка не имеет настраиваемых параметров."
+    IDS_TEXT "Эта заставка не имеет настраиваемых параметров."
 END

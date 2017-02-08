@@ -1,14 +1,11 @@
-/*
- * Simplified Chinese Resource for Intl (dll/cpl/intl/lang/zh-CN.rc)
- * CREATED: Jingjing Fu (jingjingf AT 188.com) 2009-05-02
- */
+/* Simplified Chinese translation by Jingjing Fu (jingjingf AT 188.com) 2009-05-02 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "区域选项"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "标准和格式", -1, 5, 5, 234, 162
     LTEXT "这个选项影响到某些程序如何格式化数字、货币、时间和日期。", -1, 14, 17, 220, 25
@@ -34,21 +31,21 @@ END
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "语言"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "文字服务和输入语言", -1, 5, 5, 234, 52
     LTEXT "要查看用来输入文字的语言和方法，请单击“详细信息”。", -1, 12, 15, 220, 18
     PUSHBUTTON "详细信息(&T)...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "附加的语言支持", -1, 5, 62, 234, 82
     LTEXT "大多数语言都会在默认情况下得到安装。要安装其他语言，选择下面相应的复选框。", -1, 12, 72, 220, 18
-    CHECKBOX "为复杂文字和从右到左的语言安装文件(包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "为东亚语言安装文件(&S)", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    CHECKBOX "为复杂文字和从右到左的语言安装文件(包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "为东亚语言安装文件(&S)", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "高级"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "非 Unicode 程序的语言", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
@@ -56,14 +53,14 @@ BEGIN
     LTEXT "选择一种语言，使之与您想使用的非 Unicode 程序的语言版本相匹配(&S):", -1, 14, 55, 223, 18
     GROUPBOX "代码页转换表(&C)", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "默认用户帐户设置", -1, 5, 193, 234, 30
-    CHECKBOX "将所有设置应用于当前用户帐户和默认用户配置文件(&D)", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "默认用户帐户设置", -1, 5, 193, 234, 32
+    CHECKBOX "将所有设置应用于当前用户帐户和默认用户配置文件(&D)", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "数字"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "示例", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
     LTEXT "正:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -90,11 +87,10 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "货币"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "示例", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "正:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -117,11 +113,10 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "时间"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "示例", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "时间示例:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -140,15 +135,13 @@ BEGIN
     h = 12 小时\
     H = 24 小时\n\
     hh, mm, ss = 零起始\
-    h, m, s = 非零起始",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+    h, m, s = 非零起始", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "日期"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "日历", -1, 7, 7, 230, 74
     LTEXT "当键入的年份是两位数字时，将其显示为在这些年之间(&Y):", -1, 13, 18, 215, 8
@@ -178,11 +171,10 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "排序"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "排序", -1, 7, 7, 230, 74
     LTEXT "排序方法改变程序排序字符、字词、文件和文件夹的方式。", -1, 14, 17, 220, 25
@@ -190,13 +182,12 @@ BEGIN
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "自定义区域选项"
     IDS_SPAIN "西班牙语 (西班牙)"
-    IDS_METRIC "Metric"
-    IDS_IMPERIAL "Imperial"
+    IDS_METRIC "公制"
+    IDS_IMPERIAL "帝国"
 END
 
 STRINGTABLE
@@ -204,3 +195,27 @@ BEGIN
     IDS_CPLNAME "区域选项"
     IDS_CPLDESCRIPTION "选择语言、数字、货币、时间和日期的显示设置。"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "更改默认设置"
+    IDS_APPLY_DEFAULT_TEXT "设置将应用于默认的用户帐户。\n\n\
+这些更改应用到登录屏幕和新用户帐户。\n\
+必须重新启动计算机，以便将更改应用于一些系统服务。"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "错误"
+    IDS_ERROR_SYMBOL_SEPARATE "短日期组件分隔符包含不正确的符号"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "短日期格式包含不正确的符号"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "长日期格式包含不正确的符号"
+    IDS_ERROR_OEM_CODE_PAGE "阅读 OEM 代码页时有个问题。"
+    IDS_ERROR_ANSI_CODE_PAGE "阅读 ANSI 代码页时有个问题。"
+    IDS_ERROR_INT_KEY_REG "问题打开项: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "问题打开项: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "问题打开项: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "问题打开项: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "无法启动 input.dll"
+END
+

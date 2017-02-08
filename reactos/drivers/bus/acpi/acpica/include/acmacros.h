@@ -4,114 +4,42 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef __ACMACROS_H__
 #define __ACMACROS_H__
@@ -122,28 +50,25 @@
  * get into potential aligment issues -- see the STORE macros below.
  * Use with care.
  */
-#define ACPI_GET8(ptr)                  *ACPI_CAST_PTR (UINT8, ptr)
-#define ACPI_GET16(ptr)                 *ACPI_CAST_PTR (UINT16, ptr)
-#define ACPI_GET32(ptr)                 *ACPI_CAST_PTR (UINT32, ptr)
-#define ACPI_GET64(ptr)                 *ACPI_CAST_PTR (UINT64, ptr)
-#define ACPI_SET8(ptr)                  *ACPI_CAST_PTR (UINT8, ptr)
-#define ACPI_SET16(ptr)                 *ACPI_CAST_PTR (UINT16, ptr)
-#define ACPI_SET32(ptr)                 *ACPI_CAST_PTR (UINT32, ptr)
-#define ACPI_SET64(ptr)                 *ACPI_CAST_PTR (UINT64, ptr)
+#define ACPI_CAST8(ptr)                 ACPI_CAST_PTR (UINT8, (ptr))
+#define ACPI_CAST16(ptr)                ACPI_CAST_PTR (UINT16, (ptr))
+#define ACPI_CAST32(ptr)                ACPI_CAST_PTR (UINT32, (ptr))
+#define ACPI_CAST64(ptr)                ACPI_CAST_PTR (UINT64, (ptr))
+#define ACPI_GET8(ptr)                  (*ACPI_CAST8 (ptr))
+#define ACPI_GET16(ptr)                 (*ACPI_CAST16 (ptr))
+#define ACPI_GET32(ptr)                 (*ACPI_CAST32 (ptr))
+#define ACPI_GET64(ptr)                 (*ACPI_CAST64 (ptr))
+#define ACPI_SET8(ptr, val)             (*ACPI_CAST8 (ptr) = (UINT8) (val))
+#define ACPI_SET16(ptr, val)            (*ACPI_CAST16 (ptr) = (UINT16) (val))
+#define ACPI_SET32(ptr, val)            (*ACPI_CAST32 (ptr) = (UINT32) (val))
+#define ACPI_SET64(ptr, val)            (*ACPI_CAST64 (ptr) = (UINT64) (val))
 
 /*
- * printf() format helpers
+ * printf() format helper. This macros is a workaround for the difficulties
+ * with emitting 64-bit integers and 64-bit pointers with the same code
+ * for both 32-bit and 64-bit hosts.
  */
-
-/* Split 64-bit integer into two 32-bit values. Use with %8.8X%8.8X */
-
 #define ACPI_FORMAT_UINT64(i)           ACPI_HIDWORD(i), ACPI_LODWORD(i)
-
-#if ACPI_MACHINE_WIDTH == 64
-#define ACPI_FORMAT_NATIVE_UINT(i)      ACPI_FORMAT_UINT64(i)
-#else
-#define ACPI_FORMAT_NATIVE_UINT(i)      0, (i)
-#endif
 
 
 /*
@@ -298,6 +223,16 @@
 #define ACPI_MUL_32(a)                  _ACPI_MUL(a, 5)
 #define ACPI_MOD_32(a)                  _ACPI_MOD(a, 32)
 
+/* Test for ASCII character */
+
+#define ACPI_IS_ASCII(c)                ((c) < 0x80)
+
+/* Signed integers */
+
+#define ACPI_SIGN_POSITIVE              0
+#define ACPI_SIGN_NEGATIVE              1
+
+
 /*
  * Rounding macros (Power of two boundaries only)
  */
@@ -329,6 +264,10 @@
 
 #define ACPI_IS_MISALIGNED(value)           (((ACPI_SIZE) value) & (sizeof(ACPI_SIZE)-1))
 
+/* Generic (power-of-two) rounding */
+
+#define ACPI_IS_POWER_OF_TWO(a)             (((a) & ((a) - 1)) == 0)
+
 /*
  * Bitmask creation
  * Bit positions start at zero.
@@ -340,20 +279,65 @@
 
 /* Bitfields within ACPI registers */
 
-#define ACPI_REGISTER_PREPARE_BITS(Val, Pos, Mask)      ((Val << Pos) & Mask)
-#define ACPI_REGISTER_INSERT_VALUE(Reg, Pos, Mask, Val)  Reg = (Reg & (~(Mask))) | ACPI_REGISTER_PREPARE_BITS(Val, Pos, Mask)
+#define ACPI_REGISTER_PREPARE_BITS(Val, Pos, Mask) \
+    ((Val << Pos) & Mask)
 
-#define ACPI_INSERT_BITS(Target, Mask, Source)          Target = ((Target & (~(Mask))) | (Source & Mask))
+#define ACPI_REGISTER_INSERT_VALUE(Reg, Pos, Mask, Val) \
+    Reg = (Reg & (~(Mask))) | ACPI_REGISTER_PREPARE_BITS(Val, Pos, Mask)
+
+#define ACPI_INSERT_BITS(Target, Mask, Source) \
+    Target = ((Target & (~(Mask))) | (Source & Mask))
+
+/* Generic bitfield macros and masks */
+
+#define ACPI_GET_BITS(SourcePtr, Position, Mask) \
+    ((*SourcePtr >> Position) & Mask)
+
+#define ACPI_SET_BITS(TargetPtr, Position, Mask, Value) \
+    (*TargetPtr |= ((Value & Mask) << Position))
+
+#define ACPI_1BIT_MASK      0x00000001
+#define ACPI_2BIT_MASK      0x00000003
+#define ACPI_3BIT_MASK      0x00000007
+#define ACPI_4BIT_MASK      0x0000000F
+#define ACPI_5BIT_MASK      0x0000001F
+#define ACPI_6BIT_MASK      0x0000003F
+#define ACPI_7BIT_MASK      0x0000007F
+#define ACPI_8BIT_MASK      0x000000FF
+#define ACPI_16BIT_MASK     0x0000FFFF
+#define ACPI_24BIT_MASK     0x00FFFFFF
+
+/* Macros to extract flag bits from position zero */
+
+#define ACPI_GET_1BIT_FLAG(Value)                   ((Value) & ACPI_1BIT_MASK)
+#define ACPI_GET_2BIT_FLAG(Value)                   ((Value) & ACPI_2BIT_MASK)
+#define ACPI_GET_3BIT_FLAG(Value)                   ((Value) & ACPI_3BIT_MASK)
+#define ACPI_GET_4BIT_FLAG(Value)                   ((Value) & ACPI_4BIT_MASK)
+
+/* Macros to extract flag bits from position one and above */
+
+#define ACPI_EXTRACT_1BIT_FLAG(Field, Position)     (ACPI_GET_1BIT_FLAG ((Field) >> Position))
+#define ACPI_EXTRACT_2BIT_FLAG(Field, Position)     (ACPI_GET_2BIT_FLAG ((Field) >> Position))
+#define ACPI_EXTRACT_3BIT_FLAG(Field, Position)     (ACPI_GET_3BIT_FLAG ((Field) >> Position))
+#define ACPI_EXTRACT_4BIT_FLAG(Field, Position)     (ACPI_GET_4BIT_FLAG ((Field) >> Position))
+
+/* ACPI Pathname helpers */
+
+#define ACPI_IS_ROOT_PREFIX(c)      ((c) == (UINT8) 0x5C) /* Backslash */
+#define ACPI_IS_PARENT_PREFIX(c)    ((c) == (UINT8) 0x5E) /* Carat */
+#define ACPI_IS_PATH_SEPARATOR(c)   ((c) == (UINT8) 0x2E) /* Period (dot) */
 
 /*
- * An ACPI_NAMESPACE_NODE can appear in some contexts
- * where a pointer to an ACPI_OPERAND_OBJECT can also
+ * An object of type ACPI_NAMESPACE_NODE can appear in some contexts
+ * where a pointer to an object of type ACPI_OPERAND_OBJECT can also
  * appear. This macro is used to distinguish them.
  *
- * The "Descriptor" field is the first field in both structures.
+ * The "DescriptorType" field is the second field in both structures.
  */
+#define ACPI_GET_DESCRIPTOR_PTR(d)      (((ACPI_DESCRIPTOR *)(void *)(d))->Common.CommonPointer)
+#define ACPI_SET_DESCRIPTOR_PTR(d, p)   (((ACPI_DESCRIPTOR *)(void *)(d))->Common.CommonPointer = (p))
 #define ACPI_GET_DESCRIPTOR_TYPE(d)     (((ACPI_DESCRIPTOR *)(void *)(d))->Common.DescriptorType)
-#define ACPI_SET_DESCRIPTOR_TYPE(d, t)  (((ACPI_DESCRIPTOR *)(void *)(d))->Common.DescriptorType = t)
+#define ACPI_SET_DESCRIPTOR_TYPE(d, t)  (((ACPI_DESCRIPTOR *)(void *)(d))->Common.DescriptorType = (t))
 
 /*
  * Macros for the master AML opcode table
@@ -400,10 +384,11 @@
  * the plist contains a set of parens to allow variable-length lists.
  * These macros are used for both the debug and non-debug versions of the code.
  */
-#define ACPI_ERROR_NAMESPACE(s, e)      AcpiUtNamespaceError (AE_INFO, s, e);
-#define ACPI_ERROR_METHOD(s, n, p, e)   AcpiUtMethodError (AE_INFO, s, n, p, e);
-#define ACPI_WARN_PREDEFINED(plist)     AcpiUtPredefinedWarning plist
-#define ACPI_INFO_PREDEFINED(plist)     AcpiUtPredefinedInfo plist
+#define ACPI_ERROR_NAMESPACE(s, e)          AcpiUtNamespaceError (AE_INFO, s, e);
+#define ACPI_ERROR_METHOD(s, n, p, e)       AcpiUtMethodError (AE_INFO, s, n, p, e);
+#define ACPI_WARN_PREDEFINED(plist)         AcpiUtPredefinedWarning plist
+#define ACPI_INFO_PREDEFINED(plist)         AcpiUtPredefinedInfo plist
+#define ACPI_BIOS_ERROR_PREDEFINED(plist)   AcpiUtPredefinedBiosError plist
 
 #else
 
@@ -413,178 +398,15 @@
 #define ACPI_ERROR_METHOD(s, n, p, e)
 #define ACPI_WARN_PREDEFINED(plist)
 #define ACPI_INFO_PREDEFINED(plist)
+#define ACPI_BIOS_ERROR_PREDEFINED(plist)
 
 #endif /* ACPI_NO_ERROR_MESSAGES */
 
-/*
- * Debug macros that are conditionally compiled
- */
-#ifdef ACPI_DEBUG_OUTPUT
-/*
- * Function entry tracing
- */
-#define ACPI_FUNCTION_TRACE(a)          ACPI_FUNCTION_NAME(a) \
-                                            AcpiUtTrace(ACPI_DEBUG_PARAMETERS)
-#define ACPI_FUNCTION_TRACE_PTR(a, b)   ACPI_FUNCTION_NAME(a) \
-                                            AcpiUtTracePtr(ACPI_DEBUG_PARAMETERS, (void *)b)
-#define ACPI_FUNCTION_TRACE_U32(a, b)   ACPI_FUNCTION_NAME(a) \
-                                            AcpiUtTraceU32(ACPI_DEBUG_PARAMETERS, (UINT32)b)
-#define ACPI_FUNCTION_TRACE_STR(a, b)   ACPI_FUNCTION_NAME(a) \
-                                            AcpiUtTraceStr(ACPI_DEBUG_PARAMETERS, (char *)b)
-
-#define ACPI_FUNCTION_ENTRY()           AcpiUtTrackStackPtr()
-
-/*
- * Function exit tracing.
- * WARNING: These macros include a return statement. This is usually considered
- * bad form, but having a separate exit macro is very ugly and difficult to maintain.
- * One of the FUNCTION_TRACE macros above must be used in conjunction with these macros
- * so that "_AcpiFunctionName" is defined.
- *
- * Note: the DO_WHILE0 macro is used to prevent some compilers from complaining
- * about these constructs.
- */
-#ifdef ACPI_USE_DO_WHILE_0
-#define ACPI_DO_WHILE0(a)               do a while(0)
+#if (!ACPI_REDUCED_HARDWARE)
+#define ACPI_HW_OPTIONAL_FUNCTION(addr)     addr
 #else
-#define ACPI_DO_WHILE0(a)               a
+#define ACPI_HW_OPTIONAL_FUNCTION(addr)     NULL
 #endif
-
-#define return_VOID                     ACPI_DO_WHILE0 ({ \
-                                            AcpiUtExit (ACPI_DEBUG_PARAMETERS); \
-                                            return;})
-/*
- * There are two versions of most of the return macros. The default version is
- * safer, since it avoids side-effects by guaranteeing that the argument will
- * not be evaluated twice.
- *
- * A less-safe version of the macros is provided for optional use if the
- * compiler uses excessive CPU stack (for example, this may happen in the
- * debug case if code optimzation is disabled.)
- */
-#ifndef ACPI_SIMPLE_RETURN_MACROS
-
-#define return_ACPI_STATUS(s)           ACPI_DO_WHILE0 ({ \
-                                            register ACPI_STATUS _s = (s); \
-                                            AcpiUtStatusExit (ACPI_DEBUG_PARAMETERS, _s); \
-                                            return (_s); })
-#define return_PTR(s)                   ACPI_DO_WHILE0 ({ \
-                                            register void *_s = (void *) (s); \
-                                            AcpiUtPtrExit (ACPI_DEBUG_PARAMETERS, (UINT8 *) _s); \
-                                            return (_s); })
-#define return_VALUE(s)                 ACPI_DO_WHILE0 ({ \
-                                            register UINT64 _s = (s); \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, _s); \
-                                            return (_s); })
-#define return_UINT8(s)                 ACPI_DO_WHILE0 ({ \
-                                            register UINT8 _s = (UINT8) (s); \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (UINT64) _s); \
-                                            return (_s); })
-#define return_UINT32(s)                ACPI_DO_WHILE0 ({ \
-                                            register UINT32 _s = (UINT32) (s); \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (UINT64) _s); \
-                                            return (_s); })
-#else /* Use original less-safe macros */
-
-#define return_ACPI_STATUS(s)           ACPI_DO_WHILE0 ({ \
-                                            AcpiUtStatusExit (ACPI_DEBUG_PARAMETERS, (s)); \
-                                            return((s)); })
-#define return_PTR(s)                   ACPI_DO_WHILE0 ({ \
-                                            AcpiUtPtrExit (ACPI_DEBUG_PARAMETERS, (UINT8 *) (s)); \
-                                            return((s)); })
-#define return_VALUE(s)                 ACPI_DO_WHILE0 ({ \
-                                            AcpiUtValueExit (ACPI_DEBUG_PARAMETERS, (UINT64) (s)); \
-                                            return((s)); })
-#define return_UINT8(s)                 return_VALUE(s)
-#define return_UINT32(s)                return_VALUE(s)
-
-#endif /* ACPI_SIMPLE_RETURN_MACROS */
-
-
-/* Conditional execution */
-
-#define ACPI_DEBUG_EXEC(a)              a
-#define ACPI_DEBUG_ONLY_MEMBERS(a)      a;
-#define _VERBOSE_STRUCTURES
-
-
-/* Various object display routines for debug */
-
-#define ACPI_DUMP_STACK_ENTRY(a)        AcpiExDumpOperand((a), 0)
-#define ACPI_DUMP_OPERANDS(a, b ,c)     AcpiExDumpOperands(a, b, c)
-#define ACPI_DUMP_ENTRY(a, b)           AcpiNsDumpEntry (a, b)
-#define ACPI_DUMP_PATHNAME(a, b, c, d)  AcpiNsDumpPathname(a, b, c, d)
-#define ACPI_DUMP_BUFFER(a, b)          AcpiUtDumpBuffer((UINT8 *) a, b, DB_BYTE_DISPLAY, _COMPONENT)
-
-#else
-/*
- * This is the non-debug case -- make everything go away,
- * leaving no executable debug code!
- */
-#define ACPI_DEBUG_EXEC(a)
-#define ACPI_DEBUG_ONLY_MEMBERS(a)
-#define ACPI_FUNCTION_TRACE(a)
-#define ACPI_FUNCTION_TRACE_PTR(a, b)
-#define ACPI_FUNCTION_TRACE_U32(a, b)
-#define ACPI_FUNCTION_TRACE_STR(a, b)
-#define ACPI_FUNCTION_EXIT
-#define ACPI_FUNCTION_STATUS_EXIT(s)
-#define ACPI_FUNCTION_VALUE_EXIT(s)
-#define ACPI_FUNCTION_ENTRY()
-#define ACPI_DUMP_STACK_ENTRY(a)
-#define ACPI_DUMP_OPERANDS(a, b, c)
-#define ACPI_DUMP_ENTRY(a, b)
-#define ACPI_DUMP_TABLES(a, b)
-#define ACPI_DUMP_PATHNAME(a, b, c, d)
-#define ACPI_DUMP_BUFFER(a, b)
-#define ACPI_DEBUG_PRINT(pl)
-#define ACPI_DEBUG_PRINT_RAW(pl)
-
-#define return_VOID                     return
-#define return_ACPI_STATUS(s)           return(s)
-#define return_VALUE(s)                 return(s)
-#define return_UINT8(s)                 return(s)
-#define return_UINT32(s)                return(s)
-#define return_PTR(s)                   return(s)
-
-#endif /* ACPI_DEBUG_OUTPUT */
-
-/*
- * Some code only gets executed when the debugger is built in.
- * Note that this is entirely independent of whether the
- * DEBUG_PRINT stuff (set by ACPI_DEBUG_OUTPUT) is on, or not.
- */
-#ifdef ACPI_DEBUGGER
-#define ACPI_DEBUGGER_EXEC(a)           a
-#else
-#define ACPI_DEBUGGER_EXEC(a)
-#endif
-
-
-/*
- * Memory allocation tracking (DEBUG ONLY)
- */
-#define ACPI_MEM_PARAMETERS         _COMPONENT, _AcpiModuleName, __LINE__
-
-#ifndef ACPI_DBG_TRACK_ALLOCATIONS
-
-/* Memory allocation */
-
-#define ACPI_ALLOCATE(a)            AcpiUtAllocate((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
-#define ACPI_ALLOCATE_ZEROED(a)     AcpiUtAllocateZeroed((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
-#define ACPI_FREE(a)                AcpiOsFree(a)
-#define ACPI_MEM_TRACKING(a)
-
-#else
-
-/* Memory allocation */
-
-#define ACPI_ALLOCATE(a)            AcpiUtAllocateAndTrack((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
-#define ACPI_ALLOCATE_ZEROED(a)     AcpiUtAllocateZeroedAndTrack((ACPI_SIZE) (a), ACPI_MEM_PARAMETERS)
-#define ACPI_FREE(a)                AcpiUtFreeAndTrack(a, ACPI_MEM_PARAMETERS)
-#define ACPI_MEM_TRACKING(a)        a
-
-#endif /* ACPI_DBG_TRACK_ALLOCATIONS */
 
 
 /*

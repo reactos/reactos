@@ -1,0 +1,15 @@
+/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FINDSTR: Cetakan garisan semua fail yang mengandungi sebuah rentetan.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""string"" [ file... ]\n\
+    /C  Mengira bilangan baris yang mengandungi rentetan\n\
+    /I  Mengabaikan kes\n\
+    /N  Nombor baris dipaparkan, bermula dari 1\n\
+    /V  Cetakan garisan yang tidak mengandungi rentetan"
+    IDS_NO_SUCH_FILE "FINDSTR: %s: Tiada fail tersebut\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: Tidak dapat membuka fail\n"
+END

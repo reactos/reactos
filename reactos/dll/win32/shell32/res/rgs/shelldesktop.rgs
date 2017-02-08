@@ -4,6 +4,7 @@ HKCR
 	{
 		ForceRemove {00021400-0000-0000-C000-000000000046} = s 'Desktop'
 		{
+			val 'LocalizedString' = e '@%%SystemRoot%%\system32\SHELL32.dll,-20'
 			InprocServer32 = s '%MODULE%'
 			{
 				val ThreadingModel = s 'Apartment'

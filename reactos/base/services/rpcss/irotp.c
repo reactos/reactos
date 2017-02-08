@@ -1,5 +1,5 @@
 /*
- *       Running Object Table
+ *	Running Object Table
  *
  *      Copyright 2007  Robert Shearman
  *
@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <irot_s.h>
-#include <wine/list.h>
+#include "rpcss.h"
+
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpcss);
@@ -60,7 +60,7 @@ static inline void rot_entry_release(struct rot_entry *rot_entry)
     }
 }
 
-HRESULT IrotRegister(
+HRESULT __cdecl IrotRegister(
     IrotHandle h,
     const MonikerComparisonData *data,
     const InterfaceData *obj,
@@ -140,7 +140,7 @@ HRESULT IrotRegister(
     return hr;
 }
 
-HRESULT IrotRevoke(
+HRESULT __cdecl IrotRevoke(
     IrotHandle h,
     IrotCookie cookie,
     IrotContextHandle *ctxt_handle,
@@ -187,7 +187,7 @@ HRESULT IrotRevoke(
     return E_INVALIDARG;
 }
 
-HRESULT IrotIsRunning(
+HRESULT __cdecl IrotIsRunning(
     IrotHandle h,
     const MonikerComparisonData *data)
 {
@@ -212,7 +212,7 @@ HRESULT IrotIsRunning(
     return hr;
 }
 
-HRESULT IrotGetObject(
+HRESULT __cdecl IrotGetObject(
     IrotHandle h,
     const MonikerComparisonData *moniker_data,
     PInterfaceData *obj,
@@ -254,7 +254,7 @@ HRESULT IrotGetObject(
     return MK_E_UNAVAILABLE;
 }
 
-HRESULT IrotNoteChangeTime(
+HRESULT __cdecl IrotNoteChangeTime(
     IrotHandle h,
     IrotCookie cookie,
     const FILETIME *last_modified_time)
@@ -278,7 +278,7 @@ HRESULT IrotNoteChangeTime(
     return E_INVALIDARG;
 }
 
-HRESULT IrotGetTimeOfLastChange(
+HRESULT __cdecl IrotGetTimeOfLastChange(
     IrotHandle h,
     const MonikerComparisonData *moniker_data,
     FILETIME *time)
@@ -306,7 +306,7 @@ HRESULT IrotGetTimeOfLastChange(
     return hr;
 }
 
-HRESULT IrotEnumRunning(
+HRESULT __cdecl IrotEnumRunning(
     IrotHandle h,
     PInterfaceList *list)
 {

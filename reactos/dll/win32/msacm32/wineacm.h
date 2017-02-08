@@ -20,8 +20,21 @@
 #ifndef __WINE_WINEACM_H
 #define __WINE_WINEACM_H
 
-//#include <windef.h>
-//#include <winuser.h>
+#include <wine/config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define NOBITMAP
+
+#include <windef.h>
+#include <winuser.h>
+
+#include <wine/debug.h>
+#include <wine/msacmdrv.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 /***********************************************************************
  * Wine specific - Win32
@@ -110,43 +123,43 @@ typedef struct _WINE_ACMNOTIFYWND
 } WINE_ACMNOTIFYWND;
 
 /* From internal.c */
-extern HANDLE MSACM_hHeap;
-extern PWINE_ACMDRIVERID MSACM_pFirstACMDriverID;
+extern HANDLE MSACM_hHeap DECLSPEC_HIDDEN;
+extern PWINE_ACMDRIVERID MSACM_pFirstACMDriverID DECLSPEC_HIDDEN;
 extern PWINE_ACMDRIVERID MSACM_RegisterDriver(LPCWSTR pszDriverAlias, LPCWSTR pszFileName,
-					      PWINE_ACMLOCALDRIVER pLocalDriver);
-extern void MSACM_RegisterAllDrivers(void);
-extern PWINE_ACMDRIVERID MSACM_UnregisterDriver(PWINE_ACMDRIVERID p);
-extern void MSACM_UnregisterAllDrivers(void);
-extern PWINE_ACMDRIVERID MSACM_GetDriverID(HACMDRIVERID hDriverID);
-extern PWINE_ACMDRIVER MSACM_GetDriver(HACMDRIVER hDriver);
-extern PWINE_ACMNOTIFYWND MSACM_GetNotifyWnd(HACMDRIVERID hDriver);
-extern PWINE_ACMOBJ MSACM_GetObj(HACMOBJ hObj, DWORD type);
+					      PWINE_ACMLOCALDRIVER pLocalDriver) DECLSPEC_HIDDEN;
+extern void MSACM_RegisterAllDrivers(void) DECLSPEC_HIDDEN;
+extern PWINE_ACMDRIVERID MSACM_UnregisterDriver(PWINE_ACMDRIVERID p) DECLSPEC_HIDDEN;
+extern void MSACM_UnregisterAllDrivers(void) DECLSPEC_HIDDEN;
+extern PWINE_ACMDRIVERID MSACM_GetDriverID(HACMDRIVERID hDriverID) DECLSPEC_HIDDEN;
+extern PWINE_ACMDRIVER MSACM_GetDriver(HACMDRIVER hDriver) DECLSPEC_HIDDEN;
+extern PWINE_ACMNOTIFYWND MSACM_GetNotifyWnd(HACMDRIVERID hDriver) DECLSPEC_HIDDEN;
+extern PWINE_ACMOBJ MSACM_GetObj(HACMOBJ hObj, DWORD type) DECLSPEC_HIDDEN;
 
-extern MMRESULT MSACM_Message(HACMDRIVER, UINT, LPARAM, LPARAM);
-extern BOOL MSACM_FindFormatTagInCache(const WINE_ACMDRIVERID*, DWORD, LPDWORD);
+extern MMRESULT MSACM_Message(HACMDRIVER, UINT, LPARAM, LPARAM) DECLSPEC_HIDDEN;
+extern BOOL MSACM_FindFormatTagInCache(const WINE_ACMDRIVERID*, DWORD, LPDWORD) DECLSPEC_HIDDEN;
 
-extern void MSACM_RePositionDriver(PWINE_ACMDRIVERID, DWORD);
-extern void MSACM_WriteCurrentPriorities(void);
-extern void MSACM_BroadcastNotification(void);
-extern void MSACM_DisableNotifications(void);
-extern void MSACM_EnableNotifications(void);
-extern PWINE_ACMNOTIFYWND MSACM_RegisterNotificationWindow(HWND hNotifyWnd, DWORD dwNotifyMsg);
-extern PWINE_ACMNOTIFYWND MSACM_UnRegisterNotificationWindow(const WINE_ACMNOTIFYWND*);
+extern void MSACM_RePositionDriver(PWINE_ACMDRIVERID, DWORD) DECLSPEC_HIDDEN;
+extern void MSACM_WriteCurrentPriorities(void) DECLSPEC_HIDDEN;
+extern void MSACM_BroadcastNotification(void) DECLSPEC_HIDDEN;
+extern void MSACM_DisableNotifications(void) DECLSPEC_HIDDEN;
+extern void MSACM_EnableNotifications(void) DECLSPEC_HIDDEN;
+extern PWINE_ACMNOTIFYWND MSACM_RegisterNotificationWindow(HWND hNotifyWnd, DWORD dwNotifyMsg) DECLSPEC_HIDDEN;
+extern PWINE_ACMNOTIFYWND MSACM_UnRegisterNotificationWindow(const WINE_ACMNOTIFYWND*) DECLSPEC_HIDDEN;
 
-extern PWINE_ACMDRIVERID MSACM_RegisterDriverFromRegistry(LPCWSTR pszRegEntry);
+extern PWINE_ACMDRIVERID MSACM_RegisterDriverFromRegistry(LPCWSTR pszRegEntry) DECLSPEC_HIDDEN;
 
-extern PWINE_ACMLOCALDRIVER MSACM_RegisterLocalDriver(HMODULE hModule, DRIVERPROC lpDriverProc);
-extern PWINE_ACMLOCALDRIVERINST MSACM_OpenLocalDriver(PWINE_ACMLOCALDRIVER, LPARAM);
-extern LRESULT MSACM_CloseLocalDriver(PWINE_ACMLOCALDRIVERINST);
+extern PWINE_ACMLOCALDRIVER MSACM_RegisterLocalDriver(HMODULE hModule, DRIVERPROC lpDriverProc) DECLSPEC_HIDDEN;
+extern PWINE_ACMLOCALDRIVERINST MSACM_OpenLocalDriver(PWINE_ACMLOCALDRIVER, LPARAM) DECLSPEC_HIDDEN;
+extern LRESULT MSACM_CloseLocalDriver(PWINE_ACMLOCALDRIVERINST) DECLSPEC_HIDDEN;
 /*
 extern PWINE_ACMLOCALDRIVER MSACM_GetLocalDriver(HACMDRIVER hDriver);
 */
 /* From msacm32.c */
-extern HINSTANCE MSACM_hInstance32;
+extern HINSTANCE MSACM_hInstance32 DECLSPEC_HIDDEN;
 
 /* From pcmcnvtr.c */
 LRESULT CALLBACK	PCM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
-				       LPARAM dwParam1, LPARAM dwParam2);
+				       LPARAM dwParam1, LPARAM dwParam2) DECLSPEC_HIDDEN;
 
 /* Dialog box templates */
 #include <msacmdlg.h>

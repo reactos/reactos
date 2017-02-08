@@ -1,12 +1,14 @@
-#define WIN32_NO_STATUS
+#ifndef _NSLOOKUP_H
+#define _NSLOOKUP_H
+
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
-#include <winbase.h>
 #define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <iphlpapi.h>
 
 #define TypeA       "A"
 #define TypeAAAA    "AAAA"
@@ -112,3 +114,5 @@ PCHAR   TypeIDtoTypeName( USHORT TypeID );
 USHORT  TypeNametoTypeID( PCHAR TypeName );
 PCHAR   ClassIDtoClassName( USHORT ClassID );
 USHORT  ClassNametoClassID( PCHAR ClassName );
+
+#endif /* _NSLOOKUP_H */

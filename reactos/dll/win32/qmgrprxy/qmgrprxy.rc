@@ -1,0 +1,7 @@
+#define WINE_OLESELFREGISTER
+#define WINE_FILENAME_STR "qmgrprxy.dll"
+
+#include <wine/wine_common_ver.rc>
+
+/* @makedep: qmgrprxy.rgs */
+1 WINE_REGISTRY qmgrprxy.rgs

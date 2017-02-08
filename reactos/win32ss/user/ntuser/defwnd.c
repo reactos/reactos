@@ -2,97 +2,32 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
- * FILE:             subsystems/win32/win32k/ntuser/defwnd.c
+ * FILE:             win32ss/user/ntuser/defwnd.c
  * PROGRAMER:
  */
 
 #include <win32k.h>
+#include <windowsx.h>
+
 DBG_DEFAULT_CHANNEL(UserDefwnd);
 
-// Client Shutdown messages
-#define MCS_SHUTDOWNTIMERS  1
-#define MCS_QUERYENDSESSION 2
-// Client Shutdown returns
-#define MCSR_GOODFORSHUTDOWN  1
-#define MCSR_SHUTDOWNFINISHED 2
-#define MCSR_DONOTSHUTDOWN    3
+INT WINAPI DrawTextExWorker( HDC hdc, LPWSTR str, INT i_count,
+                        LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp );
 
-/*
- * Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
- * Apparently CSRSS sends out messages to do this w/o going into win32k internals.
- */
-static
-LRESULT FASTCALL
-IntClientShutdown(
-   PWND pWindow,
-   WPARAM wParam,
-   LPARAM lParam
-)
+INT WINAPI DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
 {
-   LPARAM lParams;
-   BOOL KillTimers;
-   INT i;
-   LRESULT lResult = MCSR_GOODFORSHUTDOWN;
-   HWND *List;
+    DRAWTEXTPARAMS dtp;
 
-   lParams = wParam & (ENDSESSION_LOGOFF|ENDSESSION_CRITICAL|ENDSESSION_CLOSEAPP);
-   KillTimers = wParam & MCS_SHUTDOWNTIMERS ? TRUE : FALSE;
-/*
-   First, send end sessions to children.
- */
-   List = IntWinListChildren(pWindow);
-
-   if (List)
-   {
-      for (i = 0; List[i]; i++)
-      {
-          PWND WndChild;
-
-          if (!(WndChild = UserGetWindowObject(List[i])))
-             continue;
-
-          if (wParam & MCS_QUERYENDSESSION)
-          {
-             if (!co_IntSendMessage(WndChild->head.h, WM_QUERYENDSESSION, 0, lParams))
-             {
-                lResult = MCSR_DONOTSHUTDOWN;
-                break;
-             }
-          }
-          else
-          {
-             co_IntSendMessage(WndChild->head.h, WM_ENDSESSION, KillTimers, lParams);
-             if (KillTimers)
-             {
-                DestroyTimersForWindow(WndChild->head.pti, WndChild);
-             }
-             lResult = MCSR_SHUTDOWNFINISHED;
-          }
-      }
-      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
-   }
-   if (List && (lResult == MCSR_DONOTSHUTDOWN)) return lResult;
-/*
-   Send to the caller.
- */
-   if (wParam & MCS_QUERYENDSESSION)
-   {
-      if (!co_IntSendMessage(pWindow->head.h, WM_QUERYENDSESSION, 0, lParams))
-      {
-         lResult = MCSR_DONOTSHUTDOWN;
-      }
-   }
-   else
-   {
-      co_IntSendMessage(pWindow->head.h, WM_ENDSESSION, KillTimers, lParams);
-      if (KillTimers)
-      {
-         DestroyTimersForWindow(pWindow->head.pti, pWindow);
-      }
-      lResult = MCSR_SHUTDOWNFINISHED;
-   }
-   return lResult;
+    memset (&dtp, 0, sizeof(dtp));
+    dtp.cbSize = sizeof(dtp);
+    if (flags & DT_TABSTOP)
+    {
+        dtp.iTabLength = (flags >> 8) & 0xff;
+        flags &= 0xffff00ff;
+    }
+    return DrawTextExWorker(hdc, (LPWSTR)str, count, rect, flags, &dtp);
 }
+
 
 HBRUSH FASTCALL
 DefWndControlColor(HDC hDC, UINT ctlType)
@@ -130,7 +65,61 @@ DefWndControlColor(HDC hDC, UINT ctlType)
   return IntGetSysColorBrush(COLOR_WINDOW);
 }
 
+LRESULT FASTCALL
+DefWndHandleWindowPosChanging(PWND pWnd, WINDOWPOS* Pos)
+{
+    POINT maxTrack, minTrack;
+    LONG style = pWnd->style;
 
+    if (Pos->flags & SWP_NOSIZE) return 0;
+    if ((style & WS_THICKFRAME) || ((style & (WS_POPUP | WS_CHILD)) == 0))
+    {
+        co_WinPosGetMinMaxInfo(pWnd, NULL, NULL, &minTrack, &maxTrack);
+        Pos->cx = min(Pos->cx, maxTrack.x);
+        Pos->cy = min(Pos->cy, maxTrack.y);
+        if (!(style & WS_MINIMIZE))
+        {
+            if (Pos->cx < minTrack.x) Pos->cx = minTrack.x;
+            if (Pos->cy < minTrack.y) Pos->cy = minTrack.y;
+        }
+    }
+    else
+    {
+        Pos->cx = max(Pos->cx, 0);
+        Pos->cy = max(Pos->cy, 0);
+    }
+    return 0;
+}
+
+LRESULT FASTCALL
+DefWndHandleWindowPosChanged(PWND pWnd, WINDOWPOS* Pos)
+{
+   RECT Rect;
+   LONG style = pWnd->style;
+
+   IntGetClientRect(pWnd, &Rect);
+   IntMapWindowPoints(pWnd, (style & WS_CHILD ? IntGetParent(pWnd) : NULL), (LPPOINT) &Rect, 2);
+
+   if (!(Pos->flags & SWP_NOCLIENTMOVE))
+   {
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_MOVE, 0, MAKELONG(Rect.left, Rect.top));
+   }
+
+   if (!(Pos->flags & SWP_NOCLIENTSIZE) || (Pos->flags & SWP_STATECHANGED))
+   {
+      if (style & WS_MINIMIZE) co_IntSendMessage(UserHMGetHandle(pWnd), WM_SIZE, SIZE_MINIMIZED, 0 );
+      else
+      {
+         WPARAM wp = (style & WS_MAXIMIZE) ? SIZE_MAXIMIZED : SIZE_RESTORED;
+         co_IntSendMessage(UserHMGetHandle(pWnd), WM_SIZE, wp, MAKELONG(Rect.right - Rect.left, Rect.bottom - Rect.top));
+      }
+   }
+   return 0;
+}
+
+//
+// Handle a WM_SYSCOMMAND message. Called from DefWindowProc().
+//
 LRESULT FASTCALL
 DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -147,10 +136,72 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
 
    switch (wParam & 0xfff0)
    {
+      case SC_MOVE:
+      case SC_SIZE:
+        DefWndDoSizeMove(pWnd, wParam);
+        break;
+
+      case SC_MINIMIZE:
+        if (UserHMGetHandle(pWnd) == UserGetActiveWindow())
+            IntShowOwnedPopups(pWnd,FALSE); // This is done in ShowWindow! Need to retest!
+        co_WinPosShowWindow( pWnd, SW_MINIMIZE );
+        break;
+
+      case SC_MAXIMIZE:
+        if (((pWnd->style & WS_MINIMIZE) != 0) && UserHMGetHandle(pWnd) == UserGetActiveWindow())
+            IntShowOwnedPopups(pWnd,TRUE);
+        co_WinPosShowWindow( pWnd, SW_MAXIMIZE );
+        break;
+
+      case SC_RESTORE:
+        if (((pWnd->style & WS_MINIMIZE) != 0) && UserHMGetHandle(pWnd) == UserGetActiveWindow())
+            IntShowOwnedPopups(pWnd,TRUE);
+        co_WinPosShowWindow( pWnd, SW_RESTORE );
+        break;
+
+      case SC_CLOSE:
+        return co_IntSendMessage(UserHMGetHandle(pWnd), WM_CLOSE, 0, 0);
+
       case SC_SCREENSAVE:
         ERR("Screensaver Called!\n");
         UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
         break;
+
+      case SC_HOTKEY:
+        {
+           USER_REFERENCE_ENTRY Ref;
+
+           pWnd = ValidateHwndNoErr((HWND)lParam);
+           if (pWnd)
+           {
+              if (pWnd->spwndLastActive)
+              {
+                 pWnd = pWnd->spwndLastActive;
+              }
+              UserRefObjectCo(pWnd, &Ref);
+              co_IntSetForegroundWindow(pWnd);
+              UserDerefObjectCo(pWnd);
+              if (pWnd->style & WS_MINIMIZE)
+              {
+                 UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_RESTORE, 0);
+              }
+           }
+        }
+        break;
+//      case SC_DEFAULT:
+      case SC_MOUSEMENU:
+        {
+          POINT Pt;
+          Pt.x = (short)LOWORD(lParam);
+          Pt.y = (short)HIWORD(lParam);
+          MENU_TrackMouseMenuBar(pWnd, wParam & 0x000f, Pt);
+        }
+	break;
+
+      case SC_KEYMENU:
+        MENU_TrackKbdMenuBar(pWnd, wParam, (WCHAR)lParam);
+	break;
+
 
       default:
    // We do not support anything else here so we should return normal even when sending a hook.
@@ -158,6 +209,320 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    }
 
    return(Hook ? 1 : 0); // Don't call us again from user space.
+}
+
+PWND FASTCALL
+co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
+{
+   PWND Ret;
+   PWND Child, OwnerWnd;
+
+   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
+   {
+      OwnerWnd = Child->spwndOwner;
+      if(!OwnerWnd)
+         continue;
+
+      if (!(Child->style & WS_POPUP) ||
+          !(Child->style & WS_VISIBLE) ||
+          /* Fixes CMD pop up properties window from having foreground. */
+           Owner->head.pti->MessageQueue != Child->head.pti->MessageQueue)
+         continue;
+
+      if(OwnerWnd == Owner)
+      {
+         Ret = Child;
+         return Ret;
+      }
+   }
+   return NULL;
+}
+
+LRESULT
+DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+   PWND pwndPopUP = NULL;
+   WORD Msg = HIWORD(lParam);
+
+   /* Not for child windows. */
+   if (UserHMGetHandle(pWnd) != (HWND)wParam)
+   {
+      return FALSE;
+   }
+
+   switch((short)LOWORD(lParam))
+   {
+      case HTERROR:
+      {
+         //// This is the real fix for CORE-6129! This was a "Code hole".
+         USER_REFERENCE_ENTRY Ref;
+
+         if (Msg == WM_LBUTTONDOWN)
+         {
+            // Find a pop up window to bring active.
+            pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pWnd);
+            if (pwndPopUP)
+            {
+               // Not a child pop up from desktop.
+               if ( pwndPopUP != UserGetDesktopWindow()->spwndChild )
+               {
+                  // Get original active window.
+                  PWND pwndOrigActive = gpqForeground->spwndActive;
+
+                  co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+                  UserRefObjectCo(pwndPopUP, &Ref);
+                  //UserSetActiveWindow(pwndPopUP);
+                  co_IntSetForegroundWindow(pwndPopUP); // HACK
+                  UserDerefObjectCo(pwndPopUP);
+
+                  // If the change was made, break out.
+                  if (pwndOrigActive != gpqForeground->spwndActive)
+                     break;
+               }
+            }
+         }
+         ////
+	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+	 {
+             if (pwndPopUP)
+             {
+                 FLASHWINFO fwi =
+                    {sizeof(FLASHWINFO),
+                     UserHMGetHandle(pwndPopUP),
+                     FLASHW_ALL,
+                     gspv.dwForegroundFlashCount,
+                     (gpsi->dtCaretBlink >> 3)};
+
+                 // Now shake that window!
+                 IntFlashWindowEx(pwndPopUP, &fwi);
+             }
+	     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
+	 }
+	 break;
+      }
+
+      case HTCLIENT:
+      {
+         if (pWnd->pcls->spcur)
+         {
+            UserSetCursor(pWnd->pcls->spcur, FALSE);
+	 }
+	 return FALSE;
+      }
+
+      case HTLEFT:
+      case HTRIGHT:
+      {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZEWE), FALSE);
+         return TRUE;
+      }
+
+      case HTTOP:
+      case HTBOTTOM:
+      {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENS), FALSE);
+         return TRUE;
+       }
+
+       case HTTOPLEFT:
+       case HTBOTTOMRIGHT:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENWSE), FALSE);
+         return TRUE;
+       }
+
+       case HTBOTTOMLEFT:
+       case HTTOPRIGHT:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENESW), FALSE);
+         return TRUE;
+       }
+   }
+   UserSetCursor(SYSTEMCUR(ARROW), FALSE);
+   return FALSE;
+}
+
+VOID FASTCALL DefWndPrint( PWND pwnd, HDC hdc, ULONG uFlags)
+{
+  /*
+   * Visibility flag.
+   */
+  if ( (uFlags & PRF_CHECKVISIBLE) &&
+       !IntIsWindowVisible(pwnd) )
+      return;
+
+  /*
+   * Unimplemented flags.
+   */
+  if ( (uFlags & PRF_CHILDREN) ||
+       (uFlags & PRF_OWNED)    ||
+       (uFlags & PRF_NONCLIENT) )
+  {
+    FIXME("WM_PRINT message with unsupported flags\n");
+  }
+
+  /*
+   * Background
+   */
+  if ( uFlags & PRF_ERASEBKGND)
+    co_IntSendMessage(UserHMGetHandle(pwnd), WM_ERASEBKGND, (WPARAM)hdc, 0);
+
+  /*
+   * Client area
+   */
+  if ( uFlags & PRF_CLIENT)
+    co_IntSendMessage(UserHMGetHandle(pwnd), WM_PRINTCLIENT, (WPARAM)hdc, uFlags);
+}
+
+BOOL
+UserPaintCaption(PWND pWnd, INT Flags)
+{
+  BOOL Ret = FALSE;
+
+  if ( (pWnd->style & WS_VISIBLE) && ((pWnd->style & WS_CAPTION) == WS_CAPTION) )
+  {
+      if (pWnd->state & WNDS_HASCAPTION && pWnd->head.pti->MessageQueue == gpqForeground)
+         Flags |= DC_ACTIVE;
+    /* 
+     * When themes are not enabled we can go on and paint the non client area.
+     * However if we do that with themes enabled we will draw a classic frame.
+     * This is solved by sending a themes specific message to notify the themes
+     * engine that the caption needs to be redrawn 
+     */
+      if (gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+      {
+        /* 
+         * This will cause uxtheme to either paint the themed caption or call
+         * RealUserDrawCaption in order to draw the classic caption when themes
+         * are disabled but the themes service is enabled
+         */
+         TRACE("UDCB Flags %08x\n");
+         co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
+      }
+      else
+      {
+         HDC hDC = UserGetDCEx(pWnd, NULL, DCX_WINDOW|DCX_USESTYLE);
+         UserDrawCaptionBar(pWnd, hDC, Flags);
+         UserReleaseDC(pWnd, hDC, FALSE);
+      }
+      Ret = TRUE;
+   }
+   // Support window tray
+   return Ret;
+}
+
+// WM_SETICON
+LRESULT FASTCALL
+DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+    HICON hIcon, hIconSmall, hIconOld;
+
+    if ( wParam > ICON_SMALL2 )
+    {  
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    hIconSmall = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
+    hIcon      = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
+
+    hIconOld = wParam == ICON_BIG ? hIcon : hIconSmall;
+
+    switch(wParam)
+    {
+        case ICON_BIG:
+            hIcon = (HICON)lParam;
+            break;
+        case ICON_SMALL:
+            hIconSmall = (HICON)lParam;
+            break;
+        case ICON_SMALL2:
+            ERR("FIXME: Set ICON_SMALL2 support!\n");
+        default:
+            break;
+    }
+
+    UserSetProp(pWnd, gpsi->atomIconProp, hIcon, TRUE);
+    UserSetProp(pWnd, gpsi->atomIconSmProp, hIconSmall, TRUE);
+
+    if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
+       UserPaintCaption(pWnd, DC_ICON);
+
+    return (LRESULT)hIconOld;
+}
+
+LRESULT FASTCALL
+DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+    HICON hIconRet;
+    if ( wParam > ICON_SMALL2 )
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    switch(wParam)
+    {
+        case ICON_BIG:
+            hIconRet = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
+            break;
+        case ICON_SMALL:
+        case ICON_SMALL2:
+            hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
+            break;
+        default:
+            break;
+    }
+    return (LRESULT)hIconRet;
+}
+
+VOID FASTCALL
+DefWndScreenshot(PWND pWnd)
+{
+    RECT rect;
+    HDC hdc;
+    INT w;
+    INT h;
+    HBITMAP hbitmap;
+    HDC hdc2;
+    SETCLIPBDATA scd = {FALSE, FALSE};
+
+    UserOpenClipboard(UserHMGetHandle(pWnd));
+    UserEmptyClipboard();
+
+    hdc = UserGetWindowDC(pWnd);
+    IntGetWindowRect(pWnd, &rect);
+    w = rect.right - rect.left;
+    h = rect.bottom - rect.top;
+
+    hbitmap = NtGdiCreateCompatibleBitmap(hdc, w, h);
+    hdc2 = NtGdiCreateCompatibleDC(hdc);
+    NtGdiSelectBitmap(hdc2, hbitmap);
+
+    NtGdiBitBlt(hdc2, 0, 0, w, h, hdc, 0, 0, SRCCOPY, 0, 0);
+
+    UserSetClipboardData(CF_BITMAP, hbitmap, &scd);
+
+    UserReleaseDC(pWnd, hdc, FALSE);
+    UserReleaseDC(pWnd, hdc2, FALSE);
+
+    UserCloseClipboard();
 }
 
 /*
@@ -171,18 +536,82 @@ IntDefWindowProc(
    LPARAM lParam,
    BOOL Ansi)
 {
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
+   USER_REFERENCE_ENTRY Ref;
 
    if (Msg > WM_USER) return 0;
 
    switch (Msg)
    {
+      case WM_GETTEXTLENGTH:
+      {
+            PWSTR buf;
+            ULONG len;
+
+            if (Wnd != NULL && Wnd->strName.Length != 0)
+            {
+                buf = Wnd->strName.Buffer;
+                if (buf != NULL &&
+                    NT_SUCCESS(RtlUnicodeToMultiByteSize(&len,
+                                                         buf,
+                                                         Wnd->strName.Length)))
+                {
+                    lResult = (LRESULT) (Wnd->strName.Length / sizeof(WCHAR));
+                }
+            }
+            else lResult = 0L;
+
+            break;
+      }
+
+      case WM_GETTEXT: // FIXME: Handle Ansi
+      {
+            PWSTR buf = NULL;
+            PWSTR outbuf = (PWSTR)lParam;
+
+            if (Wnd != NULL && wParam != 0)
+            {
+                if (Wnd->strName.Buffer != NULL)
+                    buf = Wnd->strName.Buffer;
+                else
+                    outbuf[0] = L'\0';
+
+                if (buf != NULL)
+                {
+                    if (Wnd->strName.Length != 0)
+                    {
+                        lResult = min(Wnd->strName.Length / sizeof(WCHAR), wParam - 1);
+                        RtlCopyMemory(outbuf,
+                                      buf,
+                                      lResult * sizeof(WCHAR));
+                        outbuf[lResult] = L'\0';
+                    }
+                    else
+                        outbuf[0] = L'\0';
+                }
+            }
+            break;
+      }
+
+      case WM_SETTEXT: // FIXME: Handle Ansi
+      {
+            DefSetText(Wnd, (PCWSTR)lParam);
+
+            if ((Wnd->style & WS_CAPTION) == WS_CAPTION)
+                UserPaintCaption(Wnd, DC_TEXT);
+            IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, Wnd, OBJID_WINDOW, CHILDID_SELF, 0);
+            lResult = 1;
+            break;
+      }
+
       case WM_SYSCOMMAND:
       {
-         ERR("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
+         TRACE("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
          lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
+
       case WM_SHOWWINDOW:
       {
          if ((Wnd->style & WS_VISIBLE) && wParam) break;
@@ -200,10 +629,263 @@ IntDefWindowProc(
 
             co_WinPosShowWindow(Wnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
          }
+         break;
       }
-      break;
+
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
+
+      case WM_APPCOMMAND:
+         if ( (Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
+               Wnd != co_GetDesktopWindow(Wnd) )
+         {
+            if (!co_HOOK_CallHooks(WH_SHELL, HSHELL_APPCOMMAND, wParam, lParam))
+               co_IntShellHookNotify(HSHELL_APPCOMMAND, wParam, lParam);
+            break;
+         }
+         UserRefObjectCo(Wnd->spwndParent, &Ref);
+         lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
+         UserDerefObjectCo(Wnd->spwndParent);
+         break;
+
+      case WM_KEYF1:
+      {
+         HELPINFO hi;
+         HMENU hMenu = UlongToHandle(Wnd->IDMenu);
+         PWND pwndActive = MENU_IsMenuActive();
+         hi.cbSize = sizeof(HELPINFO);
+         hi.MousePos = gpsi->ptCursor;
+         hi.iContextType = HELPINFO_MENUITEM;
+         hi.hItemHandle = pwndActive ? UserHMGetHandle(pwndActive) : UserHMGetHandle(Wnd);
+         hi.iCtrlId = (Wnd->style & (WS_POPUP|WS_CHILD)) == WS_CHILD ? IntMenuItemFromPoint(Wnd, hMenu, hi.MousePos) : 0;
+         hi.dwContextId = IntGetWindowContextHelpId(Wnd);
+
+         co_IntSendMessage( UserHMGetHandle(Wnd), WM_HELP, 0, (LPARAM)&hi );
+         break;
+      }
+
+      case WM_SETICON:
+      {
+         return DefWndSetIcon(Wnd, wParam, lParam);
+      }
+
+      case WM_GETICON:
+      {
+         return DefWndGetIcon(Wnd, wParam, lParam);
+      }
+
+      case WM_HELP:
+      {
+         PWND Parent = IntGetParent(Wnd);
+         co_IntSendMessage(UserHMGetHandle(Parent), Msg, wParam, lParam);
+         break;
+      }
+
+      case WM_LBUTTONDOWN:
+      case WM_RBUTTONDOWN:
+      case WM_MBUTTONDOWN:
+          pti->MessageQueue->QF_flags &= ~(QF_FMENUSTATUS|QF_FMENUSTATUSBREAK);
+          break;
+
+      case WM_NCLBUTTONDOWN:
+          return NC_HandleNCLButtonDown(Wnd, wParam, lParam);
+
+      case WM_NCRBUTTONDOWN:
+          return NC_HandleNCRButtonDown(Wnd, wParam, lParam);
+
+      case WM_LBUTTONDBLCLK:
+          return NC_HandleNCLButtonDblClk(Wnd, HTCLIENT, lParam);
+
+      case WM_NCLBUTTONDBLCLK:
+          return NC_HandleNCLButtonDblClk(Wnd, wParam, lParam);
+
+      case WM_RBUTTONUP:
+      {
+            POINT Pt;
+
+            Pt.x = GET_X_LPARAM(lParam);
+            Pt.y = GET_Y_LPARAM(lParam);
+            IntClientToScreen(Wnd, &Pt);
+            lParam = MAKELPARAM(Pt.x, Pt.y);
+            co_IntSendMessage(UserHMGetHandle(Wnd), WM_CONTEXTMENU, (WPARAM)UserHMGetHandle(Wnd), lParam);
+            break;
+      }
+
+      case WM_NCRBUTTONUP:
+          /*
+           * FIXME : we must NOT send WM_CONTEXTMENU on a WM_NCRBUTTONUP (checked
+           * in Windows), but what _should_ we do? According to MSDN :
+           * "If it is appropriate to do so, the system sends the WM_SYSCOMMAND
+           * message to the window". When is it appropriate?
+           */
+           ERR("WM_NCRBUTTONUP\n");
+          break;
+
+      case WM_CONTEXTMENU:
+      {
+            if (Wnd->style & WS_CHILD)
+            {
+                co_IntSendMessage(UserHMGetHandle(IntGetParent(Wnd)), Msg, wParam, lParam);
+            }
+            else
+            {
+                POINT Pt;
+                LONG_PTR Style;
+                LONG HitCode;
+
+                Style = Wnd->style;
+
+                Pt.x = GET_X_LPARAM(lParam);
+                Pt.y = GET_Y_LPARAM(lParam);
+                if (Style & WS_CHILD)
+                {
+                    IntScreenToClient(IntGetParent(Wnd), &Pt);
+                }
+
+                HitCode = GetNCHitEx(Wnd, Pt);
+
+                if (HitCode == HTCAPTION || HitCode == HTSYSMENU)
+                {
+                    PMENU SystemMenu;
+                    UINT Flags;
+
+                    if((SystemMenu = IntGetSystemMenu(Wnd, FALSE)))
+                    {
+                      MENU_InitSysMenuPopup(SystemMenu, Wnd->style, Wnd->pcls->style, HitCode);
+
+                      if(HitCode == HTCAPTION)
+                        Flags = TPM_LEFTBUTTON | TPM_RIGHTBUTTON;
+                      else
+                        Flags = TPM_LEFTBUTTON;
+
+                      IntTrackPopupMenuEx(SystemMenu, Flags|TPM_SYSTEM_MENU, Pt.x, Pt.y, Wnd, NULL);
+                    }
+                }
+                if (HitCode == HTHSCROLL || HitCode == HTVSCROLL)
+                {
+                   WARN("Scroll Menu Not Supported\n");
+                }
+	    }
+            break;
+      }
+
+      case WM_KEYDOWN:
+         if (wParam == VK_F10)
+         {
+            pti->MessageQueue->QF_flags |= QF_FF10STATUS;
+
+            if (UserGetKeyState(VK_SHIFT) & 0x8000)
+            {
+               co_IntSendMessage(UserHMGetHandle(Wnd), WM_CONTEXTMENU, (WPARAM)UserHMGetHandle(Wnd), MAKELPARAM(-1, -1));
+            }
+         }
+         break;
+
+      case WM_SYSKEYDOWN:
+      {
+            if (HIWORD(lParam) & KF_ALTDOWN)
+            {   /* Previous state, if the key was down before this message,
+                   this is a cheap way to ignore autorepeat keys. */
+                if ( !(HIWORD(lParam) & KF_REPEAT) )
+                {
+                   if ( ( wParam == VK_MENU  ||
+                          wParam == VK_LMENU ||
+                          wParam == VK_RMENU ) && !(pti->MessageQueue->QF_flags & QF_FMENUSTATUS)) //iMenuSysKey )
+                       pti->MessageQueue->QF_flags |= QF_FMENUSTATUS; //iMenuSysKey = 1;
+                   else
+                       pti->MessageQueue->QF_flags &= ~QF_FMENUSTATUS; //iMenuSysKey = 0;
+                }
+
+                pti->MessageQueue->QF_flags &= ~QF_FF10STATUS; //iF10Key = 0;
+
+                if (wParam == VK_F4) /* Try to close the window */
+                {
+                   PWND top = UserGetAncestor(Wnd, GA_ROOT);
+                   if (!(top->style & CS_NOCLOSE))
+                      UserPostMessage(UserHMGetHandle(top), WM_SYSCOMMAND, SC_CLOSE, 0);
+                }
+                else if (wParam == VK_SNAPSHOT) // Alt-VK_SNAPSHOT?
+                {
+                   PWND pwnd = Wnd;
+                   while (IntGetParent(pwnd) != NULL)
+                   {
+                       pwnd = IntGetParent(pwnd);
+                   }
+                   ERR("DefWndScreenshot\n");
+                   DefWndScreenshot(pwnd);
+                }
+                else if ( wParam == VK_ESCAPE || wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+                {
+                   WPARAM wParamTmp;
+                   HWND Active = UserGetActiveWindow(); // Noticed MDI problem.
+                   if (!Active)
+                   {
+                      FIXME("WM_SYSKEYDOWN VK_ESCAPE no active\n");
+                      break;
+                   }
+                   wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                   co_IntSendMessage( Active, WM_SYSCOMMAND, wParamTmp, wParam );
+                }
+            }
+            else if( wParam == VK_F10 )
+            {
+                if (UserGetKeyState(VK_SHIFT) & 0x8000)
+                    co_IntSendMessage( UserHMGetHandle(Wnd), WM_CONTEXTMENU, (WPARAM)UserHMGetHandle(Wnd), MAKELPARAM(-1, -1) );
+                pti->MessageQueue->QF_flags |= QF_FF10STATUS; //iF10Key = 1;
+            }
+            else if( wParam == VK_ESCAPE && (UserGetKeyState(VK_SHIFT) & 0x8000))
+                  co_IntSendMessage( UserHMGetHandle(Wnd), WM_SYSCOMMAND, SC_KEYMENU, ' ' );
+            break;
+      }
+
+      case WM_KEYUP:
+      case WM_SYSKEYUP:
+      {
+           /* Press and release F10 or ALT */
+            if (((wParam == VK_MENU || wParam == VK_LMENU || wParam == VK_RMENU)
+                 && (pti->MessageQueue->QF_flags & (QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) == QF_FMENUSTATUS /*iMenuSysKey*/) ||
+                 ((wParam == VK_F10) && pti->MessageQueue->QF_flags & QF_FF10STATUS /*iF10Key*/))
+                co_IntSendMessage( UserHMGetHandle(UserGetAncestor( Wnd, GA_ROOT )), WM_SYSCOMMAND, SC_KEYMENU, 0L );
+            pti->MessageQueue->QF_flags &= ~(QF_FMENUSTATUS|QF_FMENUSTATUSBREAK|QF_FF10STATUS); //iMenuSysKey = iF10Key = 0;
+            break;
+      }
+
+      case WM_SYSCHAR:
+      {
+            pti->MessageQueue->QF_flags &= ~(QF_FMENUSTATUS|QF_FMENUSTATUSBREAK); //iMenuSysKey = 0;
+            if (wParam == VK_RETURN && (Wnd->style & WS_MINIMIZE) != 0)
+            {
+                UserPostMessage( UserHMGetHandle(Wnd), WM_SYSCOMMAND, SC_RESTORE, 0L );
+                break;
+            }
+            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam)
+            {
+                if (wParam == VK_TAB || wParam == VK_ESCAPE) break;
+                if (wParam == VK_SPACE && Wnd->style & WS_CHILD)
+                    co_IntSendMessage( UserHMGetHandle(IntGetParent(Wnd)), Msg, wParam, lParam );
+                else
+                    co_IntSendMessage( UserHMGetHandle(Wnd), WM_SYSCOMMAND, SC_KEYMENU, wParam );
+            }
+            else /* check for Ctrl-Esc */
+                if (wParam != VK_ESCAPE) UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0); //MessageBeep(0);
+            break;
+      }
+
+      case WM_CANCELMODE:
+      {
+         pti->MessageQueue->QF_flags &= ~(QF_FMENUSTATUS|QF_FMENUSTATUSBREAK);
+
+         MENU_EndMenu( Wnd );
+         if (IntGetCaptureWindow() == UserHMGetHandle(Wnd))
+         {
+            IntReleaseCapture();
+         }
+         break;
+      }
+
+      case WM_CLOSE:
+         co_UserDestroyWindow(Wnd);
+         break;
 
       case WM_CTLCOLORMSGBOX:
       case WM_CTLCOLOREDIT:
@@ -217,9 +899,85 @@ IntDefWindowProc(
       case WM_CTLCOLOR:
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
+      case WM_SETCURSOR:
+      {
+         if (Wnd->style & WS_CHILD)
+         {
+             /* with the exception of the border around a resizable wnd,
+              * give the parent first chance to set the cursor */
+             if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
+             {
+                 PWND parent = Wnd->spwndParent;//IntGetParent( Wnd );
+                 if (parent != UserGetDesktopWindow() &&
+                     co_IntSendMessage( UserHMGetHandle(parent), WM_SETCURSOR, wParam, lParam))
+                    return TRUE;
+             }
+         }
+         return DefWndHandleSetCursor(Wnd, wParam, lParam);
+      }
+
+      case WM_MOUSEACTIVATE:
+         if (Wnd->style & WS_CHILD)
+         {
+             LONG Ret;
+             HWND hwndParent;
+             PWND pwndParent = IntGetParent(Wnd);
+             hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
+             if (hwndParent) Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
+             if (Ret) return (Ret);
+         }
+         return ( (HIWORD(lParam) == WM_LBUTTONDOWN && LOWORD(lParam) == HTCAPTION) ? MA_NOACTIVATE : MA_ACTIVATE );
+
+      case WM_ACTIVATE:
+       /* The default action in Windows is to set the keyboard focus to
+        * the window, if it's being activated and not minimized */
+         if (LOWORD(wParam) != WA_INACTIVE &&
+              !(Wnd->style & WS_MINIMIZE))
+         {
+            //ERR("WM_ACTIVATE %p\n",hWnd);
+            co_UserSetFocus(Wnd);
+         }
+         break;
+
+      case WM_MOUSEWHEEL:
+         if (Wnd->style & WS_CHILD)
+         {
+            HWND hwndParent;
+            PWND pwndParent = IntGetParent(Wnd);
+            hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
+            return co_IntSendMessage( hwndParent, WM_MOUSEWHEEL, wParam, lParam);
+         }
+         break;
+
+      case WM_ERASEBKGND:
+      case WM_ICONERASEBKGND:
+      {
+         RECT Rect;
+         HBRUSH hBrush = Wnd->pcls->hbrBackground;
+         if (!hBrush) return 0;
+         if (hBrush <= (HBRUSH)COLOR_MENUBAR)
+         {
+            hBrush = IntGetSysColorBrush((INT)hBrush);
+         }
+         if (Wnd->pcls->style & CS_PARENTDC)
+         {
+            /* can't use GetClipBox with a parent DC or we fill the whole parent */
+            IntGetClientRect(Wnd, &Rect);
+            GreDPtoLP((HDC)wParam, (LPPOINT)&Rect, 2);
+         }
+         else
+         {
+            GdiGetClipBox((HDC)wParam, &Rect);
+         }
+         FillRect((HDC)wParam, &Rect, hBrush);
+         return (1);
+      }
+
       case WM_GETHOTKEY:
-         return DefWndGetHotKey(UserHMGetHandle(Wnd));
+         //ERR("WM_GETHOTKEY\n");
+         return DefWndGetHotKey(Wnd);
       case WM_SETHOTKEY:
+         //ERR("WM_SETHOTKEY\n");
          return DefWndSetHotKey(Wnd, wParam);
 
       case WM_NCHITTEST:
@@ -230,18 +988,77 @@ IntDefWindowProc(
          return GetNCHitEx(Wnd, Point);
       }
 
+      case WM_PRINT:
+      {
+         DefWndPrint(Wnd, (HDC)wParam, lParam);
+         return (0);
+      }
+
+      case WM_SYSCOLORCHANGE:
+      {
+         /* force to redraw non-client area */
+         UserPaintCaption(Wnd, DC_NC);
+         /* Use InvalidateRect to redraw client area, enable
+          * erase to redraw all subcontrols otherwise send the
+          * WM_SYSCOLORCHANGE to child windows/controls is required
+          */
+         co_UserRedrawWindow( Wnd, NULL, NULL, RDW_ALLCHILDREN|RDW_INVALIDATE|RDW_ERASE);
+         return (0);
+      }
+
+      case WM_PAINTICON:
+      case WM_PAINT:
+      {
+         PAINTSTRUCT Ps;
+         HDC hDC;
+
+         /* If already in Paint and Client area is not empty just return. */
+         if (Wnd->state2 & WNDS2_STARTPAINT && !RECTL_bIsEmptyRect(&Wnd->rcClient))
+         {
+            ERR("In Paint and Client area is not empty!\n");
+            return 0;
+         }
+
+         hDC = IntBeginPaint(Wnd, &Ps);
+         if (hDC)
+         {
+             if (((Wnd->style & WS_MINIMIZE) != 0) && (Wnd->pcls->spicn))
+             {
+                 RECT ClientRect;
+                 INT x, y;
+
+                 ERR("Doing Paint and Client area is empty!\n");
+                 IntGetClientRect(Wnd, &ClientRect);
+                 x = (ClientRect.right - ClientRect.left - UserGetSystemMetrics(SM_CXICON)) / 2;
+                 y = (ClientRect.bottom - ClientRect.top - UserGetSystemMetrics(SM_CYICON)) / 2;
+                 UserReferenceObject(Wnd->pcls->spicn);
+                 UserDrawIconEx(hDC, x, y, Wnd->pcls->spicn, 0, 0, 0, 0, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE);
+                 UserDereferenceObject(Wnd->pcls->spicn);
+             }
+
+             IntEndPaint(Wnd, &Ps);
+         }
+         return (0);
+      }
+
       case WM_SYNCPAINT:
       {
          HRGN hRgn;
          Wnd->state &= ~WNDS_SYNCPAINTPENDING;
-         ERR("WM_SYNCPAINT\n");
-         hRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         if (co_UserGetUpdateRgn(Wnd, hRgn, FALSE) != NULLREGION)
+         TRACE("WM_SYNCPAINT\n");
+         hRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         if (hRgn)
          {
-            if (!wParam) wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
-            co_UserRedrawWindow(Wnd, NULL, hRgn, wParam);
+             if (co_UserGetUpdateRgn(Wnd, hRgn, FALSE) != NULLREGION)
+             {
+                PREGION pRgn = REGION_LockRgn(hRgn);
+                if (pRgn) REGION_UnlockRgn(pRgn);
+                if (!wParam)
+                    wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
+                co_UserRedrawWindow(Wnd, NULL, pRgn, wParam);
+             }
+             GreDeleteObject(hRgn);
          }
-         GreDeleteObject(hRgn);
          return 0;
       }
 
@@ -263,6 +1080,63 @@ IntDefWindowProc(
              }
           }
           return 0;
+
+      case WM_WINDOWPOSCHANGING:
+      {
+          return (DefWndHandleWindowPosChanging(Wnd, (WINDOWPOS*)lParam));
+      }
+
+      case WM_WINDOWPOSCHANGED:
+      {
+          return (DefWndHandleWindowPosChanged(Wnd, (WINDOWPOS*)lParam));
+      }
+
+      case WM_NCCALCSIZE:
+      {
+         return NC_HandleNCCalcSize( Wnd, wParam, (RECTL *)lParam, FALSE );
+      }
+
+      case WM_NCACTIVATE:
+      {
+          return NC_HandleNCActivate( Wnd, wParam, lParam );
+      }
+
+      //
+      // NC Paint mode.
+      //
+      case WM_NCPAINT:
+      {
+          HDC hDC = UserGetDCEx(Wnd, (HRGN)wParam, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
+          Wnd->state |= WNDS_FORCEMENUDRAW;
+          NC_DoNCPaint(Wnd, hDC, -1);
+          Wnd->state &= ~WNDS_FORCEMENUDRAW;
+          UserReleaseDC(Wnd, hDC, FALSE);
+          return 0;
+      }
+      //
+      //  Draw Caption mode.
+      //
+      //  wParam are DC_* flags.
+      //
+      case WM_NCUAHDRAWCAPTION:
+      {
+          HDC hDC = UserGetDCEx(Wnd, NULL, DCX_WINDOW|DCX_USESTYLE);
+          TRACE("WM_NCUAHDRAWCAPTION: wParam DC_ flags %08x\n",wParam);
+          UserDrawCaptionBar(Wnd, hDC, wParam|DC_FRAME); // Include DC_FRAME to comp for drawing glich.
+          UserReleaseDC(Wnd, hDC, FALSE);
+          return 0;
+      }
+      //
+      //  Draw Frame mode.
+      //
+      //  wParam is HDC, lParam are DC_ACTIVE and or DC_REDRAWHUNGWND.
+      //
+      case WM_NCUAHDRAWFRAME:
+      {
+          TRACE("WM_NCUAHDRAWFRAME: wParam hDC %p lParam DC_ flags %08x\n",wParam,lParam);
+          NC_DoNCPaint(Wnd, (HDC)wParam, lParam|DC_NC);
+          return 0;
+      }
 
       /* ReactOS only. */
       case WM_CBT:
@@ -301,216 +1175,6 @@ IntDefWindowProc(
       break;
    }
    return lResult;
-}
-
-static HICON NC_IconForWindow( PWND pWnd )
-{
-   HICON hIcon = 0;
-
-   if (!pWnd->pcls || pWnd->fnid == FNID_DESKTOP) return hIcon;
-   if (!hIcon) hIcon = pWnd->pcls->hIconSm;
-   if (!hIcon) hIcon = pWnd->pcls->hIcon;
-
-   if (!hIcon && pWnd->style & DS_MODALFRAME)
-   { // Fake it out for now, we use it as a test.
-      hIcon = (HICON)1;
-   /* FIXME: Need to setup Registry System Cursor & Icons via Callbacks at init time! */
-      if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
-      if (!hIcon) hIcon = gpsi->hIcoWindows;    // Reg size.
-   }
-   return hIcon;
-}
-
-DWORD FASTCALL
-GetNCHitEx(PWND pWnd, POINT pt)
-{
-   RECT rcWindow, rcClient;
-   DWORD Style, ExStyle;
-
-   if (!pWnd) return HTNOWHERE;
-
-   if (pWnd == UserGetDesktopWindow()) // pWnd->fnid == FNID_DESKTOP)
-   {
-      rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
-      rcWindow.right  = UserGetSystemMetrics(SM_CXSCREEN);
-      rcWindow.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-      rcClient.right  = UserGetSystemMetrics(SM_CXSCREEN);
-      rcClient.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-   }
-   else
-   {
-      rcClient = pWnd->rcClient;
-      rcWindow = pWnd->rcWindow;
-   }
-
-   if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y)) return HTNOWHERE;
-
-   Style = pWnd->style;
-   ExStyle = pWnd->ExStyle;
-
-   if (Style & WS_MINIMIZE) return HTCAPTION;
-
-   if (RECTL_bPointInRect( &rcClient,  pt.x, pt.y )) return HTCLIENT;
-
-   /* Check borders */
-   if (HAS_THICKFRAME( Style, ExStyle ))
-   {
-      RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
-      if (!RECTL_bPointInRect(&rcWindow, pt.x, pt.y ))
-      {
-            /* Check top sizing border */
-            if (pt.y < rcWindow.top)
-            {
-                if (pt.x < rcWindow.left+UserGetSystemMetrics(SM_CXSIZE)) return HTTOPLEFT;
-                if (pt.x >= rcWindow.right-UserGetSystemMetrics(SM_CXSIZE)) return HTTOPRIGHT;
-                return HTTOP;
-            }
-            /* Check bottom sizing border */
-            if (pt.y >= rcWindow.bottom)
-            {
-                if (pt.x < rcWindow.left+UserGetSystemMetrics(SM_CXSIZE)) return HTBOTTOMLEFT;
-                if (pt.x >= rcWindow.right-UserGetSystemMetrics(SM_CXSIZE)) return HTBOTTOMRIGHT;
-                return HTBOTTOM;
-            }
-            /* Check left sizing border */
-            if (pt.x < rcWindow.left)
-            {
-                if (pt.y < rcWindow.top+UserGetSystemMetrics(SM_CYSIZE)) return HTTOPLEFT;
-                if (pt.y >= rcWindow.bottom-UserGetSystemMetrics(SM_CYSIZE)) return HTBOTTOMLEFT;
-                return HTLEFT;
-            }
-            /* Check right sizing border */
-            if (pt.x >= rcWindow.right)
-            {
-                if (pt.y < rcWindow.top+UserGetSystemMetrics(SM_CYSIZE)) return HTTOPRIGHT;
-                if (pt.y >= rcWindow.bottom-UserGetSystemMetrics(SM_CYSIZE)) return HTBOTTOMRIGHT;
-                return HTRIGHT;
-            }
-        }
-    }
-    else  /* No thick frame */
-    {
-        if (HAS_DLGFRAME( Style, ExStyle ))
-            RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
-        else if (HAS_THINFRAME( Style, ExStyle ))
-            RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
-        if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y  )) return HTBORDER;
-    }
-
-    /* Check caption */
-
-    if ((Style & WS_CAPTION) == WS_CAPTION)
-    {
-        if (ExStyle & WS_EX_TOOLWINDOW)
-            rcWindow.top += UserGetSystemMetrics(SM_CYSMCAPTION) - 1;
-        else
-            rcWindow.top += UserGetSystemMetrics(SM_CYCAPTION) - 1;
-        if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y ))
-        {
-            BOOL min_or_max_box = (Style & WS_SYSMENU) && (Style & (WS_MINIMIZEBOX|WS_MAXIMIZEBOX));
-            if (ExStyle & WS_EX_LAYOUTRTL)
-            {
-                /* Check system menu */
-                if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW) && NC_IconForWindow(pWnd))
-                {
-                    rcWindow.right -= UserGetSystemMetrics(SM_CYCAPTION) - 1;
-                    if (pt.x > rcWindow.right) return HTSYSMENU;
-                }
-
-                /* Check close button */
-                if (Style & WS_SYSMENU)
-                {
-                    rcWindow.left += UserGetSystemMetrics(SM_CYCAPTION);
-                    if (pt.x < rcWindow.left) return HTCLOSE;
-                }
-
-                /* Check maximize box */
-                /* In Win95 there is automatically a Maximize button when there is a minimize one */
-                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
-                {
-                    rcWindow.left += UserGetSystemMetrics(SM_CXSIZE);
-                    if (pt.x < rcWindow.left) return HTMAXBUTTON;
-                }
-
-                /* Check minimize box */
-                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
-                {
-                    rcWindow.left += UserGetSystemMetrics(SM_CXSIZE);
-                    if (pt.x < rcWindow.left) return HTMINBUTTON;
-                }
-            }
-            else
-            {
-                /* Check system menu */
-                if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW) && NC_IconForWindow(pWnd))
-                {
-                    rcWindow.left += UserGetSystemMetrics(SM_CYCAPTION) - 1;
-                    if (pt.x < rcWindow.left) return HTSYSMENU;
-                }
-
-                /* Check close button */
-                if (Style & WS_SYSMENU)
-                {
-                    rcWindow.right -= UserGetSystemMetrics(SM_CYCAPTION);
-                    if (pt.x > rcWindow.right) return HTCLOSE;
-                }
-
-                /* Check maximize box */
-                /* In Win95 there is automatically a Maximize button when there is a minimize one */
-                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
-                {
-                    rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
-                    if (pt.x > rcWindow.right) return HTMAXBUTTON;
-                }
-
-                /* Check minimize box */
-                if (min_or_max_box && !(ExStyle & WS_EX_TOOLWINDOW))
-                {
-                    rcWindow.right -= UserGetSystemMetrics(SM_CXSIZE);
-                    if (pt.x > rcWindow.right) return HTMINBUTTON;
-                }
-            }
-            return HTCAPTION;
-        }
-    }
-
-      /* Check menu bar */
-
-    if (HAS_MENU( pWnd, Style ) && (pt.y < rcClient.top) &&
-        (pt.x >= rcClient.left) && (pt.x < rcClient.right))
-        return HTMENU;
-
-      /* Check vertical scroll bar */
-
-    if (ExStyle & WS_EX_LAYOUTRTL) ExStyle ^= WS_EX_LEFTSCROLLBAR;
-    if (Style & WS_VSCROLL)
-    {
-        if((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            rcClient.left -= UserGetSystemMetrics(SM_CXVSCROLL);
-        else
-            rcClient.right += UserGetSystemMetrics(SM_CXVSCROLL);
-        if (RECTL_bPointInRect( &rcClient, pt.x, pt.y )) return HTVSCROLL;
-    }
-
-      /* Check horizontal scroll bar */
-
-    if (Style & WS_HSCROLL)
-    {
-        rcClient.bottom += UserGetSystemMetrics(SM_CYHSCROLL);
-        if (RECTL_bPointInRect( &rcClient, pt.x, pt.y ))
-        {
-            /* Check size box */
-            if ((Style & WS_VSCROLL) &&
-                ((((ExStyle & WS_EX_LEFTSCROLLBAR) != 0) && (pt.x <= rcClient.left + UserGetSystemMetrics(SM_CXVSCROLL))) ||
-                (((ExStyle & WS_EX_LEFTSCROLLBAR) == 0) && (pt.x >= rcClient.right - UserGetSystemMetrics(SM_CXVSCROLL)))))
-                return HTSIZE;
-            return HTHSCROLL;
-        }
-    }
-
-    /* Has to return HTNOWHERE if nothing was found
-       Could happen when a window has a customized non client area */
-    return HTNOWHERE;
 }
 
 /* EOF */

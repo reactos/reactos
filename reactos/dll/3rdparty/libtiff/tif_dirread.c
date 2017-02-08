@@ -39,7 +39,7 @@
  *   TIFFReadDirectory, so as to eliminate current possibly repetitive lookup.
  */
 
-#include "tiffiop.h"
+#include <precomp.h>
 
 #define IGNORE 0          /* tag placeholder used below */
 #define FAILED_FII    ((uint32) -1)

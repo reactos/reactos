@@ -20,6 +20,28 @@
 #ifndef __MSCOREE_PRIVATE__
 #define __MSCOREE_PRIVATE__
 
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <cor.h>
+#include <cordebug.h>
+#include <metahost.h>
+
+#include <wine/list.h>
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL( mscoree );
+
 extern char *WtoA(LPCWSTR wstr) DECLSPEC_HIDDEN;
 
 extern HRESULT CLRMetaHost_CreateInstance(REFIID riid, void **ppobj) DECLSPEC_HIDDEN;

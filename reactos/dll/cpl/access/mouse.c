@@ -3,12 +3,11 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/mouse.c
  * PURPOSE:         Mouse-related accessibility settings
- * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
+ * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
  */
 
 #include "access.h"
-
 
 #define SPEEDTICKS 9
 #define ACCELTICKS 9
@@ -51,7 +50,7 @@ MouseKeysDlgProc(HWND hwndDlg,
             /* Set the thumb */
             SendDlgItemMessage(hwndDlg, IDC_MOUSEKEYS_SPEED_TRACK, TBM_SETPOS, TRUE, i);
 
-            /* Set the number of ticks for the accelleration trackbar */
+            /* Set the number of ticks for the acceleration trackbar */
             SendDlgItemMessage(hwndDlg, IDC_MOUSEKEYS_ACCEL_TRACK, TBM_SETRANGE,
                                TRUE, MAKELONG(0, ACCELTICKS - 1));
 

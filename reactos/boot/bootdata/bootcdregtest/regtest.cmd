@@ -1,5 +1,6 @@
 @echo off
 set WINETEST_DEBUG=0
+set WINETEST_PLATFORM=reactos
 
 if exist "C:\ReactOS\bin\AHKAppTests.cmd" (
     dbgprint "Preparing AHK Application testing suite."
@@ -8,4 +9,4 @@ if exist "C:\ReactOS\bin\AHKAppTests.cmd" (
 )
 
 dbgprint --process "ipconfig"
-start rosautotest /r /s
+start rosautotest /r /s /n

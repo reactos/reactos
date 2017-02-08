@@ -85,6 +85,20 @@ typedef struct
   ULONG Stats[1];
 } RPC_STATS_VECTOR;
 
+typedef struct _RPC_PROTSEQ_VECTORA
+{
+  unsigned int Count;
+  unsigned char *Protseq[1];
+} RPC_PROTSEQ_VECTORA;
+
+typedef struct _RPC_PROTSEQ_VECTORW
+{
+  unsigned int Count;
+  unsigned short *Protseq[1];
+} RPC_PROTSEQ_VECTORW;
+
+DECL_WINELIB_TYPE_AW(RPC_PROTSEQ_VECTOR)
+
 typedef I_RPC_HANDLE *RPC_EP_INQ_HANDLE;
 
 #define RPC_C_EP_ALL_ELTS 0
@@ -279,18 +293,6 @@ typedef struct _RPC_SECURITY_QOS_V2_A
     } u;
 } RPC_SECURITY_QOS_V2_A, *PRPC_SECURITY_QOS_V2_A;
 
-typedef struct _RPC_PROTSEQ_VECTORA
-{
-    unsigned int Count;
-    unsigned char __RPC_FAR * Protseq[1];
-} RPC_PROTSEQ_VECTORA;
-
-typedef struct _RPC_PROTSEQ_VECTORW
-{
-    unsigned int Count;
-    unsigned short __RPC_FAR * Protseq[1];
-} RPC_PROTSEQ_VECTORW;
-
 #define _SEC_WINNT_AUTH_IDENTITY WINELIB_NAME_AW(_SEC_WINNT_AUTH_IDENTITY_)
 #define  SEC_WINNT_AUTH_IDENTITY WINELIB_NAME_AW(SEC_WINNT_AUTH_IDENTITY_)
 #define PSEC_WINNT_AUTH_IDENTITY WINELIB_NAME_AW(PSEC_WINNT_AUTH_IDENTITY_)
@@ -302,16 +304,6 @@ typedef struct _RPC_PROTSEQ_VECTORW
 #define RPC_SECURITY_QOS_V2  WINELIB_NAME_AW(RPC_SECURITY_QOS_V2_)
 #define PRPC_SECURITY_QOS_V2 WINELIB_NAME_AW(PRPC_SECURITY_QOS_V2_)
 #define _RPC_SECURITY_QOS_V2 WINELIB_NAME_AW(_RPC_SECURITY_QOS_V2_)
-
-#define RPC_PROTSEQ_VECTOR WINELIB_NAME_AW(RPC_PROTSEQ_VECTOR)
-#define _RPC_PROTSEQ_VECTOR WINELIB_NAME_AW(_RPC_PROTSEQ_VECTOR)
-
-typedef int
-(__RPC_API * RPC_MGMT_AUTHORIZATION_FN) (
-    IN RPC_BINDING_HANDLE ClientBinding,
-    IN unsigned long RequestedMgmtOperation,
-    OUT RPC_STATUS __RPC_FAR * Status
-    );
 
 /* SEC_WINNT_AUTH Flags */
 #define SEC_WINNT_AUTH_IDENTITY_ANSI    0x1
@@ -332,7 +324,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW(RPC_STATUS e, RPC_WSTR buffer);
 
 RPCRTAPI DECLSPEC_NORETURN void RPC_ENTRY
   RpcRaiseException( RPC_STATUS exception );
-
+        
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingCopy( RPC_BINDING_HANDLE SourceBinding, RPC_BINDING_HANDLE* DestinationBinding );
 
@@ -414,6 +406,10 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcMgmtEnableIdleCleanup( void );
+
+typedef int (__RPC_API *RPC_MGMT_AUTHORIZATION_FN)( RPC_BINDING_HANDLE, ULONG, RPC_STATUS * );
+
+RPCRTAPI RPC_STATUS RPC_ENTRY RpcMgmtSetAuthorizationFn( RPC_MGMT_AUTHORIZATION_FN );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY RpcMgmtSetCancelTimeout(LONG);
 
@@ -566,6 +562,18 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 #define RpcNetworkIsProtseqValid WINELIB_NAME_AW(RpcNetworkIsProtseqValid)
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcNetworkInqProtseqsA( RPC_PROTSEQ_VECTORA** protseqs );
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcNetworkInqProtseqsW( RPC_PROTSEQ_VECTORW** protseqs );
+#define RpcNetworkInqProtseqs WINELIB_NAME_AW(RpcNetworkInqProtseqs)
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcProtseqVectorFreeA( RPC_PROTSEQ_VECTORA** protseqs );
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcProtseqVectorFreeW( RPC_PROTSEQ_VECTORW** protseqs );
+#define RpcProtseqVectorFree WINELIB_NAME_AW(RpcProtseqVectorFree)
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcRevertToSelf( void );
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcRevertToSelfEx( RPC_BINDING_HANDLE Binding );
@@ -602,6 +610,12 @@ RPCRTAPI unsigned short RPC_ENTRY
   UuidHash(UUID* Uuid, RPC_STATUS* Status_ );
 RPCRTAPI int RPC_ENTRY
   UuidIsNil( UUID* Uuid, RPC_STATUS* Status_ );
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcServerInqDefaultPrincNameA( ULONG AuthnSvc, RPC_CSTR *PrincName );
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcServerInqDefaultPrincNameW( ULONG AuthnSvc, RPC_WSTR *PrincName );
+#define RpcServerInqDefaultPrincName WINELIB_NAME_AW(RpcServerInqDefaultPrincName)
 
 #ifdef __cplusplus
 }

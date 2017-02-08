@@ -45,7 +45,6 @@
 #define __exceptthat __declspec("SAL_except")
 #define __execeptthat __exceptthat
 #define __inner_blocksOn(resource) __declspec("SAL_blocksOn("SPECSTRINGIZE(resource)")")
-#define __inner_callback __declspec("__callback")
 #define __inner_checkReturn __declspec("SAL_checkReturn")
 #define __inner_control_entrypoint(category) __declspec("SAL_entrypoint(controlEntry, "SPECSTRINGIZE(category)")")
 #define __inner_data_entrypoint(category) __declspec("SAL_entrypoint(dataEntry, "SPECSTRINGIZE(category)")")
@@ -69,9 +68,6 @@
 #define __refparam __deref __notreadonly
 #define __valid __declspec("SAL_valid")
 #define __writableTo(size) __declspec("SAL_writableTo("SPECSTRINGIZE(size)")")
-#ifndef __analysis_assume
-#define __analysis_assume(expr) __assume(expr)
-#endif
 
 #else
 
@@ -83,7 +79,6 @@
 #define __exceptthat
 #define __execeptthat
 #define __inner_blocksOn(resource)
-#define __inner_callback
 #define __inner_checkReturn
 #define __inner_control_entrypoint(category)
 #define __inner_data_entrypoint(category)
@@ -108,9 +103,6 @@
 #define __refparam
 #define __valid
 #define __writableTo(size)
-#ifndef __analysis_assume
-#define __analysis_assume(expr)
-#endif
 
 #endif /* defined(_PREFAST_) && !defined(__midl) */
 
@@ -225,6 +217,7 @@
 #define __deref_out_ecount(size) __deref_ecount(size) __post __deref __valid __refparam
 #define __deref_out_nz __deref_out
 #define __deref_out_nz_opt __deref_out_opt
+#define __deref_out_range(x,y) /* FIXME */
 #define __deref_out_opt __deref_out __post __deref __exceptthat __maybenull
 #define __deref_out_z __post __deref __valid __refparam __post __deref __nullterminated
 #define __deref_out_z_opt __post __deref __valid __refparam __execeptthat __maybenull __post __deref __nullterminated

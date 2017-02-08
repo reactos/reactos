@@ -8,8 +8,10 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msports);
+#include <wchar.h>
 
+#define NTOS_MODE_USER
+#include <ndk/cmtypes.h>
 
 typedef enum _PORT_TYPE
 {
@@ -129,7 +131,7 @@ GetSerialPortNumber(IN HDEVINFO DeviceInfoSet,
                         TRACE("Port: Start: %I64x  Length: %lu\n",
                               lpResDes->u.Port.Start.QuadPart,
                               lpResDes->u.Port.Length);
-                        if (lpResDes->u.Port.Start.HighPart == 0)
+                        if ((lpResDes->u.Port.Start.HighPart == 0) && (dwBaseAddress == 0))
                             dwBaseAddress = (DWORD)lpResDes->u.Port.Start.LowPart;
                         break;
 
@@ -201,7 +203,7 @@ GetParallelPortNumber(IN HDEVINFO DeviceInfoSet,
                         TRACE("Port: Start: %I64x  Length: %lu\n",
                               lpResDes->u.Port.Start.QuadPart,
                               lpResDes->u.Port.Length);
-                        if (lpResDes->u.Port.Start.HighPart == 0)
+                        if ((lpResDes->u.Port.Start.HighPart == 0) && (dwBaseAddress == 0))
                             dwBaseAddress = (DWORD)lpResDes->u.Port.Start.LowPart;
                         break;
 
@@ -379,6 +381,7 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
     WCHAR szPortName[8];
     DWORD dwPortNumber = 0;
     DWORD dwSize;
+    DWORD dwValue;
     LONG lError;
     HKEY hKey;
 
@@ -416,12 +419,16 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
 
     /* ... try to determine the port number from its resources */
     if (dwPortNumber == 0)
+    {
         dwPortNumber = GetParallelPortNumber(DeviceInfoSet,
                                              DeviceInfoData);
+        TRACE("GetParallelPortNumber() returned port number: %lu\n", dwPortNumber);
+    }
 
     if (dwPortNumber == 0)
     {
         /* FIXME */
+        FIXME("Got no valid port numer!\n");
     }
 
     if (dwPortNumber != 0)
@@ -451,6 +458,23 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
                        REG_SZ,
                        (LPBYTE)szPortName,
                        (wcslen(szPortName) + 1) * sizeof(WCHAR));
+
+        /*
+         * FIXME / HACK:
+         * This is to get the w2k3 parport.sys to work until we have our own.
+         * This setting makes the driver accept resources with an IRQ instead
+         * of only resources without an IRQ.
+         *
+         * We should probably also fix IO manager to actually give devices a
+         * chance to register without an IRQ. CORE-9645
+         */
+        dwValue = 0;
+        RegSetValueExW(hKey,
+                       L"FilterResourceMethod",
+                       0,
+                       REG_DWORD,
+                       (LPBYTE)&dwValue, 
+                       sizeof(dwValue));
 
         RegCloseKey(hKey);
     }
@@ -485,6 +509,8 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
                  L"Parallel Port (%s)",
                  szPortName);
     }
+
+    TRACE("Friendly name: %S\n", szFriendlyName);
 
     /* Set the friendly name for the device */
     SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet,

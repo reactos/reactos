@@ -40,30 +40,30 @@
  */
 
 /* Magic value used to identify an ext2 filesystem.  */
-#define	EXT2_MAGIC		0xEF53
+#define    EXT2_MAGIC        0xEF53
 /* Amount of indirect blocks in an inode.  */
-#define INDIRECT_BLOCKS		12
+#define INDIRECT_BLOCKS        12
 /* Maximum length of a pathname.  */
-#define EXT2_PATH_MAX		4096
+#define EXT2_PATH_MAX        4096
 /* Maximum nesting of symlinks, used to prevent a loop.  */
-#define	EXT2_MAX_SYMLINKCNT	8
+#define    EXT2_MAX_SYMLINKCNT    8
 
 /* The good old revision and the default inode size.  */
-#define EXT2_GOOD_OLD_REVISION		0
-#define EXT2_DYNAMIC_REVISION		1
-#define EXT2_GOOD_OLD_INODE_SIZE	128
+#define EXT2_GOOD_OLD_REVISION        0
+#define EXT2_DYNAMIC_REVISION        1
+#define EXT2_GOOD_OLD_INODE_SIZE    128
 
 /* Filetype used in directory entry.  */
-#define	FILETYPE_UNKNOWN	0
-#define	FILETYPE_REG		1
-#define	FILETYPE_DIRECTORY	2
-#define	FILETYPE_SYMLINK	7
+#define    FILETYPE_UNKNOWN    0
+#define    FILETYPE_REG        1
+#define    FILETYPE_DIRECTORY    2
+#define    FILETYPE_SYMLINK    7
 
 /* Filetype information as used in inodes.  */
-#define FILETYPE_INO_MASK	0170000
-#define FILETYPE_INO_REG	0100000
-#define FILETYPE_INO_DIRECTORY	0040000
-#define FILETYPE_INO_SYMLINK	0120000
+#define FILETYPE_INO_MASK    0170000
+#define FILETYPE_INO_REG    0100000
+#define FILETYPE_INO_DIRECTORY    0040000
+#define FILETYPE_INO_SYMLINK    0120000
 
 /* The ext2 superblock.  */
 struct ext2_sblock
@@ -168,71 +168,71 @@ struct ext2_dirent
  * End of code from grub/fs/ext2.c
  */
 
-typedef struct ext2_sblock		EXT2_SUPER_BLOCK, *PEXT2_SUPER_BLOCK;
-typedef struct ext2_inode		EXT2_INODE, *PEXT2_INODE;
-typedef struct ext2_block_group		EXT2_GROUP_DESC, *PEXT2_GROUP_DESC;
-typedef struct ext2_dirent		EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
+typedef struct ext2_sblock        EXT2_SUPER_BLOCK, *PEXT2_SUPER_BLOCK;
+typedef struct ext2_inode        EXT2_INODE, *PEXT2_INODE;
+typedef struct ext2_block_group        EXT2_GROUP_DESC, *PEXT2_GROUP_DESC;
+typedef struct ext2_dirent        EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 
 /* Special inode numbers.  */
-#define EXT2_ROOT_INO		2
+#define EXT2_ROOT_INO        2
 
 /* Feature set definitions.  */
-#define EXT3_FEATURE_INCOMPAT_SUPP	0x0002
+#define EXT3_FEATURE_INCOMPAT_SUPP    0x0002
 
 /* Log2 size of ext2 block in bytes.  */
-#define LOG2_BLOCK_SIZE(sb)	(sb->log2_block_size + 10)
+#define LOG2_BLOCK_SIZE(sb)    (sb->log2_block_size + 10)
 
 /* The size of an ext2 block in bytes.  */
-#define EXT2_BLOCK_SIZE(sb)	(((SIZE_T)1) << LOG2_BLOCK_SIZE(sb))
+#define EXT2_BLOCK_SIZE(sb)    (((SIZE_T)1) << LOG2_BLOCK_SIZE(sb))
 
 /* The revision level.  */
-#define EXT2_REVISION(sb)	(sb->revision_level)
+#define EXT2_REVISION(sb)    (sb->revision_level)
 
 /* The inode size.  */
-#define EXT2_INODE_SIZE(sb)	(EXT2_REVISION(sb) == EXT2_GOOD_OLD_REVISION \
-				? EXT2_GOOD_OLD_INODE_SIZE \
-				: sb->inode_size)
+#define EXT2_INODE_SIZE(sb)    (EXT2_REVISION(sb) == EXT2_GOOD_OLD_REVISION \
+                ? EXT2_GOOD_OLD_INODE_SIZE \
+                : sb->inode_size)
 
-#define EXT2_DESC_PER_BLOCK(s)	(EXT2_BLOCK_SIZE(s) / sizeof(struct ext2_block_group))
+#define EXT2_DESC_PER_BLOCK(s)    (EXT2_BLOCK_SIZE(s) / sizeof(struct ext2_block_group))
 
 // EXT2_INODE::mode values
-#define EXT2_S_IRWXO	0x0007	// Other mask
-#define EXT2_S_IXOTH	0x0001	// ---------x execute
-#define EXT2_S_IWOTH	0x0002	// --------w- write
-#define EXT2_S_IROTH	0x0004	// -------r-- read
+#define EXT2_S_IRWXO    0x0007    // Other mask
+#define EXT2_S_IXOTH    0x0001    // ---------x execute
+#define EXT2_S_IWOTH    0x0002    // --------w- write
+#define EXT2_S_IROTH    0x0004    // -------r-- read
 
-#define EXT2_S_IRWXG	0x0038	// Group mask
-#define EXT2_S_IXGRP	0x0008	// ------x--- execute
-#define EXT2_S_IWGRP	0x0010	// -----w---- write
-#define EXT2_S_IRGRP	0x0020	// ----r----- read
+#define EXT2_S_IRWXG    0x0038    // Group mask
+#define EXT2_S_IXGRP    0x0008    // ------x--- execute
+#define EXT2_S_IWGRP    0x0010    // -----w---- write
+#define EXT2_S_IRGRP    0x0020    // ----r----- read
 
-#define EXT2_S_IRWXU	0x01C0	// User mask
-#define EXT2_S_IXUSR	0x0040	// ---x------ execute
-#define EXT2_S_IWUSR	0x0080	// --w------- write
-#define EXT2_S_IRUSR	0x0100	// -r-------- read
+#define EXT2_S_IRWXU    0x01C0    // User mask
+#define EXT2_S_IXUSR    0x0040    // ---x------ execute
+#define EXT2_S_IWUSR    0x0080    // --w------- write
+#define EXT2_S_IRUSR    0x0100    // -r-------- read
 
-#define EXT2_S_ISVTX	0x0200	// Sticky bit
-#define EXT2_S_ISGID	0x0400	// SGID
-#define EXT2_S_ISUID	0x0800	// SUID
+#define EXT2_S_ISVTX    0x0200    // Sticky bit
+#define EXT2_S_ISGID    0x0400    // SGID
+#define EXT2_S_ISUID    0x0800    // SUID
 
-#define EXT2_S_IFMT		0xF000	// Format mask
-#define EXT2_S_IFIFO	0x1000	// FIFO buffer
-#define EXT2_S_IFCHR	0x2000	// Character device
-#define EXT2_S_IFDIR	0x4000	// Directory
-#define EXT2_S_IFBLK	0x6000	// Block device
-#define EXT2_S_IFREG	0x8000	// Regular file
-#define EXT2_S_IFLNK	0xA000	// Symbolic link
-#define EXT2_S_IFSOCK	0xC000	// Socket
+#define EXT2_S_IFMT        0xF000    // Format mask
+#define EXT2_S_IFIFO    0x1000    // FIFO buffer
+#define EXT2_S_IFCHR    0x2000    // Character device
+#define EXT2_S_IFDIR    0x4000    // Directory
+#define EXT2_S_IFBLK    0x6000    // Block device
+#define EXT2_S_IFREG    0x8000    // Regular file
+#define EXT2_S_IFLNK    0xA000    // Symbolic link
+#define EXT2_S_IFSOCK    0xC000    // Socket
 
-#define FAST_SYMLINK_MAX_NAME_SIZE	60
+#define FAST_SYMLINK_MAX_NAME_SIZE    60
 
 typedef struct
 {
-	ULONGLONG	FileSize;		// File size
-	ULONGLONG	FilePointer;		// File pointer
-	ULONG*		FileBlockList;		// File block list
-	UCHAR		DriveNumber;		// Drive number of open file
-	EXT2_INODE	Inode;			// File's inode
+    ULONGLONG    FileSize;        // File size
+    ULONGLONG    FilePointer;        // File pointer
+    ULONG*        FileBlockList;        // File block list
+    UCHAR        DriveNumber;        // Drive number of open file
+    EXT2_INODE    Inode;            // File's inode
 } EXT2_FILE_INFO, * PEXT2_FILE_INFO;
 
 const DEVVTBL* Ext2Mount(ULONG DeviceId);

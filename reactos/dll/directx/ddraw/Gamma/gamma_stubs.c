@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 ddraw/gamma/gamma_stubs.c
+ * FILE:                 dll/directx/ddraw/Gamma/gamma_stubs.c
  * PURPOSE:              IDirectDrawGamma Implementation
  * PROGRAMMER:           Maarten Bosma
  *

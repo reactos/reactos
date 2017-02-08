@@ -215,3 +215,21 @@ HRESULT __RPC_STUB IModalWindow_Show_Stub(
     TRACE("(%p)->(%p)\n", This, hwndOwner);
     return IModalWindow_Show(This, hwndOwner);
 }
+
+HRESULT __RPC_STUB IFolderView2_GetGroupBy_Stub(
+    IFolderView2 *This,
+    PROPERTYKEY *pkey,
+    BOOL *ascending)
+{
+    TRACE("(%p)->(%p %p)\n", This, pkey, ascending);
+    return IFolderView2_GetGroupBy(This, pkey, ascending);
+}
+
+HRESULT __RPC_STUB IFolderView2_GetGroupBy_Proxy(
+    IFolderView2 *This,
+    PROPERTYKEY *pkey,
+    BOOL *ascending)
+{
+    TRACE("(%p)->(%p %p)\n", This, pkey, ascending);
+    return IFolderView2_RemoteGetGroupBy_Proxy(This, pkey, ascending);
+}

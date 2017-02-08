@@ -10,8 +10,10 @@
 
 #include "compbatt.h"
 
+#include <wdmguid.h>
+
 /* FUNCTIONS ******************************************************************/
- 
+
 NTSTATUS
 NTAPI
 CompBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
@@ -19,10 +21,10 @@ CompBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
 {
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     if (CompBattDebug & 1) DbgPrint("CompBatt: PowerDispatch received power IRP.\n");
-     
+
     /* Start the next IRP */
     PoStartNextPowerIrp(Irp);
-    
+
     /* Call the next driver in the stack */
     IoSkipCurrentIrpStackLocation(Irp);
     return PoCallDriver(DeviceExtension->AttachedDevice, Irp);
@@ -52,22 +54,22 @@ RemoveBatteryFromList(IN PCUNICODE_STRING BatteryName,
             IoAcquireRemoveLock(&BatteryData->RemoveLock, 0);
             ExReleaseFastMutex(&DeviceExtension->Lock);
             IoReleaseRemoveLockAndWait(&BatteryData->RemoveLock, 0);
-          
+
             /* Remove the entry from the list */
             ExAcquireFastMutex(&DeviceExtension->Lock);
             RemoveEntryList(&BatteryData->BatteryLink);
             ExReleaseFastMutex(&DeviceExtension->Lock);
             return BatteryData;
         }
-        
+
         /* Next */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Done */
     ExReleaseFastMutex(&DeviceExtension->Lock);
     if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING RemoveBatteryFromList\n");
-    return STATUS_SUCCESS;
+    return NULL;
 }
 
 BOOLEAN
@@ -80,7 +82,7 @@ IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
     BOOLEAN Found = FALSE;
     if (CompBattDebug & 1)
         DbgPrint("CompBatt: ENTERING IsBatteryAlreadyOnList\n");
-    
+
     /* Loop the battery list */
     ExAcquireFastMutex(&DeviceExtension->Lock);
     ListHead = &DeviceExtension->BatteryList;
@@ -99,7 +101,7 @@ IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
         /* Next */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Release the lock and return search status */
     ExReleaseFastMutex(&DeviceExtension->Lock);
     if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING IsBatteryAlreadyOnList\n");
@@ -119,7 +121,7 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
     PAGED_CODE();
     if (CompBattDebug & 1)
         DbgPrint("CompBatt: ENTERING AddNewBattery \"%w\" \n", BatteryName->Buffer);
-    
+
     /* Is this a new battery? */
     if (!IsBatteryAlreadyOnList(BatteryName, DeviceExtension))
     {
@@ -136,7 +138,7 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
             BatteryData->BatteryName.MaximumLength = BatteryName->Length;
             BatteryData->BatteryName.Buffer = (PWCHAR)(BatteryData + 1);
             RtlCopyUnicodeString(&BatteryData->BatteryName, BatteryName);
-            
+
             /* Get the device object */
             Status = CompBattGetDeviceObjectPointer(BatteryName,
                                                     FILE_ALL_ACCESS,
@@ -147,14 +149,14 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
                 /* Reference the DO and drop the FO */
                 ObReferenceObject(BatteryData->DeviceObject);
                 ObDereferenceObject(FileObject);
-                
-                /* Allocate the battery IRP */            
+
+                /* Allocate the battery IRP */
                 Irp = IoAllocateIrp(BatteryData->DeviceObject->StackSize + 1, 0);
                 if (Irp)
                 {
                     /* Save it */
                     BatteryData->Irp = Irp;
-                    
+
                     /* Setup the stack location */
                     IoStackLocation = IoGetNextIrpStackLocation(Irp);
                     IoStackLocation->Parameters.Others.Argument1 = DeviceExtension;
@@ -176,7 +178,7 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
                     ExInitializeWorkItem(&BatteryData->WorkItem,
                                          (PVOID)CompBattMonitorIrpCompleteWorker,
                                          BatteryData);
-                    
+
                     /* Setup the IRP work entry */
                     CompBattMonitorIrpComplete(BatteryData->DeviceObject, Irp, 0);
                     Status = STATUS_SUCCESS;
@@ -193,10 +195,10 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
             else if (CompBattDebug & 8)
             {
                 /* Fail */
-                DbgPrint("CompBattAddNewBattery: Failed to get device Object. status = %lx\n", 
+                DbgPrint("CompBattAddNewBattery: Failed to get device Object. status = %lx\n",
                          Status);
             }
-            
+
             /* Free the battery data */
             ExFreePool(BatteryData);
         }
@@ -229,7 +231,7 @@ CompBattRemoveBattery(IN PCUNICODE_STRING BatteryName,
         /* Dereference and free it */
         ObDereferenceObject(BatteryData->DeviceObject);
         ExFreePool(BatteryData);
-        
+
         /* Notify class driver */
         DeviceExtension->Flags = 0;
         BatteryClassStatusNotify(DeviceExtension->ClassData);
@@ -248,7 +250,7 @@ CompBattGetBatteries(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
     PWCHAR LinkList;
     UNICODE_STRING LinkString;
     if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteries\n");
-    
+
     /* Get all battery links */
     Status = IoGetDeviceInterfaces(&GUID_DEVICE_BATTERY, NULL, 0, &LinkList);
     p = LinkList;
@@ -260,12 +262,12 @@ CompBattGetBatteries(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
             /* Create the string */
             RtlInitUnicodeString(&LinkString, p);
             if (!LinkString.Length) break;
-            
+
             /* Add this battery and move on */
             Status = CompBattAddNewBattery(&LinkString, DeviceExtension);
             p += (LinkString.Length / sizeof(WCHAR)) + sizeof(UNICODE_NULL);
         }
-      
+
         /* Parsing complete, clean up buffer */
         ExFreePool(LinkList);
     }
@@ -274,7 +276,7 @@ CompBattGetBatteries(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
         /* Fail */
         DbgPrint("CompBatt: Couldn't get list of batteries\n");
     }
-    
+
     /* Done */
     if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteries\n");
     return Status;
@@ -325,12 +327,12 @@ CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
     UNICODE_STRING SymbolicLinkName;
     BATTERY_MINIPORT_INFO MiniportInfo;
     if (CompBattDebug & 2) DbgPrint("CompBatt: Got an AddDevice - %x\n", PdoDeviceObject);
-    
+
     /* Create the device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\CompositeBattery");
     Status = IoCreateDevice(DriverObject,
                             sizeof(COMPBATT_DEVICE_EXTENSION),
-                            &DeviceName, 
+                            &DeviceName,
                             FILE_DEVICE_BATTERY,
                             FILE_DEVICE_SECURE_OPEN,
                             FALSE,
@@ -340,11 +342,11 @@ CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
     /* Setup symbolic link for Win32 access */
     RtlInitUnicodeString(&SymbolicLinkName, L"\\DosDevices\\CompositeBattery");
     IoCreateSymbolicLink(&SymbolicLinkName, &DeviceName);
-    
+
     /* Initialize the device extension */
     DeviceExtension = DeviceObject->DeviceExtension;
-    RtlZeroMemory(DeviceExtension, 0x1B0u);
-    
+    RtlZeroMemory(DeviceExtension, sizeof(COMPBATT_DEVICE_EXTENSION));
+
     /* Attach to device stack and set DO pointers */
     DeviceExtension->AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject,
                                                                   PdoDeviceObject);
@@ -355,7 +357,7 @@ CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
         if (CompBattDebug & 8)
             DbgPrint("CompBattAddDevice: Could not attach to LowerDevice.\n");
         IoDeleteDevice(DeviceObject);
-        return STATUS_UNSUCCESSFUL; 
+        return STATUS_UNSUCCESSFUL;
     }
 
     /* Set device object flags */
@@ -367,7 +369,7 @@ CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
     InitializeListHead(&DeviceExtension->BatteryList);
     DeviceExtension->Flags = 0;
     DeviceExtension->NextTag = 1;
-    
+
     /* Setup the miniport data */
     RtlZeroMemory(&MiniportInfo, sizeof(MiniportInfo));
     MiniportInfo.MajorVersion = BATTERY_CLASS_MAJOR_VERSION;
@@ -381,7 +383,7 @@ CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
     MiniportInfo.SetStatusNotify = (BCLASS_SET_STATUS_NOTIFY)CompBattSetStatusNotify;
     MiniportInfo.DisableStatusNotify = (BCLASS_DISABLE_STATUS_NOTIFY)CompBattDisableStatusNotify;
     MiniportInfo.Pdo = NULL;
-    
+
     /* Register with the class driver */
     Status = BatteryClassInitializeDevice(&MiniportInfo,
                                           &DeviceExtension->ClassData);
@@ -413,7 +415,7 @@ CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
     switch (IoStackLocation->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
-        
+
             /* Device is starting, register for new batteries and pick up current ones */
             Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                                     0,
@@ -438,32 +440,32 @@ CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
             }
              break;
         case IRP_MN_CANCEL_STOP_DEVICE:
-        
+
             /* Explicitly say ok */
             Status = STATUS_SUCCESS;
             break;
-            
+
         case IRP_MN_CANCEL_REMOVE_DEVICE:
 
             /* Explicitly say ok */
             Status = STATUS_SUCCESS;
             break;
-            
+
         case IRP_MN_SURPRISE_REMOVAL:
-        
+
             /* Explicitly say ok */
             Status = STATUS_SUCCESS;
             break;
-            
+
         case IRP_MN_QUERY_PNP_DEVICE_STATE:
-        
+
             /* Add this in */
             Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
             Status = STATUS_SUCCESS;
             break;
-            
+
         default:
-        
+
             /* Not supported */
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
@@ -472,7 +474,7 @@ CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
     /* Set IRP status if we have one */
     if (Status != STATUS_NOT_SUPPORTED) Irp->IoStatus.Status = Status;
 
-    /* Did someone pick it up? */    
+    /* Did someone pick it up? */
     if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
     {
         /* Still unsupported, try ACPI */

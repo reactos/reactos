@@ -1,5 +1,9 @@
 #pragma once
 
+/* Maximum extend of coordinate space */
+#define MIN_COORD (INT_MIN / 16)
+#define MAX_COORD (INT_MAX / 16)
+
 #define IntLPtoDP(pdc, ppt, count) DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
 #define CoordLPtoDP(pdc, ppt) DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
 #define IntDPtoLP(pdc, ppt, count) DC_vXformDeviceToWorld(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
@@ -57,8 +61,8 @@ VOID
 FASTCALL
 DC_vUpdateDeviceToWorld(PDC pdc);
 
-PSIZEL
 FORCEINLINE
+PSIZEL
 DC_pszlViewportExt(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
@@ -74,15 +78,15 @@ DC_pszlViewportExt(PDC pdc)
     return &pdcattr->szlViewportExt;
 }
 
-PMATRIX
 FORCEINLINE
+PMATRIX
 DC_pmxWorldToPage(PDC pdc)
 {
     return &pdc->pdcattr->mxWorldToPage;
 }
 
-PMATRIX
 FORCEINLINE
+PMATRIX
 DC_pmxWorldToDevice(PDC pdc)
 {
     /* Check if world or page xform was changed */
@@ -95,8 +99,8 @@ DC_pmxWorldToDevice(PDC pdc)
     return &pdc->pdcattr->mxWorldToDevice;
 }
 
-PMATRIX
 FORCEINLINE
+PMATRIX
 DC_pmxDeviceToWorld(PDC pdc)
 {
     /* Check if the device-to-world xform is invalid */
@@ -109,8 +113,8 @@ DC_pmxDeviceToWorld(PDC pdc)
     return &pdc->pdcattr->mxDeviceToWorld;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vXformDeviceToWorld(
     IN PDC pdc,
     IN ULONG cNumPoints,
@@ -125,8 +129,8 @@ DC_vXformDeviceToWorld(
     XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vXformWorldToDevice(
     IN PDC pdc,
     IN ULONG cNumPoints,
@@ -150,4 +154,9 @@ GreModifyWorldTransform(
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
 int APIENTRY IntGdiSetMapMode(PDC, int);
-
+BOOL FASTCALL GreLPtoDP(HDC, LPPOINT, INT);
+BOOL FASTCALL GreDPtoLP(HDC, LPPOINT, INT);
+BOOL APIENTRY GreGetDCPoint(HDC,UINT,PPOINTL);
+BOOL WINAPI GreGetWindowExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
+BOOL WINAPI GreGetViewportExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
+BOOL FASTCALL GreSetViewportOrgEx(HDC,int,int,LPPOINT);

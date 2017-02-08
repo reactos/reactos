@@ -8,9 +8,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msports);
-
-
 static
 BOOL
 OnInitDialog(HWND hwnd,

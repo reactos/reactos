@@ -1,37 +1,73 @@
 /*
- * FILE:             base/applications/mplay32/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * LAST CHANGE:      2011-12-19  minor changes
+ * FILE:        base/applications/mplay32/lang/ro-RO.rc
+ *              ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Fișier"
-	BEGIN
-		MENUITEM "&Deschidere…", IDM_OPEN_FILE
-		MENUITEM "Î&nchide",     IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "I&eșire",      IDM_EXIT
-	END
-	POPUP "&?"
-	BEGIN
-		MENUITEM "&Despre…",     IDM_ABOUT
-	END
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "&Deschidere…\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "Î&nchide\tCtrl+W", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire", IDM_EXIT
+    END
+    POPUP "&Lectură"
+    BEGIN
+        MENUITEM "Lecturează/&Pauză\tCtrl+P", IDC_PLAY
+        MENUITEM "&Oprește\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "&Repetă\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&Afișare"
+    BEGIN
+        MENUITEM "&Mod fereastră-solitară", IDM_SWITCHVIEW
+    END
+    POPUP "&Dispozitiv"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Proprietăți…", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "Control &volum…", IDM_VOLUMECTL
+    END
+    POPUP "Aj&utor"
+    BEGIN
+        MENUITEM "&Despre…", IDM_ABOUT
+    END
 END
 
-STRINGTABLE DISCARDABLE
+ID_ACCELERATORS ACCELERATORS
 BEGIN
-	IDS_ALL_TYPES_FILTER  "Toate admisibile (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY      "Redare conținut multimedia"
-	IDS_TOOLTIP_STOP      "Oprirea lecturii"
-	IDS_TOOLTIP_EJECT     "Scoate"
-	IDS_TOOLTIP_BACKWARD  "Salt la precedent"
-	IDS_TOOLTIP_SEEKBACK  "Derulează înapoi"
-	IDS_TOOLTIP_SEEKFORW  "Derulează înainte"
-	IDS_TOOLTIP_FORWARD   "Salt la următor"
-	IDS_APPTITLE          "Lector multimedia"
-	IDS_PLAY              "Lecturare"
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MODE_UNKNOWN "Nespecificat"
+    IDS_MODE_OPEN "Deschis"
+    IDS_MODE_STOP "Oprit"
+    IDS_MODE_PLAY "În curs"
+    IDS_MODE_PAUSE "Întrerupt"
+    IDS_MODE_RECORD "Se înregistrează"
+    IDS_MODE_SEEK "Se caută"
+    IDS_MODE_NOT_READY "Nepregătit"
+    IDS_ALL_TYPES_FILTER "Toate admisibile"
+    IDS_TOOLTIP_PLAY "Redare conținut multimedia"
+    IDS_TOOLTIP_STOP "Oprirea lecturii"
+    IDS_TOOLTIP_EJECT "Scoate"
+    IDS_TOOLTIP_BACKWARD "Salt la precedent"
+    IDS_TOOLTIP_SEEKBACK "Derulează înapoi"
+    IDS_TOOLTIP_SEEKFORW "Derulează înainte"
+    IDS_TOOLTIP_FORWARD "Salt la următor"
+    IDS_TOOLTIP_PAUSE "Întrerupere"
+    IDS_APPTITLE "Lector multimedia"
+    IDS_PLAY "Lecturare"
+    IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare."
 END

@@ -17,18 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdarg.h>
-#define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "mssip.h"
-#include "winuser.h"
-#include "wintrust.h"
+
 #include "crypt32_private.h"
-#include "cryptres.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+
+#include <wintrust.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -52,8 +44,11 @@ static BOOL CRYPT_ReadBlobFromFile(LPCWSTR fileName, PCERT_BLOB blob)
             {
                 DWORD read;
 
-                ret = ReadFile(file, blob->pbData, blob->cbData, &read, NULL);
+                ret = ReadFile(file, blob->pbData, blob->cbData, &read, NULL) && read == blob->cbData;
+                if (!ret) CryptMemFree(blob->pbData);
             }
+            else
+                ret = FALSE;
         }
         CloseHandle(file);
     }
@@ -271,12 +266,15 @@ static BOOL CRYPT_QuerySerializedContextObject(DWORD dwObjectType,
             *phCertStore = CertDuplicateStore(
              *(HCERTSTORE *)((const BYTE *)context + certStoreOffset));
         if (ppvContext)
-            *ppvContext = contextInterface->duplicate(context);
+        {
+            *ppvContext = context;
+            Context_AddRef(context_from_ptr(context));
+        }
     }
 
 end:
     if (contextInterface && context)
-        contextInterface->free(context);
+        Context_Release(context_from_ptr(context));
     if (blob == &fileBlob)
         CryptMemFree(blob->pbData);
     TRACE("returning %d\n", ret);

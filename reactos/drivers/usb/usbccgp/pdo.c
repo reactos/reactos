@@ -11,6 +11,11 @@
 
 #include "usbccgp.h"
 
+#include <ntddk.h>
+
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 USBCCGP_PdoHandleQueryDeviceText(
     IN PDEVICE_OBJECT DeviceObject,
@@ -752,7 +757,6 @@ USBCCGP_PDOSelectConfiguration(
             // invalid parameter
             //
             DPRINT1("InterfaceInformation InterfaceNumber %x Alternative %x NumberOfPipes %x not found\n", InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, InterfaceInformation->NumberOfPipes);
-            ASSERT(FALSE);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1076,6 +1080,11 @@ PDO_Dispatch(
             return PDO_HandlePnp(DeviceObject, Irp);
         case IRP_MJ_INTERNAL_DEVICE_CONTROL:
             return PDO_HandleInternalDeviceControl(DeviceObject, Irp);
+        case IRP_MJ_POWER:
+            PoStartNextPowerIrp(Irp);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
         default:
             DPRINT1("PDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
             Status = Irp->IoStatus.Status;

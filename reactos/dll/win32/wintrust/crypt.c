@@ -22,18 +22,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-#include <stdio.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wintrust.h>
-#include <mscat.h>
-//#include "mssip.h"
-#include <imagehlp.h>
-#include <winternl.h>
+#include "wintrust_priv.h"
 
-#include <wine/debug.h>
-#include <wine/unicode.h>
+#include <imagehlp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
@@ -113,7 +104,7 @@ BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN *catAdmin,
 
     TRACE("%p %s %x\n", catAdmin, debugstr_guid(sys), dwFlags);
 
-    if (!catAdmin)
+    if (!catAdmin || dwFlags)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -909,6 +900,7 @@ HANDLE WINAPI CryptCATOpen(LPWSTR pwszFileName, DWORD fdwOpenFlags, HCRYPTPROV h
             if (!CryptMsgGetParam(hmsg, CMSG_ATTR_CERT_PARAM, i, NULL, &size))
             {
                 CryptMsgClose(hmsg);
+                HeapFree(GetProcessHeap(), 0, cc);
                 return INVALID_HANDLE_VALUE;
             }
             sum += size;
@@ -916,6 +908,7 @@ HANDLE WINAPI CryptCATOpen(LPWSTR pwszFileName, DWORD fdwOpenFlags, HCRYPTPROV h
         if (!(cc->attr = HeapAlloc(GetProcessHeap(), 0, sizeof(*cc->attr) * cc->attr_count + sum)))
         {
             CryptMsgClose(hmsg);
+            HeapFree(GetProcessHeap(), 0, cc);
             SetLastError(ERROR_OUTOFMEMORY);
             return INVALID_HANDLE_VALUE;
         }
@@ -926,12 +919,14 @@ HANDLE WINAPI CryptCATOpen(LPWSTR pwszFileName, DWORD fdwOpenFlags, HCRYPTPROV h
             {
                 CryptMsgClose(hmsg);
                 HeapFree(GetProcessHeap(), 0, cc->attr);
+                HeapFree(GetProcessHeap(), 0, cc);
                 return INVALID_HANDLE_VALUE;
             }
             if (!CryptMsgGetParam(hmsg, CMSG_ATTR_CERT_PARAM, i, p, &size))
             {
                 CryptMsgClose(hmsg);
                 HeapFree(GetProcessHeap(), 0, cc->attr);
+                HeapFree(GetProcessHeap(), 0, cc);
                 return INVALID_HANDLE_VALUE;
             }
             p += size;
@@ -948,6 +943,7 @@ HANDLE WINAPI CryptCATOpen(LPWSTR pwszFileName, DWORD fdwOpenFlags, HCRYPTPROV h
         cc->magic = CRYPTCAT_MAGIC;
         return cc;
     }
+    HeapFree(GetProcessHeap(), 0, cc);
     return INVALID_HANDLE_VALUE;
 }
 

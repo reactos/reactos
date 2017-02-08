@@ -1,0 +1,11 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nВведите ""CLIP /?"" для получения справки по использованию.\n"
+    IDS_HELP "\nПеренаправляет вывод от утилит командной строки в буфер обмена.\n\n\
+CLIP [/?]\n\n\
+    /?  Вывод справки по использованию..\n"
+END

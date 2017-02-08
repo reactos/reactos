@@ -16,37 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winnls.h"
-#include <ole2.h>
-#include <msxml6.h>
-//#include "wininet.h"
-//#include "urlmon.h"
-//#include "winreg.h"
-//#include "shlwapi.h"
-
-#include <wine/debug.h>
-#include <wine/list.h>
-//#include "wine/unicode.h"
-
-#include "msxml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include <msxml6did.h>
 
 static CRITICAL_SECTION cs_dispex_static_data;
 static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =
@@ -88,20 +60,6 @@ struct dispex_data_t {
 
     struct list entry;
 };
-
-typedef struct {
-    VARIANT var;
-    LPWSTR name;
-} dynamic_prop_t;
-
-struct dispex_dynamic_data_t {
-    DWORD buf_size;
-    DWORD prop_cnt;
-    dynamic_prop_t *props;
-};
-
-#define DISPID_DYNPROP_0    0x50000000
-#define DISPID_DYNPROP_MAX  0x5fffffff
 
 static struct list dispex_data_list = LIST_INIT(dispex_data_list);
 static ITypeLib *typelib[LibXml_Last];
@@ -344,11 +302,6 @@ static dispex_data_t *get_dispex_data(DispatchEx *This)
     return This->data->data;
 }
 
-static inline BOOL is_dynamic_dispid(DISPID id)
-{
-    return DISPID_DYNPROP_0 <= id && id <= DISPID_DYNPROP_MAX;
-}
-
 static inline DispatchEx *impl_from_IDispatchEx(IDispatchEx *iface)
 {
     return CONTAINING_RECORD(iface, DispatchEx, IDispatchEx_iface);
@@ -421,7 +374,7 @@ static HRESULT WINAPI DispatchEx_Invoke(IDispatchEx *iface, DISPID dispIdMember,
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
 
-    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("(%p)->(%x %s %x %x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     return IDispatchEx_InvokeEx(&This->IDispatchEx_iface, dispIdMember, lcid, wFlags,
@@ -464,17 +417,6 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
             min = n+1;
     }
 
-    if(This->dynamic_data) {
-        unsigned i;
-
-        for(i=0; i < This->dynamic_data->prop_cnt; i++) {
-            if(!strcmpW(This->dynamic_data->props[i].name, bstrName)) {
-                *pid = DISPID_DYNPROP_0 + i;
-                return S_OK;
-            }
-        }
-    }
-
     if(This->data->vtbl && This->data->vtbl->get_dispid) {
         HRESULT hres;
 
@@ -483,44 +425,32 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
             return hres;
     }
 
-    if(grfdex & fdexNameEnsure) {
-        dispex_dynamic_data_t *dynamic_data;
-
-        TRACE("creating dynamic prop %s\n", debugstr_w(bstrName));
-
-        if(This->dynamic_data) {
-            dynamic_data = This->dynamic_data;
-        }else {
-            dynamic_data = This->dynamic_data = heap_alloc_zero(sizeof(dispex_dynamic_data_t));
-            if(!dynamic_data)
-                return E_OUTOFMEMORY;
-        }
-
-        if(!dynamic_data->buf_size) {
-            dynamic_data->props = heap_alloc(sizeof(dynamic_prop_t)*4);
-            if(!dynamic_data->props)
-                return E_OUTOFMEMORY;
-            dynamic_data->buf_size = 4;
-        }else if(dynamic_data->buf_size == dynamic_data->prop_cnt) {
-            dynamic_prop_t *new_props;
-
-            new_props = heap_realloc(dynamic_data->props, sizeof(dynamic_prop_t)*(dynamic_data->buf_size<<1));
-            if(!new_props)
-                return E_OUTOFMEMORY;
-
-            dynamic_data->props = new_props;
-            dynamic_data->buf_size <<= 1;
-        }
-
-        dynamic_data->props[dynamic_data->prop_cnt].name = heap_strdupW(bstrName);
-        VariantInit(&dynamic_data->props[dynamic_data->prop_cnt].var);
-        *pid = DISPID_DYNPROP_0 + dynamic_data->prop_cnt++;
-
-        return S_OK;
-    }
-
     TRACE("not found %s\n", debugstr_w(bstrName));
     return DISP_E_UNKNOWNNAME;
+}
+
+static BOOL is_propputref_id(DISPID id)
+{
+    switch (id)
+    {
+    case DISPID_DOM_DOCUMENT_DOCUMENTELEMENT:
+    case DISPID_XMLDOM_DOCUMENT2_SCHEMAS:
+    case DISPID_XMLDOM_SELECTION_CONTEXT:
+    case DISPID_XMLDOM_TEMPLATE_STYLESHEET:
+    case DISPID_SAX_CONTENTHANDLER_DOCUMENTLOCATOR:
+    case DISPID_SAX_XMLFILTER_PARENT:
+    case DISPID_SAX_XMLREADER_ENTITYRESOLVER:
+    case DISPID_SAX_XMLREADER_CONTENTHANDLER:
+    case DISPID_SAX_XMLREADER_DTDHANDLER:
+    case DISPID_SAX_XMLREADER_ERRORHANDLER:
+    case DISPID_MXXML_FILTER_ENTITYRESOLVER:
+    case DISPID_MXXML_FILTER_CONTENTHANDLER:
+    case DISPID_MXXML_FILTER_DTDHANDLER:
+    case DISPID_MXXML_FILTER_ERRORHANDLER:
+        return TRUE;
+    default:
+        return FALSE;
+    }
 }
 
 static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
@@ -544,28 +474,6 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     if(wFlags == DISPATCH_CONSTRUCT) {
         FIXME("DISPATCH_CONSTRUCT not implemented\n");
         return E_NOTIMPL;
-    }
-
-    if(is_dynamic_dispid(id)) {
-        DWORD idx = id - DISPID_DYNPROP_0;
-        VARIANT *var;
-
-        if(!This->dynamic_data || This->dynamic_data->prop_cnt <= idx)
-            return DISP_E_UNKNOWNNAME;
-
-        var = &This->dynamic_data->props[idx].var;
-
-        switch(wFlags) {
-        case INVOKE_PROPERTYGET:
-            V_VT(pvarRes) = VT_EMPTY;
-            return VariantCopy(pvarRes, var);
-        case INVOKE_PROPERTYPUT:
-            VariantClear(var);
-            return VariantCopy(var, pdp->rgvarg);
-        default:
-            FIXME("unhandled wFlags %x\n", wFlags);
-            return E_NOTIMPL;
-        }
     }
 
     data = get_dispex_data(This);
@@ -605,6 +513,8 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         return E_FAIL;
     }
 
+    if (is_propputref_id(id) && wFlags == DISPATCH_PROPERTYPUT)
+        wFlags = DISPATCH_PROPERTYPUTREF;
     hres = ITypeInfo_Invoke(ti, unk, id, wFlags, pdp, pvarRes, pei, &argerr);
 
     ITypeInfo_Release(ti);
@@ -703,26 +613,9 @@ BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
     return TRUE;
 }
 
-void release_dispex(DispatchEx *This)
-{
-    dynamic_prop_t *prop;
-
-    if(!This->dynamic_data)
-        return;
-
-    for(prop = This->dynamic_data->props; prop < This->dynamic_data->props + This->dynamic_data->prop_cnt; prop++) {
-        VariantClear(&prop->var);
-        heap_free(prop->name);
-    }
-
-    heap_free(This->dynamic_data->props);
-    heap_free(This->dynamic_data);
-}
-
 void init_dispex(DispatchEx *dispex, IUnknown *outer, dispex_static_data_t *data)
 {
     dispex->IDispatchEx_iface.lpVtbl = &DispatchExVtbl;
     dispex->outer = outer;
     dispex->data = data;
-    dispex->dynamic_data = NULL;
 }

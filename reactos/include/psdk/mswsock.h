@@ -86,35 +86,35 @@ typedef struct _TRANSMIT_FILE_BUFFERS {
 
 typedef BOOL
 (PASCAL FAR *LPFN_TRANSMITFILE)(
-  IN SOCKET hSocket,
-  IN HANDLE hFile,
-  IN DWORD nNumberOfBytesToWrite,
-  IN DWORD nNumberOfBytesPerSend,
-  IN OUT LPOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers OPTIONAL,
-  IN DWORD dwReserved);
+  _In_ SOCKET hSocket,
+  _In_ HANDLE hFile,
+  _In_ DWORD nNumberOfBytesToWrite,
+  _In_ DWORD nNumberOfBytesPerSend,
+  _Inout_opt_ LPOVERLAPPED lpOverlapped,
+  _In_opt_ LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers,
+  _In_ DWORD dwReserved);
 
 typedef BOOL
 (PASCAL FAR *LPFN_ACCEPTEX)(
-  IN SOCKET sListenSocket,
-  IN SOCKET sAcceptSocket,
-  IN PVOID lpOutputBuffer,
-  IN DWORD dwReceiveDataLength,
-  IN DWORD dwLocalAddressLength,
-  IN DWORD dwRemoteAddressLength,
-  OUT LPDWORD lpdwBytesReceived,
-  IN OUT LPOVERLAPPED lpOverlapped);
+  _In_ SOCKET sListenSocket,
+  _In_ SOCKET sAcceptSocket,
+  _Out_writes_bytes_(dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength) PVOID lpOutputBuffer,
+  _In_ DWORD dwReceiveDataLength,
+  _In_ DWORD dwLocalAddressLength,
+  _In_ DWORD dwRemoteAddressLength,
+  _Out_ LPDWORD lpdwBytesReceived,
+  _Inout_ LPOVERLAPPED lpOverlapped);
 
 typedef VOID
 (PASCAL FAR *LPFN_GETACCEPTEXSOCKADDRS)(
-  IN PVOID lpOutputBuffer,
-  IN DWORD dwReceiveDataLength,
-  IN DWORD dwLocalAddressLength,
-  IN DWORD dwRemoteAddressLength,
-  OUT struct sockaddr **LocalSockaddr,
-  OUT LPINT LocalSockaddrLength,
-  OUT struct sockaddr **RemoteSockaddr,
-  OUT LPINT RemoteSockaddrLength);
+  _In_reads_bytes_(dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength) PVOID lpOutputBuffer,
+  _In_ DWORD dwReceiveDataLength,
+  _In_ DWORD dwLocalAddressLength,
+  _In_ DWORD dwRemoteAddressLength,
+  _Outptr_result_bytebuffer_(*LocalSockaddrLength) struct sockaddr **LocalSockaddr,
+  _Out_ LPINT LocalSockaddrLength,
+  _Outptr_result_bytebuffer_(*RemoteSockaddrLength) struct sockaddr **RemoteSockaddr,
+  _Out_ LPINT RemoteSockaddrLength);
 
 #if(_WIN32_WINNT >= 0x0501)
 
@@ -132,35 +132,35 @@ typedef struct _TRANSMIT_PACKETS_ELEMENT {
 
 typedef BOOL
 (PASCAL FAR *LPFN_TRANSMITPACKETS)(
-  IN SOCKET hSocket,
-  IN LPTRANSMIT_PACKETS_ELEMENT lpPacketArray OPTIONAL,
-  IN DWORD nElementCount,
-  IN DWORD nSendSize,
-  IN OUT LPOVERLAPPED lpOverlapped OPTIONAL,
-  IN DWORD dwFlags);
+  _In_ SOCKET hSocket,
+  _In_opt_ LPTRANSMIT_PACKETS_ELEMENT lpPacketArray,
+  _In_ DWORD nElementCount,
+  _In_ DWORD nSendSize,
+  _Inout_opt_ LPOVERLAPPED lpOverlapped,
+  _In_ DWORD dwFlags);
 
 #define WSAID_TRANSMITPACKETS \
   {0xd9689da0,0x1f90,0x11d3,{0x99,0x71,0x00,0xc0,0x4f,0x68,0xc8,0x76}}
 
 typedef BOOL
 (PASCAL FAR *LPFN_CONNECTEX)(
-  IN SOCKET s,
-  IN const struct sockaddr FAR *name,
-  IN int namelen,
-  IN PVOID lpSendBuffer OPTIONAL,
-  IN DWORD dwSendDataLength,
-  OUT LPDWORD lpdwBytesSent,
-  IN OUT LPOVERLAPPED lpOverlapped);
+  _In_ SOCKET s,
+  _In_reads_bytes_(namelen) const struct sockaddr FAR *name,
+  _In_ int namelen,
+  _In_reads_bytes_opt_(dwSendDataLength) PVOID lpSendBuffer,
+  _In_ DWORD dwSendDataLength,
+  _Out_ LPDWORD lpdwBytesSent,
+  _Inout_ LPOVERLAPPED lpOverlapped);
 
 #define WSAID_CONNECTEX \
   {0x25a207b9,0xddf3,0x4660,{0x8e,0xe9,0x76,0xe5,0x8c,0x74,0x06,0x3e}}
 
 typedef BOOL
 (PASCAL FAR *LPFN_DISCONNECTEX)(
-  IN SOCKET s,
-  IN OUT LPOVERLAPPED lpOverlapped OPTIONAL,
-  IN DWORD dwFlags,
-  IN DWORD dwReserved);
+  _In_ SOCKET s,
+  _Inout_opt_ LPOVERLAPPED lpOverlapped,
+  _In_ DWORD dwFlags,
+  _In_ DWORD dwReserved);
 
 #define WSAID_DISCONNECTEX \
   {0x7fda2e11,0x8630,0x436f,{0xa0, 0x31, 0xf5, 0x36, 0xa6, 0xee, 0xc1, 0x57}}
@@ -231,11 +231,11 @@ typedef struct _NLA_BLOB {
 
 typedef INT
 (PASCAL FAR *LPFN_WSARECVMSG)(
-  IN SOCKET s,
-  IN OUT LPWSAMSG lpMsg,
-  OUT LPDWORD lpdwNumberOfBytesRecvd OPTIONAL,
-  IN OUT LPWSAOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL);
+  _In_ SOCKET s,
+  _Inout_ LPWSAMSG lpMsg,
+  _Out_opt_ LPDWORD lpdwNumberOfBytesRecvd,
+  _Inout_opt_ LPWSAOVERLAPPED lpOverlapped,
+  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 #define WSAID_WSARECVMSG \
   {0xf689d7c8,0x6f1f,0x436b,{0x8a,0x53,0xe5,0x4f,0xe3,0x51,0xc3,0x22}}
@@ -271,21 +271,21 @@ typedef struct {
 
 typedef INT
 (PASCAL FAR *LPFN_WSASENDMSG)(
-  IN SOCKET s,
-  IN LPWSAMSG lpMsg,
-  IN DWORD dwFlags,
-  OUT LPDWORD lpNumberOfBytesSent OPTIONAL,
-  IN OUT LPWSAOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL);
+  _In_ SOCKET s,
+  _In_ LPWSAMSG lpMsg,
+  _In_ DWORD dwFlags,
+  _Out_opt_ LPDWORD lpNumberOfBytesSent,
+  _Inout_opt_ LPWSAOVERLAPPED lpOverlapped,
+  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
-#define WSAID_WSASENDMSG
+#define WSAID_WSASENDMSG \
   {0xa441e712,0x754f,0x43ca,{0x84,0xa7,0x0d,0xee,0x44,0xcf,0x60,0x6d}}
 
 typedef INT
 (WSAAPI *LPFN_WSAPOLL)(
-  IN OUT LPWSAPOLLFD fdarray,
-  IN ULONG nfds,
-  IN INT timeout);
+  _Inout_ LPWSAPOLLFD fdarray,
+  _In_ ULONG nfds,
+  _In_ INT timeout);
 
 #define WSAID_WSAPOLL \
   {0x18C76F85,0xDC66,0x4964,{0x97,0x2E,0x23,0xC2,0x72,0x38,0x31,0x2B}}
@@ -297,58 +297,58 @@ int
 PASCAL
 FAR
 WSARecvEx(
-  IN SOCKET s,
-  OUT char FAR *buf,
-  IN int len,
-  IN OUT int FAR *flags);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(len, return) char FAR *buf,
+  _In_ int len,
+  _Inout_ int FAR *flags);
 #else
 INT
 PASCAL
 FAR
 WSARecvEx(
-  IN SOCKET s,
-  OUT CHAR FAR *buf,
-  IN INT len,
-  IN OUT INT FAR *flags);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(len, return) CHAR FAR *buf,
+  _In_ INT len,
+  _Inout_ INT FAR *flags);
 #endif /* (_WIN32_WINNT < 0x0600) */
 
 BOOL
 PASCAL
 FAR
 TransmitFile(
-  IN SOCKET hSocket,
-  IN HANDLE hFile,
-  IN DWORD nNumberOfBytesToWrite,
-  IN DWORD nNumberOfBytesPerSend,
-  IN OUT LPOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers OPTIONAL,
-  IN DWORD dwReserved);
+  _In_ SOCKET hSocket,
+  _In_ HANDLE hFile,
+  _In_ DWORD nNumberOfBytesToWrite,
+  _In_ DWORD nNumberOfBytesPerSend,
+  _Inout_opt_ LPOVERLAPPED lpOverlapped,
+  _In_opt_ LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers,
+  _In_ DWORD dwReserved);
 
 BOOL
 PASCAL
 FAR
 AcceptEx(
-  IN SOCKET sListenSocket,
-  IN SOCKET sAcceptSocket,
-  OUT PVOID lpOutputBuffer,
-  IN DWORD dwReceiveDataLength,
-  IN DWORD dwLocalAddressLength,
-  IN DWORD dwRemoteAddressLength,
-  OUT LPDWORD lpdwBytesReceived,
-  IN OUT LPOVERLAPPED lpOverlapped);
+  _In_ SOCKET sListenSocket,
+  _In_ SOCKET sAcceptSocket,
+  _Out_writes_bytes_(dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength) PVOID lpOutputBuffer,
+  _In_ DWORD dwReceiveDataLength,
+  _In_ DWORD dwLocalAddressLength,
+  _In_ DWORD dwRemoteAddressLength,
+  _Out_ LPDWORD lpdwBytesReceived,
+  _Inout_ LPOVERLAPPED lpOverlapped);
 
 VOID
 PASCAL
 FAR
 GetAcceptExSockaddrs(
-  IN PVOID lpOutputBuffer,
-  IN DWORD dwReceiveDataLength,
-  IN DWORD dwLocalAddressLength,
-  IN DWORD dwRemoteAddressLength,
-  OUT struct sockaddr **LocalSockaddr,
-  OUT LPINT LocalSockaddrLength,
-  OUT struct sockaddr **RemoteSockaddr,
-  OUT LPINT RemoteSockaddrLength);
+  _In_reads_bytes_(dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength) PVOID lpOutputBuffer,
+  _In_ DWORD dwReceiveDataLength,
+  _In_ DWORD dwLocalAddressLength,
+  _In_ DWORD dwRemoteAddressLength,
+  _Outptr_result_bytebuffer_(*LocalSockaddrLength) struct sockaddr **LocalSockaddr,
+  _Out_ LPINT LocalSockaddrLength,
+  _Outptr_result_bytebuffer_(*RemoteSockaddrLength) struct sockaddr **RemoteSockaddr,
+  _Out_ LPINT RemoteSockaddrLength);
 
 #ifdef __cplusplus
 }

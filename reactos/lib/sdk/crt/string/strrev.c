@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
+ * FILE:        lib/sdk/crt/string/strrev.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-char * _strrev(char *s)
+char * CDECL _strrev(char *s)
 {
 	char a, *b, *e;
 	b=e=s;

@@ -19,97 +19,112 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/console.h
+ * FILE:            base/setup/usetup/native/utils/console.h
  * PURPOSE:         Console support functions
  * PROGRAMMER:      Eric Kohl
  */
 
 #pragma once
 
-BOOL WINAPI
+BOOL
+WINAPI
 AllocConsole(VOID);
 
-BOOL WINAPI
+BOOL
+WINAPI
 AttachConsole(
-	IN DWORD dwProcessId);
+    IN DWORD dwProcessId);
 
-BOOL WINAPI
+BOOL
+WINAPI
 FillConsoleOutputAttribute(
-	IN HANDLE hConsoleOutput,
-	IN WORD wAttribute,
-	IN DWORD nLength,
-	IN COORD dwWriteCoord,
-	OUT LPDWORD lpNumberOfAttrsWritten);
+    IN HANDLE hConsoleOutput,
+    IN WORD wAttribute,
+    IN DWORD nLength,
+    IN COORD dwWriteCoord,
+    OUT LPDWORD lpNumberOfAttrsWritten);
 
-BOOL WINAPI
+BOOL
+WINAPI
 FillConsoleOutputCharacterA(
-	IN HANDLE hConsoleOutput,
-	IN CHAR cCharacter,
-	IN DWORD nLength,
-	IN COORD dwWriteCoord,
-	OUT LPDWORD lpNumberOfCharsWritten);
+    IN HANDLE hConsoleOutput,
+    IN CHAR cCharacter,
+    IN DWORD nLength,
+    IN COORD dwWriteCoord,
+    OUT LPDWORD lpNumberOfCharsWritten);
 
-BOOL WINAPI
+BOOL
+WINAPI
 FreeConsole(VOID);
 
-BOOL WINAPI
+BOOL
+WINAPI
 GetConsoleScreenBufferInfo(
-	IN HANDLE hConsoleOutput,
-	OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
+    IN HANDLE hConsoleOutput,
+    OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
 
-HANDLE WINAPI
+HANDLE
+WINAPI
 GetStdHandle(
-	IN DWORD nStdHandle);
+    IN DWORD nStdHandle);
 
-BOOL WINAPI
+BOOL
+WINAPI
 ReadConsoleInput(
-	IN HANDLE hConsoleInput,
-	OUT PINPUT_RECORD lpBuffer,
-	IN DWORD nLength,
-	OUT LPDWORD lpNumberOfEventsRead);
+    IN HANDLE hConsoleInput,
+    OUT PINPUT_RECORD lpBuffer,
+    IN DWORD nLength,
+    OUT LPDWORD lpNumberOfEventsRead);
 
-BOOL WINAPI
+BOOL
+WINAPI
 SetConsoleCursorInfo(
-	IN HANDLE hConsoleOutput,
-	IN const CONSOLE_CURSOR_INFO* lpConsoleCursorInfo);
+    IN HANDLE hConsoleOutput,
+    IN const CONSOLE_CURSOR_INFO *lpConsoleCursorInfo);
 
-BOOL WINAPI
+BOOL
+WINAPI
 SetConsoleCursorPosition(
-	IN HANDLE hConsoleOutput,
-	IN COORD dwCursorPosition);
+    IN HANDLE hConsoleOutput,
+    IN COORD dwCursorPosition);
 
-BOOL WINAPI
+BOOL
+WINAPI
 SetConsoleTextAttribute(
-	IN HANDLE hConsoleOutput,
-	IN WORD wAttributes);
+    IN HANDLE hConsoleOutput,
+    IN WORD wAttributes);
 
-BOOL WINAPI
+BOOL
+WINAPI
 WriteConsole(
-	IN HANDLE hConsoleOutput,
-	IN const VOID* lpBuffer,
-	IN DWORD nNumberOfCharsToWrite,
-	OUT LPDWORD lpNumberOfCharsWritten,
-	IN LPVOID lpReserved);
+    IN HANDLE hConsoleOutput,
+    IN const VOID *lpBuffer,
+    IN DWORD nNumberOfCharsToWrite,
+    OUT LPDWORD lpNumberOfCharsWritten,
+    IN LPVOID lpReserved);
 
-BOOL WINAPI
+BOOL
+WINAPI
 WriteConsoleOutputCharacterA(
-	HANDLE hConsoleOutput,
-	IN LPCSTR lpCharacter,
-	IN DWORD nLength,
-	IN COORD dwWriteCoord,
-	OUT LPDWORD lpNumberOfCharsWritten);
+    HANDLE hConsoleOutput,
+    IN LPCSTR lpCharacter,
+    IN DWORD nLength,
+    IN COORD dwWriteCoord,
+    OUT LPDWORD lpNumberOfCharsWritten);
 
-BOOL WINAPI
+BOOL
+WINAPI
 WriteConsoleOutputCharacterW(
-	HANDLE hConsoleOutput,
-	IN LPCSTR lpCharacter,
-	IN DWORD nLength,
-	IN COORD dwWriteCoord,
-	OUT LPDWORD lpNumberOfCharsWritten);
+    HANDLE hConsoleOutput,
+    IN LPCSTR lpCharacter,
+    IN DWORD nLength,
+    IN COORD dwWriteCoord,
+    OUT LPDWORD lpNumberOfCharsWritten);
 
-BOOL WINAPI
+BOOL
+WINAPI
 SetConsoleOutputCP(
-	IN UINT wCodePageID
+    IN UINT wCodePageID
 );
 
 /* EOF */

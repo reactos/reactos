@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -144,9 +144,10 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
         case MiWriteCombined:
 
             //
-            // We don't support write combining yet
+            // Disable the cache and allow combined writing
             //
-            ASSERT(FALSE);
+            MI_PAGE_DISABLE_CACHE(&TempPte);
+            MI_PAGE_WRITE_COMBINED(&TempPte);
             break;
 
         default:
@@ -263,6 +264,15 @@ MmUnmapVideoDisplay(IN PVOID BaseAddress,
     // Call the real function
     //
     MmUnmapIoSpace(BaseAddress, NumberOfBytes);
+}
+
+LOGICAL
+NTAPI
+MmIsIoSpaceActive(IN PHYSICAL_ADDRESS StartAddress,
+                  IN SIZE_T NumberOfBytes)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

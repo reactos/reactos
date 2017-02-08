@@ -1,6 +1,6 @@
-/* FILE:        dll/cpl/mmsys/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-02-02
+/* FILE:       dll/cpl/mmsys/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2014-04-25
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -10,21 +10,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hlasitost"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",IDC_DEVICE_NAME,40,10,194,36
-    GROUPBOX "Hlasitost za¯ÌzenÌ", -1, 7,30,230,100
-    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE,17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "NÌzk·",-1,62,66,30,17
-    LTEXT "Vysok·",-1,195,66,30,17
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
+    LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 36
+    GROUPBOX "Hlasitost za≈ô√≠zen√≠", -1, 7, 30, 230, 100
+    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
+    CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
+    LTEXT "N√≠zk√°", -1, 62, 66, 30, 17
+    LTEXT "Vysok√°", -1, 195, 66, 30, 17
     CHECKBOX "&Ztlumit", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    CHECKBOX "UmÌstit &ikonu hlasitosti na panel ˙loh", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "&Up¯esnit...", IDC_ADVANCED_BTN, 150,105,75,15
-    GROUPBOX "NastavenÌ reproduktor˘", IDC_SPEAKER_SET_BTN, 7,140,230,80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "NastavenÌ nÌûe lze pouûÌt ke zmÏnÏnÌ hlasitosti jednotliv˝ch reproduktor˘ a dalöÌch nastavenÌ.",-1,70,155,150,36
-    PUSHBUTTON "&Hlasitost reproduktor˘...", IDC_SPEAKER_VOL_BTN, 70,195,75,15
-    PUSHBUTTON "U&p¯esnit...", IDC_ADVANCED2_BTN, 150,195,75,15
+    CHECKBOX "Um√≠stit &ikonu hlasitosti na panel √∫loh", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
+    PUSHBUTTON "&Up≈ôesnit...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    GROUPBOX "Nastaven√≠ reproduktor≈Ø", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    LTEXT "Nastaven√≠ n√≠≈æe lze pou≈æ√≠t ke zmƒõnƒõn√≠ hlasitosti jednotliv√Ωch reproduktor≈Ø a dal≈°√≠ch nastaven√≠.", -1, 70, 155, 150, 36
+    PUSHBUTTON "&Hlasitost reproduktor≈Ø...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
+    PUSHBUTTON "U&p≈ôesnit...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
@@ -32,18 +32,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zvuky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ZvukovÈ schÈma je soubor zvuk˘, kterÈ jsou p¯ehr·v·ny p¯i ud·lostech v systÈmu ReactOS a programech. Lze zvolit existujÌcÌ schÈma nebo uloûit jinÈ, upravenÈ.",-1,8,7,230,40
-    LTEXT "ZvukovÈ s&chÈma:",-1,8,42,150,17
+    LTEXT "Zvukov√© sch√©ma je soubor zvuk≈Ø, kter√© jsou p≈ôehr√°v√°ny p≈ôi ud√°lostech v syst√©mu ReactOS a programech. Lze zvolit existuj√≠c√≠ sch√©ma nebo ulo≈æit jin√©, upraven√©.", -1, 8, 7, 230, 40
+    LTEXT "Zvukov√© s&ch√©ma:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Uloûit jako...", IDC_SAVEAS_BTN, 134,70,50,15
-    PUSHBUTTON "&Smazat", IDC_DELETE_BTN, 188,70,50,15
-    LTEXT "Zvuky lze mÏnit kliknutÌm na programovou ud·lost v n·sledujÌcÌm seznamu a vybr·nÌm zvuku, kter˝ m· b˝t p¯ehr·n. ZmÏny lze uloûit jako novÈ zvukovÈ schÈma.",-1,8,90,230,40
-    LTEXT "&Ud·losti program˘:",-1,8,118,150,17
+    PUSHBUTTON "&Ulo≈æit jako...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "&Smazat", IDC_DELETE_BTN, 188, 70, 50, 15
+    LTEXT "Zvuky lze mƒõnit kliknut√≠m na programovou ud√°lost v n√°sleduj√≠c√≠m seznamu a vybr√°n√≠m zvuku, kter√Ω m√° b√Ωt p≈ôehr√°n. Zmƒõny lze ulo≈æit jako nov√© zvukov√© sch√©ma.", -1, 8, 90, 230, 40
+    LTEXT "&Ud√°losti program≈Ø:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Zvuky:", IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    LTEXT "&Zvuky:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED | BS_ICON
-    PUSHBUTTON "&Proch·zet...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
+    PUSHBUTTON "&Proch√°zet...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -51,25 +51,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zvuk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "P¯ehr·v·nÌ zvuku", -1, 7,7,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "&V˝chozÌ za¯ÌzenÌ:",-1,50,20,80,17
+    GROUPBOX "P≈ôehr√°v√°n√≠ zvuku", -1, 7, 7, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
+    LTEXT "&V√Ωchoz√≠ za≈ô√≠zen√≠:", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Hlasitost...", IDC_VOLUME1_BTN, 85,47,70,15
-    PUSHBUTTON "&Up¯esnit...", IDC_ADV2_BTN, 160,47,70,15
-    GROUPBOX "Z·znam zvuku", -1, 7,75,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "V˝&chozÌ za¯ÌzenÌ:",-1,50,88,80,17
+    PUSHBUTTON "&Hlasitost...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "&Up≈ôesnit...", IDC_ADV2_BTN, 160, 47, 70, 15
+    GROUPBOX "Z√°znam zvuku", -1, 7, 75, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
+    LTEXT "V√Ω&choz√≠ za≈ô√≠zen√≠:", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "H&lasitost...", IDC_VOLUME2_BTN, 85,115,70,15
-    PUSHBUTTON "U&p¯esnit...", IDC_ADV1_BTN, 160,115,70,15
-    GROUPBOX "P¯ehr·v·nÌ MIDI hudby", -1, 7,145,230,60
-    ICON IDI_MIDICON, IDI_MIDICON, 15,158,32,32
-    LTEXT "V˝cho&zÌ za¯ÌzenÌ:",-1,50,158,80,17
+    PUSHBUTTON "H&lasitost...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "U&p≈ôesnit...", IDC_ADV1_BTN, 160, 115, 70, 15
+    GROUPBOX "P≈ôehr√°v√°n√≠ MIDI hudby", -1, 7, 145, 230, 60
+    ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
+    LTEXT "V√Ωcho&z√≠ za≈ô√≠zen√≠:", -1, 50, 158, 80, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Hl&asitost...", IDC_VOLUME3_BTN, 85,185,70,15
-    PUSHBUTTON "&O produktu...", IDC_ADV3_BTN, 160,185,70,15
-    CHECKBOX "PouûÌva&t jen v˝chozÌ za¯ÌzenÌ", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    PUSHBUTTON "Hl&asitost...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "&O produktu...", IDC_ADV3_BTN, 160, 185, 70, 15
+    CHECKBOX "Pou≈æ√≠va&t jen v√Ωchoz√≠ za≈ô√≠zen√≠", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -77,20 +77,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hlas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tato nastavenÌ ovlivÚujÌ hlasitost a rozöÌ¯enÈ volby pro p¯ehr·v·nÌ hlasu a zvolenÈ z·znamovÈ za¯ÌzenÌ.",-1,8,7,230,40
-    GROUPBOX "P¯ehr·v·nÌ hlasu", -1, 7,37,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "&V˝chozÌ za¯ÌzenÌ:",-1,50,50,80,17
+    LTEXT "Tato nastaven√≠ ovliv≈àuj√≠ hlasitost a roz≈°√≠≈ôen√© volby pro p≈ôehr√°v√°n√≠ hlasu a zvolen√© z√°znamov√© za≈ô√≠zen√≠.", -1, 8, 7, 230, 40
+    GROUPBOX "P≈ôehr√°v√°n√≠ hlasu", -1, 7, 37, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
+    LTEXT "&V√Ωchoz√≠ za≈ô√≠zen√≠:", -1, 50, 50, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Hlasitost...", IDC_VOLUME4_BTN, 85,77,70,15
-    PUSHBUTTON "&Up¯esnit...", IDC_ADV4_BTN, 160,77,70,15
-    GROUPBOX "Z·znam hlasu", -1, 7,105,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "V˝&chozÌ za¯ÌzenÌ:",-1,50,118,80,17
+    PUSHBUTTON "&Hlasitost...", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "&Up≈ôesnit...", IDC_ADV4_BTN, 160, 77, 70, 15
+    GROUPBOX "Z√°znam hlasu", -1, 7, 105, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
+    LTEXT "V√Ω&choz√≠ za≈ô√≠zen√≠:", -1, 50, 118, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "H&lasitost...", IDC_VOLUME5_BTN, 85,145,70,15
-    PUSHBUTTON "U&p¯esnit...", IDC_ADV5_BTN, 160,145,70,15
-    PUSHBUTTON "&Otestovat hardware...", IDC_TEST_HARDWARE, 160,175,70,15
+    PUSHBUTTON "H&lasitost...", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "U&p≈ôesnit...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "&Otestovat hardware...", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -98,177 +98,175 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-
 END
 
-IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
+IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Uloûit schÈma jako"
+CAPTION "Ulo≈æit sch√©ma jako"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Uloûit toto zvukovÈ schÈma jako:", -1, 7, 7, 212, 9
+    LTEXT "&Ulo≈æit toto zvukov√© sch√©ma jako:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 93, 36, 60, 14
     PUSHBUTTON "Storno", IDCANCEL, 157, 36, 60, 14
 END
 
-IDD_SPEAKERS DIALOG 0, 0, 257, 204
+IDD_SPEAKERS DIALOGEX 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Reproduktory"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "Zvolte rozmÌstÏnÌ reproduktor˘, kterÈ nejvÌce odpovÌd· souËasnÈmu.", -1, 36, 8, 215, 27
+    LTEXT "Zvolte rozm√≠stƒõn√≠ reproduktor≈Ø, kter√© nejv√≠ce odpov√≠d√° souƒçasn√©mu.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "&RozmÌstÏnÌ reproduktor˘:", 8502, 53, 169, 55, 10
+    LTEXT "&Rozm√≠stƒõn√≠ reproduktor≈Ø:", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
-IDD_PERFORMANCE1 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE1 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "V˝kon"
+CAPTION "V√Ωkon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tato nastavenÌ ovlivÚujÌ, jak systÈm ReactOS p¯ehr·v· zvuk. Mohou pomoci p¯i ¯eöenÌ problÈm˘ se zvukem.", 8492, 34, 7, 218, 23
-    GROUPBOX "P¯ehr·v·nÌ zvuku", 8494, 7, 32, 243, 152
+    LTEXT "Tato nastaven√≠ ovliv≈àuj√≠, jak syst√©m ReactOS p≈ôehr√°v√° zvuk. Mohou pomoci p≈ôi ≈ôe≈°en√≠ probl√©m≈Ø se zvukem.", 8492, 34, 7, 218, 23
+    GROUPBOX "P≈ôehr√°v√°n√≠ zvuku", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "&Hardwarov· akcelerace:", 8495, 13, 56, 111, 14
+    LTEXT "&Hardwarov√° akcelerace:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "&Kvalita p¯evodu vzorkov·nÌ:", 8496, 13, 123, 103, 14
+    LTEXT "&Kvalita p≈ôevodu vzorkov√°n√≠:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
-    PUSHBUTTON "&Obnovit v˝chozÌ", 5400, 7, 191, 110, 14
-    LTEXT "é·dn·", 8497, 128, 56, 21, 10
-    LTEXT "Pln·", 8498, 214, 56, 21, 9
-    LTEXT "Dobr·", 8499, 128, 123, 21, 10
-    LTEXT "NejlepöÌ", 8500, 214, 123, 23, 9
-    LTEXT "Tento string popisuje hardwarovÈ nastavenÌ pro zachyt·vacÌ za¯ÌzenÌ", 5399, 13, 145, 227, 21
-    LTEXT "Tento string popisuje hardwarovÈ nastavenÌ pro vykreslovacÌ za¯ÌzenÌ", 5398, 13, 78, 227, 22
+    PUSHBUTTON "&Obnovit v√Ωchoz√≠", 5400, 7, 191, 110, 14
+    LTEXT "≈Ω√°dn√°", 8497, 128, 56, 21, 10
+    LTEXT "Pln√°", 8498, 214, 56, 21, 9
+    LTEXT "Dobr√°", 8499, 128, 123, 21, 10
+    LTEXT "Nejlep≈°√≠", 8500, 214, 123, 23, 9
+    LTEXT "Tento string popisuje hardwarov√© nastaven√≠ pro zachyt√°vac√≠ za≈ô√≠zen√≠", 5399, 13, 145, 227, 21
+    LTEXT "Tento string popisuje hardwarov√© nastaven√≠ pro vykreslovac√≠ za≈ô√≠zen√≠", 5398, 13, 78, 227, 22
 END
 
-IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "V˝kon"
+CAPTION "V√Ωkon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tato nastavenÌ ovlivÚujÌ, jak systÈm ReactOS zaznamen·v· zvuk. Mohou pomoci p¯i ¯eöenÌ problÈm˘ se zvukem.", 8492, 34, 7, 217, 20
-    GROUPBOX "Z·znam zvuku", 8494, 7, 29, 242, 122
+    LTEXT "Tato nastaven√≠ ovliv≈àuj√≠, jak syst√©m ReactOS zaznamen√°v√° zvuk. Mohou pomoci p≈ôi ≈ôe≈°en√≠ probl√©m≈Ø se zvukem.", 8492, 34, 7, 217, 20
+    GROUPBOX "Z√°znam zvuku", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "&Hardwarov· akcelerace:", 8495, 13, 46, 103, 17
+    LTEXT "&Hardwarov√° akcelerace:", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "&Kvalita p¯evodu vzorkov·nÌ:", 8496, 13, 103, 103, 17
+    LTEXT "&Kvalita p≈ôevodu vzorkov√°n√≠:", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
-    PUSHBUTTON "&Obnovit v˝chozÌ", 5400, 9, 158, 110, 14
-    LTEXT "é·dn·", 8497, 125, 46, 24, 10
-    LTEXT "Pln·", 8498, 217, 46, 19, 9
-    LTEXT "Dobr·", 8499, 125, 103, 24, 10
-    LTEXT "NejlepöÌ", 8500, 217, 103, 19, 9
-    LTEXT "Tento string popisuje hardwarovÈ nastavenÌ pro zachyt·vacÌ za¯ÌzenÌ", 5399, 13, 125, 222, 21
-    LTEXT "Tento string popisuje hardwarovÈ nastavenÌ pro vykreslovacÌ za¯ÌzenÌ", 5398, 13, 68, 218, 24
+    PUSHBUTTON "&Obnovit v√Ωchoz√≠", 5400, 9, 158, 110, 14
+    LTEXT "≈Ω√°dn√°", 8497, 125, 46, 24, 10
+    LTEXT "Pln√°", 8498, 217, 46, 19, 9
+    LTEXT "Dobr√°", 8499, 125, 103, 24, 10
+    LTEXT "Nejlep≈°√≠", 8500, 217, 103, 19, 9
+    LTEXT "Tento string popisuje hardwarov√© nastaven√≠ pro zachyt√°vac√≠ za≈ô√≠zen√≠", 5399, 13, 125, 222, 21
+    LTEXT "Tento string popisuje hardwarov√© nastaven√≠ pro vykreslovac√≠ za≈ô√≠zen√≠", 5398, 13, 68, 218, 24
 END
 
-IDD_SETUP1 DIALOG 0, 0, 227, 206
+IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "NastavenÌ"
+CAPTION "Nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS zvuk", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Tento poËÌtaË nem˘ûe p¯ehr·vat zvuk, protoûe sluûba zvuku systÈmu ReactOS nenÌ spuötÏna.", 10245, 60, 25, 150, 40
+    LTEXT "Tento poƒç√≠taƒç nem≈Ø≈æe p≈ôehr√°vat zvuk, proto≈æe slu≈æba zvuku syst√©mu ReactOS nen√≠ spu≈°tƒõna.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Spustit ReactOS zvuk", 10253, 60, 68, 150, 9
-    LTEXT "Pozn·mky", 10246, 58, 87, 150, 11
-    LTEXT "1. Pro spuötÏnÌ tÈto sluûby je t¯eba b˝t spr·vcem poËÌtaËe. Pokud nejste p¯ihl·öeni jako spr·vce, bude vyû·d·no jmÈno a heslo spr·vce.", 10247, 60, 100, 150, 40
-    LTEXT "2. Po spuötÏnÌ ReactOS zvuku bude t¯eba restartovat poËÌtaË.", 10248, 60, 140, 150, 40
+    LTEXT "Pozn√°mky", 10246, 58, 87, 150, 11
+    LTEXT "1. Pro spu≈°tƒõn√≠ t√©to slu≈æby je t≈ôeba b√Ωt spr√°vcem poƒç√≠taƒçe. Pokud nejste p≈ôihl√°≈°eni jako spr√°vce, bude vy≈æ√°d√°no jm√©no a heslo spr√°vce.", 10247, 60, 100, 150, 40
+    LTEXT "2. Po spu≈°tƒõn√≠ ReactOS zvuku bude t≈ôeba restartovat poƒç√≠taƒç.", 10248, 60, 140, 150, 40
 END
 
-IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
+IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "VÌcekan·lov˝ zvuk"
+CAPTION "V√≠cekan√°lov√Ω zvuk"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tady bude popis.", 9506, 8, 4, 212, 24
-    LTEXT "NÌzk·", 9473, 65, 31, 14, 8
+    LTEXT "N√≠zk√°", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 29, 108, 17
-    LTEXT "Vysok·", 9474, 202, 31, 17, 8
-    LTEXT "NÌzk·", 9477, 65, 50, 14, 8
+    LTEXT "Vysok√°", 9474, 202, 31, 17, 8
+    LTEXT "N√≠zk√°", 9477, 65, 50, 14, 8
     LTEXT "", 9476, 5, 50, 55, 8
     CONTROL "Slider1", 9479, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 48, 108, 17
-    LTEXT "Vysok·", 9478, 202, 50, 17, 8
-    LTEXT "NÌzk·", 9481, 65, 69, 14, 8
+    LTEXT "Vysok√°", 9478, 202, 50, 17, 8
+    LTEXT "N√≠zk√°", 9481, 65, 69, 14, 8
     LTEXT "", 9480, 5, 69, 55, 8
     CONTROL "Slider1", 9483, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 67, 108, 17
-    LTEXT "Vysok·", 9482, 202, 69, 17, 8
-    LTEXT "NÌzk·", 9485, 65, 88, 14, 8
+    LTEXT "Vysok√°", 9482, 202, 69, 17, 8
+    LTEXT "N√≠zk√°", 9485, 65, 88, 14, 8
     LTEXT "", 9484, 5, 88, 55, 8
     CONTROL "Slider1", 9487, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 86, 108, 17
-    LTEXT "Vysok·", 9486, 202, 88, 17, 8
-    LTEXT "NÌzk·", 9489, 65, 107, 14, 8
+    LTEXT "Vysok√°", 9486, 202, 88, 17, 8
+    LTEXT "N√≠zk√°", 9489, 65, 107, 14, 8
     LTEXT "", 9488, 5, 107, 55, 8
     CONTROL "Slider1", 9491, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 105, 108, 17
-    LTEXT "Vysok·", 9490, 202, 107, 17, 8
-    LTEXT "NÌzk·", 9493, 65, 126, 14, 8
+    LTEXT "Vysok√°", 9490, 202, 107, 17, 8
+    LTEXT "N√≠zk√°", 9493, 65, 126, 14, 8
     LTEXT "", 9492, 5, 126, 55, 8
     CONTROL "Slider1", 9495, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 124, 108, 17
-    LTEXT "Vysok·", 9494, 202, 126, 17, 8
-    LTEXT "NÌzk·", 9497, 65, 145, 14, 8
+    LTEXT "Vysok√°", 9494, 202, 126, 17, 8
+    LTEXT "N√≠zk√°", 9497, 65, 145, 14, 8
     LTEXT "", 9496, 5, 145, 55, 8
     CONTROL "Slider1", 9499, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 143, 108, 17
-    LTEXT "Vysok·", 9498, 202, 145, 17, 8
-    LTEXT "NÌzk·", 9501, 65, 164, 14, 8
+    LTEXT "Vysok√°", 9498, 202, 145, 17, 8
+    LTEXT "N√≠zk√°", 9501, 65, 164, 14, 8
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
-    LTEXT "Vysok·", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Pohybovat vöemi posuvnÌky najednou", 9504, 5, 185, 216, 9
-    PUSHBUTTON "&Obnovit v˝chozÌ", 9505, 110, 199, 110, 14
+    LTEXT "Vysok√°", 9502, 202, 164, 17, 8
+    AUTOCHECKBOX "&Pohybovat v≈°emi posuvn√≠ky najednou", 9504, 5, 185, 216, 9
+    PUSHBUTTON "&Obnovit v√Ωchoz√≠", 9505, 110, 199, 110, 14
 END
 
-IDD_SETUP2 DIALOG 0, 0, 227, 206
+IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "NastavenÌ"
+CAPTION "Nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS zvuk", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Sluûba zvuku systÈmu ReactOS je nynÌ spuötÏna. Zvuk nicmÈnÏ nemusÌ fungovat spr·vnÏ, dokud nebude systÈm ReactOS restartov·n. Pokud chcete restartovat nynÌ, nejd¯Ìve uloûte svou pr·ci a ukonËete vöechny spuötÏnÈ programy.", 10261, 60, 25, 150, 50
-    LTEXT "KlepnutÌm na tlaËÌtko OK restartujete systÈm ReactOS.", 10262, 60, 75, 150, 20
-    LTEXT "Pokud klepnete na tlaËÌtko Storno, bude t¯eba poËÌtaË restartovat pozdÏji, aby ReactOS zvuk fungoval spr·vnÏ.", 10263, 60, 100, 150, 40
+    LTEXT "Slu≈æba zvuku syst√©mu ReactOS je nyn√≠ spu≈°tƒõna. Zvuk nicm√©nƒõ nemus√≠ fungovat spr√°vnƒõ, dokud nebude syst√©m ReactOS restartov√°n. Pokud chcete restartovat nyn√≠, nejd≈ô√≠ve ulo≈æte svou pr√°ci a ukonƒçete v≈°echny spu≈°tƒõn√© programy.", 10261, 60, 25, 150, 50
+    LTEXT "Klepnut√≠m na tlaƒç√≠tko OK restartujete syst√©m ReactOS.", 10262, 60, 75, 150, 20
+    LTEXT "Pokud klepnete na tlaƒç√≠tko Storno, bude t≈ôeba poƒç√≠taƒç restartovat pozdƒõji, aby ReactOS zvuk fungoval spr√°vnƒõ.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Zvuky a zvukov· za¯ÌzenÌ"
-    IDS_CPLDESCRIPTION "UpravÌ zvukovÈ schÈma Vaöeho poËÌtaËe, nebo nastavÌ reproduktory a nahr·vacÌ za¯ÌzenÌ."
-    IDS_NO_SOUND "(NenÌ)"
-	IDS_NO_DEVICES "No Devices"
-
+    IDS_CPLNAME "Zvuky a zvukov√° za≈ô√≠zen√≠"
+    IDS_CPLDESCRIPTION "Uprav√≠ zvukov√© sch√©ma Va≈°eho poƒç√≠taƒçe, nebo nastav√≠ reproduktory a nahr√°vac√≠ za≈ô√≠zen√≠."
+    IDS_NO_SOUND "(Nen√≠)"
+    IDS_NO_DEVICES "No Devices"
     5825 "Chyba programu"
-    5826 "UkonËenÌ programu"
-    5827 "Varov·nÌ p¯i kritickÈm stavu baterie"
-    5828 "P¯ipojenÌ za¯ÌzenÌ"
-    5829 "OdpojenÌ za¯ÌzenÌ"
-    5830 "Nezda¯enÈ p¯ipojenÌ za¯ÌzenÌ"
-    5831 "Vysyp·nÌ koöe"
-    5832 "Varov·nÌ p¯i nÌzkÈm stavu baterie"
+    5826 "Ukonƒçen√≠ programu"
+    5827 "Varov√°n√≠ p≈ôi kritick√©m stavu baterie"
+    5828 "P≈ôipojen√≠ za≈ô√≠zen√≠"
+    5829 "Odpojen√≠ za≈ô√≠zen√≠"
+    5830 "Nezda≈ôen√© p≈ôipojen√≠ za≈ô√≠zen√≠"
+    5831 "Vysyp√°n√≠ ko≈°e"
+    5832 "Varov√°n√≠ p≈ôi n√≠zk√©m stavu baterie"
     5833 "Maximalizace"
-    5834 "Vyvol·nÌ p¯Ìkazu z nabÌdky"
-    5835 "Vyvol·nÌ nabÌdky"
+    5834 "Vyvol√°n√≠ p≈ô√≠kazu z nab√≠dky"
+    5835 "Vyvol√°n√≠ nab√≠dky"
     5836 "Minimalizace"
-    5837 "Ozn·menÌ o novÈ poötÏ"
-    5838 "Zah·jenÌ navigace"
-    5839 "SpuötÏnÌ programu"
-    5840 "DokonËenÌ tisku"
-    5841 "ObnovenÌ z maximalizace"
-    5842 "ObnovenÌ z minimalizace"
-    5843 "HvÏzdiËka"
-    5844 "V˝chozÌ nastavenÌ zvuku"
-    5845 "V˝straha"
-    5846 "UkonËenÌ systÈmu ReactOS"
-    5847 "KritickÈ zastavenÌ"
-    5848 "SystÈmov· ozn·menÌ"
-    5849 "Ot·zka"
-    5850 "SpuötÏnÌ systÈmu ReactOS"
-    5851 "Otev¯enÌ nabÌdky Start"
-    5852 "Odhl·öenÌ od systÈmu ReactOS"
-    5853 "P¯ihl·öenÌ k systÈmu ReactOS"
-	5854 "ReactOS Explorer"
+    5837 "Ozn√°men√≠ o nov√© po≈°tƒõ"
+    5838 "Zah√°jen√≠ navigace"
+    5839 "Spu≈°tƒõn√≠ programu"
+    5840 "Dokonƒçen√≠ tisku"
+    5841 "Obnoven√≠ z maximalizace"
+    5842 "Obnoven√≠ z minimalizace"
+    5843 "Hvƒõzdiƒçka"
+    5844 "V√Ωchoz√≠ nastaven√≠ zvuku"
+    5845 "V√Ωstraha"
+    5846 "Ukonƒçen√≠ syst√©mu ReactOS"
+    5847 "Kritick√© zastaven√≠"
+    5848 "Syst√©mov√° ozn√°men√≠"
+    5849 "Ot√°zka"
+    5850 "Spu≈°tƒõn√≠ syst√©mu ReactOS"
+    5851 "Otev≈ôen√≠ nab√≠dky Start"
+    5852 "Odhl√°≈°en√≠ od syst√©mu ReactOS"
+    5853 "P≈ôihl√°≈°en√≠ k syst√©mu ReactOS"
+    5854 "ReactOS Explorer"
 END

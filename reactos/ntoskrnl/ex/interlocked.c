@@ -29,7 +29,7 @@
 
 FORCEINLINE
 BOOLEAN
-_ExiDisableInteruptsAndAcquireSpinlock(
+_ExiDisableInterruptsAndAcquireSpinlock(
     IN OUT PKSPIN_LOCK Lock)
 {
     BOOLEAN Enabled;
@@ -45,7 +45,7 @@ _ExiDisableInteruptsAndAcquireSpinlock(
 
 FORCEINLINE
 VOID
-_ExiReleaseSpinLockAndRestoreInterupts(
+_ExiReleaseSpinLockAndRestoreInterrupts(
     IN OUT PKSPIN_LOCK Lock,
     BOOLEAN Enable)
 {
@@ -68,7 +68,7 @@ ExInterlockedAddLargeInteger(
     BOOLEAN Enable;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the old value */
     OldValue.QuadPart = Addend->QuadPart;
@@ -77,7 +77,7 @@ ExInterlockedAddLargeInteger(
     Addend->QuadPart += Increment.QuadPart;
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old value */
     return OldValue;
@@ -94,7 +94,7 @@ ExInterlockedAddUlong(
     ULONG OldValue;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the old value */
     OldValue = *Addend;
@@ -103,7 +103,7 @@ ExInterlockedAddUlong(
     *Addend += Increment;
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old value */
     return OldValue;
@@ -120,7 +120,7 @@ ExInterlockedInsertHeadList(
     PLIST_ENTRY FirstEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the first entry */
     FirstEntry = ListHead->Flink;
@@ -129,7 +129,7 @@ ExInterlockedInsertHeadList(
     InsertHeadList(ListHead, ListEntry);
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old first entry or NULL for empty list */
     return (FirstEntry == ListHead) ? NULL : FirstEntry;
@@ -146,7 +146,7 @@ ExInterlockedInsertTailList(
     PLIST_ENTRY LastEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the last entry */
     LastEntry = ListHead->Blink;
@@ -155,7 +155,7 @@ ExInterlockedInsertTailList(
     InsertTailList(ListHead, ListEntry);
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old last entry or NULL for empty list */
     return (LastEntry == ListHead) ? NULL : LastEntry;
@@ -171,7 +171,7 @@ ExInterlockedRemoveHeadList(
     PLIST_ENTRY ListEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Check if the list is empty */
     if (IsListEmpty(ListHead))
@@ -190,7 +190,7 @@ ExInterlockedRemoveHeadList(
     }
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the entry */
     return ListEntry;
@@ -206,7 +206,7 @@ ExInterlockedPopEntryList(
     PSINGLE_LIST_ENTRY ListEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Pop the first entry from the list */
     ListEntry = PopEntryList(ListHead);
@@ -216,7 +216,7 @@ ExInterlockedPopEntryList(
 #endif
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the entry */
     return ListEntry;
@@ -233,7 +233,7 @@ ExInterlockedPushEntryList(
     PSINGLE_LIST_ENTRY OldListEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the old top entry */
     OldListEntry = ListHead->Next;
@@ -242,7 +242,7 @@ ExInterlockedPushEntryList(
     PushEntryList(ListHead, ListEntry);
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the entry */
     return OldListEntry;
@@ -299,7 +299,7 @@ ExfInterlockedAddUlong(
     ULONG OldValue;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the old value */
     OldValue = *Addend;
@@ -308,7 +308,7 @@ ExfInterlockedAddUlong(
     *Addend += Increment;
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old value */
     return OldValue;
@@ -325,7 +325,7 @@ ExfInterlockedInsertHeadList(
     PLIST_ENTRY FirstEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the first entry */
     FirstEntry = ListHead->Flink;
@@ -334,7 +334,7 @@ ExfInterlockedInsertHeadList(
     InsertHeadList(ListHead, ListEntry);
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old first entry or NULL for empty list */
     return (FirstEntry == ListHead) ? NULL : FirstEntry;
@@ -351,7 +351,7 @@ ExfInterlockedInsertTailList(
     PLIST_ENTRY LastEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the last entry */
     LastEntry = ListHead->Blink;
@@ -360,7 +360,7 @@ ExfInterlockedInsertTailList(
     InsertTailList(ListHead, ListEntry);
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* Return the old last entry or NULL for empty list */
     return (LastEntry == ListHead) ? NULL : LastEntry;
@@ -377,7 +377,7 @@ ExfInterlockedRemoveHeadList(
     PLIST_ENTRY ListEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Check if the list is empty */
     if (IsListEmpty(ListHead))
@@ -396,7 +396,7 @@ ExfInterlockedRemoveHeadList(
     }
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* return the entry */
     return ListEntry;
@@ -412,7 +412,7 @@ ExfInterlockedPopEntryList(
     PSINGLE_LIST_ENTRY ListEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Pop the first entry from the list */
     ListEntry = PopEntryList(ListHead);
@@ -422,7 +422,7 @@ ExfInterlockedPopEntryList(
 #endif
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* return the entry */
     return ListEntry;
@@ -439,7 +439,7 @@ ExfInterlockedPushEntryList(
     PSINGLE_LIST_ENTRY OldListEntry;
 
     /* Disable interrupts and acquire the spinlock */
-    Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+    Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
 
     /* Save the old top entry */
     OldListEntry = ListHead->Next;
@@ -448,7 +448,7 @@ ExfInterlockedPushEntryList(
     PushEntryList(ListHead, ListEntry);
 
     /* Release the spinlock and restore interrupts */
-    _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+    _ExiReleaseSpinLockAndRestoreInterrupts(Lock, Enable);
 
     /* return the entry */
     return OldListEntry;

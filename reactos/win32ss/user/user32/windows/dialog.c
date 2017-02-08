@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/dialog.c
+ * FILE:            win32ss/user/user32/windows/dialog.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -115,8 +115,8 @@ const struct builtin_class_descr DIALOG_builtin_class =
 {
     WC_DIALOG,       /* name */
     CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) DefDlgProcA,    /* procA */
-    (WNDPROC) DefDlgProcW,    /* procW */
+    DefDlgProcA,              /* procA */
+    DefDlgProcW,              /* procW */
     DLGWINDOWEXTRA,           /* extra */
     (LPCWSTR) IDC_ARROW,      /* cursor */
     0                         /* brush */
@@ -285,7 +285,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
         info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
         if (info->windowName != NULL)
         {
-            wsprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
+            wsprintf((LPWSTR)info->windowName, L"#%u", GET_WORD(p + 1));
             info->windowNameFree = TRUE;
         }
         else
@@ -585,16 +585,16 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
 
             /*
              * If the user is pressing Ctrl+C, send a WM_COPY message.
-             * Guido Pola, Bug 5281, Is there another way to check if the Dialog it's a MessageBox?
+             * Guido Pola, CORE-4829, Is there another way to check if the Dialog is a MessageBox?
              */
-            if( msg.message == WM_KEYDOWN &&
+            if (msg.message == WM_KEYDOWN &&
                 pWnd->state & WNDS_MSGBOX && // Yes!
-                GetForegroundWindow() == hwnd )
+                GetForegroundWindow() == hwnd)
             {
-                if( msg.wParam == L'C' && GetKeyState(VK_CONTROL) < 0 )
-                    SendMessageW( hwnd, WM_COPY, 0, 0);
+                if (msg.wParam == L'C' && GetKeyState(VK_CONTROL) < 0)
+                    SendMessageW(hwnd, WM_COPY, 0, 0);
             }
-            
+
             if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {
@@ -802,8 +802,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd, BOOL justActivate )
     else
         DEFDLG_SetFocus( infoPtr->hwndFocus );
 
-    /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
-       sometimes losing focus when receiving WM_SETFOCUS messages. */
+    infoPtr->hwndFocus = NULL;
 }
 
 /***********************************************************************
@@ -1047,13 +1046,18 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                 /* By returning TRUE, app has requested a default focus assignment.
                  * WM_INITDIALOG may have changed the tab order, so find the first
                  * tabstop control again. */
-                dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
-                if (!dlgInfo->hwndFocus) dlgInfo->hwndFocus = GetNextDlgGroupItem( hwnd, 0, FALSE );
-                if( dlgInfo->hwndFocus )
-                    SetFocus( dlgInfo->hwndFocus );
+                focus = GetNextDlgTabItem( hwnd, 0, FALSE );
+                if (!focus) focus = GetNextDlgGroupItem( hwnd, 0, FALSE );
+                if (focus)
+                {
+                    if (SendMessageW( focus, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
+                        SendMessageW( focus, EM_SETSEL, 0, MAXLONG );
+                    SetFocus( focus );
+                }
             }
-//// ReactOS
-            DEFDLG_SaveFocus( hwnd );
+//// ReactOS see 43396, Fixes setting focus on Open and Close dialogs to the FileName edit control in OpenOffice.
+//// This now breaks test_SaveRestoreFocus.
+            //DEFDLG_SaveFocus( hwnd );
 ////
         }
 //// ReactOS Rev 30613 & 30644
@@ -2021,7 +2025,7 @@ DlgDirSelectExW(
 
 
 /*
- * @implemented Modified for ReactOS.
+ * @implemented Modified for ReactOS. Do not Port Sync!!!
  */
 BOOL
 WINAPI
@@ -2126,9 +2130,12 @@ GetDlgItem(
   int nIDDlgItem)
 {
     int i;
-    HWND *list = WIN_ListChildren(hDlg);
+    HWND *list;
     HWND ret = 0;
 
+    if (!hDlg) return 0; 
+
+    list = WIN_ListChildren(hDlg);
     if (!list) return 0;
 
     for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
@@ -2190,7 +2197,7 @@ GetDlgItemTextA(
 {
   HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
   if ( hWnd ) return GetWindowTextA(hWnd, lpString, nMaxCount);
-  if ( nMaxCount ) *lpString = 0;
+  if ( nMaxCount ) lpString[0] = '\0';
   return 0;
 }
 
@@ -2208,7 +2215,7 @@ GetDlgItemTextW(
 {
   HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
   if ( hWnd ) return GetWindowTextW(hWnd, lpString, nMaxCount);
-  if ( nMaxCount ) *lpString = 0;
+  if ( nMaxCount ) lpString[0] = '\0';
   return 0;
 }
 

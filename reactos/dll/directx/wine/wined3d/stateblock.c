@@ -22,8 +22,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -194,40 +192,29 @@ static const DWORD vertex_states_sampler[] =
  */
 static HRESULT stateblock_allocate_shader_constants(struct wined3d_stateblock *object)
 {
-    struct wined3d_device *device = object->device;
-
-    /* Allocate space for floating point constants */
-    object->state.ps_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(float) * device->d3d_pshader_constantF * 4);
-    if (!object->state.ps_consts_f) goto fail;
+    const struct wined3d_d3d_info *d3d_info = &object->device->adapter->d3d_info;
 
     object->changed.pixelShaderConstantsF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(BOOL) * device->d3d_pshader_constantF);
+            sizeof(BOOL) * d3d_info->limits.ps_uniform_count);
     if (!object->changed.pixelShaderConstantsF) goto fail;
 
-    object->state.vs_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(float) * device->d3d_vshader_constantF * 4);
-    if (!object->state.vs_consts_f) goto fail;
-
     object->changed.vertexShaderConstantsF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(BOOL) * device->d3d_vshader_constantF);
+            sizeof(BOOL) * d3d_info->limits.vs_uniform_count);
     if (!object->changed.vertexShaderConstantsF) goto fail;
 
     object->contained_vs_consts_f = HeapAlloc(GetProcessHeap(), 0,
-            sizeof(DWORD) * device->d3d_vshader_constantF);
+            sizeof(DWORD) * d3d_info->limits.vs_uniform_count);
     if (!object->contained_vs_consts_f) goto fail;
 
     object->contained_ps_consts_f = HeapAlloc(GetProcessHeap(), 0,
-            sizeof(DWORD) * device->d3d_pshader_constantF);
+            sizeof(DWORD) * d3d_info->limits.ps_uniform_count);
     if (!object->contained_ps_consts_f) goto fail;
 
     return WINED3D_OK;
 
 fail:
     ERR("Failed to allocate memory\n");
-    HeapFree(GetProcessHeap(), 0, object->state.ps_consts_f);
     HeapFree(GetProcessHeap(), 0, object->changed.pixelShaderConstantsF);
-    HeapFree(GetProcessHeap(), 0, object->state.vs_consts_f);
     HeapFree(GetProcessHeap(), 0, object->changed.vertexShaderConstantsF);
     HeapFree(GetProcessHeap(), 0, object->contained_vs_consts_f);
     HeapFree(GetProcessHeap(), 0, object->contained_ps_consts_f);
@@ -236,7 +223,7 @@ fail:
 
 static inline void stateblock_set_bits(DWORD *map, UINT map_size)
 {
-    DWORD mask = (1 << (map_size & 0x1f)) - 1;
+    DWORD mask = (1u << (map_size & 0x1f)) - 1;
     memset(map, 0xff, (map_size >> 5) * sizeof(*map));
     if (mask) map[map_size >> 5] = mask;
 }
@@ -286,14 +273,14 @@ static void stateblock_savedstates_set_pixel(struct wined3d_saved_states *states
     for (i = 0; i < sizeof(pixel_states_render) / sizeof(*pixel_states_render); ++i)
     {
         DWORD rs = pixel_states_render[i];
-        states->renderState[rs >> 5] |= 1 << (rs & 0x1f);
+        states->renderState[rs >> 5] |= 1u << (rs & 0x1f);
     }
 
     for (i = 0; i < sizeof(pixel_states_texture) / sizeof(*pixel_states_texture); ++i)
-        texture_mask |= 1 << pixel_states_texture[i];
+        texture_mask |= 1u << pixel_states_texture[i];
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
     for (i = 0; i < sizeof(pixel_states_sampler) / sizeof(*pixel_states_sampler); ++i)
-        sampler_mask |= 1 << pixel_states_sampler[i];
+        sampler_mask |= 1u << pixel_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
     states->pixelShaderConstantsB = 0xffff;
     states->pixelShaderConstantsI = 0xffff;
@@ -313,14 +300,14 @@ static void stateblock_savedstates_set_vertex(struct wined3d_saved_states *state
     for (i = 0; i < sizeof(vertex_states_render) / sizeof(*vertex_states_render); ++i)
     {
         DWORD rs = vertex_states_render[i];
-        states->renderState[rs >> 5] |= 1 << (rs & 0x1f);
+        states->renderState[rs >> 5] |= 1u << (rs & 0x1f);
     }
 
     for (i = 0; i < sizeof(vertex_states_texture) / sizeof(*vertex_states_texture); ++i)
-        texture_mask |= 1 << vertex_states_texture[i];
+        texture_mask |= 1u << vertex_states_texture[i];
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
     for (i = 0; i < sizeof(vertex_states_sampler) / sizeof(*vertex_states_sampler); ++i)
-        sampler_mask |= 1 << vertex_states_sampler[i];
+        sampler_mask |= 1u << vertex_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
     states->vertexShaderConstantsB = 0xffff;
     states->vertexShaderConstantsI = 0xffff;
@@ -330,7 +317,7 @@ static void stateblock_savedstates_set_vertex(struct wined3d_saved_states *state
 
 void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 {
-    struct wined3d_device *device = stateblock->device;
+    const struct wined3d_d3d_info *d3d_info = &stateblock->device->adapter->d3d_info;
     unsigned int i, j;
 
     for (i = 0; i <= WINEHIGHEST_RENDER_STATE >> 5; ++i)
@@ -357,7 +344,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
         }
     }
 
-    for (i = 0; i < device->d3d_vshader_constantF; ++i)
+    for (i = 0; i < d3d_info->limits.vs_uniform_count; ++i)
     {
         if (stateblock->changed.vertexShaderConstantsF[i])
         {
@@ -368,7 +355,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_I; ++i)
     {
-        if (stateblock->changed.vertexShaderConstantsI & (1 << i))
+        if (stateblock->changed.vertexShaderConstantsI & (1u << i))
         {
             stateblock->contained_vs_consts_i[stateblock->num_contained_vs_consts_i] = i;
             ++stateblock->num_contained_vs_consts_i;
@@ -377,14 +364,14 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_B; ++i)
     {
-        if (stateblock->changed.vertexShaderConstantsB & (1 << i))
+        if (stateblock->changed.vertexShaderConstantsB & (1u << i))
         {
             stateblock->contained_vs_consts_b[stateblock->num_contained_vs_consts_b] = i;
             ++stateblock->num_contained_vs_consts_b;
         }
     }
 
-    for (i = 0; i < device->d3d_pshader_constantF; ++i)
+    for (i = 0; i < d3d_info->limits.ps_uniform_count; ++i)
     {
         if (stateblock->changed.pixelShaderConstantsF[i])
         {
@@ -395,7 +382,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_I; ++i)
     {
-        if (stateblock->changed.pixelShaderConstantsI & (1 << i))
+        if (stateblock->changed.pixelShaderConstantsI & (1u << i))
         {
             stateblock->contained_ps_consts_i[stateblock->num_contained_ps_consts_i] = i;
             ++stateblock->num_contained_ps_consts_i;
@@ -404,7 +391,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 
     for (i = 0; i < MAX_CONST_B; ++i)
     {
-        if (stateblock->changed.pixelShaderConstantsB & (1 << i))
+        if (stateblock->changed.pixelShaderConstantsB & (1u << i))
         {
             stateblock->contained_ps_consts_b[stateblock->num_contained_ps_consts_b] = i;
             ++stateblock->num_contained_ps_consts_b;
@@ -467,15 +454,18 @@ ULONG CDECL wined3d_stateblock_incref(struct wined3d_stateblock *stateblock)
     return refcount;
 }
 
-void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
+void state_unbind_resources(struct wined3d_state *state)
 {
-    struct wined3d_state *state = &stateblock->state;
+    struct wined3d_shader_resource_view *srv;
     struct wined3d_vertex_declaration *decl;
     struct wined3d_sampler *sampler;
     struct wined3d_texture *texture;
     struct wined3d_buffer *buffer;
     struct wined3d_shader *shader;
-    unsigned int i;
+#if defined(STAGING_CSMT)
+    struct wined3d_rendertarget_view *view;
+#endif /* STAGING_CSMT */
+    unsigned int i, j;
 
     if ((decl = state->vertex_declaration))
     {
@@ -516,77 +506,98 @@ void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
         wined3d_buffer_decref(buffer);
     }
 
-    if ((shader = state->vertex_shader))
+    for (i = 0; i < WINED3D_SHADER_TYPE_COUNT; ++i)
     {
-        state->vertex_shader = NULL;
-        wined3d_shader_decref(shader);
+        if ((shader = state->shader[i]))
+        {
+            state->shader[i] = NULL;
+            wined3d_shader_decref(shader);
+        }
+
+        for (j = 0; j < MAX_CONSTANT_BUFFERS; ++j)
+        {
+            if ((buffer = state->cb[i][j]))
+            {
+                state->cb[i][j] = NULL;
+                wined3d_buffer_decref(buffer);
+            }
+        }
+
+        for (j = 0; j < MAX_SAMPLER_OBJECTS; ++j)
+        {
+            if ((sampler = state->sampler[i][j]))
+            {
+                state->sampler[i][j] = NULL;
+                wined3d_sampler_decref(sampler);
+            }
+        }
+
+        for (j = 0; j < MAX_SHADER_RESOURCE_VIEWS; ++j)
+        {
+            if ((srv = state->shader_resource_view[i][j]))
+            {
+                state->shader_resource_view[i][j] = NULL;
+                wined3d_shader_resource_view_decref(srv);
+            }
+        }
+    }
+#if defined(STAGING_CSMT)
+
+    if (state->fb.depth_stencil)
+    {
+        view = state->fb.depth_stencil;
+
+        TRACE("Releasing depth/stencil buffer %p.\n", view);
+
+        state->fb.depth_stencil = NULL;
+        wined3d_rendertarget_view_decref(view);
     }
 
-    for (i = 0; i < MAX_CONSTANT_BUFFERS; ++i)
+    if (state->fb.render_targets)
     {
-        if ((buffer = state->vs_cb[i]))
+        for (i = 0; i < state->fb.rt_size; i++)
         {
-            state->vs_cb[i] = NULL;
-            wined3d_buffer_decref(buffer);
+            view = state->fb.render_targets[i];
+            TRACE("Setting rendertarget %u to NULL\n", i);
+            state->fb.render_targets[i] = NULL;
+            if (view)
+            {
+                TRACE("Releasing the rendertarget view at %p\n", view);
+                wined3d_rendertarget_view_decref(view);
+            }
+        }
+    }
+#endif /* STAGING_CSMT */
+}
+
+void state_cleanup(struct wined3d_state *state)
+{
+    unsigned int counter;
+
+    if (!(state->flags & WINED3D_STATE_NO_REF))
+        state_unbind_resources(state);
+
+    for (counter = 0; counter < MAX_ACTIVE_LIGHTS; ++counter)
+    {
+        state->lights[counter] = NULL;
+    }
+
+    for (counter = 0; counter < LIGHTMAP_SIZE; ++counter)
+    {
+        struct list *e1, *e2;
+        LIST_FOR_EACH_SAFE(e1, e2, &state->light_map[counter])
+        {
+            struct wined3d_light_info *light = LIST_ENTRY(e1, struct wined3d_light_info, entry);
+            list_remove(&light->entry);
+            HeapFree(GetProcessHeap(), 0, light);
         }
     }
 
-    for (i = 0; i < MAX_SAMPLER_OBJECTS; ++i)
-    {
-        if ((sampler = state->vs_sampler[i]))
-        {
-            state->vs_sampler[i] = NULL;
-            wined3d_sampler_decref(sampler);
-        }
-    }
-
-    if ((shader = state->geometry_shader))
-    {
-        state->geometry_shader = NULL;
-        wined3d_shader_decref(shader);
-    }
-
-    for (i = 0; i < MAX_CONSTANT_BUFFERS; ++i)
-    {
-        if ((buffer = state->gs_cb[i]))
-        {
-            state->gs_cb[i] = NULL;
-            wined3d_buffer_decref(buffer);
-        }
-    }
-
-    for (i = 0; i < MAX_SAMPLER_OBJECTS; ++i)
-    {
-        if ((sampler = state->gs_sampler[i]))
-        {
-            state->gs_sampler[i] = NULL;
-            wined3d_sampler_decref(sampler);
-        }
-    }
-
-    if ((shader = state->pixel_shader))
-    {
-        state->pixel_shader = NULL;
-        wined3d_shader_decref(shader);
-    }
-
-    for (i = 0; i < MAX_SAMPLER_OBJECTS; ++i)
-    {
-        if ((sampler = state->ps_sampler[i]))
-        {
-            state->ps_sampler[i] = NULL;
-            wined3d_sampler_decref(sampler);
-        }
-    }
-
-    for (i = 0; i < MAX_CONSTANT_BUFFERS; ++i)
-    {
-        if ((buffer = state->ps_cb[i]))
-        {
-            state->ps_cb[i] = NULL;
-            wined3d_buffer_decref(buffer);
-        }
-    }
+    HeapFree(GetProcessHeap(), 0, state->vs_consts_f);
+    HeapFree(GetProcessHeap(), 0, state->ps_consts_f);
+#if defined(STAGING_CSMT)
+    HeapFree(GetProcessHeap(), 0, state->fb.render_targets);
+#endif /* STAGING_CSMT */
 }
 
 ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
@@ -597,24 +608,9 @@ ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
 
     if (!refcount)
     {
-        int counter;
+        state_cleanup(&stateblock->state);
 
-        stateblock_unbind_resources(stateblock);
-
-        for (counter = 0; counter < LIGHTMAP_SIZE; ++counter)
-        {
-            struct list *e1, *e2;
-            LIST_FOR_EACH_SAFE(e1, e2, &stateblock->state.light_map[counter])
-            {
-                struct wined3d_light_info *light = LIST_ENTRY(e1, struct wined3d_light_info, entry);
-                list_remove(&light->entry);
-                HeapFree(GetProcessHeap(), 0, light);
-            }
-        }
-
-        HeapFree(GetProcessHeap(), 0, stateblock->state.vs_consts_f);
         HeapFree(GetProcessHeap(), 0, stateblock->changed.vertexShaderConstantsF);
-        HeapFree(GetProcessHeap(), 0, stateblock->state.ps_consts_f);
         HeapFree(GetProcessHeap(), 0, stateblock->changed.pixelShaderConstantsF);
         HeapFree(GetProcessHeap(), 0, stateblock->contained_vs_consts_f);
         HeapFree(GetProcessHeap(), 0, stateblock->contained_ps_consts_f);
@@ -683,7 +679,7 @@ static void wined3d_state_record_lights(struct wined3d_state *dst_state, const s
 
 void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 {
-    const struct wined3d_state *src_state = &stateblock->device->stateBlock->state;
+    const struct wined3d_state *src_state = &stateblock->device->state;
     unsigned int i;
     DWORD map;
 
@@ -691,16 +687,18 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 
     TRACE("Capturing state %p.\n", src_state);
 
-    if (stateblock->changed.vertexShader && stateblock->state.vertex_shader != src_state->vertex_shader)
+    if (stateblock->changed.vertexShader && stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX]
+            != src_state->shader[WINED3D_SHADER_TYPE_VERTEX])
     {
         TRACE("Updating vertex shader from %p to %p\n",
-                stateblock->state.vertex_shader, src_state->vertex_shader);
+                stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX],
+                src_state->shader[WINED3D_SHADER_TYPE_VERTEX]);
 
-        if (src_state->vertex_shader)
-            wined3d_shader_incref(src_state->vertex_shader);
-        if (stateblock->state.vertex_shader)
-            wined3d_shader_decref(stateblock->state.vertex_shader);
-        stateblock->state.vertex_shader = src_state->vertex_shader;
+        if (src_state->shader[WINED3D_SHADER_TYPE_VERTEX])
+            wined3d_shader_incref(src_state->shader[WINED3D_SHADER_TYPE_VERTEX]);
+        if (stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX])
+            wined3d_shader_decref(stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX]);
+        stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX] = src_state->shader[WINED3D_SHADER_TYPE_VERTEX];
     }
 
     /* Vertex shader float constants. */
@@ -955,13 +953,14 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         stateblock->state.sampler_states[stage][state] = src_state->sampler_states[stage][state];
     }
 
-    if (stateblock->changed.pixelShader && stateblock->state.pixel_shader != src_state->pixel_shader)
+    if (stateblock->changed.pixelShader && stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL]
+            != src_state->shader[WINED3D_SHADER_TYPE_PIXEL])
     {
-        if (src_state->pixel_shader)
-            wined3d_shader_incref(src_state->pixel_shader);
-        if (stateblock->state.pixel_shader)
-            wined3d_shader_decref(stateblock->state.pixel_shader);
-        stateblock->state.pixel_shader = src_state->pixel_shader;
+        if (src_state->shader[WINED3D_SHADER_TYPE_PIXEL])
+            wined3d_shader_incref(src_state->shader[WINED3D_SHADER_TYPE_PIXEL]);
+        if (stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL])
+            wined3d_shader_decref(stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL]);
+        stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL] = src_state->shader[WINED3D_SHADER_TYPE_PIXEL];
     }
 
     wined3d_state_record_lights(&stateblock->state, src_state);
@@ -996,7 +995,7 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applying stateblock %p to device %p.\n", stateblock, device);
 
     if (stateblock->changed.vertexShader)
-        wined3d_device_set_vertex_shader(device, stateblock->state.vertex_shader);
+        wined3d_device_set_vertex_shader(device, stateblock->state.shader[WINED3D_SHADER_TYPE_VERTEX]);
 
     /* Vertex Shader Constants. */
     for (i = 0; i < stateblock->num_contained_vs_consts_f; ++i)
@@ -1018,7 +1017,7 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     apply_lights(device, &stateblock->state);
 
     if (stateblock->changed.pixelShader)
-        wined3d_device_set_pixel_shader(device, stateblock->state.pixel_shader);
+        wined3d_device_set_pixel_shader(device, stateblock->state.shader[WINED3D_SHADER_TYPE_PIXEL]);
 
     /* Pixel Shader Constants. */
     for (i = 0; i < stateblock->num_contained_ps_consts_f; ++i)
@@ -1073,8 +1072,20 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 
     if (stateblock->changed.primitive_type)
     {
-        stateblock->device->updateStateBlock->changed.primitive_type = TRUE;
-        stateblock->device->updateStateBlock->state.gl_primitive_type = stateblock->state.gl_primitive_type;
+        GLenum gl_primitive_type, prev;
+
+        if (device->recording)
+            device->recording->changed.primitive_type = TRUE;
+        gl_primitive_type = stateblock->state.gl_primitive_type;
+        prev = device->update_state->gl_primitive_type;
+        device->update_state->gl_primitive_type = gl_primitive_type;
+#if defined(STAGING_CSMT)
+        if (gl_primitive_type != prev)
+            wined3d_cs_emit_set_primitive_type(device->cs, gl_primitive_type);
+#else  /* STAGING_CSMT */
+        if (gl_primitive_type != prev && (gl_primitive_type == GL_POINTS || prev == GL_POINTS))
+            device_invalidate_state(device, STATE_POINT_ENABLE);
+#endif /* STAGING_CSMT */
     }
 
     if (stateblock->changed.indices)
@@ -1131,24 +1142,11 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         wined3d_device_set_clip_plane(device, i, &stateblock->state.clip_planes[i]);
     }
 
-    stateblock->device->stateBlock->state.lowest_disabled_stage = MAX_TEXTURES - 1;
-    for (i = 0; i < MAX_TEXTURES - 1; ++i)
-    {
-        if (stateblock->device->stateBlock->state.texture_states[i][WINED3D_TSS_COLOR_OP] == WINED3D_TOP_DISABLE)
-        {
-            stateblock->device->stateBlock->state.lowest_disabled_stage = i;
-            break;
-        }
-    }
-
     TRACE("Applied stateblock %p.\n", stateblock);
 }
 
-void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
+static void state_init_default(struct wined3d_state *state, const struct wined3d_gl_info *gl_info)
 {
-    struct wined3d_device *device = stateblock->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    struct wined3d_state *state = &stateblock->state;
     union
     {
         struct wined3d_line_pattern lp;
@@ -1159,13 +1157,12 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
         DWORD d;
     } tmpfloat;
     unsigned int i;
-    struct wined3d_swapchain *swapchain;
-    struct wined3d_surface *backbuffer;
+    struct wined3d_matrix identity;
 
-    TRACE("stateblock %p.\n", stateblock);
+    TRACE("state %p, gl_info %p.\n", state, gl_info);
 
-    memset(stateblock->changed.pixelShaderConstantsF, 0, device->d3d_pshader_constantF * sizeof(BOOL));
-    memset(stateblock->changed.vertexShaderConstantsF, 0, device->d3d_vshader_constantF * sizeof(BOOL));
+    get_identity_matrix(&identity);
+    state->gl_primitive_type = ~0u;
 
     /* Set some of the defaults for lights, transforms etc */
     state->transforms[WINED3D_TS_PROJECTION] = identity;
@@ -1175,14 +1172,9 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
         state->transforms[WINED3D_TS_WORLD_MATRIX(i)] = identity;
     }
 
-    state->fb = &device->fb;
-
     TRACE("Render states\n");
     /* Render states: */
-    if (device->auto_depth_stencil)
-       state->render_states[WINED3D_RS_ZENABLE] = WINED3D_ZB_TRUE;
-    else
-       state->render_states[WINED3D_RS_ZENABLE] = WINED3D_ZB_FALSE;
+    state->render_states[WINED3D_RS_ZENABLE] = WINED3D_ZB_TRUE;
     state->render_states[WINED3D_RS_FILLMODE] = WINED3D_FILL_SOLID;
     state->render_states[WINED3D_RS_SHADEMODE] = WINED3D_SHADE_GOURAUD;
     lp.lp.repeat_factor = 0;
@@ -1332,9 +1324,7 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
         state->texture_states[i][WINED3D_TSS_ALPHA_ARG0] = WINED3DTA_CURRENT;
         state->texture_states[i][WINED3D_TSS_RESULT_ARG] = WINED3DTA_CURRENT;
     }
-    state->lowest_disabled_stage = 1;
 
-        /* Sampler states*/
     for (i = 0 ; i <  MAX_COMBINED_SAMPLERS; ++i)
     {
         TRACE("Setting up default samplers states for sampler %u.\n", i);
@@ -1353,80 +1343,121 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
         state->sampler_states[i][WINED3D_SAMP_ELEMENT_INDEX] = 0;
         /* TODO: Vertex offset in the presampled displacement map. */
         state->sampler_states[i][WINED3D_SAMP_DMAP_OFFSET] = 0;
-    }
-
-    for (i = 0; i < gl_info->limits.textures; ++i)
-    {
+#if defined(STAGING_CSMT)
         state->textures[i] = NULL;
     }
 
-    /* check the return values, because the GetBackBuffer call isn't valid for ddraw */
-    if ((swapchain = wined3d_device_get_swapchain(device, 0)))
+    state->index_buffer = NULL;
+    for (i = 0; i < sizeof(state->streams) / sizeof(*state->streams); i++)
+        memset(&state->streams[i], 0, sizeof(state->streams[i]));
+
+    state->shader[WINED3D_SHADER_TYPE_VERTEX] = NULL;
+    state->shader[WINED3D_SHADER_TYPE_PIXEL] = NULL;
+}
+
+HRESULT state_init(struct wined3d_state *state, const struct wined3d_gl_info *gl_info,
+        const struct wined3d_d3d_info *d3d_info, DWORD flags)
+{
+    unsigned int i;
+
+    state->flags = flags;
+#else  /* STAGING_CSMT */
+    }
+}
+
+HRESULT state_init(struct wined3d_state *state, struct wined3d_fb_state *fb,
+        const struct wined3d_gl_info *gl_info, const struct wined3d_d3d_info *d3d_info,
+        DWORD flags)
+{
+    unsigned int i;
+
+    state->flags = flags;
+    state->fb = fb;
+#endif /* STAGING_CSMT */
+
+    for (i = 0; i < LIGHTMAP_SIZE; i++)
     {
-        if ((backbuffer = wined3d_swapchain_get_back_buffer(swapchain, 0, WINED3D_BACKBUFFER_TYPE_MONO)))
-        {
-            struct wined3d_resource_desc desc;
-
-            wined3d_resource_get_desc(&backbuffer->resource, &desc);
-
-            /* Set the default scissor rect values */
-            state->scissor_rect.left = 0;
-            state->scissor_rect.right = desc.width;
-            state->scissor_rect.top = 0;
-            state->scissor_rect.bottom = desc.height;
-        }
-
-        /* Set the default viewport */
-        state->viewport.x = 0;
-        state->viewport.y = 0;
-        state->viewport.width = swapchain->desc.backbuffer_width;
-        state->viewport.height = swapchain->desc.backbuffer_height;
-        state->viewport.min_z = 0.0f;
-        state->viewport.max_z = 1.0f;
+        list_init(&state->light_map[i]);
     }
 
-    TRACE("Done.\n");
+    if (!(state->vs_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            4 * sizeof(float) * d3d_info->limits.vs_uniform_count)))
+        return E_OUTOFMEMORY;
+
+    if (!(state->ps_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            4 * sizeof(float) * d3d_info->limits.ps_uniform_count)))
+    {
+        HeapFree(GetProcessHeap(), 0, state->vs_consts_f);
+        return E_OUTOFMEMORY;
+    }
+
+#if defined(STAGING_CSMT)
+    if (!(state->fb.render_targets = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            sizeof(*state->fb.render_targets) * gl_info->limits.buffers)))
+    {
+        HeapFree(GetProcessHeap(), 0, state->ps_consts_f);
+        HeapFree(GetProcessHeap(), 0, state->vs_consts_f);
+        return E_OUTOFMEMORY;
+    }
+    state->fb.rt_size = gl_info->limits.buffers;
+
+#endif /* STAGING_CSMT */
+    if (flags & WINED3D_STATE_INIT_DEFAULT)
+        state_init_default(state, gl_info);
+
+    return WINED3D_OK;
 }
 
 static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
         struct wined3d_device *device, enum wined3d_stateblock_type type)
 {
-    unsigned int i;
     HRESULT hr;
+#if defined(STAGING_CSMT)
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
 
     stateblock->ref = 1;
     stateblock->device = device;
 
-    for (i = 0; i < LIGHTMAP_SIZE; i++)
+    if (FAILED(hr = state_init(&stateblock->state, gl_info, d3d_info, 0)))
+#else  /* STAGING_CSMT */
+    const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
+
+    stateblock->ref = 1;
+    stateblock->device = device;
+
+    if (FAILED(hr = state_init(&stateblock->state, NULL, &device->adapter->gl_info, d3d_info, 0)))
+#endif /* STAGING_CSMT */
+        return hr;
+
+    if (FAILED(hr = stateblock_allocate_shader_constants(stateblock)))
     {
-        list_init(&stateblock->state.light_map[i]);
+        state_cleanup(&stateblock->state);
+        return hr;
     }
 
-    hr = stateblock_allocate_shader_constants(stateblock);
-    if (FAILED(hr)) return hr;
-
-    /* The WINED3D_SBT_INIT stateblock type is used during initialization to
-     * produce a placeholder stateblock so other functions called can update a
-     * state block. */
-    if (type == WINED3D_SBT_INIT || type == WINED3D_SBT_RECORDED) return WINED3D_OK;
+    if (type == WINED3D_SBT_RECORDED)
+        return WINED3D_OK;
 
     TRACE("Updating changed flags appropriate for type %#x.\n", type);
 
     switch (type)
     {
         case WINED3D_SBT_ALL:
-            stateblock_init_lights(stateblock, device->stateBlock->state.light_map);
-            stateblock_savedstates_set_all(&stateblock->changed, device->d3d_vshader_constantF,
-                                           device->d3d_pshader_constantF);
+            stateblock_init_lights(stateblock, device->state.light_map);
+            stateblock_savedstates_set_all(&stateblock->changed,
+                    d3d_info->limits.vs_uniform_count, d3d_info->limits.ps_uniform_count);
             break;
 
         case WINED3D_SBT_PIXEL_STATE:
-            stateblock_savedstates_set_pixel(&stateblock->changed, device->d3d_pshader_constantF);
+            stateblock_savedstates_set_pixel(&stateblock->changed,
+                    d3d_info->limits.ps_uniform_count);
             break;
 
         case WINED3D_SBT_VERTEX_STATE:
-            stateblock_init_lights(stateblock, device->stateBlock->state.light_map);
-            stateblock_savedstates_set_vertex(&stateblock->changed, device->d3d_vshader_constantF);
+            stateblock_init_lights(stateblock, device->state.light_map);
+            stateblock_savedstates_set_vertex(&stateblock->changed,
+                    d3d_info->limits.vs_uniform_count);
             break;
 
         default:

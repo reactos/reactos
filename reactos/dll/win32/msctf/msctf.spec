@@ -12,7 +12,7 @@
 @ stub TF_CreateCicLoadMutex
 @ stub TF_CreateDisplayAttributeMgr
 @ stdcall TF_CreateInputProcessorProfiles(ptr)
-@ stub TF_CreateLangBarItemMgr
+@ stdcall TF_CreateLangBarItemMgr(ptr)
 @ stdcall TF_CreateLangBarMgr(ptr)
 @ stdcall TF_CreateThreadMgr(ptr)
 @ stub TF_DllDetachInOther
@@ -24,7 +24,7 @@
 @ stub TF_GetThreadFlags
 @ stdcall TF_GetThreadMgr(ptr)
 @ stub TF_InatExtractIcon
-@ stub TF_InitMlngInfo
+@ stdcall TF_InitMlngInfo()
 @ stub TF_InitSystem
 @ stub TF_InvalidAssemblyListCache
 @ stdcall TF_InvalidAssemblyListCacheIfExist()

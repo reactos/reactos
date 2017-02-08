@@ -6,15 +6,10 @@
  *					an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL offline_main(INT argc, WCHAR **argv)
+BOOL offline_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_offline(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_OFFLINE);
 }

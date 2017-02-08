@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../pecoff.h"
+#include <typedefs.h>
+#include <pecoff.h>
 
 static
 void
@@ -51,8 +52,8 @@ RelocateSection(
                 break;
 
             default:
-                printf("Unknown relocatation type %d, address 0x%lx\n",
-                       pReloc->Type, pReloc->VirtualAddress);
+                printf("Unknown relocation type %u, address 0x%x\n",
+                       pReloc->Type, (unsigned)pReloc->VirtualAddress);
         }
 
         pReloc++;
@@ -98,7 +99,7 @@ int main(int argc, char *argv[])
     if (!pData)
     {
         fclose(pSourceFile);
-        fprintf(stderr, "Failed to allocate %ld bytes\n", nFileSize);
+        fprintf(stderr, "Failed to allocate %lu bytes\n", nFileSize);
         return -3;
     }
 
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
     {
         free(pData);
         fclose(pSourceFile);
-        fprintf(stderr, "Failed to read %ld bytes from source file\n", nFileSize);
+        fprintf(stderr, "Failed to read %lu bytes from source file\n", nFileSize);
         return -4;
     }
 
@@ -146,8 +147,8 @@ int main(int argc, char *argv[])
             {
                 free(pData);
                 fclose(pDestFile);
-                fprintf(stderr, "Failed to write %ld bytes to destination file\n",
-                        pSectionHeader->SizeOfRawData);
+                fprintf(stderr, "Failed to write %u bytes to destination file\n",
+                        (unsigned int)pSectionHeader->SizeOfRawData);
                 return -6;
             }
 

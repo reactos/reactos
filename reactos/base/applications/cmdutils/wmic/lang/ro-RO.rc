@@ -1,0 +1,10 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Eroare: Comandă nerecunoscută.\n"
+    STRING_ALIAS_NOT_FOUND, "Eroare: Nu se poate găsi alias.\n"
+    STRING_INVALID_QUERY, "Eroare: Cerere nevalidă.\n"
+}

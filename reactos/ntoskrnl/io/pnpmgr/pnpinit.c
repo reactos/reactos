@@ -55,16 +55,18 @@ PiInitCacheGroupInformation(VOID)
     UNICODE_STRING GroupString =
         RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet"
                             L"\\Control\\ServiceGroupOrder");
-    
+
     /* ReactOS HACK for SETUPLDR */
     if (KeLoaderBlock->SetupLdrBlock)
     {
+        DPRINT1("WARNING!! In PiInitCacheGroupInformation, using ReactOS HACK for SETUPLDR!!\n");
+
         /* Bogus data */
         PiInitGroupOrderTableCount = 0;
         PiInitGroupOrderTable = (PVOID)0xBABEB00B;
         return STATUS_SUCCESS;
     }
-    
+
     /* Open the registry key */
     Status = IopOpenRegistryKeyEx(&KeyHandle,
                                   NULL,
@@ -75,7 +77,7 @@ PiInitCacheGroupInformation(VOID)
         /* Get the list */
         Status = IopGetRegistryValue(KeyHandle, L"List", &KeyValueInformation);
         ZwClose(KeyHandle);
-        
+
         /* Make sure we got it */
         if (NT_SUCCESS(Status))
         {
@@ -87,7 +89,7 @@ PiInitCacheGroupInformation(VOID)
                 Status = PnpRegMultiSzToUnicodeStrings(KeyValueInformation,
                                                        &GroupTable,
                                                        &Count);
-                
+
                 /* Cache it for later */
                 PiInitGroupOrderTable = GroupTable;
                 PiInitGroupOrderTableCount = (USHORT)Count;
@@ -97,12 +99,12 @@ PiInitCacheGroupInformation(VOID)
                 /* Fail */
                 Status = STATUS_UNSUCCESSFUL;
             }
-            
+
             /* Free the information */
             ExFreePool(KeyValueInformation);
         }
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -117,13 +119,13 @@ PpInitGetGroupOrderIndex(IN HANDLE ServiceHandle)
     PVOID Buffer;
     UNICODE_STRING Group;
     PAGED_CODE();
-       
+
     /* Make sure we have a cache */
     if (!PiInitGroupOrderTable) return -1;
-    
+
     /* If we don't have a handle, the rest is easy -- return the count */
     if (!ServiceHandle) return PiInitGroupOrderTableCount + 1;
-    
+
     /* Otherwise, get the group value */
     Status = IopGetRegistryValue(ServiceHandle, L"Group", &KeyValueInformation);
     if (!NT_SUCCESS(Status)) return PiInitGroupOrderTableCount;
@@ -131,20 +133,20 @@ PpInitGetGroupOrderIndex(IN HANDLE ServiceHandle)
     /* Make sure we have a valid string */
     ASSERT(KeyValueInformation->Type == REG_SZ);
     ASSERT(KeyValueInformation->DataLength);
-    
+
     /* Convert to unicode string */
     Buffer = (PVOID)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
     PnpRegSzToString(Buffer, KeyValueInformation->DataLength, &Group.Length);
     Group.MaximumLength = (USHORT)KeyValueInformation->DataLength;
     Group.Buffer = Buffer;
-    
+
     /* Loop the groups */
     for (i = 0; i < PiInitGroupOrderTableCount; i++)
     {
         /* Try to find a match */
         if (RtlEqualUnicodeString(&Group, &PiInitGroupOrderTable[i], TRUE)) break;
     }
-    
+
     /* We're done */
     ExFreePool(KeyValueInformation);
     return i;
@@ -167,15 +169,15 @@ PipGetDriverTagPriority(IN HANDLE ServiceHandle)
     UNICODE_STRING GroupString =
     RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet"
                         L"\\Control\\ServiceGroupOrder");
-    
+
     /* Open the key */
     Status = IopOpenRegistryKeyEx(&KeyHandle, NULL, &GroupString, KEY_READ);
     if (!NT_SUCCESS(Status)) goto Quickie;
-    
+
     /* Read the group */
     Status = IopGetRegistryValue(ServiceHandle, L"Group", &KeyValueInformation);
     if (!NT_SUCCESS(Status)) goto Quickie;
-    
+
     /* Make sure we have a group */
     if ((KeyValueInformation->Type == REG_SZ) &&
         (KeyValueInformation->DataLength))
@@ -199,7 +201,7 @@ PipGetDriverTagPriority(IN HANDLE ServiceHandle)
         Tag = *(PULONG)((ULONG_PTR)KeyValueInformationTag +
                         KeyValueInformationTag->DataOffset);
     }
-    
+
     /* We can get rid of this now */
     ExFreePool(KeyValueInformationTag);
 
@@ -207,13 +209,13 @@ PipGetDriverTagPriority(IN HANDLE ServiceHandle)
     Status = IopGetRegistryValue(KeyHandle,
                                  Group.Buffer,
                                  &KeyValueInformationGroupOrderList);
-    
+
     /* We can get rid of this now */
 Quickie:
     if (KeyValueInformation) ExFreePool(KeyValueInformation);
     if (KeyHandle) NtClose(KeyHandle);
     if (!NT_SUCCESS(Status)) return -1;
-    
+
     /* We're on the success path -- validate the tag order*/
     if ((KeyValueInformationGroupOrderList->Type == REG_BINARY) &&
         (KeyValueInformationGroupOrderList->DataLength))
@@ -221,12 +223,12 @@ Quickie:
         /* Get the order array */
         GroupOrder = (PULONG)((ULONG_PTR)KeyValueInformationGroupOrderList +
                               KeyValueInformationGroupOrderList->DataOffset);
-        
+
         /* Get the count */
         Count = *GroupOrder;
         ASSERT(((Count + 1) * sizeof(ULONG)) <=
                KeyValueInformationGroupOrderList->DataLength);
-        
+
         /* Now loop each tag */
         GroupOrder++;
         for (i = 1; i <= Count; i++)
@@ -238,7 +240,7 @@ Quickie:
             GroupOrder++;
         }
     }
-    
+
     /* Last buffer to free */
     ExFreePool(KeyValueInformationGroupOrderList);
     return i;
@@ -258,7 +260,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
     PKEY_VALUE_FULL_INFORMATION KeyValueInformation = NULL;
     PWCHAR Buffer;
-    
+
     /* Open enumeration root key */
     Status = IopOpenRegistryKeyEx(&EnumRootKey,
                                   NULL,
@@ -269,19 +271,19 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
         DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
         return Status;
     }
-    
+
     /* Open instance subkey */
     Status = IopOpenRegistryKeyEx(&SubKey,
                                   EnumRootKey,
                                   &DeviceNode->InstancePath,
                                   KEY_READ);
+    ZwClose(EnumRootKey);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
-        ZwClose(EnumRootKey);
         return Status;
     }
-    
+
     /* Get class GUID */
     Status = IopGetRegistryValue(SubKey,
                                  REGSTR_VAL_CLASSGUID,
@@ -293,7 +295,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
         PnpRegSzToString(Buffer, KeyValueInformation->DataLength, &ClassGuid.Length);
         ClassGuid.MaximumLength = (USHORT)KeyValueInformation->DataLength;
         ClassGuid.Buffer = Buffer;
-        
+
         /* Open the key */
         Status = IopOpenRegistryKeyEx(&ControlKey,
                                       NULL,
@@ -320,7 +322,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                 ClassKey = NULL;
             }
         }
-        
+
         /* Check if we made it till here */
         if (ClassKey)
         {
@@ -330,27 +332,43 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                                           ClassKey,
                                           &Properties,
                                           KEY_READ);
+            ZwClose(ClassKey);
             if (!NT_SUCCESS(Status))
             {
                 /* No properties */
                 DPRINT("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
                 PropertiesKey = NULL;
             }
+            else
+            {
+                ZwClose(PropertiesKey);
+            }
         }
-        
+
         /* Free the registry data */
         ExFreePool(KeyValueInformation);
     }
-    
+
     /* Do ReactOS-style setup */
-    IopAttachFilterDrivers(DeviceNode, TRUE);
+    Status = IopAttachFilterDrivers(DeviceNode, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        IopRemoveDevice(DeviceNode);
+        return Status;
+    }
     Status = IopInitializeDevice(DeviceNode, DriverObject);
     if (NT_SUCCESS(Status))
     {
-        IopAttachFilterDrivers(DeviceNode, FALSE);
+        Status = IopAttachFilterDrivers(DeviceNode, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            IopRemoveDevice(DeviceNode);
+            return Status;
+        }
+
         Status = IopStartDevice(DeviceNode);
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -364,23 +382,25 @@ IopInitializePlugPlayServices(VOID)
     ULONG Disposition;
     HANDLE KeyHandle, EnumHandle, ParentHandle, TreeHandle, ControlHandle;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
-    UNICODE_STRING PnpManagerDriverName = RTL_CONSTANT_STRING(L"\\Driver\\PnpManager");
+    UNICODE_STRING PnpManagerDriverName = RTL_CONSTANT_STRING(DRIVER_ROOT_NAME L"PnpManager");
     PDEVICE_OBJECT Pdo;
-    
+
     /* Initialize locks and such */
     KeInitializeSpinLock(&IopDeviceTreeLock);
-        
+    KeInitializeSpinLock(&IopDeviceRelationsSpinLock);
+    InitializeListHead(&IopDeviceRelationsRequestList);
+
     /* Get the default interface */
     PnpDefaultInterfaceType = IopDetermineDefaultInterfaceType();
-    
+
     /* Initialize arbiters */
     Status = IopInitializeArbiters();
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Setup the group cache */
     Status = PiInitCacheGroupInformation();
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Open the current control set */
     Status = IopOpenRegistryKeyEx(&KeyHandle,
                                   NULL,
@@ -427,14 +447,14 @@ IopInitializePlugPlayServices(VOID)
                                     REG_OPTION_NON_VOLATILE,
                                     &Disposition);
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Check if it's a new key */
     if (Disposition == REG_CREATED_NEW_KEY)
     {
         /* FIXME: DACLs */
         DPRINT1("Need to build DACL\n");
     }
-    
+
     /* Create the root key */
     ParentHandle = EnumHandle;
     RtlInitUnicodeString(&KeyName, REGSTR_KEY_ROOTENUM);
@@ -447,7 +467,7 @@ IopInitializePlugPlayServices(VOID)
     NtClose(ParentHandle);
     if (!NT_SUCCESS(Status)) return Status;
     NtClose(EnumHandle);
-    
+
     /* Open the root key now */
     RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET\\ENUM");
     Status = IopOpenRegistryKeyEx(&EnumHandle,
@@ -475,7 +495,7 @@ IopInitializePlugPlayServices(VOID)
         DPRINT1("IoCreateDriverObject() failed\n");
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
-    
+
     /* Create the root PDO */
     Status = IoCreateDevice(IopRootDriverObject,
                             sizeof(IOPNP_DEVICE_EXTENSION),
@@ -489,10 +509,10 @@ IopInitializePlugPlayServices(VOID)
         DPRINT1("IoCreateDevice() failed\n");
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
-    
+
     /* This is a bus enumerated device */
     Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-    
+
     /* Create the root device node */
     IopRootDeviceNode = PipAllocateDeviceNode(Pdo);
 
@@ -500,11 +520,11 @@ IopInitializePlugPlayServices(VOID)
     IopRootDeviceNode->Flags |= DNF_STARTED + DNF_PROCESSED + DNF_ENUMERATED +
                                 DNF_MADEUP + DNF_NO_RESOURCE_REQUIRED +
                                 DNF_ADDED;
-    
+
     /* Create instance path */
     RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
                            REGSTR_VAL_ROOT_DEVNODE);
-    
+
     /* Call the add device routine */
     IopRootDriverObject->DriverExtension->AddDevice(IopRootDriverObject,
                                                     IopRootDeviceNode->PhysicalDeviceObject);
@@ -512,23 +532,23 @@ IopInitializePlugPlayServices(VOID)
     /* Initialize PnP-Event notification support */
     Status = IopInitPlugPlayEvents();
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Report the device to the user-mode pnp manager */
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
                               &IopRootDeviceNode->InstancePath);
-    
+
     /* Initialize the Bus Type GUID List */
     PnpBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     RtlZeroMemory(PnpBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
     ExInitializeFastMutex(&PnpBusTypeGuidList->Lock);
-    
+
     /* Launch the firmware mapper */
     Status = IopUpdateRootKey();
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Close the handle to the control set */
     NtClose(KeyHandle);
-    
+
     /* We made it */
     return STATUS_SUCCESS;
 }

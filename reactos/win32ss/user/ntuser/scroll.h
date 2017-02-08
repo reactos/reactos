@@ -39,5 +39,11 @@ typedef struct _SBINFOEX
 #define SBOBJ_TO_SBID(Obj)	((Obj) - OBJID_HSCROLL)
 #define SBID_IS_VALID(id)	(id == SB_HORZ || id == SB_VERT || id == SB_CTL)
 
-BOOL FASTCALL co_IntCreateScrollBars(PWND Window);
-BOOL FASTCALL IntDestroyScrollBars(PWND Window);
+BOOL FASTCALL co_IntCreateScrollBars(PWND);
+BOOL FASTCALL IntDestroyScrollBars(PWND);
+DWORD FASTCALL co_UserShowScrollBar(PWND,int,BOOL,BOOL);
+BOOL FASTCALL co_IntGetScrollBarInfo(PWND,LONG,PSCROLLBARINFO);
+BOOL FASTCALL co_IntSetScrollBarInfo(PWND,LONG,PSETSCROLLBARINFO);
+void IntDrawScrollBar(PWND,HDC,INT);
+BOOL FASTCALL IntScrollWindow(PWND,int,int,CONST RECT*,CONST RECT*);
+DWORD FASTCALL IntScrollWindowEx(PWND,INT,INT,const RECT*,const RECT*,HRGN,LPRECT,UINT);

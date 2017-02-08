@@ -1,3 +1,4 @@
+
 include_directories(
     BEFORE include
     ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
@@ -54,10 +55,15 @@ list(APPEND SOURCE
     src/core/snmp/mib_structs.c
     src/core/snmp/mib2.c
     src/core/snmp/msg_in.c
-    src/core/snmp/msg_out.c)
+    src/core/snmp/msg_out.c
+    precomp.h)
 
 add_library(lwip ${SOURCE})
-add_dependencies(lwip bugcodes)
+add_dependencies(lwip bugcodes xdk)
+add_pch(lwip precomp.h SOURCE)
+
 if(NOT MSVC)
-    allow_warnings(lwip)
+    if(LTCG)
+        add_compile_flags("-fno-builtin-malloc -fno-builtin-free")
+    endif()
 endif()

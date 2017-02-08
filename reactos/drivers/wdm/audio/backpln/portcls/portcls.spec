@@ -41,6 +41,7 @@
 ; Power Management
 @ stdcall PcRegisterAdapterPowerManagement(ptr ptr)
 @ stdcall PcRequestNewPowerState(ptr long)
+@ stdcall PcUnregisterAdapterPowerManagement(ptr)
 
 ; Properties
 @ stdcall PcCompletePendingPropertyRequest(ptr long)

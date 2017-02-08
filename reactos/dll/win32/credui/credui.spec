@@ -2,7 +2,7 @@
 @ stub CredUICmdLinePromptForCredentialsW
 @ stub CredUIConfirmCredentialsA
 @ stdcall CredUIConfirmCredentialsW(wstr long)
-@ stub CredUIInitControls
+@ stdcall CredUIInitControls()
 @ stub CredUIParseUserNameA
 @ stdcall CredUIParseUserNameW(wstr ptr long ptr long)
 @ stub CredUIPromptForCredentialsA
@@ -15,3 +15,4 @@
 @ stub -private DllGetClassObject
 @ stub -private DllRegisterServer
 @ stub -private DllUnregisterServer
+@ stdcall SspiPromptForCredentialsW(wstr ptr long wstr ptr ptr ptr long)

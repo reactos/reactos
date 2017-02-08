@@ -24,8 +24,8 @@ typedef struct _KNOWN_COMPOUND_ACE
     ULONG SidStart;
 } KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
 
-PSID
 FORCEINLINE
+PSID
 SepGetGroupFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -43,8 +43,8 @@ SepGetGroupFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PSID
 FORCEINLINE
+PSID
 SepGetOwnerFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -62,8 +62,8 @@ SepGetOwnerFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PACL
 FORCEINLINE
+PACL
 SepGetDaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -83,8 +83,8 @@ SepGetDaclFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PACL
 FORCEINLINE
+PACL
 SepGetSaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -143,34 +143,44 @@ extern PSID SeAliasBackupOpsSid;
 extern PSID SeAuthenticatedUsersSid;
 extern PSID SeRestrictedSid;
 extern PSID SeAnonymousLogonSid;
+extern PSID SeLocalServiceSid;
+extern PSID SeNetworkServiceSid;
 
 /* Privileges */
-extern LUID SeCreateTokenPrivilege;
-extern LUID SeAssignPrimaryTokenPrivilege;
-extern LUID SeLockMemoryPrivilege;
-extern LUID SeIncreaseQuotaPrivilege;
-extern LUID SeUnsolicitedInputPrivilege;
-extern LUID SeTcbPrivilege;
-extern LUID SeSecurityPrivilege;
-extern LUID SeTakeOwnershipPrivilege;
-extern LUID SeLoadDriverPrivilege;
-extern LUID SeCreatePagefilePrivilege;
-extern LUID SeIncreaseBasePriorityPrivilege;
-extern LUID SeSystemProfilePrivilege;
-extern LUID SeSystemtimePrivilege;
-extern LUID SeProfileSingleProcessPrivilege;
-extern LUID SeCreatePermanentPrivilege;
-extern LUID SeBackupPrivilege;
-extern LUID SeRestorePrivilege;
-extern LUID SeShutdownPrivilege;
-extern LUID SeDebugPrivilege;
-extern LUID SeAuditPrivilege;
-extern LUID SeSystemEnvironmentPrivilege;
-extern LUID SeChangeNotifyPrivilege;
-extern LUID SeRemoteShutdownPrivilege;
-extern LUID SeUndockPrivilege;
-extern LUID SeSyncAgentPrivilege;
-extern LUID SeEnableDelegationPrivilege;
+extern const LUID SeCreateTokenPrivilege;
+extern const LUID SeAssignPrimaryTokenPrivilege;
+extern const LUID SeLockMemoryPrivilege;
+extern const LUID SeIncreaseQuotaPrivilege;
+extern const LUID SeUnsolicitedInputPrivilege;
+extern const LUID SeTcbPrivilege;
+extern const LUID SeSecurityPrivilege;
+extern const LUID SeTakeOwnershipPrivilege;
+extern const LUID SeLoadDriverPrivilege;
+extern const LUID SeSystemProfilePrivilege;
+extern const LUID SeSystemtimePrivilege;
+extern const LUID SeProfileSingleProcessPrivilege;
+extern const LUID SeIncreaseBasePriorityPrivilege;
+extern const LUID SeCreatePagefilePrivilege;
+extern const LUID SeCreatePermanentPrivilege;
+extern const LUID SeBackupPrivilege;
+extern const LUID SeRestorePrivilege;
+extern const LUID SeShutdownPrivilege;
+extern const LUID SeDebugPrivilege;
+extern const LUID SeAuditPrivilege;
+extern const LUID SeSystemEnvironmentPrivilege;
+extern const LUID SeChangeNotifyPrivilege;
+extern const LUID SeRemoteShutdownPrivilege;
+extern const LUID SeUndockPrivilege;
+extern const LUID SeSyncAgentPrivilege;
+extern const LUID SeEnableDelegationPrivilege;
+extern const LUID SeManageVolumePrivilege;
+extern const LUID SeImpersonatePrivilege;
+extern const LUID SeCreateGlobalPrivilege;
+extern const LUID SeTrustedCredmanPrivilege;
+extern const LUID SeRelabelPrivilege;
+extern const LUID SeIncreaseWorkingSetPrivilege;
+extern const LUID SeTimeZonePrivilege;
+extern const LUID SeCreateSymbolicLinkPrivilege;
 
 /* DACLs */
 extern PACL SePublicDefaultUnrestrictedDacl;
@@ -237,10 +247,6 @@ BOOLEAN
 NTAPI
 SeInitSystem(VOID);
 
-BOOLEAN
-NTAPI
-SeInitSRM(VOID);
-
 VOID
 NTAPI
 ExpInitLuid(VOID);
@@ -260,6 +266,14 @@ SepInitDACLs(VOID);
 BOOLEAN
 NTAPI
 SepInitSDs(VOID);
+
+BOOLEAN
+NTAPI
+SeRmInitPhase0(VOID);
+
+BOOLEAN
+NTAPI
+SeRmInitPhase1(VOID);
 
 VOID
 NTAPI
@@ -376,6 +390,16 @@ SepPrivilegeCheck(
     KPROCESSOR_MODE PreviousMode
 );
 
+NTSTATUS
+NTAPI
+SePrivilegePolicyCheck(
+    _Inout_ PACCESS_MASK DesiredAccess,
+    _Inout_ PACCESS_MASK GrantedAccess,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PTOKEN Token,
+    _Out_opt_ PPRIVILEGE_SET *OutPrivilegeSet,
+    _In_ KPROCESSOR_MODE PreviousMode);
+
 BOOLEAN
 NTAPI
 SeCheckPrivilegedObject(
@@ -436,6 +460,26 @@ SepReleaseSid(
 
 NTSTATUS
 NTAPI
+SeCaptureSidAndAttributesArray(
+    _In_ PSID_AND_ATTRIBUTES SrcSidAndAttributes,
+    _In_ ULONG AttributeCount,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_opt_ PVOID AllocatedMem,
+    _In_ ULONG AllocatedLength,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSID_AND_ATTRIBUTES *CapturedSidAndAttributes,
+    _Out_ PULONG ResultLength);
+
+VOID
+NTAPI
+SeReleaseSidAndAttributesArray(
+    _In_ _Post_invalid_ PSID_AND_ATTRIBUTES CapturedSidAndAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel);
+
+NTSTATUS
+NTAPI
 SepCaptureAcl(
     IN PACL InputAcl,
     IN KPROCESSOR_MODE AccessMode,
@@ -451,6 +495,32 @@ SepReleaseAcl(
     IN KPROCESSOR_MODE AccessMode,
     IN BOOLEAN CaptureIfKernel
 );
+
+NTSTATUS
+SepPropagateAcl(
+    _Out_writes_bytes_opt_(DaclLength) PACL AclDest,
+    _Inout_ PULONG AclLength,
+    _In_reads_bytes_(AclSource->AclSize) PACL AclSource,
+    _In_ PSID Owner,
+    _In_ PSID Group,
+    _In_ BOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PGENERIC_MAPPING GenericMapping);
+
+PACL
+SepSelectAcl(
+    _In_opt_ PACL ExplicitAcl,
+    _In_ BOOLEAN ExplicitPresent,
+    _In_ BOOLEAN ExplicitDefaulted,
+    _In_opt_ PACL ParentAcl,
+    _In_opt_ PACL DefaultAcl,
+    _Out_ PULONG AclLength,
+    _In_ PSID Owner,
+    _In_ PSID Group,
+    _Out_ PBOOLEAN AclPresent,
+    _Out_ PBOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PGENERIC_MAPPING GenericMapping);
 
 NTSTATUS
 NTAPI
@@ -496,6 +566,28 @@ SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                     IN PACCESS_STATE AccessState,
                     IN ACCESS_MASK DesiredAccess,
                     IN KPROCESSOR_MODE AccessMode);
+
+BOOLEAN
+NTAPI
+SeCheckAuditPrivilege(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ KPROCESSOR_MODE PreviousMode);
+
+VOID
+NTAPI
+SePrivilegedServiceAuditAlarm(
+    _In_opt_ PUNICODE_STRING ServiceName,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _In_ BOOLEAN AccessGranted);
+
+NTSTATUS
+SepRmReferenceLogonSession(
+    PLUID LogonLuid);
+
+NTSTATUS
+SepRmDereferenceLogonSession(
+    PLUID LogonLuid);
 
 #endif
 

@@ -87,12 +87,17 @@ static inline WCHAR *pdh_strdup_aw( const char *src )
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
-
-    if (fdwReason == DLL_WINE_PREATTACH) return FALSE;    /* prefer native version */
-
-    if (fdwReason == DLL_PROCESS_ATTACH)
+    switch (fdwReason)
     {
-        DisableThreadLibraryCalls( hinstDLL );
+    case DLL_WINE_PREATTACH:
+        return FALSE;    /* prefer native version */
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hinstDLL);
+        break;
+    case DLL_PROCESS_DETACH:
+        if (lpvReserved) break;
+        DeleteCriticalSection(&pdh_handle_cs);
+        break;
     }
 
     return TRUE;
@@ -218,14 +223,27 @@ static const struct source counter_sources[] =
     { 674,  path_uptime,            collect_uptime,             TYPE_UPTIME,            -3,     1000 }
 };
 
+static BOOL is_local_machine( const WCHAR *name, DWORD len )
+{
+    WCHAR buf[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD buflen = sizeof(buf) / sizeof(buf[0]);
+
+    if (!GetComputerNameW( buf, &buflen )) return FALSE;
+    return len == buflen && !memicmpW( name, buf, buflen );
+}
+
 static BOOL pdh_match_path( LPCWSTR fullpath, LPCWSTR path )
 {
     const WCHAR *p;
 
-    if (strchrW( path, '\\')) p = fullpath;
+    if (path[0] == '\\' && path[1] == '\\' && (p = strchrW( path + 2, '\\' )) &&
+        is_local_machine( path + 2, p - path - 2 ))
+    {
+        path += p - path;
+    }
+    if (strchrW( path, '\\' )) p = fullpath;
     else p = strrchrW( fullpath, '\\' ) + 1;
-    if (strcmpW( p, path )) return FALSE;
-    return TRUE;
+    return !strcmpW( p, path );
 }
 
 /***********************************************************************
@@ -617,6 +635,24 @@ PDH_STATUS WINAPI PdhExpandWildCardPathW( LPCWSTR szDataSource, LPCWSTR szWildCa
 {
     FIXME("%s, %s, %p, %p, 0x%x: stub\n", debugstr_w(szDataSource), debugstr_w(szWildCardPath), mszExpandedPathList, pcchPathListLength, dwFlags);
     return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhExpandCounterPathA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandCounterPathA( LPCSTR szWildCardPath, LPSTR mszExpandedPathList, LPDWORD pcchPathListLength )
+{
+    FIXME("%s, %p, %p: stub\n", debugstr_a(szWildCardPath), mszExpandedPathList, pcchPathListLength);
+    return PdhExpandWildCardPathA(NULL, szWildCardPath, mszExpandedPathList, pcchPathListLength, 0);
+}
+
+/***********************************************************************
+ *              PdhExpandCounterPathW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandCounterPathW( LPCWSTR szWildCardPath, LPWSTR mszExpandedPathList, LPDWORD pcchPathListLength )
+{
+    FIXME("%s, %p, %p: stub\n", debugstr_w(szWildCardPath), mszExpandedPathList, pcchPathListLength);
+    return PdhExpandWildCardPathW(NULL, szWildCardPath, mszExpandedPathList, pcchPathListLength, 0);
 }
 
 /***********************************************************************
@@ -1234,4 +1270,40 @@ PDH_STATUS WINAPI PdhSetDefaultRealTimeDataSource( DWORD source )
 {
     FIXME("%u\n", source);
     return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ *              PdhGetLogFileTypeA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhGetLogFileTypeA(const char *log, DWORD *type)
+{
+    FIXME("%s, %p: stub\n", debugstr_a(log), type);
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhGetLogFileTypeW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhGetLogFileTypeW(const WCHAR *log, DWORD *type)
+{
+    FIXME("%s, %p: stub\n", debugstr_w(log), type);
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhBindInputDataSourceA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhBindInputDataSourceA(PDH_HLOG *source, const char *filenamelist)
+{
+    FIXME("%p %s: stub\n", source, debugstr_a(filenamelist));
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhBindInputDataSourceW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhBindInputDataSourceW(PDH_HLOG *source, const WCHAR *filenamelist)
+{
+    FIXME("%p %s: stub\n", source, debugstr_w(filenamelist));
+    return PDH_NOT_IMPLEMENTED;
 }

@@ -1,16 +1,6 @@
 #ifndef _RTF
 #define _RTF
 
-//#include <stdarg.h>
-//#include <stdio.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "richedit.h"
-
-
 /*
  * rtf.h - RTF document processing stuff.  Release 1.10.
  */
@@ -184,7 +174,9 @@
 # define		rtfGenerator		74
 # define		rtfNestTableProps	75
 # define		rtfNoNestTables		76
-# define		rtfMaxDestination	77	/* highest dest + 1 */
+# define                rtfShpPict              77
+# define                rtfNonShpPict           78
+# define                rtfMaxDestination       79      /* highest dest + 1 */
 
 # define	rtfFontFamily	4
 # define		rtfFFNil		0
@@ -1139,7 +1131,7 @@ struct _RTF_Info {
     char *pushedTextBuf;
 
     int	prevChar;
-    int	bumpLine;
+    BOOL bumpLine;
 
     /* Document-wide attributes */
     RTFFont	*fontList;	/* these lists MUST be */

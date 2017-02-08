@@ -22,64 +22,79 @@
  *       MMSYSTEM...)
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "mmddk.h"
-#include "winnls.h"
+#include <windef.h>
+#include <mmddk.h>
 
 /* Add your language specific defines here */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_PT_BR
-    #include "winmm_Br.rc"
+    #include "lang/winmm_Br.rc"
 #endif
 #ifdef LANGUAGE_CS_CZ
-    #include "winmm_Cs.rc"
+    #include "lang/winmm_Cs.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
-    #include "winmm_De.rc"
+    #include "lang/winmm_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
-    #include "winmm_En.rc"
+    #include "lang/winmm_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "winmm_Es.rc"
+    #include "lang/winmm_Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "winmm_Fr.rc"
+    #include "lang/winmm_Fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/winmm_Hu.rc"
 #endif
 #ifdef LANGUAGE_ID_ID
-    #include "winmm_Id.rc"
+    #include "lang/winmm_Id.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "winmm_It.rc"
+    #include "lang/winmm_It.rc"
 #endif
-/* #include "winmm_Ja.rc" */ /* Gives error during ReactOS build */
+#ifdef LANGUAGE_JA_JP
+    #include "lang/winmm_Ja.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
-    #include "winmm_Nl.rc"
+    #include "lang/winmm_Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "winmm_No.rc"
+    #include "lang/winmm_No.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "winmm_Pl.rc"
+    #include "lang/winmm_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "winmm_Pt.rc"
+    #include "lang/winmm_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "winmm_Ro.rc"
+    #include "lang/winmm_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "winmm_Ru.rc"
+    #include "lang/winmm_Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "winmm_Si.rc"
+    #include "lang/winmm_Si.rc"
 #endif
 #ifdef LANGUAGE_SK_SK
-    #include "winmm_Sk.rc"
+    #include "lang/winmm_Sk.rc"
 #endif
-//#include "winmm_Hu.rc"
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/winmm_Sq.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/winmm_Tr.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
-    #include "winmm_Uk.rc"
+    #include "lang/winmm_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/winmm_Zh.rc"
 #endif
 
 /* do not add NLS specific stuff below that line */

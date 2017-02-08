@@ -1,21 +1,14 @@
-/*
- * FILE:         base/system/subst/lang/ro-RO.rc
- *               ReactOS Project (http://www.reactos.org)
- * AUTHOR:       Magnus Olsen, 2005
- * TRANSLATOR:   Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:   2011-08-29  initial translation
- *               2011-11-05  UTF-8 encoding (with diacritics conversion)
- */
+/* Romanian translation by Fulea Ștefan */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_INCORRECT_PARAMETER_COUNT  "Număr eronat de parametri - %s\n"
-    IDS_INVALID_PARAMETER          "Număr eronat de parametri - %s\n"
-    IDS_INVALID_PARAMETER2         "Parametru eronat - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED       "Unitatea este deja SUBSTituită\n"
-    IDS_FAILED_WITH_ERROCODE       "Operația a eșuat. Codul de eroare 0x%x: %s\n"
+    IDS_INCORRECT_PARAMETER_COUNT "Număr eronat de parametri - %s\n"
+    IDS_INVALID_PARAMETER "Număr eronat de parametri - %s\n"
+    IDS_INVALID_PARAMETER2 "Parametru eronat - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Unitatea este deja SUBSTituită\n"
+    IDS_FAILED_WITH_ERRORCODE "Operația a eșuat. Codul de eroare 0x%x: %s\n"
     IDS_USAGE "Substituie un director cu o unitate de stocare.\n\n\
 SUBST [unitate1: [unitate2:]cale]\n\
 SUBST unitate1: /D\n\n\

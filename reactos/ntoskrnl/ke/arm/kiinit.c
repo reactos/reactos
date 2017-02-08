@@ -12,6 +12,13 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+NTAPI
+KdPortPutByteEx(
+    PCPPORT PortInformation,
+    UCHAR ByteToSend
+);
+
 /* GLOBALS ********************************************************************/
 
 KINTERRUPT KxUnexpectedInterrupt;
@@ -44,15 +51,16 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     ULONG PageDirectory[2];
     ULONG i;
-    
+
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
 
     /* Initialize spinlocks and DPC data */
     KiInitSpinLocks(Prcb, Number);
-    
+
     /* Set stack pointers */
-    Pcr->InitialStack = IdleStack;
+    //Pcr->InitialStack = IdleStack;
+    Pcr->Prcb.SpBase = IdleStack; // ???
 
     /* Check if this is the Boot CPU */
     if (!Number)
@@ -64,22 +72,23 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             /* Copy the template code */
             KxUnexpectedInterrupt.DispatchCode[i] = ((PULONG)KiInterruptTemplate)[i];
         }
-        
+
         /* Set DMA coherency */
         KiDmaIoCoherency = 0;
-        
+
         /* Sweep D-Cache */
         HalSweepDcache();
-        
+
         /* Set boot-level flags */
         KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_ARM;
         KeFeatureBits = 0;
-        KeProcessorLevel = (USHORT)(Pcr->ProcessorId >> 8);
-        KeProcessorRevision = (USHORT)(Pcr->ProcessorId & 0xFF);
-
+        /// FIXME: just a wild guess
+        KeProcessorLevel = (USHORT)(Pcr->Prcb.ProcessorState.ArchState.Cp15_Cr0_CpuId >> 8);
+        KeProcessorRevision = (USHORT)(Pcr->Prcb.ProcessorState.ArchState.Cp15_Cr0_CpuId & 0xFF);
+#if 0
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
-
+#endif
         /* Lower to APC_LEVEL */
         KeLowerIrql(APC_LEVEL);
 
@@ -160,9 +169,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     LoaderBlock->Prcb = 0;
 }
 
-C_ASSERT((PKIPCR)KeGetPcr() == (PKIPCR)0xFFDFF000);
-C_ASSERT((FIELD_OFFSET(KIPCR, FirstLevelDcacheSize) & 4) == 0);
-C_ASSERT(sizeof(KIPCR) <= PAGE_SIZE);
+//C_ASSERT((PKIPCR)KeGetPcr() == (PKIPCR)0xFFDFF000);
+//C_ASSERT((FIELD_OFFSET(KIPCR, FirstLevelDcacheSize) & 4) == 0);
+//C_ASSERT(sizeof(KIPCR) <= PAGE_SIZE);
 
 VOID
 NTAPI
@@ -173,109 +182,127 @@ KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PVOID InterruptStack)
 {
     ULONG i;
-    
+
     /* Set the Current Thread */
-    Pcr->PrcbData.CurrentThread = IdleThread;
+    Pcr->Prcb.CurrentThread = IdleThread;
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
-    Pcr->Prcb = &Pcr->PrcbData;
+    Pcr->CurrentPrcb = &Pcr->Prcb;
 
     /* Set the PCR Version */
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
 
     /* Set the PCRB Version */
-    Pcr->PrcbData.MajorVersion = 1;
-    Pcr->PrcbData.MinorVersion = 1;
+    Pcr->Prcb.MajorVersion = 1;
+    Pcr->Prcb.MinorVersion = 1;
 
     /* Set the Build Type */
-    Pcr->PrcbData.BuildType = 0;
+    Pcr->Prcb.BuildType = 0;
 #ifndef CONFIG_SMP
-    Pcr->PrcbData.BuildType |= PRCB_BUILD_UNIPROCESSOR;
+    Pcr->Prcb.BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
 #if DBG
-    Pcr->PrcbData.BuildType |= PRCB_BUILD_DEBUG;
+    Pcr->Prcb.BuildType |= PRCB_BUILD_DEBUG;
 #endif
 
     /* Set the Processor Number and current Processor Mask */
-    Pcr->PrcbData.Number = (UCHAR)ProcessorNumber;
-    Pcr->PrcbData.SetMember = 1 << ProcessorNumber;
+    Pcr->Prcb.Number = (UCHAR)ProcessorNumber;
+    Pcr->Prcb.SetMember = 1 << ProcessorNumber;
 
     /* Set the PRCB for this Processor */
-    KiProcessorBlock[ProcessorNumber] = Pcr->Prcb;
+    KiProcessorBlock[ProcessorNumber] = Pcr->CurrentPrcb;
 
     /* Start us out at PASSIVE_LEVEL */
-    Pcr->Irql = PASSIVE_LEVEL;
+    Pcr->CurrentIrql = PASSIVE_LEVEL;
 
     /* Set the stacks */
-    Pcr->PanicStack = PanicStack;
-    Pcr->InterruptStack = InterruptStack;
-
+    Pcr->Prcb.PanicStackBase = (ULONG)PanicStack;
+    Pcr->Prcb.IsrStack = InterruptStack;
+#if 0
     /* Setup the processor set */
-    Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
-    
+    Pcr->Prcb.MultiThreadProcessorSet = Pcr->Prcb.SetMember;
+#endif
+
     /* Copy cache information from the loader block */
-    Pcr->FirstLevelDcacheSize = KeLoaderBlock->u.Arm.FirstLevelDcacheSize;
-    Pcr->SecondLevelDcacheSize = KeLoaderBlock->u.Arm.SecondLevelDcacheSize;
-    Pcr->FirstLevelIcacheSize = KeLoaderBlock->u.Arm.FirstLevelIcacheSize;
-    Pcr->SecondLevelIcacheSize = KeLoaderBlock->u.Arm.SecondLevelIcacheSize;
-    Pcr->FirstLevelDcacheFillSize = KeLoaderBlock->u.Arm.FirstLevelDcacheFillSize;
-    Pcr->SecondLevelDcacheFillSize = KeLoaderBlock->u.Arm.SecondLevelDcacheFillSize;
-    Pcr->FirstLevelIcacheFillSize = KeLoaderBlock->u.Arm.FirstLevelIcacheFillSize;
-    Pcr->SecondLevelIcacheFillSize = KeLoaderBlock->u.Arm.SecondLevelIcacheFillSize;
+    Pcr->Prcb.Cache[FirstLevelDcache].Type = CacheData;
+    Pcr->Prcb.Cache[FirstLevelDcache].Level = 1;
+    Pcr->Prcb.Cache[FirstLevelDcache].Associativity = 0; // FIXME
+    Pcr->Prcb.Cache[FirstLevelDcache].LineSize = KeLoaderBlock->u.Arm.FirstLevelDcacheFillSize;
+    Pcr->Prcb.Cache[FirstLevelDcache].Size = KeLoaderBlock->u.Arm.FirstLevelDcacheSize;
+
+    Pcr->Prcb.Cache[SecondLevelDcache].Type = CacheData;
+    Pcr->Prcb.Cache[SecondLevelDcache].Level = 2;
+    Pcr->Prcb.Cache[SecondLevelDcache].Associativity = 0; // FIXME
+    Pcr->Prcb.Cache[SecondLevelDcache].LineSize = KeLoaderBlock->u.Arm.SecondLevelDcacheFillSize;
+    Pcr->Prcb.Cache[SecondLevelDcache].Size = KeLoaderBlock->u.Arm.SecondLevelDcacheSize;
+
+    Pcr->Prcb.Cache[FirstLevelIcache].Type = CacheInstruction;
+    Pcr->Prcb.Cache[FirstLevelIcache].Level = 1;
+    Pcr->Prcb.Cache[FirstLevelIcache].Associativity = 0; // FIXME
+    Pcr->Prcb.Cache[FirstLevelIcache].LineSize = KeLoaderBlock->u.Arm.FirstLevelIcacheFillSize;
+    Pcr->Prcb.Cache[FirstLevelIcache].Size = KeLoaderBlock->u.Arm.FirstLevelIcacheSize;
+
+    Pcr->Prcb.Cache[SecondLevelIcache].Type = CacheInstruction;
+    Pcr->Prcb.Cache[SecondLevelIcache].Level = 2;
+    Pcr->Prcb.Cache[SecondLevelIcache].Associativity = 0; // FIXME
+    Pcr->Prcb.Cache[SecondLevelIcache].LineSize = KeLoaderBlock->u.Arm.SecondLevelIcacheFillSize;
+    Pcr->Prcb.Cache[SecondLevelIcache].Size = KeLoaderBlock->u.Arm.SecondLevelIcacheSize;
 
     /* Set global d-cache fill and alignment values */
-    if (!Pcr->SecondLevelDcacheSize)
+    if (Pcr->Prcb.Cache[SecondLevelDcache].Size == 0)
     {
         /* Use the first level */
-        Pcr->DcacheFillSize = Pcr->FirstLevelDcacheSize;
+        Pcr->Prcb.Cache[GlobalDcache] = Pcr->Prcb.Cache[FirstLevelDcache];
     }
     else
     {
         /* Use the second level */
-        Pcr->DcacheFillSize = Pcr->SecondLevelDcacheSize;
+        Pcr->Prcb.Cache[GlobalDcache] = Pcr->Prcb.Cache[SecondLevelDcache];
     }
-    
+
     /* Set the alignment */
-    Pcr->DcacheAlignment = Pcr->DcacheFillSize - 1;
-    
+    //Pcr->DcacheAlignment = Pcr->DcacheFillSize - 1;
+
     /* Set global i-cache fill and alignment values */
-    if (!Pcr->SecondLevelIcacheSize)
+    if (Pcr->Prcb.Cache[SecondLevelIcache].Size == 0)
     {
         /* Use the first level */
-        Pcr->IcacheFillSize = Pcr->FirstLevelIcacheSize;
+        Pcr->Prcb.Cache[GlobalIcache] = Pcr->Prcb.Cache[FirstLevelIcache];
     }
     else
     {
         /* Use the second level */
-        Pcr->IcacheFillSize = Pcr->SecondLevelIcacheSize;
+        Pcr->Prcb.Cache[GlobalIcache] = Pcr->Prcb.Cache[SecondLevelIcache];
     }
-    
+
     /* Set the alignment */
-    Pcr->IcacheAlignment = Pcr->IcacheFillSize - 1;
-    
+    //Pcr->IcacheAlignment = Pcr->IcacheFillSize - 1;
+
     /* Set processor information */
-    Pcr->ProcessorId = KeArmIdCodeRegisterGet().AsUlong;
-    
+    //Pcr->ProcessorId = KeArmIdCodeRegisterGet().AsUlong;
+
     /* Set all interrupt routines to unexpected interrupts as well */
     for (i = 0; i < MAXIMUM_VECTOR; i++)
     {
         /* Point to the same template */
-        Pcr->InterruptRoutine[i] = (PVOID)&KxUnexpectedInterrupt.DispatchCode;
+        Pcr->Idt[i] = (PVOID)&KxUnexpectedInterrupt.DispatchCode;
     }
 
     /* Set default stall factor */
     Pcr->StallScaleFactor = 50;
-    
+
     /* Setup software interrupts */
-    Pcr->InterruptRoutine[PASSIVE_LEVEL] = KiPassiveRelease;
-    Pcr->InterruptRoutine[APC_LEVEL] = KiApcInterrupt;
-    Pcr->InterruptRoutine[DISPATCH_LEVEL] = KiDispatchInterrupt;
+    Pcr->Idt[PASSIVE_LEVEL] = KiPassiveRelease;
+    Pcr->Idt[APC_LEVEL] = KiApcInterrupt;
+    Pcr->Idt[DISPATCH_LEVEL] = KiDispatchInterrupt;
+#if 0
     Pcr->ReservedVectors = (1 << PASSIVE_LEVEL) |
                            (1 << APC_LEVEL) |
                            (1 << DISPATCH_LEVEL) |
                            (1 << IPI_LEVEL);
+#endif
 }
 
 VOID
@@ -283,7 +310,7 @@ KiInitializeMachineType(VOID)
 {
     /* Detect ARM version */
     KeIsArmV6 = KeArmIdCodeRegisterGet().Architecture >= 7;
-    
+
     /* Set the number of TLB entries and ASIDs */
     KeNumberTbEntries = 64;
     if (__ARMV6__)
@@ -310,7 +337,7 @@ KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Flush the TLB */
     KeFlushTb();
-    
+
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;
@@ -327,7 +354,7 @@ KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Skip initial setup if this isn't the Boot CPU */
     if (Cpu) goto AppCpuInit;
-    
+
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,
@@ -339,22 +366,20 @@ KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Now sweep caches */
     HalSweepIcache();
     HalSweepDcache();
-    
+
     /* Set us as the current process */
     InitialThread->ApcState.Process = InitialProcess;
-    
+
 AppCpuInit:
     /* Setup CPU-related fields */
-    Pcr->Number = Cpu;
-    Pcr->SetMember = 1 << Cpu;
-    Pcr->SetMemberCopy = 1 << Cpu;
-    Pcr->PrcbData.SetMember = 1 << Cpu;
-    
+    Pcr->Prcb.Number = Cpu;
+    Pcr->Prcb.SetMember = 1 << Cpu;
+
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
 
     /* Set active processors */
-    KeActiveProcessors |= Pcr->SetMember;
+    KeActiveProcessors |= Pcr->Prcb.SetMember;
     KeNumberProcessors++;
 
     /* Check if this is the boot CPU */
@@ -369,12 +394,12 @@ AppCpuInit:
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
-    
+
     /* Set the exception address to high */
     ControlRegister = KeArmControlRegisterGet();
     ControlRegister.HighVectors = TRUE;
     KeArmControlRegisterSet(ControlRegister);
-    
+
     /* Setup the exception vector table */
     RtlCopyMemory((PVOID)0xFFFF0000, &KiArmVectorTable, 14 * sizeof(PVOID));
 
@@ -382,8 +407,8 @@ AppCpuInit:
     KiInitializeKernel((PKPROCESS)LoaderBlock->Process,
                        (PKTHREAD)LoaderBlock->Thread,
                        (PVOID)LoaderBlock->KernelStack,
-                       Pcr->Prcb,
-                       Pcr->Prcb->Number,
+                       &Pcr->Prcb,
+                       Pcr->Prcb.Number,
                        KeLoaderBlock);
 
     /* Set the priority of this thread to 0 */
@@ -412,7 +437,7 @@ DbgPrintEarly(const char *fmt, ...)
     va_start(args, fmt);
     i = vsprintf(Buffer, fmt, args);
     va_end(args);
-    
+
     /* Output the message */
     while (*String != 0)
     {
@@ -423,6 +448,6 @@ DbgPrintEarly(const char *fmt, ...)
         KdPortPutByteEx(NULL, *String);
         String++;
     }
-    
+
     return STATUS_SUCCESS;
 }

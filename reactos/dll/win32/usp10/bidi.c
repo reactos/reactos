@@ -41,23 +41,18 @@
  * has been modified.
  */
 
-#include <config.h>
-
-//#include <stdarg.h>
 #include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-//#include "winnls.h"
-#include <usp10.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
+
+#include <wine/list.h>
 
 #include "usp10_internal.h"
+
+extern const unsigned short bidi_bracket_table[];
 
 WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 
 #define ASSERT(x) do { if (!(x)) FIXME("assert failed: %s\n", #x); } while(0)
-#define MAX_LEVEL 61
+#define MAX_DEPTH 125
 
 /* HELPER FUNCTIONS AND DECLARATIONS */
 
@@ -75,7 +70,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 enum directions
 {
     /* input types */
-             /* ON MUST be zero, code relies on ON = N = 0 */
+             /* ON MUST be zero, code relies on ON = NI = 0 */
     ON = 0,  /* Other Neutral */
     L,       /* Left Letter */
     R,       /* Right Letter */
@@ -102,11 +97,57 @@ enum directions
     LRE,
     PDF,
 
+    LRI, /* Isolate formatting characters new with 6.3 */
+    RLI,
+    FSI,
+    PDI,
+
     /* resolved types, also resolved directions */
-    N = ON,  /* alias, where ON, WS and S are treated the same */
+    NI = ON,  /* alias, where ON, WS, S  and Isolates are treated the same */
+};
+
+static const char debug_type[][4] =
+{
+    "ON",      /* Other Neutral */
+    "L",       /* Left Letter */
+    "R",       /* Right Letter */
+    "AN",      /* Arabic Number */
+    "EN",      /* European Number */
+    "AL",      /* Arabic Letter (Right-to-left) */
+    "NSM",     /* Non-spacing Mark */
+    "CS",      /* Common Separator */
+    "ES",      /* European Separator */
+    "ET",      /* European Terminator (post/prefix e.g. $ and %) */
+    "BN",      /* Boundary neutral (type of RLE etc after explicit levels) */
+    "S",       /* Segment Separator (TAB)        // used only in L1 */
+    "WS",      /* White space                    // used only in L1 */
+    "B",       /* Paragraph Separator (aka as PS) */
+    "RLO",     /* these are used only in X1-X9 */
+    "RLE",
+    "LRO",
+    "LRE",
+    "PDF",
+    "LRI",     /* Isolate formatting characters new with 6.3 */
+    "RLI",
+    "FSI",
+    "PDI",
 };
 
 /* HELPER FUNCTIONS */
+
+static inline void dump_types(const char* header, WORD *types, int start, int end)
+{
+    int i, len = 0;
+    TRACE("%s:",header);
+    for (i = start; i < end && len < 200; i++)
+    {
+        TRACE(" %s",debug_type[types[i]]);
+        len += strlen(debug_type[types[i]])+1;
+    }
+    if (i != end)
+        TRACE("...");
+    TRACE("\n");
+}
 
 /* Convert the libwine information to the direction enum */
 static void classify(LPCWSTR lpString, WORD *chartype, DWORD uCount, const SCRIPT_CONTROL *c)
@@ -143,7 +184,7 @@ static void classify(LPCWSTR lpString, WORD *chartype, DWORD uCount, const SCRIP
             switch (lpString[i])
             {
             case '-':
-            case '+': chartype[i] = N; break;
+            case '+': chartype[i] = NI; break;
             case '/': chartype[i] = CS; break;
             }
             break;
@@ -155,20 +196,13 @@ static void classify(LPCWSTR lpString, WORD *chartype, DWORD uCount, const SCRIP
             case 0x202C: chartype[i] = PDF; break;
             case 0x202D: chartype[i] = LRO; break;
             case 0x202E: chartype[i] = RLO; break;
+            case 0x2066: chartype[i] = LRI; break;
+            case 0x2067: chartype[i] = RLI; break;
+            case 0x2068: chartype[i] = FSI; break;
+            case 0x2069: chartype[i] = PDI; break;
             }
             break;
         }
-    }
-}
-
-/* Set a run of cval values at locations all prior to, but not including */
-/* iStart, to the new value nval. */
-static void SetDeferredRun(WORD *pval, int cval, int iStart, int nval)
-{
-    int i = iStart - 1;
-    for (; i >= iStart - cval; i--)
-    {
-        pval[i] = nval;
     }
 }
 
@@ -208,233 +242,284 @@ static WORD EmbeddingDirection(int level)
           the outermost call. The nesting counter counts the recursion
           depth and not the embedding level.
 ------------------------------------------------------------------------*/
+typedef struct tagStackItem {
+    int level;
+    int override;
+    BOOL isolate;
+} StackItem;
 
-static int resolveExplicit(int level, int dir, WORD *pcls, WORD *plevel, int cch, int nNest)
+#define push_stack(l,o,i)  \
+  do { stack_top--; \
+  stack[stack_top].level = l; \
+  stack[stack_top].override = o; \
+  stack[stack_top].isolate = i;} while(0)
+
+#define pop_stack() do { stack_top++; } while(0)
+
+#define valid_level(x) (x <= MAX_DEPTH && overflow_isolate_count == 0 && overflow_embedding_count == 0)
+
+static void resolveExplicit(int level, WORD *pclass, WORD *poutLevel, WORD *poutOverrides, int count, BOOL initialOverride)
 {
-    /* always called with a valid nesting level
-       nesting levels are != embedding levels */
-    int nLastValid = nNest;
-    int ich = 0;
+    /* X1 */
+    int overflow_isolate_count = 0;
+    int overflow_embedding_count = 0;
+    int valid_isolate_count = 0;
+    int i;
 
-    /* check input values */
-    ASSERT(nNest >= 0 && level >= 0 && level <= MAX_LEVEL);
+    StackItem stack[MAX_DEPTH+2];
+    int stack_top = MAX_DEPTH+1;
 
-    /* process the text */
-    for (; ich < cch; ich++)
+    stack[stack_top].level = level;
+    stack[stack_top].override = NI;
+    stack[stack_top].isolate = FALSE;
+
+    if (initialOverride)
     {
-        WORD cls = pcls[ich];
-        switch (cls)
-        {
-        case LRO:
-        case LRE:
-            nNest++;
-            if (GreaterEven(level) <= MAX_LEVEL - (cls == LRO ? 2 : 0))
-            {
-                plevel[ich] = GreaterEven(level);
-                pcls[ich] = BN;
-                ich += resolveExplicit(plevel[ich], (cls == LRE ? N : L),
-                            &pcls[ich+1], &plevel[ich+1],
-                             cch - (ich+1), nNest);
-                nNest--;
-                continue;
-            }
-            cls = pcls[ich] = BN;
-            break;
-
-        case RLO:
-        case RLE:
-            nNest++;
-            if (GreaterOdd(level) <= MAX_LEVEL - (cls == RLO ? 2 : 0))
-            {
-                plevel[ich] = GreaterOdd(level);
-                pcls[ich] = BN;
-                ich += resolveExplicit(plevel[ich], (cls == RLE ? N : R),
-                                &pcls[ich+1], &plevel[ich+1],
-                                 cch - (ich+1), nNest);
-                nNest--;
-                continue;
-            }
-            cls = pcls[ich] = BN;
-            break;
-
-        case PDF:
-            cls = pcls[ich] = BN;
-            if (nNest)
-            {
-                if (nLastValid < nNest)
-                {
-                    nNest--;
-                }
-                else
-                {
-                    cch = ich; /* break the loop, but complete body */
-                }
-            }
-        }
-
-        /* Apply the override */
-        if (dir != N)
-        {
-            cls = dir;
-        }
-        plevel[ich] = level;
-        if (pcls[ich] != BN)
-            pcls[ich] = cls;
+        if (odd(level))
+            push_stack(level, R, FALSE);
+        else
+            push_stack(level, L, FALSE);
     }
 
-    return ich;
+    for (i = 0; i < count; i++)
+    {
+        poutOverrides[i] = stack[stack_top].override;
+
+        /* X2 */
+        if (pclass[i] == RLE)
+        {
+            int least_odd = GreaterOdd(stack[stack_top].level);
+            poutLevel[i] = stack[stack_top].level;
+            if (valid_level(least_odd))
+                push_stack(least_odd, NI, FALSE);
+            else if (overflow_isolate_count == 0)
+                overflow_embedding_count++;
+        }
+        /* X3 */
+        else if (pclass[i] == LRE)
+        {
+            int least_even = GreaterEven(stack[stack_top].level);
+            poutLevel[i] = stack[stack_top].level;
+            if (valid_level(least_even))
+                push_stack(least_even, NI, FALSE);
+            else if (overflow_isolate_count == 0)
+                overflow_embedding_count++;
+        }
+        /* X4 */
+        else if (pclass[i] == RLO)
+        {
+            int least_odd = GreaterOdd(stack[stack_top].level);
+            poutLevel[i] = stack[stack_top].level;
+            if (valid_level(least_odd))
+                push_stack(least_odd, R, FALSE);
+            else if (overflow_isolate_count == 0)
+                overflow_embedding_count++;
+        }
+        /* X5 */
+        else if (pclass[i] == LRO)
+        {
+            int least_even = GreaterEven(stack[stack_top].level);
+            poutLevel[i] = stack[stack_top].level;
+            if (valid_level(least_even))
+                push_stack(least_even, L, FALSE);
+            else if (overflow_isolate_count == 0)
+                overflow_embedding_count++;
+        }
+        /* X5a */
+        else if (pclass[i] == RLI)
+        {
+            int least_odd = GreaterOdd(stack[stack_top].level);
+            poutLevel[i] = stack[stack_top].level;
+            if (valid_level(least_odd))
+            {
+                valid_isolate_count++;
+                push_stack(least_odd, NI, TRUE);
+            }
+            else
+                overflow_isolate_count++;
+        }
+        /* X5b */
+        else if (pclass[i] == LRI)
+        {
+            int least_even = GreaterEven(stack[stack_top].level);
+            poutLevel[i] = stack[stack_top].level;
+            if (valid_level(least_even))
+            {
+                valid_isolate_count++;
+                push_stack(least_even, NI, TRUE);
+            }
+            else
+                overflow_isolate_count++;
+        }
+        /* X5c */
+        else if (pclass[i] == FSI)
+        {
+            int j;
+            int new_level = 0;
+            int skipping = 0;
+            poutLevel[i] = stack[stack_top].level;
+            for (j = i+1; j < count; j++)
+            {
+                if (pclass[j] == LRI || pclass[j] == RLI || pclass[j] == FSI)
+                {
+                    skipping++;
+                    continue;
+                }
+                else if (pclass[j] == PDI)
+                {
+                    if (skipping)
+                        skipping --;
+                    else
+                        break;
+                    continue;
+                }
+
+                if (skipping) continue;
+
+                if (pclass[j] == L)
+                {
+                    new_level = 0;
+                    break;
+                }
+                else if (pclass[j] == R || pclass[j] == AL)
+                {
+                    new_level = 1;
+                    break;
+                }
+            }
+            if (odd(new_level))
+            {
+                int least_odd = GreaterOdd(stack[stack_top].level);
+                if (valid_level(least_odd))
+                {
+                    valid_isolate_count++;
+                    push_stack(least_odd, NI, TRUE);
+                }
+                else
+                    overflow_isolate_count++;
+            }
+            else
+            {
+                int least_even = GreaterEven(stack[stack_top].level);
+                if (valid_level(least_even))
+                {
+                    valid_isolate_count++;
+                    push_stack(least_even, NI, TRUE);
+                }
+                else
+                    overflow_isolate_count++;
+            }
+        }
+        /* X6 */
+        else if (pclass[i] != B && pclass[i] != BN && pclass[i] != PDI && pclass[i] != PDF)
+        {
+            poutLevel[i] = stack[stack_top].level;
+            if (stack[stack_top].override != NI)
+                pclass[i] = stack[stack_top].override;
+        }
+        /* X6a */
+        else if (pclass[i] == PDI)
+        {
+            if (overflow_isolate_count) overflow_isolate_count--;
+            else if (!valid_isolate_count) {/* do nothing */}
+            else
+            {
+                overflow_embedding_count = 0;
+                while (!stack[stack_top].isolate) pop_stack();
+                pop_stack();
+                valid_isolate_count --;
+            }
+            poutLevel[i] = stack[stack_top].level;
+        }
+        /* X7 */
+        else if (pclass[i] == PDF)
+        {
+            poutLevel[i] = stack[stack_top].level;
+            if (overflow_isolate_count) {/* do nothing */}
+            else if (overflow_embedding_count) overflow_embedding_count--;
+            else if (!stack[stack_top].isolate && stack_top < (MAX_DEPTH+1))
+                pop_stack();
+        }
+        /* X8: Nothing */
+    }
+    /* X9: Based on 5.2 Retaining Explicit Formatting Characters */
+    for (i = 0; i < count ; i++)
+        if (pclass[i] == RLE || pclass[i] == LRE || pclass[i] == RLO || pclass[i] == LRO || pclass[i] == PDF)
+            pclass[i] = BN;
 }
 
-/* RESOLVE WEAK TYPES */
-
-enum states /* possible states */
+static inline int previousValidChar(const WORD *pcls, int index, int back_fence)
 {
-    xa,        /*  Arabic letter */
-    xr,        /*  right letter */
-    xl,        /*  left letter */
-
-    ao,        /*  Arabic lett. foll by ON */
-    ro,        /*  right lett. foll by ON */
-    lo,        /*  left lett. foll by ON */
-
-    rt,        /*  ET following R */
-    lt,        /*  ET following L */
-
-    cn,        /*  EN, AN following AL */
-    ra,        /*  Arabic number foll R */
-    re,        /*  European number foll R */
-    la,        /*  Arabic number foll L */
-    le,        /*  European number foll L */
-
-    ac,        /*  CS following cn */
-    rc,        /*  CS following ra */
-    rs,        /*  CS,ES following re */
-    lc,        /*  CS following la */
-    ls,        /*  CS,ES following le */
-
-    ret,    /*  ET following re */
-    let,    /*  ET following le */
-} ;
-
-static const int stateWeak[][10] =
-{
-    /*    N,  L,  R, AN, EN, AL,NSM, CS, ES, ET */
-/*xa*/ { ao, xl, xr, cn, cn, xa, xa, ao, ao, ao }, /* Arabic letter          */
-/*xr*/ { ro, xl, xr, ra, re, xa, xr, ro, ro, rt }, /* right letter           */
-/*xl*/ { lo, xl, xr, la, le, xa, xl, lo, lo, lt }, /* left letter            */
-
-/*ao*/ { ao, xl, xr, cn, cn, xa, ao, ao, ao, ao }, /* Arabic lett. foll by ON*/
-/*ro*/ { ro, xl, xr, ra, re, xa, ro, ro, ro, rt }, /* right lett. foll by ON */
-/*lo*/ { lo, xl, xr, la, le, xa, lo, lo, lo, lt }, /* left lett. foll by ON  */
-
-/*rt*/ { ro, xl, xr, ra, re, xa, rt, ro, ro, rt }, /* ET following R         */
-/*lt*/ { lo, xl, xr, la, le, xa, lt, lo, lo, lt }, /* ET following L         */
-
-/*cn*/ { ao, xl, xr, cn, cn, xa, cn, ac, ao, ao }, /* EN, AN following AL    */
-/*ra*/ { ro, xl, xr, ra, re, xa, ra, rc, ro, rt }, /* Arabic number foll R   */
-/*re*/ { ro, xl, xr, ra, re, xa, re, rs, rs,ret }, /* European number foll R */
-/*la*/ { lo, xl, xr, la, le, xa, la, lc, lo, lt }, /* Arabic number foll L   */
-/*le*/ { lo, xl, xr, la, le, xa, le, ls, ls,let }, /* European number foll L */
-
-/*ac*/ { ao, xl, xr, cn, cn, xa, ao, ao, ao, ao }, /* CS following cn        */
-/*rc*/ { ro, xl, xr, ra, re, xa, ro, ro, ro, rt }, /* CS following ra        */
-/*rs*/ { ro, xl, xr, ra, re, xa, ro, ro, ro, rt }, /* CS,ES following re     */
-/*lc*/ { lo, xl, xr, la, le, xa, lo, lo, lo, lt }, /* CS following la        */
-/*ls*/ { lo, xl, xr, la, le, xa, lo, lo, lo, lt }, /* CS,ES following le     */
-
-/*ret*/{ ro, xl, xr, ra, re, xa,ret, ro, ro,ret }, /* ET following re        */
-/*let*/{ lo, xl, xr, la, le, xa,let, lo, lo,let }, /* ET following le        */
-};
-
-enum actions /* possible actions */
-{
-    /* primitives */
-    IX = 0x100,                    /* increment */
-    XX = 0xF,                    /* no-op */
-
-    /* actions */
-    xxx = (XX << 4) + XX,        /* no-op */
-    xIx = IX + xxx,                /* increment run */
-    xxN = (XX << 4) + ON,        /* set current to N */
-    xxE = (XX << 4) + EN,        /* set current to EN */
-    xxA = (XX << 4) + AN,        /* set current to AN */
-    xxR = (XX << 4) + R,        /* set current to R */
-    xxL = (XX << 4) + L,        /* set current to L */
-    Nxx = (ON << 4) + 0xF,        /* set run to neutral */
-    Axx = (AN << 4) + 0xF,        /* set run to AN */
-    ExE = (EN << 4) + EN,        /* set run to EN, set current to EN */
-    NIx = (ON << 4) + 0xF + IX, /* set run to N, increment */
-    NxN = (ON << 4) + ON,        /* set run to N, set current to N */
-    NxR = (ON << 4) + R,        /* set run to N, set current to R */
-    NxE = (ON << 4) + EN,        /* set run to N, set current to EN */
-
-    AxA = (AN << 4) + AN,        /* set run to AN, set current to AN */
-    NxL = (ON << 4) + L,        /* set run to N, set current to L */
-    LxL = (L << 4) + L,            /* set run to L, set current to L */
-}  ;
-
-static const int actionWeak[][10] =
-{
-       /*  N,   L,   R,  AN,  EN,  AL, NSM,  CS,  ES,  ET */
-/*xa*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxR, xxN, xxN, xxN }, /* Arabic letter           */
-/*xr*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxR, xxN, xxN, xIx }, /* right letter            */
-/*xl*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxL, xxN, xxN, xIx }, /* left letter             */
-
-/*ao*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxN, xxN, xxN, xxN }, /* Arabic lett. foll by ON */
-/*ro*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxN, xxN, xxN, xIx }, /* right lett. foll by ON  */
-/*lo*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxN, xxN, xxN, xIx }, /* left lett. foll by ON   */
-
-/*rt*/ { Nxx, Nxx, Nxx, Nxx, ExE, NxR, xIx, NxN, NxN, xIx }, /* ET following R         */
-/*lt*/ { Nxx, Nxx, Nxx, Nxx, LxL, NxR, xIx, NxN, NxN, xIx }, /* ET following L         */
-
-/*cn*/ { xxx, xxx, xxx, xxx, xxA, xxR, xxA, xIx, xxN, xxN }, /* EN, AN following  AL    */
-/*ra*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxA, xIx, xxN, xIx }, /* Arabic number foll R   */
-/*re*/ { xxx, xxx, xxx, xxx, xxE, xxR, xxE, xIx, xIx, xxE }, /* European number foll R */
-/*la*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxA, xIx, xxN, xIx }, /* Arabic number foll L   */
-/*le*/ { xxx, xxx, xxx, xxx, xxL, xxR, xxL, xIx, xIx, xxL }, /* European number foll L */
-
-/*ac*/ { Nxx, Nxx, Nxx, Axx, AxA, NxR, NxN, NxN, NxN, NxN }, /* CS following cn         */
-/*rc*/ { Nxx, Nxx, Nxx, Axx, NxE, NxR, NxN, NxN, NxN, NIx }, /* CS following ra         */
-/*rs*/ { Nxx, Nxx, Nxx, Nxx, ExE, NxR, NxN, NxN, NxN, NIx }, /* CS,ES following re      */
-/*lc*/ { Nxx, Nxx, Nxx, Axx, NxL, NxR, NxN, NxN, NxN, NIx }, /* CS following la         */
-/*ls*/ { Nxx, Nxx, Nxx, Nxx, LxL, NxR, NxN, NxN, NxN, NIx }, /* CS,ES following le      */
-
-/*ret*/{ xxx, xxx, xxx, xxx, xxE, xxR, xxE, xxN, xxN, xxE }, /* ET following re            */
-/*let*/{ xxx, xxx, xxx, xxx, xxL, xxR, xxL, xxN, xxN, xxL }, /* ET following le            */
-};
-
-static int GetDeferredType(int action)
-{
-    return (action >> 4) & 0xF;
+    if (index == -1 || index == back_fence) return index;
+    index --;
+    while (index > back_fence && pcls[index] == BN) index --;
+    return index;
 }
 
-static int GetResolvedType(int action)
+static inline int nextValidChar(const WORD *pcls, int index, int front_fence)
 {
-    return action & 0xF;
+    if (index == front_fence) return index;
+    index ++;
+    while (index < front_fence && pcls[index] == BN) index ++;
+    return index;
 }
 
-/* Note on action table:
+typedef struct tagRun
+{
+    int start;
+    int end;
+    WORD e;
+} Run;
 
-  States can be of two kinds:
-     - Immediate Resolution State, where each input token
-       is resolved as soon as it is seen. These states have
-       only single action codes (xxN) or the no-op (xxx)
-       for static input tokens.
-     - Deferred Resolution State, where input tokens either
-       either extend the run (xIx) or resolve its Type (e.g. Nxx).
+typedef struct tagRunChar
+{
+    WCHAR ch;
+    WORD *pcls;
+} RunChar;
 
-   Input classes are of three kinds
-     - Static Input Token, where the class of the token remains
-       unchanged on output (AN, L, N, R)
-     - Replaced Input Token, where the class of the token is
-       always replaced on output (AL, BN, NSM, CS, ES, ET)
-     - Conditional Input Token, where the class of the token is
-       changed on output in some, but not all, cases (EN)
+typedef struct tagIsolatedRun
+{
+    struct list entry;
+    int length;
+    WORD sos;
+    WORD eos;
+    WORD e;
 
-     Where tokens are subject to change, a double action
-     (e.g. NxA, or NxN) is _required_ after deferred states,
-     resolving both the deferred state and changing the current token.
-*/
+    RunChar item[1];
+} IsolatedRun;
+
+static inline int iso_nextValidChar(IsolatedRun *iso_run, int index)
+{
+    if (index >= (iso_run->length-1)) return -1;
+    index ++;
+    while (index < iso_run->length && *iso_run->item[index].pcls == BN) index++;
+    if (index == iso_run->length) return -1;
+    return index;
+}
+
+static inline int iso_previousValidChar(IsolatedRun *iso_run, int index)
+{
+
+    if (index <= 0) return -1;
+    index --;
+    while (index > -1 && *iso_run->item[index].pcls == BN) index--;
+    return index;
+}
+
+static inline void iso_dump_types(const char* header, IsolatedRun *iso_run)
+{
+    int i, len = 0;
+    TRACE("%s:",header);
+    TRACE("[ ");
+    for (i = 0; i < iso_run->length && len < 200; i++)
+    {
+        TRACE(" %s",debug_type[*iso_run->item[i].pcls]);
+        len += strlen(debug_type[*iso_run->item[i].pcls])+1;
+    }
+    if (i != iso_run->length)
+        TRACE("...");
+    TRACE(" ]\n");
+}
 
 /*------------------------------------------------------------------------
     Function: resolveWeak
@@ -451,178 +536,222 @@ static int GetResolvedType(int action)
     Note: On input only these directional classes are expected
           AL, HL, R, L,  ON, BN, NSM, AN, EN, ES, ET, CS,
 ------------------------------------------------------------------------*/
-static void resolveWeak(int baselevel, WORD *pcls, WORD *plevel, int cch)
+
+static void resolveWeak(IsolatedRun * iso_run)
 {
-    int state = odd(baselevel) ? xr : xl;
-    int cls;
+    int i;
 
-    int level = baselevel;
-    int action, clsRun, clsNew;
-    int cchRun = 0;
-    int ich = 0;
-
-    for (; ich < cch; ich++)
+    /* W1 */
+    for (i=0; i < iso_run->length; i++)
     {
-        /* ignore boundary neutrals */
-        if (pcls[ich] == BN)
+        if (*iso_run->item[i].pcls == NSM)
         {
-            /* must flatten levels unless at a level change; */
-            plevel[ich] = level;
-
-            /* lookahead for level changes */
-            if (ich + 1 == cch && level != baselevel)
-            {
-                /* have to fixup last BN before end of the loop, since
-                 * its fix-upped value will be needed below the assert */
-                pcls[ich] = EmbeddingDirection(level);
-            }
-            else if (ich + 1 < cch && level != plevel[ich+1] && pcls[ich+1] != BN)
-            {
-                /* fixup LAST BN in front / after a level run to make
-                 * it act like the SOR/EOR in rule X10 */
-                int newlevel = plevel[ich+1];
-                if (level > newlevel) {
-                    newlevel = level;
-                }
-                plevel[ich] = newlevel;
-
-                /* must match assigned level */
-                pcls[ich] = EmbeddingDirection(newlevel);
-                level = plevel[ich+1];
-            }
+            int j = iso_previousValidChar(iso_run, i);
+            if (j == -1)
+                *iso_run->item[i].pcls = iso_run->sos;
+            else if (*iso_run->item[j].pcls >= LRI)
+                *iso_run->item[i].pcls = ON;
             else
-            {
-                /* don't interrupt runs */
-                if (cchRun)
-                {
-                    cchRun++;
-                }
-                continue;
-            }
+                *iso_run->item[i].pcls = *iso_run->item[j].pcls;
         }
-
-        ASSERT(pcls[ich] <= BN);
-        cls = pcls[ich];
-
-        action = actionWeak[state][cls];
-
-        /* resolve the directionality for deferred runs */
-        clsRun = GetDeferredType(action);
-        if (clsRun != XX)
-        {
-            SetDeferredRun(pcls, cchRun, ich, clsRun);
-            cchRun = 0;
-        }
-
-        /* resolve the directionality class at the current location */
-        clsNew = GetResolvedType(action);
-        if (clsNew != XX)
-            pcls[ich] = clsNew;
-
-        /* increment a deferred run */
-        if (IX & action)
-            cchRun++;
-
-        state = stateWeak[state][cls];
     }
 
-    /* resolve any deferred runs
-     * use the direction of the current level to emulate PDF */
-    cls = EmbeddingDirection(level);
+    /* W2 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == EN)
+        {
+            int j = iso_previousValidChar(iso_run, i);
+            while (j > -1)
+            {
+                if (*iso_run->item[j].pcls == R || *iso_run->item[j].pcls == L || *iso_run->item[j].pcls == AL)
+                {
+                    if (*iso_run->item[j].pcls == AL)
+                        *iso_run->item[i].pcls = AN;
+                    break;
+                }
+                j = iso_previousValidChar(iso_run, j);
+            }
+        }
+    }
 
-    /* resolve the directionality for deferred runs */
-    clsRun = GetDeferredType(actionWeak[state][cls]);
-    if (clsRun != XX)
-        SetDeferredRun(pcls, cchRun, ich, clsRun);
+    /* W3 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == AL)
+            *iso_run->item[i].pcls = R;
+    }
+
+    /* W4 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == ES)
+        {
+            int b = iso_previousValidChar(iso_run, i);
+            int f = iso_nextValidChar(iso_run, i);
+
+            if (b > -1 && f > -1 && *iso_run->item[b].pcls == EN && *iso_run->item[f].pcls == EN)
+                *iso_run->item[i].pcls = EN;
+        }
+        else if (*iso_run->item[i].pcls == CS)
+        {
+            int b = iso_previousValidChar(iso_run, i);
+            int f = iso_nextValidChar(iso_run, i);
+
+            if (b > -1 && f > -1 && *iso_run->item[b].pcls == EN && *iso_run->item[f].pcls == EN)
+                *iso_run->item[i].pcls = EN;
+            else if (b > -1 && f > -1 && *iso_run->item[b].pcls == AN && *iso_run->item[f].pcls == AN)
+                *iso_run->item[i].pcls = AN;
+        }
+    }
+
+    /* W5 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == ET)
+        {
+            int j;
+            for (j = i-1 ; j > -1; j--)
+            {
+                if (*iso_run->item[j].pcls == BN) continue;
+                if (*iso_run->item[j].pcls == ET) continue;
+                else if (*iso_run->item[j].pcls == EN) *iso_run->item[i].pcls = EN;
+                else break;
+            }
+            if (*iso_run->item[i].pcls == ET)
+            {
+                for (j = i+1; j < iso_run->length; j++)
+                {
+                    if (*iso_run->item[j].pcls == BN) continue;
+                    if (*iso_run->item[j].pcls == ET) continue;
+                    else if (*iso_run->item[j].pcls == EN) *iso_run->item[i].pcls = EN;
+                    else break;
+                }
+            }
+        }
+    }
+
+    /* W6 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == ET || *iso_run->item[i].pcls == ES || *iso_run->item[i].pcls == CS || *iso_run->item[i].pcls == ON)
+        {
+            int b = i-1;
+            int f = i+1;
+            if (b > -1 && *iso_run->item[b].pcls == BN)
+                *iso_run->item[b].pcls = ON;
+            if (f < iso_run->length && *iso_run->item[f].pcls == BN)
+                *iso_run->item[f].pcls = ON;
+
+            *iso_run->item[i].pcls = ON;
+        }
+    }
+
+    /* W7 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == EN)
+        {
+            int j;
+            for (j = iso_previousValidChar(iso_run, i); j > -1; j = iso_previousValidChar(iso_run, j))
+                if (*iso_run->item[j].pcls == R || *iso_run->item[j].pcls == L)
+                {
+                    if (*iso_run->item[j].pcls == L)
+                        *iso_run->item[i].pcls = L;
+                    break;
+                }
+            if (iso_run->sos == L &&  j == -1)
+                *iso_run->item[i].pcls = L;
+        }
+    }
 }
 
-/* RESOLVE NEUTRAL TYPES */
-
-/* action values */
-enum neutralactions
+typedef struct tagBracketPair
 {
-    /* action to resolve previous input */
-    nL = L,         /* resolve EN to L */
-    En = 3 << 4,    /* resolve neutrals run to embedding level direction */
-    Rn = R << 4,    /* resolve neutrals run to strong right */
-    Ln = L << 4,    /* resolved neutrals run to strong left */
-    In = (1<<8),    /* increment count of deferred neutrals */
-    LnL = (1<<4)+L, /* set run and EN to L */
-};
+    int start;
+    int end;
+} BracketPair;
 
-static int GetDeferredNeutrals(int action, int level)
+static int compr(const void *a, const void* b)
 {
-    action = (action >> 4) & 0xF;
-    if (action == (En >> 4))
-        return EmbeddingDirection(level);
-    else
-        return action;
+    return ((BracketPair*)a)->start - ((BracketPair*)b)->start;
 }
 
-static int GetResolvedNeutrals(int action)
+static BracketPair *computeBracketPairs(IsolatedRun *iso_run)
 {
-    action = action & 0xF;
-    if (action == In)
-        return 0;
-    else
-        return action;
+    WCHAR *open_stack;
+    int *stack_index;
+    int stack_top = iso_run->length;
+    BracketPair *out = NULL;
+    int pair_count = 0;
+    int i;
+
+    open_stack = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * iso_run->length);
+    stack_index = HeapAlloc(GetProcessHeap(), 0, sizeof(int) * iso_run->length);
+
+    for (i = 0; i < iso_run->length; i++)
+    {
+        unsigned short ubv = get_table_entry(bidi_bracket_table, iso_run->item[i].ch);
+        if (ubv)
+        {
+            if (!out)
+            {
+                out = HeapAlloc(GetProcessHeap(),0,sizeof(BracketPair));
+                out[0].start = -1;
+            }
+
+            if ((ubv >> 8) == 0)
+            {
+                stack_top --;
+                open_stack[stack_top] = iso_run->item[i].ch + (signed char)(ubv & 0xff);
+                /* deal with canonical equivalent U+2329/232A and U+3008/3009 */
+                if (open_stack[stack_top] == 0x232A)
+                    open_stack[stack_top] = 0x3009;
+                stack_index[stack_top] = i;
+            }
+            else if ((ubv >> 8) == 1)
+            {
+                int j;
+                if (stack_top == iso_run->length) continue;
+                for (j = stack_top; j < iso_run->length; j++)
+                {
+                    WCHAR c = iso_run->item[i].ch;
+                    if (c == 0x232A) c = 0x3009;
+                    if (c == open_stack[j])
+                    {
+                        out[pair_count].start = stack_index[j];
+                        out[pair_count].end = i;
+                        pair_count++;
+                        out = HeapReAlloc(GetProcessHeap(), 0, out, sizeof(BracketPair) * (pair_count+1));
+                        out[pair_count].start = -1;
+                        stack_top = j+1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (pair_count == 0)
+    {
+        HeapFree(GetProcessHeap(),0,out);
+        out = NULL;
+    }
+    else if (pair_count > 1)
+        qsort(out, pair_count, sizeof(BracketPair), compr);
+
+    HeapFree(GetProcessHeap(), 0, open_stack);
+    HeapFree(GetProcessHeap(), 0, stack_index);
+    return out;
 }
 
-/* state values */
-enum resolvestates
-{
-    /* new temporary class */
-    r,  /* R and characters resolved to R */
-    l,  /* L and characters resolved to L */
-    rn, /* N preceded by right */
-    ln, /* N preceded by left */
-    a,  /* AN preceded by left (the abbreviation 'la' is used up above) */
-    na, /* N preceded by a */
-} ;
-
-
-/*------------------------------------------------------------------------
-  Notes:
-
-  By rule W7, whenever a EN is 'dominated' by an L (including start of
-  run with embedding direction = L) it is resolved to, and further treated
-  as L.
-
-  This leads to the need for 'a' and 'na' states.
-------------------------------------------------------------------------*/
-
-static const int actionNeutrals[][5] =
-{
-/*   N,  L,  R,  AN, EN = cls */
-  { In,  0,  0,  0,  0 }, /* r    right */
-  { In,  0,  0,  0,  L }, /* l    left */
-
-  { In, En, Rn, Rn, Rn }, /* rn   N preceded by right */
-  { In, Ln, En, En, LnL}, /* ln   N preceded by left */
-
-  { In,  0,  0,  0,  L }, /* a   AN preceded by left */
-  { In, En, Rn, Rn, En }, /* na   N  preceded by a */
-} ;
-
-static const int stateNeutrals[][5] =
-{
-/*   N, L,  R, AN, EN */
-  { rn, l,  r,  r,  r }, /* r   right */
-  { ln, l,  r,  a,  l }, /* l   left */
-
-  { rn, l,  r,  r,  r }, /* rn  N preceded by right */
-  { ln, l,  r,  a,  l }, /* ln  N preceded by left */
-
-  { na, l,  r,  a,  l }, /* a  AN preceded by left */
-  { na, l,  r,  a,  l }, /* na  N preceded by la */
-} ;
+#define N0_TYPE(a) ((a == AN || a == EN)?R:a)
 
 /*------------------------------------------------------------------------
     Function: resolveNeutrals
 
     Resolves the directionality of neutral character types.
 
-    Implements rules W7, N1 and N2 of the Unicode Bidi Algorithm.
+    Implements rules N1 and N2 of the Unicode Bidi Algorithm.
 
     Input: Array of embedding levels
            Character count
@@ -631,69 +760,150 @@ static const int stateNeutrals[][5] =
     In/Out: Array of directional classes
 
     Note: On input only these directional classes are expected
-          R,  L,  N, AN, EN and BN
+          R,  L,  NI, AN, EN and BN
 
           W8 resolves a number of ENs to L
 ------------------------------------------------------------------------*/
-static void resolveNeutrals(int baselevel, WORD *pcls, const WORD *plevel, int cch)
+static void resolveNeutrals(IsolatedRun *iso_run)
 {
-    /* the state at the start of text depends on the base level */
-    int state = odd(baselevel) ? r : l;
-    int cls;
+    int i;
+    BracketPair *pairs = NULL;
 
-    int cchRun = 0;
-    int level = baselevel;
-
-    int action, clsRun, clsNew;
-    int ich = 0;
-    for (; ich < cch; ich++)
+    /* Translate isolates into NI */
+    for (i = 0; i < iso_run->length; i++)
     {
-        /* ignore boundary neutrals */
-        if (pcls[ich] == BN)
-        {
-            /* include in the count for a deferred run */
-            if (cchRun)
-                cchRun++;
+        if (*iso_run->item[i].pcls >= LRI)
+            *iso_run->item[i].pcls = NI;
 
-            /* skip any further processing */
-            continue;
+        switch(*iso_run->item[i].pcls)
+        {
+            case B:
+            case S:
+            case WS: *iso_run->item[i].pcls = NI;
         }
 
-        ASSERT(pcls[ich] < 5); /* "Only N, L, R,  AN, EN are allowed" */
-        cls = pcls[ich];
-
-        action = actionNeutrals[state][cls];
-
-        /* resolve the directionality for deferred runs */
-        clsRun = GetDeferredNeutrals(action, level);
-        if (clsRun != N)
-        {
-            SetDeferredRun(pcls, cchRun, ich, clsRun);
-            cchRun = 0;
-        }
-
-        /* resolve the directionality class at the current location */
-        clsNew = GetResolvedNeutrals(action);
-        if (clsNew != N)
-            pcls[ich] = clsNew;
-
-        if (In & action)
-            cchRun++;
-
-        state = stateNeutrals[state][cls];
-        level = plevel[ich];
+        ASSERT(*iso_run->item[i].pcls < 5 || *iso_run->item[i].pcls == BN); /* "Only NI, L, R,  AN, EN and BN are allowed" */
     }
 
-    /* resolve any deferred runs */
-    cls = EmbeddingDirection(level);    /* eor has type of current level */
+    /* N0: Skipping bracketed pairs for now */
+    pairs = computeBracketPairs(iso_run);
+    if (pairs)
+    {
+        BracketPair *p = &pairs[0];
+        int i = 0;
+        while (p->start >= 0)
+        {
+            int j;
+            int e = EmbeddingDirection(iso_run->e);
+            int o = EmbeddingDirection(iso_run->e+1);
+            BOOL flag_o = FALSE;
+            TRACE("Bracket Pair [%i - %i]\n",p->start, p->end);
 
-    /* resolve the directionality for deferred runs */
-    clsRun = GetDeferredNeutrals(actionNeutrals[state][cls], level);
-    if (clsRun != N)
-        SetDeferredRun(pcls, cchRun, ich, clsRun);
+            /* N0.b */
+            for (j = p->start+1; j < p->end; j++)
+            {
+                if (N0_TYPE(*iso_run->item[j].pcls) == e)
+                {
+                    *iso_run->item[p->start].pcls = e;
+                    *iso_run->item[p->end].pcls = e;
+                    break;
+                }
+                else if (N0_TYPE(*iso_run->item[j].pcls) == o)
+                    flag_o = TRUE;
+            }
+            /* N0.c */
+            if (j == p->end && flag_o)
+            {
+                for (j = p->start; j >= 0; j--)
+                {
+                    if (N0_TYPE(*iso_run->item[j].pcls) == o)
+                    {
+                        *iso_run->item[p->start].pcls = o;
+                        *iso_run->item[p->end].pcls = o;
+                        break;
+                    }
+                    else if (N0_TYPE(*iso_run->item[j].pcls) == e)
+                    {
+                        *iso_run->item[p->start].pcls = e;
+                        *iso_run->item[p->end].pcls = e;
+                        break;
+                    }
+                }
+                if ( j < 0 )
+                {
+                    *iso_run->item[p->start].pcls = iso_run->sos;
+                    *iso_run->item[p->end].pcls = iso_run->sos;
+                }
+            }
+
+            i++;
+            p = &pairs[i];
+        }
+        HeapFree(GetProcessHeap(),0,pairs);
+    }
+
+    /* N1 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        WORD l,r;
+
+        if (*iso_run->item[i].pcls == NI)
+        {
+            int j;
+            int b = iso_previousValidChar(iso_run, i);
+
+            if (b == -1)
+            {
+                l = iso_run->sos;
+                b = 0;
+            }
+            else
+            {
+                if (*iso_run->item[b].pcls == R || *iso_run->item[b].pcls == AN || *iso_run->item[b].pcls == EN)
+                    l = R;
+                else if (*iso_run->item[b].pcls == L)
+                    l = L;
+                else /* No string type */
+                    continue;
+            }
+            j = iso_nextValidChar(iso_run, i);
+            while (j > -1 && *iso_run->item[j].pcls == NI) j = iso_nextValidChar(iso_run, j);
+
+            if (j == -1)
+            {
+                r = iso_run->eos;
+                j = iso_run->length;
+            }
+            else if (*iso_run->item[j].pcls == R || *iso_run->item[j].pcls == AN || *iso_run->item[j].pcls == EN)
+                r = R;
+            else if (*iso_run->item[j].pcls == L)
+                r = L;
+            else /* No string type */
+                continue;
+
+            if (r == l)
+            {
+                for (b = i; b < j && b < iso_run->length; b++)
+                    *iso_run->item[b].pcls = r;
+            }
+        }
+    }
+
+    /* N2 */
+    for (i = 0; i < iso_run->length; i++)
+    {
+        if (*iso_run->item[i].pcls == NI)
+        {
+            int b = i-1;
+            int f = i+1;
+            *iso_run->item[i].pcls = EmbeddingDirection(iso_run->e);
+            if (b > -1 && *iso_run->item[b].pcls == BN)
+                *iso_run->item[b].pcls = EmbeddingDirection(iso_run->e);
+            if (f < iso_run->length && *iso_run->item[f].pcls == BN)
+                *iso_run->item[f].pcls = EmbeddingDirection(iso_run->e);
+        }
+    }
 }
-
-/* RESOLVE IMPLICIT */
 
 /*------------------------------------------------------------------------
     Function: resolveImplicit
@@ -711,30 +921,191 @@ static void resolveNeutrals(int baselevel, WORD *pcls, const WORD *plevel, int c
           Accepted subset of direction classes
           R, L, AN, EN
 ------------------------------------------------------------------------*/
-static const WORD addLevel[][4] =
+static void resolveImplicit(const WORD * pcls, WORD *plevel, int sos, int eos)
 {
-          /* L,  R, AN, EN */
-/* even */ { 0,  1,  2,  2, },
-/* odd  */ { 1,  0,  1,  1, }
+    int i;
 
-};
-
-static void resolveImplicit(const WORD * pcls, WORD *plevel, int cch)
-{
-    int ich = 0;
-    for (; ich < cch; ich++)
+    /* I1/2 */
+    for (i = sos; i <= eos; i++)
     {
-        /* cannot resolve bn here, since some bn were resolved to strong
-         * types in resolveWeak. To remove these we need the original
-         * types, which are available again in resolveWhiteSpace */
-        if (pcls[ich] == BN)
-        {
+        if (pcls[i] == BN)
             continue;
-        }
-        ASSERT(pcls[ich] > 0); /* "No Neutrals allowed to survive here." */
-        ASSERT(pcls[ich] < 5); /* "Out of range." */
-        plevel[ich] += addLevel[odd(plevel[ich])][pcls[ich] - 1];
+
+        ASSERT(pcls[i] > 0); /* "No Neutrals allowed to survive here." */
+        ASSERT(pcls[i] < 5); /* "Out of range." */
+
+        if (odd(plevel[i]) && (pcls[i] == L || pcls[i] == EN || pcls [i] == AN))
+            plevel[i]++;
+        else if (!odd(plevel[i]) && pcls[i] == R)
+            plevel[i]++;
+        else if (!odd(plevel[i]) && (pcls[i] == EN || pcls [i] == AN))
+            plevel[i]+=2;
     }
+}
+
+static void resolveResolved(unsigned baselevel, const WORD * pcls, WORD *plevel, int sos, int eos)
+{
+    int i;
+
+    /* L1 */
+    for (i = sos; i <= eos; i++)
+    {
+        if (pcls[i] == B || pcls[i] == S)
+        {
+            int j = i -1;
+            while (i > sos  && j >= sos &&
+                   (pcls[j] == WS || pcls[j] == FSI || pcls[j] == LRI || pcls[j] == RLI ||
+                    pcls[j] == PDI || pcls[j] == LRE || pcls[j] == RLE || pcls[j] == LRO ||
+                    pcls[j] == RLO || pcls[j] == PDF || pcls[j] == BN))
+                plevel[j--] = baselevel;
+            plevel[i] = baselevel;
+        }
+        if (i == eos &&
+            (pcls[i] == WS || pcls[i] == FSI || pcls[i] == LRI || pcls[i] == RLI ||
+             pcls[i] == PDI || pcls[i] == LRE || pcls[i] == RLE || pcls[i] == LRO ||
+             pcls[i] == RLO || pcls[i] == PDF || pcls[i] == BN ))
+        {
+            int j = i;
+            while (j >= sos && (pcls[j] == WS || pcls[j] == FSI || pcls[j] == LRI || pcls[j] == RLI ||
+                                pcls[j] == PDI || pcls[j] == LRE || pcls[j] == RLE || pcls[j] == LRO ||
+                                pcls[j] == RLO || pcls[j] == PDF || pcls[j] == BN))
+                plevel[j--] = baselevel;
+        }
+    }
+}
+
+static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel, LPCWSTR lpString, int uCount, struct list *set)
+{
+    int run_start, run_end, i;
+    int run_count = 0;
+    Run *runs;
+    IsolatedRun *current_isolated;
+
+    runs = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(Run));
+    if (!runs) return;
+
+    list_init(set);
+
+    /* Build Runs */
+    run_start = 0;
+    while (run_start < uCount)
+    {
+        run_end = nextValidChar(pcls, run_start, uCount);
+        while (run_end < uCount && pLevel[run_end] == pLevel[run_start]) run_end = nextValidChar(pcls, run_end, uCount);
+        run_end --;
+        runs[run_count].start = run_start;
+        runs[run_count].end = run_end;
+        runs[run_count].e = pLevel[run_start];
+        run_start = nextValidChar(pcls, run_end, uCount);
+        run_count++;
+    }
+
+    /* Build Isolating Runs */
+    i = 0;
+    while (i < run_count)
+    {
+        int k = i;
+        if (runs[k].start >= 0)
+        {
+            int type_fence, real_end;
+            int j;
+            current_isolated = HeapAlloc(GetProcessHeap(), 0, sizeof(IsolatedRun) + sizeof(RunChar)*uCount);
+            if (!current_isolated) break;
+
+            run_start = runs[k].start;
+            current_isolated->e = runs[k].e;
+            current_isolated->length = (runs[k].end - runs[k].start)+1;
+
+            for (j = 0; j < current_isolated->length;  j++)
+            {
+                current_isolated->item[j].pcls = &pcls[runs[k].start+j];
+                current_isolated->item[j].ch = lpString[runs[k].start+j];
+            }
+
+            run_end = runs[k].end;
+
+            TRACE("{ [%i -- %i]",run_start, run_end);
+
+            if (pcls[run_end] == BN)
+                run_end = previousValidChar(pcls, run_end, runs[k].start);
+
+            while (run_end < uCount && (pcls[run_end] == RLI || pcls[run_end] == LRI || pcls[run_end] == FSI))
+            {
+                j = k+1;
+search:
+                while (j < run_count && pcls[runs[j].start] != PDI) j++;
+                if (j < run_count && runs[i].e != runs[j].e)
+                {
+                    j++;
+                    goto search;
+                }
+
+                if (j != run_count)
+                {
+                    int m;
+                    int l = current_isolated->length;
+
+                    current_isolated->length += (runs[j].end - runs[j].start)+1;
+                    for (m = 0; l < current_isolated->length; l++, m++)
+                    {
+                        current_isolated->item[l].pcls = &pcls[runs[j].start+m];
+                        current_isolated->item[l].ch = lpString[runs[j].start+m];
+                    }
+
+                    TRACE("[%i -- %i]",runs[j].start, runs[j].end);
+
+                    run_end = runs[j].end;
+                    if (pcls[run_end] == BN)
+                        run_end = previousValidChar(pcls, run_end, runs[i].start);
+                    runs[j].start = -1;
+                    k = j;
+                }
+                else
+                {
+                    run_end = uCount;
+                    break;
+                }
+            }
+
+            type_fence = previousValidChar(pcls, run_start, -1);
+
+            if (type_fence == -1)
+                current_isolated->sos = (baselevel > pLevel[run_start])?baselevel:pLevel[run_start];
+            else
+                current_isolated->sos = (pLevel[type_fence] > pLevel[run_start])?pLevel[type_fence]:pLevel[run_start];
+
+            current_isolated->sos = EmbeddingDirection(current_isolated->sos);
+
+            if (run_end == uCount)
+                current_isolated->eos = current_isolated->sos;
+            else
+            {
+                /* eos could be an BN */
+                if ( pcls[run_end] == BN )
+                {
+                    real_end = previousValidChar(pcls, run_end, run_start-1);
+                    if (real_end < run_start)
+                        real_end = run_start;
+                }
+                else
+                    real_end = run_end;
+
+                type_fence = nextValidChar(pcls, run_end, uCount);
+                if (type_fence == uCount)
+                    current_isolated->eos = (baselevel > pLevel[real_end])?baselevel:pLevel[real_end];
+                else
+                    current_isolated->eos = (pLevel[type_fence] > pLevel[real_end])?pLevel[type_fence]:pLevel[real_end];
+
+                current_isolated->eos = EmbeddingDirection(current_isolated->eos);
+            }
+
+            list_add_tail(set, &current_isolated->entry);
+            TRACE(" } level %i {%s <--> %s}\n",current_isolated->e, debug_type[current_isolated->sos], debug_type[current_isolated->eos]);
+        }
+        i++;
+    }
+
+    HeapFree(GetProcessHeap(), 0, runs);
 }
 
 /*************************************************************
@@ -745,12 +1116,15 @@ BOOL BIDI_DetermineLevels(
                 INT uCount,     /* [in] Number of WCHARs in string. */
                 const SCRIPT_STATE *s,
                 const SCRIPT_CONTROL *c,
-                WORD *lpOutLevels /* [out] final string levels */
+                WORD *lpOutLevels, /* [out] final string levels */
+                WORD *lpOutOverrides /* [out] final string overrides */
     )
 {
     WORD *chartype;
     unsigned baselevel = 0;
-    INT j;
+    struct list IsolatingRuns;
+    IsolatedRun *iso_run, *next;
+
     TRACE("%s, %d\n", debugstr_wn(lpString, uCount), uCount);
 
     chartype = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WORD));
@@ -763,28 +1137,40 @@ BOOL BIDI_DetermineLevels(
     baselevel = s->uBidiLevel;
 
     classify(lpString, chartype, uCount, c);
+    if (TRACE_ON(bidi)) dump_types("Start ", chartype, 0, uCount);
 
-    for (j = 0; j < uCount; ++j)
-        switch(chartype[j])
-        {
-            case B:
-            case S:
-            case WS:
-            case ON: chartype[j] = N;
-            default: continue;
-        }
+    memset(lpOutOverrides, 0, sizeof(WORD) * uCount);
 
     /* resolve explicit */
-    resolveExplicit(baselevel, N, chartype, lpOutLevels, uCount, 0);
+    resolveExplicit(baselevel, chartype, lpOutLevels, lpOutOverrides, uCount, s->fOverrideDirection);
+    if (TRACE_ON(bidi)) dump_types("After Explicit", chartype, 0, uCount);
 
-    /* resolve weak */
-    resolveWeak(baselevel, chartype, lpOutLevels, uCount);
+    /* X10/BD13: Computer Isolating runs */
+    computeIsolatingRunsSet(baselevel, chartype, lpOutLevels, lpString, uCount, &IsolatingRuns);
 
-    /* resolve neutrals */
-    resolveNeutrals(baselevel, chartype, lpOutLevels, uCount);
+    LIST_FOR_EACH_ENTRY_SAFE(iso_run, next, &IsolatingRuns, IsolatedRun, entry)
+    {
+        if (TRACE_ON(bidi)) iso_dump_types("Run", iso_run);
 
+        /* resolve weak */
+        resolveWeak(iso_run);
+        if (TRACE_ON(bidi)) iso_dump_types("After Weak", iso_run);
+
+        /* resolve neutrals */
+        resolveNeutrals(iso_run);
+        if (TRACE_ON(bidi)) iso_dump_types("After Neutrals", iso_run);
+
+        list_remove(&iso_run->entry);
+        HeapFree(GetProcessHeap(),0,iso_run);
+    }
+
+    if (TRACE_ON(bidi)) dump_types("Before Implicit", chartype, 0, uCount);
     /* resolveImplicit */
-    resolveImplicit(chartype, lpOutLevels, uCount);
+    resolveImplicit(chartype, lpOutLevels, 0, uCount-1);
+
+    /* resolveResolvedLevels*/
+    classify(lpString, chartype, uCount, c);
+    resolveResolved(baselevel, chartype, lpOutLevels, 0, uCount-1);
 
     HeapFree(GetProcessHeap(), 0, chartype);
     return TRUE;

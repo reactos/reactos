@@ -8,6 +8,11 @@
 
 #include "kmixer.h"
 
+#include <swenum.h>
+
+#define YDEBUG
+#include <debug.h>
+
 NTSTATUS
 NTAPI
 Dispatch_fnDeviceIoControl(
@@ -15,6 +20,7 @@ Dispatch_fnDeviceIoControl(
     PIRP Irp)
 {
     UNIMPLEMENTED
+    DbgBreakPoint();
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;

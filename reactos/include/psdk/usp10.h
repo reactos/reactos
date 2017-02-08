@@ -230,65 +230,310 @@ typedef struct tagTEXTRANGE_PROPERTIES
 
 /* Function Declarations */
 
-HRESULT WINAPI ScriptApplyDigitSubstitution(const SCRIPT_DIGITSUBSTITUTE* psds, 
-                                            SCRIPT_CONTROL* psc, SCRIPT_STATE* pss);
-HRESULT WINAPI ScriptApplyLogicalWidth(const int *piDx, int cChars, int cGlyphs, const WORD *pwLogClust,
-                                       const SCRIPT_VISATTR *psva, const int *piAdvance,
-                                       const SCRIPT_ANALYSIS *psa, ABC *pABC, int *piJustify);
-HRESULT WINAPI ScriptRecordDigitSubstitution(LCID Locale, SCRIPT_DIGITSUBSTITUTE *psds);
-HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItems, 
-                             const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState, 
-                             SCRIPT_ITEM *pItems, int *pcItems);
-HRESULT WINAPI ScriptGetCMap(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcInChars, int cChars,
-                             DWORD dwFlags, WORD *pwOutGlyphs);
-HRESULT WINAPI ScriptGetFontProperties(HDC hdc, SCRIPT_CACHE *psc, SCRIPT_FONTPROPERTIES *sfp);
-HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD wGlyph, ABC *pABC);
-HRESULT WINAPI ScriptGetLogicalWidths(const SCRIPT_ANALYSIS *psa, int cChars, int cGlyphs,
-                                      const int *piGlyphWidth, const WORD *pwLogClust,
-                                      const SCRIPT_VISATTR *psva, int *piDx);
-HRESULT WINAPI ScriptGetProperties(const SCRIPT_PROPERTIES ***ppSp, int *piNumScripts);
-HRESULT WINAPI ScriptStringAnalyse(HDC hdc, 
-				   const void *pString, 
-				   int cString, 
-				   int cGlyphs,
-				   int iCharset,
-				   DWORD dwFlags,
-				   int iReqWidth,
-				   SCRIPT_CONTROL *psControl,
-				   SCRIPT_STATE *psState,
-				   const int *piDx,
-				   SCRIPT_TABDEF *pTabdef,
-				   const BYTE *pbInClass,
-				   SCRIPT_STRING_ANALYSIS *pssa);
-HRESULT WINAPI ScriptStringValidate(SCRIPT_STRING_ANALYSIS ssa);
-HRESULT WINAPI ScriptStringFree(SCRIPT_STRING_ANALYSIS *pssa);
-HRESULT WINAPI ScriptFreeCache(SCRIPT_CACHE *psc);
-HRESULT WINAPI ScriptIsComplex(const WCHAR* pwcInChars, int cInChars, DWORD dwFlags);
-HRESULT WINAPI ScriptJustify(const SCRIPT_VISATTR *psva, const int *piAdvance, int cGlyphs,
-                             int iDx, int iMinKashida, int *piJustify);
-HRESULT WINAPI ScriptLayout(int cRuns, const BYTE *pbLevel, int *piVisualToLogical, int *piLogicalToVisual);
-HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars, int cChars, int cMaxGlyphs,
-                           SCRIPT_ANALYSIS *psa, WORD *pwOutGlyphs, WORD *pwLogClust, SCRIPT_VISATTR *psva, int *pcGlyphs);
-HRESULT WINAPI ScriptPlace(HDC hdc, SCRIPT_CACHE *psc, const WORD *pwGlyphs, int cGlyphs, const SCRIPT_VISATTR *psva,
-                           SCRIPT_ANALYSIS *psa, int *piAdvance, GOFFSET *pGoffset, ABC *pABC );
-HRESULT WINAPI ScriptBreak(const WCHAR *pwcChars, int cChars, const SCRIPT_ANALYSIS *psa, SCRIPT_LOGATTR *psla);
-HRESULT WINAPI ScriptCacheGetHeight(HDC hdc, SCRIPT_CACHE *psc, LONG *tmHeight);
-HRESULT WINAPI ScriptCPtoX(int iCP, BOOL fTrailing, int cChars, int cGlyphs, const WORD *pwLogClust, const SCRIPT_VISATTR *psva,
-                           const int *piAdvance, const SCRIPT_ANALYSIS *psa, int *piX);
-HRESULT WINAPI ScriptXtoCP(int iX, int cChars, int cGlyphs, const WORD *pwLogClust, const SCRIPT_VISATTR *psva,
-                           const int *piAdvance, const SCRIPT_ANALYSIS *psa, int *piCP, int *piTrailing);
-HRESULT WINAPI ScriptStringCPtoX(SCRIPT_STRING_ANALYSIS ssa, int icp, BOOL fTrailing, int *pX);
-HRESULT WINAPI ScriptStringXtoCP(SCRIPT_STRING_ANALYSIS ssa, int iX, int *piCh , int *piTrailing);
-HRESULT WINAPI ScriptStringGetLogicalWidths(SCRIPT_STRING_ANALYSIS ssa, int *piDx);
-HRESULT WINAPI ScriptStringGetOrder(SCRIPT_STRING_ANALYSIS ssa, UINT *puOrder);
-HRESULT WINAPI ScriptStringOut(SCRIPT_STRING_ANALYSIS ssa, int iX, int iY, UINT uOptions, const RECT *prc,
-                               int iMinSel, int iMaxSel, BOOL fDisabled);
-HRESULT WINAPI ScriptTextOut(const HDC hdc, SCRIPT_CACHE *psc, int x, int y, UINT fuOptions, const RECT *lprc,
-                             const SCRIPT_ANALYSIS *psa, const WCHAR *pwcReserved, int iReserved, const WORD *pwGlyphs,
-                             int cGlyphs, const int *piAdvance, const int *piJustify, const GOFFSET *pGoffset);
-const int* WINAPI ScriptString_pcOutChars(SCRIPT_STRING_ANALYSIS ssa);
-const SCRIPT_LOGATTR* WINAPI ScriptString_pLogAttr(SCRIPT_STRING_ANALYSIS ssa);
-const SIZE* WINAPI ScriptString_pSize(SCRIPT_STRING_ANALYSIS ssa);
+_Check_return_
+HRESULT
+WINAPI
+ScriptApplyDigitSubstitution(
+  _In_reads_(1) const SCRIPT_DIGITSUBSTITUTE* psds,
+  _Out_writes_(1) SCRIPT_CONTROL* psc,
+  _Out_writes_(1) SCRIPT_STATE* pss);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptApplyLogicalWidth(
+  _In_reads_(cChars) const int *piDx,
+  _In_ int cChars,
+  _In_ int cGlyphs,
+  _In_reads_(cChars) const WORD *pwLogClust,
+  _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
+  _In_reads_(cGlyphs) const int *piAdvance,
+  _In_reads_(1) const SCRIPT_ANALYSIS *psa,
+  _Inout_updates_opt_(1) ABC *pABC,
+  _Out_writes_all_(cGlyphs) int *piJustify);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptRecordDigitSubstitution(
+  _In_ LCID Locale,
+  _Out_writes_(1) SCRIPT_DIGITSUBSTITUTE *psds);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptItemize(
+  _In_reads_(cInChars) const WCHAR *pwcInChars,
+  _In_ int cInChars,
+  _In_ int cMaxItems,
+  _In_reads_opt_(1) const SCRIPT_CONTROL *psControl,
+  _In_reads_opt_(1) const SCRIPT_STATE *psState,
+  _Out_writes_to_(cMaxItems, *pcItems) SCRIPT_ITEM *pItems,
+  _Out_writes_(1) int *pcItems);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetCMap(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _In_reads_(cChars) const WCHAR *pwcInChars,
+  _In_ int cChars,
+  _In_ DWORD dwFlags,
+  _Out_writes_(cChars) WORD *pwOutGlyphs);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetFontProperties(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Out_writes_(1) SCRIPT_FONTPROPERTIES *sfp);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetGlyphABCWidth(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _In_ WORD wGlyph,
+  _Out_writes_(1) ABC *pABC);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetLogicalWidths(
+  _In_reads_(1) const SCRIPT_ANALYSIS *psa,
+  _In_ int cChars,
+  _In_ int cGlyphs,
+  _In_reads_(cGlyphs) const int *piGlyphWidth,
+  _In_reads_(cChars) const WORD *pwLogClust,
+  _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
+  _In_reads_(cChars) int *piDx);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetProperties(
+  _Outptr_result_buffer_(*piNumScripts) const SCRIPT_PROPERTIES ***ppSp,
+  _Out_ int *piNumScripts);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringAnalyse(
+  _In_ HDC hdc,
+  _In_ const void *pString,
+  _In_ int cString,
+  _In_ int cGlyphs,
+  _In_ int iCharset,
+  _In_ DWORD dwFlags,
+  _In_ int iReqWidth,
+  _In_reads_opt_(1) SCRIPT_CONTROL *psControl,
+  _In_reads_opt_(1) SCRIPT_STATE *psState,
+  _In_reads_opt_(cString) const int *piDx,
+  _In_reads_opt_(1) SCRIPT_TABDEF *pTabdef,
+  _In_ const BYTE *pbInClass,
+  _Outptr_result_buffer_(1) SCRIPT_STRING_ANALYSIS *pssa);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringValidate(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringFree(
+  _Inout_updates_(1) SCRIPT_STRING_ANALYSIS *pssa);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptFreeCache(
+  _Inout_updates_(1) _At_(*psc, _Post_null_) SCRIPT_CACHE *psc);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptIsComplex(
+  _In_reads_(cInChars) const WCHAR *pwcInChars,
+  _In_ int cInChars,
+  _In_ DWORD dwFlags);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptJustify(
+  _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
+  _In_reads_(cGlyphs) const int *piAdvance,
+  _In_ int cGlyphs,
+  _In_ int iDx,
+  _In_ int iMinKashida,
+  _Out_writes_all_(cGlyphs) int *piJustify);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptLayout(
+  int cRuns,
+  _In_reads_(cRuns) const BYTE *pbLevel,
+  _Out_writes_all_opt_(cRuns) int *piVisualToLogical,
+  _Out_writes_all_opt_(cRuns) int *piLogicalToVisual);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptShape(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _In_reads_(cChars) const WCHAR *pwcChars,
+  _In_ int cChars,
+  _In_ int cMaxGlyphs,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _Out_writes_to_(cMaxGlyphs, *pcGlyphs) WORD *pwOutGlyphs,
+  _Out_writes_all_(cChars) WORD *pwLogClust,
+  _Out_writes_to_(cMaxGlyphs, *pcGlyphs) SCRIPT_VISATTR *psva,
+  _Out_writes_(1) int *pcGlyphs);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptPlace(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _In_reads_(cGlyphs) const WORD *pwGlyphs,
+  _In_ int cGlyphs,
+  _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _Out_writes_all_(cGlyphs) int *piAdvance,
+  _Out_writes_all_opt_(cGlyphs) GOFFSET *pGoffset,
+  _Out_writes_(1) ABC *pABC);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptBreak(
+  _In_reads_(cChars) const WCHAR *pwcChars,
+  _In_ int cChars,
+  _In_reads_(1) const SCRIPT_ANALYSIS *psa,
+  _Out_writes_all_(cChars) SCRIPT_LOGATTR *psla);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptCacheGetHeight(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Out_writes_(1) LONG *tmHeight);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptCPtoX(
+  _In_ int iCP,
+  _In_ BOOL fTrailing,
+  _In_ int cChars,
+  _In_ int cGlyphs,
+  _In_reads_(cChars) const WORD *pwLogClust,
+  _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
+  _In_reads_(cGlyphs) const int *piAdvance,
+  _In_reads_(1) const SCRIPT_ANALYSIS *psa,
+  _Out_ int *piX);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptXtoCP(
+  _In_ int iX,
+  _In_ int cChars,
+  _In_ int cGlyphs,
+  _In_reads_(cChars) const WORD *pwLogClust,
+  _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
+  _In_reads_(cGlyphs) const int *piAdvance,
+  _In_reads_(1) const SCRIPT_ANALYSIS *psa,
+  _Out_writes_(1) int *piCP,
+  _Out_writes_(1) int *piTrailing);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringCPtoX(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa,
+  _In_ int icp,
+  _In_ BOOL fTrailing,
+  _Out_writes_(1) int *pX);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringXtoCP(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa,
+  _In_ int iX,
+  _Out_writes_(1) int *piCh,
+  _Out_writes_(1) int *piTrailing);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringGetLogicalWidths(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa,
+  _Out_ int *piDx);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringGetOrder(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa,
+  _Out_ UINT *puOrder);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptStringOut(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa,
+  _In_ int iX,
+  _In_ int iY,
+  _In_ UINT uOptions,
+  _In_reads_opt_(1) const RECT *prc,
+  _In_ int iMinSel,
+  _In_ int iMaxSel,
+  _In_ BOOL fDisabled);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptTextOut(
+  _In_ const HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _In_ int x,
+  _In_ int y,
+  _In_ UINT fuOptions,
+  _In_reads_opt_(1) const RECT *lprc,
+  _In_reads_(1) const SCRIPT_ANALYSIS *psa,
+  _Reserved_ const WCHAR *pwcReserved,
+  _Reserved_ int iReserved,
+  _In_reads_(cGlyphs) const WORD *pwGlyphs,
+  _In_ int cGlyphs,
+  _In_reads_(cGlyphs) const int *piAdvance,
+  _In_reads_opt_(cGlyphs) const int *piJustify,
+  _In_reads_(cGlyphs) const GOFFSET *pGoffset);
+
+const int*
+WINAPI
+ScriptString_pcOutChars(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa);
+
+const SCRIPT_LOGATTR*
+WINAPI
+ScriptString_pLogAttr(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa);
+
+const SIZE*
+WINAPI
+ScriptString_pSize(
+  _In_reads_(1) SCRIPT_STRING_ANALYSIS ssa);
 
 #ifdef __cplusplus
 } /* extern "C" */

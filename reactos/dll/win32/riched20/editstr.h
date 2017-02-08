@@ -21,41 +21,8 @@
 #ifndef __EDITSTR_H
 #define __EDITSTR_H
 
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
-#endif
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <assert.h>
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <stdlib.h>
-//#include <limits.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include <winnls.h>
-//#include <winnt.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <richedit.h>
-//#include <commctrl.h>
-#include <ole2.h>
-#include <richole.h>
-#include <imm.h>
-#include <textserv.h>
-
-#include <wine/debug.h>
-
 #ifdef __i386__
-extern const struct ITextHostVtbl itextHostStdcallVtbl;
+extern const struct ITextHostVtbl itextHostStdcallVtbl DECLSPEC_HIDDEN;
 #endif /* __i386__ */
 
 typedef struct tagME_String
@@ -64,13 +31,25 @@ typedef struct tagME_String
   int nLen, nBuffer;
 } ME_String;
 
+typedef struct tagME_FontCacheItem
+{
+  LOGFONTW lfSpecs;
+  HFONT hFont;
+  int nRefs;
+  int nAge;
+} ME_FontCacheItem;
+
+#define HFONT_CACHE_SIZE 10
+
 typedef struct tagME_Style
 {
   CHARFORMAT2W fmt;
 
-  HFONT hFont; /* cached font for the style */
+  ME_FontCacheItem *font_cache; /* cached font for the style */
   TEXTMETRICW tm; /* cached font metrics for the style */
   int nRefs; /* reference count */
+  SCRIPT_CACHE script_cache;
+  struct list entry;
 } ME_Style;
 
 typedef enum {
@@ -89,15 +68,6 @@ typedef enum {
   diRunOrStartRow,
   diParagraphOrEnd,
   diRunOrParagraphOrEnd, /* 12 */
-  
-  diUndoInsertRun, /* 13 */
-  diUndoDeleteRun, /* 14 */
-  diUndoJoinParagraphs, /* 15 */
-  diUndoSplitParagraph, /* 16 */
-  diUndoSetParagraphFormat, /* 17 */
-  diUndoSetCharFormat, /* 18 */
-  diUndoEndTransaction, /* 19 - marks the end of a group of changes for undo */
-  diUndoPotentialEndTransaction, /* 20 - allows grouping typed chars for undo */
 } ME_DIType;
 
 #define SELECTIONBAR_WIDTH 8
@@ -146,6 +116,7 @@ typedef enum {
 #define MEPF_CELL     0x04 /* The paragraph is nested in a cell */
 #define MEPF_ROWSTART 0x08 /* Hidden empty paragraph at the start of the row */
 #define MEPF_ROWEND   0x10 /* Visible empty paragraph at the end of the row */
+#define MEPF_COMPLEX  0x20 /* Use uniscribe */
 
 /******************************** structures *************************/
 
@@ -153,14 +124,24 @@ struct tagME_DisplayItem;
 
 typedef struct tagME_Run
 {
-  ME_String *strText;
   ME_Style *style;
+  struct tagME_Paragraph *para; /* ptr to the run's paragraph */
   int nCharOfs; /* relative to para's offset */
+  int len;      /* length of run's text */
   int nWidth; /* width of full run, width of leading&trailing ws */
   int nFlags;
   int nAscent, nDescent; /* pixels above/below baseline */
   POINT pt; /* relative to para's position */
   REOBJECT *ole_obj; /* FIXME: should be a union with strText (at least) */
+
+  SCRIPT_ANALYSIS script_analysis;
+  int num_glyphs, max_glyphs;
+  WORD *glyphs;
+  SCRIPT_VISATTR *vis_attrs;
+  int *advances;
+  GOFFSET *offsets;
+  int max_clusters;
+  WORD *clusters;
 } ME_Run;
 
 typedef struct tagME_Border
@@ -180,6 +161,7 @@ typedef struct tagME_BorderRect
 typedef struct tagME_Paragraph
 {
   PARAFORMAT2 *pFmt;
+  ME_String *text;
 
   struct tagME_DisplayItem *pCell; /* v4.1 */
   ME_BorderRect border;
@@ -234,16 +216,8 @@ typedef struct tagME_DisplayItem
     ME_Row row;
     ME_Cell cell;
     ME_Paragraph para;
-    ME_Style *ustyle; /* used by diUndoSetCharFormat */
   } member;
 } ME_DisplayItem;
-
-typedef struct tagME_UndoItem
-{
-  ME_DisplayItem di;
-  int nStart, nLen;
-  ME_String *eol_str; /* used by diUndoSplitParagraph */
-} ME_UndoItem;
 
 typedef struct tagME_TextBuffer
 {
@@ -265,6 +239,75 @@ typedef enum {
   umIgnore,
   umAddBackToUndo
 } ME_UndoMode;
+
+enum undo_type
+{
+    undo_insert_run,
+    undo_delete_run,
+    undo_join_paras,
+    undo_split_para,
+    undo_set_para_fmt,
+    undo_set_char_fmt,
+    undo_end_transaction,          /* marks the end of a group of changes for undo */
+    undo_potential_end_transaction /* allows grouping typed chars for undo */
+};
+
+struct insert_run_item
+{
+    int pos, len;
+    WCHAR *str;
+    ME_Style *style;
+    DWORD flags;
+};
+
+struct delete_run_item
+{
+    int pos, len;
+};
+
+struct join_paras_item
+{
+    int pos;
+};
+
+struct split_para_item
+{
+    int pos;
+    PARAFORMAT2 fmt;
+    ME_BorderRect border;
+    ME_String *eol_str;
+    DWORD flags;
+    ME_BorderRect cell_border;
+    int cell_right_boundary;
+};
+
+struct set_para_fmt_item
+{
+    int pos;
+    PARAFORMAT2 fmt;
+    ME_BorderRect border;
+};
+
+struct set_char_fmt_item
+{
+    int pos, len;
+    CHARFORMAT2W fmt;
+};
+
+struct undo_item
+{
+    struct list entry;
+    enum undo_type type;
+    union
+    {
+        struct insert_run_item insert_run;
+        struct delete_run_item delete_run;
+        struct join_paras_item join_paras;
+        struct split_para_item split_para;
+        struct set_para_fmt_item set_para_fmt;
+        struct set_char_fmt_item set_char_fmt;
+    } u;
+};
 
 typedef enum {
   stPosition = 0,
@@ -311,24 +354,16 @@ typedef struct tagME_OutStream {
   UINT nNestingLevel;
 } ME_OutStream;
 
-typedef struct tagME_FontCacheItem
-{
-  LOGFONTW lfSpecs;
-  HFONT hFont;
-  int nRefs;
-  int nAge;
-} ME_FontCacheItem;
-
-#define HFONT_CACHE_SIZE 10
-
 typedef struct tagME_TextEditor
 {
   HWND hWnd, hwndParent;
   ITextHost *texthost;
+  IRichEditOle *reOle;
   BOOL bEmulateVersion10;
   ME_TextBuffer *pBuffer;
   ME_Cursor *pCursors;
   DWORD styleFlags;
+  DWORD alignStyle;
   DWORD exStyleFlags;
   int nCursors;
   SIZE sizeWindow;
@@ -341,7 +376,8 @@ typedef struct tagME_TextEditor
   BOOL bCaretAtEnd;
   int nEventMask;
   int nModifyStep;
-  ME_DisplayItem *pUndoStack, *pRedoStack, *pUndoStackBottom;
+  struct list undo_stack;
+  struct list redo_stack;
   int nUndoStackSize;
   int nUndoLimit;
   ME_UndoMode nUndoMode;
@@ -379,6 +415,8 @@ typedef struct tagME_TextEditor
   SCROLLINFO vert_si, horz_si;
 
   BOOL bMouseCaptured;
+  int wheel_remain;
+  struct list style_list;
 } ME_TextEditor;
 
 typedef struct tagME_Context

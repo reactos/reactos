@@ -30,21 +30,6 @@
  * 
  */
 
-#include <stdarg.h>
-//#include <stdio.h>
-#include <stdlib.h>
-//#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-//#include "winnls.h"
-//#include "commctrl.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/debug.h>
-
 #include "comctl32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(trackbar);
@@ -499,12 +484,12 @@ TRACKBAR_DrawOneTic (const TRACKBAR_INFO *infoPtr, HDC hdc, LONG ticPos, int fla
         offsetthumb = (infoPtr->rcThumb.bottom - infoPtr->rcThumb.top)/2;
 	rcTics.left = infoPtr->rcThumb.left - 2;
 	rcTics.right = infoPtr->rcThumb.right + 2;
-	rcTics.top    = infoPtr->rcChannel.top + offsetthumb + 1;
-	rcTics.bottom = infoPtr->rcChannel.bottom - offsetthumb;
+	rcTics.top    = infoPtr->rcChannel.top + offsetthumb;
+	rcTics.bottom = infoPtr->rcChannel.bottom - offsetthumb - 1;
     } else {
         offsetthumb = (infoPtr->rcThumb.right - infoPtr->rcThumb.left)/2;
-	rcTics.left   = infoPtr->rcChannel.left + offsetthumb + 1;
-	rcTics.right  = infoPtr->rcChannel.right - offsetthumb;
+	rcTics.left   = infoPtr->rcChannel.left + offsetthumb;
+	rcTics.right  = infoPtr->rcChannel.right - offsetthumb - 1;
 	rcTics.top = infoPtr->rcThumb.top - 2;
 	rcTics.bottom = infoPtr->rcThumb.bottom + 2;
     }
@@ -612,19 +597,104 @@ TRACKBAR_DrawTics (const TRACKBAR_INFO *infoPtr, HDC hdc)
     }
 }
 
-static void
-TRACKBAR_DrawThumb (const TRACKBAR_INFO *infoPtr, HDC hdc)
+static int
+TRACKBAR_FillThumb (const TRACKBAR_INFO *infoPtr, HDC hdc, HBRUSH hbrush)
 {
-    HBRUSH oldbr;
-    HPEN  oldpen;
-    RECT thumb = infoPtr->rcThumb;
-    int BlackUntil = 3;
-    int PointCount = 6;
+    const RECT *thumb = &infoPtr->rcThumb;
     POINT points[6];
-    int fillClr;
     int PointDepth;
+    HBRUSH oldbr;
+
+    if (infoPtr->dwStyle & TBS_BOTH)
+    {
+        FillRect(hdc, thumb, hbrush);
+        return 0;
+    }
+
+    if (infoPtr->dwStyle & TBS_VERT)
+    {
+        PointDepth = (thumb->bottom - thumb->top) / 2;
+        if (infoPtr->dwStyle & TBS_LEFT)
+        {
+            points[0].x = thumb->right-1;
+            points[0].y = thumb->top;
+            points[1].x = thumb->right-1;
+            points[1].y = thumb->bottom-1;
+            points[2].x = thumb->left + PointDepth;
+            points[2].y = thumb->bottom-1;
+            points[3].x = thumb->left;
+            points[3].y = thumb->top + PointDepth;
+            points[4].x = thumb->left + PointDepth;
+            points[4].y = thumb->top;
+            points[5].x = points[0].x;
+            points[5].y = points[0].y;
+        }
+        else
+        {
+            points[0].x = thumb->right;
+            points[0].y = thumb->top + PointDepth;
+            points[1].x = thumb->right - PointDepth;
+            points[1].y = thumb->bottom-1;
+            points[2].x = thumb->left;
+            points[2].y = thumb->bottom-1;
+            points[3].x = thumb->left;
+            points[3].y = thumb->top;
+            points[4].x = thumb->right - PointDepth;
+            points[4].y = thumb->top;
+            points[5].x = points[0].x;
+            points[5].y = points[0].y;
+        }
+    }
+    else
+    {
+        PointDepth = (thumb->right - thumb->left) / 2;
+        if (infoPtr->dwStyle & TBS_TOP)
+        {
+            points[0].x = thumb->left + PointDepth;
+            points[0].y = thumb->top+1;
+            points[1].x = thumb->right-1;
+            points[1].y = thumb->top + PointDepth + 1;
+            points[2].x = thumb->right-1;
+            points[2].y = thumb->bottom-1;
+            points[3].x = thumb->left;
+            points[3].y = thumb->bottom-1;
+            points[4].x = thumb->left;
+            points[4].y = thumb->top + PointDepth + 1;
+            points[5].x = points[0].x;
+            points[5].y = points[0].y;
+        }
+        else
+        {
+            points[0].x = thumb->right-1;
+            points[0].y = thumb->top;
+            points[1].x = thumb->right-1;
+            points[1].y = thumb->bottom - PointDepth - 1;
+            points[2].x = thumb->left + PointDepth;
+            points[2].y = thumb->bottom-1;
+            points[3].x = thumb->left;
+            points[3].y = thumb->bottom - PointDepth - 1;
+            points[4].x = thumb->left;
+            points[4].y = thumb->top;
+            points[5].x = points[0].x;
+            points[5].y = points[0].y;
+        }
+    }
+
+    oldbr = SelectObject(hdc, hbrush);
+    SetPolyFillMode(hdc, WINDING);
+    Polygon(hdc, points, sizeof(points) / sizeof(points[0]));
+    SelectObject(hdc, oldbr);
+
+    return PointDepth;
+}
+
+static void
+TRACKBAR_DrawThumb (TRACKBAR_INFO *infoPtr, HDC hdc)
+{
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
-    
+    int PointDepth;
+    HBRUSH brush;
+
     if (theme)
     {
         int partId;
@@ -645,113 +715,115 @@ TRACKBAR_DrawThumb (const TRACKBAR_INFO *infoPtr, HDC hdc)
         else
             stateId = TUS_NORMAL;
         
-        DrawThemeBackground (theme, hdc, partId, stateId, &thumb, 0);
+        DrawThemeBackground (theme, hdc, partId, stateId, &infoPtr->rcThumb, NULL);
         
         return;
     }
 
-    fillClr = infoPtr->flags & TB_DRAG_MODE ? COLOR_BTNHILIGHT : COLOR_BTNFACE;
-    oldbr = SelectObject (hdc, GetSysColorBrush(fillClr));
-    SetPolyFillMode (hdc, WINDING);
+    if (infoPtr->dwStyle & WS_DISABLED || infoPtr->flags & TB_DRAG_MODE)
+    {
+        if (comctl32_color.clr3dHilight == comctl32_color.clrWindow)
+            brush = COMCTL32_hPattern55AABrush;
+        else
+            brush = GetSysColorBrush(COLOR_SCROLLBAR);
+
+        SetTextColor(hdc, comctl32_color.clr3dFace);
+        SetBkColor(hdc, comctl32_color.clr3dHilight);
+    }
+    else
+        brush = GetSysColorBrush(COLOR_BTNFACE);
+
+    PointDepth = TRACKBAR_FillThumb(infoPtr, hdc, brush);
 
     if (infoPtr->dwStyle & TBS_BOTH)
     {
-       points[0].x=thumb.right;
-       points[0].y=thumb.top;
-       points[1].x=thumb.right;
-       points[1].y=thumb.bottom;
-       points[2].x=thumb.left;
-       points[2].y=thumb.bottom;
-       points[3].x=thumb.left;
-       points[3].y=thumb.top;
-       points[4].x=points[0].x;
-       points[4].y=points[0].y;
-       PointCount = 5;
-       BlackUntil = 3;
+       DrawEdge(hdc, &infoPtr->rcThumb, EDGE_RAISED, BF_RECT | BF_SOFT);
+       return;
     }
     else
     {
+        RECT thumb = infoPtr->rcThumb;
+
         if (infoPtr->dwStyle & TBS_VERT)
         {
-          PointDepth = (thumb.bottom - thumb.top) / 2;
           if (infoPtr->dwStyle & TBS_LEFT)
           {
-            points[0].x=thumb.right;
-            points[0].y=thumb.top;
-            points[1].x=thumb.right;
-            points[1].y=thumb.bottom;
-            points[2].x=thumb.left + PointDepth;
-            points[2].y=thumb.bottom;
-            points[3].x=thumb.left;
-            points[3].y=(thumb.bottom - thumb.top) / 2 + thumb.top + 1;
-            points[4].x=thumb.left + PointDepth;
-            points[4].y=thumb.top;
-            points[5].x=points[0].x;
-            points[5].y=points[0].y;
-            BlackUntil = 4;
+            /* rectangular part */
+            thumb.left += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_TOP | BF_RIGHT | BF_BOTTOM | BF_SOFT);
+
+            /* light edge */
+            thumb.left -= PointDepth;
+            thumb.right = thumb.left + PointDepth;
+            thumb.bottom = infoPtr->rcThumb.top + PointDepth + 1;
+            thumb.top = infoPtr->rcThumb.top;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDTOPRIGHT | BF_SOFT);
+
+            /* shadowed edge */
+            thumb.top += PointDepth;
+            thumb.bottom += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_SUNKEN, BF_DIAGONAL_ENDTOPLEFT | BF_SOFT);
+            return;
           }
           else
           {
-            points[0].x=thumb.right;
-            points[0].y=(thumb.bottom - thumb.top) / 2 + thumb.top + 1;
-            points[1].x=thumb.right - PointDepth;
-            points[1].y=thumb.bottom;
-            points[2].x=thumb.left;
-            points[2].y=thumb.bottom;
-            points[3].x=thumb.left;
-            points[3].y=thumb.top;
-            points[4].x=thumb.right - PointDepth;
-            points[4].y=thumb.top;
-            points[5].x=points[0].x;
-            points[5].y=points[0].y;
+            /* rectangular part */
+            thumb.right -= PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_TOP | BF_LEFT | BF_BOTTOM | BF_SOFT);
+
+            /* light edge */
+            thumb.left = thumb.right;
+            thumb.right += PointDepth + 1;
+            thumb.bottom = infoPtr->rcThumb.top + PointDepth + 1;
+            thumb.top = infoPtr->rcThumb.top;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDTOPLEFT | BF_SOFT);
+
+            /* shadowed edge */
+            thumb.top += PointDepth;
+            thumb.bottom += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDBOTTOMLEFT | BF_SOFT);
           }
         }
         else
         {
-          PointDepth = (thumb.right - thumb.left) / 2;
           if (infoPtr->dwStyle & TBS_TOP)
           {
-            points[0].x=(thumb.right - thumb.left) / 2 + thumb.left + 1;
-            points[0].y=thumb.top;
-            points[1].x=thumb.right;
-            points[1].y=thumb.top + PointDepth;
-            points[2].x=thumb.right;
-            points[2].y=thumb.bottom;
-            points[3].x=thumb.left;
-            points[3].y=thumb.bottom;
-            points[4].x=thumb.left;
-            points[4].y=thumb.top + PointDepth;
-            points[5].x=points[0].x;
-            points[5].y=points[0].y;
-            BlackUntil = 4;
+            /* rectangular part */
+            thumb.top += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_LEFT | BF_BOTTOM | BF_RIGHT | BF_SOFT);
+
+            /* light edge */
+            thumb.left = infoPtr->rcThumb.left;
+            thumb.right = thumb.left + PointDepth;
+            thumb.bottom = infoPtr->rcThumb.top + PointDepth + 1;
+            thumb.top -= PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDTOPRIGHT | BF_SOFT);
+
+            /* shadowed edge */
+            thumb.left += PointDepth;
+            thumb.right += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDBOTTOMRIGHT | BF_SOFT);
           }
           else
           {
-            points[0].x=thumb.right;
-            points[0].y=thumb.top;
-            points[1].x=thumb.right;
-            points[1].y=thumb.bottom - PointDepth;
-            points[2].x=(thumb.right - thumb.left) / 2 + thumb.left + 1;
-            points[2].y=thumb.bottom;
-            points[3].x=thumb.left;
-            points[3].y=thumb.bottom - PointDepth;
-            points[4].x=thumb.left;
-            points[4].y=thumb.top;
-            points[5].x=points[0].x;
-            points[5].y=points[0].y;
+            /* rectangular part */
+            thumb.bottom -= PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_LEFT | BF_TOP | BF_RIGHT | BF_SOFT);
+
+            /* light edge */
+            thumb.left = infoPtr->rcThumb.left;
+            thumb.right = thumb.left + PointDepth;
+            thumb.top = infoPtr->rcThumb.bottom - PointDepth - 1;
+            thumb.bottom += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDTOPLEFT | BF_SOFT);
+
+            /* shadowed edge */
+            thumb.left += PointDepth;
+            thumb.right += PointDepth;
+            DrawEdge(hdc, &thumb, EDGE_RAISED, BF_DIAGONAL_ENDBOTTOMLEFT | BF_SOFT);
           }
         }
-
     }
-
-    /* Draw the thumb now */
-    Polygon (hdc, points, PointCount);
-    oldpen = SelectObject(hdc, GetStockObject(BLACK_PEN));
-    Polyline(hdc,points, BlackUntil);
-    SelectObject(hdc, GetStockObject(WHITE_PEN));
-    Polyline(hdc, &points[BlackUntil-1], PointCount+1-BlackUntil);
-    SelectObject(hdc, oldpen);
-    SelectObject(hdc, oldbr);
 }
 
 
@@ -1142,9 +1214,12 @@ TRACKBAR_SetPos (TRACKBAR_INFO *infoPtr, BOOL fPosition, LONG lPosition)
 
     if (infoPtr->lPos > infoPtr->lRangeMax)
 	infoPtr->lPos = infoPtr->lRangeMax;
-    infoPtr->flags |= TB_THUMBPOSCHANGED;
 
-    if (fPosition && oldPos != lPosition) TRACKBAR_InvalidateThumbMove(infoPtr, oldPos, lPosition);
+    if (fPosition && oldPos != lPosition)
+    {
+        TRACKBAR_UpdateThumb(infoPtr);
+        TRACKBAR_InvalidateThumbMove(infoPtr, oldPos, lPosition);
+    }
 
     return 0;
 }
@@ -1295,9 +1370,11 @@ static inline LRESULT
 TRACKBAR_SetThumbLength (TRACKBAR_INFO *infoPtr, UINT iLength)
 {
     if (infoPtr->dwStyle & TBS_FIXEDLENGTH) {
+        /* We're not supposed to check if it's really changed or not,
+           just repaint in any case. */
         infoPtr->uThumbLen = iLength;
 	infoPtr->flags |= TB_THUMBSIZECHANGED;
-	InvalidateRect (infoPtr->hwndSelf, &infoPtr->rcThumb, FALSE);
+	TRACKBAR_InvalidateAll(infoPtr);
     }
 
     return 0;
@@ -1436,11 +1513,13 @@ TRACKBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
                              hwnd, 0, 0, 0);
 
     	if (infoPtr->hwndToolTip) {
-            TTTOOLINFOW ti;	    
+            TTTOOLINFOW ti;
+            WCHAR wEmpty = 0;
             ZeroMemory (&ti, sizeof(ti));
             ti.cbSize   = sizeof(ti);
      	    ti.uFlags   = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
 	    ti.hwnd     = hwnd;
+            ti.lpszText = &wEmpty;
 
             SendMessageW (infoPtr->hwndToolTip, TTM_ADDTOOLW, 0, (LPARAM)&ti);
 	 }
@@ -1571,9 +1650,15 @@ TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr)
 static LRESULT
 TRACKBAR_Size (TRACKBAR_INFO *infoPtr)
 {
-    TRACKBAR_CalcChannel (infoPtr);
-    TRACKBAR_UpdateThumb (infoPtr);
+    if (infoPtr->dwStyle & TBS_FIXEDLENGTH)
+    {
+        TRACKBAR_CalcChannel(infoPtr);
+        TRACKBAR_UpdateThumb(infoPtr);
+    }
+    else
+        TRACKBAR_InitializeThumb(infoPtr);
     TRACKBAR_AlignBuddies (infoPtr);
+    TRACKBAR_InvalidateAll(infoPtr);
 
     return 0;
 }
@@ -1721,7 +1806,7 @@ TRACKBAR_KeyDown (TRACKBAR_INFO *infoPtr, INT nVirtKey)
     }
 
     if (pos != infoPtr->lPos) {
-	infoPtr->flags |=TB_THUMBPOSCHANGED;
+	TRACKBAR_UpdateThumb (infoPtr);
 	TRACKBAR_InvalidateThumbMove (infoPtr, pos, infoPtr->lPos);
     }
 
@@ -1746,6 +1831,19 @@ TRACKBAR_KeyUp (const TRACKBAR_INFO *infoPtr, INT nVirtKey)
     return TRUE;
 }
 
+
+static LRESULT
+TRACKBAR_Enable (TRACKBAR_INFO *infoPtr, BOOL enable)
+{
+    if (enable)
+        infoPtr->dwStyle &= ~WS_DISABLED;
+    else
+        infoPtr->dwStyle |= WS_DISABLED;
+
+    InvalidateRect(infoPtr->hwndSelf, &infoPtr->rcThumb, TRUE);
+
+    return 1;
+}
 
 static LRESULT WINAPI
 TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1866,6 +1964,7 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
     case WM_CAPTURECHANGED:
+        if (hwnd == (HWND)lParam) return 0;
         return TRACKBAR_CaptureChanged (infoPtr);
 
     case WM_CREATE:
@@ -1874,7 +1973,8 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         return TRACKBAR_Destroy (infoPtr);
 
-/*	case WM_ENABLE: */
+    case WM_ENABLE:
+        return TRACKBAR_Enable (infoPtr, (BOOL)wParam);
 
     case WM_ERASEBKGND:
 	return 0;

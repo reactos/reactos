@@ -1,0 +1,12 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Affiche graphiquement la structure des dossiers d'un lecteur ou d'un chemin.\n\n\
+TREE [lecteur:][chemin] [/F] [/A]\n\n\
+\t/F   Affiche le nom des fichiers dans chaque dossier.\n\
+\t/A   Utiliser l'ASCII au lieu de l'unicode.\n"
+    IDS_NO_SUBDIRECTORIES "Aucun sous-répertoire n'existe"
+    IDS_FOLDER_PATH "Énumération du dossier\n"
+    IDS_VOL_SERIAL "Le numéro de série du volume est %x:%x\n"
+END

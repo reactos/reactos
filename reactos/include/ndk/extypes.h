@@ -35,6 +35,10 @@ Author:
 #include <obtypes.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // GCC compatibility
 //
@@ -125,6 +129,15 @@ extern ULONG NTSYSAPI NtBuildNumber;
 //
 #define PROFILE_CONTROL                     0x0001
 #define PROFILE_ALL_ACCESS                  (STANDARD_RIGHTS_REQUIRED | PROFILE_CONTROL)
+
+//
+// Keyed Event Object Access Masks
+//
+#define KEYEDEVENT_WAIT                     0x0001
+#define KEYEDEVENT_WAKE                     0x0002
+#define KEYEDEVENT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED | \
+                                             KEYEDEVENT_WAIT | \
+                                             KEYEDEVENT_WAKE)
 
 //
 // NtRaiseHardError-related parameters
@@ -457,6 +470,16 @@ typedef struct _EX_PUSH_LOCK
 //
 // Executive Pushlock Wait Block
 //
+
+//
+// The wait block has to be properly aligned
+// on a non-checked build even if the debug data isn't there.
+//
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4324)
+#endif
+
 typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
 {
     union
@@ -476,6 +499,10 @@ typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
     PEX_PUSH_LOCK PushLock;
 #endif
 } EX_PUSH_LOCK_WAIT_BLOCK, *PEX_PUSH_LOCK_WAIT_BLOCK;
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 //
 // Callback Object
@@ -1356,7 +1383,22 @@ typedef struct _SYSTEM_SESSION_PROCESS_INFORMATION
     PVOID Buffer; // Same format as in SystemProcessInformation
 } SYSTEM_SESSION_PROCESS_INFORMATION, *PSYSTEM_SESSION_PROCESS_INFORMATION;
 
-// FIXME: Class 54-97
+// FIXME: Class 54
+
+// Class 55
+#define MAXIMUM_NUMA_NODES 16
+typedef struct _SYSTEM_NUMA_INFORMATION
+{
+    ULONG HighestNodeNumber;
+    ULONG Reserved;
+    union
+    {
+        ULONGLONG ActiveProcessorsAffinityMask[MAXIMUM_NUMA_NODES];
+        ULONGLONG AvailableMemory[MAXIMUM_NUMA_NODES];
+    };
+} SYSTEM_NUMA_INFORMATION, *PSYSTEM_NUMA_INFORMATION;
+
+// FIXME: Class 56-97
 
 //
 // Hotpatch flags
@@ -1462,5 +1504,10 @@ typedef struct _SYSTEM_MEMORY_LIST_INFORMATION
    SIZE_T ModifiedPageCountPageFile;
 } SYSTEM_MEMORY_LIST_INFORMATION, *PSYSTEM_MEMORY_LIST_INFORMATION;
 
+#endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+}; // extern "C"
 #endif
-#endif
+
+#endif // !_EXTYPES_H

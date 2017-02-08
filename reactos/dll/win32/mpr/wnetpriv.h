@@ -21,7 +21,7 @@
 #ifndef __WNET_PRIV_H__
 #define __WNET_PRIV_H__
 
-void wnetInit(HINSTANCE hInstDll);
-void wnetFree(void);
+void wnetInit(HINSTANCE hInstDll) DECLSPEC_HIDDEN;
+void wnetFree(void) DECLSPEC_HIDDEN;
 
 #endif /* ndef __WNET_PRIV_H__ */

@@ -15,15 +15,18 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_IPEXPORT_H
 #define __WINE_IPEXPORT_H
 
-typedef unsigned long   IPAddr;
-typedef unsigned long   IPMask;
-typedef unsigned long   IP_STATUS;
+#include <in6addr.h>
+#include <inaddr.h>
+
+typedef ULONG IPAddr;
+typedef ULONG IPMask;
+typedef ULONG IP_STATUS;
 
 struct ip_option_information
 {
@@ -44,7 +47,6 @@ struct ip_option_information
 #define IP_OPT_RR       0x7
 #define IP_OPT_TS       0x44
 #define IP_OPT_SID      0x88
-#define IP_OPT_ROUTER_ALERT 0x94
 
 #define MAX_OPT_SIZE    40
 
@@ -52,8 +54,8 @@ struct ip_option_information
 struct icmp_echo_reply
 {
     IPAddr                       Address;
-    unsigned long                Status;
-    unsigned long                RoundTripTime;
+    ULONG                        Status;
+    ULONG                        RoundTripTime;
     unsigned short               DataSize;
     unsigned short               Reserved;
     void*                        Data;
@@ -91,18 +93,6 @@ typedef struct icmp_echo_reply ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
 #define IP_SPEC_MTU_CHANGE          (IP_STATUS_BASE + 20)
 #define IP_MTU_CHANGE               (IP_STATUS_BASE + 21)
 #define IP_UNLOAD                   (IP_STATUS_BASE + 22)
-#define IP_ADDR_ADDED               (IP_STATUS_BASE + 23)
-#define IP_MEDIA_CONNECT            (IP_STATUS_BASE + 24)
-#define IP_MEDIA_DISCONNECT         (IP_STATUS_BASE + 25)
-#define IP_BIND_ADAPTER             (IP_STATUS_BASE + 26)
-#define IP_UNBIND_ADAPTER           (IP_STATUS_BASE + 27)
-#define IP_DEVICE_DOES_NOT_EXIST    (IP_STATUS_BASE + 28)
-#define IP_DUPLICATE_ADDRESS        (IP_STATUS_BASE + 29)
-#define IP_INTERFACE_METRIC_CHANGE  (IP_STATUS_BASE + 30)
-#define IP_RECONFIG_SECFLTR         (IP_STATUS_BASE + 31)
-#define IP_NEGOTIATING_IPSEC        (IP_STATUS_BASE + 32)
-#define IP_INTERFACE_WOL_CAPABILITY_CHANGE (IP_STATUS_BASE + 33)
-#define IP_DUPLICATE_IPADD          (IP_STATUS_BASE + 34)
 
 #define IP_GENERAL_FAILURE          (IP_STATUS_BASE + 50)
 #define MAX_IP_STATUS               IP_GENERAL_FAILURE
@@ -126,9 +116,33 @@ typedef struct _IP_UNIDIRECTIONAL_ADAPTER_ADDRESS {
   IPAddr Address[1];
 } IP_UNIDIRECTIONAL_ADAPTER_ADDRESS, *PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS;
 
+/* ReactOS */
+
 typedef struct _IP_ADAPTER_ORDER_MAP {
-    ULONG   NumAdapters;
-    ULONG   AdapterOrder[1];
+  ULONG NumAdapters;
+  ULONG AdapterOrder[1];
 } IP_ADAPTER_ORDER_MAP, *PIP_ADAPTER_ORDER_MAP;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#include <pshpack1.h>
+typedef struct _IPV6_ADDRESS_EX {
+  USHORT sin6_port;
+  ULONG sin6_flowinfo;
+  USHORT sin6_addr[8];
+  ULONG sin6_scope_id;
+} IPV6_ADDRESS_EX, *PIPV6_ADDRESS_EX;
+#include <poppack.h>
+
+typedef struct icmpv6_echo_reply_lh {
+  IPV6_ADDRESS_EX Address;
+  ULONG Status;
+  unsigned int RoundTripTime;
+} ICMPV6_ECHO_REPLY_LH, *PICMPV6_ECHO_REPLY_LH;
+
+typedef ICMPV6_ECHO_REPLY_LH ICMPV6_ECHO_REPLY;
+typedef ICMPV6_ECHO_REPLY_LH *PICMPV6_ECHO_REPLY;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #endif /* __WINE_IPEXPORT_H */

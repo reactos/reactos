@@ -26,7 +26,6 @@ list(APPEND SOURCE
     dispatch.c
     enum.c
     fdo.c
-    guid.c
     hookhal.c
     init.c
     pcivrify.c
@@ -34,14 +33,15 @@ list(APPEND SOURCE
     power.c
     usage.c
     utils.c
-    pci.rc)
+    pci.h)
 
-add_library(pcix SHARED ${SOURCE})
+add_library(pcix SHARED
+    ${SOURCE}
+    guid.c
+    pci.rc)
 
 set_module_type(pcix kernelmodedriver)
 add_importlibs(pcix ntoskrnl hal)
-
-add_pch(pcix pci.h)
+add_pch(pcix pci.h SOURCE)
 add_dependencies(pcix pciclass)
-
 add_cd_file(TARGET pcix DESTINATION reactos/system32/drivers NO_CAB FOR all)

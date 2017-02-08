@@ -22,21 +22,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
 
 static void dump_wined3d_vertex_element(const struct wined3d_vertex_element *element)
 {
-    TRACE("     format: %s (%#x)\n", debug_d3dformat(element->format), element->format);
-    TRACE(" input_slot: %u\n", element->input_slot);
-    TRACE("     offset: %u\n", element->offset);
-    TRACE("output_slot: %u\n", element->output_slot);
-    TRACE("     method: %s (%#x)\n", debug_d3ddeclmethod(element->method), element->method);
-    TRACE("      usage: %s (%#x)\n", debug_d3ddeclusage(element->usage), element->usage);
-    TRACE("  usage_idx: %u\n", element->usage_idx);
+    TRACE("                 format: %s (%#x)\n", debug_d3dformat(element->format), element->format);
+    TRACE("             input_slot: %u\n", element->input_slot);
+    TRACE("                 offset: %u\n", element->offset);
+    TRACE("            output_slot: %u\n", element->output_slot);
+    TRACE("       input slot class: %s\n", debug_d3dinput_classification(element->input_slot_class));
+    TRACE("instance data step rate: %u\n", element->instance_data_step_rate);
+    TRACE("                 method: %s (%#x)\n", debug_d3ddeclmethod(element->method), element->method);
+    TRACE("                  usage: %s (%#x)\n", debug_d3ddeclusage(element->usage), element->usage);
+    TRACE("              usage_idx: %u\n", element->usage_idx);
 }
 
 ULONG CDECL wined3d_vertex_declaration_incref(struct wined3d_vertex_declaration *declaration)
@@ -48,6 +48,14 @@ ULONG CDECL wined3d_vertex_declaration_incref(struct wined3d_vertex_declaration 
     return refcount;
 }
 
+#if defined(STAGING_CSMT)
+void wined3d_vertex_declaration_destroy(struct wined3d_vertex_declaration *declaration)
+{
+    HeapFree(GetProcessHeap(), 0, declaration->elements);
+    HeapFree(GetProcessHeap(), 0, declaration);
+}
+
+#endif /* STAGING_CSMT */
 ULONG CDECL wined3d_vertex_declaration_decref(struct wined3d_vertex_declaration *declaration)
 {
     ULONG refcount = InterlockedDecrement(&declaration->ref);
@@ -56,9 +64,15 @@ ULONG CDECL wined3d_vertex_declaration_decref(struct wined3d_vertex_declaration 
 
     if (!refcount)
     {
+#if defined(STAGING_CSMT)
+        const struct wined3d_device *device = declaration->device;
+        declaration->parent_ops->wined3d_object_destroyed(declaration->parent);
+        wined3d_cs_emit_vertex_declaration_destroy(device->cs, declaration);
+#else  /* STAGING_CSMT */
         HeapFree(GetProcessHeap(), 0, declaration->elements);
         declaration->parent_ops->wined3d_object_destroyed(declaration->parent);
         HeapFree(GetProcessHeap(), 0, declaration);
+#endif /* STAGING_CSMT */
     }
 
     return refcount;
@@ -164,7 +178,6 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    WORD preloaded = 0; /* MAX_STREAMS, 16 */
     unsigned int i;
 
     if (TRACE_ON(d3d_decl))
@@ -198,6 +211,8 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         e->input_slot = elements[i].input_slot;
         e->offset = elements[i].offset;
         e->output_slot = elements[i].output_slot;
+        e->input_slot_class = elements[i].input_slot_class;
+        e->instance_data_step_rate = elements[i].instance_data_step_rate;
         e->method = elements[i].method;
         e->usage = elements[i].usage;
         e->usage_idx = elements[i].usage_idx;
@@ -217,18 +232,28 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
             return E_FAIL;
         }
 
+        if (e->offset == WINED3D_APPEND_ALIGNED_ELEMENT)
+        {
+            const struct wined3d_vertex_declaration_element *prev;
+            unsigned int j;
+
+            e->offset = 0;
+            for (j = 1; j <= i; ++j)
+            {
+                prev = &declaration->elements[i - j];
+                if (prev->input_slot == e->input_slot)
+                {
+                    e->offset = (prev->offset + prev->format->byte_count + 3) & ~3;
+                    break;
+                }
+            }
+        }
+
         if (e->offset & 0x3)
         {
             WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);
             HeapFree(GetProcessHeap(), 0, declaration->elements);
             return E_FAIL;
-        }
-
-        if (!(preloaded & (1 << e->input_slot)))
-        {
-            declaration->streams[declaration->num_streams] = e->input_slot;
-            ++declaration->num_streams;
-            preloaded |= 1 << e->input_slot;
         }
 
         if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
@@ -287,7 +312,9 @@ static void append_decl_element(struct wined3d_fvf_convert_state *state,
     elements[idx].format = format_id;
     elements[idx].input_slot = 0;
     elements[idx].offset = offset;
-    elements[idx].output_slot = 0;
+    elements[idx].output_slot = WINED3D_OUTPUT_SLOT_SEMANTIC;
+    elements[idx].input_slot_class = WINED3D_INPUT_PER_VERTEX_DATA;
+    elements[idx].instance_data_step_rate = 0;
     elements[idx].method = WINED3D_DECL_METHOD_DEFAULT;
     elements[idx].usage = usage;
     elements[idx].usage_idx = usage_idx;

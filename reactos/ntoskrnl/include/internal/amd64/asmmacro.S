@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/include/amd64/asmmacro.S
+ * FILE:            ntoskrnl/include/internal/amd64/asmmacro.S
  * PURPOSE:         Macros for x64 assembly
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */

@@ -22,18 +22,18 @@
 #include <pshpack1.h>
 typedef struct
 {
-	UCHAR		DriveMapCount;		// Count of drives currently mapped
-	CHAR		DriveMap[8];		// Map of BIOS drives
+    UCHAR        DriveMapCount;        // Count of drives currently mapped
+    CHAR        DriveMap[8];        // Map of BIOS drives
 } DRIVE_MAP_LIST, *PDRIVE_MAP_LIST;
 #include <poppack.h>
 
-VOID	DriveMapMapDrivesInSection(PCSTR SectionName);
-BOOLEAN	DriveMapIsValidDriveString(PCSTR DriveString);			// Checks the drive string ("hd0") for validity
-UCHAR		DriveMapGetBiosDriveNumber(PCSTR DeviceName);			// Returns a BIOS drive number for any given device name (e.g. 0x80 for 'hd0')
-VOID	DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap);	// Installs the int 13h handler for the drive mapper
-VOID	DriveMapRemoveInt13Handler(VOID);						// Removes a previously installed int 13h drive map handler
+VOID    DriveMapMapDrivesInSection(PCSTR SectionName);
+BOOLEAN    DriveMapIsValidDriveString(PCSTR DriveString);            // Checks the drive string ("hd0") for validity
+UCHAR        DriveMapGetBiosDriveNumber(PCSTR DeviceName);            // Returns a BIOS drive number for any given device name (e.g. 0x80 for 'hd0')
+VOID    DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap);    // Installs the int 13h handler for the drive mapper
+VOID    DriveMapRemoveInt13Handler(VOID);                        // Removes a previously installed int 13h drive map handler
 
-extern PVOID			DriveMapInt13HandlerStart;
-extern PVOID			DriveMapInt13HandlerEnd;
-extern ULONG				DriveMapOldInt13HandlerAddress;
-extern DRIVE_MAP_LIST	DriveMapInt13HandlerMapList;
+extern PVOID            DriveMapInt13HandlerStart;
+extern PVOID            DriveMapInt13HandlerEnd;
+extern ULONG                DriveMapOldInt13HandlerAddress;
+extern DRIVE_MAP_LIST    DriveMapInt13HandlerMapList;

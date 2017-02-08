@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/fsrtl.h
+ * FILE:            ntoskrnl/include/internal/fsrtl.h
  * PURPOSE:         Internal header for the File System Runtime Library
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
@@ -53,9 +53,9 @@
 // Notifications flags
 //
 #define WATCH_TREE         0x01
-#define INVALIDATE_BUFFERS 0x02
+#define NOTIFY_IMMEDIATELY 0x02
 #define CLEANUP_IN_PROCESS 0x04
-#define ENUMERATE_DIR      0x08
+#define NOTIFY_LATER       0x08
 #define WATCH_ROOT         0x10
 #define DELETE_IN_PROCESS  0x20
 
@@ -114,6 +114,12 @@ FsRtlInitializeLargeMcbs(
     VOID
 );
 
+VOID
+NTAPI
+FsRtlInitializeTunnels(
+    VOID
+);
+
 //
 // File contexts Routines
 //
@@ -133,5 +139,4 @@ FsRtlInitSystem(
 // Global data inside the File System Runtime Library
 //
 extern PERESOURCE FsRtlPagingIoResources;
-extern PUCHAR _FsRtlLegalAnsiCharacterArray;
 extern PAGED_LOOKASIDE_LIST FsRtlFileLockLookasideList;

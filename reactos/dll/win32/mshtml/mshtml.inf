@@ -3,7 +3,7 @@ Signature="$CHICAGO$"
 
 
 [RegisterDll]
-AddReg=Classes.Reg, Protocols.Reg, IE.Reg, FileAssoc.Reg, WineGecko.Reg
+AddReg=Classes.Reg, Protocols.Reg, IE.Reg, FileAssoc.Reg
 
 
 [UnregisterDll]
@@ -12,245 +12,42 @@ DelReg=Classes.Reg, Protocols.Reg, IE.Reg
 
 [Classes.Reg]
 
-;; AboutProtocol
-HKCR,"CLSID\%CLSID_AboutProtocol%",,,"Microsoft HTML About Pluggable Protocol"
-HKCR,"CLSID\%CLSID_AboutProtocol%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_AboutProtocol%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CAnchorBrowsePropertyPage
-HKCR,"CLSID\%CLSID_CAnchorBrowsePropertyPage%",,,"%Microsoft Anchor Element Browse Property Page%"
-HKCR,"CLSID\%CLSID_CAnchorBrowsePropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CAnchorBrowsePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CBackgroundPropertyPage
-HKCR,"CLSID\%CLSID_CBackgroundPropertyPage%",,,"Microsoft HTML Background Page"
-HKCR,"CLSID\%CLSID_CBackgroundPropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CBackgroundPropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CCDAnchorPropertyPage
-HKCR,"CLSID\%CLSID_CCDAnchorPropertyPage%",,,"Microsoft HTML Anchor Page"
-HKCR,"CLSID\%CLSID_CCDAnchorPropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CCDAnchorPropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CCDGenericPropertyPage
-HKCR,"CLSID\%CLSID_CCDGenericPropertyPage%",,,"Microsoft HTML Generic Page"
-HKCR,"CLSID\%CLSID_CCDGenericPropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CCDGenericPropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CDocBrowsePropertyPage
-HKCR,"CLSID\%CLSID_CDocBrowsePropertyPage%",,,"%Microsoft Document Browse Property Page%"
-HKCR,"CLSID\%CLSID_CDocBrowsePropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CDocBrowsePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CDwnBindInfo
-HKCR,"CLSID\%CLSID_CDwnBindInfo%",,,"Microsoft HTML DwnBindInfo"
-HKCR,"CLSID\%CLSID_CDwnBindInfo%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CDwnBindInfo%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; ExternalFrameworkSite
-HKCR,"CLSID\%CLSID_ExternalFrameworkSite%",,,"Microsoft HTML External Document"
-HKCR,"CLSID\%CLSID_ExternalFrameworkSite%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_ExternalFrameworkSite%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CHiFiUses
-HKCR,"CLSID\%CLSID_CHiFiUses%",,,"Microsoft Scriptlet HiFiTimer Uses"
-HKCR,"CLSID\%CLSID_CHiFiUses%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_CHiFiUses%\InProcServer32","ThreadingModel",,"Apartment"
-HKCR,"CLSID\%CLSID_CHiFiUses%\ProgID",,,"Scriptlet.HiFiTimer"
-HKCR,"Scriptlet.HiFiTimer",,,"HiFiTimer Uses"
-HKCR,"Scriptlet.HiFiTimer\CLSID",,,"%CLSID_CHiFiUses%"
-
-;; CHtmlComponentConstructor
-HKCR,"CLSID\%CLSID_CHtmlComponentConstructor%",,,"Microsoft Html Component"
-HKCR,"CLSID\%CLSID_CHtmlComponentConstructor%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_CHtmlComponentConstructor%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CImageBrowsePropertyPage
-HKCR,"CLSID\%CLSID_CImageBrowsePropertyPage%",,,"Microsoft Image Element Browse Property Page"
-HKCR,"CLSID\%CLSID_CImageBrowsePropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CImageBrowsePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CInlineStylePropertyPage
-HKCR,"CLSID\%CLSID_CInlineStylePropertyPage%",,,"Microsoft HTML Inline Style Page"
-HKCR,"CLSID\%CLSID_CInlineStylePropertyPage%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CInlineStylePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; CPeerHandler
-HKCR,"CLSID\%CLSID_CPeerHandler%",,,"Microsoft Scriptlet Element Behavior Handler"
-HKCR,"CLSID\%CLSID_CPeerHandler%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_CPeerHandler%\InProcServer32","ThreadingModel",,"Apartment"
-HKCR,"CLSID\%CLSID_CPeerHandler%\ProgID",,,"Scriptlet.Behavior"
-HKCR,Scriptlet.Behavior,,,"Element Behavior Handler"
-HKCR,Scriptlet.Behavior\CLSID,,,"%CLSID_CPeerHandler%"
-
-;; CRecalcEngine
-HKCR,"CLSID\%CLSID_CRecalcEngine%",,,"Microsoft HTML Recalc"
-HKCR,"CLSID\%CLSID_CRecalcEngine%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CRecalcEngine%\InProcServer32","ThreadingModel",,"Apartment"
-
 ;; CrSource
-HKCR,"CLSID\%CLSID_CrSource%",,,"Microsoft CrSource 4.0"
 HKCR,"CLSID\%CLSID_CrSource%\BrowseInPlace",,16
 ;;HKCR,"CLSID\%CLSID_CrSource%\DefaultIcon",,0x00020000,"%16422%\Internet Explorer\iexplore.exe,1"
 HKCR,"CLSID\%CLSID_CrSource%\EnablePlugin\.css",,,"PointPlus plugin"
-HKCR,"CLSID\%CLSID_CrSource%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_CrSource%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_CrSource%\MiscStatus",,,"2228625"
-HKCR,"CLSID\%CLSID_CrSource%\ProgID",,,"CrSource"
-HKCR,"CLSID\%CLSID_CrSource%\Version",,,"4.0"
-
-;; CSvrOMUses
-HKCR,"CLSID\%CLSID_CSvrOMUses%",,,"Microsoft Scriptlet svr om Uses"
-HKCR,"CLSID\%CLSID_CSvrOMUses%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_CSvrOMUses%\InProcServer32","ThreadingModel",,"Apartment"
-HKCR,"CLSID\%CLSID_CSvrOMUses%\ProgID",,,"Scriptlet.SvrOm"
-HKCR,"Scriptlet.SvrOm",,,"Server OM Uses"
-HKCR,"Scriptlet.SvrOm\CLSID",,,"%CLSID_CSvrOMUses%"
-HKCR,"ScriptBridge.ScriptBridge",,,"Microsoft Scriptlet Component"
-HKCR,"ScriptBridge.ScriptBridge\CurVer",,,"ScriptBridge.ScriptBridge.1"
-HKCR,"ScriptBridge.ScriptBridge.1",,,"Microsoft Scriptlet Component"
-HKCR,"ScriptBridge.ScriptBridge.1\CLSID",,,"%CLSID_Scriptlet%"
 
 ;; HTADocument
-HKCR,"CLSID\%CLSID_HTADocument%",,,"Microsoft HTA Document 6.0"
 HKCR,"CLSID\%CLSID_HTADocument%\BrowseInPlace",,16
-HKCR,"CLSID\%CLSID_HTADocument%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_HTADocument%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_HTADocument%\MiscStatus",,,"2228625"
-HKCR,"CLSID\%CLSID_HTADocument%\Version",,,"6.0"
 
 ;; HTMLDocument
-HKCR,"CLSID\%CLSID_HTMLDocument%",,,"HTML Document"
 HKCR,"CLSID\%CLSID_HTMLDocument%\BrowseInPlace",,16
 ;;HKCR,"CLSID\%CLSID_HTMLDocument%\DefaultIcon",,0x00020000,"%16422%\Internet Explorer\iexplore.exe,1"
-HKCR,"CLSID\%CLSID_HTMLDocument%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_HTMLDocument%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_HTMLDocument%\MiscStatus",,,"2228625"
-HKCR,"CLSID\%CLSID_HTMLDocument%\ProgID",,,"htmlfile"
-HKCR,"CLSID\%CLSID_HTMLDocument%\Version",,,"6.0"
 HKCR,"CLSID\%CLSID_HTMLDocument%\EnablePlugin\.css",,,"PointPlus plugin"
 
 ;; HTMLPluginDocument
-HKCR,"CLSID\%CLSID_HTMLPluginDocument%",,,"Microsoft HTML Document 6.0"
 HKCR,"CLSID\%CLSID_HTMLPluginDocument%\BrowseInPlace",,16
-HKCR,"CLSID\%CLSID_HTMLPluginDocument%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_HTMLPluginDocument%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_HTMLPluginDocument%\MiscStatus",,,"0"
-HKCR,"CLSID\%CLSID_HTMLPluginDocument%\ProgID",,,"htmlfile_FullWindowEmbed"
-
-;; HTMLPopup
-HKCR,"CLSID\%CLSID_HTMLPopup%",,,"Microsoft Html Popup Window"
-HKCR,"CLSID\%CLSID_HTMLPopup%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_HTMLPopup%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; HTMLPopupDoc
-HKCR,"CLSID\%CLSID_HTMLPopupDoc%",,,"Microsoft Html Document for Popup Window"
-HKCR,"CLSID\%CLSID_HTMLPopupDoc%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_HTMLPopupDoc%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; HTMLServerDoc
-HKCR,"CLSID\%CLSID_HTMLServerDoc%",,,"Microsoft HTML Server Document 6.0"
-HKCR,"CLSID\%CLSID_HTMLServerDoc%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_HTMLServerDoc%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; HTMLWindowProxy
-HKCR,"CLSID\%CLSID_HTMLWindowProxy%",,,"Microsoft HTML Window Security Proxy"
-HKCR,"CLSID\%CLSID_HTMLWindowProxy%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_HTMLWindowProxy%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; IImageDecodeFilter
-HKCR,"CLSID\%CLSID_IImageDecodeFilter%",,,"CoICOFilter Class"
-HKCR,"CLSID\%CLSID_IImageDecodeFilter%\InProcServer32",,,%_MOD_PATH%
-HKCR,"CLSID\%CLSID_IImageDecodeFilter%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"MIME\Database\Content Type\image/x-wmf","Image Filter CLSID",,"%CLSID_IImageDecodeFilter%"
 HKCR,"MIME\Database\Content Type\image/x-wmf\Bits","0",1,04,00,00,00,FF,FF,FF,FF,D7,CD,C6,9A
-HKCR,"GIFFilter.CoGIFFilter\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"GIFFilter.CoGIFFilter.1",,,"CoGIFFilter Class"
-HKCR,"GIFFilter.CoGIFFilter.1\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"JPEGFilter.CoJPEGFilter",,,"CoJPEGFilter Class"
-HKCR,"JPEGFilter.CoJPEGFilter\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"JPEGFilter.CoJPEGFilter.1",,,"CoJPEGFilter Class"
-HKCR,"JPEGFilter.CoJPEGFilter.1\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"BMPFilter.CoBMPFilter",,,"CoBMPFilter Class"
-HKCR,"BMPFilter.CoBMPFilter\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"BMPFilter.CoBMPFilter.1",,,"CoBMPFilter Class"
-HKCR,"BMPFilter.CoBMPFilter.1\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"WMFFilter.CoWMFFilter",,,"CoWMFFilter Class"
-HKCR,"WMFFilter.CoWMFFilter\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"WMFFilter.CoWMFFilter.1",,,"CoWMFFilter Class"
-HKCR,"WMFFilter.CoWMFFilter.1\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"ICOFilter.CoICOFilter",,,"CoICOFilter Class"
-HKCR,"ICOFilter.CoICOFilter\CLSID",,,"%CLSID_IImageDecodeFilter%"
-HKCR,"ICOFilter.CoICOFilter.1",,,"CoICOFilter Class"
-HKCR,"ICOFilter.CoICOFilter.1\CLSID",,,"%CLSID_IImageDecodeFilter%"
-
-;; IImgCtx
-HKCR,"CLSID\%CLSID_IImgCtx%",,,"IImgCtx"
-HKCR,"CLSID\%CLSID_IImgCtx%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_IImgCtx%\InProcServer32","ThreadingModel",,"Apartment"
-HKCR,"CLSID\%CLSID_IImgCtx%\ProgID",,,"IImgCtx"
-HKCR,"IImgCtx",,,"IImgCtx"
-HKCR,"IImgCtx\CLSID",,,"%CLSID_IImgCtx%h"
-
-;; HTMLLoadOptions
-HKCR,"CLSID\%CLSID_HTMLLoadOptions%",,,"Microsoft HTML Load Options"
-HKCR,"CLSID\%CLSID_HTMLLoadOptions%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_HTMLLoadOptions%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; IntDitherer
-HKCR,"CLSID\%CLSID_IntDitherer%",,,"IntDitherer Class"
-HKCR,"CLSID\%CLSID_IntDitherer%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_IntDitherer%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; JSProtocol
-HKCR,"CLSID\%CLSID_JSProtocol%",,,"Microsoft HTML Javascript Pluggable Protocol"
-HKCR,"CLSID\%CLSID_JSProtocol%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_JSProtocol%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; MailtoProtocol
-HKCR,"CLSID\%CLSID_MailtoProtocol%",,,"Microsoft HTML Mailto Pluggable Protocol"
-HKCR,"CLSID\%CLSID_MailtoProtocol%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_MailtoProtocol%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; MHTMLDocument
-HKCR,"CLSID\%CLSID_MHTMLDocument%",,,"MHTML Document"
 HKCR,"CLSID\%CLSID_MHTMLDocument%\BrowseInPlace",,16
 ;;HKCR,"CLSID\%CLSID_MHTMLDocument%\DefaultIcon",,0x00020000,"%16422%\Internet Explorer\iexplore.exe,1"
-HKCR,"CLSID\%CLSID_MHTMLDocument%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_MHTMLDocument%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_MHTMLDocument%\MiscStatus",,,"2228625"
-HKCR,"CLSID\%CLSID_MHTMLDocument%\ProgID",,,"mhtmlfile"
-HKCR,"CLSID\%CLSID_MHTMLDocument%\Version",,,"6.0"
-
-;; ResProtocol
-HKCR,"CLSID\%CLSID_ResProtocol%",,,"Microsoft HTML Resource Pluggable Protocol"
-HKCR,"CLSID\%CLSID_ResProtocol%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_ResProtocol%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; Scriptlet
-HKCR,"CLSID\%CLSID_Scriptlet%",,,"Microsoft Scriptlet Component"
 HKCR,"CLSID\%CLSID_Scriptlet%\Control",,16
-HKCR,"CLSID\%CLSID_Scriptlet%\InProcServer32",,,"%_MOD_PATH%"
-HKCR,"CLSID\%CLSID_Scriptlet%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_Scriptlet%\MiscStatus",,,"0"
 HKCR,"CLSID\%CLSID_Scriptlet%\MiscStatus\1",,,"131473"
-HKCR,"CLSID\%CLSID_Scriptlet%\ProgID",,,"ScriptBridge.ScriptBridge.1"
 HKCR,"CLSID\%CLSID_Scriptlet%\Programmable",,16
 ;;HKCR,"CLSID\%CLSID_Scriptlet%\ToolboxBitmap32",,,"%16422%\Internet Explorer\iexplore.exe,1"
-HKCR,"CLSID\%CLSID_Scriptlet%\TypeLib",,,"%LIBID_MSHTML%"
-HKCR,"CLSID\%CLSID_Scriptlet%\Version",,,"4.0"
-HKCR,"CLSID\%CLSID_Scriptlet%\VersionIndependentProgID",,,"ScriptBridge.ScriptBridge"
 HKCR,"MIME\Database\Content Type\text/x-scriptlet","CLSID",,"%CLSID_Scriptlet%"
-
-;; SysimageProtocol
-HKCR,"CLSID\%CLSID_SysimageProtocol%",,,"Microsoft HTML Resource Pluggable Protocol"
-HKCR,"CLSID\%CLSID_SysimageProtocol%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_SysimageProtocol%\InProcServer32","ThreadingModel",,"Apartment"
-
-;; TridentAPI
-HKCR,"CLSID\%CLSID_TridentAPI%",,,"%Trident API%"
-HKCR,"CLSID\%CLSID_TridentAPI%\InProcServer32",,,"mshtml.dll"
-HKCR,"CLSID\%CLSID_TridentAPI%\InProcServer32","ThreadingModel",,"Apartment"
 
 
 [Protocols.Reg]
@@ -269,10 +66,7 @@ HKLM,"Software\Microsoft\Internet Explorer\AboutURLs","PostNotCached",2,"res://m
 HKLM,"Software\Microsoft\Internet Explorer\AboutURLs","mozilla",2,"res://mshtml.dll/about.moz"
 HKLM,"Software\Microsoft\Internet Explorer\Default Behaviors","VML",,  "CLSID:10072CEC-8CC1-11D1-986E-00A0C955B42E"
 HKLM,"Software\Microsoft\Internet Explorer\Default Behaviors","TIME",, "CLSID:476C391C-3E0D-11D2-B948-00C04FA32195"
-
-
-[WineGecko.Reg]
-HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://source.winehq.org/winegecko.php"
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility","Version",,"6.17"
 
 
 [FileAssoc.Reg]

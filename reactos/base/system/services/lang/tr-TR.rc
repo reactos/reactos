@@ -1,0 +1,14 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "başlat"
+    IDS_SERVICE_STOP    "durdur"
+    IDS_SERVICE_PAUSE   "duraklat"
+    IDS_SERVICE_RESUME  "sürdür"
+    IDS_SERVICE_RUNNING "Çalışıyor"
+    IDS_SERVICE_STOPPED "Durduruldu"
+    IDS_SERVICE_PAUSED  "Duraklatıldı"
+END

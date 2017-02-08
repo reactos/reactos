@@ -16,12 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /*****************************************************************************
  * IDirectDrawPalette::QueryInterface
@@ -94,10 +89,10 @@ static ULONG WINAPI ddraw_palette_Release(IDirectDrawPalette *iface)
     {
         wined3d_mutex_lock();
         wined3d_palette_decref(This->wineD3DPalette);
-        if(This->ifaceToRelease)
-        {
+        if ((This->flags & DDPCAPS_PRIMARYSURFACE) && This->ddraw->primary)
+            This->ddraw->primary->palette = NULL;
+        if (This->ifaceToRelease)
             IUnknown_Release(This->ifaceToRelease);
-        }
         wined3d_mutex_unlock();
 
         HeapFree(GetProcessHeap(), 0, This);
@@ -130,20 +125,6 @@ static HRESULT WINAPI ddraw_palette_Initialize(IDirectDrawPalette *iface,
     return DDERR_ALREADYINITIALIZED;
 }
 
-/*****************************************************************************
- * IDirectDrawPalette::GetCaps
- *
- * Returns the palette description
- *
- * Params:
- *  Caps: Address to store the caps at
- *
- * Returns:
- *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if Caps is NULL
- *  For more details, see IWineD3DPalette::GetCaps
- *
- *****************************************************************************/
 static HRESULT WINAPI ddraw_palette_GetCaps(IDirectDrawPalette *iface, DWORD *caps)
 {
     struct ddraw_palette *palette = impl_from_IDirectDrawPalette(iface);
@@ -151,7 +132,7 @@ static HRESULT WINAPI ddraw_palette_GetCaps(IDirectDrawPalette *iface, DWORD *ca
     TRACE("iface %p, caps %p.\n", iface, caps);
 
     wined3d_mutex_lock();
-    *caps = wined3d_palette_get_flags(palette->wineD3DPalette);
+    *caps = palette->flags;
     wined3d_mutex_unlock();
 
     return D3D_OK;
@@ -189,6 +170,10 @@ static HRESULT WINAPI ddraw_palette_SetEntries(IDirectDrawPalette *iface,
 
     wined3d_mutex_lock();
     hr = wined3d_palette_set_entries(palette->wineD3DPalette, flags, start, count, entries);
+
+    if (SUCCEEDED(hr) && palette->flags & DDPCAPS_PRIMARYSURFACE)
+        ddraw_surface_update_frontbuffer(palette->ddraw->primary, NULL, FALSE);
+
     wined3d_mutex_unlock();
 
     return hr;
@@ -250,22 +235,55 @@ struct ddraw_palette *unsafe_impl_from_IDirectDrawPalette(IDirectDrawPalette *if
     return CONTAINING_RECORD(iface, struct ddraw_palette, IDirectDrawPalette_iface);
 }
 
+static unsigned int palette_size(DWORD flags)
+{
+    switch (flags & (DDPCAPS_1BIT | DDPCAPS_2BIT | DDPCAPS_4BIT | DDPCAPS_8BIT))
+    {
+        case DDPCAPS_1BIT:
+            return 2;
+        case DDPCAPS_2BIT:
+            return 4;
+        case DDPCAPS_4BIT:
+            return 16;
+        case DDPCAPS_8BIT:
+            return 256;
+        default:
+            return ~0u;
+    }
+}
+
 HRESULT ddraw_palette_init(struct ddraw_palette *palette,
         struct ddraw *ddraw, DWORD flags, PALETTEENTRY *entries)
 {
+    unsigned int entry_count;
+    DWORD wined3d_flags = 0;
     HRESULT hr;
+
+    if ((entry_count = palette_size(flags)) == ~0u)
+    {
+        WARN("Invalid flags %#x.\n", flags);
+        return DDERR_INVALIDPARAMS;
+    }
+
+    if (flags & DDPCAPS_8BITENTRIES)
+        wined3d_flags |= WINED3D_PALETTE_8BIT_ENTRIES;
+    if (flags & DDPCAPS_ALLOW256)
+        wined3d_flags |= WINED3D_PALETTE_ALLOW_256;
+    if (flags & DDPCAPS_ALPHA)
+        wined3d_flags |= WINED3D_PALETTE_ALPHA;
 
     palette->IDirectDrawPalette_iface.lpVtbl = &ddraw_palette_vtbl;
     palette->ref = 1;
+    palette->flags = flags;
 
-    hr = wined3d_palette_create(ddraw->wined3d_device, flags,
-            entries, palette, &palette->wineD3DPalette);
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_palette_create(ddraw->wined3d_device,
+            wined3d_flags, entry_count, entries, &palette->wineD3DPalette)))
     {
         WARN("Failed to create wined3d palette, hr %#x.\n", hr);
         return hr;
     }
 
+    palette->ddraw = ddraw;
     palette->ifaceToRelease = (IUnknown *)&ddraw->IDirectDraw7_iface;
     IUnknown_AddRef(palette->ifaceToRelease);
 

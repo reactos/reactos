@@ -26,6 +26,7 @@
 #include <mmddk.h>
 #include <mmebuddy.h>
 #include <mment4.h>
+#include <mmebuddy_debug.h>
 //#include <debug.h>
 
 /* TODO: Give individual device names if someone has > 1 card */

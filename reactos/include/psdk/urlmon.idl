@@ -258,7 +258,23 @@ interface IBindStatusCallback : IUnknown
         BINDSTATUS_CONTENTDISPOSITIONFILENAME,
         BINDSTATUS_MIMETEXTPLAINMISMATCH,
         BINDSTATUS_PUBLISHERAVAILABLE,
-        BINDSTATUS_DISPLAYNAMEAVAILABLE
+        BINDSTATUS_DISPLAYNAMEAVAILABLE,
+        BINDSTATUS_SSLUX_NAVBLOCKED,
+        BINDSTATUS_SERVER_MIMETYPEAVAILABLE,
+        BINDSTATUS_SNIFFED_CLASSIDAVAILABLE,
+        BINDSTATUS_64BIT_PROGRESS,
+        BINDSTATUS_LAST = BINDSTATUS_64BIT_PROGRESS,
+        BINDSTATUS_RESERVED_0 = (BINDSTATUS_LAST+1),
+        BINDSTATUS_RESERVED_1 = (BINDSTATUS_RESERVED_0+1),
+        BINDSTATUS_RESERVED_2 = (BINDSTATUS_RESERVED_1+1),
+        BINDSTATUS_RESERVED_3 = (BINDSTATUS_RESERVED_2+1),
+        BINDSTATUS_RESERVED_4 = (BINDSTATUS_RESERVED_3+1),
+        BINDSTATUS_RESERVED_5 = (BINDSTATUS_RESERVED_4+1),
+        BINDSTATUS_RESERVED_6 = (BINDSTATUS_RESERVED_5+1),
+        BINDSTATUS_RESERVED_7 = (BINDSTATUS_RESERVED_6+1),
+        BINDSTATUS_RESERVED_8 = (BINDSTATUS_RESERVED_7+1),
+        BINDSTATUS_RESERVED_9 = (BINDSTATUS_RESERVED_8+1),
+        BINDSTATUS_LAST_PRIVATE = BINDSTATUS_RESERVED_9
     } BINDSTATUS;
 
 
@@ -276,7 +292,7 @@ interface IBindStatusCallback : IUnknown
         [in] ULONG ulProgress,
         [in] ULONG ulProgressMax,
         [in] ULONG ulStatusCode,
-        [in] LPCWSTR szStatusText);
+        [in, unique] LPCWSTR szStatusText);
 
     HRESULT OnStopBinding(
         [in] HRESULT hresult,
@@ -577,6 +593,7 @@ interface ICodeInstall : IWindowForBindingUI
  * IHttpSecurity interface
  */
 [
+    local,
     object,
     uuid(79eac9d7-bafa-11ce-8c82-00aa004ba90b),
     pointer_default(unique)
@@ -706,7 +723,14 @@ interface IInternetBindInfo : IUnknown
         BINDSTRING_URL,
         BINDSTRING_IID,
         BINDSTRING_FLAG_BIND_TO_OBJECT,
-        BINDSTRING_PTR_BIND_CONTEXT
+        BINDSTRING_PTR_BIND_CONTEXT,
+        BINDSTRING_XDR_ORIGIN,
+        BINDSTRING_DOWNLOADPATH,
+        BINDSTRING_ROOTDOC_URL,
+        BINDSTRING_INITIAL_FILENAME,
+        BINDSTRING_PROXY_USERNAME,
+        BINDSTRING_PROXY_PASSWORD,
+        BINDSTRING_ENTERPRISE_ID
     } BINDSTRING;
 
     HRESULT GetBindInfo(
@@ -1070,7 +1094,7 @@ cpp_quote("#define MAX_SIZE_SECURITY_ID 512")
         [in] DWORD dwAction,
         [out, size_is(cbPolicy)] BYTE *pPolicy,
         [in] DWORD cbPolicy,
-        [in] BYTE *pContext,
+        [in, unique] BYTE *pContext,
         [in] DWORD cbContext,
         [in] DWORD dwFlags,
         [in] DWORD dwReserved);
@@ -1115,7 +1139,7 @@ interface IInternetSecurityManagerEx : IInternetSecurityManager
     HRESULT ProcessUrlActionEx(
         [in] LPCWSTR pwszUrl,
         [in] DWORD dwAction,
-        [out] BYTE *pPolicy,
+        [out, size_is(cbPolicy)] BYTE *pPolicy,
         [in] DWORD cbPolicy,
         [in] BYTE *pContext,
         [in] DWORD cbContext,
@@ -1146,9 +1170,9 @@ interface IInternetSecurityManagerEx2 : IInternetSecurityManagerEx
     HRESULT ProcessUrlActionEx2(
         [in] IUri *pUri,
         [in] DWORD dwAction,
-        [out] BYTE *pPolicy,
+        [out, size_is(cbPolicy)] BYTE *pPolicy,
         [in] DWORD cbPolicy,
-        [in] BYTE *pContext,
+        [in, unique] BYTE *pContext,
         [in] DWORD cbContext,
         [in] DWORD dwFlags,
         [in] DWORD_PTR dwReserved,
@@ -1156,14 +1180,14 @@ interface IInternetSecurityManagerEx2 : IInternetSecurityManagerEx
 
     HRESULT GetSecurityIdEx2(
         [in] IUri *pUri,
-        [out] BYTE *pbSecurityId,
+        [out, size_is(*pcbSecurityId)] BYTE *pbSecurityId,
         [in, out] DWORD *pcbSecurityId,
         [in] DWORD_PTR dwReserved);
 
     HRESULT QueryCustomPolicyEx2(
         [in] IUri *pUri,
         [in] REFGUID guidKey,
-        [out] BYTE **ppPolicy,
+        [out, size_is(,*pcbPolicy)] BYTE **ppPolicy,
         [out] DWORD *pcbPolicy,
         [in] BYTE *pContext,
         [in] DWORD cbContext,
@@ -1419,28 +1443,28 @@ interface IInternetZoneManager : IUnknown
     HRESULT GetZoneCustomPolicy(
         [in]  DWORD dwZone,
         [in]  REFGUID guidKey,
-        [out] BYTE **ppPolicy,
+        [out, size_is(,*pcbPolicy)] BYTE **ppPolicy,
         [out] DWORD* pcbPolicy,
         [in]  URLZONEREG ulrZoneReg);
 
     HRESULT SetZoneCustomPolicy(
         [in] DWORD dwZone,
         [in] REFGUID guidKey,
-        [in] BYTE *ppPolicy,
+        [in, size_is(pcbPolicy)] BYTE *ppPolicy,
         [in] DWORD pcbPolicy,
         [in] URLZONEREG ulrZoneReg);
 
     HRESULT GetZoneActionPolicy(
         [in]  DWORD dwZone,
         [in]  DWORD dwAction,
-        [out] BYTE* pPolicy,
+        [out, size_is(cbPolicy)] BYTE* pPolicy,
         [in]  DWORD cbPolicy,
         [in]  URLZONEREG urlZoneReg);
 
     HRESULT SetZoneActionPolicy(
         [in] DWORD dwZone,
         [in] DWORD dwAction,
-        [in] BYTE* pPolicy,
+        [in, size_is(cbPolicy)] BYTE* pPolicy,
         [in] DWORD cbPolicy,
         [in] URLZONEREG urlZoneReg);
 
@@ -1490,7 +1514,7 @@ interface IInternetZoneManagerEx : IInternetZoneManager
     HRESULT GetZoneActionPolicyEx(
         [in]  DWORD dwZone,
         [in]  DWORD dwAction,
-        [out] BYTE* pPolicy,
+        [out, size_is(cbPolicy)] BYTE *pPolicy,
         [in]  DWORD cbPolicy,
         [in]  URLZONEREG urlZoneReg,
         [in]  DWORD dwFlags);
@@ -1498,7 +1522,7 @@ interface IInternetZoneManagerEx : IInternetZoneManager
     HRESULT SetZoneActionPolicyEx(
         [in] DWORD dwZone,
         [in] DWORD dwAction,
-        [in] BYTE* pPolicy,
+        [in, size_is(cbPolicy)] BYTE *pPolicy,
         [in] DWORD cbPolicy,
         [in] URLZONEREG urlZoneReg,
         [in] DWORD dwFlags);
@@ -1826,6 +1850,8 @@ cpp_quote("#define Uri_CREATE_NO_PRE_PROCESS_HTML_URI         0x1000")
 cpp_quote("#define Uri_CREATE_IE_SETTINGS                     0x2000")
 cpp_quote("#define Uri_CREATE_NO_IE_SETTINGS                  0x4000")
 cpp_quote("#define Uri_CREATE_NO_ENCODE_FORBIDDEN_CHARACTERS  0x8000")
+cpp_quote("#define Uri_CREATE_NORMALIZE_INTL_CHARACTERS   0x00010000")
+cpp_quote("#define Uri_CREATE_CANONICALIZE_ABSOLUTE       0x00020000")
 
 cpp_quote("#define Uri_DISPLAY_NO_FRAGMENT  0x00000001")
 cpp_quote("#define Uri_PUNYCODE_IDN_HOST    0x00000002")

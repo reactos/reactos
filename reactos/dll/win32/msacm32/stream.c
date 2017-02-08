@@ -28,22 +28,7 @@
  *	+ properly close ACM streams
  */
 
-#define WIN32_NO_STATUS
-
-//#include <stdarg.h>
-//#include <string.h>
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "mmsystem.h"
-#define NOBITMAP
-//#include "mmreg.h"
-//#include "msacm.h"
-#include <msacmdrv.h>
 #include "wineacm.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 static PWINE_ACMSTREAM	ACM_GetStream(HACMSTREAM has)
 {
@@ -259,6 +244,7 @@ MMRESULT WINAPI acmStreamOpen(PHACMSTREAM phas, HACMDRIVER had,
 		TRACE("%s => %08x\n", debugstr_w(wadi->pszDriverAlias), ret);
 		if (ret == MMSYSERR_NOERROR) {
 		    if (fdwOpen & ACM_STREAMOPENF_QUERY) {
+			MSACM_Message((HACMDRIVER)wad, ACMDM_STREAM_CLOSE, (LPARAM)&was->drvInst, 0);
 			acmDriverClose(had, 0L);
 		    }
 		    break;
@@ -312,9 +298,6 @@ MMRESULT WINAPI acmStreamPrepareHeader(HACMSTREAM has, PACMSTREAMHEADER pash,
     if (fdwPrepare)
 	ret = MMSYSERR_INVALFLAG;
 
-    if (pash->fdwStatus & ACMSTREAMHEADER_STATUSF_DONE)
-	return MMSYSERR_NOERROR;
-
     /* Note: the ACMSTREAMHEADER and ACMDRVSTREAMHEADER structs are of same
      * size. some fields are private to msacm internals, and are exposed
      * in ACMSTREAMHEADER in the dwReservedDriver array
@@ -335,7 +318,7 @@ MMRESULT WINAPI acmStreamPrepareHeader(HACMSTREAM has, PACMSTREAMHEADER pash,
     ret = MSACM_Message((HACMDRIVER)was->pDrv, ACMDM_STREAM_PREPARE, (LPARAM)&was->drvInst, (LPARAM)padsh);
     if (ret == MMSYSERR_NOERROR || ret == MMSYSERR_NOTSUPPORTED) {
 	ret = MMSYSERR_NOERROR;
-	padsh->fdwStatus &= ~(ACMSTREAMHEADER_STATUSF_DONE|ACMSTREAMHEADER_STATUSF_INQUEUE);
+	padsh->fdwStatus &= ~ACMSTREAMHEADER_STATUSF_INQUEUE;
 	padsh->fdwStatus |= ACMSTREAMHEADER_STATUSF_PREPARED;
 	padsh->fdwPrepared = padsh->fdwStatus;
 	padsh->dwPrepared = 0;
@@ -478,7 +461,7 @@ MMRESULT WINAPI acmStreamUnprepareHeader(HACMSTREAM has, PACMSTREAMHEADER pash,
     ret = MSACM_Message((HACMDRIVER)was->pDrv, ACMDM_STREAM_UNPREPARE, (LPARAM)&was->drvInst, (LPARAM)padsh);
     if (ret == MMSYSERR_NOERROR || ret == MMSYSERR_NOTSUPPORTED) {
 	ret = MMSYSERR_NOERROR;
-	padsh->fdwStatus &= ~(ACMSTREAMHEADER_STATUSF_DONE|ACMSTREAMHEADER_STATUSF_INQUEUE|ACMSTREAMHEADER_STATUSF_PREPARED);
+	padsh->fdwStatus &= ~(ACMSTREAMHEADER_STATUSF_INQUEUE|ACMSTREAMHEADER_STATUSF_PREPARED);
     }
     TRACE("=> (%d)\n", ret);
     return ret;

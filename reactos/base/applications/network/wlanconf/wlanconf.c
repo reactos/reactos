@@ -271,7 +271,7 @@ WlanDisconnect(HANDLE hAdapter, PIP_ADAPTER_INDEX_MAP IpInfo)
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_SET_OID_VALUE,
                                &SetOid,
-                               sizeof(SetOid),
+                               FIELD_OFFSET(NDISUIO_SET_OID, Data),
                                NULL,
                                0,
                                &dwBytesReturned,
@@ -739,6 +739,7 @@ WlanScan(HANDLE hAdapter)
     DWORD QueryOidSize;
     PNDIS_802_11_BSSID_LIST BssidList;
     DWORD i, j;
+    DWORD dwNetworkCount;
     WCHAR szMsgBuf[128];
 
     SetOid.Oid = OID_802_11_BSSID_LIST_SCAN;
@@ -747,7 +748,7 @@ WlanScan(HANDLE hAdapter)
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_SET_OID_VALUE,
                                &SetOid,
-                               sizeof(SetOid),
+                               FIELD_OFFSET(NDISUIO_SET_OID, Data),
                                NULL,
                                0,
                                &dwBytesReturned,
@@ -755,23 +756,44 @@ WlanScan(HANDLE hAdapter)
     if (!bSuccess)
         return FALSE;
 
-    /* Allocate space for 15 networks to be returned */
-    QueryOidSize = sizeof(NDISUIO_QUERY_OID) + (sizeof(NDIS_WLAN_BSSID) * 15);
-    QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
-    if (!QueryOid)
-        return FALSE;
+    /* Wait 2 seconds for the scan to return some results */
+    Sleep(2000);
 
-    QueryOid->Oid = OID_802_11_BSSID_LIST;
-    BssidList = (PNDIS_802_11_BSSID_LIST)QueryOid->Data;
+    /* Allocate space for 10 networks to be returned initially */
+    QueryOid = NULL;
+    dwNetworkCount = 10;
+    for (;;)
+    {
+        if (QueryOid)
+            HeapFree(GetProcessHeap(), 0, QueryOid);
 
-    bSuccess = DeviceIoControl(hAdapter,
-                               IOCTL_NDISUIO_QUERY_OID_VALUE,
-                               QueryOid,
-                               QueryOidSize,
-                               QueryOid,
-                               QueryOidSize,
-                               &dwBytesReturned,
-                               NULL);
+        QueryOidSize = sizeof(NDISUIO_QUERY_OID) + (sizeof(NDIS_WLAN_BSSID) * dwNetworkCount);
+        QueryOid = HeapAlloc(GetProcessHeap(), 0, QueryOidSize);
+        if (!QueryOid)
+            return FALSE;
+
+        QueryOid->Oid = OID_802_11_BSSID_LIST;
+        BssidList = (PNDIS_802_11_BSSID_LIST)QueryOid->Data;
+
+        bSuccess = DeviceIoControl(hAdapter,
+                                   IOCTL_NDISUIO_QUERY_OID_VALUE,
+                                   QueryOid,
+                                   QueryOidSize,
+                                   QueryOid,
+                                   QueryOidSize,
+                                   &dwBytesReturned,
+                                   NULL);
+        if (!bSuccess && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            /* Try allocating space for 10 more networks */
+            dwNetworkCount += 10;
+        }
+        else
+        {
+            break;
+        }
+    }
+
     if (!bSuccess)
     {
         HeapFree(GetProcessHeap(), 0, QueryOid);

@@ -3,12 +3,14 @@
  * PROJECT:         ReactOS kernel
  * FILE:            dll/ntdll/csr/capture.c
  * PURPOSE:         Routines for probing and capturing CSR API Messages
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <ntdll.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -100,6 +102,9 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
     /* Align it to a 4-byte boundary */
     BufferSize = (BufferSize + 3) & ~3;
 
+    /* Add the size of the alignment padding for each argument */
+    BufferSize += ArgumentCount * 3;
+
     /* Allocate memory from the port heap */
     CaptureBuffer = RtlAllocateHeap(CsrPortHeap, HEAP_ZERO_MEMORY, BufferSize);
     if (CaptureBuffer == NULL) return NULL;
@@ -127,7 +132,7 @@ ULONG
 NTAPI
 CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                           IN ULONG MessageLength,
-                          OUT PVOID *CapturedData)
+                          OUT PVOID* CapturedData)
 {
     if (MessageLength == 0)
     {
@@ -164,7 +169,7 @@ NTAPI
 CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                         IN PVOID MessageBuffer OPTIONAL,
                         IN ULONG MessageLength,
-                        OUT PVOID *CapturedData)
+                        OUT PVOID* CapturedData)
 {
     /* Simply allocate a message pointer in the buffer */
     CsrAllocateMessagePointer(CaptureBuffer, MessageLength, CapturedData);
@@ -188,34 +193,22 @@ CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer)
 }
 
 /*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-CsrCaptureMessageMultiUnicodeStringsInPlace(IN PCSR_CAPTURE_BUFFER *CaptureBuffer,
-                                            IN ULONG MessageCount,
-                                            IN PVOID MessageStrings)
-{
-    /* FIXME: allocate a buffer if we don't have one, and return it */
-    /* FIXME: call CsrCaptureMessageUnicodeStringInPlace for each string */
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
  * @implemented
  */
 VOID
 NTAPI
 CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN LPSTR String OPTIONAL,
+                        IN PCSTR String OPTIONAL,
                         IN ULONG StringLength,
                         IN ULONG MaximumLength,
-                        OUT PANSI_STRING CapturedString)
+                        OUT PSTRING CapturedString)
 {
-    ULONG ReturnedLength;
+    ASSERT(CapturedString != NULL);
 
-    /* If we don't have a string, initialize an empty one */
+    /*
+     * If we don't have a string, initialize an empty one,
+     * otherwise capture the given string.
+     */
     if (!String)
     {
         CapturedString->Length = 0;
@@ -225,31 +218,95 @@ CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
         CsrAllocateMessagePointer(CaptureBuffer,
                                   MaximumLength,
                                   (PVOID*)&CapturedString->Buffer);
-        return;
     }
-
-    /* Initialize this string */
-    CapturedString->Length = (USHORT)StringLength;
-
-    /* Allocate a buffer and get its size */
-    ReturnedLength = CsrAllocateMessagePointer(CaptureBuffer,
-                                               MaximumLength,
-                                               (PVOID*)&CapturedString->Buffer);
-    CapturedString->MaximumLength = (USHORT)ReturnedLength;
-
-    /* If the string had data */
-    if (StringLength)
+    else
     {
-        /* Copy it into the capture buffer */
-        RtlMoveMemory(CapturedString->Buffer, String, MaximumLength);
+        /* Cut-off the string length if needed */
+        if (StringLength > MaximumLength)
+            StringLength = MaximumLength;
 
-        /* If we don't take up the whole space */
-        if (CapturedString->Length < CapturedString->MaximumLength)
-        {
-            /* Null-terminate it */
-            CapturedString->Buffer[CapturedString->Length] = '\0';
-        }
+        CapturedString->Length = (USHORT)StringLength;
+
+        /* Allocate a buffer and get its size */
+        CapturedString->MaximumLength =
+            (USHORT)CsrAllocateMessagePointer(CaptureBuffer,
+                                              MaximumLength,
+                                              (PVOID*)&CapturedString->Buffer);
+
+        /* If the string has data, copy it into the buffer */
+        if (StringLength)
+            RtlMoveMemory(CapturedString->Buffer, String, StringLength);
     }
+
+    /* Null-terminate the string if we don't take up the whole space */
+    if (CapturedString->Length < CapturedString->MaximumLength)
+        CapturedString->Buffer[CapturedString->Length] = '\0';
+}
+
+static VOID
+CsrCaptureMessageUnicodeStringInPlace(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
+                                      IN PUNICODE_STRING String)
+{
+    ASSERT(String != NULL);
+
+    /* This is a way to capture the UNICODE string, since (Maximum)Length are also in bytes */
+    CsrCaptureMessageString(CaptureBuffer,
+                            (PCSTR)String->Buffer,
+                            String->Length,
+                            String->MaximumLength,
+                            (PSTRING)String);
+
+    /* Null-terminate the string */
+    if (String->MaximumLength >= String->Length + sizeof(WCHAR))
+    {
+        String->Buffer[String->Length / sizeof(WCHAR)] = L'\0';
+    }
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+CsrCaptureMessageMultiUnicodeStringsInPlace(OUT PCSR_CAPTURE_BUFFER* CaptureBuffer,
+                                            IN ULONG StringsCount,
+                                            IN PUNICODE_STRING* MessageStrings)
+{
+    ULONG Count;
+
+    if (!CaptureBuffer) return STATUS_INVALID_PARAMETER;
+
+    /* Allocate a new capture buffer if we don't have one already */
+    if (!*CaptureBuffer)
+    {
+        /* Compute the required size for the capture buffer */
+        ULONG Size = 0;
+
+        Count = 0;
+        while (Count < StringsCount)
+        {
+            if (MessageStrings[Count])
+                Size += MessageStrings[Count]->MaximumLength;
+
+            ++Count;
+        }
+
+        /* Allocate the capture buffer */
+        *CaptureBuffer = CsrAllocateCaptureBuffer(StringsCount, Size);
+        if (!*CaptureBuffer) return STATUS_NO_MEMORY;
+    }
+
+    /* Now capture each UNICODE string */
+    Count = 0;
+    while (Count < StringsCount)
+    {
+        if (MessageStrings[Count])
+            CsrCaptureMessageUnicodeStringInPlace(*CaptureBuffer, MessageStrings[Count]);
+
+        ++Count;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -264,7 +321,7 @@ CsrCaptureTimeout(IN ULONG Milliseconds,
     if (Milliseconds == -1) return NULL;
 
     /* Convert to relative ticks */
-    Timeout->QuadPart = Int32x32To64(Milliseconds, -10000);
+    Timeout->QuadPart = Milliseconds * -10000LL;
     return Timeout;
 }
 

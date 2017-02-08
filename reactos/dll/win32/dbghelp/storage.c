@@ -19,13 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
-#include "config.h"
-#include <assert.h>
-#include <stdlib.h>
-#include "wine/debug.h"
-
 #include "dbghelp_private.h"
+
 #ifdef USE_STATS
 #include <math.h>
 #endif
@@ -287,7 +282,7 @@ void*   sparse_array_add(struct sparse_array* sa, unsigned long key,
     pk2i = sparse_array_lookup(sa, key, &idx);
     if (pk2i && pk2i->key == key)
     {
-        FIXME("re adding an existing key\n");
+        FIXME("re-adding an existing key\n");
         return NULL;
     }
     to = vector_add(&sa->key2index, pool);
@@ -358,20 +353,19 @@ void hash_table_destroy(struct hash_table* ht)
     variance = (double)sq / ht->num_buckets - mean * mean;
     FIXME("STATS: elts[num:%-4u size:%u mean:%f] buckets[min:%-4u variance:%+f max:%-4u]\n",
           ht->num_elts, ht->num_buckets, mean, min, variance, max);
-#if 1
+
     for (i = 0; i < ht->num_buckets; i++)
     {
         for (len = 0, elt = ht->buckets[i]; elt; elt = elt->next) len++;
         if (len == max)
         {
-            FIXME("Longuest bucket:\n");
+            FIXME("Longest bucket:\n");
             for (elt = ht->buckets[i]; elt; elt = elt->next)
                 FIXME("\t%s\n", elt->name);
             break;
         }
 
     }
-#endif
 #endif
 }
 

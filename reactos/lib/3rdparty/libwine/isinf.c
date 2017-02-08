@@ -21,7 +21,7 @@
 #include "config.h"
 #include "wine/port.h"
 
-#if !defined(HAVE_ISINF) && !defined(_ISINF) && !defined(isinf)
+#if !defined(HAVE_ISINF) && !defined(isinf)
 
 #ifdef HAVE_IEEEFP_H
 #include <ieeefp.h>
@@ -43,4 +43,4 @@ int isinf(double x)
 #error No isinf() implementation available.
 #endif
 
-#endif /* !defined(HAVE_ISINF) && !defined(_ISINF) && !defined(isinf) */
+#endif /* !defined(HAVE_ISINF) && !defined(isinf) */

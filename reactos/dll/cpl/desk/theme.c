@@ -9,6 +9,11 @@
 
 #include "desk.h"
 
+#include <shlwapi.h>
+#include <uxtheme.h>
+#include <uxundoc.h>
+#include <vssym32.h>
+
 static const WCHAR g_CPColors[] = L"Control Panel\\Colors";
 static const WCHAR g_CPANewSchemes[] = L"Control Panel\\Appearance\\New Schemes";
 static const WCHAR g_CPMetrics[] = L"Control Panel\\Desktop\\WindowMetrics";
@@ -573,6 +578,16 @@ LoadClassicColorSchemes(VOID)
                                    NULL, 
                                    0, 
                                    NULL);
+        if (Result != ERROR_SUCCESS)
+        {
+            Result = RegLoadMUIStringW(hkScheme, 
+                                       L"LegacyName", 
+                                       wstrDisplayName, 
+                                       sizeof(wstrDisplayName), 
+                                       NULL, 
+                                       0, 
+                                       NULL);
+        }
 
         if (Result == ERROR_SUCCESS)
             pCurrentStyle = CreateStyle(wstrStyleName, wstrDisplayName);
@@ -880,4 +895,3 @@ DrawThemePreview(IN HDC hdcMem, IN PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSe
 
     return SUCCEEDED(hres);
 }
-

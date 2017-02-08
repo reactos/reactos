@@ -16,22 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "ieframe.h"
 
-#include <exdispid.h>
-#include <shellapi.h>
-#include <winreg.h>
-#include <shlwapi.h>
 #include <wininet.h>
-//#include "mshtml.h"
-#include "resource.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 static const WCHAR emptyW[] = {0};
 
@@ -115,7 +102,7 @@ static void set_status_text(BindStatusCallback *This, ULONG statuscode, LPCWSTR 
     }
 
     V_VT(&arg) = VT_BSTR;
-    V_BSTR(&arg) = str ? SysAllocString(buffer) : NULL;
+    V_BSTR(&arg) = str ? SysAllocString(buffer) : SysAllocString(emptyW);
     TRACE("=> %s\n", debugstr_w(V_BSTR(&arg)));
 
     call_sink(This->doc_host->cps.wbe2, DISPID_STATUSTEXTCHANGE, &dispparams);
@@ -142,8 +129,15 @@ HRESULT set_dochost_url(DocHost *This, const WCHAR *url)
     heap_free(This->url);
     This->url = new_url;
 
-    This->container_vtbl->SetURL(This, This->url);
+    This->container_vtbl->set_url(This, This->url);
     return S_OK;
+}
+
+void notify_download_state(DocHost *dochost, BOOL is_downloading)
+{
+    DISPPARAMS dwl_dp = {NULL};
+    TRACE("(%x)\n", is_downloading);
+    call_sink(dochost->cps.wbe2, is_downloading ? DISPID_DOWNLOADBEGIN : DISPID_DOWNLOADCOMPLETE, &dwl_dp);
 }
 
 static inline BindStatusCallback *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
@@ -357,6 +351,8 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallback *ifac
     if(!This->doc_host)
         return S_OK;
 
+    if(!This->doc_host->olecmd)
+        notify_download_state(This->doc_host, FALSE);
     if(FAILED(hresult))
         handle_navigation_error(This->doc_host, hresult, This->url, NULL);
 
@@ -666,7 +662,7 @@ static HRESULT create_moniker(LPCWSTR url, IMoniker **mon)
         return CreateURLMoniker(NULL, url, mon);
 
     size = sizeof(new_url)/sizeof(WCHAR);
-    hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME | URL_APPLY_GUESSFILE);
+    hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME | URL_APPLY_GUESSFILE | URL_APPLY_DEFAULT);
     TRACE("was %s got %s\n", debugstr_w(url), debugstr_w(new_url));
     if(FAILED(hres)) {
         WARN("UrlApplyScheme failed: %08x\n", hres);
@@ -875,6 +871,10 @@ static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mo
         return S_OK;
     }
 
+    notify_download_state(This, TRUE);
+    on_commandstate_change(This, CSC_NAVIGATEBACK, FALSE);
+    on_commandstate_change(This, CSC_NAVIGATEFORWARD, FALSE);
+
     if(This->document)
         deactivate_document(This);
 
@@ -920,6 +920,7 @@ static void navigate_bsc_proc(DocHost *This, task_header_t *t)
 HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
                      const VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
+    SAFEARRAY *post_array = NULL;
     PBYTE post_data = NULL;
     ULONG post_data_len = 0;
     LPWSTR headers = NULL;
@@ -927,15 +928,22 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
 
     TRACE("navigating to %s\n", debugstr_w(url));
 
-    if((Flags && V_VT(Flags) != VT_EMPTY)
-       || (TargetFrameName && V_VT(TargetFrameName) != VT_EMPTY))
-        FIXME("Unsupported args (Flags %p:%d; TargetFrameName %p:%d)\n",
-                Flags, Flags ? V_VT(Flags) : -1, TargetFrameName,
-                TargetFrameName ? V_VT(TargetFrameName) : -1);
+    if((Flags && V_VT(Flags) != VT_EMPTY && V_VT(Flags) != VT_ERROR)
+       || (TargetFrameName && V_VT(TargetFrameName) != VT_EMPTY && V_VT(TargetFrameName) != VT_ERROR))
+        FIXME("Unsupported args (Flags %s; TargetFrameName %s)\n", debugstr_variant(Flags), debugstr_variant(TargetFrameName));
 
-    if(PostData && V_VT(PostData) == (VT_ARRAY | VT_UI1) && V_ARRAY(PostData)) {
-        SafeArrayAccessData(V_ARRAY(PostData), (void**)&post_data);
-        post_data_len = V_ARRAY(PostData)->rgsabound[0].cElements;
+    if(PostData) {
+        if(V_VT(PostData) & VT_ARRAY)
+            post_array = V_ISBYREF(PostData) ? *V_ARRAYREF(PostData) : V_ARRAY(PostData);
+        else
+            WARN("Invalid post data %s\n", debugstr_variant(PostData));
+    }
+
+    if(post_array) {
+        LONG elem_max;
+        SafeArrayAccessData(post_array, (void**)&post_data);
+        SafeArrayGetUBound(post_array, 1, &elem_max);
+        post_data_len = (elem_max+1) * SafeArrayGetElemsize(post_array);
     }
 
     if(Headers && V_VT(Headers) == VT_BSTR) {
@@ -974,7 +982,7 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
     }
 
     if(post_data)
-        SafeArrayUnaccessData(V_ARRAY(PostData));
+        SafeArrayUnaccessData(post_array);
 
     return hres;
 }
@@ -1058,27 +1066,56 @@ HRESULT go_home(DocHost *This)
     return navigate_url(This, wszPageName, NULL, NULL, NULL, NULL);
 }
 
-HRESULT go_back(DocHost *This)
+static HRESULT navigate_history(DocHost *This, unsigned travellog_pos)
 {
-    WCHAR *url;
+    IPersistHistory *persist_history;
+    travellog_entry_t *entry;
+    LARGE_INTEGER li;
     HRESULT hres;
 
-    if(!This->travellog_position) {
+    if(!This->doc_navigate) {
+        FIXME("unsupported doc_navigate FALSE\n");
+        return E_NOTIMPL;
+    }
+
+    This->travellog.loading_pos = travellog_pos;
+    entry = This->travellog.log + This->travellog.loading_pos;
+
+    update_navigation_commands(This);
+
+    if(!entry->stream)
+        return async_doc_navigate(This, entry->url, NULL, NULL, 0, FALSE);
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IPersistHistory, (void**)&persist_history);
+    if(FAILED(hres))
+        return hres;
+
+    li.QuadPart = 0;
+    IStream_Seek(entry->stream, li, STREAM_SEEK_SET, NULL);
+
+    hres = IPersistHistory_LoadHistory(persist_history, entry->stream, NULL);
+    IPersistHistory_Release(persist_history);
+    return hres;
+}
+
+HRESULT go_back(DocHost *This)
+{
+    if(!This->travellog.position) {
         WARN("No history available\n");
         return E_FAIL;
     }
 
-    url = This->travellog[--This->travellog_position].url;
+    return navigate_history(This, This->travellog.position-1);
+}
 
-    if(This->doc_navigate) {
-        hres = async_doc_navigate(This, url, NULL, NULL, 0, FALSE);
-    }else {
-        FIXME("unsupported doc_navigate FALSE\n");
-        hres = E_NOTIMPL;
+HRESULT go_forward(DocHost *This)
+{
+    if(This->travellog.position >= This->travellog.length) {
+        WARN("No history available\n");
+        return E_FAIL;
     }
 
-    heap_free(url);
-    return hres;
+    return navigate_history(This, This->travellog.position+1);
 }
 
 HRESULT get_location_url(DocHost *This, BSTR *ret)
@@ -1423,6 +1460,45 @@ static const ITargetFramePriv2Vtbl TargetFramePriv2Vtbl = {
     TargetFramePriv2_AggregatedNavigation2
 };
 
+static inline HlinkFrame *impl_from_IWebBrowserPriv2IE9(IWebBrowserPriv2IE9 *iface)
+{
+    return CONTAINING_RECORD(iface, HlinkFrame, IWebBrowserPriv2IE9_iface);
+}
+
+static HRESULT WINAPI WebBrowserPriv2IE9_QueryInterface(IWebBrowserPriv2IE9 *iface, REFIID riid, void **ppv)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    return IUnknown_QueryInterface(This->outer, riid, ppv);
+}
+
+static ULONG WINAPI WebBrowserPriv2IE9_AddRef(IWebBrowserPriv2IE9 *iface)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    return IUnknown_AddRef(This->outer);
+}
+
+static ULONG WINAPI WebBrowserPriv2IE9_Release(IWebBrowserPriv2IE9 *iface)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    return IUnknown_Release(This->outer);
+}
+
+static HRESULT WINAPI WebBrowserPriv2IE9_NavigateWithBindCtx2(IWebBrowserPriv2IE9 *iface, IUri *uri, VARIANT *flags,
+        VARIANT *target_frame, VARIANT *post_data, VARIANT *headers, IBindCtx *bind_ctx, LPOLESTR url_fragment, DWORD unused)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    FIXME("(%p)->(%p %s %s %s %s %p %s)\n", This, uri, debugstr_variant(flags), debugstr_variant(target_frame),
+          debugstr_variant(post_data), debugstr_variant(headers), bind_ctx, debugstr_w(url_fragment));
+    return E_NOTIMPL;
+}
+
+static const IWebBrowserPriv2IE9Vtbl WebBrowserPriv2IE9Vtbl = {
+    WebBrowserPriv2IE9_QueryInterface,
+    WebBrowserPriv2IE9_AddRef,
+    WebBrowserPriv2IE9_Release,
+    WebBrowserPriv2IE9_NavigateWithBindCtx2
+};
+
 BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IHlinkFrame, riid)) {
@@ -1437,6 +1513,9 @@ BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
     }else if(IsEqualGUID(&IID_ITargetFramePriv2, riid)) {
         TRACE("(%p)->(IID_ITargetFramePriv2 %p)\n", This, ppv);
         *ppv = &This->ITargetFramePriv2_iface;
+    }else if(IsEqualGUID(&IID_IWebBrowserPriv2IE9, riid)) {
+        TRACE("(%p)->(IID_IWebBrowserPriv2IE9 %p)\n", This, ppv);
+        *ppv = &This->IWebBrowserPriv2IE9_iface;
     }else {
         return FALSE;
     }
@@ -1450,6 +1529,7 @@ void HlinkFrame_Init(HlinkFrame *This, IUnknown *outer, DocHost *doc_host)
     This->IHlinkFrame_iface.lpVtbl   = &HlinkFrameVtbl;
     This->ITargetFrame2_iface.lpVtbl = &TargetFrame2Vtbl;
     This->ITargetFramePriv2_iface.lpVtbl = &TargetFramePriv2Vtbl;
+    This->IWebBrowserPriv2IE9_iface.lpVtbl = &WebBrowserPriv2IE9Vtbl;
 
     This->outer = outer;
     This->doc_host = doc_host;

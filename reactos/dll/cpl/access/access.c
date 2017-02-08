@@ -3,11 +3,13 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/access.c
  * PURPOSE:         Main control panel code
- * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
+ * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
  */
 
 #include "access.h"
+
+#include <cpl.h>
 
 #define NUM_APPLETS	(1)
 
@@ -182,7 +184,10 @@ SystemApplet(VOID)
         return 0;
 
     if (!ReadSettings(pGlobalData))
+    {
+        HeapFree(GetProcessHeap(), 0, pGlobalData);
         return 0;
+    }
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);

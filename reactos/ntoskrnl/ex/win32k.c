@@ -14,6 +14,12 @@
 #pragma alloc_text(INIT, ExpWin32kInit)
 #endif
 
+typedef struct _WIN32_KERNEL_OBJECT_HEADER
+{
+    ULONG SessionId;
+} WIN32_KERNEL_OBJECT_HEADER, *PWIN32_KERNEL_OBJECT_HEADER;
+
+
 /* DATA **********************************************************************/
 
 POBJECT_TYPE ExWindowStationObjectType = NULL;
@@ -35,15 +41,76 @@ GENERIC_MAPPING ExpDesktopMapping =
     STANDARD_RIGHTS_REQUIRED
 };
 
-PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse = NULL;
-PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete = NULL;
-PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose = NULL;
-PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose = NULL;
-PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
-PKWIN32_OPENMETHOD_CALLOUT ExpDesktopObjectOpen = NULL;
-PKWIN32_CLOSEMETHOD_CALLOUT ExpDesktopObjectClose = NULL;
+PKWIN32_SESSION_CALLOUT ExpWindowStationObjectParse = NULL;
+PKWIN32_SESSION_CALLOUT ExpWindowStationObjectDelete = NULL;
+PKWIN32_SESSION_CALLOUT ExpWindowStationObjectOkToClose = NULL;
+PKWIN32_SESSION_CALLOUT ExpDesktopObjectOkToClose = NULL;
+PKWIN32_SESSION_CALLOUT ExpDesktopObjectDelete = NULL;
+PKWIN32_SESSION_CALLOUT ExpDesktopObjectOpen = NULL;
+PKWIN32_SESSION_CALLOUT ExpDesktopObjectClose = NULL;
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS
+NTAPI
+ExpWin32SessionCallout(
+    _In_ PVOID Object,
+    _In_ PKWIN32_SESSION_CALLOUT CalloutProcedure,
+    _Inout_opt_ PVOID Parameter)
+{
+    PWIN32_KERNEL_OBJECT_HEADER Win32ObjectHeader;
+    PVOID SessionEntry = NULL;
+    KAPC_STATE ApcState;
+    NTSTATUS Status;
+
+    /* The objects have a common header. And the kernel accesses it!
+       Thanks MS for this kind of retarded "design"! */
+    Win32ObjectHeader = Object;
+
+    /* Check if we are not already in the correct session */
+    if (!PsGetCurrentProcess()->ProcessInSession ||
+        (PsGetCurrentProcessSessionId() != Win32ObjectHeader->SessionId))
+    {
+        /* Get the session from the objects session Id */
+        DPRINT("SessionId == %d\n", Win32ObjectHeader->SessionId);
+        SessionEntry = MmGetSessionById(Win32ObjectHeader->SessionId);
+        if (SessionEntry == NULL)
+        {
+            /* The requested session does not even exist! */
+            ASSERT(FALSE);
+            return STATUS_NOT_FOUND;
+        }
+
+        /* Attach to the session */
+        Status = MmAttachSession(SessionEntry, &ApcState);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Could not attach to 0x%p, object %p, callout 0x%p\n",
+                    SessionEntry,
+                    Win32ObjectHeader,
+                    CalloutProcedure);
+
+            /* Cleanup and return */
+            MmQuitNextSession(SessionEntry);
+            ASSERT(FALSE);
+            return Status;
+        }
+    }
+
+    /* Call the callout routine */
+    Status = CalloutProcedure(Parameter);
+
+    /* Check if we have a session */
+    if (SessionEntry != NULL)
+    {
+        /* Detach from the session and quit using it */
+        MmDetachSession(SessionEntry, &ApcState);
+        MmQuitNextSession(SessionEntry);
+    }
+
+    /* Return the callback status */
+    return Status;
+}
 
 BOOLEAN
 NTAPI
@@ -53,13 +120,18 @@ ExpDesktopOkToClose( IN PEPROCESS Process OPTIONAL,
                      IN KPROCESSOR_MODE AccessMode)
 {
     WIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters;
+    NTSTATUS Status;
 
     Parameters.Process = Process;
     Parameters.Object = Object;
     Parameters.Handle = Handle;
     Parameters.PreviousMode = AccessMode;
 
-    return NT_SUCCESS(ExpDesktopObjectOkToClose(&Parameters));
+    Status = ExpWin32SessionCallout(Object,
+                                    ExpDesktopObjectOkToClose,
+                                    &Parameters);
+
+    return NT_SUCCESS(Status);
 }
 
 BOOLEAN
@@ -70,13 +142,18 @@ ExpWindowStationOkToClose( IN PEPROCESS Process OPTIONAL,
                      IN KPROCESSOR_MODE AccessMode)
 {
     WIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters;
+    NTSTATUS Status;
 
     Parameters.Process = Process;
     Parameters.Object = Object;
     Parameters.Handle = Handle;
     Parameters.PreviousMode = AccessMode;
 
-    return NT_SUCCESS(ExpWindowStationObjectOkToClose(&Parameters));
+    Status = ExpWin32SessionCallout(Object,
+                                    ExpWindowStationObjectOkToClose,
+                                    &Parameters);
+
+    return NT_SUCCESS(Status);
 }
 
 VOID
@@ -88,8 +165,9 @@ ExpWinStaObjectDelete(PVOID DeletedObject)
     /* Fill out the callback structure */
     Parameters.Object = DeletedObject;
 
-    /* Call the Registered Callback */
-    ExpWindowStationObjectDelete(&Parameters);
+    ExpWin32SessionCallout(DeletedObject,
+                           ExpWindowStationObjectDelete,
+                           &Parameters);
 }
 
 NTSTATUS
@@ -119,8 +197,9 @@ ExpWinStaObjectParse(IN PVOID ParseObject,
     Parameters.SecurityQos = SecurityQos;
     Parameters.Object = Object;
 
-    /* Call the Registered Callback */
-    return ExpWindowStationObjectParse(&Parameters);
+    return ExpWin32SessionCallout(ParseObject,
+                                  ExpWindowStationObjectParse,
+                                  &Parameters);
 }
 VOID
 NTAPI
@@ -131,12 +210,13 @@ ExpDesktopDelete(PVOID DeletedObject)
     /* Fill out the callback structure */
     Parameters.Object = DeletedObject;
 
-    /* Call the Registered Callback */
-    ExpDesktopObjectDelete(&Parameters);
+    ExpWin32SessionCallout(DeletedObject,
+                           ExpDesktopObjectDelete,
+                           &Parameters);
 }
 
 NTSTATUS
-NTAPI 
+NTAPI
 ExpDesktopOpen(IN OB_OPEN_REASON Reason,
                IN PEPROCESS Process OPTIONAL,
                IN PVOID ObjectBody,
@@ -151,11 +231,13 @@ ExpDesktopOpen(IN OB_OPEN_REASON Reason,
     Parameters.GrantedAccess = GrantedAccess;
     Parameters.HandleCount = HandleCount;
 
-    return ExpDesktopObjectOpen(&Parameters);
+    return ExpWin32SessionCallout(ObjectBody,
+                                  ExpDesktopObjectOpen,
+                                  &Parameters);
 }
 
 VOID
-NTAPI 
+NTAPI
 ExpDesktopClose(IN PEPROCESS Process OPTIONAL,
                 IN PVOID Object,
                 IN ACCESS_MASK GrantedAccess,
@@ -170,7 +252,9 @@ ExpDesktopClose(IN PEPROCESS Process OPTIONAL,
     Parameters.ProcessHandleCount = ProcessHandleCount;
     Parameters.SystemHandleCount = SystemHandleCount;
 
-    ExpDesktopObjectClose(&Parameters);
+    ExpWin32SessionCallout(Object,
+                           ExpDesktopObjectClose,
+                           &Parameters);
 }
 
 BOOLEAN
@@ -202,7 +286,7 @@ ExpWin32kInit(VOID)
                                 NULL,
                                 &ExWindowStationObjectType);
     if (!NT_SUCCESS(Status)) return FALSE;
-    
+
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
     ObjectTypeInitializer.GenericMapping = ExpDesktopMapping;
@@ -211,12 +295,12 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.OkayToCloseProcedure = ExpDesktopOkToClose;
     ObjectTypeInitializer.OpenProcedure = ExpDesktopOpen;
     ObjectTypeInitializer.CloseProcedure = ExpDesktopClose;
-    ObCreateObjectType(&Name,
-                       &ObjectTypeInitializer,
-                       NULL,
-                       &ExDesktopObjectType);
+    Status = ObCreateObjectType(&Name,
+                                &ObjectTypeInitializer,
+                                NULL,
+                                &ExDesktopObjectType);
     if (!NT_SUCCESS(Status)) return FALSE;
-    
+
     return TRUE;
 }
 

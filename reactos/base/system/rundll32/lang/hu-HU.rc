@@ -1,10 +1,9 @@
-/*
- * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
- */
+/* Hungarian translation by Peter Nagy <nagylakas@gmail.com> */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded,   "A(z) '%s' állományt, vagy valamelyik összetevõjét nem sikerült megnyitni"
-    IDS_MissingEntry,   "Hiányzó bejegyzés: %s\nIn A Következõ állomány nem tölthetõ be: %s"
+    IDS_DllNotLoaded "A(z) '%s' állományt, vagy valamelyik összetevõjét nem sikerült megnyitni"
+    IDS_MissingEntry "Hiányzó bejegyzés: %s\nIn A Következõ állomány nem tölthetõ be: %s"
 END

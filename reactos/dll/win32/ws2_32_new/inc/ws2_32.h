@@ -1,9 +1,12 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2.2 Library
- * FILE:        lib/ws2_32.h
+ * FILE:        dll/win32/ws2_32_new/inc/ws2_32.h
  * PURPOSE:     WinSock 2.2 Main Header
  */
+
+#ifndef _WS2_32_NEW_PCH_
+#define _WS2_32_NEW_PCH_
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -23,16 +26,15 @@
 #include <winreg.h>
 #include <winnls.h>
 #include <winuser.h>
-#include <ws2tcpip.h>
 #include <ws2spi.h>
-//#include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
-//#include <svcguid.h>
+#include <pseh/pseh2.h>
 
 /* Winsock Helper Header */
 #include <ws2help.h>
 
 #include <nsp_dns.h>
+#include <iptypes.h>
 
 /* Missing definitions */
 #define SO_OPENTYPE                 0x7008
@@ -40,3 +42,5 @@
 
 /* Internal headers */
 #include "ws2_32p.h"
+
+#endif /* _WS2_32_NEW_PCH_ */

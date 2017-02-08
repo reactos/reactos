@@ -11,10 +11,16 @@
 
 #include "srv.h"
 
+#include <winreg.h>
+#include <ndk/cmfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
 /* DATA ***********************************************************************/
+
+// Debug Flag
+ULONG CsrDebug = 0; // 0xFFFFFFFF;
 
 HANDLE CsrHeap = NULL;
 HANDLE CsrObjectDirectory = NULL;
@@ -25,14 +31,12 @@ PCSR_THREAD CsrSbApiRequestThreadPtr;
 HANDLE CsrSmApiPort = NULL;
 HANDLE hSbApiPort = NULL;
 HANDLE CsrApiPort = NULL;
-ULONG CsrDebug = 0; // 0xFFFFFFFF;
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
 ULONG SessionId;
 HANDLE BNOLinksDirectory;
 HANDLE SessionObjectDirectory;
 HANDLE DosDevicesDirectory;
-HANDLE CsrInitializationEvent;
 SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 
 
@@ -572,7 +576,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         ParameterValue = NULL;
         ParameterValue = strchr(ParameterName, '=');
         if (ParameterValue) *ParameterValue++ = ANSI_NULL;
-        DPRINT1("Name=%s, Value=%s\n", ParameterName, ParameterValue);
+        DPRINT("Name=%s, Value=%s\n", ParameterName, ParameterValue);
 
         /* Check for Object Directory */
         if (_stricmp(ParameterName, "ObjectDirectory") == 0)
@@ -963,19 +967,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Create the Init Event */
-    Status = NtCreateEvent(&CsrInitializationEvent,
-                           EVENT_ALL_ACCESS,
-                           NULL,
-                           SynchronizationEvent,
-                           FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSRSRV:%s: NtCreateEvent failed (Status=%08lx)\n",
-                __FUNCTION__, Status);
-        return Status;
-    }
-
     /* Cache System Basic Information so we don't always request it */
     Status = NtQuerySystemInformation(SystemBasicInformation,
                                       &CsrNtSysInfo,
@@ -983,7 +974,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: NtQuerySystemInformation failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: NtQuerySystemInformation failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -995,7 +986,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrSetProcessSecurity();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrSetProcessSecurity failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrSetProcessSecurity failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1004,7 +995,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrInitializeNtSessionList();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrInitializeSessions failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrInitializeSessions failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1013,7 +1004,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrInitializeProcessStructure();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrInitializeProcessStructure failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrInitializeProcessStructure failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1022,7 +1013,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrParseServerCommandLine(ArgumentCount, Arguments);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrParseServerCommandLine failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrParseServerCommandLine failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1031,7 +1022,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrInitCsrRootProcess();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrInitCsrRootProcess failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrInitCsrRootProcess failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1040,7 +1031,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrApiPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrApiPortInitialize failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrApiPortInitialize failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1049,7 +1040,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrSbApiPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrSbApiPortInitialize failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrSbApiPortInitialize failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1061,28 +1052,16 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                            &CsrSmApiPort);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: SmConnectToSm failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: SmConnectToSm failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
-
-    /* Finito! Signal the event */
-    Status = NtSetEvent(CsrInitializationEvent, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSRSRV:%s: NtSetEvent failed (Status=%08lx)\n",
-                __FUNCTION__, Status);
-        return Status;
-    }
-
-    /* Close the event handle now */
-    NtClose(CsrInitializationEvent);
 
     /* Have us handle Hard Errors */
     Status = NtSetDefaultHardErrorPort(CsrApiPort);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: NtSetDefaultHardErrorPort failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: NtSetDefaultHardErrorPort failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }

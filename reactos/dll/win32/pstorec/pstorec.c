@@ -57,8 +57,6 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinst);
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }
@@ -398,5 +396,5 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    return S_OK;
+    return S_FALSE;
 }

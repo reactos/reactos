@@ -275,14 +275,17 @@ typedef [switch_type(DOMAIN_INFORMATION_CLASS)] union _SAMPR_DOMAIN_INFO_BUFFER
     [case(DomainModifiedInformation2)] DOMAIN_MODIFIED_INFORMATION2 Modified2;
 } SAMPR_DOMAIN_INFO_BUFFER, *PSAMPR_DOMAIN_INFO_BUFFER;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef enum _DOMAIN_DISPLAY_INFORMATION
 {
     DomainDisplayUser = 1,
     DomainDisplayMachine,
     DomainDisplayGroup,
     DomainDisplayOemUser,
-    DomainDisplayOemGroup
+    DomainDisplayOemGroup,
+    DomainDisplayServer
 } DOMAIN_DISPLAY_INFORMATION, *PDOMAIN_DISPLAY_INFORMATION;
+cpp_quote("#endif")
 
 typedef struct _SAMPR_DOMAIN_DISPLAY_USER
 {
@@ -363,10 +366,10 @@ typedef [switch_type(DOMAIN_DISPLAY_INFORMATION)] union _SAMPR_DISPLAY_INFO_BUFF
     [case(DomainDisplayOemGroup)] SAMPR_DOMAIN_DISPLAY_OEM_GROUP_BUFFER OemGroupInformation;
 } SAMPR_DISPLAY_INFO_BUFFER, *PSAMPR_DISPLAY_INFO_BUFFER;
 
-typedef struct _GROUP_ATTRIBUTE_INFORMATION
+typedef struct _SAMPR_GROUP_ATTRIBUTE_INFORMATION
 {
     unsigned long Attributes;
-} GROUP_ATTRIBUTE_INFORMATION, *PGROUP_ATTRIBUTE_INFORMATION;
+} SAMPR_GROUP_ATTRIBUTE_INFORMATION, *PSAMPR_GROUP_ATTRIBUTE_INFORMATION;
 
 typedef struct _SAMPR_GROUP_GENERAL_INFORMATION
 {
@@ -401,7 +404,7 @@ typedef [switch_type(GROUP_INFORMATION_CLASS)] union _SAMPR_GROUP_INFO_BUFFER
 {
     [case(GroupGeneralInformation)] SAMPR_GROUP_GENERAL_INFORMATION General;
     [case(GroupNameInformation)] SAMPR_GROUP_NAME_INFORMATION Name;
-    [case(GroupAttributeInformation)] GROUP_ATTRIBUTE_INFORMATION Attribute;
+    [case(GroupAttributeInformation)] SAMPR_GROUP_ATTRIBUTE_INFORMATION Attribute;
     [case(GroupAdminCommentInformation)] SAMPR_GROUP_ADM_COMMENT_INFORMATION AdminComment;
     [case(GroupReplicationInformation)] SAMPR_GROUP_GENERAL_INFORMATION DoNotUse;
 } SAMPR_GROUP_INFO_BUFFER, *PSAMPR_GROUP_INFO_BUFFER;

@@ -18,14 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include "dbghelp_private.h"
-#include "winerror.h"
-#include "psapi.h"
-#include "wine/debug.h"
+
 #include "wdbgexts.h"
-#include "winnls.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -65,25 +60,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  */
 
 unsigned   dbghelp_options = SYMOPT_UNDNAME;
-HANDLE     hMsvcrt = NULL;
-
-/***********************************************************************
- *           DllMain (DEBUGHLP.@)
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:    break;
-    case DLL_PROCESS_DETACH:
-        if (hMsvcrt) FreeLibrary(hMsvcrt);
-        break;
-    case DLL_THREAD_ATTACH:     break;
-    case DLL_THREAD_DETACH:     break;
-    default:                    break;
-    }
-    return TRUE;
-}
 
 static struct process* process_first /* = NULL */;
 
@@ -133,6 +109,7 @@ void* fetch_buffer(struct process* pcs, unsigned size)
     return pcs->buffer;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 const char* wine_dbgstr_addr(const ADDRESS64* addr)
 {
     if (!addr) return "(null)";
@@ -150,21 +127,27 @@ const char* wine_dbgstr_addr(const ADDRESS64* addr)
         return "unknown";
     }
 }
+#endif
 
-extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc, cpu_sparc, cpu_arm;
+extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc, cpu_arm, cpu_arm64;
 
-static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, &cpu_sparc, &cpu_arm, NULL};
+#ifndef DBGHELP_STATIC_LIB
+static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, &cpu_arm, &cpu_arm64, NULL};
+#else
+static struct cpu*      dbghelp_cpus[] = {&cpu_i386, NULL};
+#endif
+
 struct cpu*             dbghelp_current_cpu =
-#if defined(__i386__)
+#if defined(__i386__) || defined(DBGHELP_STATIC_LIB)
     &cpu_i386
 #elif defined(__x86_64__)
     &cpu_x86_64
 #elif defined(__powerpc__)
     &cpu_ppc
-#elif defined(__sparc__)
-    &cpu_sparc
 #elif defined(__arm__)
     &cpu_arm
+#elif defined(__aarch64__)
+    &cpu_arm64
 #else
 #error define support for your CPU
 #endif
@@ -280,8 +263,10 @@ static BOOL check_live_target(struct process* pcs)
 {
     if (!GetProcessId(pcs->handle)) return FALSE;
     if (GetEnvironmentVariableA("DBGHELP_NOLIVE", NULL, 0)) return FALSE;
+#ifndef DBGHELP_STATIC_LIB
     if (!elf_read_wine_loader_dbg_info(pcs))
         macho_read_wine_loader_dbg_info(pcs);
+#endif
     return TRUE;
 }
 
@@ -291,7 +276,7 @@ static BOOL check_live_target(struct process* pcs)
  * The initialisation of a dbghelp's context.
  * Note that hProcess doesn't need to be a valid process handle (except
  * when fInvadeProcess is TRUE).
- * Since, we're also allow to load ELF (pure) libraries and Wine ELF libraries 
+ * Since we also allow loading ELF (pure) libraries and Wine ELF libraries
  * containing PE (and NE) module(s), here's how we handle it:
  * - we load every module (ELF, NE, PE) passed in SymLoadModule
  * - in fInvadeProcess (in SymInitialize) is TRUE, we set up what is called ELF
@@ -370,7 +355,8 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     pcs->dbg_hdr_addr = 0;
     pcs->next = process_first;
     process_first = pcs;
-    
+
+#ifndef DBGHELP_STATIC_LIB
     if (check_live_target(pcs))
     {
         if (fInvadeProcess)
@@ -384,6 +370,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+#endif
 
     return TRUE;
 }

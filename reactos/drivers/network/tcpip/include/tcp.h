@@ -186,6 +186,8 @@ NTSTATUS TCPShutdown(
 
 BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
 
+NTSTATUS TCPSetNoDelay(PCONNECTION_ENDPOINT Connection, BOOLEAN Set);
+
 VOID
 TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF);
 
@@ -211,3 +213,6 @@ VOID
 FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status);
 
 VOID CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEAN Synchronous);
+
+void
+LibTCPDumpPcb(PVOID SocketContext);

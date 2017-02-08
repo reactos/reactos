@@ -11,6 +11,11 @@
 
 #include "mmdrv.h"
 
+#include <winuser.h>
+
+#define NDEBUG
+#include <debug.h>
+
 /*
     Devices that we provide access to follow a standard naming convention.
     The first wave output, for example, appears as \Device\WaveOut0

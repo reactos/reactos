@@ -18,12 +18,6 @@
  */
 
 #include "urlmon_main.h"
-//#include "winreg.h"
-#include <shlwapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static const WCHAR feature_control_keyW[] =
     {'S','o','f','t','w','a','r','e','\\',
@@ -536,10 +530,8 @@ static HRESULT set_internet_feature(INTERNETFEATURELIST feature, DWORD flags, BO
     if(feature >= FEATURE_ENTRY_COUNT)
         return E_FAIL;
 
-    if(flags & ~supported_flags) {
+    if(flags & ~supported_flags)
         FIXME("Unsupported flags: %08x\n", flags & ~supported_flags);
-        return E_NOTIMPL;
-    }
 
     if(flags & SET_FEATURE_ON_PROCESS)
         set_feature_on_process(feature, enable);
@@ -637,22 +629,17 @@ static HRESULT load_process_feature(INTERNETFEATURELIST feature)
 
 static HRESULT get_feature_from_process(INTERNETFEATURELIST feature)
 {
-    HRESULT hres;
+    HRESULT hres = S_OK;
 
     EnterCriticalSection(&process_features_cs);
 
     /* Try loading the feature from the registry, if it hasn't already
      * been done.
      */
-    if(process_feature_controls[feature].check_registry) {
+    if(process_feature_controls[feature].check_registry)
         hres = load_process_feature(feature);
-        if(FAILED(hres)) {
-            LeaveCriticalSection(&process_features_cs);
-            return hres;
-        }
-    }
-
-    hres = process_feature_controls[feature].enabled ? S_OK : S_FALSE;
+    if(SUCCEEDED(hres))
+        hres = process_feature_controls[feature].enabled ? S_OK : S_FALSE;
 
     LeaveCriticalSection(&process_features_cs);
 

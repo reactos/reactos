@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/kdb_expr.c
+ * FILE:            ntoskrnl/kdbg/kdb_expr.c
  * PURPOSE:         Kernel debugger expression evaluation
  * PROGRAMMER:      Gregor Anich (blight@blight.eu.org)
  * UPDATE HISTORY:

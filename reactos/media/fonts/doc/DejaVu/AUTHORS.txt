@@ -14,6 +14,7 @@ David Lawrence Ramsey
 Denis Jacquerye
 Dwayne Bailey
 Eugeniy Meshcheryakov
+Frédéric Wang
 Gee Fung Sit
 Heikki Lindroos
 James Cloos
@@ -39,6 +40,7 @@ Remy Oudompheng
 Roozbeh Pournader
 Rouben Hakobian
 Sahak Petrosyan
+Sami Tarazi
 Sander Vesik
 Stepan Roh
 Stephen Hartke
@@ -49,5 +51,6 @@ Tim May
 Valentin Stoykov
 Vasek Stodulka
 Wesley Transue
+Yoshiki Ohshima
 
-$Id: AUTHORS 2461 2011-02-18 16:38:20Z ben_laenen $
+$Id: AUTHORS 2593 2015-05-17 07:47:39Z ben_laenen $

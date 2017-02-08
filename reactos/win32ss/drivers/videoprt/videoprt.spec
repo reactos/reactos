@@ -7,6 +7,11 @@
 @ stdcall VideoPortAllocatePool(ptr long long long)
 @ stdcall VideoPortAssociateEventsWithDmaHandle(ptr ptr ptr ptr)
 @ stdcall VideoPortCheckForDeviceExistence(ptr long long long long long long)
+
+;; Starting NT 5.1, the following function was introduced for a mysterious reason
+;; (it differs from the previous one only by its name).
+@ stdcall VideoPortCheckForDeviceExistance(ptr long long long long long long) VideoPortCheckForDeviceExistence
+
 @ stdcall VideoPortClearEvent(ptr ptr)
 @ stdcall VideoPortCompareMemory(ptr ptr long) NTOSKRNL.RtlCompareMemory
 @ stdcall VideoPortCompleteDma(ptr ptr ptr long)
@@ -44,12 +49,15 @@
 @ stdcall VideoPortGetVgaStatus(ptr ptr)
 @ stdcall VideoPortInitialize(ptr ptr ptr ptr)
 @ stdcall VideoPortInt10(ptr ptr)
-@ fastcall -arch=i386,arm VideoPortInterlockedDecrement(ptr) NTOSKRNL.InterlockedDecrement
-@ fastcall -arch=x86_64 VideoPortInterlockedDecrement(ptr)
-@ fastcall -arch=i386,arm VideoPortInterlockedExchange(ptr long) NTOSKRNL.InterlockedExchange
-@ fastcall -arch=x86_64 VideoPortInterlockedExchange(ptr long)
-@ fastcall -arch=i386,arm VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
-@ fastcall -arch=x86_64 VideoPortInterlockedIncrement(ptr)
+;;@ fastcall -arch=i386,arm VideoPortInterlockedDecrement(ptr) NTOSKRNL.InterlockedDecrement
+;;@ fastcall -arch=x86_64 VideoPortInterlockedDecrement(ptr)
+@ fastcall VideoPortInterlockedDecrement(ptr)
+;;@ fastcall -arch=i386,arm VideoPortInterlockedExchange(ptr long) NTOSKRNL.InterlockedExchange
+;;@ fastcall -arch=x86_64 VideoPortInterlockedExchange(ptr long)
+@ fastcall VideoPortInterlockedExchange(ptr long)
+;;@ fastcall -arch=i386,arm VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
+;;@ fastcall -arch=x86_64 VideoPortInterlockedIncrement(ptr)
+@ fastcall VideoPortInterlockedIncrement(ptr)
 @ stdcall VideoPortIsNoVesa()
 @ stdcall VideoPortLockBuffer(ptr ptr long long)
 @ stdcall VideoPortLockPages(ptr ptr ptr ptr long)
@@ -141,3 +149,4 @@
 @ stdcall VideoPortZeroMemory(ptr long) NTOSKRNL.RtlZeroMemory
 @ stdcall VideoPortZeroDeviceMemory(ptr long) NTOSKRNL.RtlZeroMemory
 @ stdcall VpNotifyEaData(ptr ptr)
+@ stdcall WdDdiWatchdogDpcCallback(ptr ptr ptr ptr)

@@ -577,3 +577,5 @@ BEGIN
 MCI_ON_S,			"on"
 MCI_OFF_S,			"off"
 END
+
+#include "version.rc"

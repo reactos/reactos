@@ -19,6 +19,10 @@ Author:
 #ifndef _ARM_MMTYPES_H
 #define _ARM_MMTYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Dependencies
 //
@@ -32,6 +36,17 @@ Author:
 #define PAGE_SHIFT                        12L
 #define MM_ALLOCATION_GRANULARITY         0x10000
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
+#define MM_PAGE_FRAME_NUMBER_SIZE         20
+
+//
+// User space range limit
+//
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
+
+//
+// Address of the shared user page
+//
+#define MM_SHARED_USER_DATA_VA 0x7FFE0000
 
 //
 // Sanity checks for Paging Macros
@@ -68,7 +83,7 @@ typedef struct _HARDWARE_LARGE_PTE_ARMV6
     ULONG NoExecute:1;
     ULONG Domain:4;
     ULONG Ecc:1;
-    ULONG Sbo:1;
+    ULONG Sbo:1; // ULONG Accessed:1;?
     ULONG Owner:1;
     ULONG CacheAttributes:3;
     ULONG ReadOnly:1;
@@ -85,7 +100,7 @@ typedef struct _HARDWARE_PTE_ARMV6
     ULONG Valid:1;
     ULONG Buffered:1;
     ULONG Cached:1;
-    ULONG Sbo:1;
+    ULONG Sbo:1; // ULONG Accessed:1;?
     ULONG Owner:1;
     ULONG CacheAttributes:3;
     ULONG ReadOnly:1;
@@ -149,7 +164,7 @@ typedef struct _MMPTE_LIST
     ULONG Prototype:1;
 } MMPTE_LIST;
 
-typedef union _MMPTE_HARDWARE
+typedef struct _MMPTE_HARDWARE
 {
     ULONG NoExecute:1;
     ULONG Valid:1;
@@ -163,6 +178,28 @@ typedef union _MMPTE_HARDWARE
     ULONG NonGlobal:1;
     ULONG PageFrameNumber:20;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
+
+
+//
+// Use the right PTE structure
+//
+#define HARDWARE_PTE        HARDWARE_PTE_ARMV6
+#define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
+
+typedef struct _MMPTE
+{
+    union
+    {
+        ULONG_PTR Long;
+        HARDWARE_PTE Flush;
+        MMPTE_HARDWARE Hard;
+        MMPTE_PROTOTYPE Proto;
+        MMPTE_SOFTWARE Soft;
+        MMPTE_TRANSITION Trans;
+        MMPTE_SUBSECTION Subsect;
+        MMPTE_LIST List;
+    } u;
+} MMPTE, *PMMPTE;
 
 typedef union _MMPDE_HARDWARE
 {
@@ -178,17 +215,15 @@ typedef union _MMPDE_HARDWARE
 
 typedef struct _MMPDE
 {
-    union 
+    union
     {
         MMPDE_HARDWARE Hard;
         ULONG Long;
     } u;
 } MMPDE, *PMMPDE;
 
-//
-// Use the right PTE structure
-//
-#define HARDWARE_PTE        HARDWARE_PTE_ARMV6
-#define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif

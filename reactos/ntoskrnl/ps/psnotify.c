@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ps/notify.c
+ * FILE:            ntoskrnl/ps/psnotify.c
  * PURPOSE:         Process Manager: Callbacks to Registered Clients (Drivers)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller (w3seek@reactos.org)

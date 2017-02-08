@@ -1,0 +1,21 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_USAGE, "Использование: TASKKILL [/F] [/IM <образ> | /PID <процесс>]\n"
+    STRING_INVALID_OPTION, "Ошибка: Указаны неверные параметры командной строки.\n"
+    STRING_INVALID_PARAM, "Ошибка: Указаны неверные параметры командной строки.\n"
+    STRING_MISSING_OPTION, "Ошибка: Должен быть указан параметр /im или /pid.\n"
+    STRING_MISSING_PARAM, "Ошибка: Потерян обязательный параметр %1.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Ошибка: Одновременное использование параметров '/pid' и '/im' запрещено.\n"
+    STRING_CLOSE_PID_SEARCH, "Отправлен сигнал завершения процессу с идентификатором %1!u!.\n"
+    STRING_CLOSE_PROC_SRCH, "Отправлен сигнал завершения процессу ""%1"" с идентификатором %2!u!.\n"
+    STRING_TERM_PID_SEARCH, "Процесс, с идентификатором %1!u! принудительно завершен.\n"
+    STRING_TERM_PROC_SEARCH, "Процесс ""%1"" с идентификатором %2!u! принудительно завершен.\n"
+    STRING_SEARCH_FAILED, "Ошибка: Не удается найти процесс ""%1"".\n"
+    STRING_ENUM_FAILED, "Ошибка: Unable to enumerate the process list.\n"
+    STRING_TERMINATE_FAILED, "Ошибка: Не удается завершить процесс ""%1"".\n"
+    STRING_SELF_TERMINATION, "Ошибка: Процесс не может завершить сам себя.\n"
+}

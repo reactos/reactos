@@ -4,117 +4,44 @@
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
-
-#define __EVXFGPE_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -125,6 +52,7 @@
         ACPI_MODULE_NAME    ("evxfgpe")
 
 
+#if (!ACPI_REDUCED_HARDWARE) /* Entire module */
 /*******************************************************************************
  *
  * FUNCTION:    AcpiUpdateAllGpes
@@ -154,7 +82,7 @@ AcpiUpdateAllGpes (
     ACPI_STATUS             Status;
 
 
-    ACPI_FUNCTION_TRACE (AcpiUpdateGpes);
+    ACPI_FUNCTION_TRACE (AcpiUpdateAllGpes);
 
 
     Status = AcpiUtAcquireMutex (ACPI_MTX_EVENTS);
@@ -211,12 +139,23 @@ AcpiEnableGpe (
 
     Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
 
-    /* Ensure that we have a valid GPE number */
-
+    /*
+     * Ensure that we have a valid GPE number and that there is some way
+     * of handling the GPE (handler or a GPE method). In other words, we
+     * won't allow a valid GPE to be enabled if there is no way to handle it.
+     */
     GpeEventInfo = AcpiEvGetGpeEventInfo (GpeDevice, GpeNumber);
     if (GpeEventInfo)
     {
-        Status = AcpiEvAddGpeReference (GpeEventInfo);
+        if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) !=
+            ACPI_GPE_DISPATCH_NONE)
+        {
+            Status = AcpiEvAddGpeReference (GpeEventInfo);
+        }
+        else
+        {
+            Status = AE_NO_HANDLER;
+        }
     }
 
     AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
@@ -282,12 +221,21 @@ ACPI_EXPORT_SYMBOL (AcpiDisableGpe)
  * RETURN:      Status
  *
  * DESCRIPTION: Enable or disable an individual GPE. This function bypasses
- *              the reference count mechanism used in the AcpiEnableGpe and
- *              AcpiDisableGpe interfaces -- and should be used with care.
+ *              the reference count mechanism used in the AcpiEnableGpe(),
+ *              AcpiDisableGpe() interfaces.
+ *              This API is typically used by the GPE raw handler mode driver
+ *              to switch between the polling mode and the interrupt mode after
+ *              the driver has enabled the GPE.
+ *              The APIs should be invoked in this order:
+ *               AcpiEnableGpe()              <- Ensure the reference count > 0
+ *               AcpiSetGpe(ACPI_GPE_DISABLE) <- Enter polling mode
+ *               AcpiSetGpe(ACPI_GPE_ENABLE)  <- Leave polling mode
+ *               AcpiDisableGpe()             <- Decrease the reference count
  *
- * Note: Typically used to disable a runtime GPE for short period of time,
- * then re-enable it, without disturbing the existing reference counts. This
- * is useful, for example, in the Embedded Controller (EC) driver.
+ * Note: If a GPE is shared by 2 silicon components, then both the drivers
+ *       should support GPE polling mode or disabling the GPE for long period
+ *       for one driver may break the other. So use it with care since all
+ *       firmware _Lxx/_Exx handlers currently rely on the GPE interrupt mode.
  *
  ******************************************************************************/
 
@@ -321,14 +269,17 @@ AcpiSetGpe (
     switch (Action)
     {
     case ACPI_GPE_ENABLE:
-        Status = AcpiEvEnableGpe (GpeEventInfo);
+
+        Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_ENABLE);
         break;
 
     case ACPI_GPE_DISABLE:
+
         Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_DISABLE);
         break;
 
     default:
+
         Status = AE_BAD_PARAMETER;
         break;
     }
@@ -339,6 +290,60 @@ UnlockAndExit:
 }
 
 ACPI_EXPORT_SYMBOL (AcpiSetGpe)
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiMarkGpeForWake
+ *
+ * PARAMETERS:  GpeDevice           - Parent GPE Device. NULL for GPE0/GPE1
+ *              GpeNumber           - GPE level within the GPE block
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Mark a GPE as having the ability to wake the system. Simply
+ *              sets the ACPI_GPE_CAN_WAKE flag.
+ *
+ * Some potential callers of AcpiSetupGpeForWake may know in advance that
+ * there won't be any notify handlers installed for device wake notifications
+ * from the given GPE (one example is a button GPE in Linux). For these cases,
+ * AcpiMarkGpeForWake should be used instead of AcpiSetupGpeForWake.
+ * This will set the ACPI_GPE_CAN_WAKE flag for the GPE without trying to
+ * setup implicit wake notification for it (since there's no handler method).
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiMarkGpeForWake (
+    ACPI_HANDLE             GpeDevice,
+    UINT32                  GpeNumber)
+{
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo;
+    ACPI_STATUS             Status = AE_BAD_PARAMETER;
+    ACPI_CPU_FLAGS          Flags;
+
+
+    ACPI_FUNCTION_TRACE (AcpiMarkGpeForWake);
+
+
+    Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+
+    /* Ensure that we have a valid GPE number */
+
+    GpeEventInfo = AcpiEvGetGpeEventInfo (GpeDevice, GpeNumber);
+    if (GpeEventInfo)
+    {
+        /* Mark the GPE as a possible wake event */
+
+        GpeEventInfo->Flags |= ACPI_GPE_CAN_WAKE;
+        Status = AE_OK;
+    }
+
+    AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiMarkGpeForWake)
 
 
 /*******************************************************************************
@@ -366,9 +371,11 @@ AcpiSetupGpeForWake (
     ACPI_HANDLE             GpeDevice,
     UINT32                  GpeNumber)
 {
-    ACPI_STATUS             Status = AE_BAD_PARAMETER;
+    ACPI_STATUS             Status;
     ACPI_GPE_EVENT_INFO     *GpeEventInfo;
     ACPI_NAMESPACE_NODE     *DeviceNode;
+    ACPI_GPE_NOTIFY_INFO    *Notify;
+    ACPI_GPE_NOTIFY_INFO    *NewNotify;
     ACPI_CPU_FLAGS          Flags;
 
 
@@ -404,32 +411,88 @@ AcpiSetupGpeForWake (
         return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
 
+    /*
+     * Allocate a new notify object up front, in case it is needed.
+     * Memory allocation while holding a spinlock is a big no-no
+     * on some hosts.
+     */
+    NewNotify = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_GPE_NOTIFY_INFO));
+    if (!NewNotify)
+    {
+        return_ACPI_STATUS (AE_NO_MEMORY);
+    }
+
     Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
 
     /* Ensure that we have a valid GPE number */
 
     GpeEventInfo = AcpiEvGetGpeEventInfo (GpeDevice, GpeNumber);
-    if (GpeEventInfo)
+    if (!GpeEventInfo)
     {
-        /*
-         * If there is no method or handler for this GPE, then the
-         * WakeDevice will be notified whenever this GPE fires (aka
-         * "implicit notify") Note: The GPE is assumed to be
-         * level-triggered (for windows compatibility).
-         */
-        if ((GpeEventInfo->Flags & ACPI_GPE_DISPATCH_MASK) ==
-                ACPI_GPE_DISPATCH_NONE)
-        {
-            GpeEventInfo->Flags =
-                (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
-            GpeEventInfo->Dispatch.DeviceNode = DeviceNode;
-        }
-
-        GpeEventInfo->Flags |= ACPI_GPE_CAN_WAKE;
-        Status = AE_OK;
+        Status = AE_BAD_PARAMETER;
+        goto UnlockAndExit;
     }
 
+    /*
+     * If there is no method or handler for this GPE, then the
+     * WakeDevice will be notified whenever this GPE fires. This is
+     * known as an "implicit notify". Note: The GPE is assumed to be
+     * level-triggered (for windows compatibility).
+     */
+    if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+        ACPI_GPE_DISPATCH_NONE)
+    {
+        /*
+         * This is the first device for implicit notify on this GPE.
+         * Just set the flags here, and enter the NOTIFY block below.
+         */
+        GpeEventInfo->Flags =
+            (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
+    }
+
+    /*
+     * If we already have an implicit notify on this GPE, add
+     * this device to the notify list.
+     */
+    if (ACPI_GPE_DISPATCH_TYPE (GpeEventInfo->Flags) ==
+        ACPI_GPE_DISPATCH_NOTIFY)
+    {
+        /* Ensure that the device is not already in the list */
+
+        Notify = GpeEventInfo->Dispatch.NotifyList;
+        while (Notify)
+        {
+            if (Notify->DeviceNode == DeviceNode)
+            {
+                Status = AE_ALREADY_EXISTS;
+                goto UnlockAndExit;
+            }
+            Notify = Notify->Next;
+        }
+
+        /* Add this device to the notify list for this GPE */
+
+        NewNotify->DeviceNode = DeviceNode;
+        NewNotify->Next = GpeEventInfo->Dispatch.NotifyList;
+        GpeEventInfo->Dispatch.NotifyList = NewNotify;
+        NewNotify = NULL;
+    }
+
+    /* Mark the GPE as a possible wake event */
+
+    GpeEventInfo->Flags |= ACPI_GPE_CAN_WAKE;
+    Status = AE_OK;
+
+
+UnlockAndExit:
     AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+
+    /* Delete the notify object if it was not used above */
+
+    if (NewNotify)
+    {
+        ACPI_FREE (NewNotify);
+    }
     return_ACPI_STATUS (Status);
 }
 
@@ -493,21 +556,24 @@ AcpiSetGpeWakeMask (
         goto UnlockAndExit;
     }
 
-    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo, GpeRegisterInfo);
+    RegisterBit = AcpiHwGetGpeRegisterBit (GpeEventInfo);
 
     /* Perform the action */
 
     switch (Action)
     {
     case ACPI_GPE_ENABLE:
+
         ACPI_SET_BIT (GpeRegisterInfo->EnableForWake, (UINT8) RegisterBit);
         break;
 
     case ACPI_GPE_DISABLE:
+
         ACPI_CLEAR_BIT (GpeRegisterInfo->EnableForWake, (UINT8) RegisterBit);
         break;
 
     default:
+
         ACPI_ERROR ((AE_INFO, "%u, Invalid action", Action));
         Status = AE_BAD_PARAMETER;
         break;
@@ -745,6 +811,44 @@ AcpiEnableAllRuntimeGpes (
 ACPI_EXPORT_SYMBOL (AcpiEnableAllRuntimeGpes)
 
 
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiEnableAllWakeupGpes
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Enable all "wakeup" GPEs and disable all of the other GPEs, in
+ *              all GPE blocks.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiEnableAllWakeupGpes (
+    void)
+{
+    ACPI_STATUS             Status;
+
+
+    ACPI_FUNCTION_TRACE (AcpiEnableAllWakeupGpes);
+
+
+    Status = AcpiUtAcquireMutex (ACPI_MTX_EVENTS);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    Status = AcpiHwEnableAllWakeupGpes ();
+    (void) AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
+
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiEnableAllWakeupGpes)
+
+
 /*******************************************************************************
  *
  * FUNCTION:    AcpiInstallGpeBlock
@@ -787,7 +891,7 @@ AcpiInstallGpeBlock (
     Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
     if (ACPI_FAILURE (Status))
     {
-        return (Status);
+        return_ACPI_STATUS (Status);
     }
 
     Node = AcpiNsValidateHandle (GpeDevice);
@@ -797,12 +901,27 @@ AcpiInstallGpeBlock (
         goto UnlockAndExit;
     }
 
+    /* Validate the parent device */
+
+    if (Node->Type != ACPI_TYPE_DEVICE)
+    {
+        Status = AE_TYPE;
+        goto UnlockAndExit;
+    }
+
+    if (Node->Object)
+    {
+        Status = AE_ALREADY_EXISTS;
+        goto UnlockAndExit;
+    }
+
     /*
      * For user-installed GPE Block Devices, the GpeBlockBaseNumber
      * is always zero
      */
-    Status = AcpiEvCreateGpeBlock (Node, GpeBlockAddress, RegisterCount,
-                0, InterruptNumber, &GpeBlock);
+    Status = AcpiEvCreateGpeBlock (Node, GpeBlockAddress->Address,
+        GpeBlockAddress->SpaceId, RegisterCount,
+        0, InterruptNumber, &GpeBlock);
     if (ACPI_FAILURE (Status))
     {
         goto UnlockAndExit;
@@ -880,13 +999,21 @@ AcpiRemoveGpeBlock (
     Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
     if (ACPI_FAILURE (Status))
     {
-        return (Status);
+        return_ACPI_STATUS (Status);
     }
 
     Node = AcpiNsValidateHandle (GpeDevice);
     if (!Node)
     {
         Status = AE_BAD_PARAMETER;
+        goto UnlockAndExit;
+    }
+
+    /* Validate the parent device */
+
+    if (Node->Type != ACPI_TYPE_DEVICE)
+    {
+        Status = AE_TYPE;
         goto UnlockAndExit;
     }
 
@@ -970,3 +1097,5 @@ AcpiGetGpeDevice (
 }
 
 ACPI_EXPORT_SYMBOL (AcpiGetGpeDevice)
+
+#endif /* !ACPI_REDUCED_HARDWARE */

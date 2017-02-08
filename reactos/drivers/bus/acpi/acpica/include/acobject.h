@@ -1,118 +1,45 @@
-
 /******************************************************************************
  *
  * Name: acobject.h - Definition of ACPI_OPERAND_OBJECT  (Internal object only)
  *
  *****************************************************************************/
 
-/******************************************************************************
- *
- * 1. Copyright Notice
- *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+/*
+ * Copyright (C) 2000 - 2016, Intel Corp.
  * All rights reserved.
  *
- * 2. License
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions, and the following disclaimer,
+ *    without modification.
+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
+ *    substantially similar to the "NO WARRANTY" disclaimer below
+ *    ("Disclaimer") and any redistribution must be conditioned upon
+ *    including a substantially similar Disclaimer requirement for further
+ *    binary redistribution.
+ * 3. Neither the names of the above-listed copyright holders nor the names
+ *    of any contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
- * you this software, covering your right to use that party's intellectual
- * property rights.
+ * Alternatively, this software may be distributed under the terms of the
+ * GNU General Public License ("GPL") version 2 as published by the Free
+ * Software Foundation.
  *
- * 2.2. Intel grants, free of charge, to any person ("Licensee") obtaining a
- * copy of the source code appearing in this file ("Covered Code") an
- * irrevocable, perpetual, worldwide license under Intel's copyrights in the
- * base code distributed originally by Intel ("Original Intel Code") to copy,
- * make derivatives, distribute, use and display any portion of the Covered
- * Code in any form, with the right to sublicense such rights; and
- *
- * 2.3. Intel grants Licensee a non-exclusive and non-transferable patent
- * license (with the right to sublicense), under only those claims of Intel
- * patents that are infringed by the Original Intel Code, to make, use, sell,
- * offer to sell, and import the Covered Code and derivative works thereof
- * solely to the minimum extent necessary to exercise the above copyright
- * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
- * is granted directly or by implication, estoppel or otherwise;
- *
- * The above copyright and patent license is granted only if the following
- * conditions are met:
- *
- * 3. Conditions
- *
- * 3.1. Redistribution of Source with Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification with rights to further distribute source must include
- * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
- * Licensee must cause all Covered Code to which Licensee contributes to
- * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
- * must include a prominent statement that the modification is derived,
- * directly or indirectly, from Original Intel Code.
- *
- * 3.2. Redistribution of Source with no Rights to Further Distribute Source.
- * Redistribution of source code of any substantial portion of the Covered
- * Code or modification without rights to further distribute source must
- * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
- * addition, Licensee may not authorize further sublicense of source of any
- * portion of the Covered Code, and must include terms to the effect that the
- * license from Licensee to its licensee is limited to the intellectual
- * property embodied in the software Licensee provides to its licensee, and
- * not to intellectual property embodied in modifications its licensee may
- * make.
- *
- * 3.3. Redistribution of Executable. Redistribution in executable form of any
- * substantial portion of the Covered Code or modification must reproduce the
- * above Copyright Notice, and the following Disclaimer and Export Compliance
- * provision in the documentation and/or other materials provided with the
- * distribution.
- *
- * 3.4. Intel retains all right, title, and interest in and to the Original
- * Intel Code.
- *
- * 3.5. Neither the name Intel nor any other trademark owned or controlled by
- * Intel shall be used in advertising or otherwise to promote the sale, use or
- * other dealings in products derived from or relating to the Covered Code
- * without prior written authorization from Intel.
- *
- * 4. Disclaimer and Export Compliance
- *
- * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * 4.2. IN NO EVENT SHALL INTEL HAVE ANY LIABILITY TO LICENSEE, ITS LICENSEES
- * OR ANY OTHER THIRD PARTY, FOR ANY LOST PROFITS, LOST DATA, LOSS OF USE OR
- * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
- * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
- * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
- * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
- * LIMITED REMEDY.
- *
- * 4.3. Licensee shall not export, either directly or indirectly, any of this
- * software or system incorporating such software without first obtaining any
- * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
- * event Licensee exports any such software from the United States or
- * re-exports any such software from a foreign destination, Licensee shall
- * ensure that the distribution and export/re-export of the software is in
- * compliance with all laws, regulations, orders, or other restrictions of the
- * U.S. Export Administration Regulations. Licensee agrees that neither it nor
- * any of its subsidiaries will export/re-export any technical data, process,
- * software, or service, directly or indirectly, to any country for which the
- * United States government or any agency thereof requires an export license,
- * other governmental approval, or letter of assurance, without first obtaining
- * such license, approval or letter.
- *
- *****************************************************************************/
+ * NO WARRANTY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #ifndef _ACOBJECT_H
 #define _ACOBJECT_H
@@ -166,10 +93,11 @@
 
 #define AOPOBJ_AML_CONSTANT         0x01    /* Integer is an AML constant */
 #define AOPOBJ_STATIC_POINTER       0x02    /* Data is part of an ACPI table, don't delete */
-#define AOPOBJ_DATA_VALID           0x04    /* Object is intialized and data is valid */
-#define AOPOBJ_OBJECT_INITIALIZED   0x08    /* Region is initialized, _REG was run */
-#define AOPOBJ_SETUP_COMPLETE       0x10    /* Region setup is complete */
-#define AOPOBJ_INVALID              0x20    /* Host OS won't allow a Region address */
+#define AOPOBJ_DATA_VALID           0x04    /* Object is initialized and data is valid */
+#define AOPOBJ_OBJECT_INITIALIZED   0x08    /* Region is initialized */
+#define AOPOBJ_REG_CONNECTED        0x10    /* _REG was run */
+#define AOPOBJ_SETUP_COMPLETE       0x20    /* Region setup is complete */
+#define AOPOBJ_INVALID              0x40    /* Host OS won't allow a Region address */
 
 
 /******************************************************************************
@@ -195,8 +123,8 @@ typedef struct acpi_object_integer
 
 
 /*
- * Note: The String and Buffer object must be identical through the Pointer
- * and length elements.  There is code that depends on this.
+ * Note: The String and Buffer object must be identical through the
+ * pointer and length elements. There is code that depends on this.
  *
  * Fields common to both Strings and Buffers
  */
@@ -286,6 +214,7 @@ typedef struct acpi_object_method
     UINT8                           ParamCount;
     UINT8                           SyncLevel;
     union acpi_operand_object       *Mutex;
+    union acpi_operand_object       *Node;
     UINT8                           *AmlStart;
     union
     {
@@ -305,12 +234,13 @@ typedef struct acpi_object_method
 #define ACPI_METHOD_INTERNAL_ONLY       0x02    /* Method is implemented internally (_OSI) */
 #define ACPI_METHOD_SERIALIZED          0x04    /* Method is serialized */
 #define ACPI_METHOD_SERIALIZED_PENDING  0x08    /* Method is to be marked serialized */
-#define ACPI_METHOD_MODIFIED_NAMESPACE  0x10    /* Method modified the namespace */
+#define ACPI_METHOD_IGNORE_SYNC_LEVEL   0x10    /* Method was auto-serialized at table load time */
+#define ACPI_METHOD_MODIFIED_NAMESPACE  0x20    /* Method modified the namespace */
 
 
 /******************************************************************************
  *
- * Objects that can be notified.  All share a common NotifyInfo area.
+ * Objects that can be notified. All share a common NotifyInfo area.
  *
  *****************************************************************************/
 
@@ -318,8 +248,7 @@ typedef struct acpi_object_method
  * Common fields for objects that support ASL notifications
  */
 #define ACPI_COMMON_NOTIFY_INFO \
-    union acpi_operand_object       *SystemNotify;      /* Handler for system notifies */\
-    union acpi_operand_object       *DeviceNotify;      /* Handler for driver notifies */\
+    union acpi_operand_object       *NotifyList[2];     /* Handlers for system/device notifies */\
     union acpi_operand_object       *Handler;           /* Handler for Address space */
 
 
@@ -374,7 +303,7 @@ typedef struct acpi_object_thermal_zone
 
 /******************************************************************************
  *
- * Fields.  All share a common header/info field.
+ * Fields. All share a common header/info field.
  *
  *****************************************************************************/
 
@@ -392,6 +321,7 @@ typedef struct acpi_object_thermal_zone
     UINT32                          BaseByteOffset;     /* Byte offset within containing object */\
     UINT32                          Value;              /* Value to store into the Bank or Index register */\
     UINT8                           StartFieldBitOffset;/* Bit offset within first field datum (0-63) */\
+    UINT8                           AccessLength;       /* For serial regions/fields */
 
 
 typedef struct acpi_object_field_common                 /* COMMON FIELD (for BUFFER, REGION, BANK, and INDEX fields) */
@@ -407,7 +337,10 @@ typedef struct acpi_object_region_field
 {
     ACPI_OBJECT_COMMON_HEADER
     ACPI_COMMON_FIELD_INFO
+    UINT16                          ResourceLength;
     union acpi_operand_object       *RegionObj;         /* Containing OpRegion object */
+    UINT8                           *ResourceBuffer;    /* ResourceTemplate for serial regions/fields */
+    UINT16                          PinNumberIndex;     /* Index relative to previous Connection/Template */
 
 } ACPI_OBJECT_REGION_FIELD;
 
@@ -458,8 +391,10 @@ typedef struct acpi_object_notify_handler
 {
     ACPI_OBJECT_COMMON_HEADER
     ACPI_NAMESPACE_NODE             *Node;              /* Parent device */
-    ACPI_NOTIFY_HANDLER             Handler;
+    UINT32                          HandlerType;        /* Type: Device/System/Both */
+    ACPI_NOTIFY_HANDLER             Handler;            /* Handler address */
     void                            *Context;
+    union acpi_operand_object       *Next[2];           /* Device and System handler lists */
 
 } ACPI_OBJECT_NOTIFY_HANDLER;
 
@@ -473,7 +408,7 @@ typedef struct acpi_object_addr_handler
     ACPI_NAMESPACE_NODE             *Node;              /* Parent device */
     void                            *Context;
     ACPI_ADR_SPACE_SETUP            Setup;
-    union acpi_operand_object       *RegionList;        /* regions using this handler */
+    union acpi_operand_object       *RegionList;        /* Regions using this handler */
     union acpi_operand_object       *Next;
 
 } ACPI_OBJECT_ADDR_HANDLER;
@@ -497,13 +432,14 @@ typedef struct acpi_object_addr_handler
 typedef struct acpi_object_reference
 {
     ACPI_OBJECT_COMMON_HEADER
-     UINT8                           Class;              /* Reference Class */
-     UINT8                           TargetType;         /* Used for Index Op */
-     UINT8                           Reserved;
-     void                            *Object;            /* NameOp=>HANDLE to obj, IndexOp=>ACPI_OPERAND_OBJECT */
-     ACPI_NAMESPACE_NODE             *Node;              /* RefOf or Namepath */
-     union acpi_operand_object       **Where;            /* Target of Index */
-     UINT32                          Value;              /* Used for Local/Arg/Index/DdbHandle */
+    UINT8                           Class;              /* Reference Class */
+    UINT8                           TargetType;         /* Used for Index Op */
+    UINT8                           Reserved;
+    void                            *Object;            /* NameOp=>HANDLE to obj, IndexOp=>ACPI_OPERAND_OBJECT */
+    ACPI_NAMESPACE_NODE             *Node;              /* RefOf or Namepath */
+    union acpi_operand_object       **Where;            /* Target of Index */
+    UINT8                           *IndexPointer;      /* Used for Buffers and Strings */
+    UINT32                          Value;              /* Used for Local/Arg/Index/DdbHandle */
 
 } ACPI_OBJECT_REFERENCE;
 
@@ -535,6 +471,7 @@ typedef struct acpi_object_extra
 {
     ACPI_OBJECT_COMMON_HEADER
     ACPI_NAMESPACE_NODE             *Method_REG;        /* _REG method for this region (if any) */
+    ACPI_NAMESPACE_NODE             *ScopeNode;
     void                            *RegionContext;     /* Region-specific data */
     UINT8                           *AmlStart;
     UINT32                          AmlLength;

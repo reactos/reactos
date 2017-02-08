@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS VGA Miniport Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/miniport/vga/vga.c
+ * FILE:            win32ss/drivers/miniport/vga_new/vga.c
  * PURPOSE:         Main Standard VGA-compatible Minport Handling Code
  * PROGRAMMERS:     Copyright (c) 1992  Microsoft Corporation
  *                  ReactOS Portable Systems Group
@@ -10,6 +10,8 @@
 //---------------------------------------------------------------------------
 
 #include "vga.h"
+
+#include <devioctl.h>
 
 //---------------------------------------------------------------------------
 //
@@ -478,7 +480,7 @@ Return Value:
         return ERROR_INVALID_PARAMETER;
     }
 
-    VideoPortDebugPrint(0, "vga mapped at %x\n", hwDeviceExtension->VideoMemoryAddress);
+    VideoDebugPrint((0, "vga mapped at %x\n", hwDeviceExtension->VideoMemoryAddress));
 #endif
 // eVb: 1.7 [VDM] - Disable VDM for now
     ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0;
@@ -1508,7 +1510,7 @@ Return Value:
 --*/
 
 {
-    VideoPortDebugPrint(Error, "Detected internal VGA chip on embedded board, todo\n");
+    VideoDebugPrint((Error, "Detected internal VGA chip on embedded board, todo\n"));
     while (TRUE);
     return NO_ERROR;
 

@@ -22,29 +22,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdio.h>
-//#include <string.h>
-//#include <stdarg.h>
-//#include <stdlib.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <commdlg.h>
 #include "winhelp.h"
-//#include "winhelp_res.h"
-//#include "shellapi.h"
+
 #include <richedit.h>
 #include <commctrl.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
 WINHELP_GLOBALS Globals = {3, NULL, TRUE, NULL, NULL, NULL, NULL, NULL, {{{NULL,NULL}},0}, NULL};
 
@@ -70,7 +51,7 @@ static void WINHELP_InitFonts(HWND hWnd)
 #define FONTS_LEN (sizeof(logfontlist)/sizeof(*logfontlist))
 
     static HFONT fonts[FONTS_LEN];
-    static BOOL init = 0;
+    static BOOL init = FALSE;
 
     win->fonts_len = FONTS_LEN;
     win->fonts = fonts;
@@ -84,7 +65,7 @@ static void WINHELP_InitFonts(HWND hWnd)
             fonts[i] = CreateFontIndirectW(&logfontlist[i]);
 	}
 
-        init = 1;
+        init = TRUE;
     }
 }
 
@@ -180,7 +161,7 @@ BOOL WINHELP_GetOpenFileName(LPSTR lpszFile, int len)
     openfilename.nMaxFileTitle     = 0;
     openfilename.lpstrInitialDir   = szDir;
     openfilename.lpstrTitle        = 0;
-    openfilename.Flags             = OFN_ENABLESIZING;
+    openfilename.Flags             = OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_READONLY;
     openfilename.nFileOffset       = 0;
     openfilename.nFileExtension    = 0;
     openfilename.lpstrDefExt       = 0;
@@ -309,7 +290,7 @@ static HLPFILE_WINDOWINFO*     WINHELP_GetPopupWindowInfo(HLPFILE* hlpfile,
     /* Calculate horizontal size and position of a popup window */
     GetWindowRect(parent->hMainWnd, &parent_rect);
     wi.size.cx = (parent_rect.right  - parent_rect.left) / 2;
-    wi.size.cy = 10; /* need a non null value, so that border are taken into account while computing */
+    wi.size.cy = 10; /* need a non null value, so that borders are taken into account while computing */
 
     wi.origin.x = (short)LOWORD(mouse);
     wi.origin.y = (short)HIWORD(mouse);
@@ -1131,7 +1112,6 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
         win->hHistoryWnd = hWnd;
         break;
     case WM_CREATE:
-        win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         hDc = GetDC(hWnd);
         GetTextMetricsW(hDc, &tm);
         GetWindowRect(hWnd, &r);
@@ -1146,7 +1126,6 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
         ReleaseDC(hWnd, hDc);
         break;
     case WM_LBUTTONDOWN:
-        win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         hDc = GetDC(hWnd);
         GetTextMetricsW(hDc, &tm);
         i = HIWORD(lParam) / tm.tmHeight;
@@ -1156,7 +1135,6 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
         break;
     case WM_PAINT:
         hDc = BeginPaint(hWnd, &ps);
-        win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         GetTextMetricsW(hDc, &tm);
 
         for (i = 0; i < Globals.history.index; i++)
@@ -1522,11 +1500,11 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
     case WM_INITMENUPOPUP:
         win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_SMALL,
-                      MF_BYCOMMAND | (win->font_scale == 0) ? MF_CHECKED : 0);
+                      (win->font_scale == 0) ? MF_CHECKED : MF_UNCHECKED);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_NORMAL,
-                      MF_BYCOMMAND | (win->font_scale == 1) ? MF_CHECKED : 0);
+                      (win->font_scale == 1) ? MF_CHECKED : MF_UNCHECKED);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_LARGE,
-                      MF_BYCOMMAND | (win->font_scale == 2) ? MF_CHECKED : 0);
+                      (win->font_scale == 2) ? MF_CHECKED : MF_UNCHECKED);
         break;
     case WM_DESTROY:
         win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);

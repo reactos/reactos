@@ -45,19 +45,19 @@ extern "C" {
 /* stupid #if can't handle casts... this __stupidity
    is just a workaround for that limitation */
 
-#define __NDR_CHAR_REP_MASK  0x000fL
-#define __NDR_INT_REP_MASK   0x00f0L
-#define __NDR_FLOAT_REP_MASK 0xff00L
+#define __NDR_CHAR_REP_MASK  0x000f
+#define __NDR_INT_REP_MASK   0x00f0
+#define __NDR_FLOAT_REP_MASK 0xff00
 
-#define __NDR_IEEE_FLOAT     0x0000L
-#define __NDR_VAX_FLOAT      0x0100L
-#define __NDR_IBM_FLOAT      0x0300L
+#define __NDR_IEEE_FLOAT     0x0000
+#define __NDR_VAX_FLOAT      0x0100
+#define __NDR_IBM_FLOAT      0x0300
 
-#define __NDR_ASCII_CHAR     0x0000L
-#define __NDR_EBCDIC_CHAR    0x0001L
+#define __NDR_ASCII_CHAR     0x0000
+#define __NDR_EBCDIC_CHAR    0x0001
 
-#define __NDR_LITTLE_ENDIAN  0x0010L
-#define __NDR_BIG_ENDIAN     0x0000L
+#define __NDR_LITTLE_ENDIAN  0x0010
+#define __NDR_BIG_ENDIAN     0x0000
 
 /* Mac's are special */
 #if defined(__RPC_MAC__)
@@ -142,7 +142,14 @@ typedef void (__RPC_USER *NDR_RUNDOWN)(void *context);
 typedef void (__RPC_USER *NDR_NOTIFY_ROUTINE)(void);
 typedef void (__RPC_USER *NDR_NOTIFY2_ROUTINE)(boolean flag);
 
-#define DECLSPEC_UUID(x)
+#ifndef DECLSPEC_UUID
+ #if defined(_MSC_VER) && defined(__cplusplus)
+  #define DECLSPEC_UUID(x) __declspec(uuid(x))
+ #else
+  #define DECLSPEC_UUID(x)
+ #endif
+#endif /* DECLSPEC_UUID */
+
 #define MIDL_INTERFACE(x)   struct
 
 struct _MIDL_STUB_MESSAGE;

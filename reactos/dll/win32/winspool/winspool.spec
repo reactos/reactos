@@ -153,7 +153,7 @@
 @ stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
 @ stub GetSpoolFileHandle
 @ stub IsValidDevmodeA
-@ stub IsValidDevmodeW
+@ stdcall -stub IsValidDevmodeW(ptr long)
 @ stdcall OpenPrinterA(str ptr ptr)
 @ stdcall OpenPrinterW(wstr ptr ptr)
 @ stub PlayGdiScriptOnPrinterIC

@@ -1,0 +1,59 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "無效的參數數目 - 使用 xcopy /? 求助\n"
+    STRING_INVPARM,  "無效的參數 '%1' - 使用 xcopy /? 求助\n"
+    STRING_PAUSE,    "請按 <Enter> 開始複製\n"
+    STRING_SIMCOPY,  "%1!d! 將複製檔案\n"
+    STRING_COPY,     "%1!d! 檔案已複製\n"
+    STRING_QISDIR,   "'%1' 的檔名或在目標系統上\n\
+                     的目錄嗎?\n\
+                     (F - 檔案, D - 目錄)\n"
+    STRING_SRCPROMPT,"%1? (Yes|No)\n"
+    STRING_OVERWRITE,"要覆蓋 %1 嗎? (Yes|No|All)\n"
+    STRING_COPYFAIL, "為 '%2' 的 '%1' 的複製失敗， r/c %3!d!\n"
+    STRING_OPENFAIL, "未能開啟 '%1'\n"
+    STRING_READFAIL, "在 '%1' 的閱讀過程中失敗\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - 副本的源的檔案或目錄樹到目的地。\n\
+\n\
+語法:\n\
+XCOPY 源 [目標] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+地點:\n\
+\n\
+[/I]  假設如果目標不存在的目錄和複製兩個或\n\
+\t多個檔案。\n\
+[/S]  複製目錄和子目錄。\n\
+[/E]  複製目錄和子目錄，包括任何空的。\n\
+[/Q]  做不列表名稱在拷貝，就是保持安靜。\n\
+[/F]  在複製期間顯示完整的源和目標名稱。\n\
+[/L]  模擬運行，顯示名稱會被複製。\n\
+[/W]  在開始複製操作之前提示。\n\
+[/T]  創建空的目錄結構，但不複製檔案。\n\
+[/Y]  禁止顯示提示覆蓋檔案時。\n\
+[/-Y] 啟用提示覆蓋檔案時。\n\
+[/P]  在每個原始檔在複製前的提示。\n\
+[/N]  複製使用短名稱。\n\
+[/U]  複製目標中已存在的唯一檔案。\n\
+[/R]  覆蓋任何讀取的唯一檔案。\n\
+[/H]  包括隱藏檔案和系統檔案的副本中。\n\
+[/C]  繼續即使在複製期間發生的錯誤。\n\
+[/A]  僅複製具有存檔屬性設定的檔案。\n\
+[/M]  僅複製檔案的存檔屬性設定，刪除\n\
+\t存檔屬性。\n\
+[/D | /D:m-d-y] 複製新檔案或那些修改後所提供的日期。\n\
+\t\t如果提供沒有日期，則只複製如果目的地\n\
+\t\t比源。\n\n"
+
+}

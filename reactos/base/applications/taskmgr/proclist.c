@@ -22,7 +22,6 @@
 
 #include "precomp.h"
 
-
 INT_PTR CALLBACK    ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 WNDPROC             OldProcessListWndProc;
@@ -77,7 +76,7 @@ ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         rcItem.left = LVIR_BOUNDS;
         SendMessageW(hWnd, LVM_GETITEMRECT, ListView_GetItemCount(hWnd) - 1, (LPARAM)&rcItem);
         rcClip.bottom = rcItem.bottom;
-	rcClip.right = rcItem.right;
+        rcClip.right = rcItem.right;
         rcItem.left = LVIR_ICON;
         SendMessageW(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcItem);
         rcClip.left = rcItem.right;

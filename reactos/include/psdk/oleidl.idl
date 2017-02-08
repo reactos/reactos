@@ -956,3 +956,18 @@ interface IDropTarget : IUnknown
         [in] POINTL pt,
         [in, out] DWORD *pdwEffect);
 }
+
+/*****************************************************************************
+ * IDropSourceNotify interface
+ */
+[
+    object,
+    uuid(0000012b-0000-0000-c000-000000000046),
+    pointer_default(unique),
+    local
+]
+interface IDropSourceNotify : IUnknown
+{
+    HRESULT DragTargetEnter( [in] HWND hwnd );
+    HRESULT DragTargetLeave( void );
+}

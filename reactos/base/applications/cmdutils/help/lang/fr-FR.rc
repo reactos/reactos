@@ -1,0 +1,78 @@
+/*
+ * French resources
+ * Sylvain Pétréolle - 2005
+ * Pierre Schweitzer - 2007
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "Cette commande n'est pas prise en charge par l'utilitaire d'aide.\nEssayez ""%s /?"".\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Fournit des informations d'aide pour les commandes de ReactOS.\n\n\
+HELP [commande]\n\n\
+  commande - Affiche des informations d'aide sur cette commande.\n"
+    IDS_HELP1 "Liste de toutes les commandes disponibles (+ description)\n\n\
+  help commande\n\
+  commande /?    Pour plus d'informations sur une commande spécifique\n\n\
+?        Liste toutes les commandes disponibles sans leur description).\n\
+ALIAS    Définit, supprime ou montre les alias.\n\
+ATTRIB   Affiche ou change les attributs d'un fichier.\n\
+BEEP     Émet un bip par le haut-parleur système.\n\
+CALL     Appelle un programme batch à partir d'un autre.\n\
+CD       Affiche ou change le répertoire courant.\n\
+CHCP     Affiche ou définit le numéro de page de codes.\n\
+CHOICE   Attend après l'utilisateur pour un choix parmi un ensemble de propositions.\n\
+CLS      Efface l'écran.\n\
+CMD      Démarre une nouvelle instance de l'interpréteur de commandes de ReactOS.\n\
+COLOR    Définit les couleurs par défaut pour le premier plan et l'arrière-plan de la console.\n\
+COPY     Copie un ou plusieurs fichiers vers une autre destination.\n\
+DATE     Affiche ou définit la date.\n\
+DELETE   Supprime un ou plusieurs fichiers.\n\
+DIR      Affiche la liste des fichiers et des sous-répertoires du dossier.\n\
+ECHO     Affiche des messages, ou bascule l'affichage des commandes sur on ou off.\n\
+ERASE    Supprime un ou plusieurs fichiers.\n\
+EXIT     Quitte le programme CMD.EXE (interpréteur de commandes).\n\
+FOR      Lance une commande spécifique pour chaque fichier d'un ensemble de fichiers.\n\
+FREE     Espace disque (libre).\n\
+GOTO     Dirige l'interpréteur de commandes de ReactOS vers une ligne nommée\n\
+         dans un script batch.\n\
+HELP     Fournit des informations d'aide pour les commandes de ReactOS.\n\
+HISTORY  Liste toutes les commandes qui ont été utilisées\n\
+IF       Exécute un traitement conditionnel dans des programmes batch.\n\
+LABEL    Crée, change, ou supprime le nom de volume d'un disque.\n\
+MD       Crée un répertoire.\n\
+MKDIR    Crée un répertoire.\n\
+MKLINK   Crée des liens symboliques ou réels.\n"
+    IDS_HELP2 "MOVE     Déplace un ou plusieurs fichiers d'un répertoire vers un autre\n\
+         répertoire.\n\
+PATH     Affiche ou définit un chemin de recherche pour les fichiers exécutables.\n\
+PAUSE    Suspend l'exécution d'un fichier batch et affiche un message.\n\
+POPD     Restaure la précédente valeur du répertoire courant sauvegardée par\n\
+         PUSHD.\n\
+PROMPT   Change l'invite de commande.\n\
+PUSHD    Sauvegarde le répertoire courant puis le change.\n\
+RD       Supprime un répertoire.\n\
+REM      Enregistre des commentaires (remarques) dans un fichier batch.\n\
+REN      Renomme un ou plusieurs fichiers.\n\
+RENAME   Renomme un ou plusieurs fichiers.\n\
+REPLACE  Remplace un fichier.\n\
+RMDIR    Supprime un répertoire.\n\
+SCREEN   Déplace le curseur, optionnellement affiche du texte.\n\
+SET      Affiche, définit, ou supprime des variables d'environnement de ReactOS.\n\
+SHIFT    Déplace la position des paramètres remplacables dans un fichier batch.\n\
+START    Démarre une fenêtre séparée pour lancer un programme spécifié ou une commande.\n\
+         Exécute la commande.\n\
+TIME     Affiche ou définit l'heure du système.\n\
+TIMER    Permet l'utilisation de dix chronomètres.\n\
+TITLE    Définit le titre de la fenêtre pour une session de CMD.EXE.\n\
+TYPE     Affiche le contenu d'un fichier texte.\n\
+VER      Affiche la version de ReactOS.\n\
+VERIFY   Spécifie à ReactOS s'il faut vérifier que les fichiers sont correctement\n\
+         écrit sur un disque.\n\
+VOL      Affiche le nom de volume d'un disque et son numéro de série.\n"
+END

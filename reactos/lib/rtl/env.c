@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/env.c
  * PURPOSE:         Environment functions
@@ -13,6 +14,14 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+RtlSetEnvironmentStrings(IN PWCHAR NewEnvironment, IN ULONG NewEnvironmentSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -515,6 +524,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    {
       PPEB Peb = RtlGetCurrentPeb();
       if (Peb) {
+          RtlAcquirePebLock();
           Environment = Peb->ProcessParameters->Environment;
           SysEnvUsed = TRUE;
       }
@@ -522,12 +532,12 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
+      if (SysEnvUsed)
+         RtlReleasePebLock();
       return(STATUS_VARIABLE_NOT_FOUND);
    }
 
    Value->Length = 0;
-   if (SysEnvUsed == TRUE)
-      RtlAcquirePebLock();
 
    wcs = Environment;
    DPRINT("Starting search at :%p\n", wcs);
@@ -564,7 +574,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
                Status = STATUS_BUFFER_TOO_SMALL;
             }
 
-            if (SysEnvUsed == TRUE)
+            if (SysEnvUsed)
                RtlReleasePebLock();
 
             return(Status);
@@ -573,7 +583,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
       wcs++;
    }
 
-   if (SysEnvUsed == TRUE)
+   if (SysEnvUsed)
       RtlReleasePebLock();
 
    DPRINT("Return STATUS_VARIABLE_NOT_FOUND: %wZ\n", Name);

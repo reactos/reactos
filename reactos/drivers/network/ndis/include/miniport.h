@@ -7,9 +7,6 @@
 
 #pragma once
 
-#include <ndis.h>
-#include <ndissys.h>
-
 struct _ADAPTER_BINDING;
 
 typedef struct _HARDWARE_ADDRESS {

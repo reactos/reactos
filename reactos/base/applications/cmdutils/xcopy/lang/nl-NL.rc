@@ -1,0 +1,56 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Onjuist aantal parameters - Gebruik xcopy /? om hulp te krijgen\n"
+    STRING_INVPARM,  "Onjuiste parameter '%1' -  Gebruik xcopy /? om hulp te krijgen\n"
+    STRING_PAUSE,    "Druk op <enter> om te beginnen met kopiëren\n"
+    STRING_SIMCOPY,  "%1!d! bestand(en) zouden worden gekopieerd\n"
+    STRING_COPY,     "%1!d! bestand(en) gekopieerd\n"
+    STRING_QISDIR,   "Is '%1' een bestand of een map\n\
+                     op de bestemming?\n\
+                     (B - Bestand, D - Directory)\n"
+    STRING_SRCPROMPT,"%1? (Ja|Nee)\n"
+    STRING_OVERWRITE,"Overschrijven %1? (Ja|Nee|Alles)\n"
+    STRING_COPYFAIL, "Kopiëren van '%1' naar '%2' mislukt met r/c %3!d!\n"
+    STRING_OPENFAIL, "Fout tijdens openen van '%1'\n"
+    STRING_READFAIL, "Fout tijdens lezen van '%1'\n"
+    STRING_YES_CHAR, "J"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"B"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Kopieert bronbestanden of -mappen naar een bestemming\n\
+\n\
+Gebruik:\n\
+XCOPY bron [bestemming] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Parameters:\n\
+\n\
+[/I]  Als bestemming niet bestaat en 2 of meer bestanden worden\n\
+\tgekopieerd, neem aan dat een map werd bedoeld\n\
+[/S]  Kopieer mappen en submappen\n\
+[/E]  Kopieer mappen en submappen, inclusief lege\n\
+[/Q]  Toon geen namen tijdens kopiëren (stil).\n\
+[/F]  Toon volledige bron- en bestemmingnamen tijdens kopiëren\n\
+[/L]  Simuleer de actie, toon de namen die gekopieerd zouden worden\n\
+[/W]  Wacht op actie van de gebruiker voor het kopiëren begint\n\
+[/T]  Creëert een lege mapstructuur, maar kopieert geen bestanden\n\
+[/Y]  Onderdrukt gebruikersactie wanneer bestanden worden overschreven\n\
+[/-Y] Vraagt gebruikersactie wanneer bestanden worden overschreven\n\
+[/P]  Vraagt gebruikersactie voor ieder bronbestand voor kopiëren\n\
+[/N]  Kopieer m.b.v korte bestandsnamen\n\
+[/U]  Kopieer alleen bestanden die al bestaan op de bestemming\n\
+[/R]  Overschrijf alle schrijf-beveiligde bestanden\n\
+[/H]  Inclusief verborgen en systeem bestanden\n\
+[/C]  Ga door zelfs als er een fout optreed tijdens het kopiëren\n\
+[/A]  Kopieer alleen bestanden met archiveringsattribuut aan\n\
+[/M]  Kopieer alleen bestanden met archiveringsattribuut aan, verwijdert\n\
+\tdit archiveringsattribuut\n\
+[/D | /D:m-d-y] Kopieer bestanden die nieuw zijn of gewijzigd zijn na de opgegeven\n\
+\t\tdatum. Als geen datum wordt gegeven, kopieer alleen als bron nieuwer is.\n\n"
+
+}

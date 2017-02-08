@@ -30,7 +30,7 @@ static PMONITOR gMonitorList = NULL;
  */
 static
 PMONITOR
-IntCreateMonitorObject()
+IntCreateMonitorObject(VOID)
 {
     return UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_MONITOR, sizeof(MONITOR));
 }
@@ -99,7 +99,7 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
  *   PMONITOR
  */
 PMONITOR NTAPI
-UserGetPrimaryMonitor()
+UserGetPrimaryMonitor(VOID)
 {
     PMONITOR pMonitor;
 
@@ -258,7 +258,11 @@ UserUpdateMonitorSize(IN HDEV hDev)
     }
 
     /* ...and create new one */
-    pMonitor->hrgnMonitor = IntSysCreateRectRgnIndirect(&pMonitor->rcMonitor);
+    pMonitor->hrgnMonitor = NtGdiCreateRectRgn(
+        pMonitor->rcMonitor.left,
+        pMonitor->rcMonitor.top,
+        pMonitor->rcMonitor.right,
+        pMonitor->rcMonitor.bottom);
     if (pMonitor->hrgnMonitor)
         IntGdiSetRegionOwner(pMonitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
@@ -467,6 +471,35 @@ cleanup:
     return UserGetMonitorObject(hMonitor);
 }
 
+PMONITOR
+FASTCALL
+UserMonitorFromPoint(
+    IN POINT pt,
+    IN DWORD dwFlags)
+{
+    RECTL rc;
+    HMONITOR hMonitor = NULL;
+
+    /* Check if flags are valid */
+    if (dwFlags != MONITOR_DEFAULTTONULL &&
+        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
+        dwFlags != MONITOR_DEFAULTTONEAREST)
+    {
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        return NULL;
+    }
+
+    /* Fill rect (bottom-right exclusive) */
+    rc.left = pt.x;
+    rc.right = pt.x + 1;
+    rc.top = pt.y;
+    rc.bottom = pt.y + 1;
+
+    /* Find intersecting monitor */
+    IntGetMonitorsFromRect(&rc, &hMonitor, NULL, 1, dwFlags);
+
+    return UserGetMonitorObject(hMonitor);
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -509,7 +542,8 @@ NtUserEnumDisplayMonitors(
     OPTIONAL OUT PRECTL prcUnsafeMonitorList,
     OPTIONAL IN DWORD dwListSize)
 {
-    INT cMonitors, iRet = -1, i;
+    UINT cMonitors, i;
+    INT iRet = -1;
     HMONITOR *phMonitorList = NULL;
     PRECTL prcMonitorList = NULL;
     RECTL rc, *pRect;
@@ -586,7 +620,7 @@ NtUserEnumDisplayMonitors(
         (phUnsafeMonitorList == NULL && prcUnsafeMonitorList == NULL))
     {
         /* Simple case - just return monitors count */
-        TRACE("cMonitors = %d\n", cMonitors);
+        TRACE("cMonitors = %u\n", cMonitors);
         iRet = cMonitors;
         goto cleanup;
     }
@@ -603,7 +637,7 @@ NtUserEnumDisplayMonitors(
     }
     if (prcUnsafeMonitorList != NULL && dwListSize != 0)
     {
-        prcMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * dwListSize, USERTAG_MONITORRECTS);
+        prcMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof(RECT) * dwListSize,USERTAG_MONITORRECTS);
         if (prcMonitorList == NULL)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -616,13 +650,16 @@ NtUserEnumDisplayMonitors(
                                        dwListSize, MONITOR_DEFAULTTONULL);
 
     if (hdc != NULL && pRect != NULL && prcMonitorList != NULL)
-        for (i = 0; i < cMonitors; i++)
+    {
+        for (i = 0; i < min(cMonitors, dwListSize); i++)
         {
+            _Analysis_assume_(i < dwListSize);
             prcMonitorList[i].left -= DcRect.left;
             prcMonitorList[i].right -= DcRect.left;
             prcMonitorList[i].top -= DcRect.top;
             prcMonitorList[i].bottom -= DcRect.top;
         }
+    }
 
     /* Output result */
     if (phUnsafeMonitorList != NULL && dwListSize != 0)
@@ -700,7 +737,7 @@ NtUserGetMonitorInfo(
     pMonitor = UserGetMonitorObject(hMonitor);
     if (!pMonitor)
     {
-        TRACE("Couldnt find monitor 0x%lx\n", hMonitor);
+        TRACE("Couldnt find monitor %p\n", hMonitor);
         goto cleanup;
     }
 
@@ -786,7 +823,6 @@ NtUserMonitorFromPoint(
     IN POINT pt,
     IN DWORD dwFlags)
 {
-    INT cMonitors;
     RECTL rc;
     HMONITOR hMonitor = NULL;
 
@@ -808,7 +844,7 @@ NtUserMonitorFromPoint(
     UserEnterShared();
 
     /* Find intersecting monitor */
-    cMonitors = IntGetMonitorsFromRect(&rc, &hMonitor, NULL, 1, dwFlags);
+    IntGetMonitorsFromRect(&rc, &hMonitor, NULL, 1, dwFlags);
 
     UserLeave();
     return hMonitor;

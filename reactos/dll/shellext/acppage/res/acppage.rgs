@@ -1,0 +1,85 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        ForceRemove {513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8} = s 'LayerUIPropPage'
+        {
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+    }
+    NoRemove batfile
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove ShimLayer Property Page = s '{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}'
+                {
+                }
+            }
+        }
+    }
+    NoRemove cmdfile
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove ShimLayer Property Page = s '{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}'
+                {
+                }
+            }
+        }
+    }
+    NoRemove exefile
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove ShimLayer Property Page = s '{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}'
+                {
+                }
+            }
+        }
+    }
+    NoRemove lnkfile
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove ShimLayer Property Page = s '{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}'
+                {
+                }
+            }
+        }
+    }
+    NoRemove Msi.Package
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove ShimLayer Property Page = s '{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}'
+                {
+                }
+            }
+        }
+    }
+    NoRemove piffile
+    {
+        NoRemove shellex
+        {
+            NoRemove PropertySheetHandlers
+            {
+                ForceRemove ShimLayer Property Page = s '{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}'
+                {
+                }
+            }
+        }
+    }
+}

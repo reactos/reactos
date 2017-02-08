@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            dll/gdi32/objects/coord.c
+ * FILE:            win32ss/gdi/gdi32/objects/efloat.c
  * PURPOSE:         Functions to convert between FLOAT and EFLOAT
  * PROGRAMMER:      James Tabor
  */

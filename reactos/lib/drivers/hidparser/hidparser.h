@@ -10,16 +10,6 @@
 
 #pragma once
 
-#define _HIDPI_
-#define _HIDPI_NO_FUNCTION_MACROS_
-#include <ntddk.h>
-#include <hidpddi.h>
-#include <hidpi.h>
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#include <debug.h>
-
 //
 // function prototypes
 //
@@ -27,7 +17,7 @@ typedef PVOID (NTAPI *PHIDPARSER_ALLOC_FUNCTION)(ULONG Size);
 typedef VOID (NTAPI *PHIDPARSER_FREE_FUNCTION)(PVOID Item);
 typedef VOID (NTAPI *PHIDPARSER_ZERO_FUNCTION)(PVOID Item, ULONG Size);
 typedef VOID (NTAPI *PHIDPARSER_COPY_FUNCTION)(PVOID Target, PVOID Source, ULONG Size);
-typedef VOID (NTAPI *PHIDPARSER_DEBUG_FUNCTION)(LPCSTR Src, ...);
+typedef VOID (__cdecl *PHIDPARSER_DEBUG_FUNCTION)(LPCSTR Src, ...);
 
 //
 // status code
@@ -123,12 +113,12 @@ NTAPI
 HidParser_GetSpecificValueCaps(
     IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PULONG  ValueCapsLength);
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    OUT PHIDP_VALUE_CAPS ValueCaps,
+    IN OUT PUSHORT ValueCapsLength);
 
 
 HIDAPI

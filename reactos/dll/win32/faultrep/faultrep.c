@@ -53,14 +53,13 @@ static const WCHAR SZ_EXCLUSIONLIST_KEY[] = {
  * Wine doesn't use this data but stores it in the registry (in the same place
  * as Windows would) in case it will be useful in a future version
  *
- * According to MSDN this function should succeed even if the user has no write
- * access to HKLM. This probably means that there is no error checking.
  */
 BOOL WINAPI AddERExcludedApplicationW(LPCWSTR lpAppFileName)
 {
     WCHAR *bslash;
     DWORD value = 1;
     HKEY hkey;
+    LONG res;
 
     TRACE("(%s)\n", wine_dbgstr_w(lpAppFileName));
     bslash = strrchrW(lpAppFileName, '\\');
@@ -72,13 +71,14 @@ BOOL WINAPI AddERExcludedApplicationW(LPCWSTR lpAppFileName)
         return FALSE;
     }
 
-    if (!RegCreateKeyW(HKEY_LOCAL_MACHINE, SZ_EXCLUSIONLIST_KEY, &hkey))
+    res = RegCreateKeyW(HKEY_LOCAL_MACHINE, SZ_EXCLUSIONLIST_KEY, &hkey);
+    if (!res)
     {
         RegSetValueExW(hkey, lpAppFileName, 0, REG_DWORD, (LPBYTE)&value, sizeof(value));
         RegCloseKey(hkey);
     }
 
-    return TRUE;
+    return !res;
 }
 
 /*************************************************************************
@@ -122,8 +122,6 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
         return FALSE;
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(inst);
-        break;
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;

@@ -18,21 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-#define COBJMACROS
-
 #include "editor.h"
-//#include "ole2.h"
-//#include "oleauto.h"
-//#include "richole.h"
-//#include "imm.h"
-//#include "textserv.h"
-//#include "wine/debug.h"
-//#include "editstr.h"
+
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
@@ -77,9 +64,17 @@ static HRESULT WINAPI ITextServicesImpl_QueryInterface(IUnknown *iface, REFIID r
 
    if (IsEqualIID(riid, &IID_IUnknown))
       *ppv = &This->IUnknown_inner;
-   else if IsEqualIID(riid, &IID_ITextServices)
+   else if (IsEqualIID(riid, &IID_ITextServices))
       *ppv = &This->ITextServices_iface;
-   else {
+   else if (IsEqualIID(riid, &IID_IRichEditOle) || IsEqualIID(riid, &IID_ITextDocument)) {
+      if (!This->editor->reOle)
+         if (!CreateIRichEditOle(This->outer_unk, This->editor, (void **)(&This->editor->reOle)))
+            return E_OUTOFMEMORY;
+      if (IsEqualIID(riid, &IID_ITextDocument))
+         ME_GetITextDocumentInterface(This->editor->reOle, ppv);
+      else
+         *ppv = This->editor->reOle;
+   } else {
       *ppv = NULL;
       FIXME("Unknown interface: %s\n", debugstr_guid(riid));
       return E_NOINTERFACE;
@@ -108,7 +103,7 @@ static ULONG WINAPI ITextServicesImpl_Release(IUnknown *iface)
 
    if (!ref)
    {
-      ITextHost_Release(This->pMyHost);
+      ME_DestroyEditor(This->editor);
       This->csTxtSrv.DebugInfo->Spare[0] = 0;
       DeleteCriticalSection(&This->csTxtSrv);
       CoTaskMemFree(This);
@@ -264,7 +259,7 @@ DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetText(ITextServices *iface, BSTR *p
          return E_OUTOFMEMORY;
 
       ME_CursorFromCharOfs(This->editor, 0, &start);
-      ME_GetTextW(This->editor, bstr, length, &start, INT_MAX, FALSE);
+      ME_GetTextW(This->editor, bstr, length, &start, INT_MAX, FALSE, FALSE);
       *pbstrText = bstr;
    } else {
       *pbstrText = NULL;
@@ -292,7 +287,7 @@ DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxSetText(ITextServices *iface, LPCWSTR
    return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetCurrentTargetX(ITextServices *iface, LONG *x)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
 {
    ITextServicesImpl *This = impl_from_ITextServices(iface);
 
@@ -354,7 +349,7 @@ DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurrentTargetX,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
@@ -378,7 +373,7 @@ static const ITextServicesVtbl textservices_vtbl =
    THISCALL(fnTextSrv_OnTxUIDeactivate),
    THISCALL(fnTextSrv_TxGetText),
    THISCALL(fnTextSrv_TxSetText),
-   THISCALL(fnTextSrv_TxGetCurrentTargetX),
+   THISCALL(fnTextSrv_TxGetCurTargetX),
    THISCALL(fnTextSrv_TxGetBaseLinePos),
    THISCALL(fnTextSrv_TxGetNaturalSize),
    THISCALL(fnTextSrv_TxGetDropTarget),
@@ -392,7 +387,7 @@ static const ITextServicesVtbl textservices_vtbl =
 HRESULT WINAPI CreateTextServices(IUnknown  *pUnkOuter, ITextHost *pITextHost, IUnknown  **ppUnk)
 {
    ITextServicesImpl *ITextImpl;
-   HRESULT hres;
+
    TRACE("%p %p --> %p\n", pUnkOuter, pITextHost, ppUnk);
    if (pITextHost == NULL)
       return E_POINTER;
@@ -407,14 +402,12 @@ HRESULT WINAPI CreateTextServices(IUnknown  *pUnkOuter, ITextHost *pITextHost, I
    ITextImpl->pMyHost = pITextHost;
    ITextImpl->IUnknown_inner.lpVtbl = &textservices_inner_vtbl;
    ITextImpl->ITextServices_iface.lpVtbl = &textservices_vtbl;
-   ITextImpl->editor = ME_MakeEditor(pITextHost, FALSE);
+   ITextImpl->editor = ME_MakeEditor(pITextHost, FALSE, ES_LEFT);
    ITextImpl->editor->exStyleFlags = 0;
    ITextImpl->editor->rcFormat.left = 0;
    ITextImpl->editor->rcFormat.top = 0;
    ITextImpl->editor->rcFormat.right = 0;
    ITextImpl->editor->rcFormat.bottom = 0;
-
-   ME_HandleMessage(ITextImpl->editor, WM_CREATE, 0, 0, TRUE, &hres);
 
    if (pUnkOuter)
       ITextImpl->outer_unk = pUnkOuter;

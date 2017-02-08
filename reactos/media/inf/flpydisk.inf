@@ -1,0 +1,99 @@
+; FDC.INF
+
+; Installation file for floppy disk drives
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = FloppyDisk
+ClassGuid  = {4D36E980-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 08/15/2005,1.01.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = Floppy.NT.AddReg
+
+[Floppy.NT.AddReg]
+HKR, , ,               0, %FloppyClassName%
+HKR, , Icon,           0, "-50"
+HKR, , NoInstallClass, , 1
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+;FIXME: We do not have a driver yet
+%Floppy.DeviceDesc% = NO_DRV, GenFloppyDisk
+;%Floppy.DeviceDesc% = floppy_Inst, GenFloppyDisk
+
+;----------------------------- FDC DRIVER -----------------------------
+
+[floppy_Inst.NT]
+CopyFiles = floppy_CopyFiles.NT
+
+[floppy_CopyFiles.NT]
+flpydisk.sys
+
+[flopy_Inst.NT.Services]
+AddService = flpydisk, 0x00000002, floppy_Service_Inst
+
+[floppy_Service_Inst]
+ServiceType    = 1
+StartType      = 3
+ErrorControl   = 1
+ServiceBinary  = %12%\flpydisk.sys
+
+
+;---------------------------- NO DRIVER REQ -----------------------------
+
+[NO_DRV]
+
+[NO_DRV.Services]
+AddService = , 0x00000002
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+FloppyClassName = "Floppy disk drives"
+GenericMfg = "(Generic floppy disk drives)"
+Floppy.DeviceDesc = "Generic floppy disk drive"
+
+[Strings.0405]
+ReactOS = "ReactOS Team"
+
+FloppyClassName = "Disketové jednotky"
+GenericMfg = "(Obecné disketové jednotky)"
+Floppy.DeviceDesc = "Obecná disketová jednotka"
+
+[Strings.0a]
+ReactOS = "Equipo de ReactOS"
+
+FloppyClassName = "Disqueteras"
+GenericMfg = "(Disqueteras genéricas)"
+Floppy.DeviceDesc = "Disquetera genérica"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+
+FloppyClassName = "Stacje dyskietek"
+GenericMfg = "(Standardowe stacje dyskietek)"
+Floppy.DeviceDesc = "Standardowa stacja dyskietek"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
+FloppyClassName = "Unitate de disc flexibil"
+GenericMfg = "(unități generice de disc flexibil)"
+Floppy.DeviceDesc = "Unitate de disc flexibil"
+
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+
+FloppyClassName = "Yumuşak Disk Sürücüleri"
+GenericMfg = "(Umûmî Yumuşak Disk Sürücüleri)"
+Floppy.DeviceDesc = "Umûmî Yumuşak Disk Sürücüsü"

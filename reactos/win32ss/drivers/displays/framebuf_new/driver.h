@@ -1,21 +1,22 @@
 /*
  * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/framebuf/driver.h
+ * FILE:            win32ss/drivers/displays/framebuf_new/driver.h
  * PURPOSE:         Main Driver Header File
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  *                  ReactOS Portable Systems Group
  */
- 
+
+#ifndef _FRAMEBUF_NEW_PCH_
+#define _FRAMEBUF_NEW_PCH_
+
 //#define DBG 1
-#include "stddef.h"
 #include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "wingdi.h"
-#include "winddi.h"
-#include "devioctl.h"
-#include "ntddvdeo.h"
+#include <windef.h>
+#include <wingdi.h>
+#include <winddi.h>
+#include <devioctl.h>
+#include <ntddvdeo.h>
 #include "debug.h"
 
 typedef struct  _PDEV
@@ -74,3 +75,5 @@ VOID NTAPI vDisableSURF(PPDEV);
 #define ALLOC_TAG               'bfDD'        // Four byte tag (characters in
                                               // reverse order) used for memory
                                               // allocations
+
+#endif /* _FRAMEBUF_NEW_PCH_ */

@@ -1,5 +1,5 @@
 /*
- * COMMDLG - File Dialogs
+ * Win 3.1 Style File Dialogs
  *
  * Copyright 1994 Martin Ayotte
  * Copyright 1996 Albrecht Kleine
@@ -18,31 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <ctype.h>
-//#include <stdlib.h>
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-#include <windef.h>
-//#include "winbase.h"
-//#include "winnls.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
-#include <winreg.h>
-#include <winternl.h>
-#include <commdlg.h>
-#include <shlwapi.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #include "cdlg.h"
-#include "filedlg31.h"
 
 #define BUFFILE 512
 #define BUFFILEALLOC 512 * sizeof(WCHAR)
@@ -60,12 +37,28 @@ static HICON hHDisk = 0;
 static HICON hCDRom = 0;
 static HICON hNet = 0;
 
+#define FD31_OFN_PROP "FILEDLG_OFN"
+
+typedef struct tagFD31_DATA
+{
+    HWND hwnd; /* file dialog window handle */
+    BOOL hook; /* TRUE if the dialog is hooked */
+    UINT lbselchstring; /* registered message id */
+    UINT fileokstring; /* registered message id */
+    LPARAM lParam; /* save original lparam */
+    LPCVOID template; /* template for 32 bits resource */
+    BOOL open; /* TRUE if open dialog, FALSE if save dialog */
+    LPOPENFILENAMEW ofnW; /* pointer either to the original structure or
+                             a W copy for A/16 API */
+    LPOPENFILENAMEA ofnA; /* original structure if 32bits ansi dialog */
+} FD31_DATA, *PFD31_DATA;
+
 /***********************************************************************
  * 				FD31_Init			[internal]
  */
-BOOL FD31_Init(void)
+static BOOL FD31_Init(void)
 {
-    static BOOL initialized = 0;
+    static BOOL initialized = FALSE;
 
     if (!initialized) {
         hFolder  = LoadImageA( COMDLG32_hInstance, "FOLDER", IMAGE_ICON, 16, 16, LR_SHARED );
@@ -77,7 +70,7 @@ BOOL FD31_Init(void)
 	if (hFolder == 0 || hFolder2 == 0 || hFloppy == 0 ||
 	    hHDisk == 0 || hCDRom == 0 || hNet == 0)
 	{
-	    ERR("Error loading icons !\n");
+	    ERR("Error loading icons!\n");
 	    return FALSE;
 	}
 	initialized = TRUE;
@@ -110,8 +103,7 @@ static void FD31_StripEditControl(HWND hwnd)
  *
  *      Call the appropriate hook
  */
-BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
-                         LPARAM lParam)
+static BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam, LPARAM lParam)
 {
     BOOL ret;
 
@@ -190,11 +182,11 @@ static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
 	while (filter) {
 	    scptr = strchrW(filter, ';');
 	    if (scptr)	*scptr = 0;
-            while (*filter == ' ') filter++;
+	    while (*filter == ' ') filter++;
 	    TRACE("Using file spec %s\n", debugstr_w(filter));
 	    SendMessageW(hdlg, LB_DIR, 0, (LPARAM)filter);
 	    if (scptr) *scptr = ';';
-	        filter = (scptr) ? (scptr + 1) : 0;
+	    filter = (scptr) ? (scptr + 1) : 0;
 	 }
     }
 
@@ -211,8 +203,8 @@ static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
 /***********************************************************************
  *                              FD31_WMDrawItem              [internal]
  */
-LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
-       int savedlg, const DRAWITEMSTRUCT *lpdis)
+static LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
+			    int savedlg, const DRAWITEMSTRUCT *lpdis)
 {
     WCHAR *str;
     HICON hIcon;
@@ -496,7 +488,7 @@ static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
         TRACE("path=%s, tmpstr2=%s\n", debugstr_w(path), debugstr_w(tmpstr2));
         SetDlgItemTextW( hWnd, edt1, tmpstr2 );
         FD31_ScanDir(lfs->ofnW, hWnd, path);
-        return (lfs->ofnW->Flags & OFN_NOVALIDATE) ? TRUE : FALSE;
+        return (lfs->ofnW->Flags & OFN_NOVALIDATE) != 0;
     }
 
     /* no wildcards, we might have a directory or a filename */
@@ -545,8 +537,9 @@ static LRESULT FD31_Validate( const FD31_DATA *lfs, LPCWSTR path, UINT control, 
     OPENFILENAMEW ofnsav;
     LPOPENFILENAMEW ofnW = lfs->ofnW;
     WCHAR filename[BUFFILE];
+    int copied_size = min( ofnW->lStructSize, sizeof(ofnsav) );
 
-    ofnsav = *ofnW; /* for later restoring */
+    memcpy( &ofnsav, ofnW, copied_size ); /* for later restoring */
 
     /* get current file name */
     if (path)
@@ -580,7 +573,7 @@ static LRESULT FD31_Validate( const FD31_DATA *lfs, LPCWSTR path, UINT control, 
                   0, lfs->lParam );
         if (lRet)
         {
-            *ofnW = ofnsav; /* restore old state */
+            memcpy( ofnW, &ofnsav, copied_size ); /* restore old state */
             return FALSE;
         }
     }
@@ -645,8 +638,8 @@ static LRESULT FD31_FileTypeChange( const FD31_DATA *lfs )
 /***********************************************************************
  *                              FD31_WMCommand               [internal]
  */
-LRESULT FD31_WMCommand(HWND hWnd, LPARAM lParam, UINT notification,
-       UINT control, const FD31_DATA *lfs )
+static LRESULT FD31_WMCommand( HWND hWnd, LPARAM lParam, UINT notification,
+			       UINT control, const FD31_DATA *lfs )
 {
     switch (control)
     {
@@ -746,7 +739,6 @@ static void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, 
 {
     UNICODE_STRING usBuffer;
 
-    ofnW->lStructSize = sizeof(OPENFILENAMEW);
     ofnW->hwndOwner = ofnA->hwndOwner;
     ofnW->hInstance = ofnA->hInstance;
     if (ofnA->lpstrFilter)
@@ -793,6 +785,12 @@ static void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, 
         else /* numbered resource */
             ofnW->lpTemplateName = (LPCWSTR) ofnA->lpTemplateName;
     }
+    if (ofnW->lStructSize > OPENFILENAME_SIZE_VERSION_400W)
+    {
+        ofnW->pvReserved = ofnA->pvReserved;
+        ofnW->dwReserved = ofnA->dwReserved;
+        ofnW->FlagsEx    = ofnA->FlagsEx;
+    }
 }
 
 
@@ -816,7 +814,7 @@ static void FD31_FreeOfnW(OPENFILENAMEW *ofnW)
  *                              FD31_DestroyPrivate            [internal]
  *      destroys the private object
  */
-void FD31_DestroyPrivate(PFD31_DATA lfs)
+static void FD31_DestroyPrivate(PFD31_DATA lfs)
 {
     HWND hwnd;
     if (!lfs) return;
@@ -833,6 +831,64 @@ void FD31_DestroyPrivate(PFD31_DATA lfs)
     RemovePropA(hwnd, FD31_OFN_PROP);
 }
 
+/***********************************************************************
+ *           FD31_GetTemplate                                  [internal]
+ *
+ * Get a template (or FALSE if failure) when 16 bits dialogs are used
+ * by a 32 bits application
+ *
+ */
+static BOOL FD31_GetTemplate(PFD31_DATA lfs)
+{
+    LPOPENFILENAMEW ofnW = lfs->ofnW;
+    LPOPENFILENAMEA ofnA = lfs->ofnA;
+    HANDLE hDlgTmpl;
+
+    if (ofnW->Flags & OFN_ENABLETEMPLATEHANDLE)
+    {
+        if (!(lfs->template = LockResource( ofnW->hInstance )))
+        {
+            COMDLG32_SetCommDlgExtendedError( CDERR_LOADRESFAILURE );
+            return FALSE;
+        }
+    }
+    else if (ofnW->Flags & OFN_ENABLETEMPLATE)
+    {
+        HRSRC hResInfo;
+        if (ofnA)
+            hResInfo = FindResourceA( ofnA->hInstance, ofnA->lpTemplateName, (LPSTR)RT_DIALOG );
+        else
+            hResInfo = FindResourceW( ofnW->hInstance, ofnW->lpTemplateName, (LPWSTR)RT_DIALOG );
+        if (!hResInfo)
+        {
+            COMDLG32_SetCommDlgExtendedError( CDERR_FINDRESFAILURE );
+            return FALSE;
+        }
+        if (!(hDlgTmpl = LoadResource( ofnW->hInstance, hResInfo )) ||
+            !(lfs->template = LockResource( hDlgTmpl )))
+        {
+            COMDLG32_SetCommDlgExtendedError( CDERR_LOADRESFAILURE );
+            return FALSE;
+        }
+    }
+    else /* get it from internal Wine resource */
+    {
+        HRSRC hResInfo;
+        if (!(hResInfo = FindResourceA( COMDLG32_hInstance, lfs->open ? "OPEN_FILE" : "SAVE_FILE", (LPSTR)RT_DIALOG )))
+        {
+            COMDLG32_SetCommDlgExtendedError( CDERR_FINDRESFAILURE );
+            return FALSE;
+        }
+        if (!(hDlgTmpl = LoadResource( COMDLG32_hInstance, hResInfo )) ||
+            !(lfs->template = LockResource( hDlgTmpl )))
+        {
+            COMDLG32_SetCommDlgExtendedError( CDERR_LOADRESFAILURE );
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 /************************************************************************
  *                              FD31_AllocPrivate            [internal]
  *      allocate a private object to hold 32 bits Unicode
@@ -841,7 +897,7 @@ void FD31_DestroyPrivate(PFD31_DATA lfs)
  *      On entry : type = dialog procedure type (16,32A,32W)
  *                 dlgType = dialog type (open or save)
  */
-PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode)
+static PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode)
 {
     PFD31_DATA lfs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FD31_DATA));
 
@@ -865,11 +921,12 @@ PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode)
         if (lfs->ofnA->Flags & OFN_ENABLEHOOK)
             if (lfs->ofnA->lpfnHook)
                 lfs->hook = TRUE;
-        lfs->ofnW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lfs->ofnW));
+        lfs->ofnW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lfs->ofnA->lStructSize);
+        lfs->ofnW->lStructSize = lfs->ofnA->lStructSize;
         FD31_MapOfnStructA(lfs->ofnA, lfs->ofnW, lfs->open);
     }
 
-    if (! FD32_GetTemplate(lfs))
+    if (! FD31_GetTemplate(lfs))
     {
         FD31_DestroyPrivate(lfs);
         return NULL;
@@ -883,8 +940,7 @@ PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode)
 /***********************************************************************
  *                              FD31_WMInitDialog            [internal]
  */
-
-LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
+static LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   int i, n;
   WCHAR tmpstr[BUFFILE];
@@ -1001,7 +1057,117 @@ LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   return TRUE;
 }
 
-int FD31_GetFldrHeight(void)
+static int FD31_GetFldrHeight(void)
 {
   return fldrHeight;
+}
+
+/***********************************************************************
+ *                              FD31_WMMeasureItem           [internal]
+ */
+static LONG FD31_WMMeasureItem(LPARAM lParam)
+{
+    LPMEASUREITEMSTRUCT lpmeasure;
+
+    lpmeasure = (LPMEASUREITEMSTRUCT)lParam;
+    lpmeasure->itemHeight = FD31_GetFldrHeight();
+    return TRUE;
+}
+
+
+/***********************************************************************
+ *           FileOpenDlgProc                                    [internal]
+ *      Used for open and save, in fact.
+ */
+static INT_PTR CALLBACK FD31_FileOpenDlgProc(HWND hWnd, UINT wMsg,
+                                             WPARAM wParam, LPARAM lParam)
+{
+    PFD31_DATA lfs = (PFD31_DATA)GetPropA( hWnd, FD31_OFN_PROP );
+
+    TRACE("msg=%x wparam=%lx lParam=%lx\n", wMsg, wParam, lParam);
+    if ((wMsg != WM_INITDIALOG) && lfs && lfs->hook)
+    {
+        INT_PTR lRet;
+        lRet  = (INT_PTR)FD31_CallWindowProc( lfs, wMsg, wParam, lParam );
+        if (lRet) return lRet;   /* else continue message processing */
+    }
+    switch (wMsg)
+    {
+    case WM_INITDIALOG:
+        return FD31_WMInitDialog( hWnd, wParam, lParam );
+
+    case WM_MEASUREITEM:
+        return FD31_WMMeasureItem( lParam );
+
+    case WM_DRAWITEM:
+        return FD31_WMDrawItem( hWnd, wParam, lParam, !lfs->open, (DRAWITEMSTRUCT *)lParam );
+
+    case WM_COMMAND:
+        return FD31_WMCommand( hWnd, lParam, HIWORD(wParam), LOWORD(wParam), lfs );
+#if 0
+    case WM_CTLCOLOR:
+        SetBkColor( (HDC16)wParam, 0x00C0C0C0 );
+        switch (HIWORD(lParam))
+        {
+        case CTLCOLOR_BTN:
+            SetTextColor( (HDC16)wParam, 0x00000000 );
+            return hGRAYBrush;
+        case CTLCOLOR_STATIC:
+            SetTextColor( (HDC16)wParam, 0x00000000 );
+            return hGRAYBrush;
+        }
+        break;
+#endif
+    }
+    return FALSE;
+}
+
+/***********************************************************************
+ *           GetFileName31A                                 [internal]
+ *
+ * Creates a win31 style dialog box for the user to select a file to open/save.
+ */
+BOOL GetFileName31A( OPENFILENAMEA *lpofn, UINT dlgType )
+{
+    BOOL bRet = FALSE;
+    PFD31_DATA lfs;
+
+    if (!lpofn || !FD31_Init()) return FALSE;
+
+    TRACE("ofn flags %08x\n", lpofn->Flags);
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, FALSE);
+    if (lfs)
+    {
+        bRet = DialogBoxIndirectParamA( COMDLG32_hInstance, lfs->template, lpofn->hwndOwner,
+                                        FD31_FileOpenDlgProc, (LPARAM)lfs);
+        FD31_DestroyPrivate(lfs);
+    }
+
+    TRACE("return lpstrFile='%s' !\n", lpofn->lpstrFile);
+    return bRet;
+}
+
+/***********************************************************************
+ *           GetFileName31W                                 [internal]
+ *
+ * Creates a win31 style dialog box for the user to select a file to open/save
+ */
+BOOL GetFileName31W( OPENFILENAMEW *lpofn, UINT dlgType )
+{
+    BOOL bRet = FALSE;
+    PFD31_DATA lfs;
+
+    if (!lpofn || !FD31_Init()) return FALSE;
+
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, TRUE);
+    if (lfs)
+    {
+        bRet = DialogBoxIndirectParamW( COMDLG32_hInstance, lfs->template, lpofn->hwndOwner,
+                                        FD31_FileOpenDlgProc, (LPARAM)lfs);
+        FD31_DestroyPrivate(lfs);
+    }
+
+    TRACE("file %s, file offset %d, ext offset %d\n",
+          debugstr_w(lpofn->lpstrFile), lpofn->nFileOffset, lpofn->nFileExtension);
+    return bRet;
 }

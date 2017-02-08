@@ -13,7 +13,12 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
+#define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
+#include <mmsystem.h>
+#include <userenv.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -23,234 +28,249 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 #define HK_CTRL_ALT_DEL   0
 #define HK_CTRL_SHIFT_ESC 1
 
+// #define EWX_FLAGS_MASK  0x00000014
+// #define EWX_ACTION_MASK ~EWX_FLAGS_MASK
+
+// FIXME: At the moment we use this value (select the lowbyte flags and some highbytes ones).
+// It should be set such that it makes winlogon accepting only valid flags.
+#define EWX_ACTION_MASK 0x5C0F
+
+typedef struct tagLOGOFF_SHUTDOWN_DATA
+{
+    UINT Flags;
+    PWLSESSION Session;
+} LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
+
+static BOOL ExitReactOSInProgress = FALSE;
+
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
 StartTaskManager(
-	IN OUT PWLSESSION Session)
+    IN OUT PWLSESSION Session)
 {
-	LPVOID lpEnvironment;
-	BOOL ret;
+    LPVOID lpEnvironment;
+    BOOL ret;
 
-	if (!Session->Gina.Functions.WlxStartApplication)
-		return FALSE;
+    if (!Session->Gina.Functions.WlxStartApplication)
+        return FALSE;
 
-	if (!CreateEnvironmentBlock(
-		&lpEnvironment,
-		Session->UserToken,
-		TRUE))
-	{
-		return FALSE;
-	}
+    if (!CreateEnvironmentBlock(
+        &lpEnvironment,
+        Session->UserToken,
+        TRUE))
+    {
+        return FALSE;
+    }
 
-	ret = Session->Gina.Functions.WlxStartApplication(
-		Session->Gina.Context,
-		L"Default",
-		lpEnvironment,
-		L"taskmgr.exe");
+    ret = Session->Gina.Functions.WlxStartApplication(
+        Session->Gina.Context,
+        L"Default",
+        lpEnvironment,
+        L"taskmgr.exe");
 
-	DestroyEnvironmentBlock(lpEnvironment);
-	return ret;
+    DestroyEnvironmentBlock(lpEnvironment);
+    return ret;
 }
 
 static BOOL
 StartUserShell(
-	IN OUT PWLSESSION Session)
+    IN OUT PWLSESSION Session)
 {
-	LPVOID lpEnvironment = NULL;
-	BOOLEAN Old;
-	BOOL ret;
+    LPVOID lpEnvironment = NULL;
+    BOOLEAN Old;
+    BOOL ret;
 
-	/* Create environment block for the user */
-	if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
-	{
-		WARN("WL: CreateEnvironmentBlock() failed\n");
-		return FALSE;
-	}
+    /* Create environment block for the user */
+    if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
+    {
+        WARN("WL: CreateEnvironmentBlock() failed\n");
+        return FALSE;
+    }
 
-	/* Get privilege */
-	/* FIXME: who should do it? winlogon or gina? */
-	/* FIXME: reverting to lower privileges after creating user shell? */
-	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
+    /* Get privilege */
+    /* FIXME: who should do it? winlogon or gina? */
+    /* FIXME: reverting to lower privileges after creating user shell? */
+    RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
-	ret = Session->Gina.Functions.WlxActivateUserShell(
-				Session->Gina.Context,
-				L"Default",
-				NULL, /* FIXME */
-				lpEnvironment);
+    ret = Session->Gina.Functions.WlxActivateUserShell(
+                Session->Gina.Context,
+                L"Default",
+                NULL, /* FIXME */
+                lpEnvironment);
 
-	DestroyEnvironmentBlock(lpEnvironment);
-	return ret;
+    DestroyEnvironmentBlock(lpEnvironment);
+    return ret;
 }
 
 
 BOOL
 SetDefaultLanguage(
-	IN BOOL UserProfile)
+    IN BOOL UserProfile)
 {
-	HKEY BaseKey;
-	LPCWSTR SubKey;
-	LPCWSTR ValueName;
-	LONG rc;
-	HKEY hKey = NULL;
-	DWORD dwType, dwSize;
-	LPWSTR Value = NULL;
-	UNICODE_STRING ValueString;
-	NTSTATUS Status;
-	LCID Lcid;
-	BOOL ret = FALSE;
+    HKEY BaseKey;
+    LPCWSTR SubKey;
+    LPCWSTR ValueName;
+    LONG rc;
+    HKEY hKey = NULL;
+    DWORD dwType, dwSize;
+    LPWSTR Value = NULL;
+    UNICODE_STRING ValueString;
+    NTSTATUS Status;
+    LCID Lcid;
+    BOOL ret = FALSE;
 
-	if (UserProfile)
-	{
-		BaseKey = HKEY_CURRENT_USER;
-		SubKey = L"Control Panel\\International";
-		ValueName = L"Locale";
-	}
-	else
-	{
-		BaseKey = HKEY_LOCAL_MACHINE;
-		SubKey = L"System\\CurrentControlSet\\Control\\Nls\\Language";
-		ValueName = L"Default";
-	}
+    if (UserProfile)
+    {
+        BaseKey = HKEY_CURRENT_USER;
+        SubKey = L"Control Panel\\International";
+        ValueName = L"Locale";
+    }
+    else
+    {
+        BaseKey = HKEY_LOCAL_MACHINE;
+        SubKey = L"System\\CurrentControlSet\\Control\\Nls\\Language";
+        ValueName = L"Default";
+    }
 
-	rc = RegOpenKeyExW(
-		BaseKey,
-		SubKey,
-		0,
-		KEY_READ,
-		&hKey);
-	if (rc != ERROR_SUCCESS)
-	{
-		TRACE("RegOpenKeyEx() failed with error %lu\n", rc);
-		goto cleanup;
-	}
-	rc = RegQueryValueExW(
-		hKey,
-		ValueName,
-		NULL,
-		&dwType,
-		NULL,
-		&dwSize);
-	if (rc != ERROR_SUCCESS)
-	{
-		TRACE("RegQueryValueEx() failed with error %lu\n", rc);
-		goto cleanup;
-	}
-	else if (dwType != REG_SZ)
-	{
-		TRACE("Wrong type for %S\\%S registry entry (got 0x%lx, expected 0x%x)\n",
-			SubKey, ValueName, dwType, REG_SZ);
-		goto cleanup;
-	}
+    rc = RegOpenKeyExW(
+        BaseKey,
+        SubKey,
+        0,
+        KEY_READ,
+        &hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        TRACE("RegOpenKeyEx() failed with error %lu\n", rc);
+        goto cleanup;
+    }
+    rc = RegQueryValueExW(
+        hKey,
+        ValueName,
+        NULL,
+        &dwType,
+        NULL,
+        &dwSize);
+    if (rc != ERROR_SUCCESS)
+    {
+        TRACE("RegQueryValueEx() failed with error %lu\n", rc);
+        goto cleanup;
+    }
+    else if (dwType != REG_SZ)
+    {
+        TRACE("Wrong type for %S\\%S registry entry (got 0x%lx, expected 0x%x)\n",
+            SubKey, ValueName, dwType, REG_SZ);
+        goto cleanup;
+    }
 
-	Value = HeapAlloc(GetProcessHeap(), 0, dwSize);
-	if (!Value)
-	{
-		TRACE("HeapAlloc() failed\n");
-		goto cleanup;
-	}
-	rc = RegQueryValueExW(
-		hKey,
-		ValueName,
-		NULL,
-		NULL,
-		(LPBYTE)Value,
-		&dwSize);
-	if (rc != ERROR_SUCCESS)
-	{
-		TRACE("RegQueryValueEx() failed with error %lu\n", rc);
-		goto cleanup;
-	}
+    Value = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (!Value)
+    {
+        TRACE("HeapAlloc() failed\n");
+        goto cleanup;
+    }
+    rc = RegQueryValueExW(
+        hKey,
+        ValueName,
+        NULL,
+        NULL,
+        (LPBYTE)Value,
+        &dwSize);
+    if (rc != ERROR_SUCCESS)
+    {
+        TRACE("RegQueryValueEx() failed with error %lu\n", rc);
+        goto cleanup;
+    }
 
-	/* Convert Value to a Lcid */
-	ValueString.Length = ValueString.MaximumLength = (USHORT)dwSize;
-	ValueString.Buffer = Value;
-	Status = RtlUnicodeStringToInteger(&ValueString, 16, (PULONG)&Lcid);
-	if (!NT_SUCCESS(Status))
-	{
-		TRACE("RtlUnicodeStringToInteger() failed with status 0x%08lx\n", Status);
-		goto cleanup;
-	}
+    /* Convert Value to a Lcid */
+    ValueString.Length = ValueString.MaximumLength = (USHORT)dwSize;
+    ValueString.Buffer = Value;
+    Status = RtlUnicodeStringToInteger(&ValueString, 16, (PULONG)&Lcid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("RtlUnicodeStringToInteger() failed with status 0x%08lx\n", Status);
+        goto cleanup;
+    }
 
-	TRACE("%s language is 0x%08lx\n",
-		UserProfile ? "User" : "System", Lcid);
-	Status = NtSetDefaultLocale(UserProfile, Lcid);
-	if (!NT_SUCCESS(Status))
-	{
-		TRACE("NtSetDefaultLocale() failed with status 0x%08lx\n", Status);
-		goto cleanup;
-	}
+    TRACE("%s language is 0x%08lx\n",
+        UserProfile ? "User" : "System", Lcid);
+    Status = NtSetDefaultLocale(UserProfile, Lcid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtSetDefaultLocale() failed with status 0x%08lx\n", Status);
+        goto cleanup;
+    }
 
-	ret = TRUE;
+    ret = TRUE;
 
 cleanup:
-	if (hKey)
-		RegCloseKey(hKey);
-	if (Value)
-		HeapFree(GetProcessHeap(), 0, Value);
-	return ret;
+    if (hKey)
+        RegCloseKey(hKey);
+    if (Value)
+        HeapFree(GetProcessHeap(), 0, Value);
+    return ret;
 }
 
 BOOL
 PlaySoundRoutine(
-	IN LPCWSTR FileName,
-	IN UINT bLogon,
-	IN UINT Flags)
+    IN LPCWSTR FileName,
+    IN UINT bLogon,
+    IN UINT Flags)
 {
-	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
-	typedef UINT (WINAPI *WAVEOUTGETNUMDEVS)(VOID);
-	PLAYSOUNDW Play;
-	WAVEOUTGETNUMDEVS waveOutGetNumDevs;
-	UINT NumDevs;
-	HMODULE hLibrary;
-	BOOL Ret = FALSE;
+    typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
+    typedef UINT (WINAPI *WAVEOUTGETNUMDEVS)(VOID);
+    PLAYSOUNDW Play;
+    WAVEOUTGETNUMDEVS waveOutGetNumDevs;
+    UINT NumDevs;
+    HMODULE hLibrary;
+    BOOL Ret = FALSE;
 
-	hLibrary = LoadLibraryW(L"winmm.dll");
-	if (hLibrary)
-	{
-		waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
-		if (waveOutGetNumDevs)
-		{
-			NumDevs = waveOutGetNumDevs();
-			if (!NumDevs)
-			{
-				if (!bLogon)
-				{
-					Beep(500, 500);
-				}
-				FreeLibrary(hLibrary);
-				return FALSE;
-			}
-		}
+    hLibrary = LoadLibraryW(L"winmm.dll");
+    if (hLibrary)
+    {
+        waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
+        if (waveOutGetNumDevs)
+        {
+            NumDevs = waveOutGetNumDevs();
+            if (!NumDevs)
+            {
+                if (!bLogon)
+                {
+                    Beep(500, 500);
+                }
+                FreeLibrary(hLibrary);
+                return FALSE;
+            }
+        }
 
-		Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
-		if (Play)
-		{
-			Ret = Play(FileName, NULL, Flags);
-		}
-		FreeLibrary(hLibrary);
-	}
+        Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
+        if (Play)
+        {
+            Ret = Play(FileName, NULL, Flags);
+        }
+        FreeLibrary(hLibrary);
+    }
 
-	return Ret;
+    return Ret;
 }
 
 DWORD
 WINAPI
 PlayLogonSoundThread(
-	IN LPVOID lpParameter)
+    IN LPVOID lpParameter)
 {
     BYTE TokenUserBuffer[256];
     PTOKEN_USER pTokenUser = (TOKEN_USER*)TokenUserBuffer;
     ULONG Length;
-	HKEY hKey;
-	WCHAR wszBuffer[MAX_PATH] = {0};
-	WCHAR wszDest[MAX_PATH];
-	DWORD dwSize = sizeof(wszBuffer), dwType;
-	SERVICE_STATUS_PROCESS Info;
-	UNICODE_STRING SidString;
-	NTSTATUS Status;
-	ULONG Index = 0;
-	SC_HANDLE hSCManager, hService;
+    HKEY hKey;
+    WCHAR wszBuffer[MAX_PATH] = {0};
+    WCHAR wszDest[MAX_PATH];
+    DWORD dwSize = sizeof(wszBuffer), dwType;
+    SERVICE_STATUS_PROCESS Info;
+    UNICODE_STRING SidString;
+    NTSTATUS Status;
+    ULONG Index = 0;
+    SC_HANDLE hSCManager, hService;
 
     /* Get SID of current user */
     Status = NtQueryInformationToken((HANDLE)lpParameter,
@@ -281,40 +301,40 @@ PlayLogonSoundThread(
     {
         /* SID is too long. Should not happen. */
         ERR("StringCbCopyW failed!\n");
-		return 0;
+        return 0;
     }
 
     /* Open registry key and query sound path */
-	if (RegOpenKeyExW(HKEY_USERS, wszBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-	{
-	    ERR("RegOpenKeyExW(%ls) failed!\n", wszBuffer);
-		return 0;
-	}
+    if (RegOpenKeyExW(HKEY_USERS, wszBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW(%ls) failed!\n", wszBuffer);
+        return 0;
+    }
 
-	if (RegQueryValueExW(hKey, NULL, NULL, &dwType,
+    if (RegQueryValueExW(hKey, NULL, NULL, &dwType,
                       (LPBYTE)wszBuffer, &dwSize) != ERROR_SUCCESS ||
         (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
-	{
-	    ERR("RegQueryValueExW failed!\n");
-		RegCloseKey(hKey);
-		return 0;
-	}
+    {
+        ERR("RegQueryValueExW failed!\n");
+        RegCloseKey(hKey);
+        return 0;
+    }
 
-	RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-	if (!wszBuffer[0])
-	{
-	    /* No sound has been set */
-	    ERR("No sound has been set\n");
-	    return 0;
-	}
+    if (!wszBuffer[0])
+    {
+        /* No sound has been set */
+        ERR("No sound has been set\n");
+        return 0;
+    }
 
     /* Expand environment variables */
-	if (!ExpandEnvironmentStringsW(wszBuffer, wszDest, MAX_PATH))
-	{
-	    ERR("ExpandEnvironmentStringsW failed!\n");
-	    return 0;
-	}
+    if (!ExpandEnvironmentStringsW(wszBuffer, wszDest, MAX_PATH))
+    {
+        ERR("ExpandEnvironmentStringsW failed!\n");
+        return 0;
+    }
 
     /* Open service manager */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
@@ -363,776 +383,962 @@ PlayLogonSoundThread(
     /* Sound subsystem is running. Play logon sound. */
     TRACE("Playing logon sound: %ls\n", wszDest);
     PlaySoundRoutine(wszDest, TRUE, SND_FILENAME);
-	return 0;
+    return 0;
 }
 
-static VOID
+static
+VOID
 PlayLogonSound(
     IN OUT PWLSESSION Session)
 {
     HANDLE hThread;
 
-	hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
-	if (hThread)
-		CloseHandle(hThread);
+    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
+    if (hThread)
+        CloseHandle(hThread);
 }
 
-static BOOL
+static
+BOOL
 HandleLogon(
-	IN OUT PWLSESSION Session)
+    IN OUT PWLSESSION Session)
 {
-	PROFILEINFOW ProfileInfo;
-	BOOL ret = FALSE;
+    PROFILEINFOW ProfileInfo;
+    BOOL ret = FALSE;
 
-	/* Loading personal settings */
-	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
-	ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
-	if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
-	{
-		if (Session->Profile == NULL
-		 || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
-		  && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
-		{
-			ERR("WL: Wrong profile\n");
-			goto cleanup;
-		}
+    /* Loading personal settings */
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
+    ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
+    if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+    {
+        if (Session->Profile == NULL
+         || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
+          && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
+        {
+            ERR("WL: Wrong profile\n");
+            goto cleanup;
+        }
 
-		/* Load the user profile */
-		ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-		ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-		ProfileInfo.dwFlags = 0;
-		ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
-		ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
-		if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
-		{
-			ProfileInfo.lpDefaultPath = Session->Profile->pszNetworkDefaultUserProfile;
-			ProfileInfo.lpServerName = Session->Profile->pszServerName;
-			ProfileInfo.lpPolicyPath = Session->Profile->pszPolicy;
-		}
+        /* Load the user profile */
+        ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
+        ProfileInfo.dwSize = sizeof(PROFILEINFOW);
+        ProfileInfo.dwFlags = 0;
+        ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
+        ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
+        if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
+        {
+            ProfileInfo.lpDefaultPath = Session->Profile->pszNetworkDefaultUserProfile;
+            ProfileInfo.lpServerName = Session->Profile->pszServerName;
+            ProfileInfo.lpPolicyPath = Session->Profile->pszPolicy;
+        }
 
-		if (!LoadUserProfileW(Session->UserToken, &ProfileInfo))
-		{
-			ERR("WL: LoadUserProfileW() failed\n");
-			goto cleanup;
-		}
-	}
+        if (!LoadUserProfileW(Session->UserToken, &ProfileInfo))
+        {
+            ERR("WL: LoadUserProfileW() failed\n");
+            goto cleanup;
+        }
+    }
 
-	/* Create environment block for the user */
-	if (!CreateUserEnvironment(Session))
-	{
-		WARN("WL: SetUserEnvironment() failed\n");
-		goto cleanup;
-	}
+    /* Create environment block for the user */
+    if (!CreateUserEnvironment(Session))
+    {
+        WARN("WL: SetUserEnvironment() failed\n");
+        goto cleanup;
+    }
 
-	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
-	UpdatePerUserSystemParameters(0, TRUE);
+    CallNotificationDlls(Session, LogonHandler);
 
-	/* Set default language */
-	if (!SetDefaultLanguage(TRUE))
-	{
-		WARN("WL: SetDefaultLanguage() failed\n");
-		goto cleanup;
-	}
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
+    UpdatePerUserSystemParameters(0, TRUE);
 
-	if (!StartUserShell(Session))
-	{
-		//WCHAR StatusMsg[256];
-		WARN("WL: WlxActivateUserShell() failed\n");
-		//LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg));
-		//MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
-		goto cleanup;
-	}
+    /* Set default language */
+    if (!SetDefaultLanguage(TRUE))
+    {
+        WARN("WL: SetDefaultLanguage() failed\n");
+        goto cleanup;
+    }
 
-	if (!InitializeScreenSaver(Session))
-		WARN("WL: Failed to initialize screen saver\n");
+    if (!StartUserShell(Session))
+    {
+        //WCHAR StatusMsg[256];
+        WARN("WL: WlxActivateUserShell() failed\n");
+        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg) / sizeof(StatusMsg[0]));
+        //MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
+        goto cleanup;
+    }
 
-	Session->hProfileInfo = ProfileInfo.hProfile;
+    CallNotificationDlls(Session, StartShellHandler);
+
+    if (!InitializeScreenSaver(Session))
+        WARN("WL: Failed to initialize screen saver\n");
+
+    Session->hProfileInfo = ProfileInfo.hProfile;
 
     /* Logon has successed. Play sound. */
-	PlayLogonSound(Session);
-	
-	ret = TRUE;
+    PlayLogonSound(Session);
+
+    ret = TRUE;
 
 cleanup:
-	if (Session->Profile)
-	{
-		HeapFree(GetProcessHeap(), 0, Session->Profile->pszProfile);
-		HeapFree(GetProcessHeap(), 0, Session->Profile);
-	}
-	Session->Profile = NULL;
-	if (!ret
-	 && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
-	{
-		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
-	}
-	RemoveStatusMessage(Session);
-	if (!ret)
-	{
-		CloseHandle(Session->UserToken);
-		Session->UserToken = NULL;
-	}
-	return ret;
-}
+    if (Session->Profile)
+    {
+        HeapFree(GetProcessHeap(), 0, Session->Profile->pszProfile);
+        HeapFree(GetProcessHeap(), 0, Session->Profile);
+    }
+    Session->Profile = NULL;
+    if (!ret && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
+    {
+        UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
+    }
+    RemoveStatusMessage(Session);
+    if (!ret)
+    {
+        CloseHandle(Session->UserToken);
+        Session->UserToken = NULL;
+    }
 
-#define EWX_ACTION_MASK 0xffffffeb
-#define EWX_FLAGS_MASK  0x00000014
+    if (ret)
+    {
+        SwitchDesktop(Session->ApplicationDesktop);
+        Session->LogonState = STATE_LOGGED_ON;
+    }
 
-typedef struct tagLOGOFF_SHUTDOWN_DATA
-{
-  UINT Flags;
-  PWLSESSION Session;
-} LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
-
-static DWORD WINAPI
-LogoffShutdownThread(LPVOID Parameter)
-{
-	PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
-
-	if (LSData->Session->UserToken != NULL && !ImpersonateLoggedOnUser(LSData->Session->UserToken))
-	{
-		ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-		return 0;
-	}
-
-	/* Close processes of the interactive user */
-	if (!ExitWindowsEx(
-		EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
-		(EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
-		0))
-	{
-		ERR("Unable to kill user apps, error %lu\n", GetLastError());
-		RevertToSelf();
-		return 0;
-	}
-
-	/* FIXME: Call ExitWindowsEx() to terminate COM processes */
-
-	if (LSData->Session->UserToken)
-		RevertToSelf();
-
-	return 1;
+    return ret;
 }
 
 
-static NTSTATUS
+static
+DWORD
+WINAPI
+LogoffShutdownThread(
+    LPVOID Parameter)
+{
+    DWORD ret = 1;
+    PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+    UINT uFlags;
+
+    if (LSData->Session->UserToken != NULL &&
+        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    {
+        ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return 0;
+    }
+
+    // FIXME: To be really fixed: need to check what needs to be kept and what needs to be removed there.
+    //
+    // uFlags = EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
+             // ((LSData->Flags & EWX_ACTION_MASK) == EWX_LOGOFF ? EWX_CALLER_WINLOGON_LOGOFF : 0);
+
+    uFlags = EWX_CALLER_WINLOGON | (LSData->Flags & 0x0F);
+
+    ERR("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
+        uFlags, ExitReactOSInProgress ? "true" : "false");
+
+    ExitReactOSInProgress = TRUE;
+
+    /* Close processes of the interactive user */
+    if (!ExitWindowsEx(uFlags, 0))
+    {
+        ERR("Unable to kill user apps, error %lu\n", GetLastError());
+        ret = 0;
+    }
+
+    if (LSData->Session->UserToken)
+        RevertToSelf();
+
+    return ret;
+}
+
+static
+DWORD
+WINAPI
+KillComProcesses(
+    LPVOID Parameter)
+{
+    DWORD ret = 1;
+    PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+
+    ERR("In KillComProcesses\n");
+
+    if (LSData->Session->UserToken != NULL &&
+        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    {
+        ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return 0;
+    }
+
+    /* Attempt to kill remaining processes. No notifications needed. */
+    if (!ExitWindowsEx(EWX_CALLER_WINLOGON | EWX_NONOTIFY | EWX_FORCE | EWX_LOGOFF, 0))
+    {
+        ERR("Unable to kill COM apps, error %lu\n", GetLastError());
+        ret = 0;
+    }
+
+    if (LSData->Session->UserToken)
+        RevertToSelf();
+
+    return ret;
+}
+
+static
+NTSTATUS
 CreateLogoffSecurityAttributes(
-	OUT PSECURITY_ATTRIBUTES* ppsa)
+    OUT PSECURITY_ATTRIBUTES* ppsa)
 {
-	/* The following code is not working yet and messy */
-	/* Still, it gives some ideas about data types and functions involved and */
-	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */
-	/* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
-	/* Specifically THREAD_SET_THREAD_TOKEN is required. */
-	PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
-	PSECURITY_ATTRIBUTES psa = 0;
-	BYTE* pMem;
-	PACL pACL;
-	EXPLICIT_ACCESS Access;
-	PSID pEveryoneSID = NULL;
-	static SID_IDENTIFIER_AUTHORITY WorldAuthority = { SECURITY_WORLD_SID_AUTHORITY };
+    /* The following code is not working yet and messy */
+    /* Still, it gives some ideas about data types and functions involved and */
+    /* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */
+    /* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
+    /* Specifically THREAD_SET_THREAD_TOKEN is required. */
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    PSECURITY_ATTRIBUTES psa = 0;
+    BYTE* pMem;
+    PACL pACL;
+    EXPLICIT_ACCESS Access;
+    PSID pEveryoneSID = NULL;
+    static SID_IDENTIFIER_AUTHORITY WorldAuthority = { SECURITY_WORLD_SID_AUTHORITY };
 
-	*ppsa = NULL;
+    *ppsa = NULL;
 
-	// Let's first try to enumerate what kind of data we need for this to ever work:
-	// 1.  The Winlogon SID, to be able to give it THREAD_SET_THREAD_TOKEN.
-	// 2.  The users SID (the user trying to logoff, or rather shut down the system).
-	// 3.  At least two EXPLICIT_ACCESS instances:
-	// 3.1 One for Winlogon itself, giving it the rights
-	//     required to THREAD_SET_THREAD_TOKEN (as it's needed to successfully call
-	//     ImpersonateLoggedOnUser).
-	// 3.2 One for the user, to allow *that* thread to perform its work.
-	// 4.  An ACL to hold the these EXPLICIT_ACCESS ACE's.
-	// 5.  A SECURITY_DESCRIPTOR to hold the ACL, and finally.
-	// 6.  A SECURITY_ATTRIBUTES instance to pull all of this required stuff
-	//     together, to hand it to CreateThread.
-	//
-	// However, it seems struct LOGOFF_SHUTDOWN_DATA doesn't contain
-	// these required SID's, why they'd have to be added.
-	// The Winlogon's own SID should probably only be created once,
-	// while the user's SID obviously must be created for each new user.
-	// Might as well store it when the user logs on?
+    // Let's first try to enumerate what kind of data we need for this to ever work:
+    // 1.  The Winlogon SID, to be able to give it THREAD_SET_THREAD_TOKEN.
+    // 2.  The users SID (the user trying to logoff, or rather shut down the system).
+    // 3.  At least two EXPLICIT_ACCESS instances:
+    // 3.1 One for Winlogon itself, giving it the rights
+    //     required to THREAD_SET_THREAD_TOKEN (as it's needed to successfully call
+    //     ImpersonateLoggedOnUser).
+    // 3.2 One for the user, to allow *that* thread to perform its work.
+    // 4.  An ACL to hold the these EXPLICIT_ACCESS ACE's.
+    // 5.  A SECURITY_DESCRIPTOR to hold the ACL, and finally.
+    // 6.  A SECURITY_ATTRIBUTES instance to pull all of this required stuff
+    //     together, to hand it to CreateThread.
+    //
+    // However, it seems struct LOGOFF_SHUTDOWN_DATA doesn't contain
+    // these required SID's, why they'd have to be added.
+    // The Winlogon's own SID should probably only be created once,
+    // while the user's SID obviously must be created for each new user.
+    // Might as well store it when the user logs on?
 
-	if(!AllocateAndInitializeSid(&WorldAuthority, 
-	                             1,
-	                             SECURITY_WORLD_RID,
-	                             0, 0, 0, 0, 0, 0, 0,
-	                             &pEveryoneSID))
-	{
-		ERR("Failed to initialize security descriptor for logoff thread!\n");
-		return STATUS_UNSUCCESSFUL;
-	}
+    if(!AllocateAndInitializeSid(&WorldAuthority,
+                                 1,
+                                 SECURITY_WORLD_RID,
+                                 0, 0, 0, 0, 0, 0, 0,
+                                 &pEveryoneSID))
+    {
+        ERR("Failed to initialize security descriptor for logoff thread!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
-	/* set up the required security attributes to be able to shut down */
-	/* To save space and time, allocate a single block of memory holding */
-	/* both SECURITY_ATTRIBUTES and SECURITY_DESCRIPTOR */
-	pMem = HeapAlloc(GetProcessHeap(),
-	                 0,
-	                 sizeof(SECURITY_ATTRIBUTES) +
-	                 SECURITY_DESCRIPTOR_MIN_LENGTH +
-	                 sizeof(ACL));
-	if (!pMem)
-	{
-		ERR("Failed to allocate memory for logoff security descriptor!\n");
-		return STATUS_NO_MEMORY;
-	}
+    /* set up the required security attributes to be able to shut down */
+    /* To save space and time, allocate a single block of memory holding */
+    /* both SECURITY_ATTRIBUTES and SECURITY_DESCRIPTOR */
+    pMem = HeapAlloc(GetProcessHeap(),
+                     0,
+                     sizeof(SECURITY_ATTRIBUTES) +
+                     SECURITY_DESCRIPTOR_MIN_LENGTH +
+                     sizeof(ACL));
+    if (!pMem)
+    {
+        ERR("Failed to allocate memory for logoff security descriptor!\n");
+        return STATUS_NO_MEMORY;
+    }
 
-	/* Note that the security descriptor needs to be in _absolute_ format, */
-	/* meaning its members must be pointers to other structures, rather */
-	/* than the relative format using offsets */
-	psa = (PSECURITY_ATTRIBUTES)pMem;
-	SecurityDescriptor = (PSECURITY_DESCRIPTOR)(pMem + sizeof(SECURITY_ATTRIBUTES));
-	pACL = (PACL)(((PBYTE)SecurityDescriptor) + SECURITY_DESCRIPTOR_MIN_LENGTH);
+    /* Note that the security descriptor needs to be in _absolute_ format, */
+    /* meaning its members must be pointers to other structures, rather */
+    /* than the relative format using offsets */
+    psa = (PSECURITY_ATTRIBUTES)pMem;
+    SecurityDescriptor = (PSECURITY_DESCRIPTOR)(pMem + sizeof(SECURITY_ATTRIBUTES));
+    pACL = (PACL)(((PBYTE)SecurityDescriptor) + SECURITY_DESCRIPTOR_MIN_LENGTH);
 
-	// Initialize an EXPLICIT_ACCESS structure for an ACE.
-	// The ACE will allow this thread to log off (and shut down the system, currently).
-	ZeroMemory(&Access, sizeof(Access));
-	Access.grfAccessPermissions = THREAD_SET_THREAD_TOKEN;
-	Access.grfAccessMode = SET_ACCESS; // GRANT_ACCESS?
-	Access.grfInheritance = NO_INHERITANCE;
-	Access.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	Access.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-	Access.Trustee.ptstrName = pEveryoneSID;
+    // Initialize an EXPLICIT_ACCESS structure for an ACE.
+    // The ACE will allow this thread to log off (and shut down the system, currently).
+    ZeroMemory(&Access, sizeof(Access));
+    Access.grfAccessPermissions = THREAD_SET_THREAD_TOKEN;
+    Access.grfAccessMode = SET_ACCESS; // GRANT_ACCESS?
+    Access.grfInheritance = NO_INHERITANCE;
+    Access.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    Access.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    Access.Trustee.ptstrName = pEveryoneSID;
 
-	if (SetEntriesInAcl(1, &Access, NULL, &pACL) != ERROR_SUCCESS) 
-	{
-		ERR("Failed to set Access Rights for logoff thread. Logging out will most likely fail.\n");
+    if (SetEntriesInAcl(1, &Access, NULL, &pACL) != ERROR_SUCCESS)
+    {
+        ERR("Failed to set Access Rights for logoff thread. Logging out will most likely fail.\n");
 
-		HeapFree(GetProcessHeap(), 0, pMem);
-		return STATUS_UNSUCCESSFUL;
-	}
+        HeapFree(GetProcessHeap(), 0, pMem);
+        return STATUS_UNSUCCESSFUL;
+    }
 
-	if (!InitializeSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
-	{
-		ERR("Failed to initialize security descriptor for logoff thread!\n");
-		HeapFree(GetProcessHeap(), 0, pMem);
-		return STATUS_UNSUCCESSFUL;
-	}
+    if (!InitializeSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
+    {
+        ERR("Failed to initialize security descriptor for logoff thread!\n");
+        HeapFree(GetProcessHeap(), 0, pMem);
+        return STATUS_UNSUCCESSFUL;
+    }
 
-	if (!SetSecurityDescriptorDacl(SecurityDescriptor,
-	                               TRUE,     // bDaclPresent flag
-	                               pACL,
-	                               FALSE))   // not a default DACL
-	{
-		ERR("SetSecurityDescriptorDacl Error %lu\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, pMem);
-		return STATUS_UNSUCCESSFUL;
-	}
+    if (!SetSecurityDescriptorDacl(SecurityDescriptor,
+                                   TRUE,     // bDaclPresent flag
+                                   pACL,
+                                   FALSE))   // not a default DACL
+    {
+        ERR("SetSecurityDescriptorDacl Error %lu\n", GetLastError());
+        HeapFree(GetProcessHeap(), 0, pMem);
+        return STATUS_UNSUCCESSFUL;
+    }
 
-	psa->nLength = sizeof(SECURITY_ATTRIBUTES);
-	psa->lpSecurityDescriptor = SecurityDescriptor;
-	psa->bInheritHandle = FALSE;
+    psa->nLength = sizeof(SECURITY_ATTRIBUTES);
+    psa->lpSecurityDescriptor = SecurityDescriptor;
+    psa->bInheritHandle = FALSE;
 
-	*ppsa = psa;
+    *ppsa = psa;
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-static VOID
+static
+VOID
 DestroyLogoffSecurityAttributes(
-	IN PSECURITY_ATTRIBUTES psa)
+    IN PSECURITY_ATTRIBUTES psa)
 {
-	if (psa)
-	{
-		HeapFree(GetProcessHeap(), 0, psa);
-	}
+    if (psa)
+    {
+        HeapFree(GetProcessHeap(), 0, psa);
+    }
 }
 
 
-static NTSTATUS
+static
+NTSTATUS
 HandleLogoff(
-	IN OUT PWLSESSION Session,
-	IN UINT Flags)
+    IN OUT PWLSESSION Session,
+    IN UINT Flags)
 {
-	PLOGOFF_SHUTDOWN_DATA LSData;
-	PSECURITY_ATTRIBUTES psa;
-	HANDLE hThread;
-	DWORD exitCode;
-	NTSTATUS Status;
+    PLOGOFF_SHUTDOWN_DATA LSData;
+    PSECURITY_ATTRIBUTES psa;
+    HANDLE hThread;
+    DWORD exitCode;
+    NTSTATUS Status;
 
-	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
+    /* Prepare data for logoff thread */
+    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
+    if (!LSData)
+    {
+        ERR("Failed to allocate mem for thread data\n");
+        return STATUS_NO_MEMORY;
+    }
+    LSData->Flags = Flags;
+    LSData->Session = Session;
 
-	/* Prepare data for logoff thread */
-	LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-	if (!LSData)
-	{
-		ERR("Failed to allocate mem for thread data\n");
-		return STATUS_NO_MEMORY;
-	}
-	LSData->Flags = Flags;
-	LSData->Session = Session;
+    Status = CreateLogoffSecurityAttributes(&psa);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to create a required security descriptor. Status 0x%08lx\n", Status);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return Status;
+    }
 
-	Status = CreateLogoffSecurityAttributes(&psa);
-	if (!NT_SUCCESS(Status))
-	{
-		ERR("Failed to create a required security descriptor. Status 0x%08lx\n", Status);
-		HeapFree(GetProcessHeap(), 0, LSData);
-		return Status;
-	}
+    /* Run logoff thread */
+    hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+    if (!hThread)
+    {
+        ERR("Unable to create logoff thread, error %lu\n", GetLastError());
+        DestroyLogoffSecurityAttributes(psa);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    WaitForSingleObject(hThread, INFINITE);
+    if (!GetExitCodeThread(hThread, &exitCode))
+    {
+        ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
+        CloseHandle(hThread);
+        DestroyLogoffSecurityAttributes(psa);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    CloseHandle(hThread);
+    if (exitCode == 0)
+    {
+        ERR("Logoff thread returned failure\n");
+        DestroyLogoffSecurityAttributes(psa);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
 
-	/* Run logoff thread */
-	hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+    SwitchDesktop(Session->WinlogonDesktop);
 
-	/* we're done with the SECURITY_DESCRIPTOR */
-	DestroyLogoffSecurityAttributes(psa);
-	psa = NULL;
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
 
-	if (!hThread)
-	{
-		ERR("Unable to create logoff thread, error %lu\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, LSData);
-		return STATUS_UNSUCCESSFUL;
-	}
-	WaitForSingleObject(hThread, INFINITE);
-	HeapFree(GetProcessHeap(), 0, LSData);
-	if (!GetExitCodeThread(hThread, &exitCode))
-	{
-		ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
-		CloseHandle(hThread);
-		return STATUS_UNSUCCESSFUL;
-	}
-	CloseHandle(hThread);
-	if (exitCode == 0)
-	{
-		ERR("Logoff thread returned failure\n");
-		return STATUS_UNSUCCESSFUL;
-	}
+    // FIXME: Closing network connections!
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
 
-	UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
-	CloseHandle(Session->UserToken);
-	UpdatePerUserSystemParameters(0, FALSE);
-	Session->LogonState = STATE_LOGGED_OFF;
-	Session->UserToken = NULL;
-	return STATUS_SUCCESS;
+    /* Kill remaining COM apps. Only at logoff! */
+    hThread = CreateThread(psa, 0, KillComProcesses, (LPVOID)LSData, 0, NULL);
+    if (hThread)
+    {
+        WaitForSingleObject(hThread, INFINITE);
+        CloseHandle(hThread);
+    }
+
+    /* We're done with the SECURITY_DESCRIPTOR */
+    DestroyLogoffSecurityAttributes(psa);
+    psa = NULL;
+
+    HeapFree(GetProcessHeap(), 0, LSData);
+
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
+
+    UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+
+    CallNotificationDlls(Session, LogoffHandler);
+
+    CloseHandle(Session->UserToken);
+    UpdatePerUserSystemParameters(0, FALSE);
+    Session->LogonState = STATE_LOGGED_OFF;
+    Session->UserToken = NULL;
+
+    return STATUS_SUCCESS;
 }
 
-static INT_PTR CALLBACK
+static
+INT_PTR
+CALLBACK
 ShutdownComputerWindowProc(
-	IN HWND hwndDlg,
-	IN UINT uMsg,
-	IN WPARAM wParam,
-	IN LPARAM lParam)
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
-	UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(lParam);
 
-	switch (uMsg)
-	{
-		case WM_COMMAND:
-		{
-			switch (LOWORD(wParam))
-			{
-				case IDC_BTNSHTDOWNCOMPUTER:
-					EndDialog(hwndDlg, IDC_BTNSHTDOWNCOMPUTER);
-					return TRUE;
-			}
-			break;
-		}
-		case WM_INITDIALOG:
-		{
-			RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
-			SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
-			return TRUE;
-		}
-	}
-	return FALSE;
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_BTNSHTDOWNCOMPUTER:
+                    EndDialog(hwndDlg, IDC_BTNSHTDOWNCOMPUTER);
+                    return TRUE;
+            }
+            break;
+        }
+        case WM_INITDIALOG:
+        {
+            RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
+            SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
-static VOID
+static
+VOID
 UninitializeSAS(
-	IN OUT PWLSESSION Session)
+    IN OUT PWLSESSION Session)
 {
-	if (Session->SASWindow)
-	{
-		DestroyWindow(Session->SASWindow);
-		Session->SASWindow = NULL;
-	}
-	if (Session->hEndOfScreenSaverThread)
-		SetEvent(Session->hEndOfScreenSaverThread);
-	UnregisterClassW(WINLOGON_SAS_CLASS, hAppInstance);
+    if (Session->SASWindow)
+    {
+        DestroyWindow(Session->SASWindow);
+        Session->SASWindow = NULL;
+    }
+    if (Session->hEndOfScreenSaverThread)
+        SetEvent(Session->hEndOfScreenSaverThread);
+    UnregisterClassW(WINLOGON_SAS_CLASS, hAppInstance);
 }
 
 NTSTATUS
 HandleShutdown(
-	IN OUT PWLSESSION Session,
-	IN DWORD wlxAction)
+    IN OUT PWLSESSION Session,
+    IN DWORD wlxAction)
 {
-	PLOGOFF_SHUTDOWN_DATA LSData;
-	HANDLE hThread;
-	DWORD exitCode;
+    PLOGOFF_SHUTDOWN_DATA LSData;
+    HANDLE hThread;
+    DWORD exitCode;
+    BOOLEAN Old;
 
-	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+    // SwitchDesktop(Session->WinlogonDesktop);
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
-	/* Prepare data for shutdown thread */
-	LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-	if (!LSData)
-	{
-		ERR("Failed to allocate mem for thread data\n");
-		return STATUS_NO_MEMORY;
-	}
-	if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
-		LSData->Flags = EWX_POWEROFF;
-	else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-		LSData->Flags = EWX_REBOOT;
-	else
-		LSData->Flags = EWX_SHUTDOWN;
-	LSData->Session = Session;
+    /* Prepare data for shutdown thread */
+    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
+    if (!LSData)
+    {
+        ERR("Failed to allocate mem for thread data\n");
+        return STATUS_NO_MEMORY;
+    }
+    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+        LSData->Flags = EWX_POWEROFF;
+    else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+        LSData->Flags = EWX_REBOOT;
+    else
+        LSData->Flags = EWX_SHUTDOWN;
+    LSData->Session = Session;
 
-	/* Run shutdown thread */
-	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-	if (!hThread)
-	{
-		ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, LSData);
-		return STATUS_UNSUCCESSFUL;
-	}
-	WaitForSingleObject(hThread, INFINITE);
-	HeapFree(GetProcessHeap(), 0, LSData);
-	if (!GetExitCodeThread(hThread, &exitCode))
-	{
-		ERR("Unable to get exit code of shutdown thread (error %lu)\n", GetLastError());
-		CloseHandle(hThread);
-		return STATUS_UNSUCCESSFUL;
-	}
-	CloseHandle(hThread);
-	if (exitCode == 0)
-	{
-		ERR("Shutdown thread returned failure\n");
-		return STATUS_UNSUCCESSFUL;
-	}
+    // FIXME: We may need to specify this flag to really force application kill
+    // (we are shutting down ReactOS, not just logging off so no hangs, etc...
+    // should be allowed).
+    // LSData->Flags |= EWX_FORCE;
 
-	/* Destroy SAS window */
-	UninitializeSAS(Session);
+    /* Run shutdown thread */
+    hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+    if (!hThread)
+    {
+        ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    WaitForSingleObject(hThread, INFINITE);
+    HeapFree(GetProcessHeap(), 0, LSData);
+    if (!GetExitCodeThread(hThread, &exitCode))
+    {
+        ERR("Unable to get exit code of shutdown thread (error %lu)\n", GetLastError());
+        CloseHandle(hThread);
+        return STATUS_UNSUCCESSFUL;
+    }
+    CloseHandle(hThread);
+    if (exitCode == 0)
+    {
+        ERR("Shutdown thread returned failure\n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
-	FIXME("FIXME: Call SMSS API #1\n");
-	if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-		NtShutdownSystem(ShutdownReboot);
-	else
-	{
-		if (FALSE)
-		{
-			/* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
-			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), GetDesktopWindow(), ShutdownComputerWindowProc);
-		}
-		NtShutdownSystem(ShutdownNoReboot);
-	}
-	return STATUS_SUCCESS;
+    CallNotificationDlls(Session, ShutdownHandler);
+
+    /* Destroy SAS window */
+    UninitializeSAS(Session);
+
+    /* Now we can shut down NT */
+    ERR("Shutting down NT...\n");
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
+    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+    {
+        NtShutdownSystem(ShutdownReboot);
+    }
+    else
+    {
+        if (FALSE)
+        {
+            /* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
+            DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER),
+                      GetDesktopWindow(), ShutdownComputerWindowProc);
+        }
+        NtShutdownSystem(ShutdownNoReboot);
+    }
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
+    return STATUS_SUCCESS;
 }
 
-static VOID
+static
+VOID
 DoGenericAction(
-	IN OUT PWLSESSION Session,
-	IN DWORD wlxAction)
+    IN OUT PWLSESSION Session,
+    IN DWORD wlxAction)
 {
-	switch (wlxAction)
-	{
-		case WLX_SAS_ACTION_LOGON: /* 0x01 */
-			if (HandleLogon(Session))
-			{
-				SwitchDesktop(Session->ApplicationDesktop);
-				Session->LogonState = STATE_LOGGED_ON;
-			}
-			else
-				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-			break;
-		case WLX_SAS_ACTION_NONE: /* 0x02 */
-			break;
-		case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
-			if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
-			{
-				SwitchDesktop(WLSession->WinlogonDesktop);
-				Session->LogonState = STATE_LOCKED;
-				Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
-			}
-			break;
-		case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
-		case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
-		case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
-		case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
-			if (Session->LogonState != STATE_LOGGED_OFF)
-			{
-				if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
-					break;
-				SwitchDesktop(WLSession->WinlogonDesktop);
-				Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
-				if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
-				{
-					RemoveStatusMessage(Session);
-					break;
-				}
-			}
-			if (WLX_SHUTTINGDOWN(wlxAction))
-			{
-				Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
-				if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
-				{
-					RemoveStatusMessage(Session);
-					Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-				}
-			}
-			else
-			{
-				RemoveStatusMessage(Session);
-				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-			}
-			break;
-		case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
-			SwitchDesktop(WLSession->ApplicationDesktop);
-			StartTaskManager(Session);
-			break;
-		case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
-			SwitchDesktop(WLSession->ApplicationDesktop);
-			Session->LogonState = STATE_LOGGED_ON;
-			break;
-		default:
-			WARN("Unknown SAS action 0x%lx\n", wlxAction);
-	}
+    switch (wlxAction)
+    {
+        case WLX_SAS_ACTION_LOGON: /* 0x01 */
+            if (Session->LogonState == STATE_LOGGED_OFF_SAS)
+            {
+                if (!HandleLogon(Session))
+                {
+                    Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                    CallNotificationDlls(Session, LogonHandler);
+                }
+            }
+            break;
+        case WLX_SAS_ACTION_NONE: /* 0x02 */
+            if (Session->LogonState == STATE_LOGGED_OFF_SAS)
+            {
+                Session->LogonState = STATE_LOGGED_OFF;
+                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+            }
+            else if (Session->LogonState == STATE_LOGGED_ON_SAS)
+            {
+                Session->LogonState = STATE_LOGGED_ON;
+            }
+            else if (Session->LogonState == STATE_LOCKED_SAS)
+            {
+                Session->LogonState = STATE_LOCKED;
+                Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+            }
+            break;
+        case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
+            if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+            {
+                SwitchDesktop(Session->WinlogonDesktop);
+                Session->LogonState = STATE_LOCKED;
+                Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+                CallNotificationDlls(Session, LockHandler);
+            }
+            break;
+        case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
+        case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
+        case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
+        case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
+            if (Session->LogonState != STATE_LOGGED_OFF)
+            {
+                if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
+                    break;
+                if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
+                {
+                    RemoveStatusMessage(Session);
+                    break;
+                }
+                Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
+            }
+            if (WLX_SHUTTINGDOWN(wlxAction))
+            {
+                // FIXME: WlxShutdown should be done from inside HandleShutdown,
+                // after having displayed "ReactOS is shutting down" message.
+                Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
+                if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
+                {
+                    RemoveStatusMessage(Session);
+                    Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                }
+            }
+            else
+            {
+                RemoveStatusMessage(Session);
+                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+            }
+            break;
+        case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
+            SwitchDesktop(Session->ApplicationDesktop);
+            Session->LogonState = STATE_LOGGED_ON;
+            StartTaskManager(Session);
+            break;
+        case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
+            SwitchDesktop(Session->ApplicationDesktop);
+            Session->LogonState = STATE_LOGGED_ON;
+            CallNotificationDlls(Session, UnlockHandler);
+            break;
+        default:
+            WARN("Unknown SAS action 0x%lx\n", wlxAction);
+    }
 }
 
-static VOID
+DWORD WINAPI SetWindowStationUser(HWINSTA hWinSta, LUID* pluid, PSID psid, DWORD sidSize);
+
+BOOL
+AddAceToWindowStation(
+    IN HWINSTA WinSta,
+    IN PSID Sid);
+
+static
+BOOL AllowWinstaAccess(PWLSESSION Session)
+{
+    BOOL bSuccess = FALSE;
+    DWORD dwIndex;
+    DWORD dwLength = 0;
+    PTOKEN_GROUPS ptg = NULL;
+    PSID psid;
+    TOKEN_STATISTICS Stats;
+    DWORD cbStats;
+    DWORD ret;
+
+    // Get required buffer size and allocate the TOKEN_GROUPS buffer.
+
+    if (!GetTokenInformation(Session->UserToken,
+                             TokenGroups,
+                             ptg,
+                             0,
+                             &dwLength))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            return FALSE;
+
+        ptg = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
+        if (ptg == NULL)
+            return FALSE;
+    }
+
+    // Get the token group information from the access token.
+    if (!GetTokenInformation(Session->UserToken,
+                             TokenGroups,
+                             ptg,
+                             dwLength,
+                             &dwLength))
+    {
+        goto Cleanup;
+    }
+
+    // Loop through the groups to find the logon SID.
+
+    for (dwIndex = 0; dwIndex < ptg->GroupCount; dwIndex++)
+    {
+        if ((ptg->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID)
+            == SE_GROUP_LOGON_ID)
+        {
+            psid = ptg->Groups[dwIndex].Sid;
+            break;
+        }
+    }
+
+    dwLength = GetLengthSid(psid);
+
+    if (!GetTokenInformation(Session->UserToken,
+                             TokenStatistics,
+                             &Stats,
+                             sizeof(TOKEN_STATISTICS),
+                             &cbStats))
+    {
+        WARN("Couldn't get Authentication id from user token!\n");
+        goto Cleanup;
+    }
+
+    AddAceToWindowStation(Session->InteractiveWindowStation, psid);
+
+    ret = SetWindowStationUser(Session->InteractiveWindowStation,
+                               &Stats.AuthenticationId,
+                               psid,
+                               dwLength);
+    TRACE("SetWindowStationUser returned 0x%x\n", ret);
+
+    bSuccess = TRUE;
+
+Cleanup:
+
+    // Free the buffer for the token groups.
+    if (ptg != NULL)
+        HeapFree(GetProcessHeap(), 0, (LPVOID)ptg);
+
+    return bSuccess;
+}
+
+static
+VOID
 DispatchSAS(
-	IN OUT PWLSESSION Session,
-	IN DWORD dwSasType)
+    IN OUT PWLSESSION Session,
+    IN DWORD dwSasType)
 {
-	DWORD wlxAction = WLX_SAS_ACTION_NONE;
+    DWORD wlxAction = WLX_SAS_ACTION_NONE;
+    HWND hwnd;
+    PSID LogonSid = NULL; /* FIXME */
+    BOOL bSecure = TRUE;
 
-	if (Session->LogonState == STATE_LOGGED_ON)
-		wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
-	else if (Session->LogonState == STATE_LOCKED)
-		wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
-	else
-	{
-		/* Display a new dialog (if necessary) */
-		switch (dwSasType)
-		{
-			case WLX_SAS_TYPE_TIMEOUT: /* 0x00 */
-			{
-				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-				break;
-			}
-			default:
-			{
-				PSID LogonSid = NULL; /* FIXME */
+    switch (dwSasType)
+    {
+        case WLX_SAS_TYPE_CTRL_ALT_DEL:
+            switch (Session->LogonState)
+            {
+                case STATE_INIT:
+                    Session->LogonState = STATE_LOGGED_OFF;
+                    Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                    return;
 
-				Session->Options = 0;
+                case STATE_LOGGED_OFF:
+                    Session->LogonState = STATE_LOGGED_OFF_SAS;
 
-				wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOutSAS(
-					Session->Gina.Context,
-					Session->SASAction,
-					&Session->LogonId,
-					LogonSid,
-					&Session->Options,
-					&Session->UserToken,
-					&Session->MprNotifyInfo,
-					(PVOID*)&Session->Profile);
-				break;
-			}
-		}
-	}
+                    hwnd = GetTopDialogWindow();
+                    if (hwnd != NULL)
+                        SendMessage(hwnd, WLX_WM_SAS, 0, 0);
 
-	if (dwSasType == WLX_SAS_TYPE_SCRNSVR_TIMEOUT)
-	{
-		BOOL bSecure = TRUE;
-		if (!Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
-		{
-			/* Skip start of screen saver */
-			SetEvent(Session->hEndOfScreenSaver);
-		}
-		else
-		{
-			StartScreenSaver(Session);
-			if (bSecure)
-				DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
-		}
-	}
-	else if (dwSasType == WLX_SAS_TYPE_SCRNSVR_ACTIVITY)
-		SetEvent(Session->hUserActivity);
+                    Session->Options = 0;
 
-	DoGenericAction(Session, wlxAction);
+                    wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOutSAS(
+                        Session->Gina.Context,
+                        Session->SASAction,
+                        &Session->LogonId,
+                        LogonSid,
+                        &Session->Options,
+                        &Session->UserToken,
+                        &Session->MprNotifyInfo,
+                        (PVOID*)&Session->Profile);
+
+                    AllowWinstaAccess(Session);
+                    break;
+
+                case STATE_LOGGED_OFF_SAS:
+                    /* Ignore SAS if we are already in an SAS state */
+                    return;
+
+                case STATE_LOGGED_ON:
+                    Session->LogonState = STATE_LOGGED_ON_SAS;
+                    wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+                    break;
+
+                case STATE_LOGGED_ON_SAS:
+                    /* Ignore SAS if we are already in an SAS state */
+                    return;
+
+                case STATE_LOCKED:
+                    Session->LogonState = STATE_LOCKED_SAS;
+
+                    hwnd = GetTopDialogWindow();
+                    if (hwnd != NULL)
+                        SendMessage(hwnd, WLX_WM_SAS, 0, 0);
+
+                    wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
+                    break;
+
+                case STATE_LOCKED_SAS:
+                    /* Ignore SAS if we are already in an SAS state */
+                    return;
+
+                default:
+                    return;
+            }
+            break;
+
+        case WLX_SAS_TYPE_TIMEOUT:
+            return;
+
+        case WLX_SAS_TYPE_SCRNSVR_TIMEOUT:
+            if (!Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
+            {
+                /* Skip start of screen saver */
+                SetEvent(Session->hEndOfScreenSaver);
+            }
+            else
+            {
+                StartScreenSaver(Session);
+                if (bSecure)
+                {
+                    wlxAction = WLX_SAS_ACTION_LOCK_WKSTA;
+//                    DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
+                }
+            }
+            break;
+
+        case WLX_SAS_TYPE_SCRNSVR_ACTIVITY:
+            SetEvent(Session->hUserActivity);
+            break;
+    }
+
+    DoGenericAction(Session, wlxAction);
 }
 
-static BOOL
+static
+BOOL
 RegisterHotKeys(
-	IN PWLSESSION Session,
-	IN HWND hwndSAS)
+    IN PWLSESSION Session,
+    IN HWND hwndSAS)
 {
-	/* Register Ctrl+Alt+Del Hotkey */
-	if (!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
-	{
-		ERR("WL: Unable to register Ctrl+Alt+Del hotkey!\n");
-		return FALSE;
-	}
+    /* Register Ctrl+Alt+Del Hotkey */
+    if (!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
+    {
+        ERR("WL: Unable to register Ctrl+Alt+Del hotkey!\n");
+        return FALSE;
+    }
 
-	/* Register Ctrl+Shift+Esc (optional) */
-	Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
-	if (!Session->TaskManHotkey)
-		WARN("WL: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
-	return TRUE;
+    /* Register Ctrl+Shift+Esc (optional) */
+    Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
+    if (!Session->TaskManHotkey)
+        WARN("WL: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
+    return TRUE;
 }
 
-static BOOL
+static
+BOOL
 UnregisterHotKeys(
-	IN PWLSESSION Session,
-	IN HWND hwndSAS)
+    IN PWLSESSION Session,
+    IN HWND hwndSAS)
 {
-	/* Unregister hotkeys */
-	UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
+    /* Unregister hotkeys */
+    UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
 
-	if (Session->TaskManHotkey)
-		UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
+    if (Session->TaskManHotkey)
+        UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
 
-	return TRUE;
-}
-
-static NTSTATUS
-CheckForShutdownPrivilege(
-	IN DWORD RequestingProcessId)
-{
-	HANDLE Process;
-	HANDLE Token;
-	BOOL CheckResult;
-	PPRIVILEGE_SET PrivSet;
-
-	TRACE("CheckForShutdownPrivilege()\n");
-
-	Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, RequestingProcessId);
-	if (!Process)
-	{
-		WARN("OpenProcess() failed with error %lu\n", GetLastError());
-		return STATUS_INVALID_HANDLE;
-	}
-	if (!OpenProcessToken(Process, TOKEN_QUERY, &Token))
-	{
-		WARN("OpenProcessToken() failed with error %lu\n", GetLastError());
-		CloseHandle(Process);
-		return STATUS_INVALID_HANDLE;
-	}
-	CloseHandle(Process);
-	PrivSet = HeapAlloc(GetProcessHeap(), 0, sizeof(PRIVILEGE_SET) + sizeof(LUID_AND_ATTRIBUTES));
-	if (!PrivSet)
-	{
-		ERR("Failed to allocate mem for privilege set\n");
-		CloseHandle(Token);
-		return STATUS_NO_MEMORY;
-	}
-	PrivSet->PrivilegeCount = 1;
-	PrivSet->Control = PRIVILEGE_SET_ALL_NECESSARY;
-	if (!LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &PrivSet->Privilege[0].Luid))
-	{
-		WARN("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, PrivSet);
-		CloseHandle(Token);
-		return STATUS_UNSUCCESSFUL;
-	}
-	if (!PrivilegeCheck(Token, PrivSet, &CheckResult))
-	{
-		WARN("PrivilegeCheck() failed with error %lu\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, PrivSet);
-		CloseHandle(Token);
-		return STATUS_ACCESS_DENIED;
-	}
-	HeapFree(GetProcessHeap(), 0, PrivSet);
-	CloseHandle(Token);
-
-	if (!CheckResult)
-	{
-		WARN("SE_SHUTDOWN privilege not enabled\n");
-		return STATUS_ACCESS_DENIED;
-	}
-	return STATUS_SUCCESS;
+    return TRUE;
 }
 
 BOOL
 WINAPI
 HandleMessageBeep(UINT uType)
 {
-	LPWSTR EventName;
+    LPWSTR EventName;
 
-	switch(uType)
-	{
-	case 0xFFFFFFFF:
-		EventName = NULL;
-		break;
-	case MB_OK:
-		EventName = L"SystemDefault";
-		break;
-	case MB_ICONASTERISK:
-		EventName = L"SystemAsterisk";
-		break;
-	case MB_ICONEXCLAMATION:
-		EventName = L"SystemExclamation";
-		break;
-	case MB_ICONHAND:
-		EventName = L"SystemHand";
-		break;
-	case MB_ICONQUESTION:
-		EventName = L"SystemQuestion";
-		break;
-	default:
-		WARN("Unhandled type %d\n", uType);
-		EventName = L"SystemDefault";
-	}
+    switch(uType)
+    {
+    case 0xFFFFFFFF:
+        EventName = NULL;
+        break;
+    case MB_OK:
+        EventName = L"SystemDefault";
+        break;
+    case MB_ICONASTERISK:
+        EventName = L"SystemAsterisk";
+        break;
+    case MB_ICONEXCLAMATION:
+        EventName = L"SystemExclamation";
+        break;
+    case MB_ICONHAND:
+        EventName = L"SystemHand";
+        break;
+    case MB_ICONQUESTION:
+        EventName = L"SystemQuestion";
+        break;
+    default:
+        WARN("Unhandled type %d\n", uType);
+        EventName = L"SystemDefault";
+    }
 
-	return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+    return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
 }
 
-static LRESULT CALLBACK
+static
+LRESULT
+CALLBACK
 SASWindowProc(
-	IN HWND hwndDlg,
-	IN UINT uMsg,
-	IN WPARAM wParam,
-	IN LPARAM lParam)
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
-	PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
-	switch (uMsg)
-	{
-		case WM_HOTKEY:
-		{
-			switch (lParam)
-			{
-				case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
-				{
-					TRACE("SAS: CONTROL+ALT+DELETE\n");
-					if (!Session->Gina.UseCtrlAltDelete)
-						break;
-					PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
-					return TRUE;
-				}
-				case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
-				{
-					TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
-					DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
-					return TRUE;
-				}
-			}
-			break;
-		}
-		case WM_CREATE:
-		{
-			/* Get the session pointer from the create data */
-			Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
+    switch (uMsg)
+    {
+        case WM_HOTKEY:
+        {
+            switch (lParam)
+            {
+                case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
+                {
+                    TRACE("SAS: CONTROL+ALT+DELETE\n");
+                    if (!Session->Gina.UseCtrlAltDelete)
+                        break;
+                    PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
+                    return TRUE;
+                }
+                case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
+                {
+                    TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
+                    DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    return TRUE;
+                }
+            }
+            break;
+        }
+        case WM_CREATE:
+        {
+            /* Get the session pointer from the create data */
+            Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
 
-			/* Save the Session pointer */
-			SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
-			if (GetSetupType())
-				return TRUE;
-			return RegisterHotKeys(Session, hwndDlg);
-		}
-		case WM_DESTROY:
-		{
-			if (!GetSetupType())
-			    UnregisterHotKeys(Session, hwndDlg);
-			return TRUE;
-		}
-		case WM_SETTINGCHANGE:
-		{
-			UINT uiAction = (UINT)wParam;
-			if (uiAction == SPI_SETSCREENSAVETIMEOUT
-			 || uiAction == SPI_SETSCREENSAVEACTIVE)
-			{
-				SetEvent(Session->hScreenSaverParametersChanged);
-			}
-			return TRUE;
-		}
+            /* Save the Session pointer */
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
+            if (GetSetupType())
+                return TRUE;
+            return RegisterHotKeys(Session, hwndDlg);
+        }
+        case WM_DESTROY:
+        {
+            if (!GetSetupType())
+                UnregisterHotKeys(Session, hwndDlg);
+            return TRUE;
+        }
+        case WM_SETTINGCHANGE:
+        {
+            UINT uiAction = (UINT)wParam;
+            if (uiAction == SPI_SETSCREENSAVETIMEOUT
+             || uiAction == SPI_SETSCREENSAVEACTIVE)
+            {
+                SetEvent(Session->hScreenSaverParametersChanged);
+            }
+            return TRUE;
+        }
         case WM_LOGONNOTIFY:
         {
             switch(wParam)
@@ -1160,6 +1366,91 @@ SASWindowProc(
                     DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
                     break;
                 }
+                case LN_LOGOFF:
+                {
+                    UINT Flags = (UINT)lParam;
+                    UINT Action = Flags & EWX_ACTION_MASK;
+                    DWORD wlxAction;
+
+                    TRACE("\tFlags : 0x%lx\n", lParam);
+
+                    /*
+                     * Our caller (USERSRV) should have added the shutdown flag
+                     * when setting also poweroff or reboot.
+                     */
+                    if (Action & (EWX_POWEROFF | EWX_REBOOT))
+                    {
+                        if ((Action & EWX_SHUTDOWN) == 0)
+                        {
+                            ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
+                            return STATUS_INVALID_PARAMETER;
+                        }
+
+                        /* Now we can locally remove it for performing checks */
+                        Action &= ~EWX_SHUTDOWN;
+                    }
+
+                    /* Check parameters */
+                    if (Action & EWX_FORCE)
+                    {
+                        // FIXME!
+                        ERR("FIXME: EWX_FORCE present for Winlogon, what to do?\n");
+                        Action &= ~EWX_FORCE;
+                    }
+                    switch (Action)
+                    {
+                        case EWX_LOGOFF:
+                            wlxAction = WLX_SAS_ACTION_LOGOFF;
+                            break;
+                        case EWX_SHUTDOWN:
+                            wlxAction = WLX_SAS_ACTION_SHUTDOWN;
+                            break;
+                        case EWX_REBOOT:
+                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
+                            break;
+                        case EWX_POWEROFF:
+                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+                            break;
+
+                        default:
+                        {
+                            ERR("Invalid ExitWindows action 0x%x\n", Action);
+                            return STATUS_INVALID_PARAMETER;
+                        }
+                    }
+
+                    ERR("In LN_LOGOFF, exit_in_progress == %s\n",
+                        ExitReactOSInProgress ? "true" : "false");
+
+                    /*
+                     * In case a parallel shutdown request is done (while we are
+                     * being to shut down) and it was not done by Winlogon itself,
+                     * then just stop here.
+                     */
+#if 0
+// This code is commented at the moment (even if it's correct) because
+// our log-offs do not really work: the shell is restarted, no app is killed
+// etc... and as a result you just get explorer opening "My Documents". And
+// if you try now a shut down, it won't work because winlogon thinks it is
+// still in the middle of a shutdown.
+// Maybe we also need to reset ExitReactOSInProgress somewhere else??
+                    if (ExitReactOSInProgress && (lParam & EWX_CALLER_WINLOGON) == 0)
+                    {
+                        break;
+                    }
+#endif
+                    /* Now do the shutdown action proper */
+                    DoGenericAction(Session, wlxAction);
+                    return 1;
+                }
+                case LN_LOGOFF_CANCELED:
+                {
+                    ERR("Logoff canceled!!, before: exit_in_progress == %s, after will be false\n",
+                        ExitReactOSInProgress ? "true" : "false");
+
+                    ExitReactOSInProgress = FALSE;
+                    return 1;
+                }
                 default:
                 {
                     ERR("WM_LOGONNOTIFY case %d is unimplemented\n", wParam);
@@ -1176,105 +1467,76 @@ SASWindowProc(
             }
             break;
         }
-		case WLX_WM_SAS:
-		{
-			DispatchSAS(Session, (DWORD)wParam);
-			return TRUE;
-		}
-		case PM_WINLOGON_EXITWINDOWS:
-		{
-			UINT Flags = (UINT)lParam;
-			UINT Action = Flags & EWX_ACTION_MASK;
-			DWORD wlxAction;
+        case WLX_WM_SAS:
+        {
+            DispatchSAS(Session, (DWORD)wParam);
+            return TRUE;
+        }
+    }
 
-			/* Check parameters */
-			switch (Action)
-			{
-				case EWX_LOGOFF: wlxAction = WLX_SAS_ACTION_LOGOFF; break;
-				case EWX_SHUTDOWN: wlxAction = WLX_SAS_ACTION_SHUTDOWN; break;
-				case EWX_REBOOT: wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT; break;
-				case EWX_POWEROFF: wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF; break;
-				default:
-				{
-					ERR("Invalid ExitWindows action 0x%x\n", Action);
-					return STATUS_INVALID_PARAMETER;
-				}
-			}
-
-			if (WLX_SHUTTINGDOWN(wlxAction))
-			{
-				NTSTATUS Status = CheckForShutdownPrivilege((DWORD)wParam);
-				if (!NT_SUCCESS(Status))
-					return Status;
-			}
-			DoGenericAction(Session, wlxAction);
-			return 1;
-		}
-	}
-
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+    return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 BOOL
 InitializeSAS(
-	IN OUT PWLSESSION Session)
+    IN OUT PWLSESSION Session)
 {
-	WNDCLASSEXW swc;
-	BOOL ret = FALSE;
+    WNDCLASSEXW swc;
+    BOOL ret = FALSE;
 
-	if (!SwitchDesktop(Session->WinlogonDesktop))
-	{
-		ERR("WL: Failed to switch to winlogon desktop\n");
-		goto cleanup;
-	}
+    if (!SwitchDesktop(Session->WinlogonDesktop))
+    {
+        ERR("WL: Failed to switch to winlogon desktop\n");
+        goto cleanup;
+    }
 
-	/* Register SAS window class */
-	swc.cbSize = sizeof(WNDCLASSEXW);
-	swc.style = CS_SAVEBITS;
-	swc.lpfnWndProc = SASWindowProc;
-	swc.cbClsExtra = 0;
-	swc.cbWndExtra = 0;
-	swc.hInstance = hAppInstance;
-	swc.hIcon = NULL;
-	swc.hCursor = NULL;
-	swc.hbrBackground = NULL;
-	swc.lpszMenuName = NULL;
-	swc.lpszClassName = WINLOGON_SAS_CLASS;
-	swc.hIconSm = NULL;
-	if (RegisterClassExW(&swc) == 0)
-	{
-		ERR("WL: Failed to register SAS window class\n");
-		goto cleanup;
-	}
+    /* Register SAS window class */
+    swc.cbSize = sizeof(WNDCLASSEXW);
+    swc.style = CS_SAVEBITS;
+    swc.lpfnWndProc = SASWindowProc;
+    swc.cbClsExtra = 0;
+    swc.cbWndExtra = 0;
+    swc.hInstance = hAppInstance;
+    swc.hIcon = NULL;
+    swc.hCursor = NULL;
+    swc.hbrBackground = NULL;
+    swc.lpszMenuName = NULL;
+    swc.lpszClassName = WINLOGON_SAS_CLASS;
+    swc.hIconSm = NULL;
+    if (RegisterClassExW(&swc) == 0)
+    {
+        ERR("WL: Failed to register SAS window class\n");
+        goto cleanup;
+    }
 
-	/* Create invisible SAS window */
-	Session->SASWindow = CreateWindowExW(
-		0,
-		WINLOGON_SAS_CLASS,
-		WINLOGON_SAS_TITLE,
-		WS_POPUP,
-		0, 0, 0, 0, 0, 0,
-		hAppInstance, Session);
-	if (!Session->SASWindow)
-	{
-		ERR("WL: Failed to create SAS window\n");
-		goto cleanup;
-	}
+    /* Create invisible SAS window */
+    Session->SASWindow = CreateWindowExW(
+        0,
+        WINLOGON_SAS_CLASS,
+        WINLOGON_SAS_TITLE,
+        WS_POPUP,
+        0, 0, 0, 0, 0, 0,
+        hAppInstance, Session);
+    if (!Session->SASWindow)
+    {
+        ERR("WL: Failed to create SAS window\n");
+        goto cleanup;
+    }
 
-	/* Register SAS window to receive SAS notifications */
-	if (!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
-	{
-		ERR("WL: Failed to register SAS window\n");
-		goto cleanup;
-	}
+    /* Register SAS window to receive SAS notifications */
+    if (!SetLogonNotifyWindow(Session->SASWindow))
+    {
+        ERR("WL: Failed to register SAS window\n");
+        goto cleanup;
+    }
 
-	if (!SetDefaultLanguage(FALSE))
-		return FALSE;
+    if (!SetDefaultLanguage(FALSE))
+        return FALSE;
 
-	ret = TRUE;
+    ret = TRUE;
 
 cleanup:
-	if (!ret)
-		UninitializeSAS(Session);
-	return ret;
+    if (!ret)
+        UninitializeSAS(Session);
+    return ret;
 }

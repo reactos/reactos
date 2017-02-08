@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Console Device Driver"
+#define REACTOS_STR_INTERNAL_NAME     "condrv"
+#define REACTOS_STR_ORIGINAL_FILENAME "condrv.sys"
+#include <reactos/version.rc>

@@ -1,12 +1,14 @@
 /*
  * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/video/displays/vga/objects/bitblt.c
+ * FILE:            win32ss/drivers/displays/vga/objects/bitblt.c
  * PURPOSE:         
  * PROGRAMMERS:     
  */
 
 #include <vgaddi.h>
+
+#include "bitblt.h"
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
 typedef BOOL  (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,

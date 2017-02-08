@@ -3,21 +3,21 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Имя компьютера"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS использует указанные ниже сведения для идентификации компьютера в сети.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Описание:", IDC_STATIC, 6, 40, 70, 9
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Полное имя:", IDC_STATIC, 6, 68, 64, 9
-    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Рабочая группа:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Чтобы вызвать мастер сетевой идентификации для присоединения компьютера к домену, нажмите кнопку ""Идентификация"".", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON  "&Идентификация...", IDC_NETWORK_ID, 180, 114, 72, 15
-    LTEXT       "Чтобы изменить имя компьютера или домена нажмите ""Изменить"".", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON  "И&зменить...",IDC_NETWORK_PROPERTY, 180, 149, 72, 15
-    LTEXT       "Примечание: Только администраторы могут изменять эти параметры.", IDC_STATIC, 6, 179, 245, 9
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "Указанные ниже сведения используются для идентификации компьютера в сети.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Описание:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Полное имя:", IDC_STATIC, 6, 68, 64, 9
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Рабочая группа:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Чтобы вызвать мастер сетевой идентификации для присоединения компьютера к домену, нажмите кнопку ""Идентификация"".", IDC_STATIC, 6, 113, 172, 24
+    PUSHBUTTON "&Идентификация...", IDC_NETWORK_ID, 180, 114, 72, 15
+    LTEXT "Чтобы изменить имя компьютера или домена нажмите ""Изменить"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON "И&зменить...", IDC_NETWORK_PROPERTY, 180, 149, 72, 15
+    LTEXT "Примечание: Только администраторы могут изменять эти параметры.", IDC_STATIC, 6, 179, 245, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -35,7 +35,7 @@ BEGIN
     AUTORADIOBUTTON "до&мена:", 1008, 17, 132, 192, 10, WS_GROUP
     AUTORADIOBUTTON "рабочей &группы:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "&Поиск домена", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "&Найти домен", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "Отмена", 2, 176, 203, 50, 14
@@ -67,12 +67,12 @@ BEGIN
     22 "Добро пожаловать в рабочую группу %1."
     23 "Добро пожаловать в домен %1."
     24 "Необходимо перезапустить компьютер для того, чтобы эти изменения вступили в силу."
-	25 "Можно изменить имя и принадлежность этого компьютера. Изменения могут повлиять на доступ к сетевым ресурсам."
+    25 "Можно изменить имя и принадлежность этого компьютера. Изменения могут повлиять на доступ к сетевым ресурсам."
     1021 "Примечание: только администраторы могут изменить идентификацию этого компьютера."
     1022 "Примечание: идентификация этого компьютера не может быть изменена, потому что:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+    1030 "Новое имя компьютера ""%s"" содержит запрещенные знаки. Запрещенные знаки ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / и ?"
     3210 "&Подробно >>"
     3220 "<< &Подробно"
-	4000 "Информация"
-	4001 "Не удалось установить новое имя компьютера!"
+    4000 "Информация"
+    4001 "Не удалось установить новое имя компьютера!"
 END

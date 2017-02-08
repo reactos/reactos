@@ -1,0 +1,24 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Прекратяване на приложение - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Прекратяване на приложението... Почакайте", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Ход", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Ако решите да затворите приложението веднага, ще изгубите всички незаписани данни. За да прекратите приложението веднага, натиснете „Прекратяване веднага„.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Прекратяване веднага", IDC_END_NOW, 150, 71, 60, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Прекратяване на приложение - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Отказ", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&Прекратяване веднага", IDC_END_NOW, 150, 71, 60, 17
+    LTEXT "Приложението не отговаря.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "За да се върнете в РеактОС и да проверите състоянието на приложението, натиснете „Отказ“.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Ако решите да затворите приложението веднага, ще изгубите всички незаписани данни. За да прекратите приложението веднага, натиснете „Прекратяване веднага“.", IDC_STATIC, 7, 53, 178, 26
+END

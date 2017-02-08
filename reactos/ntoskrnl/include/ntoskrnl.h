@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _NTOSKRNL_PCH
+#define _NTOSKRNL_PCH
+
 /* INCLUDES ******************************************************************/
 
 /* ARM Bringup Hack */
@@ -47,6 +50,7 @@
 #include <ndk/ldrfuncs.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/mmfuncs.h>
+#include <ndk/muptypes.h>
 #include <ndk/obfuncs.h>
 #include <ndk/pofuncs.h>
 #include <ndk/psfuncs.h>
@@ -69,9 +73,6 @@
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-/* ReactOS Headers */
-#include <reactos/bugcodes.h>
-
 /* SetupLDR Support */
 #include <arc/setupblk.h>
 
@@ -87,35 +88,17 @@
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 
-//
-// Define the internal versions of external and public global data
-//
-#define IoFileObjectType                _IoFileObjectType
-#define PsThreadType                    _PsThreadType
-#define PsProcessType                   _PsProcessType
-#define ExEventObjectType               _ExEventObjectType
-#define ExSemaphoreObjectType           _ExSemaphoreObjectType
-#define KdDebuggerEnabled               _KdDebuggerEnabled
-#define KdDebuggerNotPresent            _KdDebuggerNotPresent
-#define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
-extern PUSHORT _NlsOemLeadByteInfo;
-#define KeNumberProcessors              _KeNumberProcessors
-extern UCHAR _KeNumberProcessors;
-#define FsRtlLegalAnsiCharacterArray    _FsRtlLegalAnsiCharacterArray
-#undef LEGAL_ANSI_CHARACTER_ARRAY
-#undef NLS_MB_CODE_PAGE_TAG
-#undef NLS_OEM_LEAD_BYTE_INFO
-#define LEGAL_ANSI_CHARACTER_ARRAY      FsRtlLegalAnsiCharacterArray
-#define NLS_MB_CODE_PAGE_TAG            NlsMbOemCodePageTag
-#define NLS_OEM_LEAD_BYTE_INFO          _NlsOemLeadByteInfo
-#undef KD_DEBUGGER_ENABLED
-#undef KD_DEBUGGER_NOT_PRESENT
-#define KD_DEBUGGER_ENABLED             KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT         KdDebuggerNotPresent
-#define HalDispatchTable                _HalDispatchTable
-#undef HALDISPATCH
-#define HALDISPATCH                     (&HalDispatchTable)
+/* SRM header */
+#include <srmp.h>
+
 #define ExRaiseStatus RtlRaiseStatus
+
+//
+// Switch for enabling global page support
+//
+
+//#define _GLOBAL_PAGES_ARE_AWESOME_
+
 
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
@@ -125,3 +108,4 @@ extern UCHAR _KeNumberProcessors;
 #include "internal/probe.h"
 #include "resource.h"
 
+#endif /* _NTOSKRNL_PCH */

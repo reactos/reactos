@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/filesup.h
+ * FILE:            base/setup/usetup/filesup.h
  * PURPOSE:         File support functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -27,19 +27,28 @@
 #pragma once
 
 NTSTATUS
-SetupCreateDirectory(PWCHAR DirectoryName);
+SetupCreateDirectory(
+    PWCHAR DirectoryName);
 
 NTSTATUS
-SetupCopyFile(PWCHAR SourceFileName,
-	      PWCHAR DestinationFileName);
+SetupCopyFile(
+    PWCHAR SourceFileName,
+    PWCHAR DestinationFileName);
 
 NTSTATUS
-SetupExtractFile(PWCHAR CabinetFileName,
-        PWCHAR SourceFileName,
-	      PWCHAR DestinationFileName);
+SetupExtractFile(
+    PWCHAR CabinetFileName,
+    PWCHAR SourceFileName,
+    PWCHAR DestinationFileName);
 
 BOOLEAN
-DoesFileExist(PWSTR PathName,
-	      PWSTR FileName);
+DoesFileExist(
+    PWSTR PathName,
+    PWSTR FileName);
+
+BOOLEAN
+IsValidPath(
+    PWCHAR InstallDir,
+    ULONG Length);
 
 /* EOF */

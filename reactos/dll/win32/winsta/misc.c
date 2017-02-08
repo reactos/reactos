@@ -6,6 +6,7 @@
  * NOTES:           Misc functions.
  * 
  */
+
 #include "winsta.h"
 
 VOID

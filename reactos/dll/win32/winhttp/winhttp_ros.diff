@@ -1,6 +1,7 @@
---- wine-1.5.4/dlls/winhttp/net.c	2012-06-20 14:30:41 +0200
-+++ dll/win32/winhttp/net.c	2012-06-21 18:00:53 +0200
-@@ -160,6 +160,7 @@ static void ssl_lock_callback(int mode,
+diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
+--- e:\wine\dlls\winhttp/net.c	2015-02-21 17:13:15.365542100 +0100
++++ e:\reactos\dll\win32\winhttp/net.c	2015-07-20 14:25:14.321893000 +0100
+@@ -73,6 +50,7 @@ static CRITICAL_SECTION cs_gethostbyname
  #endif
  
  /* translate a unix error code into a winsock error code */
@@ -8,7 +9,7 @@
  static int sock_get_error( int err )
  {
  #if !defined(__MINGW32__) && !defined (_MSC_VER)
-@@ -225,6 +226,15 @@ static int sock_get_error( int err )
+@@ -138,6 +116,15 @@ static int sock_get_error( int err )
  #endif
      return err;
  }
@@ -22,20 +23,17 @@
 +#define ioctlsocket unix_ioctl
 +#endif
  
- #ifdef SONAME_LIBSSL
- static PCCERT_CONTEXT X509_to_cert_context(X509 *cert)
-@@ -648,11 +658,17 @@ BOOL netconn_connect( netconn_t *conn, c
+ static int sock_send(int fd, const void *msg, size_t len, int flags)
+ {
+@@ -366,11 +353,25 @@ BOOL netconn_connect( netconn_t *conn, c
          res = sock_get_error( errno );
          if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
          {
--            struct pollfd pfd;
-+            // ReactOS: use select instead of poll
++#ifdef __REACTOS__
++            /* ReactOS: use select instead of poll */
 +            fd_set outfd;
 +            struct timeval tv;
- 
--            pfd.fd = conn->socket;
--            pfd.events = POLLOUT;
--            if (poll( &pfd, 1, timeout ) > 0)
++
 +            FD_ZERO(&outfd);
 +            FD_SET(conn->socket, &outfd);
 +
@@ -43,77 +41,78 @@
 +            tv.tv_usec = timeout * 1000;
 +
 +            if (select( 0, NULL, &outfd, NULL, &tv ) > 0)
++#else
+             struct pollfd pfd;
+ 
+             pfd.fd = conn->socket;
+             pfd.events = POLLOUT;
+             if (poll( &pfd, 1, timeout ) > 0)
++#endif
                  ret = TRUE;
              else
                  res = sock_get_error( errno );
-@@ -848,7 +864,8 @@ BOOL netconn_query_data_available( netco
+diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
+--- e:\wine\dlls\winhttp/request.c	2015-07-14 15:44:36.027191600 +0100
++++ e:\reactos\dll\win32\winhttp/request.c	2015-07-20 14:28:31.803188200 +0100
+@@ -1263,6 +1252,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNE
+     return ret;
+ }
  
- BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
- {
--    struct pollfd pfd;
-+    // ReactOS: use select instead of poll
-+    fd_set infd;
-     BOOL ret = FALSE;
-     DWORD recvd = 0;
++#undef ARRAYSIZE
+ #define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
  
-@@ -884,19 +901,21 @@ BOOL netconn_get_next_line( netconn_t *c
- #endif
-     }
- 
--    pfd.fd = conn->socket;
--    pfd.events = POLLIN;
-+    FD_ZERO(&infd);
-+    FD_SET(conn->socket, &infd);
-+
-     while (recvd < *buflen)
+ static const WCHAR basicW[]     = {'B','a','s','i','c',0};
+@@ -2754,8 +2744,8 @@ static void free_request( struct winhttp
+     CloseHandle( request->thread );
+     CloseHandle( request->wait );
+     CloseHandle( request->cancel );
+-    heap_free( request->proxy.lpszProxy );
+-    heap_free( request->proxy.lpszProxyBypass );
++    heap_free( (WCHAR *)request->proxy.lpszProxy );
++    heap_free( (WCHAR *)request->proxy.lpszProxyBypass );
+     heap_free( request->buffer );
+     heap_free( request->verb );
+     VariantClear( &request->data );
+@@ -2959,16 +2949,16 @@ static HRESULT WINAPI winhttp_request_Se
      {
--        int timeout, res;
--        struct timeval tv;
-+        int res;
-+        struct timeval tv, *ptv;
-         socklen_t len = sizeof(tv);
+     case HTTPREQUEST_PROXYSETTING_DEFAULT:
+         request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
+-        heap_free( request->proxy.lpszProxy );
+-        heap_free( request->proxy.lpszProxyBypass );
++        heap_free( (WCHAR *)request->proxy.lpszProxy );
++        heap_free( (WCHAR *)request->proxy.lpszProxyBypass );
+         request->proxy.lpszProxy = NULL;
+         request->proxy.lpszProxyBypass = NULL;
+         break;
  
-         if ((res = getsockopt( conn->socket, SOL_SOCKET, SO_RCVTIMEO, (void*)&tv, &len ) != -1))
--            timeout = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-+            ptv = &tv;
-         else
--            timeout = -1;
--        if (poll( &pfd, 1, timeout ) > 0)
-+            ptv = NULL;
-+
-+        if (select( 0, &infd, NULL, NULL, ptv ) > 0)
+     case HTTPREQUEST_PROXYSETTING_DIRECT:
+         request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NO_PROXY;
+-        heap_free( request->proxy.lpszProxy );
+-        heap_free( request->proxy.lpszProxyBypass );
++        heap_free( (WCHAR *)request->proxy.lpszProxy );
++        heap_free( (WCHAR *)request->proxy.lpszProxyBypass );
+         request->proxy.lpszProxy = NULL;
+         request->proxy.lpszProxyBypass = NULL;
+         break;
+@@ -2977,12 +2967,12 @@ static HRESULT WINAPI winhttp_request_Se
+         request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+         if (V_VT( &proxy_server ) == VT_BSTR)
          {
-             if ((res = recv( conn->socket, &buffer[recvd], 1, 0 )) <= 0)
-             {
---- wine-1.5.4/dlls/winhttp/request.c	2012-06-20 14:30:41 +0200
-+++ dll/win32/winhttp/request.c	2012-06-21 17:32:47 +0200
-@@ -38,6 +38,8 @@
- 
- #include "winhttp_private.h"
- 
-+#include "inet_ntop.c"
-+
- WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
- 
- static const WCHAR attr_accept[] = {'A','c','c','e','p','t',0};
---- wine-1.5.4/dlls/winhttp/rsrc.rc	2012-06-20 14:30:41 +0200
-+++ dll/win32/winhttp/rsrc.rc	2012-07-14 15:25:28 +0200
-@@ -16,6 +16,12 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
- 
-+/* @makedep: winhttp_tlb.tlb */
-+1 TYPELIB winhttp_tlb.tlb
-+
-+/* @makedep: winhttp_tlb.rgs */
-+1 WINE_REGISTRY winhttp_tlb.rgs
-+
- /* @makedep: pac.js */
- pac.js 40 "pac.js"
- 
---- wine-1.5.4/dlls/winhttp/session.c	2012-07-13 15:34:57 +0200
-+++ dll/win32/winhttp/session.c	2012-06-23 17:51:47 +0200
-@@ -95,6 +95,9 @@ static void session_destroy( object_head
+-            heap_free( request->proxy.lpszProxy );
++            heap_free( (WCHAR *)request->proxy.lpszProxy );
+             request->proxy.lpszProxy = strdupW( V_BSTR( &proxy_server ) );
+         }
+         if (V_VT( &bypass_list ) == VT_BSTR)
+         {
+-            heap_free( request->proxy.lpszProxyBypass );
++            heap_free( (WCHAR *)request->proxy.lpszProxyBypass );
+             request->proxy.lpszProxyBypass = strdupW( V_BSTR( &bypass_list ) );
+         }
+         break;
+diff -pudN e:\wine\dlls\winhttp/session.c e:\reactos\dll\win32\winhttp/session.c
+--- e:\wine\dlls\winhttp/session.c	2015-07-14 15:44:36.029191700 +0100
++++ e:\reactos\dll\win32\winhttp/session.c	2015-07-20 14:29:15.686698200 +0100
+@@ -109,6 +81,9 @@ static void session_destroy( object_head
      heap_free( session->proxy_username );
      heap_free( session->proxy_password );
      heap_free( session );
@@ -123,7 +122,7 @@
  }
  
  static BOOL session_query_option( object_header_t *hdr, DWORD option, LPVOID buffer, LPDWORD buflen )
-@@ -203,6 +206,11 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
+@@ -220,6 +195,11 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
  {
      session_t *session;
      HINTERNET handle = NULL;
@@ -135,3 +134,31 @@
  
      TRACE("%s, %u, %s, %s, 0x%08x\n", debugstr_w(agent), access, debugstr_w(proxy), debugstr_w(bypass), flags);
  
+@@ -246,14 +226,14 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
+         session->access = info.dwAccessType;
+         if (info.lpszProxy && !(session->proxy_server = strdupW( info.lpszProxy )))
+         {
+-            GlobalFree( info.lpszProxy );
+-            GlobalFree( info.lpszProxyBypass );
++            GlobalFree( (LPWSTR)info.lpszProxy );
++            GlobalFree( (LPWSTR)info.lpszProxyBypass );
+             goto end;
+         }
+         if (info.lpszProxyBypass && !(session->proxy_bypass = strdupW( info.lpszProxyBypass )))
+         {
+-            GlobalFree( info.lpszProxy );
+-            GlobalFree( info.lpszProxyBypass );
++            GlobalFree( (LPWSTR)info.lpszProxy );
++            GlobalFree( (LPWSTR)info.lpszProxyBypass );
+             goto end;
+         }
+     }
+@@ -624,7 +604,7 @@ static WCHAR *blob_to_str( DWORD encodin
+ 
+ static BOOL convert_sockaddr( const struct sockaddr *addr, SOCKADDR_STORAGE *addr_storage )
+ {
+-#ifndef __MINGW32__
++#if !defined(__MINGW32__) && !defined(_MSC_VER)
+     switch (addr->sa_family)
+     {
+     case AF_INET:

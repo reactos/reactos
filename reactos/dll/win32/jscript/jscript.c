@@ -16,15 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
 #include "jscript.h"
-#include "engine.h"
-#include <objsafe.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 #ifdef _WIN64
 
@@ -783,7 +775,8 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
             clear_ei(This->ctx);
             hres = exec_source(exec_ctx, code, &code->global_code, TRUE, &r);
             if(SUCCEEDED(hres)) {
-                hres = jsval_to_variant(r, pvarResult);
+                if(pvarResult)
+                    hres = jsval_to_variant(r, pvarResult);
                 jsval_release(r);
             }
             exec_release(exec_ctx);
@@ -794,7 +787,11 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
         return hres;
     }
 
-    if(!is_started(This->ctx)) {
+    /*
+     * Although pvarResult is not really used without SCRIPTTEXT_ISEXPRESSION flag, if it's not NULL,
+     * script is executed immediately, even if it's not in started state yet.
+     */
+    if(!pvarResult && !is_started(This->ctx)) {
         if(This->queue_tail)
             This->queue_tail = This->queue_tail->next = code;
         else
@@ -803,9 +800,13 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
     }
 
     hres = exec_global_code(This, code);
-
     release_bytecode(code);
-    return hres;
+    if(FAILED(hres))
+        return hres;
+
+    if(pvarResult)
+        V_VT(pvarResult) = VT_EMPTY;
+    return S_OK;
 }
 
 static const IActiveScriptParseVtbl JScriptParseVtbl = {

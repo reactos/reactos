@@ -10,7 +10,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
-add_library(libtiff SHARED
+list(APPEND SOURCE
     mkg3states.c
     tif_aux.c
     tif_close.c
@@ -48,14 +48,18 @@ add_library(libtiff SHARED
     tif_warning.c
     tif_win32.c
     tif_write.c
-    tif_zip.c)
+    tif_zip.c
+    precomp.h)
 
+add_library(libtiff SHARED ${SOURCE})
 set_module_type(libtiff win32dll)
 target_link_libraries(libtiff zlib getopt)
 add_importlibs(libtiff user32 msvcrt kernel32 ntdll)
-add_dependencies(libtiff psdk)
+add_pch(libtiff precomp.h SOURCE)
 add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    allow_warnings(libtiff)
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_target_compile_flags(libtiff "-Wno-unused-but-set-variable")
+    endif()
 endif()

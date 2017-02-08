@@ -47,6 +47,16 @@ typedef struct
     LPVOID lpFileType;
 } MapiFileDesc, *lpMapiFileDesc;
 
+typedef struct
+{
+    ULONG ulReserved;
+    ULONG flFlags;
+    ULONG nPosition;
+    PWSTR lpszPathName;
+    PWSTR lpszFileName;
+    PVOID lpFileType;
+} MapiFileDescW, *lpMapiFileDescW;
+
 #ifndef MAPI_ORIG
 #define MAPI_ORIG   0
 #define MAPI_TO     1
@@ -67,6 +77,16 @@ typedef struct
 typedef struct
 {
     ULONG ulReserved;
+    ULONG ulRecipClass;
+    PWSTR lpszName;
+    PWSTR lpszAddress;
+    ULONG ulEIDSize;
+    PVOID lpEntryID;
+} MapiRecipDescW, *lpMapiRecipDescW;
+
+typedef struct
+{
+    ULONG ulReserved;
     LPSTR lpszSubject;
     LPSTR lpszNoteText;
     LPSTR lpszMessageType;
@@ -80,11 +100,26 @@ typedef struct
     lpMapiFileDesc lpFiles;
 } MapiMessage, *lpMapiMessage;
 
+typedef struct
+{
+    ULONG ulReserved;
+    PWSTR lpszSubject;
+    PWSTR lpszNoteText;
+    PWSTR lpszMessageType;
+    PWSTR lpszDateReceived;
+    PWSTR lpszConversationID;
+    FLAGS flFlags;
+    lpMapiRecipDescW lpOriginator;
+    ULONG nRecipCount;
+    lpMapiRecipDescW lpRecips;
+    ULONG nFileCount;
+    lpMapiFileDescW lpFiles;
+} MapiMessageW, *lpMapiMessageW;
 
 /* Error codes */
 
 #ifndef SUCCESS_SUCCESS
-#define SUCCESS_SUCCESS                 0L
+#define SUCCESS_SUCCESS                 0
 #endif
 
 #define MAPI_USER_ABORT                 1
@@ -115,6 +150,7 @@ typedef struct
 #define MAPI_E_INVALID_EDITFIELDS       24
 #define MAPI_E_INVALID_RECIPS           25
 #define MAPI_E_NOT_SUPPORTED            26
+#define MAPI_E_UNICODE_NOT_SUPPORTED    27
 
 
 /* MAPILogon */
@@ -139,6 +175,10 @@ typedef struct
 /* MAPISendMail */
 
 #define MAPI_DIALOG             0x00000008
+
+/* MAPISendMailW */
+
+#define MAPI_FORCE_UNICODE      0x00040000
 
 
 /* API typedefs and prototypes */
@@ -193,6 +233,10 @@ MAPISENDDOCUMENTS MAPISendDocuments;
 typedef ULONG (WINAPI MAPISENDMAIL)(LHANDLE,ULONG_PTR,lpMapiMessage,FLAGS,ULONG);
 typedef MAPISENDMAIL *LPMAPISENDMAIL;
 MAPISENDMAIL MAPISendMail;
+
+typedef ULONG (WINAPI MAPISENDMAILW)(LHANDLE,ULONG_PTR,lpMapiMessageW,FLAGS,ULONG);
+typedef MAPISENDMAILW *LPMAPISENDMAILW;
+MAPISENDMAILW MAPISendMailW;
 
 #ifdef __cplusplus
 }

@@ -19,11 +19,13 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        subsys/system/sndvol32/misc.c
+ * FILE:        base/applications/sndvol32/misc.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
 
 #include "sndvol32.h"
+
+#include <winreg.h>
 
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,

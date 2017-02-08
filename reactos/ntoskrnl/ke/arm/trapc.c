@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/arm/ksarm.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -22,13 +21,13 @@ KiIdleLoop(VOID)
     PKPCR Pcr = (PKPCR)KeGetPcr();
     PKPRCB Prcb = Pcr->Prcb;
     PKTHREAD OldThread, NewThread;
-    
+
     //
     // Loop forever... that's why this is an idle loop
     //
     DPRINT1("[IDLE LOOP]\n");
     while (TRUE);
-    
+
     while (TRUE)
     {
         //
@@ -36,7 +35,7 @@ KiIdleLoop(VOID)
         //
         _disable();
         _enable();
-    
+
         //
         // Check if there's DPC work to do
         //
@@ -48,13 +47,13 @@ KiIdleLoop(VOID)
             // Clear the pending interrupt
             //
             HalClearSoftwareInterrupt(DISPATCH_LEVEL);
-        
+
             //
             // Retire DPCs
             //
             KiRetireDpcList(Prcb);
         }
-    
+
         //
         // Check if there's a thread to schedule
         //
@@ -64,15 +63,15 @@ KiIdleLoop(VOID)
             // Out with the old, in with the new...
             //
             OldThread = Prcb->CurrentThread;
-            NewThread = Prcb->NextThread;        
+            NewThread = Prcb->NextThread;
             Prcb->CurrentThread = NewThread;
             Prcb->NextThread = NULL;
-        
+
             //
             // Update thread state
             //
             NewThread->State = Running;
-        
+
             //
             // Swap to the new thread
             // On ARM we call KiSwapContext instead of KiSwapContextInternal,
@@ -101,19 +100,19 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     DPRINT1("Swapping from: %p (%16s) to %p (%16s)\n",
             OldProcess, ((PEPROCESS)OldProcess)->ImageFileName,
             NewProcess, ((PEPROCESS)NewProcess)->ImageFileName);
-    
+
     //
     // Update the page directory base
     //
     TtbRegister.AsUlong = NewProcess->DirectoryTableBase[0];
     ASSERT(TtbRegister.Reserved == 0);
     KeArmTranslationTableRegisterSet(TtbRegister);
-    
+
     //
     // FIXME: Flush the TLB
     //
-    
-    
+
+
     DPRINT1("Survived!\n");
     while (TRUE);
 }
@@ -126,15 +125,15 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPRCB Prcb = Pcr->Prcb;
     PKPROCESS OldProcess, NewProcess;
-    
+
     DPRINT1("SWAP\n");
     while (TRUE);
-    
+
     //
     // Increase context switch count
     //
     Pcr->ContextSwitches++;
-    
+
     //
     // Check if WMI tracing is enabled
     //
@@ -146,7 +145,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         DPRINT1("WMI Tracing not supported\n");
         ASSERT(FALSE);
     }
-    
+
     //
     // Check if the processes are also different
     //
@@ -167,7 +166,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
             ASSERT(FALSE);
         }
     }
-    
+
     //
     // Increase thread context switches
     //
@@ -199,7 +198,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
                      (ULONG_PTR)OldThread->InitialStack,
                      0);
     }
-    
+
     //
     // Kernel APCs may be pending
     //
@@ -217,7 +216,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
             return TRUE;
         }
     }
-    
+
     //
     // Return
     //
@@ -231,20 +230,20 @@ KiApcInterrupt(VOID)
     KPROCESSOR_MODE PreviousMode;
     KEXCEPTION_FRAME ExceptionFrame;
     PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
-    
+
     DPRINT1("[APC TRAP]\n");
     while (TRUE);
-       
+
     //
     // Isolate previous mode
     //
     PreviousMode = KiGetPreviousMode(TrapFrame);
-    
+
     //
     // FIXME-USER: Handle APC interrupt while in user-mode
     //
     if (PreviousMode == UserMode) ASSERT(FALSE);
-    
+
     //
     // Disable interrupts
     //
@@ -254,12 +253,12 @@ KiApcInterrupt(VOID)
     // Clear APC interrupt
     //
     HalClearSoftwareInterrupt(APC_LEVEL);
-    
+
     //
     // Re-enable interrupts
     //
     _enable();
-    
+
     //
     // Deliver APCs
     //
@@ -273,17 +272,17 @@ KiDispatchInterrupt(VOID)
     PKIPCR Pcr;
     PKPRCB Prcb;
     PKTHREAD NewThread, OldThread;
-    
+
     DPRINT1("[DPC TRAP]\n");
     while (TRUE);
-    
+
     //
     // Get the PCR and disable interrupts
     //
     Pcr = (PKIPCR)KeGetPcr();
     Prcb = Pcr->Prcb;
     _disable();
-    
+
     //
     //Check if we have to deliver DPCs, timers, or deferred threads
     //
@@ -296,12 +295,12 @@ KiDispatchInterrupt(VOID)
         //
         KiRetireDpcList(Prcb);
     }
-    
+
     //
     // Re-enable interrupts
     //
     _enable();
-    
+
     //
     // Check for quantum end
     //
@@ -314,12 +313,12 @@ KiDispatchInterrupt(VOID)
         KiQuantumEnd();
         return;
     }
-    
+
     //
     // Check if we have a thread to swap to
     //
     if (Prcb->NextThread)
-    {       
+    {
         //
         // Next is now current
         //
@@ -327,18 +326,18 @@ KiDispatchInterrupt(VOID)
         NewThread = Prcb->NextThread;
         Prcb->CurrentThread = NewThread;
         Prcb->NextThread = NULL;
-        
+
         //
         // Update thread states
         //
         NewThread->State = Running;
         OldThread->WaitReason = WrDispatchInt;
-        
+
         //
         // Make the old thread ready
         //
         KxQueueReadyThread(OldThread, Prcb);
-        
+
         //
         // Swap to the new thread
         // On ARM we call KiSwapContext instead of KiSwapContextInternal,
@@ -355,23 +354,23 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
                    IN ULONG Reserved)
 {
     KIRQL OldIrql, Irql;
-    ULONG InterruptCause, InterruptMask;
+    ULONG InterruptCause;//, InterruptMask;
     PKIPCR Pcr;
     PKTRAP_FRAME OldTrapFrame;
-    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    ASSERT(TrapFrame->Reserved == 0xBADB0D00);
 
     //
     // Increment interrupt count
     //
     Pcr = (PKIPCR)KeGetPcr();
-    Pcr->Prcb->InterruptCount++;
-    
+    Pcr->Prcb.InterruptCount++;
+
     //
     // Get the old IRQL
     //
     OldIrql = KeGetCurrentIrql();
-    TrapFrame->OldIrql = OldIrql;
-    
+    TrapFrame->PreviousIrql = OldIrql;
+
     //
     // Get the interrupt source
     //
@@ -381,14 +380,17 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     //
     // Get the new IRQL and Interrupt Mask
     //
-    Irql = Pcr->IrqlMask[InterruptCause];
-    InterruptMask = Pcr->IrqlTable[Irql];
-    
+    /// FIXME: use a global table in ntoskrnl instead of HAL?
+    //Irql = Pcr->IrqlMask[InterruptCause];
+    //InterruptMask = Pcr->IrqlTable[Irql];
+    Irql = 0;
+    __debugbreak();
+
     //
     // Raise to the new IRQL
     //
     KfRaiseIrql(Irql);
-    
+
     //
     // The clock ISR wants the trap frame as a parameter
     //
@@ -399,7 +401,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     // Check if this interrupt is at DISPATCH or higher
     //
     if (Irql > DISPATCH_LEVEL)
-    {   
+    {
         //
         // FIXME-TODO: Switch to interrupt stack
         //
@@ -417,11 +419,13 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     //
     // Call the registered interrupt routine
     //
-    Pcr->InterruptRoutine[Irql]();
+    /// FIXME: this should probably go into a table in ntoskrnl
+    //Pcr->InterruptRoutine[Irql]();
+    __debugbreak();
     ASSERT(KeGetCurrentThread()->TrapFrame == TrapFrame);
     KeGetCurrentThread()->TrapFrame = OldTrapFrame;
 //    DPRINT1("[ISR RETURN]\n");
-    
+
     //
     // Restore IRQL and interrupts
     //
@@ -433,15 +437,15 @@ NTSTATUS
 KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
-    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    ASSERT(TrapFrame->Reserved == 0xBADB0D00);
     ULONG Instruction = *(PULONG)TrapFrame->Pc;
     ULONG DebugType, Parameter0;
     EXCEPTION_RECORD ExceptionRecord;
-    
+
     DPRINT1("[PREFETCH ABORT] (%x) @ %p/%p/%p\n",
-            KeArmInstructionFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
+            KeArmInstructionFaultStatusRegisterGet(), Address, TrapFrame->Lr, TrapFrame->Pc);
     while (TRUE);
-    
+
     //
     // What we *SHOULD* do is look at the instruction fault status register
     // and see if it's equal to 2 (debug trap). Unfortunately QEMU doesn't seem
@@ -469,7 +473,7 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
             //
             Parameter0 = STATUS_SUCCESS;
         }
-        
+
         //
         // Build the exception record
         //
@@ -478,14 +482,14 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
         ExceptionRecord.ExceptionRecord = NULL;
         ExceptionRecord.ExceptionAddress = (PVOID)TrapFrame->Pc;
         ExceptionRecord.NumberParameters = 3;
-        
+
         //
         // Build the parameters
         //
         ExceptionRecord.ExceptionInformation[0] = Parameter0;
         ExceptionRecord.ExceptionInformation[1] = TrapFrame->R1;
         ExceptionRecord.ExceptionInformation[2] = TrapFrame->R2;
-        
+
         //
         // Dispatch the exception
         //
@@ -500,7 +504,7 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
         //
         return STATUS_SUCCESS;
     }
-    
+
     //
     // Unhandled
     //
@@ -514,12 +518,12 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
     NTSTATUS Status;
     PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
-    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
-   
+    ASSERT(TrapFrame->Reserved == 0xBADB0D00);
+
     DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
-            KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
+            KeArmFaultStatusRegisterGet(), Address, TrapFrame->Lr, TrapFrame->Pc);
     while (TRUE);
-        
+
     //
     // Check if this is a page fault
     //
@@ -546,33 +550,33 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread;
     KPROCESSOR_MODE PreviousMode;
     ULONG Instruction;
-    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
-    
-    DPRINT1("[SWI] @ %p/%p\n", TrapFrame->SvcLr, TrapFrame->Pc);
+    ASSERT(TrapFrame->Reserved == 0xBADB0D00);
+
+    DPRINT1("[SWI] @ %p/%p\n", TrapFrame->Lr, TrapFrame->Pc);
     while (TRUE);
-    
+
     //
     // Get the current thread
     //
     Thread = KeGetCurrentThread();
-    
+
     //
     // Isolate previous mode
     //
     PreviousMode = KiGetPreviousMode(TrapFrame);
-    
+
     //
     // Save old previous mode
     //
     TrapFrame->PreviousMode = PreviousMode;
-    TrapFrame->PreviousTrapFrame = (ULONG_PTR)Thread->TrapFrame;
-    
+    TrapFrame->TrapFrame = (ULONG_PTR)Thread->TrapFrame;
+
     //
     // Save previous mode and trap frame
     //
     Thread->TrapFrame = TrapFrame;
     Thread->PreviousMode = PreviousMode;
-    
+
     //
     // Read the opcode
     //
@@ -587,12 +591,12 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 NTSTATUS
 KiUndefinedExceptionHandler(IN PKTRAP_FRAME TrapFrame)
 {
-    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
-    
+    ASSERT(TrapFrame->Reserved == 0xBADB0D00);
+
     //
     // This should never happen
     //
-    DPRINT1("[UNDEF] @ %p/%p\n", TrapFrame->SvcLr, TrapFrame->Pc);
+    DPRINT1("[UNDEF] @ %p/%p\n", TrapFrame->Lr, TrapFrame->Pc);
     UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_SUCCESS;

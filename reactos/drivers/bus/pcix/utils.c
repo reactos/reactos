@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <pci.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -32,7 +33,7 @@ PciUnicodeStringStrStr(IN PUNICODE_STRING InputString,
 
     /* Build a partial string with the smaller substring */
     PartialString.Length = EqualString->Length;
-    PartialString.MaximumLength = InputString->MaximumLength;;
+    PartialString.MaximumLength = InputString->MaximumLength;
     PartialString.Buffer = InputString->Buffer;
 
     /* Check how many characters that need comparing */
@@ -493,7 +494,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
                     Status,
                     STATUS_BUFFER_TOO_SMALL);
             *OutputBuffer = NULL;
-            ASSERTMSG(FALSE, "PCI Successfully did the impossible!");
+            ASSERTMSG("PCI Successfully did the impossible!", FALSE);
             break;
         }
 

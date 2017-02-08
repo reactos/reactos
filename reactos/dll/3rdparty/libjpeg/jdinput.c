@@ -2,7 +2,7 @@
  * jdinput.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2002-2009 by Guido Vollbeding.
+ * Modified 2002-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -196,7 +196,7 @@ jpeg_core_output_dimensions (j_decompress_ptr cinfo)
   /* Hardwire it to "no scaling" */
   cinfo->output_width = cinfo->image_width;
   cinfo->output_height = cinfo->image_height;
-  /* jdinput.c has already initialized DCT_scaled_size,
+  /* initial_setup has already initialized DCT_scaled_size,
    * and has computed unscaled downsampled_width and downsampled_height.
    */
 
@@ -216,8 +216,8 @@ initial_setup (j_decompress_ptr cinfo)
       (long) cinfo->image_width > (long) JPEG_MAX_DIMENSION)
     ERREXIT1(cinfo, JERR_IMAGE_TOO_BIG, (unsigned int) JPEG_MAX_DIMENSION);
 
-  /* For now, precision must match compiled-in value... */
-  if (cinfo->data_precision != BITS_IN_JSAMPLE)
+  /* Only 8 to 12 bits data precision are supported for DCT based JPEG */
+  if (cinfo->data_precision < 8 || cinfo->data_precision > 12)
     ERREXIT1(cinfo, JERR_BAD_PRECISION, cinfo->data_precision);
 
   /* Check that number of components won't exceed internal array sizes */
@@ -537,6 +537,7 @@ start_input_pass (j_decompress_ptr cinfo)
 METHODDEF(void)
 finish_input_pass (j_decompress_ptr cinfo)
 {
+  (*cinfo->entropy->finish_pass) (cinfo);
   cinfo->inputctl->consume_input = consume_markers;
 }
 
@@ -646,7 +647,7 @@ jinit_input_controller (j_decompress_ptr cinfo)
   inputctl = (my_inputctl_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
 				SIZEOF(my_input_controller));
-  cinfo->inputctl = (struct jpeg_input_controller *) inputctl;
+  cinfo->inputctl = &inputctl->pub;
   /* Initialize method pointers */
   inputctl->pub.consume_input = consume_markers;
   inputctl->pub.reset_input_controller = reset_input_controller;

@@ -8,6 +8,8 @@
 
 #include "precomp.h"
 
+#include <stdio.h>
+
 const DWORD defaultReason = SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER;
 
 REASON shutdownReason[] =

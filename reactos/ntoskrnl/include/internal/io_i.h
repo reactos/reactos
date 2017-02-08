@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/include/io_i.h
+ * FILE:            ntoskrnl/include/internal/io_i.h
  * PURPOSE:         Info Classes for the I/O Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

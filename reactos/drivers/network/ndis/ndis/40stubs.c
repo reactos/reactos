@@ -10,7 +10,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @unimplemented
  */

@@ -73,31 +73,31 @@ typedef union tagKEY_CONTEXT {
 } KEY_CONTEXT;
 
 BOOL init_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext) DECLSPEC_HIDDEN;
-BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, CONST BYTE *pbData, 
+BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, const BYTE *pbData,
                       DWORD dwDataLen) DECLSPEC_HIDDEN;
 BOOL finalize_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, BYTE *pbHashValue) DECLSPEC_HIDDEN;
-BOOL duplicate_hash_impl(ALG_ID aiAlgid, CONST HASH_CONTEXT *pSrcHashContext, 
+BOOL duplicate_hash_impl(ALG_ID aiAlgid, const HASH_CONTEXT *pSrcHashContext,
                          HASH_CONTEXT *pDestHashContext) DECLSPEC_HIDDEN;
 
 BOOL new_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen) DECLSPEC_HIDDEN;
 BOOL free_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext) DECLSPEC_HIDDEN;
 BOOL setup_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                     DWORD dwEffectiveKeyLen, DWORD dwSaltLen, BYTE *abKeyValue) DECLSPEC_HIDDEN;
-BOOL duplicate_key_impl(ALG_ID aiAlgid, CONST KEY_CONTEXT *pSrcKeyContext, 
+BOOL duplicate_key_impl(ALG_ID aiAlgid, const KEY_CONTEXT *pSrcKeyContext,
                         KEY_CONTEXT *pDestKeyContext) DECLSPEC_HIDDEN;
 
 /* dwKeySpec is optional for symmetric key algorithms */
-BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContext, CONST BYTE *pbIn, BYTE *pbOut, 
-                        DWORD enc) DECLSPEC_HIDDEN;
+BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContext, const BYTE *pbIn,
+                        BYTE *pbOut, DWORD enc) DECLSPEC_HIDDEN;
 BOOL encrypt_stream_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, BYTE *pbInOut, DWORD dwLen) DECLSPEC_HIDDEN;
 
 BOOL export_public_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                             DWORD *pdwPubExp) DECLSPEC_HIDDEN;
-BOOL import_public_key_impl(CONST BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen, 
+BOOL import_public_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                             DWORD dwPubExp) DECLSPEC_HIDDEN;
 BOOL export_private_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                              DWORD *pdwPubExp) DECLSPEC_HIDDEN;
-BOOL import_private_key_impl(CONST BYTE* pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen, 
+BOOL import_private_key_impl(const BYTE* pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
                              DWORD dwDataLen, DWORD dwPubExp) DECLSPEC_HIDDEN;
 
 BOOL gen_rand_impl(BYTE *pbBuffer, DWORD dwLen) DECLSPEC_HIDDEN;

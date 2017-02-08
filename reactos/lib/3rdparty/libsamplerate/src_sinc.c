@@ -22,13 +22,7 @@
 **		http://www.mega-nerd.com/SRC/procedure.html
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "config.h"
-#include "float_cast.h"
-#include "common.h"
+#include "precomp.h"
 
 #define	SINC_MAGIC_MARKER	MAKE_MAGIC (' ', 's', 'i', 'n', 'c', ' ')
 

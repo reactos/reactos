@@ -213,7 +213,7 @@ typedef struct bufferstackentry {
 	pp_entry_t	*define;	/* Points to expanding define or NULL if handling includes */
 	int		line_number;	/* Line that we were handling */
 	int		char_number;	/* The current position on that line */
-	const char	*filename;	/* Filename that we were handling */
+	char		*filename;	/* Filename that we were handling */
 	int		if_depth;	/* How many #if:s deep to check matching #endif:s */
 	int		ncontinuations;	/* Remember the continuation state */
 	int		should_pop;	/* Set if we must pop the start-state on EOF */
@@ -329,6 +329,7 @@ void pp_writestring(const char *format, ...)
 	va_start(valist, format);
 	len = vsnprintf(buffer, buffercapacity,
 			format, valist);
+	va_end(valist);
         /* If the string is longer than buffersize, vsnprintf returns
          * the string length with glibc >= 2.1, -1 with glibc < 2.1 */
 	while(len > buffercapacity || len < 0)
@@ -345,10 +346,11 @@ void pp_writestring(const char *format, ...)
 			return;
 		}
 		buffer = new_buffer;
+		va_start(valist, format);
 		len = vsnprintf(buffer, buffercapacity,
 				format, valist);
+		va_end(valist);
 	}
-	va_end(valist);
 
 	wpp_callbacks->write(buffer, len);
 }
@@ -772,7 +774,10 @@ void pp_writestring(const char *format, ...)
 		if(!bep)
 		{
 			if(YY_START != INITIAL)
+			{
 				ppy_error("Unexpected end of file during preprocessing");
+				BEGIN(INITIAL);
+			}
 			yyterminate();
 		}
 		else if(bep->should_pop == 2)
@@ -1335,6 +1340,8 @@ static bufferstackentry_t *pop_buffer(void)
 		bufferstack[bufferstackidx].define->expanding = 0;
 	else
 	{
+		includelogicentry_t *iep = NULL;
+
 		if(!bufferstack[bufferstackidx].should_pop)
 		{
 			wpp_callbacks->close(pp_status.file);
@@ -1346,32 +1353,37 @@ static bufferstackentry_t *pop_buffer(void)
 				pp_entry_t *ppp = pplookup(pp_incl_state.ppp);
 				if(ppp)
 				{
-					includelogicentry_t *iep = pp_xmalloc(sizeof(includelogicentry_t));
-					if(!iep)
-						return NULL;
-
-					iep->ppp = ppp;
-					ppp->iep = iep;
-					iep->filename = bufferstack[bufferstackidx].include_filename;
-                                        iep->prev = NULL;
-					iep->next = pp_includelogiclist;
-					if(iep->next)
-						iep->next->prev = iep;
-					pp_includelogiclist = iep;
-					if(pp_status.debug)
-						fprintf(stderr, "pop_buffer: %s:%d: includelogic added, include_ppp='%s', file='%s'\n", bufferstack[bufferstackidx].filename, bufferstack[bufferstackidx].line_number, pp_incl_state.ppp, iep->filename);
+					iep = pp_xmalloc(sizeof(includelogicentry_t));
+					if (iep)
+					{
+						iep->ppp = ppp;
+						ppp->iep = iep;
+						iep->filename = bufferstack[bufferstackidx].include_filename;
+						iep->prev = NULL;
+						iep->next = pp_includelogiclist;
+						if(iep->next)
+							iep->next->prev = iep;
+						pp_includelogiclist = iep;
+						if(pp_status.debug)
+							fprintf(stderr, "pop_buffer: %s:%d: includelogic added, include_ppp='%s', file='%s'\n",
+                                                                bufferstack[bufferstackidx].filename, bufferstack[bufferstackidx].line_number, pp_incl_state.ppp, iep->filename);
+					}
 				}
-				else
-					free(bufferstack[bufferstackidx].include_filename);
 			}
 			free(pp_incl_state.ppp);
 			pp_incl_state	= bufferstack[bufferstackidx].incl;
 
 		}
+		if (bufferstack[bufferstackidx].include_filename)
+		{
+			free(pp_status.input);
+			pp_status.input = bufferstack[bufferstackidx].filename;
+		}
 		pp_status.line_number = bufferstack[bufferstackidx].line_number;
 		pp_status.char_number = bufferstack[bufferstackidx].char_number;
-		pp_status.input  = bufferstack[bufferstackidx].filename;
 		ncontinuations = bufferstack[bufferstackidx].ncontinuations;
+		if (!iep)
+			free(bufferstack[bufferstackidx].include_filename);
 	}
 
 	if(ppy_debug)
@@ -1581,6 +1593,7 @@ void pp_do_include(char *fname, int type)
 			 * If the define was deleted, then this entry would have
 			 * been deleted too.
 			 */
+			free(fname);
 			return;
 		}
 	}
@@ -1590,15 +1603,17 @@ void pp_do_include(char *fname, int type)
 	if(n <= 2)
 	{
 		ppy_error("Empty include filename");
+		free(fname);
 		return;
 	}
 
 	/* Undo the effect of the quotation */
 	fname[n-1] = '\0';
 
-	if((fp = pp_open_include(fname+1, type ? pp_status.input : NULL, &newpath)) == NULL)
+	if((fp = pp_open_include(fname+1, type, pp_status.input, &newpath)) == NULL)
 	{
 		ppy_error("Unable to open include file %s", fname+1);
+		free(fname);
 		return;
 	}
 

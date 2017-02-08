@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            base/system/smss/smss.c
+ * FILE:            base/system/smss/smloop.c
  * PURPOSE:         Main SMSS Code
  * PROGRAMMERS:     Alex Ionescu
  */
@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -379,7 +380,7 @@ SmpApiLoop(IN PVOID Parameter)
             case LPC_CONNECTION_REQUEST:
                 /* Create the right structures for it */
                 SmpHandleConnectionRequest(SmApiPort, (PSB_API_MSG)&RequestMsg);
-                ReplyMsg =  NULL;
+                ReplyMsg = NULL;
                 break;
 
             /* A closed connection */

@@ -18,11 +18,6 @@
 
 #include "hlink_private.h"
 
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(hlink);
-
 typedef struct {
     IUnknown           IUnknown_inner;
     IAuthenticate      IAuthenticate_iface;
@@ -235,7 +230,7 @@ static ULONG WINAPI ExtServ_Release(IExtensionServices *iface)
 
 static HRESULT ExtServ_ImplSetAdditionalHeaders(ExtensionService* This, LPCWSTR pwzAdditionalHeaders)
 {
-    int len = 0;
+    int len;
 
     heap_free(This->headers);
     This->headers = NULL;

@@ -17,15 +17,6 @@
 #ifndef __NBCMDQUEUE_H__
 #define __NBCMDQUEUE_H__
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <nb30.h>
-
 /* This file defines a queue of pending NetBIOS commands.  The queue operations
  * are thread safe, with the exception of NBCmdQueueDestroy:  ensure no other
  * threads are manipulating the queue when calling NBCmdQueueDestroy.
@@ -34,12 +25,12 @@
 struct NBCmdQueue;
 
 /* Allocates a new command queue from heap. */
-struct NBCmdQueue *NBCmdQueueCreate(HANDLE heap);
+struct NBCmdQueue *NBCmdQueueCreate(HANDLE heap) DECLSPEC_HIDDEN;
 
 /* Adds ncb to queue.  Assumes queue is not NULL, and ncb is not already in the
  * queue.  If ncb is already in the queue, returns NRC_TOOMANY.
  */
-UCHAR NBCmdQueueAdd(struct NBCmdQueue *queue, PNCB ncb);
+UCHAR NBCmdQueueAdd(struct NBCmdQueue *queue, PNCB ncb) DECLSPEC_HIDDEN;
 
 /* Cancels the given ncb.  Blocks until the command completes.  Implicitly
  * removes ncb from the queue.  Assumes queue and ncb are not NULL, and that
@@ -48,23 +39,23 @@ UCHAR NBCmdQueueAdd(struct NBCmdQueue *queue, PNCB ncb);
  * completed before it could be cancelled, and various other return values for
  * different failures.
  */
-UCHAR NBCmdQueueCancel(struct NBCmdQueue *queue, PNCB ncb);
+UCHAR NBCmdQueueCancel(struct NBCmdQueue *queue, PNCB ncb) DECLSPEC_HIDDEN;
 
 /* Sets the return code of the given ncb, and implicitly removes the command
  * from the queue.  Assumes queue and ncb are not NULL, and that ncb has been
  * added to queue previously.
  * Returns NRC_GOODRET on success.
  */
-UCHAR NBCmdQueueComplete(struct NBCmdQueue *queue, PNCB ncb, UCHAR retcode);
+UCHAR NBCmdQueueComplete(struct NBCmdQueue *queue, PNCB ncb, UCHAR retcode) DECLSPEC_HIDDEN;
 
 /* Cancels all pending commands in the queue (useful for a RESET or a shutdown).
  * Returns when all commands have been completed.
  */
-UCHAR NBCmdQueueCancelAll(struct NBCmdQueue *queue);
+UCHAR NBCmdQueueCancelAll(struct NBCmdQueue *queue) DECLSPEC_HIDDEN;
 
 /* Frees all memory associated with the queue.  Blocks until all commands
  * pending in the queue have been completed.
  */
-void NBCmdQueueDestroy(struct NBCmdQueue *queue);
+void NBCmdQueueDestroy(struct NBCmdQueue *queue) DECLSPEC_HIDDEN;
 
 #endif /* __NBCMDQUEUE_H__ */

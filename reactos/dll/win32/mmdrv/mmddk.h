@@ -27,7 +27,6 @@
 #define __MMDDK_H
 
 #include <mmsystem.h>
-//#include <winbase.h>
 
 typedef VOID (TASKCALLBACK) (DWORD dwInst);
 

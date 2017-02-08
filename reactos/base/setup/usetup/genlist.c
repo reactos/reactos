@@ -18,7 +18,7 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/genlist.c
+ * FILE:            base/setup/usetup/genlist.c
  * PURPOSE:         Generic list functions
  * PROGRAMMER:      Eric Kohl
  *                  Christoph von Wittich <christoph at reactos.org>
@@ -84,8 +84,9 @@ CreateGenericList(VOID)
 
 
 VOID
-DestroyGenericList(PGENERIC_LIST List,
-                   BOOLEAN FreeUserData)
+DestroyGenericList(
+    PGENERIC_LIST List,
+    BOOLEAN FreeUserData)
 {
     PGENERIC_LIST_ENTRY ListEntry;
     PLIST_ENTRY Entry;
@@ -110,10 +111,11 @@ DestroyGenericList(PGENERIC_LIST List,
 
 
 BOOLEAN
-AppendGenericListEntry(PGENERIC_LIST List,
-                     PCHAR Text,
-                     PVOID UserData,
-                     BOOLEAN Current)
+AppendGenericListEntry(
+    PGENERIC_LIST List,
+    PCHAR Text,
+    PVOID UserData,
+    BOOLEAN Current)
 {
     PGENERIC_LIST_ENTRY Entry;
 
@@ -139,8 +141,10 @@ AppendGenericListEntry(PGENERIC_LIST List,
 }
 
 
-static VOID
-DrawListFrame(PGENERIC_LIST GenericList)
+static
+VOID
+DrawListFrame(
+    PGENERIC_LIST GenericList)
 {
     COORD coPos;
     DWORD Written;
@@ -221,8 +225,10 @@ DrawListFrame(PGENERIC_LIST GenericList)
 }
 
 
-static VOID
-DrawListEntries(PGENERIC_LIST GenericList)
+static
+VOID
+DrawListEntries(
+    PGENERIC_LIST GenericList)
 {
     PGENERIC_LIST_ENTRY ListEntry;
     PLIST_ENTRY Entry;
@@ -286,8 +292,11 @@ DrawListEntries(PGENERIC_LIST GenericList)
     }
 }
 
-static VOID
-DrawScrollBarGenericList(PGENERIC_LIST GenericList)
+
+static
+VOID
+DrawScrollBarGenericList(
+    PGENERIC_LIST GenericList)
 {
     COORD coPos;
     DWORD Written;
@@ -331,12 +340,59 @@ DrawScrollBarGenericList(PGENERIC_LIST GenericList)
     }
 }
 
+
+static
 VOID
-DrawGenericList(PGENERIC_LIST List,
-                SHORT Left,
-                SHORT Top,
-                SHORT Right,
-                SHORT Bottom)
+CenterCurrentListItem(
+    PGENERIC_LIST List)
+{
+    PLIST_ENTRY Entry;
+    ULONG MaxVisibleItems, ItemCount, i;
+
+    if ((List->Top == 0 && List->Bottom == 0) ||
+        IsListEmpty(&List->ListHead) ||
+        List->CurrentEntry == NULL)
+        return;
+
+    MaxVisibleItems = (ULONG)(List->Bottom - List->Top - 1);
+
+    ItemCount = 0;
+    Entry = List->ListHead.Flink;
+    while (Entry != &List->ListHead)
+    {
+        ItemCount++;
+        Entry = Entry->Flink;
+    }
+
+    if (ItemCount > MaxVisibleItems)
+    {
+        Entry = &List->CurrentEntry->Entry;
+        for (i = 0; i < MaxVisibleItems / 2; i++)
+        {
+            if (Entry->Blink != &List->ListHead)
+                Entry = Entry->Blink;
+        }
+
+        List->FirstShown = Entry;
+
+        for (i = 0; i < MaxVisibleItems; i++)
+        {
+            if (Entry->Flink != &List->ListHead)
+                Entry = Entry->Flink;
+        }
+
+        List->LastShown = Entry;
+    }
+}
+
+
+VOID
+DrawGenericList(
+    PGENERIC_LIST List,
+    SHORT Left,
+    SHORT Top,
+    SHORT Right,
+    SHORT Bottom)
 {
     List->FirstShown = List->ListHead.Flink;
     List->Left = Left;
@@ -349,12 +405,16 @@ DrawGenericList(PGENERIC_LIST List,
     if (IsListEmpty(&List->ListHead))
         return;
 
+    CenterCurrentListItem(List);
+
     DrawListEntries(List);
     DrawScrollBarGenericList(List);
 }
 
+
 VOID
-ScrollPageDownGenericList (PGENERIC_LIST List)
+ScrollPageDownGenericList(
+    PGENERIC_LIST List)
 {
     SHORT i;
 
@@ -374,8 +434,10 @@ ScrollPageDownGenericList (PGENERIC_LIST List)
     List->Redraw = TRUE;
 }
 
+
 VOID
-ScrollPageUpGenericList (PGENERIC_LIST List)
+ScrollPageUpGenericList(
+    PGENERIC_LIST List)
 {
     SHORT i;
 
@@ -395,8 +457,10 @@ ScrollPageUpGenericList (PGENERIC_LIST List)
     List->Redraw = TRUE;
 }
 
+
 VOID
-ScrollDownGenericList (PGENERIC_LIST List)
+ScrollDownGenericList(
+    PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;
 
@@ -423,7 +487,9 @@ ScrollDownGenericList (PGENERIC_LIST List)
 
 
 VOID
-ScrollToPositionGenericList (PGENERIC_LIST List, ULONG uIndex)
+ScrollToPositionGenericList(
+    PGENERIC_LIST List,
+    ULONG uIndex)
 {
     PLIST_ENTRY Entry;
     ULONG uCount = 0;
@@ -456,7 +522,8 @@ ScrollToPositionGenericList (PGENERIC_LIST List, ULONG uIndex)
 
 
 VOID
-ScrollUpGenericList (PGENERIC_LIST List)
+ScrollUpGenericList(
+    PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry;
 
@@ -483,7 +550,24 @@ ScrollUpGenericList (PGENERIC_LIST List)
 
 
 VOID
-SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry)
+RedrawGenericList(
+    PGENERIC_LIST List)
+{
+    if (List->CurrentEntry == NULL)
+        return;
+
+    if (List->Redraw)
+    {
+        DrawListEntries(List);
+        DrawScrollBarGenericList(List);
+    }
+}
+
+
+VOID
+SetCurrentListEntry(
+    PGENERIC_LIST List,
+    PGENERIC_LIST_ENTRY Entry)
 {
     if (Entry->List != List)
         return;
@@ -492,14 +576,16 @@ SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry)
 
 
 PGENERIC_LIST_ENTRY
-GetCurrentListEntry(PGENERIC_LIST List)
+GetCurrentListEntry(
+    PGENERIC_LIST List)
 {
     return List->CurrentEntry;
 }
 
 
 PGENERIC_LIST_ENTRY
-GetFirstListEntry(PGENERIC_LIST List)
+GetFirstListEntry(
+    PGENERIC_LIST List)
 {
     PLIST_ENTRY Entry = List->ListHead.Flink;
 
@@ -510,7 +596,8 @@ GetFirstListEntry(PGENERIC_LIST List)
 
 
 PGENERIC_LIST_ENTRY
-GetNextListEntry(PGENERIC_LIST_ENTRY Entry)
+GetNextListEntry(
+    PGENERIC_LIST_ENTRY Entry)
 {
     PLIST_ENTRY Next = Entry->Entry.Flink;
 
@@ -521,21 +608,25 @@ GetNextListEntry(PGENERIC_LIST_ENTRY Entry)
 
 
 PVOID
-GetListEntryUserData(PGENERIC_LIST_ENTRY List)
+GetListEntryUserData(
+    PGENERIC_LIST_ENTRY List)
 {
     return List->UserData;
 }
 
 
 LPCSTR
-GetListEntryText(PGENERIC_LIST_ENTRY List)
+GetListEntryText(
+    PGENERIC_LIST_ENTRY List)
 {
     return List->Text;
 }
 
 
 VOID
-GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
+GenericListKeyPress(
+    PGENERIC_LIST GenericList,
+    CHAR AsciiChar)
 {
     PGENERIC_LIST_ENTRY ListEntry;
     PGENERIC_LIST_ENTRY OldListEntry;
@@ -546,13 +637,13 @@ GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
 
     GenericList->Redraw = FALSE;
 
-    if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar) &&
+    if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciiChar) &&
          (GenericList->CurrentEntry->Entry.Flink != &GenericList->ListHead))
     {
         ScrollDownGenericList(GenericList);
         ListEntry = GenericList->CurrentEntry;
 
-        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar))
+        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciiChar))
             goto End;
     }
 
@@ -563,7 +654,7 @@ GenericListKeyPress (PGENERIC_LIST GenericList, CHAR AsciChar)
 
     for (;;)
     {
-        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciChar))
+        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciiChar))
         {
             Flag = TRUE;
             break;
@@ -595,16 +686,31 @@ End:
 
 
 VOID
-SaveGenericListState(PGENERIC_LIST List)
+SaveGenericListState(
+    PGENERIC_LIST List)
 {
     List->BackupEntry = List->CurrentEntry;
 }
 
 
 VOID
-RestoreGenericListState(PGENERIC_LIST List)
+RestoreGenericListState(
+    PGENERIC_LIST List)
 {
     List->CurrentEntry = List->BackupEntry;
+}
+
+
+BOOL
+GenericListHasSingleEntry(
+    PGENERIC_LIST List)
+{
+    if (!IsListEmpty(&List->ListHead) && List->ListHead.Flink == List->ListHead.Blink)
+        return TRUE;
+
+    /* if both list head pointers (which normally point to the first and last list member, respectively)
+       point to the same entry then it means that there's just a single thing in there, otherwise... false! */
+    return FALSE;
 }
 
 /* EOF */

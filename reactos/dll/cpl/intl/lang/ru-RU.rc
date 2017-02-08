@@ -21,7 +21,7 @@ BEGIN
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    GROUPBOX "Географического расположение", -1, 5, 171, 234, 55
+    GROUPBOX "Расположение", -1, 5, 171, 234, 55
     LTEXT "&Укажите ваше расположение для того, чтобы службы могли снабжать вас местной информацией, например, новостями и сводками погоды:", -1, 14, 180, 217, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
@@ -32,12 +32,12 @@ CAPTION "Языки"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Языки и службы текстового ввода", -1, 5, 5, 234, 52
-    LTEXT "Чтобы просмотреть или изменить язык или метод ввода текста, нажмите кнопку ""Подробнее""", -1, 12, 15, 220, 18
+    LTEXT "Чтобы просмотреть или изменить язык или метод ввода текста, нажмите кнопку ""Подробнее"".", -1, 12, 15, 220, 18
     PUSHBUTTON "&Подробнее...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Дополнительная языковая поддержка", -1, 5, 61, 234, 90
     LTEXT "Поддержка большинства языков устанавливается по умолчанию. Чтобы установить дополнительную поддержку языков с особыми способами письма, установите соответствующие флажки.", -1, 12, 72, 220, 32
-    CHECKBOX "&Установить поддержку языков с письмом справа налево и сложным письмом", IDC_INST_FILES_FOR_RTOL_LANG, 12, 108, 215, 18, BS_MULTILINE
-    CHECKBOX "Ус&тановить поддержку языков с письмом иероглифами", IDC_INST_FILES_FOR_ASIAN, 12, 129, 215, 15, BS_MULTILINE
+    CHECKBOX "&Установить поддержку языков с письмом справа налево и сложным письмом", IDC_INST_FILES_FOR_RTOL_LANG, 12, 108, 215, 18, BS_MULTILINE | BS_TOP
+    CHECKBOX "Ус&тановить поддержку языков с письмом иероглифами", IDC_INST_FILES_FOR_ASIAN, 12, 129, 215, 15, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -51,8 +51,8 @@ BEGIN
     LTEXT "Выберите язык, соответствующий языку используемых программ, которые не поддерживают Юникод:", -1, 14, 55, 223, 18
     GROUPBOX "Кодовые страницы таблиц преобразования", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Параметры для стандартной учетной записи", -1, 5, 193, 234, 30
-    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Параметры для стандартной учетной записи", -1, 5, 193, 234, 32
+    CHECKBOX "Применить эти параметры для текущей учетной записи и для стандартного профиля", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -61,9 +61,9 @@ CAPTION "Числа"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Образцы", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-    LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Полож.:", -1, 13, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_NUMBERSPOSSAMPLE, 44, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Отриц.:", -1, 123, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "&Раздел. целой и дробной части:", -1, 8, 67, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -81,7 +81,7 @@ BEGIN
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Разделитель &элементов списка:", -1, 8, 181, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Система едениц:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Система единиц:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -91,11 +91,11 @@ CAPTION "Денежная единица"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Образцы", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Полож.:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Отриц.:", -1, 123, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Полож.:", -1, 13, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYPOSSAMPLE, 44, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Отриц.:", -1, 123, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "О&бозначение денежной еденицы:", -1, 8, 51, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "О&бозначение денежной единицы:", -1, 8, 51, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Формат &полож. денежных сумм:", -1, 8, 68, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -129,12 +129,10 @@ BEGIN
     COMBOBOX IDC_TIMEPMSYMBOL, 152, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Обозначение формата времени\n\n\
-h = час    m = минута    s = секунда    t = am или pm\n\n\
-h = 12-часовой формат суток\n\
-H = 24-часовой формат суток\n\
+h = час    m = минута    s = секунда    t = AM или PM\n\n\
+h/H = 12/24-часовой формат суток\n\
 hh, mm, ss = с выводом нулей в начале\n\
-h, m, s = без вывода нулей",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+h, m, s = без вывода нулей", -1, 13, 150, 214, 60, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
@@ -155,7 +153,7 @@ BEGIN
     GROUPBOX "Краткий формат даты", -1, 7, 83, 230, 81
     LTEXT "Образец:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Образец - справа на лево:", -1, 13, 111, 60, 16
+    LTEXT "Образец - справа налево:", -1, 13, 111, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
     LTEXT "Краткий формат:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
@@ -164,7 +162,7 @@ BEGIN
     GROUPBOX "Полный формат даты", -1, 7, 167, 230, 64
     LTEXT "Образец:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Образец - справа на лево:", -1, 13, 195, 61, 16
+    LTEXT "Образец - справа налево:", -1, 13, 195, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
     LTEXT "&Полный формат:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
@@ -185,12 +183,35 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Настройка региональных параметров"
     IDS_SPAIN "Испанский (Испания)"
-    IDS_METRIC "Metric"
-    IDS_IMPERIAL "Imperial"
+    IDS_METRIC "Метрическая"
+    IDS_IMPERIAL "Американская"
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Язык и региональные стандарты"
     IDS_CPLDESCRIPTION "Выбор языка, формата чисел, денежных единиц, времени и даты."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Изменить стандартные параметры"
+    IDS_APPLY_DEFAULT_TEXT "Параметры будут применены к стандартной учетной записи.\n\n\
+Эти изменения будут применены к экрану приветствия и к новым учетным записям.\n\
+Компьютер должен быть перезагружен, для применения изменений к некоторым службам ОС."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Ошибка"
+    IDS_ERROR_SYMBOL_SEPARATE "Короткий разделитель компонентов даты содержит неверный символ(ы)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Короткий формат даты содержит неверный символ(ы)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Длинный формат даты содержит неверный символ(ы)"
+    IDS_ERROR_OEM_CODE_PAGE "Возникла проблема при чтении кодовой страницы OEM"
+    IDS_ERROR_ANSI_CODE_PAGE "Возникла проблема при чтении кодовой страницы ANSI"
+    IDS_ERROR_INT_KEY_REG "Проблема открытия ключа: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Проблема открытия ключа: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Не удается запустить input.dll"
 END

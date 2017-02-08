@@ -115,7 +115,7 @@ char *pp_xstrdup(const char *str)
 	return memcpy(s, str, len);
 }
 
-static char *wpp_default_lookup(const char *name, const char *parent_name,
+static char *wpp_default_lookup(const char *name, int type, const char *parent_name,
                                 char **include_path, int include_path_count)
 {
     char *cpy;
@@ -144,7 +144,7 @@ static char *wpp_default_lookup(const char *name, const char *parent_name,
     }
     *cptr = '\0';
 
-    if(parent_name)
+    if(type && parent_name)
     {
         /* Search directory of parent include and then -I path */
         const char *p;
@@ -209,7 +209,7 @@ static void wpp_default_write( const char *buffer, unsigned int len ) {
     fwrite(buffer, 1, len, ppy_out);
 }
 
-/* Don't comment on the hash, its primitive but functional... */
+/* Don't comment on the hash, it's primitive but functional... */
 static int pphash(const char *str)
 {
 	int sum = 0;
@@ -292,7 +292,7 @@ void pp_pop_define_state(void)
 
     for (i = 0; i < HASHKEY; i++)
     {
-        while ((ppp = pp_def_state->defines[i]) != NULL) free_pp_entry( ppp, i );
+        while ((ppp = pp_def_state->defines[i]) != NULL) pp_del_define( ppp->ident );
     }
     state = pp_def_state;
     pp_def_state = state->next;
@@ -302,6 +302,7 @@ void pp_pop_define_state(void)
 void pp_del_define(const char *name)
 {
 	pp_entry_t *ppp;
+	int idx = pphash(name);
 
 	if((ppp = pplookup(name)) == NULL)
 	{
@@ -310,13 +311,13 @@ void pp_del_define(const char *name)
 		return;
 	}
 
+	if(pp_status.debug)
+		printf("Deleting (%s, %d) <%s>\n", pp_status.input, pp_status.line_number, name);
+
 	free( ppp->ident );
 	free( ppp->subst.text );
 	free( ppp->filename );
-	free_pp_entry( ppp, pphash(name) );
-
-	if(pp_status.debug)
-		printf("Deleted (%s, %d) <%s>\n", pp_status.input, pp_status.line_number, name);
+	free_pp_entry( ppp, idx );
 }
 
 pp_entry_t *pp_add_define(const char *def, const char *text)
@@ -507,17 +508,17 @@ int wpp_add_include_path(const char *path)
 
 char *wpp_find_include(const char *name, const char *parent_name)
 {
-    return wpp_default_lookup(name, parent_name, includepath, nincludepath);
+    return wpp_default_lookup(name, !!parent_name, parent_name, includepath, nincludepath);
 }
 
-void *pp_open_include(const char *name, const char *parent_name, char **newpath)
+void *pp_open_include(const char *name, int type, const char *parent_name, char **newpath)
 {
     char *path;
     void *fp;
 
-    if (!(path = wpp_callbacks->lookup(name, parent_name, includepath,
+    if (!(path = wpp_callbacks->lookup(name, type, parent_name, includepath,
                                        nincludepath))) return NULL;
-    fp = wpp_callbacks->open(path, parent_name == NULL ? 1 : 0);
+    fp = wpp_callbacks->open(path, type);
 
     if (fp)
     {

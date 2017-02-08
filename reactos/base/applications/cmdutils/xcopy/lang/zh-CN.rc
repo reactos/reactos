@@ -1,0 +1,59 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "无效的参数数目 - 使用 xcopy /? 求助\n"
+    STRING_INVPARM,  "无效的参数 '%1' - 使用 xcopy /? 求助\n"
+    STRING_PAUSE,    "请按 <Enter> 开始复制\n"
+    STRING_SIMCOPY,  "%1!d! 将复制文件\n"
+    STRING_COPY,     "%1!d! 文件已复制\n"
+    STRING_QISDIR,   "'%1' 的文件名或在目标系统上\n\
+                     的目录吗?\n\
+                     (F - 文件, D - 目录)\n"
+    STRING_SRCPROMPT,"%1? (Yes|No)\n"
+    STRING_OVERWRITE,"要覆盖 %1 吗? (Yes|No|All)\n"
+    STRING_COPYFAIL, "为 '%2' 的 '%1' 的复制失败， r/c %3!d!\n"
+    STRING_OPENFAIL, "未能打开 '%1'\n"
+    STRING_READFAIL, "在 '%1' 的阅读过程中失败\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - 副本的源的文件或目录树到目的地。\n\
+\n\
+语法:\n\
+XCOPY 源 [目标] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+地点:\n\
+\n\
+[/I]  假设如果目标不存在的目录和复制两个或\n\
+\t多个文件。\n\
+[/S]  复制目录和子目录。\n\
+[/E]  复制目录和子目录，包括任何空的。\n\
+[/Q]  做不列表名称在拷贝，就是保持安静。\n\
+[/F]  在复制期间显示完整的源和目标名称。\n\
+[/L]  模拟运行，显示名称会被复制。\n\
+[/W]  在开始复制操作之前提示。\n\
+[/T]  创建空的目录结构，但不复制文件。\n\
+[/Y]  禁止显示提示覆盖文件时。\n\
+[/-Y] 启用提示覆盖文件时。\n\
+[/P]  在每个源文件在复制前的提示。\n\
+[/N]  复制使用短名称。\n\
+[/U]  复制目标中已存在的唯一文件。\n\
+[/R]  覆盖任何读取的唯一文件。\n\
+[/H]  包括隐藏文件和系统文件的副本中。\n\
+[/C]  继续即使在复制期间发生的错误。\n\
+[/A]  仅复制具有存档属性设置的文件。\n\
+[/M]  仅复制文件的存档属性设置，删除\n\
+\t存档属性。\n\
+[/D | /D:m-d-y] 复制新文件或那些修改后所提供的日期。\n\
+\t\t如果提供没有日期，则只复制如果目的地\n\
+\t\t比源。\n\n"
+
+}

@@ -7,7 +7,7 @@
 
 #include "msgina.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msgina);
+#include <wincon.h>
 
 static BOOL
 TUIInitialize(
@@ -199,6 +199,8 @@ TUILoggedOutSAS(
 {
     WCHAR UserName[256];
     WCHAR Password[256];
+    NTSTATUS Status;
+    NTSTATUS SubStatus = STATUS_SUCCESS;
 
     TRACE("TUILoggedOutSAS()\n");
 
@@ -208,10 +210,14 @@ TUILoggedOutSAS(
     if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
         return WLX_SAS_ACTION_NONE;
 
-    if (DoLoginTasks(pgContext, UserName, NULL, Password))
-        return WLX_SAS_ACTION_LOGON;
-    else
-        return WLX_SAS_ACTION_NONE;
+    Status = DoLoginTasks(pgContext, UserName, NULL, Password, &SubStatus);
+    if (Status == STATUS_SUCCESS)
+    {
+        if (CreateProfile(pgContext, UserName, NULL, Password))
+            return WLX_SAS_ACTION_LOGON;
+    }
+
+    return WLX_SAS_ACTION_NONE;
 }
 
 static INT
@@ -221,6 +227,8 @@ TUILockedSAS(
     HANDLE hToken;
     WCHAR UserName[256];
     WCHAR Password[256];
+    NTSTATUS SubStatus;
+    NTSTATUS Status;
 
     TRACE("TUILockedSAS()\n");
 
@@ -235,14 +243,26 @@ TUILockedSAS(
     if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
         return WLX_SAS_ACTION_NONE;
 
-    if (!LogonUserW(UserName, NULL, Password,
-        LOGON32_LOGON_UNLOCK,
-        LOGON32_PROVIDER_DEFAULT,
-        &hToken))
+    Status = ConnectToLsa(pgContext);
+    if (!NT_SUCCESS(Status))
     {
-        TRACE("LogonUserW() failed\n");
+        WARN("ConnectToLsa() failed\n");
         return WLX_SAS_ACTION_NONE;
     }
+
+    Status = MyLogonUser(pgContext->LsaHandle,
+                         pgContext->AuthenticationPackage,
+                         UserName,
+                         NULL,
+                         Password,
+                         &hToken,
+                         &SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("MyLogonUser() failed\n");
+        return WLX_SAS_ACTION_NONE;
+    }
+
     CloseHandle(hToken);
     return WLX_SAS_ACTION_UNLOCK_WKSTA;
 }

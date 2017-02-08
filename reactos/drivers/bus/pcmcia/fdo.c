@@ -16,12 +16,11 @@ NTAPI
 PcmciaFdoPlugPlay(PPCMCIA_FDO_EXTENSION FdoExt,
                   PIRP Irp)
 {
-  UNREFERENCED_PARAMETER(FdoExt);
+    UNREFERENCED_PARAMETER(FdoExt);
 
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return STATUS_NOT_SUPPORTED;
+    return STATUS_NOT_SUPPORTED;
 }
-

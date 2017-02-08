@@ -19,18 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <config.h>
 #include <wine/port.h>
 
-#define COBJMACROS
-
-//#include <stdarg.h>
 #ifdef HAVE_LIBXML2
-//# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
 # ifdef SONAME_LIBXSLT
 #  ifdef HAVE_LIBXSLT_PATTERN_H
 #   include <libxslt/pattern.h>
@@ -38,26 +31,16 @@
 #  ifdef HAVE_LIBXSLT_TRANSFORM_H
 #   include <libxslt/transform.h>
 #  endif
+#  include <libxslt/imports.h>
 #  include <libxslt/xsltutils.h>
+#  include <libxslt/variables.h>
 #  include <libxslt/xsltInternals.h>
 # endif
 #endif
 
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
 #include <rpcproxy.h>
-//#include "msxml.h"
-#include <msxml6.h>
 
-//#include "wine/unicode.h"
-#include <wine/debug.h>
 #include <wine/library.h>
-
-#include "msxml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 HINSTANCE MSXML_hInstance = NULL;
 
@@ -67,7 +50,7 @@ void wineXmlCallbackLog(char const* caller, xmlErrorLevel lvl, char const* msg, 
 {
     enum __wine_debug_class dbcl;
     char buff[200];
-    static const int max_size = sizeof(buff) / sizeof(buff[0]);
+    const int max_size = sizeof(buff) / sizeof(buff[0]);
     int len;
 
     switch (lvl)
@@ -164,22 +147,19 @@ static int wineXmlFileCloseCallback (void * context)
     return CloseHandle(context) ? 0 : -1;
 }
 
-#endif
-
-
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
-
 void* libxslt_handle = NULL;
 #ifdef SONAME_LIBXSLT
 # define DECL_FUNCPTR(f) typeof(f) * p##f = NULL
 DECL_FUNCPTR(xsltApplyStylesheet);
+DECL_FUNCPTR(xsltApplyStylesheetUser);
 DECL_FUNCPTR(xsltCleanupGlobals);
 DECL_FUNCPTR(xsltFreeStylesheet);
+DECL_FUNCPTR(xsltFreeTransformContext);
+DECL_FUNCPTR(xsltNewTransformContext);
+DECL_FUNCPTR(xsltNextImport);
 DECL_FUNCPTR(xsltParseStylesheetDoc);
+DECL_FUNCPTR(xsltQuoteUserParams);
+DECL_FUNCPTR(xsltSaveResultTo);
 # undef DECL_FUNCPTR
 #endif
 
@@ -197,9 +177,15 @@ static void init_libxslt(void)
         if (needed) { WARN("Can't find symbol %s\n", #f); goto sym_not_found; }
     LOAD_FUNCPTR(xsltInit, 0);
     LOAD_FUNCPTR(xsltApplyStylesheet, 1);
+    LOAD_FUNCPTR(xsltApplyStylesheetUser, 1);
     LOAD_FUNCPTR(xsltCleanupGlobals, 1);
     LOAD_FUNCPTR(xsltFreeStylesheet, 1);
+    LOAD_FUNCPTR(xsltFreeTransformContext, 1);
+    LOAD_FUNCPTR(xsltNewTransformContext, 1);
+    LOAD_FUNCPTR(xsltNextImport, 1);
     LOAD_FUNCPTR(xsltParseStylesheetDoc, 1);
+    LOAD_FUNCPTR(xsltQuoteUserParams, 1);
+    LOAD_FUNCPTR(xsltSaveResultTo, 1);
 #undef LOAD_FUNCPTR
 
     if (pxsltInit)
@@ -212,7 +198,16 @@ static void init_libxslt(void)
 #endif
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+#endif  /* HAVE_LIBXML2 */
+
+
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    return S_FALSE;
+}
+
+
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
 {
     MSXML_hInstance = hInstDLL;
 
@@ -233,20 +228,20 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             WARN("Failed to register callbacks\n");
 
         schemasInit();
-#endif
         init_libxslt();
+#endif
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
+        if (reserved) break;
+#ifdef HAVE_LIBXML2
 #ifdef SONAME_LIBXSLT
         if (libxslt_handle)
         {
             pxsltCleanupGlobals();
             wine_dlclose(libxslt_handle, NULL, 0);
-            libxslt_handle = NULL;
         }
 #endif
-#ifdef HAVE_LIBXML2
         /* Restore default Callbacks */
         xmlCleanupInputCallbacks();
         xmlRegisterDefaultInputCallbacks();
@@ -258,50 +253,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         break;
     }
     return TRUE;
-}
-
-const char *debugstr_variant(const VARIANT *v)
-{
-    if(!v)
-        return "(null)";
-
-    switch(V_VT(v)) {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I1:
-        return wine_dbg_sprintf("{VT_I1: %d}", V_I1(v));
-    case VT_I2:
-        return wine_dbg_sprintf("{VT_I2: %d}", V_I2(v));
-    case VT_I4:
-        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
-    case VT_INT:
-        return wine_dbg_sprintf("{VT_INT: %d}", V_INT(v));
-    case VT_R8:
-        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
-    case VT_BSTR:
-        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
-    case VT_DISPATCH:
-        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
-    case VT_BOOL:
-        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
-    case VT_UNKNOWN:
-        return wine_dbg_sprintf("{VT_UNKNOWN: %p}", V_UNKNOWN(v));
-    case VT_UINT:
-        return wine_dbg_sprintf("{VT_UINT: %u}", V_UINT(v));
-    case VT_BSTR|VT_BYREF:
-        return wine_dbg_sprintf("{VT_BSTR|VT_BYREF: ptr %p, data %s}",
-            V_BSTRREF(v), debugstr_w(V_BSTRREF(v) ? *V_BSTRREF(v) : NULL));
-    case VT_ERROR:
-        return wine_dbg_sprintf("{VT_ERROR: 0x%08x}", V_ERROR(v));
-    case VT_VARIANT|VT_BYREF:
-        return wine_dbg_sprintf("{VT_VARIANT|VT_BYREF: %s}", debugstr_variant(V_VARIANTREF(v)));
-    case VT_UI1|VT_ARRAY:
-        return "{VT_UI1|VT_ARRAY}";
-    default:
-        return wine_dbg_sprintf("{vt %d}", V_VT(v));
-    }
 }
 
 /***********************************************************************

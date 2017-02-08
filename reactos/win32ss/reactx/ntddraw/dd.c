@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsystems/win32/win32k/ntddraw/dd.c
+ * FILE:             win32ss/reactx/ntddraw/dd.c
  * PROGRAMER:        Magnus Olsen (greatlord@reactos.org)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen

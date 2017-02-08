@@ -1,0 +1,27 @@
+/* Russian translation by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Встроенный"
+    IDS_GROUP_NONE_NAME "Пусто"
+    IDS_GROUP_NONE_COMMENT "Обычные пользователи"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Администраторы"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Администраторы имеют полные, ничем не ограниченные права доступа к компьютеру или домену."
+    IDS_ALIAS_GUESTS_NAME "Гости"
+    IDS_ALIAS_GUESTS_COMMENT "Гости по умолчанию имеют те же права, что и пользователи, за исключением учетной записи ""Guest"", еще более ограниченной в правах."
+    IDS_ALIAS_POWER_USERS_NAME "Опытные пользователи"
+    IDS_ALIAS_POWER_USERS_COMMENT "Категория опытных пользователей обладает ограниченными административными правами."
+    IDS_ALIAS_USERS_NAME "Пользователи"
+    IDS_ALIAS_USERS_COMMENT "Пользователи не имеют прав на изменение параметров системы и могут запускать большинство приложений."
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administrator"// Не изменять, иначе будут глюки с нерусскими программами
+    IDS_USER_ADMINISTRATOR_COMMENT "Встроенная учетная запись администратора компьютера/домена."
+    IDS_USER_GUEST_NAME "Guest"// Не изменять, иначе будут глюки с нерусскими программами
+    IDS_USER_GUEST_COMMENT "Встроенная учетная запись для доступа гостей к компьютеру или домену."
+END

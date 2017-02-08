@@ -59,11 +59,6 @@ ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars)
   return s;
 }
 
-ME_String *ME_StrDup(const ME_String *s)
-{
-  return ME_MakeStringN(s->szData, s->nLen);
-}
-
 void ME_DestroyString(ME_String *s)
 {
   if (!s) return;
@@ -71,25 +66,28 @@ void ME_DestroyString(ME_String *s)
   FREE_OBJ(s);
 }
 
-void ME_AppendString(ME_String *s1, const ME_String *s2)
+BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len)
 {
-  if (s1->nLen+s2->nLen+1 <= s1->nBuffer)
-  {
-    memcpy(s1->szData + s1->nLen, s2->szData, s2->nLen * sizeof(WCHAR));
-    s1->nLen += s2->nLen;
-    s1->szData[s1->nLen] = 0;
-  } else {
-    WCHAR *buf;
-    s1->nBuffer = ME_GetOptimalBuffer(s1->nLen+s2->nLen+1);
+    DWORD new_len = s->nLen + len + 1;
+    assert( ofs <= s->nLen );
 
-    buf = ALLOC_N_OBJ(WCHAR, s1->nBuffer);
-    memcpy(buf, s1->szData, s1->nLen * sizeof(WCHAR));
-    memcpy(buf + s1->nLen, s2->szData, s2->nLen * sizeof(WCHAR));
-    FREE_OBJ(s1->szData);
-    s1->szData = buf;
-    s1->nLen += s2->nLen;
-    s1->szData[s1->nLen] = 0;
-  }
+    if( new_len > s->nBuffer )
+    {
+        s->nBuffer = ME_GetOptimalBuffer( new_len );
+        s->szData = heap_realloc( s->szData, s->nBuffer * sizeof(WCHAR) );
+        if (!s->szData) return FALSE;
+    }
+
+    memmove( s->szData + ofs + len, s->szData + ofs, (s->nLen - ofs + 1) * sizeof(WCHAR) );
+    memcpy( s->szData + ofs, insert, len * sizeof(WCHAR) );
+    s->nLen += len;
+
+    return TRUE;
+}
+
+BOOL ME_AppendString(ME_String *s, const WCHAR *append, int len)
+{
+    return ME_InsertString( s, s->nLen, append, len );
 }
 
 ME_String *ME_VSplitString(ME_String *orig, int charidx)
@@ -108,34 +106,6 @@ ME_String *ME_VSplitString(ME_String *orig, int charidx)
   return s;
 }
 
-int ME_IsWhitespaces(const ME_String *s)
-{
-  /* FIXME multibyte */
-  WCHAR *pos = s->szData;
-  while(ME_IsWSpace(*pos++))
-    ;
-  pos--;
-  if (*pos)
-    return 0;
-  else
-    return 1;
-}
-
-int ME_IsSplitable(const ME_String *s)
-{
-  WCHAR *pos = s->szData;
-  WCHAR ch;
-  while(ME_IsWSpace(*pos++))
-    ;
-  pos--;
-  while((ch = *pos++) != 0)
-  {
-    if (ME_IsWSpace(ch))
-      return 1;
-  }
-  return 0;
-}
-
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars)
 {
   int end_ofs = nVChar + nChars;
@@ -149,41 +119,13 @@ void ME_StrDeleteV(ME_String *s, int nVChar, int nChars)
   s->nLen -= nChars;
 }
 
-int ME_FindNonWhitespaceV(const ME_String *s, int nVChar) {
-  int i;
-  for (i = nVChar; i<s->nLen && ME_IsWSpace(s->szData[i]); i++)
-    ;
-    
-  return i;
-}
-
-/* note: returns offset of the first trailing whitespace */
-int ME_ReverseFindNonWhitespaceV(const ME_String *s, int nVChar) {
-  int i;
-  for (i = nVChar; i>0 && ME_IsWSpace(s->szData[i-1]); i--)
-    ;
-    
-  return i;
-}
-
-/* note: returns offset of the first trailing nonwhitespace */
-int ME_ReverseFindWhitespaceV(const ME_String *s, int nVChar) {
-  int i;
-  for (i = nVChar; i>0 && !ME_IsWSpace(s->szData[i-1]); i--)
-    ;
-    
-  return i;
-}
-
-
 static int
 ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
 {
   /* FIXME: Native also knows about punctuation */
   TRACE("s==%s, start==%d, len==%d, code==%d\n",
         debugstr_wn(s, len), start, len, code);
-  /* convert number of bytes to number of characters. */
-  len /= sizeof(WCHAR);
+
   switch (code)
   {
     case WB_ISDELIMITER:
@@ -208,44 +150,51 @@ ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
 
 
 int
-ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code)
+ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, INT code)
 {
   if (!editor->pfnWordBreak) {
-    return ME_WordBreakProc(str->szData, start, str->nLen*sizeof(WCHAR), code);
+    return ME_WordBreakProc(str, start, len, code);
   } else if (!editor->bEmulateVersion10) {
     /* MSDN lied about the third parameter for EditWordBreakProc being the number
      * of characters, it is actually the number of bytes of the string. */
-    return editor->pfnWordBreak(str->szData, start, str->nLen*sizeof(WCHAR), code);
+    return editor->pfnWordBreak(str, start, len * sizeof(WCHAR), code);
   } else {
     int result;
-    int buffer_size = WideCharToMultiByte(CP_ACP, 0, str->szData, str->nLen,
+    int buffer_size = WideCharToMultiByte(CP_ACP, 0, str, len,
                                           NULL, 0, NULL, NULL);
     char *buffer = heap_alloc(buffer_size);
-    WideCharToMultiByte(CP_ACP, 0, str->szData, str->nLen,
+    WideCharToMultiByte(CP_ACP, 0, str, len,
                         buffer, buffer_size, NULL, NULL);
-    result = editor->pfnWordBreak(str->szData, start, str->nLen, code);
+    result = editor->pfnWordBreak((WCHAR*)buffer, start, buffer_size, code);
     heap_free(buffer);
     return result;
   }
 }
 
-LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz)
+LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len)
 {
-  assert(psz != NULL);
+  *len = 0;
+  if (!psz) return NULL;
 
-  if (unicode)
+  if (codepage == CP_UNICODE)
+  {
+    *len = lstrlenW(psz);
     return psz;
+  }
   else {
     WCHAR *tmp;
-    int nChars = MultiByteToWideChar(CP_ACP, 0, psz, -1, NULL, 0);
+    int nChars = MultiByteToWideChar(codepage, 0, psz, -1, NULL, 0);
+
+    if(!nChars) return NULL;
+
     if((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
-      MultiByteToWideChar(CP_ACP, 0, psz, -1, tmp, nChars);
+      *len = MultiByteToWideChar(codepage, 0, psz, -1, tmp, nChars) - 1;
     return tmp;
   }
 }
 
-void ME_EndToUnicode(BOOL unicode, LPVOID psz)
+void ME_EndToUnicode(LONG codepage, LPVOID psz)
 {
-  if (!unicode)
+  if (codepage != CP_UNICODE)
     FREE_OBJ(psz);
 }

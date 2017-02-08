@@ -1,7 +1,7 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/dib/dib24bppc.c
+ * FILE:            win32ss/gdi/dib/dib24bppc.c
  * PURPOSE:         C language equivalents of asm optimised 24bpp functions
  * PROGRAMMERS:     Jason Filby
  *                  Magnus Olsen

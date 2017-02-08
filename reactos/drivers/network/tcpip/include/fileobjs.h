@@ -35,4 +35,6 @@ NTSTATUS FileOpenControlChannel(
 NTSTATUS FileCloseControlChannel(
   PTDI_REQUEST Request);
 
+VOID LogActiveObjects(VOID);
+
 /* EOF */

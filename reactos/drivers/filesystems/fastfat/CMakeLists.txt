@@ -21,13 +21,11 @@ list(APPEND SOURCE
     shutdown.c
     string.c
     volume.c
-    vfatfs.rc)
+    vfat.h)
 
-add_library(fastfat SHARED ${SOURCE})
-
+add_library(fastfat SHARED ${SOURCE} vfatfs.rc)
 set_module_type(fastfat kernelmodedriver)
+target_link_libraries(fastfat ${PSEH_LIB})
 add_importlibs(fastfat ntoskrnl hal)
-
-add_pch(fastfat vfat.h)
-
+add_pch(fastfat vfat.h SOURCE)
 add_cd_file(TARGET fastfat DESTINATION reactos/system32/drivers NO_CAB FOR all)

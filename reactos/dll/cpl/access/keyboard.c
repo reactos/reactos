@@ -3,12 +3,11 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/keyboard.c
  * PURPOSE:         Keyboard-related accessibility settings
- * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
+ * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
  */
 
 #include "access.h"
-
 
 #define BOUNCETICKS 5
 static UINT nBounceArray[BOUNCETICKS] = {500, 700, 1000, 1500, 2000};

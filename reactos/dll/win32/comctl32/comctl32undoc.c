@@ -26,36 +26,8 @@
  *     COMCTL32.DLL (internally).
  *
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-//#include <string.h>
-//#include <ctype.h>
-//#include <limits.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-#include <winreg.h>
-//#include "commctrl.h"
-//#include "objbase.h"
-//#include "winerror.h"
-
-#include <wine/unicode.h>
 #include "comctl32.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
@@ -694,8 +666,8 @@ static HANDLE create_mru_list(LPWINEMRULIST mp)
     /* get values from key 'MRUList' */
     if (newkey) {
 	datasize = (mp->extview.uMax + 1) * sizeof(WCHAR);
-	if((err=RegQueryValueExW( newkey, strMRUList, 0, &type,
-				  (LPBYTE)mp->realMRU, &datasize))) {
+	if (RegQueryValueExW( newkey, strMRUList, 0, &type,
+				  (LPBYTE)mp->realMRU, &datasize)) {
 	    /* not present - set size to 1 (will become 0 later) */
 	    datasize = 1;
 	    *mp->realMRU = 0;

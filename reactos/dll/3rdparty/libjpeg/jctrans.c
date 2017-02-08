@@ -2,7 +2,7 @@
  * jctrans.c
  *
  * Copyright (C) 1995-1998, Thomas G. Lane.
- * Modified 2000-2012 by Guido Vollbeding.
+ * Modified 2000-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -143,10 +143,10 @@ jpeg_copy_critical_parameters (j_decompress_ptr srcinfo,
    * if the application chooses to copy JFIF 1.02 extension markers from
    * the source file, we need to copy the version to make sure we don't
    * emit a file that has 1.02 extensions but a claimed version of 1.01.
-   * We will *not*, however, copy version info from mislabeled "2.01" files.
    */
   if (srcinfo->saw_JFIF_marker) {
-    if (srcinfo->JFIF_major_version == 1) {
+    if (srcinfo->JFIF_major_version == 1 ||
+	srcinfo->JFIF_major_version == 2) {
       dstinfo->JFIF_major_version = srcinfo->JFIF_major_version;
       dstinfo->JFIF_minor_version = srcinfo->JFIF_minor_version;
     }

@@ -1,33 +1,33 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Gemischt"
-  IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "Unbekannt"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer-to-Peer"
+    IDS_MIXED "Gemischt"
+    IDS_HYBRID "Hybrid"
+    IDS_UNKNOWN "Unbekannt"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-  IDS_OTHER   "Anderer Adapter"
-  IDS_ETH     "Ethernet-Adapter"
-  IDS_TOKEN   "Token-Ring-Adapter"
-  IDS_FDDI    "FDDI-Adapter"
-  IDS_PPP     "PPP-Adapter"
-  IDS_LOOP    "Loopback-Adapter"
-  IDS_SLIP    "SLIP-Adapter"
+    IDS_OTHER "Anderer Adapter"
+    IDS_ETH "Ethernet-Adapter"
+    IDS_TOKEN "Token-Ring-Adapter"
+    IDS_FDDI "FDDI-Adapter"
+    IDS_PPP "PPP-Adapter"
+    IDS_LOOP "Loopback-Adapter"
+    IDS_SLIP "SLIP-Adapter"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-  IDS_USAGE
+    IDS_USAGE
     "\nSyntax:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
+        ipconfig [/? | /all | /renew [Adapter] | /release [Adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [Klassen-ID] ]\n \
+                  /showclassid Adapter |\n \
+                  /setclassid Adapter [Klassen-ID] ]\n \
     \n \
     wobei\n \
         Adapter         Verbindungsname\n \

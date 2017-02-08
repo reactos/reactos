@@ -26,9 +26,8 @@ Revision History:
 // Now instantiate the GUIDs
 //
 
-#include "initguid.h"
-#include "ntddstor.h"
-#include "ioevent.h"
+#include <initguid.h>
+#include <ioevent.h>
 
 NTSTATUS
 NTAPI
@@ -1633,7 +1632,7 @@ Return Value:
             break;
         }
 
-        length += (sizeof(SENDCMDOUTPARAMS) > sizeof(SENDCMDINPARAMS)) ? sizeof(SENDCMDOUTPARAMS) : sizeof(SENDCMDINPARAMS);;
+        length += (sizeof(SENDCMDOUTPARAMS) > sizeof(SENDCMDINPARAMS)) ? sizeof(SENDCMDOUTPARAMS) : sizeof(SENDCMDINPARAMS);
         srbControl = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(SRB_IO_CONTROL) + length,
                                            DISK_TAG_SMART);

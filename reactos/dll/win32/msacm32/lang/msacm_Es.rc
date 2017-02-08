@@ -1,0 +1,51 @@
+/*
+ * Spanish resource file for MS ACM
+ *
+ * Copyright 2004 José Manuel Ferrer Ortiz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+DLG_ACMFORMATCHOOSE_ID DIALOGEX  10, 20, 225, 118
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Selección de sonido"
+FONT 8, "MS Shell Dlg"
+BEGIN
+
+    LTEXT           "&Nombre:", -1, 5, 5, 115, 8, NOT WS_GROUP
+
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 135, 60,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "&Guardar como...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
+    PUSHBUTTON      "&Eliminar", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
+
+    LTEXT           "&Formato:", -1, 5, 56, 44, 8, NOT WS_GROUP
+
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 54, 170, 60,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "A&tributos:", -1, 5, 76, 44, 8, NOT WS_GROUP
+
+    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 74, 170, 60,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "&Ayuda", IDD_ACMFORMATCHOOSE_BTN_HELP, 5, 100, 50, 14
+    DEFPUSHBUTTON   "Aceptar", IDOK, 115, 100, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 170, 100, 50, 14
+
+END

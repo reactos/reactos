@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-int _cdecl streamout(FILE *stream, const char *format, va_list argptr);
+int __cdecl streamout(FILE *stream, const char *format, va_list argptr);
 
 int
-_cdecl
+__cdecl
 vfprintf(FILE *file, const char *format, va_list argptr)
 {
     int result;

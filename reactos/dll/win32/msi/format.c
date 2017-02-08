@@ -19,27 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-//#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "msi.h"
-//#include "winnls.h"
-#include <objbase.h>
-#include <oleauto.h>
-
 #include "msipriv.h"
-#include <msiserver.h>
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -374,7 +354,11 @@ static LPWSTR build_default_format(const MSIRECORD* record)
         {
             max_len = len;
             buf = msi_realloc(buf, (max_len + 1) * sizeof(WCHAR));
-            if (!buf) return NULL;
+            if (!buf)
+            {
+                msi_free(rc);
+                return NULL;
+            }
         }
 
         if (str)
@@ -735,10 +719,10 @@ static UINT replace_stack(FORMAT *format, STACK *stack, STACK *values)
 
     format->n = n;
     beg = format_replace( format, propfound, nonprop, oldsize, type, replaced, len );
+    msi_free(replaced);
     if (!beg)
         return ERROR_SUCCESS;
 
-    msi_free(replaced);
     format->n = beg->n + beg->len;
 
     top = stack_peek(stack);

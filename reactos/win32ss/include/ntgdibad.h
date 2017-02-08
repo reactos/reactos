@@ -75,41 +75,41 @@ BOOL APIENTRY  NtGdiGetWindowOrgEx(HDC  hDC, LPPOINT windowOrg);
 BOOL
 APIENTRY
 NtGdiOffsetViewportOrgEx (
-	HDC	hDC,
-	int	XOffset,
-	int	YOffset,
-	LPPOINT	Point
-	);
+    HDC hDC,
+    int XOffset,
+    int YOffset,
+    LPPOINT Point
+    );
 
 /* Needs to be done in user-mode. */
 BOOL
 APIENTRY
 NtGdiOffsetWindowOrgEx (
-	HDC	hDC,
-	int	XOffset,
-	int	YOffset,
-	LPPOINT	Point
-	);
+    HDC hDC,
+    int XOffset,
+    int YOffset,
+    LPPOINT Point
+    );
 
 /* Needs to be done in user-mode. */
 BOOL
 APIENTRY
 NtGdiSetViewportOrgEx (
-	HDC	hDC,
-	int	X,
-	int	Y,
-	LPPOINT	Point
-	);
+    HDC hDC,
+    int X,
+    int Y,
+    LPPOINT Point
+    );
 
 /* Needs to be done in user-mode. */
 BOOL
 APIENTRY
 NtGdiSetWindowOrgEx (
-	HDC	hDC,
-	int	X,
-	int	Y,
-	LPPOINT	Point
-	);
+    HDC hDC,
+    int X,
+    int Y,
+    LPPOINT Point
+    );
 
 #endif /* WIN32K_NTGDI_BAD_INCLUDED */
 

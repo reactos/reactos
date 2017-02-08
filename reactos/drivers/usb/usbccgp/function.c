@@ -11,6 +11,9 @@
 
 #include "usbccgp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 USBCCGP_QueryInterface(
     IN PDEVICE_OBJECT DeviceObject,
@@ -636,6 +639,7 @@ USBCCGP_LegacyEnum(
     //
     // init function descriptors
     //
+    FDODeviceExtension->FunctionDescriptorCount = 0;
     for (Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
     {
         // get interface descriptor

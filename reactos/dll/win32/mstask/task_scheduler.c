@@ -16,15 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "mstask_private.h"
 
 #include <corerror.h>
-#include "mstask_private.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
 typedef struct
 {
@@ -32,9 +26,20 @@ typedef struct
     LONG ref;
 } TaskSchedulerImpl;
 
+typedef struct
+{
+    IEnumWorkItems IEnumWorkItems_iface;
+    LONG ref;
+} EnumWorkItemsImpl;
+
 static inline TaskSchedulerImpl *impl_from_ITaskScheduler(ITaskScheduler *iface)
 {
     return CONTAINING_RECORD(iface, TaskSchedulerImpl, ITaskScheduler_iface);
+}
+
+static inline EnumWorkItemsImpl *impl_from_IEnumWorkItems(IEnumWorkItems *iface)
+{
+    return CONTAINING_RECORD(iface, EnumWorkItemsImpl, IEnumWorkItems_iface);
 }
 
 static void TaskSchedulerDestructor(TaskSchedulerImpl *This)
@@ -42,6 +47,103 @@ static void TaskSchedulerDestructor(TaskSchedulerImpl *This)
     TRACE("%p\n", This);
     HeapFree(GetProcessHeap(), 0, This);
     InterlockedDecrement(&dll_ref);
+}
+
+static HRESULT WINAPI EnumWorkItems_QueryInterface(IEnumWorkItems *iface, REFIID riid, void **obj)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), obj);
+
+    if (IsEqualGUID(riid, &IID_IEnumWorkItems) || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        *obj = &This->IEnumWorkItems_iface;
+        IEnumWorkItems_AddRef(iface);
+        return S_OK;
+    }
+
+    *obj = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI EnumWorkItems_AddRef(IEnumWorkItems *iface)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+    TRACE("(%p)->(%u)\n", This, ref);
+    return ref;
+}
+
+static ULONG WINAPI EnumWorkItems_Release(IEnumWorkItems *iface)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p)->(%u)\n", This, ref);
+
+    if (ref == 0)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
+        InterlockedDecrement(&dll_ref);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI EnumWorkItems_Next(IEnumWorkItems *iface, ULONG count, LPWSTR **names, ULONG *fetched)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+    FIXME("(%p)->(%u %p %p): stub\n", This, count, names, fetched);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumWorkItems_Skip(IEnumWorkItems *iface, ULONG count)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+    FIXME("(%p)->(%u): stub\n", This, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumWorkItems_Reset(IEnumWorkItems *iface)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+    FIXME("(%p): stub\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumWorkItems_Clone(IEnumWorkItems *iface, IEnumWorkItems **cloned)
+{
+    EnumWorkItemsImpl *This = impl_from_IEnumWorkItems(iface);
+    FIXME("(%p)->(%p): stub\n", This, cloned);
+    return E_NOTIMPL;
+}
+
+static const IEnumWorkItemsVtbl EnumWorkItemsVtbl = {
+    EnumWorkItems_QueryInterface,
+    EnumWorkItems_AddRef,
+    EnumWorkItems_Release,
+    EnumWorkItems_Next,
+    EnumWorkItems_Skip,
+    EnumWorkItems_Reset,
+    EnumWorkItems_Clone
+};
+
+static HRESULT create_task_enum(IEnumWorkItems **ret)
+{
+    EnumWorkItemsImpl *tasks;
+
+    *ret = NULL;
+
+    tasks = HeapAlloc(GetProcessHeap(), 0, sizeof(*tasks));
+    if (!tasks)
+        return E_OUTOFMEMORY;
+
+    tasks->IEnumWorkItems_iface.lpVtbl = &EnumWorkItemsVtbl;
+    tasks->ref = 1;
+
+    *ret = &tasks->IEnumWorkItems_iface;
+    InterlockedIncrement(&dll_ref);
+    return S_OK;
 }
 
 static HRESULT WINAPI MSTASK_ITaskScheduler_QueryInterface(
@@ -89,24 +191,71 @@ static HRESULT WINAPI MSTASK_ITaskScheduler_SetTargetComputer(
         ITaskScheduler* iface,
         LPCWSTR pwszComputer)
 {
-    FIXME("%p, %s: stub\n", iface, debugstr_w(pwszComputer));
-    return E_NOTIMPL;
+    TaskSchedulerImpl *This = impl_from_ITaskScheduler(iface);
+    WCHAR buffer[MAX_COMPUTERNAME_LENGTH + 3];  /* extra space for two '\' and a zero */
+    DWORD len = MAX_COMPUTERNAME_LENGTH + 1;    /* extra space for a zero */
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(pwszComputer));
+
+    /* NULL is an alias for the local computer */
+    if (!pwszComputer)
+        return S_OK;
+
+    buffer[0] = '\\';
+    buffer[1] = '\\';
+    if (GetComputerNameW(buffer + 2, &len))
+    {
+        if (!lstrcmpiW(buffer, pwszComputer) ||    /* full unc name */
+            !lstrcmpiW(buffer + 2, pwszComputer))  /* name without backslash */
+            return S_OK;
+    }
+
+    FIXME("remote computer %s not supported\n", debugstr_w(pwszComputer));
+    return HRESULT_FROM_WIN32(ERROR_BAD_NETPATH);
 }
 
 static HRESULT WINAPI MSTASK_ITaskScheduler_GetTargetComputer(
         ITaskScheduler* iface,
         LPWSTR *ppwszComputer)
 {
-    FIXME("%p, %p: stub\n", iface, ppwszComputer);
-    return E_NOTIMPL;
+    TaskSchedulerImpl *This = impl_from_ITaskScheduler(iface);
+    LPWSTR buffer;
+    DWORD len = MAX_COMPUTERNAME_LENGTH + 1; /* extra space for the zero */
+
+    TRACE("(%p)->(%p)\n", This, ppwszComputer);
+
+    if (!ppwszComputer)
+        return E_INVALIDARG;
+
+    /* extra space for two '\' and a zero */
+    buffer = CoTaskMemAlloc((MAX_COMPUTERNAME_LENGTH + 3) * sizeof(WCHAR));
+    if (buffer)
+    {
+        buffer[0] = '\\';
+        buffer[1] = '\\';
+        if (GetComputerNameW(buffer + 2, &len))
+        {
+            *ppwszComputer = buffer;
+            return S_OK;
+        }
+        CoTaskMemFree(buffer);
+    }
+    *ppwszComputer = NULL;
+    return HRESULT_FROM_WIN32(GetLastError());
 }
 
 static HRESULT WINAPI MSTASK_ITaskScheduler_Enum(
         ITaskScheduler* iface,
-        IEnumWorkItems **ppEnumTasks)
+        IEnumWorkItems **tasks)
 {
-    FIXME("%p, %p: stub\n", iface, ppEnumTasks);
-    return E_NOTIMPL;
+    TaskSchedulerImpl *This = impl_from_ITaskScheduler(iface);
+
+    TRACE("(%p)->(%p)\n", This, tasks);
+
+    if (!tasks)
+        return E_INVALIDARG;
+
+    return create_task_enum(tasks);
 }
 
 static HRESULT WINAPI MSTASK_ITaskScheduler_Activate(

@@ -8,7 +8,33 @@
 
 #include "appwiz.h"
 
+#include <shellapi.h>
+#include <cpl.h>
+#include <wine/unicode.h>
+
 HINSTANCE hApplet = NULL;
+
+static LONG start_params(const WCHAR *params, HWND hwnd_parent)
+{
+    static const WCHAR install_geckoW[] = {'i','n','s','t','a','l','l','_','g','e','c','k','o',0};
+    static const WCHAR install_monoW[] = {'i','n','s','t','a','l','l','_','m','o','n','o',0};
+
+    if(!params)
+        return FALSE;
+
+    if(!strcmpW(params, install_geckoW)) {
+        install_addon(ADDON_GECKO, hwnd_parent);
+        return TRUE;
+    }
+
+    if(!strcmpW(params, install_monoW)) {
+        install_addon(ADDON_MONO, hwnd_parent);
+        return TRUE;
+    }
+
+    WARN("unknown param %s\n", debugstr_w(params));
+    return FALSE;
+}
 
 /* Control Panel Callback */
 LONG CALLBACK
@@ -24,6 +50,9 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
         case CPL_GETCOUNT:
             return 1;
 
+        case CPL_STARTWPARMSW:
+            return start_params((const WCHAR *)lParam2, hwndCPl);
+
         case CPL_INQUIRE:
             CPlInfo = (CPLINFO*)lParam2;
             CPlInfo->lData = 0;
@@ -33,12 +62,12 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             break;
 
         case CPL_DBLCLK:
-            ShellExecute(NULL,
-                         NULL,
-                         _T("rapps.exe"),
-                         NULL,
-                         NULL,
-                         1);
+            ShellExecuteW(NULL,
+                          NULL,
+                          L"rapps.exe",
+                          NULL,
+                          NULL,
+                          1);
             break;
     }
 

@@ -18,10 +18,6 @@
 
 #include "ieframe.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
-
 struct ShellUIHelper {
     IShellUIHelper2 IShellUIHelper2_iface;
     LONG ref;
@@ -45,7 +41,7 @@ static HRESULT WINAPI ShellUIHelper2_QueryInterface(IShellUIHelper2 *iface, REFI
     }else if(IsEqualGUID(&IID_IShellUIHelper, riid)) {
         TRACE("(%p)->(IID_IShellUIHelper %p)\n", This, ppv);
         *ppv = &This->IShellUIHelper2_iface;
-    }else if(IsEqualGUID(&IID_IShellUIHelper, riid)) {
+    }else if(IsEqualGUID(&IID_IShellUIHelper2, riid)) {
         TRACE("(%p)->(IID_IShellUIHelper2 %p)\n", This, ppv);
         *ppv = &This->IShellUIHelper2_iface;
     }else {

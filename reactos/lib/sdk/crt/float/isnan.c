@@ -19,10 +19,14 @@
 
 #include <precomp.h>
 
+#if defined(_MSC_VER) && defined(_M_ARM)
+#pragma function(_isnan)
+#endif /* _MSC_VER */
+
 /*
  * @implemented
  */
-int _isnan(double __x)
+int CDECL _isnan(double __x)
 {
 	union
 	{
@@ -36,7 +40,7 @@ int _isnan(double __x)
 /*
  * @implemented
  */
-int _finite(double __x)
+int CDECL _finite(double __x)
 {
 	union
 	{

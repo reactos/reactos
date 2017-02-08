@@ -7,12 +7,14 @@ list(APPEND SOURCE
     misc.c
     pciidex.c
     pdo.c
+    pciidex.h)
+
+add_library(pciidex SHARED
+    ${SOURCE}
     pciidex.rc
     ${CMAKE_CURRENT_BINARY_DIR}/pciidex.def)
 
-add_library(pciidex SHARED ${SOURCE})
-add_pch(pciidex pciidex.h)
+add_pch(pciidex pciidex.h SOURCE)
 set_module_type(pciidex kernelmodedriver)
 add_importlibs(pciidex ntoskrnl)
 add_cd_file(TARGET pciidex DESTINATION reactos/system32/drivers NO_CAB FOR all)
-

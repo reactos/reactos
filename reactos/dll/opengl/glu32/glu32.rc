@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS OpenGL Utility Library"
+#define REACTOS_STR_INTERNAL_NAME     "glu32"
+#define REACTOS_STR_ORIGINAL_FILENAME "glu32.dll"
+#include <reactos/version.rc>

@@ -13,3 +13,10 @@ typedef struct
     INT Right;
     INT Bottom;
 } SHIMGVW_SETTINGS;
+
+typedef struct SHIMGVW_FILENODE_INTERNAL
+{
+    WCHAR FileName[MAX_PATH];
+    struct SHIMGVW_FILENODE_INTERNAL *Prev;
+    struct SHIMGVW_FILENODE_INTERNAL *Next;
+} SHIMGVW_FILENODE;

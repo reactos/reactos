@@ -2,7 +2,7 @@
  * COPYRIGHT:        GPL, see COPYING in the top level directory
  * PROJECT:          ReactOS win32 kernel mode subsystem server
  * PURPOSE:          File access support routines
- * FILE:             subsystem/win32/win32k/misc/registry.c
+ * FILE:             win32ss/user/ntuser/misc/file.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -83,7 +83,7 @@ W32kCreateFileSection(HANDLE hFile,
                       ULONGLONG ullMaxSize)
 {
     NTSTATUS Status;
-    HANDLE hSection = NULL;
+    HANDLE hSection;
     ACCESS_MASK amDesiredAccess;
 
     /* Set access mask */
@@ -107,6 +107,7 @@ W32kCreateFileSection(HANDLE hFile,
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
+        hSection = NULL;
     }
 
     DPRINT("Leaving W32kCreateFileSection, Status=0x%lx, hSection=0x%p\n", Status, hSection);
@@ -125,7 +126,7 @@ W32kMapViewOfSection(
     NTSTATUS Status;
     LARGE_INTEGER liSectionOffset;
     ULONG_PTR ulViewSize;
-    PVOID pvBase = 0;
+    PVOID pvBase = NULL;
 
     liSectionOffset.QuadPart = ulViewSize = ulSectionOffset;
     Status = ZwMapViewOfSection(hSection,
@@ -141,6 +142,7 @@ W32kMapViewOfSection(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
+        pvBase = NULL;
     }
 
     DPRINT("Leaving W32kMapViewOfSection, Status=0x%lx, pvBase=0x%p\n", Status, pvBase);

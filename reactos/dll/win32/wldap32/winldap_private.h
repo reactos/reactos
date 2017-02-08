@@ -22,6 +22,30 @@
  * native headers.
  */
 
+#ifndef _WINLDAP_PRIVATE_H_
+#define _WINLDAP_PRIVATE_H_
+
+#include <wine/config.h>
+
+#include <stdarg.h>
+
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
+
+#include "wldap32.h"
+
 typedef enum {
     WLDAP32_LDAP_SUCCESS                 =   0x00,
     WLDAP32_LDAP_UNWILLING_TO_PERFORM    =   0x35,
@@ -456,3 +480,5 @@ ULONG CDECL LdapGetLastError(void);
 ULONG CDECL LdapMapErrorToWin32(ULONG);
 int CDECL LdapUnicodeToUTF8(LPCWSTR,int,LPSTR,int);
 int CDECL LdapUTF8ToUnicode(LPCSTR,int,LPWSTR,int);
+
+#endif /* _WINLDAP_PRIVATE_H_ */

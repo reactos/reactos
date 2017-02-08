@@ -21,12 +21,6 @@
 #ifndef _WINE_TYPELIB_H
 #define _WINE_TYPELIB_H
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <oleauto.h>
-
 #define HELPDLLFLAG (0x0100)
 #define DO_NOT_SEEK (-1)
 
@@ -100,12 +94,12 @@ typedef struct tagMSFT_SegDir {
 /*2*/MSFT_pSeg pImpInfo;     /* table with info for imported types */
 /*3*/MSFT_pSeg pImpFiles;    /* import libraries */
 /*4*/MSFT_pSeg pRefTab;      /* References table */
-/*5*/MSFT_pSeg pLibtab;      /* always exists, always same size (0x80) */
-                             /* hash table w offsets to guid????? */
+/*5*/MSFT_pSeg pGuidHashTab; /* always exists, always same size (0x80) */
+                             /* hash table with offsets to guid */
 /*6*/MSFT_pSeg pGuidTab;     /* all guids are stored here together with  */
                              /* offset in some table???? */
-/*7*/MSFT_pSeg res07;        /* always created, always same size (0x200) */
-                             /* purpose largely unknown */
+/*7*/MSFT_pSeg pNameHashTab; /* always created, always same size (0x200) */
+                             /* hash table with offsets to names */
 /*8*/MSFT_pSeg pNametab;     /* name tables */
 /*9*/MSFT_pSeg pStringtab;   /* string table */
 /*A*/MSFT_pSeg pTypdescTab;  /* table with type descriptors */
@@ -387,18 +381,18 @@ typedef struct {
 /* we then get 0x40 bytes worth of 0xffff or small numbers followed by
    nrOfFileBlks - 2 of these */
 typedef struct {
-	WORD small_no;
 	SLTG_Name index_name; /* This refers to a name in the directory */
 	SLTG_Name other_name; /* Another one of these weird names */
 	WORD res1a;	      /* 0xffff */
 	WORD name_offs;	      /* offset to name in name table */
-	WORD more_bytes;      /* if this is non-zero we get this many
+	WORD hlpstr_len;      /* if this is non-zero we get this many
 				 bytes before the next element, which seem
 				 to reference the docstring of the type ? */
 	WORD res20;	      /* 0xffff */
 	DWORD helpcontext;
 	WORD res26;	      /* 0xffff */
         GUID uuid;
+        WORD typekind;
 } SLTG_OtherTypeInfo;
 
 /* Next we get WORD 0x0003 followed by a DWORD which if we add to
@@ -604,7 +598,7 @@ extern void  heap_free(void *ptr) DECLSPEC_HIDDEN;
 
 HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc ) DECLSPEC_HIDDEN;
 
-extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) DECLSPEC_HIDDEN;
+extern DWORD _invoke(FARPROC func, CALLCONV callconv, int nrargs, DWORD_PTR *args) DECLSPEC_HIDDEN;
 
 HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
 

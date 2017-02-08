@@ -124,7 +124,7 @@ static BOOL dlg_configure_com(HANDLE hXcv, HWND hWnd, PCWSTR pPortName)
         shortname[len-1] = '\0';
 
         /* get current settings */
-        len = sizeof(cfg);
+        len = FIELD_OFFSET(COMMCONFIG, wcProviderData[1]);
         status = ERROR_SUCCESS;
         res = XcvDataW( hXcv, cmd_GetDefaultCommConfigW,
                         (PBYTE) shortname,
@@ -619,7 +619,7 @@ static BOOL WINAPI localui_ConfigurePortUI(PCWSTR pName, HWND hWnd, PCWSTR pPort
  *  Failure: FALSE
  *
  * NOTES
- *  Native localui does not allow to delete a COM / LPT - Port (ERROR_NOT_SUPPORTED)
+ *  Native localui does not allow deleting a COM/LPT port (ERROR_NOT_SUPPORTED)
  *
  */
 static BOOL WINAPI localui_DeletePortUI(PCWSTR pName, HWND hWnd, PCWSTR pPortName)

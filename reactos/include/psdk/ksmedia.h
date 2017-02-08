@@ -814,6 +814,110 @@ typedef struct
    ULONG                    ChannelMask;
 } KSDATARANGE_MUSIC, *PKSDATARANGE_MUSIC;
 
+#if (NTDDI_VERSION >= NTDDI_WINXPSP1)
+
+#define STATIC_KSPROPSETID_Jack\
+    0x4509f757, 0x2d46, 0x4637, {0x8e, 0x62, 0xce, 0x7d, 0xb9, 0x44, 0xf5, 0x7b}
+DEFINE_GUIDSTRUCT("4509F757-2D46-4637-8E62-CE7DB944F57B", KSPROPSETID_Jack);
+#define KSPROPSETID_Jack DEFINE_GUIDNAMED(KSPROPSETID_Jack)
+
+typedef enum {
+  KSPROPERTY_JACK_DESCRIPTION = 1,
+  KSPROPERTY_JACK_DESCRIPTION2,
+  KSPROPERTY_JACK_SINK_INFO,
+  KSPROPERTY_JACK_CONTAINERID
+} KSPROPERTY_JACK;
+
+typedef enum {
+  eConnTypeUnknown,
+  eConnType3Point5mm,
+  eConnTypeQuarter,
+  eConnTypeAtapiInternal,
+  eConnTypeRCA,
+  eConnTypeOptical,
+  eConnTypeOtherDigital,
+  eConnTypeOtherAnalog,
+  eConnTypeMultichannelAnalogDIN,
+  eConnTypeXlrProfessional,
+  eConnTypeRJ11Modem,
+  eConnTypeCombination
+} EPcxConnectionType;
+
+#define eGeoLocReserved5 eGeoLocNotApplicable
+
+typedef enum {
+  eGeoLocRear = 0x1,
+  eGeoLocFront,
+  eGeoLocLeft,
+  eGeoLocRight,
+  eGeoLocTop,
+  eGeoLocBottom,
+  eGeoLocRearPanel,
+  eGeoLocRiser,
+  eGeoLocInsideMobileLid,
+  eGeoLocDrivebay,
+  eGeoLocHDMI,
+  eGeoLocOutsideMobileLid,
+  eGeoLocATAPI,
+  eGeoLocNotApplicable,
+  eGeoLocReserved6,
+  EPcxGeoLocation_enum_count
+} EPcxGeoLocation;
+
+typedef enum {
+  eGenLocPrimaryBox = 0,
+  eGenLocInternal,
+  eGenLocSeparate,
+  eGenLocOther,
+  EPcxGenLocation_enum_count
+} EPcxGenLocation;
+
+typedef enum {
+  ePortConnJack = 0,
+  ePortConnIntegratedDevice,
+  ePortConnBothIntegratedAndJack,
+  ePortConnUnknown
+} EPxcPortConnection;
+
+typedef struct {
+  DWORD ChannelMapping;
+  DWORD Color;
+  EPcxConnectionType ConnectionType;
+  EPcxGeoLocation GeoLocation;
+  EPcxGenLocation GenLocation;
+  EPxcPortConnection PortConnection;
+  BOOL IsConnected;
+} KSJACK_DESCRIPTION, *PKSJACK_DESCRIPTION;
+
+typedef enum {
+  KSJACK_SINK_CONNECTIONTYPE_HDMI = 0,
+  KSJACK_SINK_CONNECTIONTYPE_DISPLAYPORT
+} KSJACK_SINK_CONNECTIONTYPE;
+
+#define MAX_SINK_DESCRIPTION_NAME_LENGTH 32
+
+typedef struct _tagKSJACK_SINK_INFORMATION {
+  KSJACK_SINK_CONNECTIONTYPE ConnType;
+  WORD ManufacturerId;
+  WORD ProductId;
+  WORD AudioLatency;
+  BOOL HDCPCapable;
+  BOOL AICapable;
+  UCHAR SinkDescriptionLength;
+  WCHAR SinkDescription[MAX_SINK_DESCRIPTION_NAME_LENGTH];
+  LUID PortId;
+} KSJACK_SINK_INFORMATION, *PKSJACK_SINK_INFORMATION;
+
+#define JACKDESC2_PRESENCE_DETECT_CAPABILITY       0x1
+#define JACKDESC2_DYNAMIC_FORMAT_CHANGE_CAPABILITY 0x2
+
+typedef struct _tagKSJACK_DESCRIPTION2 {
+  DWORD DeviceStateInfo;
+  DWORD JackCapabilities;
+} KSJACK_DESCRIPTION2, *PKSJACK_DESCRIPTION2;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXPSP1) */
+
 #ifndef _SPEAKER_POSITIONS_
 #define _SPEAKER_POSITIONS_
 

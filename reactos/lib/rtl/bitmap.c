@@ -28,7 +28,11 @@ typedef ULONG64 BITMAP_BUFFER, *PBITMAP_BUFFER;
 #define RTL_BITMAP_RUN RTL_BITMAP_RUN64
 #define PRTL_BITMAP_RUN PRTL_BITMAP_RUN64
 #undef BitScanForward
-#define BitScanForward BitScanForward64
+#define BitScanForward(Index, Mask) \
+    do { unsigned long tmp; BitScanForward64(&tmp, Mask); *Index = tmp; } while (0)
+#undef BitScanReverse
+#define BitScanReverse(Index, Mask) \
+    do { unsigned long tmp; BitScanReverse64(&tmp, Mask); *Index = tmp; } while (0)
 #define RtlFillMemoryUlong RtlFillMemoryUlonglong
 
 #define RtlInitializeBitMap RtlInitializeBitMap64
@@ -100,6 +104,11 @@ RtlpGetLengthOfRunClear(
     BITMAP_INDEX Value, BitPos, Length;
     PBITMAP_BUFFER Buffer, MaxBuffer;
 
+    /* If we are already at the end, the length of the run is zero */
+    ASSERT(StartingIndex <= BitMapHeader->SizeOfBitMap);
+    if (StartingIndex >= BitMapHeader->SizeOfBitMap)
+        return 0;
+
     /* Calculate positions */
     Buffer = BitMapHeader->Buffer + StartingIndex / _BITCOUNT;
     BitPos = StartingIndex & (_BITCOUNT - 1);
@@ -148,6 +157,11 @@ RtlpGetLengthOfRunSet(
 {
     BITMAP_INDEX InvValue, BitPos, Length;
     PBITMAP_BUFFER Buffer, MaxBuffer;
+
+    /* If we are already at the end, the length of the run is zero */
+    ASSERT(StartingIndex <= BitMapHeader->SizeOfBitMap);
+    if (StartingIndex >= BitMapHeader->SizeOfBitMap)
+        return 0;
 
     /* Calculate positions */
     Buffer = BitMapHeader->Buffer + StartingIndex / _BITCOUNT;
@@ -245,8 +259,8 @@ VOID
 NTAPI
 RtlInitializeBitMap(
     _Out_ PRTL_BITMAP BitMapHeader,
-    _In_ PBITMAP_BUFFER BitMapBuffer,
-    _In_ BITMAP_INDEX SizeOfBitMap)
+    _In_opt_ __drv_aliasesMem PBITMAP_BUFFER BitMapBuffer,
+    _In_opt_ ULONG SizeOfBitMap)
 {
     /* Setup the bitmap header */
     BitMapHeader->SizeOfBitMap = SizeOfBitMap;
@@ -289,7 +303,7 @@ VOID
 NTAPI
 RtlSetBit(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX BitNumber)
+    _In_range_(<, BitMapHeader->SizeOfBitMap) BITMAP_INDEX BitNumber)
 {
     ASSERT(BitNumber <= BitMapHeader->SizeOfBitMap);
     BitMapHeader->Buffer[BitNumber / _BITCOUNT] |= ((BITMAP_INDEX)1 << (BitNumber & (_BITCOUNT - 1)));
@@ -299,8 +313,8 @@ VOID
 NTAPI
 RtlClearBits(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX StartingIndex,
-    _In_ BITMAP_INDEX NumberToClear)
+    _In_range_(0, BitMapHeader->SizeOfBitMap - NumberToClear) BITMAP_INDEX StartingIndex,
+    _In_range_(0, BitMapHeader->SizeOfBitMap - StartingIndex) BITMAP_INDEX NumberToClear)
 {
     BITMAP_INDEX Bits, Mask;
     PBITMAP_BUFFER Buffer;
@@ -348,16 +362,19 @@ RtlClearBits(
 
     /* Clear what's left */
     NumberToClear &= (_BITCOUNT - 1);
-    Mask = MAXINDEX << NumberToClear;
-    *Buffer &= Mask;
+    if (NumberToClear != 0)
+    {
+        Mask = MAXINDEX << NumberToClear;
+        *Buffer &= Mask;
+    }
 }
 
 VOID
 NTAPI
 RtlSetBits(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX StartingIndex,
-    _In_ BITMAP_INDEX NumberToSet)
+    _In_range_(0, BitMapHeader->SizeOfBitMap - NumberToSet) BITMAP_INDEX StartingIndex,
+    _In_range_(0, BitMapHeader->SizeOfBitMap - StartingIndex) BITMAP_INDEX NumberToSet)
 {
     BITMAP_INDEX Bits, Mask;
     PBITMAP_BUFFER Buffer;
@@ -405,15 +422,18 @@ RtlSetBits(
 
     /* Set what's left */
     NumberToSet &= (_BITCOUNT - 1);
-    Mask = MAXINDEX << NumberToSet;
-    *Buffer |= ~Mask;
+    if (NumberToSet != 0)
+    {
+        Mask = MAXINDEX << NumberToSet;
+        *Buffer |= ~Mask;
+    }
 }
 
 BOOLEAN
 NTAPI
 RtlTestBit(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX BitNumber)
+    _In_range_(<, BitMapHeader->SizeOfBitMap) BITMAP_INDEX BitNumber)
 {
     ASSERT(BitNumber < BitMapHeader->SizeOfBitMap);
     return (BitMapHeader->Buffer[BitNumber / _BITCOUNT] >> (BitNumber & (_BITCOUNT - 1))) & 1;
@@ -466,8 +486,11 @@ RtlNumberOfSetBits(
         BitCount += BitCountTable[*Byte++];
     }
 
-    Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
-    BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
+    if (BitMapHeader->SizeOfBitMap & 7)
+    {
+        Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
+        BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
+    }
 
     return BitCount;
 }
@@ -708,7 +731,7 @@ RtlFindNextForwardRunSet(
     *StartingRunIndex = FromIndex + Length;
 
     /* Now return the length of the run */
-    return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXINDEX);
+    return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex + Length, MAXINDEX);
 }
 
 BITMAP_INDEX
@@ -720,15 +743,69 @@ RtlFindFirstRunClear(
     return RtlFindNextForwardRunClear(BitMapHeader, 0, StartingIndex);
 }
 
-ULONG
+BITMAP_INDEX
 NTAPI
 RtlFindLastBackwardRunClear(
     _In_ PRTL_BITMAP BitMapHeader,
     _In_ BITMAP_INDEX FromIndex,
     _Out_ PBITMAP_INDEX StartingRunIndex)
 {
-    UNIMPLEMENTED;
-    return 0;
+    BITMAP_INDEX Value, InvValue, BitPos;
+    PBITMAP_BUFFER Buffer;
+
+    /* Make sure we don't go past the end */
+    FromIndex = min(FromIndex, BitMapHeader->SizeOfBitMap - 1);
+
+    /* Calculate positions */
+    Buffer = BitMapHeader->Buffer + FromIndex / _BITCOUNT;
+    BitPos = (_BITCOUNT - 1) - (FromIndex & (_BITCOUNT - 1));
+
+    /* Get the inversed value, clear bits that don't belong to the run */
+    InvValue = ~(*Buffer--) << BitPos >> BitPos;
+
+    /* Skip all set ULONGs */
+    while (InvValue == 0)
+    {
+        /* Did we already reach past the first ULONG? */
+        if (Buffer < BitMapHeader->Buffer)
+        {
+            /* Yes, nothing found */
+            return 0;
+        }
+
+        InvValue = ~(*Buffer--);
+    }
+
+    /* We hit a clear bit, check how many set bits are left */
+    BitScanReverse(&BitPos, InvValue);
+
+    /* Calculate last bit position */
+    FromIndex = (BITMAP_INDEX)((Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos);
+
+    Value = ~InvValue << ((_BITCOUNT - 1) - BitPos) >> ((_BITCOUNT - 1) - BitPos);
+
+    /* Skip all clear ULONGs */
+    while (Value == 0 && Buffer >= BitMapHeader->Buffer)
+    {
+        Value = *Buffer--;
+    }
+
+    if (Value != 0)
+    {
+        /* We hit a set bit, check how many clear bits are left */
+        BitScanReverse(&BitPos, Value);
+
+        /* Calculate Starting Index */
+        *StartingRunIndex = (BITMAP_INDEX)((Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos + 1);
+    }
+    else
+    {
+        /* We reached the start of the bitmap */
+        *StartingRunIndex = 0;
+    }
+
+    /* Return length of the run */
+    return (FromIndex - *StartingRunIndex);
 }
 
 

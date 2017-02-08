@@ -102,4 +102,33 @@ typedef struct ColorPalette
 
 #endif  /* end of c typedefs */
 
+typedef enum DitherType
+{
+    DitherTypeNone,
+    DitherTypeSolid,
+    DitherTypeOrdered4x4,
+    DitherTypeOrdered8x8,
+    DitherTypeOrdered16x16,
+    DitherTypeSpiral4x4,
+    DitherTypeSpiral8x8,
+    DitherTypeDualSpiral4x4,
+    DitherTypeDualSpiral8x8,
+    DitherTypeErrorDiffusion,
+    DitherTypeMax
+} DitherType;
+
+typedef enum PaletteType
+{
+    PaletteTypeCustom,
+    PaletteTypeOptimal,
+    PaletteTypeFixedBW,
+    PaletteTypeFixedHalftone8,
+    PaletteTypeFixedHalftone27,
+    PaletteTypeFixedHalftone64,
+    PaletteTypeFixedHalftone125,
+    PaletteTypeFixedHalftone216,
+    PaletteTypeFixedHalftone252,
+    PaletteTypeFixedHalftone256
+} PaletteType;
+
 #endif

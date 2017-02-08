@@ -2,6 +2,7 @@
  * TAPI32 Assisted Telephony
  *
  * Copyright 1999  Andreas Mohr
+ * Copyright 2011  André Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,65 +19,58 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-#include <stdio.h>
-#include <windef.h>
-#include <winbase.h>
-//#include "wingdi.h"
-#include <winreg.h>
-#include <objbase.h>
-#include <tapi.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(tapi);
+#include "precomp.h"
 
 /***********************************************************************
- *		tapiGetLocationInfo (TAPI32.@)
+ *      tapiGetLocationInfoW (TAPI32.@)
  */
-DWORD WINAPI tapiGetLocationInfoA(LPSTR lpszCountryCode, LPSTR lpszCityCode)
+DWORD WINAPI tapiGetLocationInfoW(LPWSTR countrycode, LPWSTR citycode)
 {
     HKEY hkey, hsubkey;
     DWORD currid;
     DWORD valsize;
     DWORD type;
     DWORD bufsize;
-    BYTE buf[100];
-    char szlockey[20];
-    if(!RegOpenKeyA(HKEY_LOCAL_MACHINE,
-           "Software\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Locations",
-           &hkey) != ERROR_SUCCESS) { 
+    BYTE buf[200];
+    WCHAR szlockey[20];
+
+    static const WCHAR currentidW[] = {'C','u','r','r','e','n','t','I','D',0};
+    static const WCHAR locationW[]  = {'L','o','c','a','t','i','o','n','%','u',0};
+    static const WCHAR areacodeW[]  = {'A','r','e','a','C','o','d','e',0};
+    static const WCHAR countryW[]   = {'C','o','u','n','t','r','y',0};
+    static const WCHAR fmtW[]       = {'%','u',0};
+
+    static const WCHAR locations_keyW[] =
+        {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+         'W','i','n','d','o','w','s','\\',
+         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+         'T','e','l','e','p','h','o','n','y','\\','L','o','c','a','t','i','o','n','s',0};
+
+    if(RegOpenKeyW(HKEY_LOCAL_MACHINE, locations_keyW, &hkey) == ERROR_SUCCESS) {
         valsize = sizeof( DWORD);
-        if(!RegQueryValueExA(hkey, "CurrentID", 0, &type, (LPBYTE) &currid,
-                    &valsize) && type == REG_DWORD) {
+        if(!RegQueryValueExW(hkey, currentidW, 0, &type, (LPBYTE) &currid, &valsize) &&
+           type == REG_DWORD) {
             /* find a subkey called Location1, Location2... */
-            sprintf( szlockey, "Location%u", currid); 
-            if( !RegOpenKeyA( hkey, szlockey, &hsubkey)) {
-                if( lpszCityCode) {
+            sprintfW( szlockey, locationW, currid);
+            if( !RegOpenKeyW( hkey, szlockey, &hsubkey)) {
+                if( citycode) {
                     bufsize=sizeof(buf);
-                    if( !RegQueryValueExA( hsubkey, "AreaCode", 0, &type, buf,
-                                &bufsize) && type == REG_SZ) {
-			lstrcpynA( lpszCityCode, (char *) buf, 8);
+                    if( !RegQueryValueExW( hsubkey, areacodeW, 0, &type, buf, &bufsize) &&
+                        type == REG_SZ) {
+                        lstrcpynW( citycode, (WCHAR *) buf, 8);
                     } else 
-                        lpszCityCode[0] = '\0';
+                        citycode[0] = '\0';
                 }
-                if( lpszCountryCode) {
+                if( countrycode) {
                     bufsize=sizeof(buf);
-                    if( !RegQueryValueExA( hsubkey, "Country", 0, &type, buf,
-                                &bufsize) && type == REG_DWORD)
-                        snprintf( lpszCountryCode, 8, "%u", *(LPDWORD) buf );
+                    if( !RegQueryValueExW( hsubkey, countryW, 0, &type, buf, &bufsize) &&
+                        type == REG_DWORD)
+                        snprintfW( countrycode, 8, fmtW, *(LPDWORD) buf );
                     else
-                        lpszCountryCode[0] = '\0';
+                        countrycode[0] = '\0';
                 }
-                TRACE("(%p \"%s\", %p \"%s\"): success.\n",
-                        lpszCountryCode, debugstr_a(lpszCountryCode),
-                        lpszCityCode, debugstr_a(lpszCityCode));
+                TRACE("(%p \"%s\", %p \"%s\"): success.\n", countrycode, debugstr_w(countrycode),
+                      citycode, debugstr_w(citycode));
                 RegCloseKey( hkey);
                 RegCloseKey( hsubkey);
                 return 0; /* SUCCESS */
@@ -84,9 +78,32 @@ DWORD WINAPI tapiGetLocationInfoA(LPSTR lpszCountryCode, LPSTR lpszCityCode)
         }
         RegCloseKey( hkey);
     }
-    WARN("(%p, %p): failed (no telephony registry entries?).\n",
-            lpszCountryCode, lpszCityCode);
+    WARN("(%p, %p): failed (no telephony registry entries?).\n", countrycode, citycode);
     return TAPIERR_REQUESTFAILED;
+}
+
+
+/***********************************************************************
+ *      tapiGetLocationInfoA (TAPI32.@)
+ */
+DWORD WINAPI tapiGetLocationInfoA(LPSTR countrycode, LPSTR citycode)
+{
+    DWORD ret, len;
+    LPWSTR country, city;
+
+    len = MultiByteToWideChar( CP_ACP, 0, countrycode, -1, NULL, 0 );
+    country = HeapAlloc( GetProcessHeap(), 0, len );
+    MultiByteToWideChar( CP_ACP, 0, countrycode, -1, country, len );
+
+    len = MultiByteToWideChar( CP_ACP, 0, citycode, -1, NULL, 0 );
+    city = HeapAlloc( GetProcessHeap(), 0, len );
+    MultiByteToWideChar( CP_ACP, 0, citycode, -1, city, len );
+
+    ret = tapiGetLocationInfoW(country, city);
+
+    HeapFree( GetProcessHeap(), 0, city );
+    HeapFree( GetProcessHeap(), 0, country );
+    return ret;
 }
 
 /***********************************************************************

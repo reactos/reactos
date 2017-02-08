@@ -2,7 +2,11 @@
 #include <stddef.h>
 #include <tchar.h>
 
-size_t _tcslen(const _TCHAR * str)
+#ifdef _MSC_VER
+#pragma function(_tcslen)
+#endif /* _MSC_VER */
+
+size_t __cdecl _tcslen(const _TCHAR * str)
 {
  const _TCHAR * s;
 

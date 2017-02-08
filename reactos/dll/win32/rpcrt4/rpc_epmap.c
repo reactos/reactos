@@ -20,27 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <rpc.h>
-
-#include <wine/debug.h>
-#include <wine/exception.h>
-
-#include "rpc_binding.h"
-//#include "epm_c.h"
+#include "precomp.h"
 #include "epm_towers.h"
-
-#ifdef __REACTOS__
-DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -99,7 +80,7 @@ static BOOL start_rpcss(void)
     lstrcatW( cmd, rpcss );
 
     Wow64DisableWow64FsRedirection( &redir );
-    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi );
     Wow64RevertWow64FsRedirection( redir );
 
     if (rslt)
@@ -179,11 +160,8 @@ static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *__eptr)
     }
 }
 
-/***********************************************************************
- *             RpcEpRegisterA (RPCRT4.@)
- */
-RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
-                                  UUID_VECTOR *UuidVector, RPC_CSTR Annotation )
+static RPC_STATUS epm_register( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
+                                UUID_VECTOR *UuidVector, RPC_CSTR Annotation, BOOL replace )
 {
   PRPC_SERVER_INTERFACE If = IfSpec;
   ULONG i;
@@ -192,7 +170,7 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
   ept_entry_t *entries;
   handle_t handle;
 
-  TRACE("(%p,%p,%p,%s)\n", IfSpec, BindingVector, UuidVector, debugstr_a((char*)Annotation));
+  TRACE("(%p,%p,%p,%s) replace=%d\n", IfSpec, BindingVector, UuidVector, debugstr_a((char*)Annotation), replace);
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
   for (i=0; i<BindingVector->Count; i++) {
     RpcBinding* bind = BindingVector->BindingH[i];
@@ -246,7 +224,7 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
           __TRY
           {
               ept_insert(handle, BindingVector->Count * (UuidVector ? UuidVector->Count : 1),
-                         entries, TRUE, &status2);
+                         entries, replace, &status2);
           }
           __EXCEPT(rpc_filter)
           {
@@ -280,6 +258,24 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
 }
 
 /***********************************************************************
+ *             RpcEpRegisterA (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
+                                  UUID_VECTOR *UuidVector, RPC_CSTR Annotation )
+{
+    return epm_register(IfSpec, BindingVector, UuidVector, Annotation, TRUE);
+}
+
+/***********************************************************************
+ *             RpcEpRegisterNoReplaceA (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcEpRegisterNoReplaceA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
+                                           UUID_VECTOR *UuidVector, RPC_CSTR Annotation )
+{
+    return epm_register(IfSpec, BindingVector, UuidVector, Annotation, FALSE);
+}
+
+/***********************************************************************
  *             RpcEpRegisterW (RPCRT4.@)
  */
 RPC_STATUS WINAPI RpcEpRegisterW( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
@@ -288,7 +284,22 @@ RPC_STATUS WINAPI RpcEpRegisterW( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
   LPSTR annA = RPCRT4_strdupWtoA(Annotation);
   RPC_STATUS status;
 
-  status = RpcEpRegisterA(IfSpec, BindingVector, UuidVector, (RPC_CSTR)annA);
+  status = epm_register(IfSpec, BindingVector, UuidVector, (RPC_CSTR)annA, TRUE);
+
+  HeapFree(GetProcessHeap(), 0, annA);
+  return status;
+}
+
+/***********************************************************************
+ *             RpcEpRegisterNoReplaceW (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcEpRegisterNoReplaceW( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
+                                           UUID_VECTOR *UuidVector, RPC_WSTR Annotation )
+{
+  LPSTR annA = RPCRT4_strdupWtoA(Annotation);
+  RPC_STATUS status;
+
+  status = epm_register(IfSpec, BindingVector, UuidVector, (RPC_CSTR)annA, FALSE);
 
   HeapFree(GetProcessHeap(), 0, annA);
   return status;

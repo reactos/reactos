@@ -21,35 +21,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static void DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf);
 
-/*****************************************************************************
- * PixelFormat_WineD3DtoDD
- *
- * Converts an wined3d format ID into a DDPIXELFORMAT structure
- *
- * Params:
- *  DDPixelFormat: Address of the structure to write the pixel format to
- *  WineD3DFormat: Source format
- *
- *****************************************************************************/
-void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_id WineD3DFormat)
+void ddrawformat_from_wined3dformat(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_id wined3d_format)
 {
     DWORD Size = DDPixelFormat->dwSize;
-    TRACE("Converting wined3d format %#x to DDRAW.\n", WineD3DFormat);
 
     if(Size==0) return;
 
     memset(DDPixelFormat, 0x00, Size);
     DDPixelFormat->dwSize = Size;
-    switch(WineD3DFormat)
+    switch (wined3d_format)
     {
         case WINED3DFMT_B8G8R8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
@@ -247,13 +231,13 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         case WINED3DFMT_YUY2:
             DDPixelFormat->u1.dwYUVBitCount = 16;
             DDPixelFormat->dwFlags = DDPF_FOURCC;
-            DDPixelFormat->dwFourCC = WineD3DFormat;
+            DDPixelFormat->dwFourCC = wined3d_format;
             break;
 
         case WINED3DFMT_YV12:
             DDPixelFormat->u1.dwYUVBitCount = 12;
             DDPixelFormat->dwFlags = DDPF_FOURCC;
-            DDPixelFormat->dwFourCC = WineD3DFormat;
+            DDPixelFormat->dwFourCC = wined3d_format;
             break;
 
         case WINED3DFMT_DXT1:
@@ -265,7 +249,7 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         case WINED3DFMT_G8R8_G8B8:
         case WINED3DFMT_R8G8_B8G8:
             DDPixelFormat->dwFlags = DDPF_FOURCC;
-            DDPixelFormat->dwFourCC = WineD3DFormat;
+            DDPixelFormat->dwFourCC = wined3d_format;
             break;
 
         /* Luminance */
@@ -310,18 +294,8 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
             break;
 
-        case WINED3DFMT_R16G16_SNORM:
-            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
-            DDPixelFormat->dwFourCC = 0;
-            DDPixelFormat->u1.dwBumpBitCount = 32;
-            DDPixelFormat->u2.dwBumpDuBitMask =         0x0000ffff;
-            DDPixelFormat->u3.dwBumpDvBitMask =         0xffff0000;
-            DDPixelFormat->u4.dwBumpLuminanceBitMask =  0x00000000;
-            DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
-            break;
-
         case WINED3DFMT_R5G5_SNORM_L6_UNORM:
-            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
+            DDPixelFormat->dwFlags = DDPF_BUMPDUDV | DDPF_BUMPLUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwBumpBitCount = 16;
             DDPixelFormat->u2.dwBumpDuBitMask =         0x0000001f;
@@ -331,7 +305,7 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
             break;
 
         case WINED3DFMT_R8G8_SNORM_L8X8_UNORM:
-            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
+            DDPixelFormat->dwFlags = DDPF_BUMPDUDV | DDPF_BUMPLUMINANCE;
             DDPixelFormat->dwFourCC = 0;
             DDPixelFormat->u1.dwBumpBitCount = 32;
             DDPixelFormat->u2.dwBumpDuBitMask =         0x000000ff;
@@ -341,7 +315,8 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
             break;
 
         default:
-            ERR("Can't translate this Pixelformat %d\n", WineD3DFormat);
+            FIXME("Unhandled wined3d format %#x.\n", wined3d_format);
+            break;
     }
 
     if(TRACE_ON(ddraw)) {
@@ -349,20 +324,8 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         DDRAW_dump_pixelformat(DDPixelFormat);
     }
 }
-/*****************************************************************************
- * PixelFormat_DD2WineD3D
- *
- * Reads a DDPIXELFORMAT structure and returns the equivalent wined3d
- * format ID.
- *
- * Params:
- *  DDPixelFormat: The source format
- *
- * Returns:
- *  The wined3d format ID equivalent to the DDraw format
- *  WINED3DFMT_UNKNOWN if a matching format wasn't found
- *****************************************************************************/
-enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
+
+enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *DDPixelFormat)
 {
     TRACE("Convert a DirectDraw Pixelformat to a WineD3D Pixelformat\n");
     if(TRACE_ON(ddraw))
@@ -573,13 +536,6 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
         {
             return WINED3DFMT_R8G8_SNORM;
         }
-        else if ( (DDPixelFormat->u1.dwBumpBitCount         == 32        ) &&
-                  (DDPixelFormat->u2.dwBumpDuBitMask        == 0x0000ffff) &&
-                  (DDPixelFormat->u3.dwBumpDvBitMask        == 0xffff0000) &&
-                  (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x00000000) )
-        {
-            return WINED3DFMT_R16G16_SNORM;
-        }
         else if ( (DDPixelFormat->u1.dwBumpBitCount         == 16        ) &&
                   (DDPixelFormat->u2.dwBumpDuBitMask        == 0x0000001f) &&
                   (DDPixelFormat->u3.dwBumpDvBitMask        == 0x000003e0) &&
@@ -757,57 +713,35 @@ DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf)
     TRACE("( ");
     DDRAW_dump_pixelformat_flag(pf->dwFlags);
     if (pf->dwFlags & DDPF_FOURCC)
-    {
-        TRACE(", dwFourCC code '%c%c%c%c' (0x%08x) - %d bits per pixel",
+        TRACE(", dwFourCC code '%c%c%c%c' (0x%08x) - %u bits per pixel",
                 (unsigned char)( pf->dwFourCC     &0xff),
                 (unsigned char)((pf->dwFourCC>> 8)&0xff),
                 (unsigned char)((pf->dwFourCC>>16)&0xff),
                 (unsigned char)((pf->dwFourCC>>24)&0xff),
                 pf->dwFourCC,
-                pf->u1.dwYUVBitCount
-        );
-    }
+                pf->u1.dwYUVBitCount);
     if (pf->dwFlags & DDPF_RGB)
     {
-        const char *cmd;
-        TRACE(", RGB bits: %d, ", pf->u1.dwRGBBitCount);
-        switch (pf->u1.dwRGBBitCount)
-        {
-        case 4: cmd = "%1lx"; break;
-        case 8: cmd = "%02lx"; break;
-        case 16: cmd = "%04lx"; break;
-        case 24: cmd = "%06lx"; break;
-        case 32: cmd = "%08lx"; break;
-        default: ERR("Unexpected bit depth !\n"); cmd = "%d"; break;
-        }
-        TRACE(" R "); TRACE(cmd, pf->u2.dwRBitMask);
-        TRACE(" G "); TRACE(cmd, pf->u3.dwGBitMask);
-        TRACE(" B "); TRACE(cmd, pf->u4.dwBBitMask);
+        TRACE(", RGB bits: %u, R 0x%08x G 0x%08x B 0x%08x",
+                pf->u1.dwRGBBitCount,
+                pf->u2.dwRBitMask,
+                pf->u3.dwGBitMask,
+                pf->u4.dwBBitMask);
         if (pf->dwFlags & DDPF_ALPHAPIXELS)
-        {
-            TRACE(" A "); TRACE(cmd, pf->u5.dwRGBAlphaBitMask);
-        }
+            TRACE(" A 0x%08x", pf->u5.dwRGBAlphaBitMask);
         if (pf->dwFlags & DDPF_ZPIXELS)
-        {
-            TRACE(" Z "); TRACE(cmd, pf->u5.dwRGBZBitMask);
-        }
+            TRACE(" Z 0x%08x", pf->u5.dwRGBZBitMask);
     }
     if (pf->dwFlags & DDPF_ZBUFFER)
-    {
-        TRACE(", Z bits : %d", pf->u1.dwZBufferBitDepth);
-    }
+        TRACE(", Z bits: %u", pf->u1.dwZBufferBitDepth);
     if (pf->dwFlags & DDPF_ALPHA)
-    {
-        TRACE(", Alpha bits : %d", pf->u1.dwAlphaBitDepth);
-    }
+        TRACE(", Alpha bits: %u", pf->u1.dwAlphaBitDepth);
     if (pf->dwFlags & DDPF_BUMPDUDV)
-    {
-        const char *cmd = "%08lx";
-        TRACE(", Bump bits: %d, ", pf->u1.dwBumpBitCount);
-        TRACE(" U "); TRACE(cmd, pf->u2.dwBumpDuBitMask);
-        TRACE(" V "); TRACE(cmd, pf->u3.dwBumpDvBitMask);
-        TRACE(" L "); TRACE(cmd, pf->u4.dwBumpLuminanceBitMask);
-    }
+        TRACE(", Bump bits: %u, U 0x%08x V 0x%08x L 0x%08x",
+                pf->u1.dwBumpBitCount,
+                pf->u2.dwBumpDuBitMask,
+                pf->u3.dwBumpDvBitMask,
+                pf->u4.dwBumpLuminanceBitMask);
     TRACE(")\n");
 }
 

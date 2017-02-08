@@ -30,7 +30,7 @@
 #include "rpcproxy.h"
 #include "atliface.h"
 
-static const WCHAR ole32W[] = {'o','l','e','3','2','.','d','l','l',0};
+static const WCHAR atl100W[] = {'a','t','l','1','0','0','.','d','l','l',0};
 static const WCHAR regtypeW[] = {'W','I','N','E','_','R','E','G','I','S','T','R','Y',0};
 static const WCHAR moduleW[] = {'M','O','D','U','L','E',0};
 
@@ -38,32 +38,25 @@ struct reg_info
 {
     IRegistrar  *registrar;
     BOOL         do_register;
-    BOOL         uninit;
     HRESULT      result;
 };
 
-static HMODULE ole32;
-static HRESULT (WINAPI *pCoInitialize)(LPVOID);
-static void (WINAPI *pCoUninitialize)(void);
-static HRESULT (WINAPI *pCoCreateInstance)(REFCLSID,LPUNKNOWN,DWORD,REFIID,LPVOID*);
+static HMODULE atl100;
+static HRESULT (WINAPI *pAtlCreateRegistrar)(IRegistrar**);
 
 static IRegistrar *create_registrar( HMODULE inst, struct reg_info *info )
 {
-    if (!pCoCreateInstance)
+    if (!pAtlCreateRegistrar)
     {
-        if (!(ole32 = LoadLibraryW( ole32W )) ||
-            !(pCoInitialize = (void *)GetProcAddress( ole32, "CoInitialize" )) ||
-            !(pCoUninitialize = (void *)GetProcAddress( ole32, "CoUninitialize" )) ||
-            !(pCoCreateInstance = (void *)GetProcAddress( ole32, "CoCreateInstance" )))
+        if (!(atl100 = LoadLibraryW( atl100W )) ||
+            !(pAtlCreateRegistrar = (void *)GetProcAddress( atl100, "AtlCreateRegistrar" )))
         {
             info->result = E_NOINTERFACE;
             return NULL;
         }
     }
-    info->uninit = SUCCEEDED( pCoInitialize( NULL ));
 
-    info->result = pCoCreateInstance( &CLSID_Registrar, NULL, CLSCTX_INPROC_SERVER,
-                                      &IID_IRegistrar, (void **)&info->registrar );
+    info->result = pAtlCreateRegistrar( &info->registrar );
     if (SUCCEEDED( info->result ))
     {
         WCHAR str[MAX_PATH];
@@ -108,11 +101,9 @@ HRESULT __wine_register_resources( HMODULE module )
 
     info.registrar = NULL;
     info.do_register = TRUE;
-    info.uninit = FALSE;
     info.result = S_OK;
     EnumResourceNamesW( module, regtypeW, register_resource, (LONG_PTR)&info );
     if (info.registrar) IRegistrar_Release( info.registrar );
-    if (info.uninit) pCoUninitialize();
     return info.result;
 }
 
@@ -122,10 +113,8 @@ HRESULT __wine_unregister_resources( HMODULE module )
 
     info.registrar = NULL;
     info.do_register = FALSE;
-    info.uninit = FALSE;
     info.result = S_OK;
     EnumResourceNamesW( module, regtypeW, register_resource, (LONG_PTR)&info );
     if (info.registrar) IRegistrar_Release( info.registrar );
-    if (info.uninit) pCoUninitialize();
     return info.result;
 }

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Videoport
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/video/videoprt/dma.c
+ * FILE:            win32ss/drivers/videoprt/dma.c
  * PURPOSE:         Videoport Direct Memory Access Support
  * PROGRAMMERS:     ...
  */
@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <videoprt.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -229,8 +230,11 @@ VideoPortGetCommonBuffer(IN PVOID HwDeviceExtension,
         return NULL;
     }
 
-    /* sanity check */
-    ASSERT(!IsListEmpty(&DeviceExtension->DmaAdapterList));
+    if (IsListEmpty(&DeviceExtension->DmaAdapterList))
+    {
+        /* no adapter available */
+        return NULL;
+    }
 
     /* grab first dma adapter */
     VpDmaAdapter = (PVIP_DMA_ADAPTER)CONTAINING_RECORD(DeviceExtension->DmaAdapterList.Flink, VIP_DMA_ADAPTER, Entry);
@@ -239,7 +243,6 @@ VideoPortGetCommonBuffer(IN PVOID HwDeviceExtension,
     ASSERT(VpDmaAdapter->HwDeviceExtension == HwDeviceExtension);
     ASSERT(VpDmaAdapter->Adapter != NULL);
     ASSERT(VpDmaAdapter->MapRegisters != 0);
-
 
     /* allocate common buffer */
     Result = VideoPortAllocateCommonBuffer(HwDeviceExtension, (PVP_DMA_ADAPTER)VpDmaAdapter, DesiredLength, LogicalAddress, CacheEnabled, NULL);

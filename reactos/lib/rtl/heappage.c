@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/heappage.c
  * PURPOSE:         RTL Page Heap implementation
@@ -236,7 +237,7 @@ RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
     if (Flags & HEAP_NO_SERIALIZE)
     {
         /* More complex scenario */
-        if (!RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE))
+        if (!RtlTryEnterHeapLock(DphRoot->HeapCritSect, TRUE))
         {
             if (!DphRoot->nRemoteLockAcquired)
             {
@@ -690,12 +691,35 @@ RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
         /* Check the previous node and merge if possible */
         if (PrevNode->pVirtualBlock + PrevNode->nVirtualBlockSize == Node->pVirtualBlock)
         {
-            /* They are adjacent - merge! */
-            PrevNode->nVirtualBlockSize += Node->nVirtualBlockSize;
-            RtlpDphReturnNodeToUnusedList(DphRoot, Node);
-            DphRoot->nAvailableAllocations--;
+            /* Check they actually belong to the same virtual memory block */
+            NTSTATUS Status;
+            MEMORY_BASIC_INFORMATION MemoryBasicInfo;
 
-            Node = PrevNode;
+            Status = ZwQueryVirtualMemory(
+                ZwCurrentProcess(),
+                Node->pVirtualBlock,
+                MemoryBasicInformation,
+                &MemoryBasicInfo,
+                sizeof(MemoryBasicInfo),
+                NULL);
+
+            /* There is no way this can fail, we committed this memory! */
+            ASSERT(NT_SUCCESS(Status));
+
+            if ((PUCHAR)MemoryBasicInfo.AllocationBase <= PrevNode->pVirtualBlock)
+            {
+                /* They are adjacent, and from the same VM region. - merge! */
+                PrevNode->nVirtualBlockSize += Node->nVirtualBlockSize;
+                RtlpDphReturnNodeToUnusedList(DphRoot, Node);
+                DphRoot->nAvailableAllocations--;
+
+                Node = PrevNode;
+            }
+            else
+            {
+                /* Insert after PrevNode */
+                InsertTailList(&PrevNode->AvailableEntry, &Node->AvailableEntry);
+            }
         }
         else
         {
@@ -710,13 +734,31 @@ RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
             /* Node is not at the tail of the list, check if it's adjacent */
             if (Node->pVirtualBlock + Node->nVirtualBlockSize == NextNode->pVirtualBlock)
             {
-                /* They are adjacent - merge! */
-                Node->nVirtualBlockSize += NextNode->nVirtualBlockSize;
+                /* Check they actually belong to the same virtual memory block */
+                NTSTATUS Status;
+                MEMORY_BASIC_INFORMATION MemoryBasicInfo;
 
-                /* Remove next entry from the list and put it into unused entries list */
-                RemoveEntryList(&NextNode->AvailableEntry);
-                RtlpDphReturnNodeToUnusedList(DphRoot, NextNode);
-                DphRoot->nAvailableAllocations--;
+                Status = ZwQueryVirtualMemory(
+                    ZwCurrentProcess(),
+                    NextNode->pVirtualBlock,
+                    MemoryBasicInformation,
+                    &MemoryBasicInfo,
+                    sizeof(MemoryBasicInfo),
+                    NULL);
+
+                /* There is no way this can fail, we committed this memory! */
+                ASSERT(NT_SUCCESS(Status));
+
+                if ((PUCHAR)MemoryBasicInfo.AllocationBase <= Node->pVirtualBlock)
+                {
+                    /* They are adjacent - merge! */
+                    Node->nVirtualBlockSize += NextNode->nVirtualBlockSize;
+
+                    /* Remove next entry from the list and put it into unused entries list */
+                    RemoveEntryList(&NextNode->AvailableEntry);
+                    RtlpDphReturnNodeToUnusedList(DphRoot, NextNode);
+                    DphRoot->nAvailableAllocations--;
+                }
             }
         }
     }
@@ -1159,7 +1201,7 @@ RtlpDphFreeNodeForTable(IN PRTL_AVL_TABLE Table,
 }
 
 NTSTATUS NTAPI
-RtlpDphInitializeDelayedFreeQueue()
+RtlpDphInitializeDelayedFreeQueue(VOID)
 {
     NTSTATUS Status;
 
@@ -1224,7 +1266,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
             RtlpDphNumberOfDelayedFreeBlocks--;
 
             /* Free the normal heap */
-            RtlFreeHeap (NormalHeap, 0, BlockInfo);
+            RtlFreeHeap(NormalHeap, 0, BlockInfo);
         }
 
         /* Move to the next one */
@@ -1236,7 +1278,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
 }
 
 NTSTATUS NTAPI
-RtlpDphTargetDllsLogicInitialize()
+RtlpDphTargetDllsLogicInitialize(VOID)
 {
     UNIMPLEMENTED;
     return STATUS_SUCCESS;
@@ -1386,7 +1428,7 @@ RtlpDphIsNormalFreeHeapBlock(PVOID Block,
 }
 
 NTSTATUS NTAPI
-RtlpDphProcessStartupInitialization()
+RtlpDphProcessStartupInitialization(VOID)
 {
     NTSTATUS Status;
     PTEB Teb = NtCurrentTeb();
@@ -1571,6 +1613,7 @@ PVOID NTAPI
 RtlpPageHeapDestroy(HANDLE HeapPtr)
 {
     PDPH_HEAP_ROOT DphRoot;
+    PVOID Ptr;
     PDPH_HEAP_BLOCK Node, Next;
     PHEAP NormalHeap;
     ULONG Value;
@@ -1595,10 +1638,11 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     RtlpDphFreeDelayedBlocksFromHeap(DphRoot, NormalHeap);
 
     /* Go through the busy blocks */
-    Node = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, TRUE);
+    Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, TRUE);
 
-    while (Node)
+    while (Ptr)
     {
+        Node = CONTAINING_RECORD(Ptr, DPH_HEAP_BLOCK, pUserAllocation);
         if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
         {
             if (!RtlpDphIsPageHeapBlock(DphRoot, Node->pUserAllocation, &Value, TRUE))
@@ -1611,7 +1655,7 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
         //AVrfInternalHeapFreeNotification();
 
         /* Go to the next node */
-        Node = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
+        Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
     }
 
     /* Acquire the global heap list lock */

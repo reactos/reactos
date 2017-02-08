@@ -1,191 +1,85 @@
-/////////////////////////////////////////////////////////////////////////////
-// Romanian resource file
-// ReactOS Project (http://www.reactos.org) boot/freeldr/fdebug/lang/ro-RO.rc
-// Translation by Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
-// CHANGE LOG:   2011-08-30  initial translation
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-#endif //_WIN32
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDC_FDEBUG MENU DISCARDABLE
+/* Menu */
+IDC_FDEBUG MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Conectare",         IDM_FILE_CONNECT
-        MENUITEM "&Deconectare",       IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Conectare", IDM_FILE_CONNECT
+        MENUITEM "&Deconectare", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "C&urăță ecran",      IDM_FILE_CLEARDISPLAY
+        MENUITEM "C&urăță ecran", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Pornește captură",  IDM_FILE_STARTCAPTURE
-        MENUITEM "&Oprește captură",   IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Pornește captură", IDM_FILE_STARTCAPTURE
+        MENUITEM "&Oprește captură", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ecou &local",        IDM_FILE_LOCALECHO
+        MENUITEM "Ecou loc&al", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire",            IDM_EXIT
+        MENUITEM "I&eșire", IDM_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Despre…",           IDM_ABOUT
+        MENUITEM "&Despre…", IDM_ABOUT
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE
+/* Accelerators */
+IDC_FDEBUG ACCELERATORS
 BEGIN
-    63,            IDM_ABOUT,              ASCII,  ALT // "?"
-    47,            IDM_ABOUT,              ASCII,  ALT // "/"
+    63, IDM_ABOUT, ASCII, ALT // "?"
+    47, IDM_ABOUT, ASCII, ALT // "/"
 END
 
+/* Dialogs */
 
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-2 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""resource.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-1 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "resource.h\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE
-BEGIN
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 252
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 203
-    END
-
-    IDD_CONNECTION, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 189
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 93
-    END
-
-    IDD_CAPTURE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 244
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre depanatorul FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Depanatorul FreeLoader v1.0\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)",
-                                 IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,122,26
-    DEFPUSHBUTTON   "Î&nchide",  IDOK,183,189,44,14,WS_GROUP
-    ICON                         IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT                     IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                                 ES_READONLY | WS_VSCROLL
+    CONTROL "Depanatorul FreeLoader v1.0\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    DEFPUSHBUTTON "Î&nchide", 183, 189, 44, 14, WS_GROUP
+    ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
+    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
-IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
+IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Opțiuni de conectare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Alegeți portul COM (ex. COM1):",IDC_STATIC,7,7,108,8
-    EDITTEXT                       IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Rata baud (ex. 115200):",IDC_STATIC,7,38,114,8
-    EDITTEXT                       IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Con&firmă",   IDOK,45,79,50,14
-    PUSHBUTTON      "A&nulează",   IDCANCEL,100,79,50,14
+    LTEXT "Alegeți portul COM (ex. COM1):", IDC_STATIC, 7, 7, 108, 8
+    EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
+    LTEXT "Rata baud (ex. 115200):", IDC_STATIC, 7, 38, 114, 8
+    EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Con&firmă", IDOK, 45, 79, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 100, 79, 50, 14
 END
 
-IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
+IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Fișierul de captură"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Numele fișierului:",IDC_STATIC,7,17,62,8
-    EDITTEXT                      IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Caută",     IDC_BROWSE,194,26,50,14
-    DEFPUSHBUTTON   "Con&firmă",  IDOK,139,74,50,14
-    PUSHBUTTON      "A&nulează",  IDCANCEL,194,74,50,14
+    LTEXT "Numele fișierului:", IDC_STATIC, 7, 17, 62, 8
+    EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&Caută", IDC_BROWSE, 194, 26, 50, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 139, 74, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 194, 74, 50, 14
 END
 
+/* String Tables */
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "fdebug"
-    IDS_HELLO               "Salut, lume!"
-    IDC_FDEBUG              "FDEBUG"
+    IDS_APP_TITLE "Program de depanare FreeLoader"
+    IDS_HELLO "Salut, lume!"
+    IDC_FDEBUG "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_LICENSE             "Această aplicație este un soft public; poate fi redistribuită și/sau modificată respectând termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau respectând Licența în versiunea 2, sau (la alegere) o altă versiune ulterioară.\r\n\r\nAceastă aplicație este distribuită în speranța că va fi utilă, FĂRĂ însă NICI O GARANŢIE; nici măcar cu garanția implicită a VANDABILITĂŢII sau a UTILITĂŢII ÎNTR-UN SCOP ANUME.  Consultați Licența Publică Generală GNU pentru mai multe detalii.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_LICENSE "Această aplicație este un soft public; poate fi redistribuită și/sau modificată respectând termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau respectând Licența în versiunea 2, sau (la alegere) o altă versiune ulterioară.\r\n\r\nAceastă aplicație este distribuită în speranța că va fi utilă, FĂRĂ însă NICI O GARANŢIE; nici măcar cu garanția implicită a VANDABILITĂŢII sau a UTILITĂŢII ÎNTR-UN SCOP ANUME.  Consultați Licența Publică Generală GNU pentru mai multe detalii.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
 END
-
-#endif    // Romanian resource file
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

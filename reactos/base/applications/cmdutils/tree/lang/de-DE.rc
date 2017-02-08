@@ -1,0 +1,12 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Zeigt die Ordnerstruktur eines Laufwerks oder Pfads grafisch an.\n\n\
+TREE [Laufwerk:][Pfad] [/F] [/A]\n\n\
+\t/F   Zeigt die Namen der Dateien in jedem Ordner an.\n\
+\t/A   Verwendet den ASCII- statt des erweiterten Zeichensatzes.\n"
+    IDS_NO_SUBDIRECTORIES "Es sind keine Unterordner vorhanden"
+    IDS_FOLDER_PATH "Auflistung der Ordnerpfade\n"
+    IDS_VOL_SERIAL "Volumeseriennummer : %x:%x\n"
+END

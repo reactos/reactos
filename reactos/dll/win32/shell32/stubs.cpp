@@ -668,17 +668,6 @@ SHInvokePrinterCommandA(HWND hwnd,
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-SHCreateQueryCancelAutoPlayMoniker(IMoniker **ppmoniker)
-{
-    FIXME("SHCreateQueryCancelAutoPlayMoniker() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
@@ -692,9 +681,9 @@ SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
  */
 EXTERN_C BOOL
 WINAPI
-SHChangeNotifySuspendResume(BOOL bSuspend, 
-                            LPITEMIDLIST pidl, 
-                            BOOL bRecursive, 
+SHChangeNotifySuspendResume(BOOL bSuspend,
+                            LPITEMIDLIST pidl,
+                            BOOL bRecursive,
                             DWORD dwReserved)
 {
     FIXME("SHChangeNotifySuspendResume() stub\n");
@@ -1118,7 +1107,7 @@ SHGlobalDefect(DWORD dwUnknown)
  */
 EXTERN_C LPITEMIDLIST
 WINAPI
-Printers_GetPidl(LPCITEMIDLIST pidl, LPCWSTR lpName)
+Printers_GetPidl(LPCITEMIDLIST pidl, LPCWSTR lpName, DWORD dwUnknown1, DWORD dwUnknown2)
 {
     FIXME("Printers_GetPidl() stub\n");
     return NULL;
@@ -1405,4 +1394,18 @@ SHGetUserSessionId(HANDLE hHandle)
 {
     FIXME("SHGetUserSessionId() stub\n");
     return NULL;
+}
+
+EXTERN_C
+DWORD WINAPI CheckStagingArea(VOID)
+{
+    /* Called by native explorer */
+    return 0;
+}
+
+EXTERN_C
+DWORD WINAPI SHGetComputerDisplayNameW(DWORD param1, DWORD param2, DWORD param3, DWORD param4)
+{
+    FIXME("SHGetComputerDisplayNameW() stub\n");
+    return E_FAIL;
 }

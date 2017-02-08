@@ -1,0 +1,32 @@
+/* Swedish translation by Jaix Bly */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Redigera"
+    IDS_MARK "Markera"
+    IDS_COPY "Kopiera\tEnter"
+    IDS_PASTE "Klistra in"
+    IDS_SELECTALL "Markera Allt"
+    IDS_SCROLL "Skrolla"
+    IDS_FIND "Sök..."
+    IDS_DEFAULTS "Ursprunglig"
+    IDS_PROPERTIES "Egenskaper"
+/*
+    IDS_SCROLLHERE "Skrolla hit"
+    IDS_SCROLLTOP "Skrolla till topp"
+    IDS_SCROLLBOTTOM "Skrolla till botten"
+    IDS_SCROLLPAGE_UP "Sida upp"
+    IDS_SCROLLPAGE_DOWN "Sida ner"
+    IDS_SCROLLUP "Skrolla upp"
+    IDS_SCROLLDOWN "Skrolla ner"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
+END

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        include/helpers.h
+ * FILE:        dll/win32/msafd/include/helpers.h
  * PURPOSE:     Definitions for helper DLL management
  */
 #ifndef __HELPERS_H

@@ -8,7 +8,13 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include "diskpart.h"
+
+#include <stdlib.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <winuser.h>
 
 /* FUNCTIONS ******************************************************************/
 
@@ -37,7 +43,9 @@ ShowHeader(VOID)
     wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
 
     /* Print the header information */
+    wprintf(L"\n");
     PrintResourceString(IDS_APP_HEADER);
+    wprintf(L"\n");
     PrintResourceString(IDS_APP_LICENSE);
     PrintResourceString(IDS_APP_CURR_COMPUTER, szComputerName);
 }
@@ -66,7 +74,10 @@ RunScript(LPCWSTR filename)
     while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
         if (InterpretScript(tmp_string) == FALSE)
+        {
+            fclose(script);
             return FALSE;
+        }
     }
 
     /* Close the file */
@@ -79,15 +90,25 @@ RunScript(LPCWSTR filename)
  * wmain():
  * Main entry point of the application.
  */
-int wmain(int argc, const WCHAR *argv[])
+int wmain(int argc, const LPWSTR argv[])
 {
     LPCWSTR script = NULL;
     LPCWSTR tmpBuffer = NULL;
+    WCHAR appTitle[50];
     int index, timeout;
+    int result = EXIT_SUCCESS;
+
+    /* Sets the title of the program so the user will have an easier time
+    determining the current program, especially if diskpart is running a
+    script */
+    LoadStringW(GetModuleHandle(NULL), IDS_APP_HEADER, (LPWSTR)appTitle, 50);
+    SetConsoleTitleW(appTitle);
 
     /* Sets the timeout value to 0 just in case the user doesn't
-    specify a value. */
+    specify a value */
     timeout = 0;
+
+    CreatePartitionList();
 
     /* If there are no command arguments, then go straight to the interpreter */
     if (argc < 2)
@@ -110,7 +131,8 @@ int wmain(int argc, const WCHAR *argv[])
             {
                 /* If there is no flag, then return an error */
                 PrintResourceString(IDS_ERROR_MSG_BAD_ARG, argv[index]);
-                return EXIT_FAILURE;
+                result = EXIT_FAILURE;
+                goto done;
             }
 
             /* Checks for the /? flag first since the program
@@ -118,7 +140,8 @@ int wmain(int argc, const WCHAR *argv[])
             if (_wcsicmp(tmpBuffer, L"?") == 0)
             {
                 PrintResourceString(IDS_APP_USAGE);
-                return EXIT_SUCCESS;
+                result = EXIT_SUCCESS;
+                goto done;
             }
             /* Checks for the script flag */
             else if (_wcsicmp(tmpBuffer, L"s") == 0)
@@ -147,7 +170,8 @@ int wmain(int argc, const WCHAR *argv[])
             {
                 /* Assume that the flag doesn't exist. */
                 PrintResourceString(IDS_ERROR_MSG_BAD_ARG, tmpBuffer);
-                return EXIT_FAILURE;
+                result = EXIT_FAILURE;
+                goto done;
             }
         }
 
@@ -163,18 +187,25 @@ int wmain(int argc, const WCHAR *argv[])
                 Sleep(timeout * 1000);
 
             if (RunScript(script) == FALSE)
-                return EXIT_FAILURE;
+            {
+                result = EXIT_FAILURE;
+                goto done;
+            }
         }
         else
         {
             /* Exit failure since the user wanted to run a script */
             PrintResourceString(IDS_ERROR_MSG_NO_SCRIPT, script);
-            return EXIT_FAILURE;
+            result = EXIT_FAILURE;
+            goto done;
         }
     }
 
     /* Let the user know the program is exiting */
     PrintResourceString(IDS_APP_LEAVING);
 
-    return EXIT_SUCCESS;
+done:
+    DestroyPartitionList();
+
+    return result;
 }

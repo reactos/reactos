@@ -95,7 +95,9 @@ extern "C" {
 #define WM_CHOOSEFONT_SETFLAGS	(WM_USER+102)
 #define OFN_ALLOWMULTISELECT 512
 #define OFN_CREATEPROMPT 0x2000
+#define OFN_DONTADDTORECENT 0x2000000
 #define OFN_ENABLEHOOK 32
+#define OFN_ENABLEINCLUDENOTIFY 0x400000
 #define OFN_ENABLESIZING 0x800000
 #define OFN_ENABLETEMPLATE 64
 #define OFN_ENABLETEMPLATEHANDLE 128
@@ -194,6 +196,12 @@ extern "C" {
 #define CD_LBSELSUB      1
 #define CD_LBSELADD      2
 #define DN_DEFAULTPRN	1
+
+#define PD_RESULT_CANCEL 0
+#define PD_RESULT_PRINT  1
+#define PD_RESULT_APPLY  2
+
+#define START_PAGE_GENERAL 0xffffffff
 
 #ifndef SNDMSG
 #ifdef __cplusplus
@@ -378,6 +386,21 @@ typedef struct tagOFNW {
     DWORD FlagsEx;
 #endif
 } OPENFILENAMEW,*LPOPENFILENAMEW;
+
+
+#ifndef CDSIZEOF_STRUCT
+#define CDSIZEOF_STRUCT(type,field) ((INT_PTR)&(((type *)0)->field) + sizeof(((type*)0)->field))
+#endif
+
+#define OPENFILENAME_SIZE_VERSION_400A CDSIZEOF_STRUCT(OPENFILENAMEA,lpTemplateName)
+#define OPENFILENAME_SIZE_VERSION_400W CDSIZEOF_STRUCT(OPENFILENAMEW,lpTemplateName)
+
+#ifdef UNICODE
+#define OPENFILENAME_SIZE_VERSION_400 OPENFILENAME_SIZE_VERSION_400W
+#else
+#define OPENFILENAME_SIZE_VERSION_400 OPENFILENAME_SIZE_VERSION_400A
+#endif
+
 typedef struct _OFNOTIFYA {
 	NMHDR hdr;
 	LPOPENFILENAMEA lpOFN;
@@ -532,6 +555,40 @@ typedef struct tagPDEXW {
    DWORD dwResultAction;
 } PRINTDLGEXW, *LPPRINTDLGEXW;
 #endif /* WINVER >= 0x0500 */
+
+#ifdef STDMETHOD
+
+DEFINE_GUID(IID_IPrintDialogCallback, 0x5852a2c3,0x6530,0x11d1,0xb6,0xa3,0x00,0x00,0xf8,0x75,0x7b,0xf9);
+#define INTERFACE IPrintDialogCallback
+DECLARE_INTERFACE_(IPrintDialogCallback,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IPrintDialogCallback methods ***/
+    STDMETHOD(InitDone)(THIS) PURE;
+    STDMETHOD(SelectionChange)(THIS) PURE;
+    STDMETHOD(HandleMessage)(THIS_ HWND,UINT,WPARAM,LPARAM,LRESULT *) PURE;
+};
+#undef INTERFACE
+
+DEFINE_GUID(IID_IPrintDialogServices, 0x509aaeda,0x5639,0x11d1,0xb6,0xa1,0x00,0x00,0xf8,0x75,0x7b,0xf9);
+#define INTERFACE IPrintDialogServices
+DECLARE_INTERFACE_(IPrintDialogServices,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IPrintDialogServices methods ***/
+    STDMETHOD(GetCurrentDevMode)(THIS_ LPDEVMODEW,UINT *) PURE;
+    STDMETHOD(GetCurrentPrinterName)(THIS_ LPWSTR,UINT *) PURE;
+    STDMETHOD(GetCurrentPortName)(THIS_ LPWSTR,UINT *) PURE;
+};
+#undef INTERFACE
+
+#endif /* STDMETHOD */
 
 BOOL WINAPI ChooseColorA(LPCHOOSECOLORA);
 BOOL WINAPI ChooseColorW(LPCHOOSECOLORW);

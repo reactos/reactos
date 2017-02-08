@@ -2,7 +2,7 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if your architecture wants/needs/can use attribute_align_arg and
-   alignment checks. It's for 32bit x86... */
+   alignment checks. It is for 32bit x86... */
 #define ABI_ALIGN_FUN 1
 
 /* Define to use proper rounding. */
@@ -14,9 +14,6 @@
 /* Define if __attribute__((aligned(16))) shall be used */
 #define CCALIGN 1
 
-/* Define if checking of stack alignment is wanted. */
-#define CHECK_ALIGN 1
-
 /* Define if debugging is enabled. */
 /* #undef DEBUG */
 
@@ -25,6 +22,9 @@
 
 /* Define if building with dynamcally linked libmpg123 */
 /* #undef DYNAMIC_BUILD */
+
+/* Use EFBIG as substitude for EOVERFLOW, mingw.org may lack the latter */
+/* #undef EOVERFLOW */
 
 /* Define if FIFO support is enabled. */
 /* #undef FIFO */
@@ -117,7 +117,7 @@
 /* #undef HAVE_MACHINE_SOUNDCARD_H */
 
 /* Define to 1 if you have the <memory.h> header file. */
-/* #undef HAVE_MEMORY_H */
+#define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `mkfifo' function. */
 /* #undef HAVE_MKFIFO */
@@ -189,7 +189,7 @@
 #define HAVE_STRERROR 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
@@ -222,7 +222,7 @@
 /* #undef HAVE_SYS_SOUNDCARD_H */
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-/* #undef HAVE_SYS_STAT_H */
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #define HAVE_SYS_TIME_H 1
@@ -254,8 +254,8 @@
 /* Define if IPV6 support is enabled. */
 #define IPV6 1
 
-/* Define this to the size of long type in bits, used for LFS small/native
-   alias functions. */
+/* Define this to the size of native offset type in bits, used for LFS alias
+   functions. */
 #define LFS_ALIAS_BITS 32
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
@@ -268,7 +268,7 @@
 /* Define to disable 16 bit integer output. */
 /* #undef NO_16BIT */
 
-/* Define to disable 32 bit integer output. */
+/* Define to disable 32 bit and 24 bit integer output. */
 /* #undef NO_32BIT */
 
 /* Define to disable 8 bit integer output. */
@@ -282,7 +282,7 @@
 /* #undef NO_ERETURN */
 
 /* Define to disable error messages. */
-/* #undef NO_ERROR */
+/* #undef NO_ERRORMSG */
 
 /* Define to disable feeder and buffered readers. */
 /* #undef NO_FEEDER */
@@ -311,6 +311,9 @@
 /* Define to disable string functions. */
 /* #undef NO_STRING */
 
+/* Define for post-processed 32 bit formats. */
+/* #undef NO_SYNTH32 */
+
 /* Define to disable warning messages. */
 /* #undef NO_WARNING */
 
@@ -324,7 +327,7 @@
 #define PACKAGE_NAME "mpg123"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "mpg123 1.12.3"
+#define PACKAGE_STRING "mpg123 1.22.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "mpg123"
@@ -333,7 +336,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.12.3"
+#define PACKAGE_VERSION "1.22.1"
 
 /* Define if portaudio v18 API is wanted. */
 /* #undef PORTAUDIO18 */
@@ -359,8 +362,17 @@
 /* Define if modules are enabled */
 /* #undef USE_MODULES */
 
+/* Define for new Huffman decoding scheme. */
+#define USE_NEW_HUFFTABLE 1
+
+/* Define to use yasm for assemble AVX sources. */
+/* #undef USE_YASM_FOR_AVX */
+
 /* Version number of package */
-#define VERSION "1.12.3"
+#define VERSION "1.22.1"
+
+/* Define to use Win32 named pipes */
+#define WANT_WIN32_FIFO 1
 
 /* Define to use Win32 sockets */
 #define WANT_WIN32_SOCKETS 1
@@ -396,7 +408,7 @@
 /* #undef size_t */
 
 /* Define to `long' if <sys/types.h> does not define. */
-/* #undef ssize_t */
+#define ssize_t long
 
 /* Define to `unsigned short' if <sys/types.h> does not define. */
 /* #undef uint16_t */

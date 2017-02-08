@@ -16,6 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _SXS_PRIVATE_H_
+#define _SXS_PRIVATE_H_
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <winsxs.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(sxs);
+
 enum name_attr_id
 {
     NAME_ATTR_ID_NAME,
@@ -25,7 +46,7 @@ enum name_attr_id
     NAME_ATTR_ID_VERSION
 };
 
-const WCHAR *get_name_attribute( IAssemblyName *, enum name_attr_id );
+const WCHAR *get_name_attribute( IAssemblyName *, enum name_attr_id ) DECLSPEC_HIDDEN;
 
 static inline WCHAR *strdupW( const WCHAR *src )
 {
@@ -36,3 +57,5 @@ static inline WCHAR *strdupW( const WCHAR *src )
     if (dst) strcpyW( dst, src );
     return dst;
 }
+
+#endif /* _SXS_PRIVATE_H_ */

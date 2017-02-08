@@ -119,55 +119,44 @@ C_ASSERT(sizeof(INT) == 4);
 C_ASSERT(sizeof(UINT) == 4);
 C_ASSERT(sizeof(LONG) == 4);
 C_ASSERT(sizeof(ULONG) == 4);
+C_ASSERT(sizeof(DWORD) == 4);
 C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 
-/* Undefine these to avoid conflicts with limits.h */
-#undef CHAR_MIN
-#undef CHAR_MAX
-#undef INT_MIN
-#undef INT_MAX
-#undef LONG_MIN
-#undef LONG_MAX
-#undef UCHAR_MAX
-#undef UINT_MAX
-#undef ULONG_MAX
-
 /* Integer range margins (use (x-1) to prevent warnings) */
-#define INT8_MIN (-127 - 1)
-#define SHORT_MIN (-32767 - 1)
-#define INT16_MIN (-32767 - 1)
+#define INT8_MIN ((signed char)(-127 - 1))
+#define SHORT_MIN (-32768)
+#define INT16_MIN ((short)(-32767 - 1))
 #define INT_MIN (-2147483647 - 1)
 #define INT32_MIN (-2147483647 - 1)
 #define LONG_MIN (-2147483647L - 1)
 #define LONGLONG_MIN (-9223372036854775807LL - 1)
 #define LONG64_MIN (-9223372036854775807LL - 1)
 #define INT64_MIN (-9223372036854775807LL - 1)
-//#define INT128_MIN (-170141183460469231731687303715884105728)
+#define INT128_MIN (-170141183460469231731687303715884105727i128 - 1)
 #ifdef _WIN64
-#define INT_PTR_MIN INT64_MIN
-#define LONG_PTR_MIN LONG64_MIN
-#define PTRDIFF_T_MIN INT64_MIN
-#define SSIZE_T_MIN INT64_MIN
-#else // _WIN64
-#define INT_PTR_MIN INT_MIN
-#define LONG_PTR_MIN LONG_MIN
-#define PTRDIFF_T_MIN INT_MIN
-#define SSIZE_T_MIN INT_MIN
-#endif // _WIN64
+#define INT_PTR_MIN (-9223372036854775807LL - 1)
+#define LONG_PTR_MIN (-9223372036854775807LL - 1)
+#define PTRDIFF_T_MIN (-9223372036854775807LL - 1)
+#define SSIZE_T_MIN (-9223372036854775807LL - 1)
+#else /* _WIN64 */
+#define INT_PTR_MIN (-2147483647 - 1)
+#define LONG_PTR_MIN (-2147483647L - 1)
+#define PTRDIFF_T_MIN (-2147483647 - 1)
+#define SSIZE_T_MIN (-2147483647L - 1)
+#endif /* _WIN64 */
 
-#define INT8_MAX 127
-#define UINT8_MAX 0xff
-#define UCHAR_MAX 0xff
-#define BYTE_MAX 0xff
-#define SHORT_MAX 32767
-#define INT16_MAX 32767
-#define USHORT_MAX 0xffff
-#define UINT16_MAX 0xffff
-#define WORD_MAX 0xffff
+#define INT8_MAX ((signed char)127)
+#define UINT8_MAX ((unsigned char)0xffU)
+#define BYTE_MAX ((unsigned char)0xff)
+#define SHORT_MAX ((short)32767)
+#define INT16_MAX ((short)32767)
+#define USHORT_MAX ((unsigned short)0xffff)
+#define UINT16_MAX ((unsigned short)0xffff)
+#define WORD_MAX ((unsigned short)0xffff)
 #define INT_MAX 2147483647
 #define INT32_MAX 2147483647
 #define UINT_MAX 0xffffffff
-#define UINT32_MAX 0xffffffff
+#define UINT32_MAX 0xffffffffU
 #define LONG_MAX 2147483647L
 #define ULONG_MAX 0xffffffffUL
 #define DWORD_MAX 0xffffffffUL
@@ -179,54 +168,44 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define ULONG64_MAX 0xffffffffffffffffULL
 #define DWORD64_MAX 0xffffffffffffffffULL
 #define UINT64_MAX 0xffffffffffffffffULL
-#define INT128_MAX 170141183460469231731687303715884105727
-#define UINT128_MAX 0xffffffffffffffffffffffffffffffff
+#define INT128_MAX 170141183460469231731687303715884105727i128
+#define UINT128_MAX 0xffffffffffffffffffffffffffffffffui128
 #undef SIZE_T_MAX
 #ifdef _WIN64
-#define INT_PTR_MAX INT64_MAX
-#define UINT_PTR_MAX UINT64_MAX
-#define LONG_PTR_MAX LONG64_MAX
-#define ULONG_PTR_MAX ULONG64_MAX
-#define DWORD_PTR_MAX DWORD64_MAX
-#define PTRDIFF_T_MAX INT64_MAX
-#define SIZE_T_MAX UINT64_MAX
-#define SSIZE_T_MAX INT64_MAX
-#define _SIZE_T_MAX UINT64_MAX
-#else // _WIN64
-#define INT_PTR_MAX INT_MAX
-#define UINT_PTR_MAX UINT_MAX
-#define LONG_PTR_MAX LONG_MAX
-#define ULONG_PTR_MAX ULONG_MAX
-#define DWORD_PTR_MAX DWORD_MAX
-#define PTRDIFF_T_MAX INT_MAX
-#define SIZE_T_MAX UINT_MAX
-#define SSIZE_T_MAX INT_MAX
-#define _SIZE_T_MAX UINT_MAX
-#endif // _WIN64
-
-#ifndef CHAR_MIN
-#ifdef _CHAR_UNSIGNED
-#define CHAR_MIN 0
-#define CHAR_MAX 0xff
-#else
-#define CHAR_MIN (-128)
-#define CHAR_MAX 127
-#endif
-#endif
+#define INT_PTR_MAX 9223372036854775807LL
+#define UINT_PTR_MAX 0xffffffffffffffffULL
+#define LONG_PTR_MAX 9223372036854775807LL
+#define ULONG_PTR_MAX 0xffffffffffffffffULL
+#define DWORD_PTR_MAX 0xffffffffffffffffULL
+#define PTRDIFF_T_MAX 9223372036854775807LL
+#define SIZE_T_MAX 0xffffffffffffffffULL
+#define SSIZE_T_MAX 9223372036854775807LL
+#define _SIZE_T_MAX 0xffffffffffffffffULL
+#else /* _WIN64 */
+#define INT_PTR_MAX 2147483647
+#define UINT_PTR_MAX 0xffffffff
+#define LONG_PTR_MAX 2147483647L
+#define ULONG_PTR_MAX 0xffffffffUL
+#define DWORD_PTR_MAX 0xffffffffUL
+#define PTRDIFF_T_MAX 2147483647
+#define SIZE_T_MAX 0xffffffff
+#define SSIZE_T_MAX 2147483647L
+#define _SIZE_T_MAX 0xffffffffUL
+#endif /* _WIN64 */
 
 /* Error values */
-#define INT8_ERROR (-1)
-#define UINT8_ERROR 0xff
-#define BYTE_ERROR 0xff
-#define SHORT_ERROR (-1)
-#define INT16_ERROR (-1)
-#define USHORT_ERROR 0xffff
-#define UINT16_ERROR 0xffff
-#define WORD_ERROR 0xffff
+#define INT8_ERROR ((signed char)(-1))
+#define UINT8_ERROR ((unsigned char)0xff)
+#define BYTE_ERROR ((unsigned char)0xff)
+#define SHORT_ERROR ((short)(-1))
+#define INT16_ERROR ((short)(-1))
+#define USHORT_ERROR ((unsigned short)0xffff)
+#define UINT16_ERROR ((unsigned short)0xffff)
+#define WORD_ERROR ((unsigned short)0xffff)
 #define INT_ERROR (-1)
 #define INT32_ERROR (-1)
-#define UINT_ERROR 0xffffffff
-#define UINT32_ERROR 0xffffffff
+#define UINT_ERROR 0xffffffffU
+#define UINT32_ERROR 0xffffffffU
 #define LONG_ERROR (-1L)
 #define ULONG_ERROR 0xffffffffUL
 #define DWORD_ERROR 0xffffffffUL
@@ -247,29 +226,39 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define SIZE_T_ERROR 0xffffffffffffffffULL
 #define SSIZE_T_ERROR (-1LL)
 #define _SIZE_T_ERROR 0xffffffffffffffffULL
-#else // _WIN64
+#else /* _WIN64 */
 #define INT_PTR_ERROR (-1)
-#define UINT_PTR_ERROR 0xffffffff
+#define UINT_PTR_ERROR 0xffffffffU
 #define LONG_PTR_ERROR (-1L)
 #define ULONG_PTR_ERROR 0xffffffffUL
 #define DWORD_PTR_ERROR 0xffffffffUL
 #define PTRDIFF_T_ERROR (-1)
-#define SIZE_T_ERROR 0xffffffff
+#define SIZE_T_ERROR 0xffffffffU
 #define SSIZE_T_ERROR (-1L)
 #define _SIZE_T_ERROR 0xffffffffUL
-#endif // _WIN64
+#endif /* _WIN64 */
+
+/* special definitons (the CHAR ones should not be defined here!) */
+#define _INTSAFE_CHAR CHAR
+#define _INTSAFE_CHAR_ERROR ((signed char)(-1))
+#ifdef _CHAR_UNSIGNED
+ #define _INTSAFE_CHAR_MIN ((unsigned char)0)
+ #define _INTSAFE_CHAR_MAX ((unsigned char)0xff)
+#else
+ #define _INTSAFE_CHAR_MIN ((signed char)(-128))
+ #define _INTSAFE_CHAR_MAX ((signed char)127)
+#endif /* _CHAR_UNSIGNED */
 
 #define size_t_ERROR SIZE_T_ERROR
 #define UCHAR_ERROR '\0'
 #define CHAR_ERROR '\0'
 
-
 /* 32 bit x 32 bit to 64 bit unsigned multiplication */
 #ifndef UInt32x32To64
-#define UInt32x32To64(a,b) ((DWORDLONG)(a)*(DWORDLONG)(b))
+#define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
 #endif
 
-
+/* Convert unsigned to signed or unsigned */
 #define DEFINE_SAFE_CONVERT_UTOX(_Name, _TypeFrom, _TypeTo) \
 _Must_inspect_result_ \
 __forceinline \
@@ -290,23 +279,23 @@ INTSAFE_NAME(_Name)( \
     } \
 }
 
-DEFINE_SAFE_CONVERT_UTOX(ByteToChar, BYTE, CHAR)
+DEFINE_SAFE_CONVERT_UTOX(ByteToChar, BYTE, _INTSAFE_CHAR)
 DEFINE_SAFE_CONVERT_UTOX(ByteToInt8, BYTE, INT8)
-DEFINE_SAFE_CONVERT_UTOX(UInt8ToChar, UINT8, CHAR)
+DEFINE_SAFE_CONVERT_UTOX(UInt8ToChar, UINT8, _INTSAFE_CHAR)
 DEFINE_SAFE_CONVERT_UTOX(UInt8ToInt8, UINT8, INT8)
-DEFINE_SAFE_CONVERT_UTOX(UShortToChar, USHORT, CHAR)
-DEFINE_SAFE_CONVERT_UTOX(UShortToUChar, USHORT, UCHAR)
+DEFINE_SAFE_CONVERT_UTOX(UShortToChar, USHORT, _INTSAFE_CHAR)
+DEFINE_SAFE_CONVERT_UTOX(UShortToUChar, USHORT, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(UShortToInt8, USHORT, INT8)
 DEFINE_SAFE_CONVERT_UTOX(UShortToUInt8, USHORT, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(UShortToShort, USHORT, SHORT)
-DEFINE_SAFE_CONVERT_UTOX(UIntToUChar, UINT, UCHAR)
+DEFINE_SAFE_CONVERT_UTOX(UIntToUChar, UINT, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(UIntToInt8, UINT, INT8)
 DEFINE_SAFE_CONVERT_UTOX(UIntToUInt8, UINT, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(UIntToShort, UINT, SHORT)
 DEFINE_SAFE_CONVERT_UTOX(UIntToUShort, UINT, USHORT)
 DEFINE_SAFE_CONVERT_UTOX(UIntToInt, UINT, INT)
 DEFINE_SAFE_CONVERT_UTOX(UIntToLong, UINT, LONG)
-DEFINE_SAFE_CONVERT_UTOX(UIntPtrToUChar, UINT_PTR, UCHAR)
+DEFINE_SAFE_CONVERT_UTOX(UIntPtrToUChar, UINT_PTR, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToInt8, UINT_PTR, INT8)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToUInt8, UINT_PTR, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToShort, UINT_PTR, SHORT)
@@ -317,7 +306,7 @@ DEFINE_SAFE_CONVERT_UTOX(UIntPtrToInt, UINT_PTR, INT)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToLong, UINT_PTR, LONG)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToIntPtr, UINT_PTR, INT_PTR)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToLongPtr, UINT_PTR, LONG_PTR)
-DEFINE_SAFE_CONVERT_UTOX(ULongToUChar, ULONG, UCHAR)
+DEFINE_SAFE_CONVERT_UTOX(ULongToUChar, ULONG, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(ULongToUInt8, ULONG, UINT8)
 DEFINE_SAFE_CONVERT_UTOX(ULongToShort, ULONG, SHORT)
 DEFINE_SAFE_CONVERT_UTOX(ULongToUShort, ULONG, USHORT)
@@ -326,13 +315,14 @@ DEFINE_SAFE_CONVERT_UTOX(ULongToUInt, ULONG, UINT)
 DEFINE_SAFE_CONVERT_UTOX(ULongToIntPtr, ULONG, INT_PTR)
 DEFINE_SAFE_CONVERT_UTOX(ULongToUIntPtr, ULONG, UINT_PTR)
 DEFINE_SAFE_CONVERT_UTOX(ULongToLongPtr, ULONG, LONG_PTR)
-DEFINE_SAFE_CONVERT_UTOX(ULongPtrToULong, ULONG_PTR, ULONGLONG)
+DEFINE_SAFE_CONVERT_UTOX(ULongPtrToULong, ULONG_PTR, ULONG)
 DEFINE_SAFE_CONVERT_UTOX(ULongLongToUInt, ULONGLONG, UINT)
 DEFINE_SAFE_CONVERT_UTOX(ULongLongToULong, ULONGLONG, ULONG)
 DEFINE_SAFE_CONVERT_UTOX(ULongLongToULongPtr, ULONGLONG, ULONG_PTR)
 
 
-#define DEFINE_SAFE_CONVERT_ITOU(_Name, _TypeFrom, _TypeTo) \
+/* Convert signed to unsigned */
+#define DEFINE_SAFE_CONVERT_STOU(_Name, _TypeFrom, _TypeTo) \
 _Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
@@ -340,7 +330,8 @@ INTSAFE_NAME(_Name)( \
     _In_ _TypeFrom Input, \
     _Out_ _Deref_out_range_(==, Input) _TypeTo *pOutput) \
 { \
-    if ((Input >= 0) && (Input <= _TypeTo ## _MAX)) \
+    if ((Input >= 0) && \
+        ((sizeof(_TypeFrom) <= sizeof(_TypeTo)) || (Input <= (_TypeFrom)_TypeTo ## _MAX))) \
     { \
         *pOutput = (_TypeTo)Input; \
         return INTSAFE_SUCCESS; \
@@ -352,60 +343,61 @@ INTSAFE_NAME(_Name)( \
     } \
 }
 
-DEFINE_SAFE_CONVERT_ITOU(Int8ToUChar, INT8, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToUInt8, INT8, UINT8)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToUShort, INT8, USHORT)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToUInt, INT8, UINT)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToULong, INT8, ULONG)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToUIntPtr, INT8, UINT_PTR)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToULongPtr, INT8, ULONG_PTR)
-DEFINE_SAFE_CONVERT_ITOU(Int8ToULongLong, INT8, ULONGLONG)
-DEFINE_SAFE_CONVERT_ITOU(ShortToUChar, SHORT, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(ShortToUInt8, SHORT, UINT8)
-DEFINE_SAFE_CONVERT_ITOU(ShortToUShort, SHORT, USHORT)
-DEFINE_SAFE_CONVERT_ITOU(ShortToUInt, SHORT, UINT)
-DEFINE_SAFE_CONVERT_ITOU(ShortToULong, SHORT, ULONG)
-DEFINE_SAFE_CONVERT_ITOU(ShortToUIntPtr, SHORT, UINT_PTR)
-DEFINE_SAFE_CONVERT_ITOU(ShortToULongPtr, SHORT, ULONG_PTR)
-DEFINE_SAFE_CONVERT_ITOU(ShortToDWordPtr, SHORT, DWORD_PTR)
-DEFINE_SAFE_CONVERT_ITOU(ShortToULongLong, SHORT, ULONGLONG)
-DEFINE_SAFE_CONVERT_ITOU(IntToUChar, INT, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(IntToUInt8, INT, UINT8)
-DEFINE_SAFE_CONVERT_ITOU(IntToUShort, INT, USHORT)
-DEFINE_SAFE_CONVERT_ITOU(IntToUInt, INT, UINT)
-DEFINE_SAFE_CONVERT_ITOU(IntToULong, INT, ULONG)
-DEFINE_SAFE_CONVERT_ITOU(IntToULongLong, INT, ULONGLONG)
-DEFINE_SAFE_CONVERT_ITOU(LongToUChar, LONG, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(LongToUInt8, LONG, UINT8)
-DEFINE_SAFE_CONVERT_ITOU(LongToUShort, LONG, USHORT)
-DEFINE_SAFE_CONVERT_ITOU(LongToUInt, LONG, UINT)
-DEFINE_SAFE_CONVERT_ITOU(LongToULong, LONG, ULONG)
-DEFINE_SAFE_CONVERT_ITOU(LongToUIntPtr, LONG, UINT_PTR)
-DEFINE_SAFE_CONVERT_ITOU(LongToULongPtr, LONG, ULONG_PTR)
-DEFINE_SAFE_CONVERT_ITOU(LongToULongLong, LONG, ULONGLONG)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToUChar, INT_PTR, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToUInt8, INT_PTR, UINT8)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToUShort, INT_PTR, USHORT)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToUInt, INT_PTR, UINT)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToULong, INT_PTR, ULONG)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToUIntPtr, INT_PTR, UINT_PTR)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToULongPtr, INT_PTR, ULONG_PTR)
-DEFINE_SAFE_CONVERT_ITOU(IntPtrToULongLong, INT_PTR, ULONGLONG)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToUChar, LONG_PTR, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToUInt8, LONG_PTR, UINT8)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToUShort, LONG_PTR, USHORT)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToUInt, LONG_PTR, UINT)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToULong, LONG_PTR, ULONG)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToUIntPtr, LONG_PTR, UINT_PTR)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToULongPtr, LONG_PTR, ULONG_PTR)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToULongLong, LONG_PTR, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(Int8ToUChar, INT8, UINT8)
+DEFINE_SAFE_CONVERT_STOU(Int8ToUInt8, INT8, UINT8)
+DEFINE_SAFE_CONVERT_STOU(Int8ToUShort, INT8, USHORT)
+DEFINE_SAFE_CONVERT_STOU(Int8ToUInt, INT8, UINT)
+DEFINE_SAFE_CONVERT_STOU(Int8ToULong, INT8, ULONG)
+DEFINE_SAFE_CONVERT_STOU(Int8ToUIntPtr, INT8, UINT_PTR)
+DEFINE_SAFE_CONVERT_STOU(Int8ToULongPtr, INT8, ULONG_PTR)
+DEFINE_SAFE_CONVERT_STOU(Int8ToULongLong, INT8, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(ShortToUChar, SHORT, UINT8)
+DEFINE_SAFE_CONVERT_STOU(ShortToUInt8, SHORT, UINT8)
+DEFINE_SAFE_CONVERT_STOU(ShortToUShort, SHORT, USHORT)
+DEFINE_SAFE_CONVERT_STOU(ShortToUInt, SHORT, UINT)
+DEFINE_SAFE_CONVERT_STOU(ShortToULong, SHORT, ULONG)
+DEFINE_SAFE_CONVERT_STOU(ShortToUIntPtr, SHORT, UINT_PTR)
+DEFINE_SAFE_CONVERT_STOU(ShortToULongPtr, SHORT, ULONG_PTR)
+DEFINE_SAFE_CONVERT_STOU(ShortToDWordPtr, SHORT, DWORD_PTR)
+DEFINE_SAFE_CONVERT_STOU(ShortToULongLong, SHORT, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(IntToUChar, INT, UINT8)
+DEFINE_SAFE_CONVERT_STOU(IntToUInt8, INT, UINT8)
+DEFINE_SAFE_CONVERT_STOU(IntToUShort, INT, USHORT)
+DEFINE_SAFE_CONVERT_STOU(IntToUInt, INT, UINT)
+DEFINE_SAFE_CONVERT_STOU(IntToULong, INT, ULONG)
+DEFINE_SAFE_CONVERT_STOU(IntToULongLong, INT, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(LongToUChar, LONG, UINT8)
+DEFINE_SAFE_CONVERT_STOU(LongToUInt8, LONG, UINT8)
+DEFINE_SAFE_CONVERT_STOU(LongToUShort, LONG, USHORT)
+DEFINE_SAFE_CONVERT_STOU(LongToUInt, LONG, UINT)
+DEFINE_SAFE_CONVERT_STOU(LongToULong, LONG, ULONG)
+DEFINE_SAFE_CONVERT_STOU(LongToUIntPtr, LONG, UINT_PTR)
+DEFINE_SAFE_CONVERT_STOU(LongToULongPtr, LONG, ULONG_PTR)
+DEFINE_SAFE_CONVERT_STOU(LongToULongLong, LONG, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToUChar, INT_PTR, UINT8)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToUInt8, INT_PTR, UINT8)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToUShort, INT_PTR, USHORT)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToUInt, INT_PTR, UINT)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToULong, INT_PTR, ULONG)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToUIntPtr, INT_PTR, UINT_PTR)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToULongPtr, INT_PTR, ULONG_PTR)
+DEFINE_SAFE_CONVERT_STOU(IntPtrToULongLong, INT_PTR, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToUChar, LONG_PTR, UINT8)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToUInt8, LONG_PTR, UINT8)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToUShort, LONG_PTR, USHORT)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToUInt, LONG_PTR, UINT)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToULong, LONG_PTR, ULONG)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToUIntPtr, LONG_PTR, UINT_PTR)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToULongPtr, LONG_PTR, ULONG_PTR)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToULongLong, LONG_PTR, ULONGLONG)
 #ifdef _CHAR_UNSIGNED
-DEFINE_SAFE_CONVERT_ITOU(ShortToChar, SHORT, UCHAR)
-DEFINE_SAFE_CONVERT_ITOU(LongPtrToChar, LONG_PTR, UCHAR)
+DEFINE_SAFE_CONVERT_STOU(ShortToChar, SHORT, UINT8)
+DEFINE_SAFE_CONVERT_STOU(LongPtrToChar, LONG_PTR, UINT8)
 #endif
 
 
-#define DEFINE_SAFE_CONVERT_ITOI(_Name, _TypeFrom, _TypeTo) \
+/* Convert signed to signed */
+#define DEFINE_SAFE_CONVERT_STOS(_Name, _TypeFrom, _TypeTo) \
 _Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
@@ -425,29 +417,28 @@ INTSAFE_NAME(_Name)( \
     } \
 }
 
-DEFINE_SAFE_CONVERT_ITOI(ShortToInt8, SHORT, INT8)
-DEFINE_SAFE_CONVERT_ITOI(IntToInt8, INT, INT8)
-DEFINE_SAFE_CONVERT_ITOI(IntToShort, INT, SHORT)
-DEFINE_SAFE_CONVERT_ITOI(LongToInt8, LONG, INT8)
-DEFINE_SAFE_CONVERT_ITOI(LongToShort, LONG, SHORT)
-DEFINE_SAFE_CONVERT_ITOI(LongToInt, LONG, INT)
-DEFINE_SAFE_CONVERT_ITOI(IntPtrToInt8, INT_PTR, INT8)
-DEFINE_SAFE_CONVERT_ITOI(IntPtrToShort, INT_PTR, SHORT)
-DEFINE_SAFE_CONVERT_ITOI(IntPtrToInt, INT_PTR, INT)
-DEFINE_SAFE_CONVERT_ITOI(IntPtrToLong, INT_PTR, LONG)
-DEFINE_SAFE_CONVERT_ITOI(IntPtrToLongPtr, INT_PTR, LONG_PTR)
-DEFINE_SAFE_CONVERT_ITOI(LongPtrToInt8, LONG_PTR, INT8)
-DEFINE_SAFE_CONVERT_ITOI(LongPtrToShort, LONG_PTR, SHORT)
-DEFINE_SAFE_CONVERT_ITOI(LongPtrToInt, LONG_PTR, INT)
-DEFINE_SAFE_CONVERT_ITOI(LongPtrToLong, LONG_PTR, LONG)
-DEFINE_SAFE_CONVERT_ITOI(LongPtrToIntPtr, LONG_PTR, INT_PTR)
-DEFINE_SAFE_CONVERT_ITOI(LongLongToLong, LONGLONG, LONG)
-DEFINE_SAFE_CONVERT_ITOI(LongLongToIntPtr, LONGLONG, INT_PTR)
-DEFINE_SAFE_CONVERT_ITOI(LongLongToLongPtr, LONGLONG, LONG_PTR)
-#ifndef _CHAR_UNSIGNED
-DEFINE_SAFE_CONVERT_ITOI(ShortToChar, SHORT, CHAR)
-DEFINE_SAFE_CONVERT_ITOI(LongPtrToChar, LONG_PTR, CHAR)
-#endif
+DEFINE_SAFE_CONVERT_STOS(ShortToInt8, SHORT, INT8)
+DEFINE_SAFE_CONVERT_STOS(IntToInt8, INT, INT8)
+DEFINE_SAFE_CONVERT_STOS(IntToShort, INT, SHORT)
+DEFINE_SAFE_CONVERT_STOS(LongToInt8, LONG, INT8)
+DEFINE_SAFE_CONVERT_STOS(LongToShort, LONG, SHORT)
+DEFINE_SAFE_CONVERT_STOS(LongToInt, LONG, INT)
+DEFINE_SAFE_CONVERT_STOS(IntPtrToInt8, INT_PTR, INT8)
+DEFINE_SAFE_CONVERT_STOS(IntPtrToShort, INT_PTR, SHORT)
+DEFINE_SAFE_CONVERT_STOS(IntPtrToInt, INT_PTR, INT)
+DEFINE_SAFE_CONVERT_STOS(IntPtrToLong, INT_PTR, LONG)
+DEFINE_SAFE_CONVERT_STOS(IntPtrToLongPtr, INT_PTR, LONG_PTR)
+DEFINE_SAFE_CONVERT_STOS(LongPtrToInt8, LONG_PTR, INT8)
+DEFINE_SAFE_CONVERT_STOS(LongPtrToShort, LONG_PTR, SHORT)
+DEFINE_SAFE_CONVERT_STOS(LongPtrToInt, LONG_PTR, INT)
+DEFINE_SAFE_CONVERT_STOS(LongPtrToLong, LONG_PTR, LONG)
+DEFINE_SAFE_CONVERT_STOS(LongPtrToIntPtr, LONG_PTR, INT_PTR)
+DEFINE_SAFE_CONVERT_STOS(LongLongToInt, LONGLONG, INT)
+DEFINE_SAFE_CONVERT_STOS(LongLongToLong, LONGLONG, LONG)
+DEFINE_SAFE_CONVERT_STOS(LongLongToIntPtr, LONGLONG, INT_PTR)
+DEFINE_SAFE_CONVERT_STOS(LongLongToLongPtr, LONGLONG, LONG_PTR)
+DEFINE_SAFE_CONVERT_STOS(ShortToChar, SHORT, _INTSAFE_CHAR)
+DEFINE_SAFE_CONVERT_STOS(LongPtrToChar, LONG_PTR, _INTSAFE_CHAR)
 
 
 #ifdef _NTINTSAFE_H_INCLUDED_
@@ -466,6 +457,7 @@ DEFINE_SAFE_CONVERT_ITOI(LongPtrToChar, LONG_PTR, CHAR)
 #define RtlInt8ToSIZET RtlInt8ToULongPtr
 #define RtlIntToSizeT RtlIntToUIntPtr
 #define RtlIntToSIZET RtlIntToULongPtr
+#define RtlULongToSSIZET RtlULongToLongPtr
 #define RtlULongToByte RtlULongToUInt8
 #define RtlULongLongToInt64 RtlULongLongToLongLong
 #define RtlULongLongToLong64 RtlULongLongToLongLong
@@ -502,6 +494,7 @@ DEFINE_SAFE_CONVERT_ITOI(LongPtrToChar, LONG_PTR, CHAR)
 #define Int8ToSIZET Int8ToULongPtr
 #define IntToSizeT IntToUIntPtr
 #define IntToSIZET IntToULongPtr
+#define ULongToSSIZET ULongToLongPtr
 #define ULongToByte ULongToUInt8
 #define ULongLongToInt64 ULongLongToLongLong
 #define ULongLongToLong64 ULongLongToLongLong
@@ -534,7 +527,7 @@ INTSAFE_NAME(_Name)( \
     _In_ _Type Addend, \
     _Out_ _Deref_out_range_(==, Augend + Addend) _Type *pOutput) \
 { \
-    if ((Augend + Addend) >= Augend) \
+    if ((_Type)(Augend + Addend) >= Augend) \
     { \
         *pOutput = Augend + Addend; \
         return INTSAFE_SUCCESS; \
@@ -590,6 +583,55 @@ DEFINE_SAFE_SUB(SizeTSub, size_t)
 DEFINE_SAFE_SUB(SIZETSub, SIZE_T)
 DEFINE_SAFE_SUB(ULongLongSub, ULONGLONG)
 
+#ifdef ENABLE_INTSAFE_SIGNED_FUNCTIONS
+_Must_inspect_result_
+__forceinline
+INTSAFE_RESULT
+INTSAFE_NAME(LongLongAdd)(
+    _In_ LONGLONG Augend,
+    _In_ LONGLONG Addend,
+    _Out_ _Deref_out_range_(==, Augend + Addend) LONGLONG* pResult)
+{
+    LONGLONG Result = Augend + Addend;
+
+    /* The only way the result can overflow, is when the sign of the augend
+       and the addend are the same. In that case the result is expected to
+       have the same sign as the two, otherwise it overflowed.
+       Sign equality is checked with a binary xor operation. */
+    if ( ((Augend ^ Addend) >= 0) && ((Augend ^ Result) < 0) )
+    {
+        *pResult = LONGLONG_ERROR;
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    }
+    else
+    {
+        *pResult = Result;
+        return INTSAFE_SUCCESS;
+    }
+}
+
+
+#define DEFINE_SAFE_ADD_S(_Name, _Type1, _Type2, _Convert) \
+C_ASSERT(sizeof(_Type2) > sizeof(_Type1)); \
+_Must_inspect_result_ \
+__forceinline \
+INTSAFE_RESULT \
+INTSAFE_NAME(_Name)( \
+    _In_ _Type1 Augend, \
+    _In_ _Type1 Addend, \
+    _Out_ _Deref_out_range_(==, Augend + Addend) _Type1* pOutput) \
+{ \
+    return INTSAFE_NAME(_Convert)(((_Type2)Augend) + ((_Type2)Addend), pOutput); \
+}
+
+DEFINE_SAFE_ADD_S(Int8Add, INT8, SHORT, ShortToInt8)
+DEFINE_SAFE_ADD_S(ShortAdd, SHORT, INT, IntToShort)
+DEFINE_SAFE_ADD_S(IntAdd, INT, LONGLONG, LongLongToInt)
+DEFINE_SAFE_ADD_S(LongAdd, LONG, LONGLONG, LongLongToLong)
+#ifndef _WIN64
+DEFINE_SAFE_ADD_S(IntPtrAdd, INT_PTR, LONGLONG, LongLongToIntPtr)
+DEFINE_SAFE_ADD_S(LongPtrAdd, LONG_PTR, LONGLONG, LongLongToLongPtr)
+#endif
 
 _Must_inspect_result_
 __forceinline
@@ -619,6 +661,7 @@ INTSAFE_NAME(LongLongSub)(
 
 
 #define DEFINE_SAFE_SUB_S(_Name, _Type1, _Type2, _Convert) \
+C_ASSERT(sizeof(_Type2) > sizeof(_Type1)); \
 _Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
@@ -636,6 +679,7 @@ DEFINE_SAFE_SUB_S(IntPtrSub, INT_PTR, LONGLONG, LongLongToIntPtr)
 DEFINE_SAFE_SUB_S(LongPtrSub, LONG_PTR, LONGLONG, LongLongToLongPtr)
 #endif
 
+#endif /* ENABLE_INTSAFE_SIGNED_FUNCTIONS */
 
 _Must_inspect_result_
 __forceinline
@@ -650,14 +694,14 @@ INTSAFE_NAME(ULongLongMult)(
         M2 = M2Low + M2Hi * 0x100000000
 
        Then the multiplication looks like this:
-        M1 * M2 = (M1Low + M1Hi * 0x100000000) + (M2Low + M2Hi * 0x100000000)
+        M1 * M2 = (M1Low + M1Hi * 0x100000000) * (M2Low + M2Hi * 0x100000000)
                 = M1Low * M2Low
                   + M1Low * M2Hi * 0x100000000
                   + M2Low * M1Hi * 0x100000000
                   + M1Hi * M2Hi * 0x100000000 * 0x100000000
 
         We get an overflow when
-            a) M1Hi * M2Hi != 0, so when M1Hi or M2Hi are not 0
+            a) M1Hi * M2Hi != 0, so when M1Hi and M2Hi are both not 0
             b) The product of the nonzero high part and the other low part
                is larger than 32 bits.
             c) The addition of the product from b) shifted left by 32 and
@@ -679,13 +723,13 @@ INTSAFE_NAME(ULongLongMult)(
     }
     else
     {
-        *pOutput = LONGLONG_ERROR;
+        *pOutput = ULONGLONG_ERROR;
         return INTSAFE_E_ARITHMETIC_OVERFLOW;
     }
 
     if (Temp > ULONG_MAX)
     {
-        *pOutput = LONGLONG_ERROR;
+        *pOutput = ULONGLONG_ERROR;
         return INTSAFE_E_ARITHMETIC_OVERFLOW;
     }
 
@@ -694,7 +738,7 @@ INTSAFE_NAME(ULongLongMult)(
 
 
 #define DEFINE_SAFE_MULT_U32(_Name, _Type, _Convert) \
-__checkReturn \
+_Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
 INTSAFE_NAME(_Name)( \
@@ -711,6 +755,21 @@ DEFINE_SAFE_MULT_U32(ULongMult, ULONG, ULongLongToULong)
 DEFINE_SAFE_MULT_U32(SizeTMult, size_t, ULongLongToSizeT)
 DEFINE_SAFE_MULT_U32(SIZETMult, SIZE_T, ULongLongToSIZET)
 #endif
+
+#define DEFINE_SAFE_MULT_U16(_Name, _Type, _Convert) \
+_Must_inspect_result_ \
+__forceinline \
+INTSAFE_RESULT \
+INTSAFE_NAME(_Name)( \
+    _In_ _Type Multiplicand, \
+    _In_ _Type Multiplier, \
+    _Out_ _Deref_out_range_(==, Multiplicand * Multiplier) _Type* pOutput) \
+{ \
+    ULONG Result = ((ULONG)Multiplicand) * ((ULONG)Multiplier); \
+    return INTSAFE_NAME(_Convert)(Result, pOutput); \
+}
+
+DEFINE_SAFE_MULT_U16(UShortMult, USHORT, ULongToUShort)
 
 
 #ifdef _NTINTSAFE_H_INCLUDED_
@@ -731,7 +790,11 @@ DEFINE_SAFE_MULT_U32(SIZETMult, SIZE_T, ULongLongToSIZET)
 #define RtlULong64Sub RtlULongLongSub
 #define RtlDWord64Sub RtlULongLongSub
 #define RtlUInt64Sub RtlULongLongSub
+#define RtlUInt16Mult RtlUShortMult
+#define RtlWordMult RtlUShortMult
 #ifdef _WIN64
+#define RtlIntPtrAdd RtlLongLongAdd
+#define RtlLongPtrAdd RtlLongLongAdd
 #define RtlIntPtrSub RtlLongLongSub
 #define RtlLongPtrSub RtlLongLongSub
 #define RtlSizeTMult RtlULongLongMult
@@ -757,13 +820,21 @@ DEFINE_SAFE_MULT_U32(SIZETMult, SIZE_T, ULongLongToSIZET)
 #define ULong64Sub ULongLongSub
 #define DWord64Sub ULongLongSub
 #define UInt64Sub ULongLongSub
+#define UInt16Mult UShortMult
+#define WordMult UShortMult
 #ifdef _WIN64
+#define IntPtrAdd LongLongAdd
+#define LongPtrAdd LongLongAdd
 #define IntPtrSub LongLongSub
 #define LongPtrSub LongLongSub
 #define SizeTMult ULongLongMult
 #define SIZETMult ULongLongMult
 #else
 #endif
+
+#undef _INTSAFE_CHAR_MIN
+#undef _INTSAFE_CHAR_MAX
+#undef _INTSAFE_CHAR_ERROR
 
 #endif // _NTINTSAFE_H_INCLUDED_
 

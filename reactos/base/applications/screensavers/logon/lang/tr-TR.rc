@@ -1,0 +1,9 @@
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "Oturum Açma Görüntülük Koruyucusu"
+    IDS_TEXT "Ayarlanması gereken seçenek yok."
+END

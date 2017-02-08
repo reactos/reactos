@@ -21,17 +21,17 @@
 #pragma once
 
 class CCommonBrowser :
-    public CComCoClass<CCommonBrowser, &CLSID_ACLMulti>,
+    public CComCoClass<CCommonBrowser, &CLSID_CCommonBrowser>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellBrowser,
+    public IBrowserService3,
     public IServiceProvider,
     public IOleCommandTarget,
-    public IBrowserService3,
-    public IShellBrowser,
-    public IShellBrowserService,
     public IDockingWindowSite,
     public IDockingWindowFrame,
     public IInputObjectSite,
-    public IDropTarget
+    public IDropTarget,
+    public IShellBrowserService
 {
 private:
 public:
@@ -54,7 +54,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE ShowControlWindow(UINT id, BOOL fShow);
     virtual HRESULT STDMETHODCALLTYPE IsControlWindowShown(UINT id, BOOL *pfShown);
     virtual HRESULT STDMETHODCALLTYPE IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPCITEMIDLIST *ppidlOut);
+    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut);
     virtual HRESULT STDMETHODCALLTYPE DisplayParseError(HRESULT hres, LPCWSTR pwszPath);
     virtual HRESULT STDMETHODCALLTYPE NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF);
     virtual HRESULT STDMETHODCALLTYPE SetNavigateState(BNSTATE bnstate);
@@ -65,7 +65,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetFlags(DWORD dwFlags, DWORD dwFlagMask);
     virtual HRESULT STDMETHODCALLTYPE GetFlags(DWORD *pdwFlags);
     virtual HRESULT STDMETHODCALLTYPE CanNavigateNow();
-    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPCITEMIDLIST *ppidl);
+    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPITEMIDLIST *ppidl);
     virtual HRESULT STDMETHODCALLTYPE SetReferrer(LPCITEMIDLIST pidl);
     virtual DWORD STDMETHODCALLTYPE GetBrowserIndex();
     virtual HRESULT STDMETHODCALLTYPE GetBrowserByIndex(DWORD dwID, IUnknown **ppunk);
@@ -142,8 +142,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE v_CheckZoneCrossing(LPCITEMIDLIST pidl);
 
     // *** IBrowserService3 methods ***
-    virtual HRESULT STDMETHODCALLTYPE _PositionViewWindow(HWND *, RECT *);
-    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayNameEx(unsigned int, const unsigned short *, DWORD, LPITEMIDLIST *);
+    virtual HRESULT STDMETHODCALLTYPE _PositionViewWindow(HWND, RECT *);
+    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayNameEx(UINT, PCWSTR, DWORD, LPITEMIDLIST *);
 
     // *** IShellBrowser methods ***
     virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths);
@@ -187,6 +187,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_COMMONBROWSER)
+    DECLARE_NOT_AGGREGATABLE(CCommonBrowser)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

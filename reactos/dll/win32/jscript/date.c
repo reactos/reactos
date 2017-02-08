@@ -17,18 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
-
-//#include <limits.h>
-//#include <math.h>
-#include <assert.h>
-
 #include "jscript.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 /* 1601 to 1970 is 369 years plus 89 leap days */
 #define TIME_EPOCH  ((ULONGLONG)(369 * 365 + 89) * 86400 * 1000)
@@ -48,9 +37,6 @@ typedef struct {
 
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 static const WCHAR toUTCStringW[] = {'t','o','U','T','C','S','t','r','i','n','g',0};
 static const WCHAR toGMTStringW[] = {'t','o','G','M','T','S','t','r','i','n','g',0};
@@ -97,9 +83,14 @@ static const WCHAR setYearW[] = {'s','e','t','Y','e','a','r',0};
 static const WCHAR UTCW[] = {'U','T','C',0};
 static const WCHAR parseW[] = {'p','a','r','s','e',0};
 
+static inline DateInstance *date_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, DateInstance, dispex);
+}
+
 static inline DateInstance *date_this(vdisp_t *jsthis)
 {
-    return is_vclass(jsthis, JSCLASS_DATE) ? (DateInstance*)jsthis->u.jsdisp : NULL;
+    return is_vclass(jsthis, JSCLASS_DATE) ? date_from_jsdisp(jsthis->u.jsdisp) : NULL;
 }
 
 /*ECMA-262 3rd Edition    15.9.1.2 */
@@ -492,7 +483,7 @@ static inline HRESULT date_to_string(DOUBLE time, BOOL show_offset, int offset, 
 
     BOOL formatAD = TRUE;
     WCHAR week[64], month[64];
-    jsstr_t *date_str;
+    jsstr_t *date_jsstr;
     int len, size, year, day;
     DWORD lcid_en;
     WCHAR sign = '-';
@@ -504,6 +495,8 @@ static inline HRESULT date_to_string(DOUBLE time, BOOL show_offset, int offset, 
     }
 
     if(r) {
+        WCHAR *date_str;
+
         len = 21;
 
         lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
@@ -544,25 +537,25 @@ static inline HRESULT date_to_string(DOUBLE time, BOOL show_offset, int offset, 
             offset = -offset;
         }
 
-        date_str = jsstr_alloc_buf(len);
+        date_str = jsstr_alloc_buf(len, &date_jsstr);
         if(!date_str)
             return E_OUTOFMEMORY;
 
         if(!show_offset)
-            sprintfW(date_str->str, formatNoOffsetW, week, month, day,
+            sprintfW(date_str, formatNoOffsetW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), year, formatAD?ADW:BCW);
         else if(offset)
-            sprintfW(date_str->str, formatW, week, month, day,
+            sprintfW(date_str, formatW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), sign, offset/60, offset%60,
                     year, formatAD?ADW:BCW);
         else
-            sprintfW(date_str->str, formatUTCW, week, month, day,
+            sprintfW(date_str, formatUTCW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), year, formatAD?ADW:BCW);
 
-        *r = jsval_string(date_str);
+        *r = jsval_string(date_jsstr);
     }
     return S_OK;
 }
@@ -618,14 +611,18 @@ static HRESULT Date_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         return dateobj_to_string(date, r);
 
     if(r) {
+        WCHAR *ptr;
+
         date_len = GetDateFormatW(ctx->lcid, DATE_LONGDATE, &st, NULL, NULL, 0);
         time_len = GetTimeFormatW(ctx->lcid, 0, &st, NULL, NULL, 0);
-        date_str = jsstr_alloc_buf(date_len+time_len-1);
+
+        ptr = jsstr_alloc_buf(date_len+time_len-1, &date_str);
         if(!date_str)
             return E_OUTOFMEMORY;
-        GetDateFormatW(ctx->lcid, DATE_LONGDATE, &st, NULL, date_str->str, date_len);
-        GetTimeFormatW(ctx->lcid, 0, &st, NULL, date_str->str+date_len, time_len);
-        date_str->str[date_len-1] = ' ';
+
+        GetDateFormatW(ctx->lcid, DATE_LONGDATE, &st, NULL, ptr, date_len);
+        GetTimeFormatW(ctx->lcid, 0, &st, NULL, ptr+date_len, time_len);
+        ptr[date_len-1] = ' ';
 
         *r = jsval_string(date_str);
     }
@@ -681,6 +678,8 @@ static inline HRESULT create_utc_string(script_ctx_t *ctx, vdisp_t *jsthis, jsva
     }
 
     if(r) {
+        WCHAR *ptr;
+
         len = 17;
 
         lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
@@ -713,11 +712,11 @@ static inline HRESULT create_utc_string(script_ctx_t *ctx, vdisp_t *jsthis, jsva
         } while(day);
         day = date_from_time(date->time);
 
-        date_str = jsstr_alloc_buf(len);
+        ptr = jsstr_alloc_buf(len, &date_str);
         if(!date_str)
             return E_OUTOFMEMORY;
 
-        sprintfW(date_str->str, formatAD?formatADW:formatBCW, week, day, month, year,
+        sprintfW(ptr, formatAD?formatADW:formatBCW, week, day, month, year,
                 (int)hour_from_time(date->time), (int)min_from_time(date->time),
                 (int)sec_from_time(date->time));
 
@@ -773,6 +772,8 @@ static HRESULT dateobj_to_date_string(DateInstance *date, jsval_t *r)
     time = local_time(date->time, date);
 
     if(r) {
+        WCHAR *ptr;
+
         len = 5;
 
         lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
@@ -807,10 +808,10 @@ static HRESULT dateobj_to_date_string(DateInstance *date, jsval_t *r)
         } while(day);
         day = date_from_time(time);
 
-        date_str = jsstr_alloc_buf(len);
-        if(!date_str)
+        ptr = jsstr_alloc_buf(len, &date_str);
+        if(!ptr)
             return E_OUTOFMEMORY;
-        sprintfW(date_str->str, formatAD?formatADW:formatBCW, week, month, day, year);
+        sprintfW(ptr, formatAD?formatADW:formatBCW, week, month, day, year);
 
         *r = jsval_string(date_str);
     }
@@ -856,7 +857,9 @@ static HRESULT Date_toTimeString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
     time = local_time(date->time, date);
 
     if(r) {
-        date_str = jsstr_alloc_buf(17);
+        WCHAR *ptr;
+
+        ptr = jsstr_alloc_buf(17, &date_str);
         if(!date_str)
             return E_OUTOFMEMORY;
 
@@ -870,11 +873,11 @@ static HRESULT Date_toTimeString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         else sign = '-';
 
         if(offset)
-            sprintfW(date_str->str, formatW, (int)hour_from_time(time),
+            sprintfW(ptr, formatW, (int)hour_from_time(time),
                     (int)min_from_time(time), (int)sec_from_time(time),
                     sign, offset/60, offset%60);
         else
-            sprintfW(date_str->str, formatUTCW, (int)hour_from_time(time),
+            sprintfW(ptr, formatUTCW, (int)hour_from_time(time),
                     (int)min_from_time(time), (int)sec_from_time(time));
 
         *r = jsval_string(date_str);
@@ -908,11 +911,13 @@ static HRESULT Date_toLocaleDateString(script_ctx_t *ctx, vdisp_t *jsthis, WORD 
         return dateobj_to_date_string(date, r);
 
     if(r) {
+        WCHAR *ptr;
+
         len = GetDateFormatW(ctx->lcid, DATE_LONGDATE, &st, NULL, NULL, 0);
-        date_str = jsstr_alloc_buf(len);
-        if(!date_str)
+        ptr = jsstr_alloc_buf(len, &date_str);
+        if(!ptr)
             return E_OUTOFMEMORY;
-        GetDateFormatW(ctx->lcid, DATE_LONGDATE, &st, NULL, date_str->str, len);
+        GetDateFormatW(ctx->lcid, DATE_LONGDATE, &st, NULL, ptr, len);
 
         *r = jsval_string(date_str);
     }
@@ -945,11 +950,13 @@ static HRESULT Date_toLocaleTimeString(script_ctx_t *ctx, vdisp_t *jsthis, WORD 
         return Date_toTimeString(ctx, jsthis, flags, argc, argv, r);
 
     if(r) {
+        WCHAR *ptr;
+
         len = GetTimeFormatW(ctx->lcid, 0, &st, NULL, NULL, 0);
-        date_str = jsstr_alloc_buf(len);
-        if(!date_str)
+        ptr = jsstr_alloc_buf(len, &date_str);
+        if(!ptr)
             return E_OUTOFMEMORY;
-        GetTimeFormatW(ctx->lcid, 0, &st, NULL, date_str->str, len);
+        GetTimeFormatW(ctx->lcid, 0, &st, NULL, ptr, len);
 
         *r = jsval_string(date_str);
     }
@@ -1904,20 +1911,11 @@ static HRESULT Date_setYear(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
     return S_OK;
 }
 
-static HRESULT Date_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Date_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
+    return dateobj_to_string(date_from_jsdisp(jsthis), r);
 }
 
 static const builtin_prop_t Date_props[] = {
@@ -1969,7 +1967,7 @@ static const builtin_prop_t Date_props[] = {
 
 static const builtin_info_t Date_info = {
     JSCLASS_DATE,
-    {NULL, Date_value, 0},
+    {NULL, NULL,0, Date_get_value},
     sizeof(Date_props)/sizeof(*Date_props),
     Date_props,
     NULL,
@@ -1978,7 +1976,7 @@ static const builtin_info_t Date_info = {
 
 static const builtin_info_t DateInst_info = {
     JSCLASS_DATE,
-    {NULL, Date_value, 0},
+    {NULL, NULL,0, Date_get_value},
     0, NULL,
     NULL,
     NULL
@@ -2038,7 +2036,9 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
     DWORD lcid_en;
 
     input_len = jsstr_length(input_str);
-    input = input_str->str;
+    input = jsstr_flatten(input_str);
+    if(!input)
+        return E_OUTOFMEMORY;
 
     for(i=0; i<input_len; i++) {
         if(input[i] == '(') nest_level++;
@@ -2121,7 +2121,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 }
             }
             else if(parse[i]=='-' || parse[i]=='/') {
-                /* Short date */
+                /* Short or long date */
                 if(set_day || set_month || set_year) break;
                 set_day = TRUE;
                 set_month = TRUE;
@@ -2141,6 +2141,13 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 if(parse[i]<'0' || parse[i]>'9') break;
                 year = atoiW(&parse[i]);
                 while(parse[i]>='0' && parse[i]<='9') i++;
+
+                if(tmp >= 70){
+                        /* long date */
+                        month = day - 1;
+                        day = year;
+                        year = tmp;
+		}
             }
             else if(tmp<0) break;
             else if(tmp<70) {
@@ -2491,7 +2498,7 @@ static const builtin_prop_t DateConstr_props[] = {
 
 static const builtin_info_t DateConstr_info = {
     JSCLASS_FUNCTION,
-    {NULL, Function_value, 0},
+    DEFAULT_FUNCTION_VALUE,
     sizeof(DateConstr_props)/sizeof(*DateConstr_props),
     DateConstr_props,
     NULL,

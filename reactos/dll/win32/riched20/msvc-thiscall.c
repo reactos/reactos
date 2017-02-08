@@ -1,4 +1,3 @@
-#include "config.h"
 #include "editor.h"
 
 #define DEFINE_THISCALL_WRAPPER(func,args) \
@@ -114,7 +113,7 @@ DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurrentTargetX,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)

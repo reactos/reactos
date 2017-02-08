@@ -2,16 +2,13 @@
 #define __SHUTDOWN_PRECOMP_H
 
 /* INCLUDES ******************************************************************/
+
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <winuser.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <powrprof.h>
-// #include <reason.h> // Shutdown codes
 
 #include "resource.h"
 
@@ -60,4 +57,4 @@ VOID DisplayError(DWORD dwError);
 /* gui.c */
 BOOL ShutdownGuiMain(struct CommandLineOptions opts);
 
-#endif
+#endif /* __SHUTDOWN_PRECOMP_H */

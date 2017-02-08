@@ -3,7 +3,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
- * FILE:             drivers/directx/dxg/main.c
+ * FILE:             win32ss/reactx/dxapi/main.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       15/10-2007   Magnus Olsen
@@ -12,25 +12,19 @@
 
 #include "dxapi_driver.h"
 
+#define NDEBU /* debug prints are enabled, add a G at the end to disable it ;-) */
+#include <debug.h>
+
 NTSTATUS NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {
-    /* 
+    /*
      * NOTE this driver will never be load, it only contain export list
      * to win32k eng functions
      */
     return STATUS_SUCCESS;
 }
-
-NTSTATUS NTAPI
-GsDriverEntry(IN PVOID Context1,
-              IN PVOID Context2)
-{
-    return DriverEntry(Context1, Context2);
-}
-
-
 
 /*++
 * @name DxApiGetVersion
@@ -38,7 +32,7 @@ GsDriverEntry(IN PVOID Context1,
 *
 * The function DxApiGetVersion return the dsound version, and it always return 4.02
 *
-* @return 
+* @return
 * Always return 4.02
 *
 * @remarks.
@@ -46,8 +40,8 @@ GsDriverEntry(IN PVOID Context1,
 *
 *--*/
 ULONG
-PASCAL
-DxApiGetVersion()
+NTAPI
+DxApiGetVersion(VOID)
 {
     /* MSDN say this always return Direct Sound version 4.02 */
     return 0x402;
@@ -59,14 +53,14 @@ DxApiGetVersion()
 * @name DxApi
 * @implemented
 *
-* The function DxApi calls to diffent functions, follow functions 
+* The function DxApi calls to diffent functions, follow functions
 * are supported
 * DxGetVersionNumber, DxCloseHandle, DxOpenDirectDraw, DxOpenSurface,
 * DxOpenVideoPort, DxGetKernelCaps, DxGetFieldNumber, DxSetFieldNumber,
 * DxSetSkipPattern, DxGetSurfaceState, DxSetSurfaceState, DxLock,
 * DxFlipOverlay, DxFlipVideoPort, DxGetCurrentAutoflip, DxGetPreviousAutoflip,
 * DxRegisterEvent, DxUnregisterEvent, DxGetPolarity, DxOpenVpCatureDevice,
-* DxAddVpCaptureBuffer, DxFlushVpCaptureBuffs 
+* DxAddVpCaptureBuffer, DxFlushVpCaptureBuffs
 *
 * See ddkmapi.h as well
 
@@ -89,8 +83,8 @@ DxApiGetVersion()
 * Our size in bytes of the output buffer, rember wrong size will result in the function
 * does not being call.
 *
-* @return 
-* Return Always 0. 
+* @return
+* Return Always 0.
 *
 * @remarks.
 * before call to any of this functions, do not forget set lpvOutBuffer->ddRVal = DDERR_GEN*,
@@ -99,7 +93,7 @@ DxApiGetVersion()
 *--*/
 
 DWORD
-PASCAL
+NTAPI
 DxApi(IN DWORD dwFunctionNum,
       IN LPVOID lpvInBuffer,
       IN DWORD cbInBuffer,
@@ -109,7 +103,7 @@ DxApi(IN DWORD dwFunctionNum,
 
     dwFunctionNum -= DD_FIRST_DXAPI;
 
-    if ((lpvOutBuffer == NULL) || 
+    if ((lpvOutBuffer == NULL) ||
        /*(dwFunctionNum < (DD_FIRST_DXAPI - DD_FIRST_DXAPI)) ||*/
        (dwFunctionNum > (DD_DXAPI_FLUSHVPCAPTUREBUFFERS - DD_FIRST_DXAPI)) ||
        (gDxApiEntryPoint[dwFunctionNum].pfn == NULL) ||
@@ -124,13 +118,69 @@ DxApi(IN DWORD dwFunctionNum,
     return 0;
 }
 
+VOID
+NTAPI
+DxApiInitialize (
+    PVOID p1,
+    PVOID p2,
+    PVOID p3,
+    PVOID p4,
+    PVOID p5,
+    PVOID p6,
+    PVOID p7,
+    PVOID p8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+DxAutoflipUpdate (
+    PVOID p1,
+    PVOID p2,
+    PVOID p3,
+    PVOID p4,
+    PVOID p5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+DxEnableIRQ (
+    PVOID p1,
+    PVOID p2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+DxLoseObject (
+    PVOID p1,
+    PVOID p2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+DxUpdateCapture (
+    PVOID p1,
+    PVOID p2,
+    PVOID p3)
+{
+    UNIMPLEMENTED;
+}
+
+
 /*++
 * @name DxGetVersionNumber
 * @implemented
 *
 * The function DxGetVersionNumber return dxapi interface version, that is 1.0
 *
-* @return 
+* @return
 * Always return 1.0
 *
 * @remarks.

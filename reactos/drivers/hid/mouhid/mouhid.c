@@ -30,6 +30,7 @@ static USHORT MouHid_ButtonDownFlags[] =
     MOUSE_BUTTON_5_UP
 };
 
+
 VOID
 MouHid_GetButtonMove(
     IN PMOUHID_DEVICE_EXTENSION DeviceExtension,
@@ -43,8 +44,10 @@ MouHid_GetButtonMove(
     *LastX = 0;
     *LastY = 0;
 
-    /* get scaled usage value x */
-    Status =  HidP_GetScaledUsageValue(HidP_Input,
+    if (!DeviceExtension->MouseAbsolute) 
+    {
+        /* get scaled usage value x */
+        Status =  HidP_GetScaledUsageValue(HidP_Input,
                                        HID_USAGE_PAGE_GENERIC,
                                        HIDP_LINK_COLLECTION_UNSPECIFIED,
                                        HID_USAGE_GENERIC_X,
@@ -52,16 +55,17 @@ MouHid_GetButtonMove(
                                        DeviceExtension->PreparsedData,
                                        DeviceExtension->Report,
                                        DeviceExtension->ReportLength);
-    if (Status != HIDP_STATUS_SUCCESS)
-    {
-        /* FIXME: handle more errors */
-        if (Status == HIDP_STATUS_BAD_LOG_PHY_VALUES)
-        {
-            /* FIXME: assume it operates in absolute mode */
-            DeviceExtension->MouseAbsolute = TRUE;
 
-            /* get unscaled value */
-            Status = HidP_GetUsageValue(HidP_Input,
+        if (Status != HIDP_STATUS_SUCCESS)
+        {
+            /* FIXME: handle more errors */
+            if (Status == HIDP_STATUS_BAD_LOG_PHY_VALUES)
+            {
+                /* FIXME: assume it operates in absolute mode */
+                DeviceExtension->MouseAbsolute = TRUE;
+
+                /* get unscaled value */
+                Status = HidP_GetUsageValue(HidP_Input,
                                         HID_USAGE_PAGE_GENERIC,
                                         HIDP_LINK_COLLECTION_UNSPECIFIED,
                                         HID_USAGE_GENERIC_X,
@@ -70,18 +74,45 @@ MouHid_GetButtonMove(
                                         DeviceExtension->Report,
                                         DeviceExtension->ReportLength);
 
-            /* FIXME handle error */
-            ASSERT(Status == HIDP_STATUS_SUCCESS);
+                /* FIXME handle error */
+                ASSERT(Status == HIDP_STATUS_SUCCESS);
 
-            /* absolute pointing devices values need be in range 0 - 0xffff */
-            ASSERT(DeviceExtension->ValueCapsX.LogicalMax > 0);
+                /* absolute pointing devices values need be in range 0 - 0xffff */
+                ASSERT(DeviceExtension->ValueCapsX.LogicalMax > 0);
+                ASSERT(DeviceExtension->ValueCapsX.LogicalMax > DeviceExtension->ValueCapsX.LogicalMin);
 
-            *LastX = (ValueX * 0xFFFF) / DeviceExtension->ValueCapsX.LogicalMax;
+                /* convert to logical range */
+                *LastX = (ValueX * VIRTUAL_SCREEN_SIZE_X) / DeviceExtension->ValueCapsX.LogicalMax;
+            }
         }
     }
+    else
+    {
+        /* get unscaled value */
+        Status = HidP_GetUsageValue(HidP_Input,
+                                    HID_USAGE_PAGE_GENERIC,
+                                    HIDP_LINK_COLLECTION_UNSPECIFIED,
+                                    HID_USAGE_GENERIC_X,
+                                    &ValueX,
+                                    DeviceExtension->PreparsedData,
+                                    DeviceExtension->Report,
+                                    DeviceExtension->ReportLength);
 
-    /* get scaled usage value y */
-    Status =  HidP_GetScaledUsageValue(HidP_Input,
+        /* FIXME handle error */
+        ASSERT(Status == HIDP_STATUS_SUCCESS);
+
+        /* absolute pointing devices values need be in range 0 - 0xffff */
+        ASSERT(DeviceExtension->ValueCapsX.LogicalMax > 0);
+        ASSERT(DeviceExtension->ValueCapsX.LogicalMax > DeviceExtension->ValueCapsX.LogicalMin);
+
+        /* convert to logical range */
+        *LastX = (ValueX * VIRTUAL_SCREEN_SIZE_X) / DeviceExtension->ValueCapsX.LogicalMax;
+    }
+
+    if (!DeviceExtension->MouseAbsolute)
+    {
+        /* get scaled usage value y */
+        Status =  HidP_GetScaledUsageValue(HidP_Input,
                                        HID_USAGE_PAGE_GENERIC,
                                        HIDP_LINK_COLLECTION_UNSPECIFIED,
                                        HID_USAGE_GENERIC_Y,
@@ -89,16 +120,17 @@ MouHid_GetButtonMove(
                                        DeviceExtension->PreparsedData,
                                        DeviceExtension->Report,
                                        DeviceExtension->ReportLength);
-    if (Status != HIDP_STATUS_SUCCESS)
-    {
-        // FIXME: handle more errors
-        if (Status == HIDP_STATUS_BAD_LOG_PHY_VALUES)
-        {
-            // assume it operates in absolute mode
-            DeviceExtension->MouseAbsolute = TRUE;
 
-            // get unscaled value
-            Status = HidP_GetUsageValue(HidP_Input,
+        if (Status != HIDP_STATUS_SUCCESS)
+        {
+            // FIXME: handle more errors
+            if (Status == HIDP_STATUS_BAD_LOG_PHY_VALUES)
+            {
+                // assume it operates in absolute mode
+                DeviceExtension->MouseAbsolute = TRUE;
+
+                // get unscaled value
+                Status = HidP_GetUsageValue(HidP_Input,
                                         HID_USAGE_PAGE_GENERIC,
                                         HIDP_LINK_COLLECTION_UNSPECIFIED,
                                         HID_USAGE_GENERIC_Y,
@@ -107,13 +139,39 @@ MouHid_GetButtonMove(
                                         DeviceExtension->Report,
                                         DeviceExtension->ReportLength);
 
-            /* FIXME handle error */
-            ASSERT(Status == HIDP_STATUS_SUCCESS);
+                /* FIXME handle error */
+                ASSERT(Status == HIDP_STATUS_SUCCESS);
 
-            /* absolute pointing devices values need be in range 0 - 0xffff */
-            ASSERT(DeviceExtension->ValueCapsY.LogicalMax);
-            *LastY = (ValueY * 0xFFFF) / DeviceExtension->ValueCapsY.LogicalMax;
+                /* absolute pointing devices values need be in range 0 - 0xffff */
+                ASSERT(DeviceExtension->ValueCapsY.LogicalMax > 0);
+                ASSERT(DeviceExtension->ValueCapsY.LogicalMax > DeviceExtension->ValueCapsY.LogicalMin);
+
+                /* convert to logical range */
+                *LastY = (ValueY * VIRTUAL_SCREEN_SIZE_Y) / DeviceExtension->ValueCapsY.LogicalMax;
+            }
         }
+    }
+    else
+    {
+        // get unscaled value
+        Status = HidP_GetUsageValue(HidP_Input,
+                                HID_USAGE_PAGE_GENERIC,
+                                HIDP_LINK_COLLECTION_UNSPECIFIED,
+                                HID_USAGE_GENERIC_Y,
+                                &ValueY,
+                                DeviceExtension->PreparsedData,
+                                DeviceExtension->Report,
+                                DeviceExtension->ReportLength);
+
+        /* FIXME handle error */
+        ASSERT(Status == HIDP_STATUS_SUCCESS);
+
+        /* absolute pointing devices values need be in range 0 - 0xffff */
+        ASSERT(DeviceExtension->ValueCapsY.LogicalMax > 0);
+        ASSERT(DeviceExtension->ValueCapsY.LogicalMax > DeviceExtension->ValueCapsY.LogicalMin);
+
+        /* convert to logical range */
+        *LastY = (ValueY * VIRTUAL_SCREEN_SIZE_Y) / DeviceExtension->ValueCapsY.LogicalMax;
     }
 }
 
@@ -323,7 +381,7 @@ MouHid_ReadCompletion(
         DeviceExtension->Report[3] & 0xFF, DeviceExtension->Report[4] & 0xFF,
         DeviceExtension->Report[5] & 0xFF, DeviceExtension->Report[6] & 0xFF);
 
-    DPRINT("[MOUHID] LastX %ld LastY %ld Flags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
+    DPRINT("[MOUHID] LastX %ld LastY %ld Flags %x ButtonFlags %x ButtonData %x\n", MouseInputData.LastX, MouseInputData.LastY, MouseInputData.Flags, MouseInputData.ButtonFlags, MouseInputData.ButtonData);
 
     /* dispatch mouse action */
     MouHid_DispatchInputData(DeviceExtension, &MouseInputData);
@@ -717,7 +775,7 @@ MouHid_StartDevice(
     HID_COLLECTION_INFORMATION Information;
     PVOID PreparsedData;
     HIDP_CAPS Capabilities;
-    ULONG ValueCapsLength;
+    USHORT ValueCapsLength;
     HIDP_VALUE_CAPS ValueCaps;
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
     PUSAGE Buffer;
@@ -886,6 +944,14 @@ MouHid_StartDevice(
             DeviceExtension->WheelUsagePage = ValueCaps.UsagePage;
             DPRINT("[MOUHID] mouse wheel support detected with z-axis\n", Status);
         }
+    }
+
+    /* check if mice is absolute */
+    if (DeviceExtension->ValueCapsY.LogicalMax > DeviceExtension->ValueCapsY.LogicalMin ||
+        DeviceExtension->ValueCapsX.LogicalMax > DeviceExtension->ValueCapsX.LogicalMin)
+    {
+        /* mice is absolute */
+        DeviceExtension->MouseAbsolute = TRUE;
     }
 
     /* completed successfully */
@@ -1173,8 +1239,6 @@ DriverEntry(
     /* FIXME check for parameters 'UseOnlyMice', 'TreatAbsoluteAsRelative', 'TreatAbsolutePointerAsAbsolute' */
 
     /* initialize driver object */
-    DriverObject->DriverUnload = MouHid_Unload;
-    DriverObject->DriverExtension->AddDevice = MouHid_AddDevice;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = MouHid_Create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = MouHid_Close;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = MouHid_Flush;

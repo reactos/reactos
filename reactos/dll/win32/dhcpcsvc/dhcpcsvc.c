@@ -7,68 +7,76 @@
  */
 
 #include <rosdhcp.h>
+#include <winsvc.h>
 
 #define NDEBUG
 #include <debug.h>
 
+static WCHAR ServiceName[] = L"DHCP";
+
+SERVICE_STATUS_HANDLE ServiceStatusHandle = 0;
+SERVICE_STATUS ServiceStatus;
+
 static HANDLE PipeHandle = INVALID_HANDLE_VALUE;
 
-DWORD APIENTRY DhcpCApiInitialize(LPDWORD Version) {
+DWORD APIENTRY
+DhcpCApiInitialize(LPDWORD Version)
+{
     DWORD PipeMode;
 
     /* Wait for the pipe to be available */
-    if (WaitNamedPipeW(DHCP_PIPE_NAME, NMPWAIT_USE_DEFAULT_WAIT))
-    {
-        /* It's available, let's try to open it */
-        PipeHandle = CreateFileW(DHCP_PIPE_NAME,
-                                 GENERIC_READ | GENERIC_WRITE,
-                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                 NULL,
-                                 OPEN_EXISTING,
-                                 0,
-                                 NULL);
-
-        /* Check if we succeeded in opening the pipe */
-        if (PipeHandle == INVALID_HANDLE_VALUE)
-        {
-            /* We didn't */
-            return GetLastError();
-        }
-        else
-        {
-            /* Change the pipe into message mode */
-            PipeMode = PIPE_READMODE_MESSAGE; 
-            if (!SetNamedPipeHandleState(PipeHandle, &PipeMode, NULL, NULL))
-            {
-                /* Mode change failed */
-                CloseHandle(PipeHandle);
-                PipeHandle = INVALID_HANDLE_VALUE;
-                return GetLastError();
-            }
-            else
-            {
-                /* We're good to go */
-                *Version = 2;
-                return NO_ERROR;
-            }
-        }
-    }
-    else
+    if (!WaitNamedPipeW(DHCP_PIPE_NAME, NMPWAIT_USE_DEFAULT_WAIT))
     {
         /* No good, we failed */
         return GetLastError();
     }
+
+    /* It's available, let's try to open it */
+    PipeHandle = CreateFileW(DHCP_PIPE_NAME,
+                             GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,
+                             NULL,
+                             OPEN_EXISTING,
+                             0,
+                             NULL);
+
+    /* Check if we succeeded in opening the pipe */
+    if (PipeHandle == INVALID_HANDLE_VALUE)
+    {
+        /* We didn't */
+        return GetLastError();
+    }
+
+    /* Change the pipe into message mode */
+    PipeMode = PIPE_READMODE_MESSAGE; 
+    if (!SetNamedPipeHandleState(PipeHandle, &PipeMode, NULL, NULL))
+    {
+        /* Mode change failed */
+        CloseHandle(PipeHandle);
+        PipeHandle = INVALID_HANDLE_VALUE;
+        return GetLastError();
+    }
+    else
+    {
+        /* We're good to go */
+        *Version = 2;
+        return NO_ERROR;
+    }
 }
 
-VOID APIENTRY DhcpCApiCleanup() {
+VOID APIENTRY
+DhcpCApiCleanup(VOID)
+{
     CloseHandle(PipeHandle);
     PipeHandle = INVALID_HANDLE_VALUE;
 }
 
-DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
-                                     PDWORD MediaType,
-                                     PDWORD Mtu,
-                                     PDWORD Speed ) {
+DWORD APIENTRY
+DhcpQueryHWInfo(DWORD AdapterIndex,
+                PDWORD MediaType,
+                PDWORD Mtu,
+                PDWORD Speed)
+{
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -89,16 +97,18 @@ DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
         return 0;
     }
 
-    if( !Reply.Reply ) return 0;
-    else {
-        *MediaType = Reply.QueryHWInfo.MediaType;
-        *Mtu = Reply.QueryHWInfo.Mtu;
-        *Speed = Reply.QueryHWInfo.Speed;
-        return 1;
-    }
+    if (Reply.Reply == 0)
+        return 0;
+
+    *MediaType = Reply.QueryHWInfo.MediaType;
+    *Mtu = Reply.QueryHWInfo.Mtu;
+    *Speed = Reply.QueryHWInfo.Speed;
+    return 1;
 }
 
-DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex ) {
+DWORD APIENTRY
+DhcpLeaseIpAddress(DWORD AdapterIndex)
+{
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -122,7 +132,9 @@ DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD APIENTRY DhcpReleaseIpAddressLease( DWORD AdapterIndex ) {
+DWORD APIENTRY
+DhcpReleaseIpAddressLease(DWORD AdapterIndex)
+{
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -146,7 +158,9 @@ DWORD APIENTRY DhcpReleaseIpAddressLease( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
+DWORD APIENTRY
+DhcpRenewIpAddressLease(DWORD AdapterIndex)
+{
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -170,9 +184,11 @@ DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
-                                             DWORD Address,
-                                             DWORD Netmask ) {
+DWORD APIENTRY
+DhcpStaticRefreshParams(DWORD AdapterIndex,
+                        DWORD Address,
+                        DWORD Netmask)
+{
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -232,9 +248,9 @@ DhcpNotifyConfigChange(LPWSTR ServerName,
                        DWORD IpIndex,
                        DWORD IpAddress,
                        DWORD SubnetMask,
-                       int DhcpAction)
+                       INT DhcpAction)
 {
-    DbgPrint("DHCPCSVC: DhcpNotifyConfigChange not implemented yet\n");
+    DPRINT1("DHCPCSVC: DhcpNotifyConfigChange not implemented yet\n");
     return 0;
 }
 
@@ -262,11 +278,12 @@ DhcpNotifyConfigChange(LPWSTR ServerName,
  *
  * \remarks This is a ReactOS-only routine
  */
-DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
-                                      PBOOL DhcpEnabled,
-                                      PDWORD DhcpServer,
-                                      time_t *LeaseObtained,
-                                      time_t *LeaseExpires )
+DWORD APIENTRY
+DhcpRosGetAdapterInfo(DWORD AdapterIndex,
+                      PBOOL DhcpEnabled,
+                      PDWORD DhcpServer,
+                      time_t* LeaseObtained,
+                      time_t* LeaseExpires)
 {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
@@ -283,16 +300,19 @@ DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
                                &Reply, sizeof(Reply),
                                &BytesRead, NULL);
 
-    if ( 0 != Result && 0 != Reply.Reply ) {
+    if (Result && Reply.Reply != 0)
         *DhcpEnabled = Reply.GetAdapterInfo.DhcpEnabled;
-    } else {
+    else
         *DhcpEnabled = FALSE;
-    }
-    if ( *DhcpEnabled ) {
+
+    if (*DhcpEnabled)
+    {
         *DhcpServer = Reply.GetAdapterInfo.DhcpServer;
         *LeaseObtained = Reply.GetAdapterInfo.LeaseObtained;
         *LeaseExpires = Reply.GetAdapterInfo.LeaseExpires;
-    } else {
+    }
+    else
+    {
         *DhcpServer = INADDR_NONE;
         *LeaseObtained = 0;
         *LeaseExpires = 0;
@@ -301,22 +321,120 @@ DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
     return Reply.Reply;
 }
 
-INT WINAPI
-DllMain(PVOID hinstDll,
-	ULONG dwReason,
-	PVOID reserved)
+
+static VOID
+UpdateServiceStatus(DWORD dwState)
 {
-   switch (dwReason)
-     {
-     case DLL_PROCESS_ATTACH:
-	DisableThreadLibraryCalls(hinstDll);
-	break;
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwCurrentState = dwState;
 
-     case DLL_PROCESS_DETACH:
-	break;
-     }
+    ServiceStatus.dwControlsAccepted = 0;
 
-   return TRUE;
+    ServiceStatus.dwWin32ExitCode = 0;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint = 0;
+
+    if (dwState == SERVICE_START_PENDING ||
+        dwState == SERVICE_STOP_PENDING  ||
+        dwState == SERVICE_PAUSE_PENDING ||
+        dwState == SERVICE_CONTINUE_PENDING)
+        ServiceStatus.dwWaitHint = 10000;
+    else
+        ServiceStatus.dwWaitHint = 0;
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+}
+
+static DWORD WINAPI
+ServiceControlHandler(DWORD dwControl,
+                      DWORD dwEventType,
+                      LPVOID lpEventData,
+                      LPVOID lpContext)
+{
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_STOP:
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_PAUSE:
+            UpdateServiceStatus(SERVICE_PAUSED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_CONTINUE:
+            UpdateServiceStatus(SERVICE_START_PENDING);
+            UpdateServiceStatus(SERVICE_RUNNING);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            SetServiceStatus(ServiceStatusHandle,
+                             &ServiceStatus);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_SHUTDOWN:
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        default :
+            return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+}
+
+VOID WINAPI
+ServiceMain(DWORD argc, LPWSTR* argv)
+{
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
+                                                        ServiceControlHandler,
+                                                        NULL);
+    if (!ServiceStatusHandle)
+    {
+        DPRINT1("DHCPCSVC: Unable to register service control handler (%lx)\n", GetLastError());
+        return;
+    }
+
+    UpdateServiceStatus(SERVICE_START_PENDING);
+
+    if (!init_client())
+    {
+        DPRINT1("DHCPCSVC: init_client() failed!\n");
+        UpdateServiceStatus(SERVICE_STOPPED);
+        return;
+    }
+
+    DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
+
+    UpdateServiceStatus(SERVICE_RUNNING);
+
+    DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
+    DH_DbgPrint(MID_TRACE,("DHCPCSVC: DHCP service is starting up\n"));
+
+    dispatch();
+
+    DH_DbgPrint(MID_TRACE,("DHCPCSVC: DHCP service is shutting down\n"));
+    stop_client();
+
+    UpdateServiceStatus(SERVICE_STOPPED);
+}
+
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL,
+        DWORD fdwReason,
+        LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            break;
+
+        case DLL_PROCESS_DETACH:
+            break;
+    }
+
+    return TRUE;
 }
 
 /* EOF */

@@ -206,7 +206,7 @@ int _setmbcp_l(int cp, LCID lcid, MSVCRT_pthreadmbcinfo mbcinfo)
   }
 
   mbcinfo->mbcodepage = newcp;
-  if(MSVCRT_locale && mbcinfo == MSVCRT_locale->mbcinfo)
+  if(global_locale && mbcinfo == MSVCRT_locale->mbcinfo)
     memcpy(_mbctype, MSVCRT_locale->mbcinfo->mbctype, sizeof(_mbctype));
 
   return 0;

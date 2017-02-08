@@ -52,16 +52,7 @@
  *       Robert Shearman <rob@codeweavers.com>
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(pager);
 
@@ -753,7 +744,7 @@ static LRESULT
 PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
 {
     POINT clpt, pt;
-    RECT wnrect, *btnrect = NULL;
+    RECT wnrect;
     BOOL topLeft = FALSE;
     INT btnstate = 0;
     INT hit;
@@ -766,8 +757,9 @@ PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
     ClientToScreen(infoPtr->hwndSelf, &pt);
     GetWindowRect(infoPtr->hwndSelf, &wnrect);
     if (PtInRect(&wnrect, pt)) {
-        RECT TLbtnrect, BRbtnrect;
-        PAGER_GetButtonRects(infoPtr, &TLbtnrect, &BRbtnrect, FALSE);
+	RECT topleft, bottomright, *rect = NULL;
+
+	PAGER_GetButtonRects(infoPtr, &topleft, &bottomright, FALSE);
 
 	clpt = pt;
 	MapWindowPoints(0, infoPtr->hwndSelf, &clpt, 1);
@@ -775,23 +767,23 @@ PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
 	if ((hit == PGB_TOPORLEFT) && (infoPtr->TLbtnState == PGF_NORMAL))
 	{
 	    topLeft = TRUE;
-	    btnrect = &TLbtnrect;
+	    rect = &topleft;
 	    infoPtr->TLbtnState = PGF_HOT;
 	    btnstate = infoPtr->TLbtnState;
 	}
 	else if ((hit == PGB_BOTTOMORRIGHT) && (infoPtr->BRbtnState == PGF_NORMAL))
 	{
 	    topLeft = FALSE;
-	    btnrect = &BRbtnrect;
+	    rect = &bottomright;
 	    infoPtr->BRbtnState = PGF_HOT;
 	    btnstate = infoPtr->BRbtnState;
 	}
 
 	/* If in one of the buttons the capture and draw buttons */
-	if (btnrect)
+	if (rect)
 	{
             TRACE("[%p] draw btn (%s), Capture %s, style %08x\n",
-                  infoPtr->hwndSelf, wine_dbgstr_rect(btnrect),
+                  infoPtr->hwndSelf, wine_dbgstr_rect(rect),
 		  (infoPtr->bCapture) ? "TRUE" : "FALSE",
 		  infoPtr->dwStyle);
 	    if (!infoPtr->bCapture)
@@ -804,7 +796,7 @@ PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
 		SetTimer(infoPtr->hwndSelf, TIMERID1, 0x3e, 0);
 	    hdc = GetWindowDC(infoPtr->hwndSelf);
 	    /* OffsetRect(wnrect, 0 | 1, 0 | 1) */
-	    PAGER_DrawButton(hdc, infoPtr->clrBk, *btnrect,
+	    PAGER_DrawButton(hdc, infoPtr->clrBk, *rect,
 			     infoPtr->dwStyle & PGS_HORZ, topLeft, btnstate);
 	    ReleaseDC(infoPtr->hwndSelf, hdc);
 	    return 0;
@@ -985,16 +977,17 @@ PAGER_EraseBackground (const PAGER_INFO* infoPtr, HDC hdc)
 {
     POINT pt, ptorig;
     HWND parent;
+    LRESULT ret;
 
     pt.x = 0;
     pt.y = 0;
     parent = GetParent(infoPtr->hwndSelf);
     MapWindowPoints(infoPtr->hwndSelf, parent, &pt, 1);
     OffsetWindowOrgEx (hdc, pt.x, pt.y, &ptorig);
-    SendMessageW (parent, WM_ERASEBKGND, (WPARAM)hdc, 0);
+    ret = SendMessageW (parent, WM_ERASEBKGND, (WPARAM)hdc, 0);
     SetWindowOrgEx (hdc, ptorig.x, ptorig.y, 0);
 
-    return 0;
+    return ret;
 }
 
 

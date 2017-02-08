@@ -16,8 +16,8 @@
 /* GLOBALS *******************************************************************/
 
 /* Boot and double-fault/NMI/DPC stack */
-UCHAR DECLSPEC_ALIGN(16) P0BootStackData[KERNEL_STACK_SIZE] = {0};
-UCHAR DECLSPEC_ALIGN(16) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(PAGE_SIZE) P0BootStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(PAGE_SIZE) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
 ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
 ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
 
@@ -31,9 +31,9 @@ ULONGLONG BootCycles, BootCyclesEnd;
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitMachineDependent(VOID)
 {
     ULONG CpuCount;
@@ -43,15 +43,20 @@ KiInitMachineDependent(VOID)
     ULONG i, Affinity, Sample = 0;
     PFX_SAVE_AREA FxSaveArea;
     ULONG MXCsrMask = 0xFFBF;
-    ULONG Dummy;
+    CPU_INFO CpuInfo;
     KI_SAMPLE_MAP Samples[4];
     PKI_SAMPLE_MAP CurrentSample = Samples;
+    LARGE_IDENTITY_MAP IdentityMap;
 
     /* Check for large page support */
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
-        /* FIXME: Support this */
-        DPRINT("Large Page support detected but not yet taken advantage of\n");
+        /* Do an IPI to enable it on all CPUs */
+        if (Ki386CreateIdentityMap(&IdentityMap, Ki386EnableCurrentLargePage, 2))
+            KeIpiGenericCall(Ki386EnableTargetLargePage, (ULONG_PTR)&IdentityMap);
+
+        /* Free the pages allocated for identity map */
+        Ki386FreeIdentityMap(&IdentityMap);
     }
 
     /* Check for global page support */
@@ -157,7 +162,7 @@ KiInitMachineDependent(VOID)
             /* FIXME: Implement and enable XMM Page Zeroing for Mm */
 
             /* Patch the RtlPrefetchMemoryNonTemporal routine to enable it */
-            *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+            *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90; // NOP
         }
     }
 
@@ -185,7 +190,7 @@ KiInitMachineDependent(VOID)
                 for (;;)
                 {
                     /* Do a dummy CPUID to start the sample */
-                    CPUID(0, &Dummy, &Dummy, &Dummy, &Dummy);
+                    KiCpuId(&CpuInfo, 0);
 
                     /* Fill out the starting data */
                     CurrentSample->PerfStart = KeQueryPerformanceCounter(NULL);
@@ -198,7 +203,7 @@ KiInitMachineDependent(VOID)
                                            &CurrentSample->PerfFreq);
 
                     /* Do another dummy CPUID */
-                    CPUID(0, &Dummy, &Dummy, &Dummy, &Dummy);
+                    KiCpuId(&CpuInfo, 0);
 
                     /* Fill out the ending data */
                     CurrentSample->PerfEnd =
@@ -319,9 +324,9 @@ KiInitMachineDependent(VOID)
     KiSetCR0Bits();
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKIPCR Pcr,
                 IN PKIDTENTRY Idt,
@@ -381,9 +386,9 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,
@@ -396,6 +401,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG PageDirectory[2];
     PVOID DpcStack;
     ULONG Vendor[3];
+    KIRQL DummyIrql;
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -588,7 +594,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
 
     /* Raise to Dispatch */
-    KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL,
+                &DummyIrql);
 
     /* Set the Idle Priority to 0. This will jump into Phase 1 */
     KeSetPriorityThread(InitThread, 0);
@@ -599,13 +606,14 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     KiReleasePrcbLock(Prcb);
 
     /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
-    KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL,
+                &DummyIrql);
     LoaderBlock->Prcb = 0;
 }
 
+INIT_SECTION
 VOID
 FASTCALL
-INIT_FUNCTION
 KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIDTENTRY *Idt,
                          IN PKIPCR *Pcr,
@@ -644,9 +652,9 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                               TssSelector.HighWord.Bytes.BaseHi << 24);
 }
 
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiSystemStartupBootStack(VOID)
 {
     PKTHREAD Thread;
@@ -665,7 +673,7 @@ KiSystemStartupBootStack(VOID)
 
     /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
     _enable();
-    KfLowerIrql(DISPATCH_LEVEL);
+    KeLowerIrql(DISPATCH_LEVEL);
 
     /* Set the right wait IRQL */
     Thread->WaitIrql = DISPATCH_LEVEL;
@@ -674,9 +682,31 @@ KiSystemStartupBootStack(VOID)
     KiIdleLoop();
 }
 
+static
+VOID
+KiMarkPageAsReadOnly(
+    PVOID Address)
+{
+    PHARDWARE_PTE PointerPte;
+
+    /* Make sure the address is page aligned */
+    ASSERT(ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE) == Address);
+
+    /* Get the PTE address */
+    PointerPte = ((PHARDWARE_PTE)PTE_BASE) + ((ULONG_PTR)Address / PAGE_SIZE);
+    ASSERT(PointerPte->Valid);
+    ASSERT(PointerPte->Write);
+
+    /* Set as read-only */
+    PointerPte->Write = 0;
+
+    /* Flush the TLB entry */
+    __invlpg(Address);
+}
+
+INIT_SECTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
@@ -687,6 +717,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
+    KIRQL DummyIrql;
 
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
@@ -791,10 +822,15 @@ AppCpuInit:
 
         /* Check for break-in */
         if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+
+        /* Make the lowest page of the boot and double fault stack read-only */
+        KiMarkPageAsReadOnly(P0BootStackData);
+        KiMarkPageAsReadOnly(KiDoubleFaultStackData);
     }
 
     /* Raise to HIGH_LEVEL */
-    KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL,
+                &DummyIrql);
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSwitchToBootStack(InitialStack & ~3);

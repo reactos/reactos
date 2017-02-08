@@ -25,6 +25,10 @@ Abstract:
 #define _WIN32_WINNT_WS08                   0x0600
 #define _WIN32_WINNT_LONGHORN               0x0600
 #define _WIN32_WINNT_WIN7                   0x0601
+#define _WIN32_WINNT_WIN8                   0x0602
+#define _WIN32_WINNT_WINBLUE                0x0603
+#define _WIN32_WINNT_WINTHRESHOLD           0x0A00
+#define _WIN32_WINNT_WIN10                  0x0A00
 
 /* _WIN32_IE */
 #define _WIN32_IE_IE20                      0x0200
@@ -40,6 +44,9 @@ Abstract:
 #define _WIN32_IE_IE60SP2                   0x0603
 #define _WIN32_IE_IE70                      0x0700
 #define _WIN32_IE_IE80                      0x0800
+#define _WIN32_IE_IE90                      0x0900
+#define _WIN32_IE_IE100                     0x0A00
+#define _WIN32_IE_IE110                     0x0A00
 
 /* Mappings Between IE Version  and Windows Version */
 #define _WIN32_IE_NT4                       _WIN32_IE_IE20
@@ -65,6 +72,10 @@ Abstract:
 #define _WIN32_IE_WIN6                      _WIN32_IE_IE70
 #define _WIN32_IE_LONGHORN                  _WIN32_IE_IE70
 #define _WIN32_IE_WIN7                      _WIN32_IE_IE80
+#define _WIN32_IE_WIN8                      _WIN32_IE_IE100
+#define _WIN32_IE_WINBLUE                   _WIN32_IE_IE100
+#define _WIN32_IE_WINTHRESHOLD              _WIN32_IE_IE110
+#define _WIN32_IE_WIN10                     _WIN32_IE_IE110
 
 /* NTDDI_VERSION */
 #define NTDDI_WIN2K                         0x05000000
@@ -99,6 +110,9 @@ Abstract:
 #define NTDDI_WS08SP4                       NTDDI_WIN6SP4
 #define NTDDI_WIN7                          0x06010000
 #define NTDDI_WIN8                          0x06020000
+#define NTDDI_WINBLUE                       0x06030000
+#define NTDDI_WINTHRESHOLD                  0x0A000000
+#define NTDDI_WIN10                         0x0A000000
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000UL
@@ -147,12 +161,18 @@ Abstract:
 #elif (_WIN32_WINNT <= _WIN32_WINNT_WINXP)
 #define _WIN32_IE       _WIN32_IE_IE60
 #elif (_WIN32_WINNT <= _WIN32_WINNT_WS03)
-#define _WIN32_IE       0x0602
+#define _WIN32_IE       _WIN32_IE_WS03
+#elif (_WIN32_WINNT <= _WIN32_WINNT_VISTA)
+#define _WIN32_IE       _WIN32_IE_IE70
+#elif (_WIN32_WINNT <= _WIN32_WINNT_WIN7)
+#define _WIN32_IE       _WIN32_IE_IE80
+#elif (_WIN32_WINNT <= _WIN32_WINNT_WIN8)
+#define _WIN32_IE       _WIN32_IE_IE100
 #else
-#define _WIN32_IE       0x0700
+#define _WIN32_IE       _WIN32_IE_IE110
 #endif
 #else
-#define _WIN32_IE       0x0700
+#define _WIN32_IE       _WIN32_IE_IE110
 #endif
 #endif
 

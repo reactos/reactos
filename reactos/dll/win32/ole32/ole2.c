@@ -23,43 +23,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-
-//#include <assert.h>
-//#include <stdlib.h>
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <wingdi.h>
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "winreg.h"
-#include <ole2.h>
-#include <ole2ver.h>
-
-#include <wine/unicode.h>
-#include "compobj_private.h"
-//#include "wine/list.h"
-
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(accel);
 
 /******************************************************************************
  * These are static/global variables and internal data structures that the
- * OLE module uses to maintain it's state.
+ * OLE module uses to maintain its state.
  */
 typedef struct tagTrackerWindowInfo
 {
@@ -72,7 +43,7 @@ typedef struct tagTrackerWindowInfo
 
   BOOL       escPressed;
   HWND       curTargetHWND;	/* window the mouse is hovering over */
-  HWND       curDragTargetHWND; /* might be a ancestor of curTargetHWND */
+  HWND       curDragTargetHWND; /* might be an ancestor of curTargetHWND */
   IDropTarget* curDragTarget;
   POINTL     curMousePos;       /* current position of the mouse in screen coordinates */
   DWORD      dwKeyState;        /* current state of the shift and ctrl keys and the mouse buttons */
@@ -124,11 +95,6 @@ static const WCHAR prop_oledroptarget[] =
 static const WCHAR prop_marshalleddroptarget[] =
   {'W','i','n','e','M','a','r','s','h','a','l','l','e','d','D','r','o','p','T','a','r','g','e','t',0};
 
-static const WCHAR clsidfmtW[] =
-  {'C','L','S','I','D','\\','{','%','0','8','x','-','%','0','4','x','-','%','0','4','x','-',
-   '%','0','2','x','%','0','2','x','-','%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',
-    '%','0','2','x','%','0','2','x','}','\\',0};
-
 static const WCHAR emptyW[] = { 0 };
 
 /******************************************************************************
@@ -160,7 +126,6 @@ extern void OLEClipbrd_Initialize(void);
  */
 static void OLEDD_Initialize(void);
 static LRESULT WINAPI  OLEDD_DragTrackerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo);
 static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo);
 static DWORD OLEDD_GetButtonState(void);
 
@@ -176,7 +141,7 @@ DWORD WINAPI OleBuildVersion(void)
 /***********************************************************************
  *           OleInitialize       (OLE32.@)
  */
-HRESULT WINAPI OleInitialize(LPVOID reserved)
+HRESULT WINAPI DECLSPEC_HOTPATCH OleInitialize(LPVOID reserved)
 {
   HRESULT hr;
 
@@ -196,6 +161,8 @@ HRESULT WINAPI OleInitialize(LPVOID reserved)
 
   if (!COM_CurrentInfo()->ole_inits)
     hr = S_OK;
+  else
+    hr = S_FALSE;
 
   /*
    * Then, it has to initialize the OLE specific modules.
@@ -235,10 +202,15 @@ HRESULT WINAPI OleInitialize(LPVOID reserved)
 /******************************************************************************
  *		OleUninitialize	[OLE32.@]
  */
-void WINAPI OleUninitialize(void)
+void WINAPI DECLSPEC_HOTPATCH OleUninitialize(void)
 {
   TRACE("()\n");
 
+  if (COM_CurrentInfo()->ole_inits == 0)
+  {
+    WARN("ole_inits is already 0\n");
+    return ;
+  }
   /*
    * If we hit the bottom of the lock stack, free the libraries.
    */
@@ -671,88 +643,73 @@ HRESULT WINAPI RevokeDragDrop(HWND hwnd)
 
 /***********************************************************************
  *           OleRegGetUserType (OLE32.@)
- *
- * This implementation of OleRegGetUserType ignores the dwFormOfType
- * parameter and always returns the full name of the object. This is
- * not too bad since this is the case for many objects because of the
- * way they are registered.
  */
-HRESULT WINAPI OleRegGetUserType(
-	REFCLSID clsid,
-	DWORD dwFormOfType,
-	LPOLESTR* pszUserType)
+HRESULT WINAPI OleRegGetUserType(REFCLSID clsid, DWORD form, LPOLESTR *usertype)
 {
-  WCHAR   keyName[60];
-  DWORD   dwKeyType;
-  DWORD   cbData;
-  HKEY    clsidKey;
-  LONG    hres;
+  static const WCHAR auxusertypeW[] = {'A','u','x','U','s','e','r','T','y','p','e','\\','%','d',0};
+  DWORD valuetype, valuelen;
+  WCHAR auxkeynameW[16];
+  HKEY    usertypekey;
+  HRESULT hres;
+  LONG    ret;
 
-  /*
-   * Initialize the out parameter.
-   */
-  *pszUserType = NULL;
+  TRACE("(%s, %u, %p)\n", debugstr_guid(clsid), form, usertype);
 
-  /*
-   * Build the key name we're looking for
-   */
-  sprintfW( keyName, clsidfmtW,
-            clsid->Data1, clsid->Data2, clsid->Data3,
-            clsid->Data4[0], clsid->Data4[1], clsid->Data4[2], clsid->Data4[3],
-            clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7] );
+  if (!usertype)
+    return E_INVALIDARG;
 
-  TRACE("(%s, %d, %p)\n", debugstr_w(keyName), dwFormOfType, pszUserType);
+  *usertype = NULL;
 
-  /*
-   * Open the class id Key
-   */
-  hres = open_classes_key(HKEY_CLASSES_ROOT, keyName, MAXIMUM_ALLOWED, &clsidKey);
-  if (hres != ERROR_SUCCESS)
-    return REGDB_E_CLASSNOTREG;
+  /* Return immediately if it's not registered. */
+  hres = COM_OpenKeyForCLSID(clsid, NULL, KEY_READ, &usertypekey);
+  if (FAILED(hres))
+    return hres;
 
-  /*
-   * Retrieve the size of the name string.
-   */
-  cbData = 0;
+  valuelen = 0;
 
-  hres = RegQueryValueExW(clsidKey,
-			  emptyW,
-			  NULL,
-			  &dwKeyType,
-			  NULL,
-			  &cbData);
-
-  if (hres!=ERROR_SUCCESS)
+  /* Try additional types if requested. If they don't exist fall back to USERCLASSTYPE_FULL. */
+  if (form != USERCLASSTYPE_FULL)
   {
-    RegCloseKey(clsidKey);
+    HKEY auxkey;
+
+    sprintfW(auxkeynameW, auxusertypeW, form);
+    if (COM_OpenKeyForCLSID(clsid, auxkeynameW, KEY_READ, &auxkey) == S_OK)
+    {
+      if (!RegQueryValueExW(auxkey, emptyW, NULL, &valuetype, NULL, &valuelen) && valuelen)
+      {
+        RegCloseKey(usertypekey);
+        usertypekey = auxkey;
+      }
+      else
+        RegCloseKey(auxkey);
+    }
+  }
+
+  valuelen = 0;
+  if (RegQueryValueExW(usertypekey, emptyW, NULL, &valuetype, NULL, &valuelen))
+  {
+    RegCloseKey(usertypekey);
     return REGDB_E_READREGDB;
   }
 
-  /*
-   * Allocate a buffer for the registry value.
-   */
-  *pszUserType = CoTaskMemAlloc(cbData);
-
-  if (*pszUserType==NULL)
+  *usertype = CoTaskMemAlloc(valuelen);
+  if (!*usertype)
   {
-    RegCloseKey(clsidKey);
+    RegCloseKey(usertypekey);
     return E_OUTOFMEMORY;
   }
 
-  hres = RegQueryValueExW(clsidKey,
+  ret = RegQueryValueExW(usertypekey,
 			  emptyW,
 			  NULL,
-			  &dwKeyType,
-			  (LPBYTE) *pszUserType,
-			  &cbData);
-
-  RegCloseKey(clsidKey);
-
-  if (hres != ERROR_SUCCESS)
+			  &valuetype,
+			  (LPBYTE)*usertype,
+			  &valuelen);
+  RegCloseKey(usertypekey);
+  if (ret != ERROR_SUCCESS)
   {
-    CoTaskMemFree(*pszUserType);
-    *pszUserType = NULL;
-
+    CoTaskMemFree(*usertype);
+    *usertype = NULL;
     return REGDB_E_READREGDB;
   }
 
@@ -878,47 +835,25 @@ HRESULT WINAPI OleRegGetMiscStatus(
 {
   static const WCHAR miscstatusW[] = {'M','i','s','c','S','t','a','t','u','s',0};
   static const WCHAR dfmtW[] = {'%','d',0};
-  WCHAR   keyName[60];
-  HKEY    clsidKey;
+  WCHAR   keyName[16];
   HKEY    miscStatusKey;
   HKEY    aspectKey;
   LONG    result;
+  HRESULT hr;
 
-  /*
-   * Initialize the out parameter.
-   */
+  TRACE("(%s, %d, %p)\n", debugstr_guid(clsid), dwAspect, pdwStatus);
+
+  if (!pdwStatus) return E_INVALIDARG;
+
   *pdwStatus = 0;
 
-  /*
-   * Build the key name we're looking for
-   */
-  sprintfW( keyName, clsidfmtW,
-            clsid->Data1, clsid->Data2, clsid->Data3,
-            clsid->Data4[0], clsid->Data4[1], clsid->Data4[2], clsid->Data4[3],
-            clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7] );
+  if (actctx_get_miscstatus(clsid, dwAspect, pdwStatus)) return S_OK;
 
-  TRACE("(%s, %d, %p)\n", debugstr_w(keyName), dwAspect, pdwStatus);
+  hr = COM_OpenKeyForCLSID(clsid, miscstatusW, KEY_READ, &miscStatusKey);
+  if (FAILED(hr))
+    /* missing key is not a failure */
+    return hr == REGDB_E_KEYMISSING ? S_OK : hr;
 
-  /*
-   * Open the class id Key
-   */
-  result = open_classes_key(HKEY_CLASSES_ROOT, keyName, MAXIMUM_ALLOWED, &clsidKey);
-  if (result != ERROR_SUCCESS)
-    return REGDB_E_CLASSNOTREG;
-
-  /*
-   * Get the MiscStatus
-   */
-  result = open_classes_key(clsidKey, miscstatusW, MAXIMUM_ALLOWED, &miscStatusKey);
-  if (result != ERROR_SUCCESS)
-  {
-    RegCloseKey(clsidKey);
-    return REGDB_E_READREGDB;
-  }
-
-  /*
-   * Read the default value
-   */
   OLEUTL_ReadRegistryDWORDValue(miscStatusKey, pdwStatus);
 
   /*
@@ -926,19 +861,14 @@ HRESULT WINAPI OleRegGetMiscStatus(
    */
   sprintfW(keyName, dfmtW, dwAspect);
 
-  result = open_classes_key(miscStatusKey, keyName, MAXIMUM_ALLOWED, &aspectKey);
+  result = open_classes_key(miscStatusKey, keyName, KEY_READ, &aspectKey);
   if (result == ERROR_SUCCESS)
   {
     OLEUTL_ReadRegistryDWORDValue(aspectKey, pdwStatus);
     RegCloseKey(aspectKey);
   }
 
-  /*
-   * Cleanup
-   */
   RegCloseKey(miscStatusKey);
-  RegCloseKey(clsidKey);
-
   return S_OK;
 }
 
@@ -1239,7 +1169,7 @@ HRESULT WINAPI OleSetContainedObject(
  *  Success: S_OK.
  *  Failure: Any HRESULT code.
  */
-HRESULT WINAPI OleRun(LPUNKNOWN pUnknown)
+HRESULT WINAPI DECLSPEC_HOTPATCH OleRun(LPUNKNOWN pUnknown)
 {
     IRunnableObject *runable;
     HRESULT hres;
@@ -1282,6 +1212,8 @@ HRESULT WINAPI OleLoad(
    * Get the class ID for the object.
    */
   hres = IStorage_Stat(pStg, &storageInfo, STATFLAG_NONAME);
+  if (FAILED(hres))
+    return hres;
 
   /*
    * Now, try and create the handler for the object
@@ -1334,7 +1266,7 @@ HRESULT WINAPI OleLoad(
 
   if (SUCCEEDED(hres) && pClientSite)
     /*
-     * Inform the new object of it's client site.
+     * Inform the new object of its client site.
      */
     hres = IOleObject_SetClientSite(pOleObject, pClientSite);
 
@@ -2201,10 +2133,6 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     }
     case WM_TIMER:
     case WM_MOUSEMOVE:
-    {
-      OLEDD_TrackMouseMove((TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0));
-      break;
-    }
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
@@ -2212,7 +2140,9 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN:
     {
-      OLEDD_TrackStateChange((TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0));
+      TrackerWindowInfo *trackerInfo = (TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0);
+      if (trackerInfo->trackingDone) break;
+      OLEDD_TrackStateChange(trackerInfo);
       break;
     }
     case WM_DESTROY:
@@ -2229,19 +2159,16 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
 }
 
 /***
- * OLEDD_TrackMouseMove()
+ * OLEDD_TrackStateChange()
  *
  * This method is invoked while a drag and drop operation is in effect.
- * it will generate the appropriate callbacks in the drop source
- * and drop target. It will also provide the expected feedback to
- * the user.
  *
  * params:
  *    trackerInfo - Pointer to the structure identifying the
  *                  drag & drop operation that is currently
  *                  active.
  */
-static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
+static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
 {
   HWND   hwndNewTarget = 0;
   HRESULT  hr = S_OK;
@@ -2253,6 +2180,10 @@ static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
   pt.x = trackerInfo->curMousePos.x;
   pt.y = trackerInfo->curMousePos.y;
   hwndNewTarget = WindowFromPoint(pt);
+
+  trackerInfo->returnValue = IDropSource_QueryContinueDrag(trackerInfo->dropSource,
+                                                           trackerInfo->escPressed,
+                                                           trackerInfo->dwKeyState);
 
   /*
    * Every time, we re-initialize the effects passed to the
@@ -2270,7 +2201,8 @@ static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
     IDropTarget_DragOver(trackerInfo->curDragTarget,
                          trackerInfo->dwKeyState,
                          trackerInfo->curMousePos,
-			 trackerInfo->pdwEffect);
+                         trackerInfo->pdwEffect);
+    *trackerInfo->pdwEffect &= trackerInfo->dwOKEffect;
   }
   else
   {
@@ -2312,6 +2244,7 @@ static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
                                    trackerInfo->dwKeyState,
                                    trackerInfo->curMousePos,
                                    trackerInfo->pdwEffect);
+        *trackerInfo->pdwEffect &= trackerInfo->dwOKEffect;
 
         /* failed DragEnter() means invalid target */
         if (hr != S_OK)
@@ -2377,29 +2310,6 @@ static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
 
     SetCursor(hCur);
   }
-}
-
-/***
- * OLEDD_TrackStateChange()
- *
- * This method is invoked while a drag and drop operation is in effect.
- * It is used to notify the drop target/drop source callbacks when
- * the state of the keyboard or mouse button change.
- *
- * params:
- *    trackerInfo - Pointer to the structure identifying the
- *                  drag & drop operation that is currently
- *                  active.
- */
-static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
-{
-  /*
-   * Ask the drop source what to do with the operation.
-   */
-  trackerInfo->returnValue = IDropSource_QueryContinueDrag(
-			       trackerInfo->dropSource,
-			       trackerInfo->escPressed,
-                               trackerInfo->dwKeyState);
 
   /*
    * All the return valued will stop the operation except the S_OK
@@ -2432,18 +2342,19 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
 	 */
         case DRAGDROP_S_DROP:
           if (*trackerInfo->pdwEffect != DROPEFFECT_NONE)
-            IDropTarget_Drop(trackerInfo->curDragTarget,
-                             trackerInfo->dataObject,
-                             trackerInfo->dwKeyState,
-                             trackerInfo->curMousePos,
-                             trackerInfo->pdwEffect);
+          {
+            hr = IDropTarget_Drop(trackerInfo->curDragTarget, trackerInfo->dataObject,
+                    trackerInfo->dwKeyState, trackerInfo->curMousePos, trackerInfo->pdwEffect);
+            if (FAILED(hr))
+              trackerInfo->returnValue = hr;
+          }
           else
             IDropTarget_DragLeave(trackerInfo->curDragTarget);
           break;
 
 	/*
 	 * If the source told us that we should cancel, fool the drop
-	 * target by telling it that the mouse left it's window.
+         * target by telling it that the mouse left its window.
 	 * Also set the drop effect to "NONE" in case the application
 	 * ignores the result of DoDragDrop.
 	 */
@@ -2475,6 +2386,9 @@ static DWORD OLEDD_GetButtonState(void)
 
   if ( (keyboardState[VK_CONTROL] & 0x80) !=0)
     keyMask |= MK_CONTROL;
+
+  if ( (keyboardState[VK_MENU] & 0x80) !=0)
+    keyMask |= MK_ALT;
 
   if ( (keyboardState[VK_LBUTTON] & 0x80) !=0)
     keyMask |= MK_LBUTTON;
@@ -2612,7 +2526,7 @@ HRESULT WINAPI OleCreate(
         if (SUCCEEDED(hres))
         {
             DWORD dwStatus;
-            hres = IOleObject_GetMiscStatus(pOleObject, DVASPECT_CONTENT, &dwStatus);
+            IOleObject_GetMiscStatus(pOleObject, DVASPECT_CONTENT, &dwStatus);
         }
     }
 
@@ -2641,21 +2555,12 @@ HRESULT WINAPI OleCreate(
     if (((renderopt == OLERENDER_DRAW) || (renderopt == OLERENDER_FORMAT)) &&
         SUCCEEDED(hres))
     {
-        IRunnableObject *pRunnable;
-        IOleCache *pOleCache;
-        HRESULT hres2;
-
-        hres2 = IUnknown_QueryInterface(pUnk, &IID_IRunnableObject, (void **)&pRunnable);
-        if (SUCCEEDED(hres2))
-        {
-            hres = IRunnableObject_Run(pRunnable, NULL);
-            IRunnableObject_Release(pRunnable);
-        }
-
+        hres = OleRun(pUnk);
         if (SUCCEEDED(hres))
         {
-            hres2 = IUnknown_QueryInterface(pUnk, &IID_IOleCache, (void **)&pOleCache);
-            if (SUCCEEDED(hres2))
+            IOleCache *pOleCache;
+
+            if (SUCCEEDED(IUnknown_QueryInterface(pUnk, &IID_IOleCache, (void **)&pOleCache)))
             {
                 DWORD dwConnection;
                 if (renderopt == OLERENDER_DRAW && !pFormatEtc) {
@@ -2745,8 +2650,59 @@ done:
  */
 HRESULT WINAPI OleDoAutoConvert(LPSTORAGE pStg, LPCLSID pClsidNew)
 {
-    FIXME("(%p,%p) : stub\n",pStg,pClsidNew);
-    return E_NOTIMPL;
+    WCHAR *user_type_old, *user_type_new;
+    CLIPFORMAT cf;
+    STATSTG stat;
+    CLSID clsid;
+    HRESULT hr;
+
+    TRACE("(%p, %p)\n", pStg, pClsidNew);
+
+    *pClsidNew = CLSID_NULL;
+    if(!pStg)
+        return E_INVALIDARG;
+    hr = IStorage_Stat(pStg, &stat, STATFLAG_NONAME);
+    if(FAILED(hr))
+        return hr;
+
+    *pClsidNew = stat.clsid;
+    hr = OleGetAutoConvert(&stat.clsid, &clsid);
+    if(FAILED(hr))
+        return hr;
+
+    hr = IStorage_SetClass(pStg, &clsid);
+    if(FAILED(hr))
+        return hr;
+
+    hr = ReadFmtUserTypeStg(pStg, &cf, &user_type_old);
+    if(FAILED(hr)) {
+        cf = 0;
+        user_type_new = NULL;
+    }
+
+    hr = OleRegGetUserType(&clsid, USERCLASSTYPE_FULL, &user_type_new);
+    if(FAILED(hr))
+        user_type_new = NULL;
+
+    hr = WriteFmtUserTypeStg(pStg, cf, user_type_new);
+    CoTaskMemFree(user_type_new);
+    if(FAILED(hr))
+    {
+        CoTaskMemFree(user_type_old);
+        IStorage_SetClass(pStg, &stat.clsid);
+        return hr;
+    }
+
+    hr = SetConvertStg(pStg, TRUE);
+    if(FAILED(hr))
+    {
+        WriteFmtUserTypeStg(pStg, cf, user_type_old);
+        IStorage_SetClass(pStg, &stat.clsid);
+    }
+    else
+        *pClsidNew = clsid;
+    CoTaskMemFree(user_type_old);
+    return hr;
 }
 
 /******************************************************************************
@@ -2839,10 +2795,14 @@ static inline HRESULT PROPVARIANT_ValidateType(VARTYPE vt)
     case VT_UI2:
     case VT_UI4:
     case VT_UI8:
+    case VT_INT:
+    case VT_UINT:
     case VT_LPSTR:
     case VT_LPWSTR:
     case VT_FILETIME:
     case VT_BLOB:
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STORAGE:
     case VT_STREAMED_OBJECT:
@@ -2891,7 +2851,10 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
 
     hr = PROPVARIANT_ValidateType(pvar->vt);
     if (FAILED(hr))
+    {
+        memset(pvar, 0, sizeof(*pvar));
         return hr;
+    }
 
     switch(pvar->vt)
     {
@@ -2912,8 +2875,12 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
     case VT_UI2:
     case VT_UI4:
     case VT_UI8:
+    case VT_INT:
+    case VT_UINT:
     case VT_FILETIME:
         break;
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STREAMED_OBJECT:
     case VT_STORAGE:
@@ -2976,12 +2943,14 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
             }
         }
         else
+        {
             WARN("Invalid/unsupported type %d\n", pvar->vt);
+            hr = STG_E_INVALIDPARAMETER;
+        }
     }
 
-    ZeroMemory(pvar, sizeof(*pvar));
-
-    return S_OK;
+    memset(pvar, 0, sizeof(*pvar));
+    return hr;
 }
 
 /***********************************************************************
@@ -2997,7 +2966,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
 
     hr = PROPVARIANT_ValidateType(pvarSrc->vt);
     if (FAILED(hr))
-        return hr;
+        return DISP_E_BADVARTYPE;
 
     /* this will deal with most cases */
     *pvarDest = *pvarSrc;
@@ -3018,30 +2987,41 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
     case VT_ERROR:
     case VT_I8:
     case VT_UI8:
+    case VT_INT:
+    case VT_UINT:
     case VT_R8:
     case VT_CY:
     case VT_DATE:
     case VT_FILETIME:
         break;
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STREAMED_OBJECT:
     case VT_STORAGE:
     case VT_STORED_OBJECT:
-        IUnknown_AddRef((LPUNKNOWN)pvarDest->u.pStream);
+        if (pvarDest->u.pStream)
+            IStream_AddRef(pvarDest->u.pStream);
         break;
     case VT_CLSID:
         pvarDest->u.puuid = CoTaskMemAlloc(sizeof(CLSID));
         *pvarDest->u.puuid = *pvarSrc->u.puuid;
         break;
     case VT_LPSTR:
-        len = strlen(pvarSrc->u.pszVal);
-        pvarDest->u.pszVal = CoTaskMemAlloc((len+1)*sizeof(CHAR));
-        CopyMemory(pvarDest->u.pszVal, pvarSrc->u.pszVal, (len+1)*sizeof(CHAR));
+        if (pvarSrc->u.pszVal)
+        {
+            len = strlen(pvarSrc->u.pszVal);
+            pvarDest->u.pszVal = CoTaskMemAlloc((len+1)*sizeof(CHAR));
+            CopyMemory(pvarDest->u.pszVal, pvarSrc->u.pszVal, (len+1)*sizeof(CHAR));
+        }
         break;
     case VT_LPWSTR:
-        len = lstrlenW(pvarSrc->u.pwszVal);
-        pvarDest->u.pwszVal = CoTaskMemAlloc((len+1)*sizeof(WCHAR));
-        CopyMemory(pvarDest->u.pwszVal, pvarSrc->u.pwszVal, (len+1)*sizeof(WCHAR));
+        if (pvarSrc->u.pwszVal)
+        {
+            len = lstrlenW(pvarSrc->u.pwszVal);
+            pvarDest->u.pwszVal = CoTaskMemAlloc((len+1)*sizeof(WCHAR));
+            CopyMemory(pvarDest->u.pwszVal, pvarSrc->u.pwszVal, (len+1)*sizeof(WCHAR));
+        }
         break;
     case VT_BLOB:
     case VT_BLOB_OBJECT:
@@ -3101,7 +3081,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
                 return E_INVALIDARG;
             }
             len = pvarSrc->u.capropvar.cElems;
-            pvarDest->u.capropvar.pElems = CoTaskMemAlloc(len * elemSize);
+            pvarDest->u.capropvar.pElems = len ? CoTaskMemAlloc(len * elemSize) : NULL;
             if (pvarSrc->vt == (VT_VECTOR | VT_VARIANT))
             {
                 for (i = 0; i < len; i++)

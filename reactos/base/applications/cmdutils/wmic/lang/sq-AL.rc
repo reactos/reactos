@@ -1,0 +1,12 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+* DATE OF TR: 29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Gabim: Linja e komandave jo e mbështetur\n"
+    STRING_ALIAS_NOT_FOUND, "Gabim: Pseudonimi nuk u gjend\n"
+    STRING_INVALID_QUERY, "Gabim: Kërkim pa vlere\n"
+}

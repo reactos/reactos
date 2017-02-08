@@ -1,0 +1,24 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "プログラムの終了 - "
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "プログラムを終了しています... しばらくお待ちください", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "プログラムをすぐに終了させるよう選択した場合、保存されていないデータはすべて失われます。プログラムを終了するには[すぐに終了]をクリックしてください。", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "すぐに終了(&E)", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "プログラムの終了 - "
+FONT 9, "MS UI Gothic"
+BEGIN
+    DEFPUSHBUTTON "キャンセル", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "すぐに終了(&E)", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "このプログラムは応答していません", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "ReactOS に戻ってプログラムの状態を確認するには[キャンセル]をクリックしてください", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "プログラムをすぐに終了させるよう選択した場合、保存されていないデータはすべて失われます。プログラムを直ちに終了するには[すぐに終了]をクリックしてください", IDC_STATIC, 7, 53, 178, 26
+END

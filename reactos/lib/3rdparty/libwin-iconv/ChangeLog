@@ -1,0 +1,161 @@
+2014-02-05  Yukihiro Nakadaira
+
+	* win_iconv.c: Added alias.  ISO_8859-* ISO_8859_*
+	* win_iconv.c, win_iconv_test.c: Fixed for compiler warning.
+
+2013-09-15  Yukihiro Nakadaira
+
+	* iconv.h: Fixed c++ style comment. (Issue 21) (Thanks to bgilbert)
+
+2012-11-22  Yukihiro Nakadaira
+
+	* win_iconv.c: Fix warnings.
+	(Issue 19) (Thanks to yselkowitz)
+
+2012-10-21  Yukihiro Nakadaira
+
+	* win_iconv.c, win_iconv_test.c: Add //ignore and -c flag.
+
+2012-10-15  Yukihiro Nakadaira
+
+	* win_iconv.c, win_iconv_test.c: cosmetic change.
+
+2012-09-19  Yukihiro Nakadaira
+
+	* iconv.h, win_iconv.c, win_iconv_test.c: Change iconv(3) prototype.
+	"const char **inbuf" -> "char **inbuf"
+	(Issue 8)
+
+	* win_iconv.c: Change to not use TEXT macro for GetProcAddress.
+	(Issue 17) (Thanks to EPienkowskia)
+
+	* win_iconv_test.c: Fix for -DUNICODE.  Use GetModuleFileNameA.
+
+2011-10-28  Yukihiro Nakadaira
+
+	* win_iconv.c: Add UCS-2.
+	(Issue 14) (Thanks to j.g.rennison)
+
+2011-10-24  Yukihiro Nakadaira
+
+	* win_iconv.c: Add Big5-HKSCS alias.
+	(Issue 13) (Thanks to timothy.ty.lee)
+
+2011-09-06  Yukihiro Nakadaira
+
+	* Makefile: Improvement of the creation of the DLL.
+	(Issue 10) (Thanks to vincent.torri)
+
+2011-08-19  Yukihiro Nakadaira
+
+	* win_iconv.c: Fixed a bug that assumption that
+	sizeof(DWORD)==sizeof(void*) in find_imported_module_by_funcname.
+	(Issue 7) (Thanks to j.g.rennison)
+
+2011-08-13  Yukihiro Nakadaira
+
+	* win_iconv.c, win_iconv_test.c: Fixed a bug that //translit
+	flag does not work when transliterating to the default
+	character.
+	(Issue 9) (Thanks to j.g.rennison)
+
+2011-07-26  Yukihiro Nakadaira
+
+	* CMakeLists.txt: fix dll name with mingw.
+	(Issue 6) (Thanks to kalevlember)
+
+
+2011-05-19  Yukihiro Nakadaira
+
+	* win_iconv.c: Add some more UCS aliases.
+	Merge from Tor Lillqvist version.
+	(Issue 4) (Thanks to mkbosmans)
+
+2011-05-15  Yukihiro Nakadaira
+
+	* Makefile: use variable for tools in Makefile
+	(Issue 3) (Thanks to mkbosmans)
+
+2011-01-13  Yukihiro Nakadaira
+
+	* win_iconv_test.c: Removed unused variable.
+
+	* win_iconv_test.c: Added USE_ICONV_H flag to compile with -liconv.
+	(Issue 2) (Thanks to amorilia.gamebox)
+
+2010-04-14  Patrick von Reth
+
+	* added c++ support
+
+2010-03-28  Patrick Spendrin
+
+    * CMakeLists.txt, win_iconv.c: add CMake buildsystem, fix bug from issue tracker
+
+2009-07-25  Yukihiro Nakadaira
+
+	* win_iconv.c, readme.txt: doc fix
+
+2009-07-06  Yukihiro Nakadaira
+
+	* win_iconv.c, Makefile, readme.txt: doc fix
+
+2009-06-19  Yukihiro Nakadaira
+
+	* win_iconv.c: cosmetic change
+	* win_iconv.c: Change Unicode BOM behavior
+	1. Remove the BOM when "fromcode" is utf-16 or utf-32.
+	2. Add the BOM when "tocode" is utf-16 or utf-32.
+
+2009-06-18  Yukihiro Nakadaira
+
+	* win_iconv.c: Fixed a bug that invalid input may cause an
+	endless loop
+
+2009-06-18  Yukihiro Nakadaira
+
+	* win_iconv.c: Fixed a bug that libiconv_iconv_open() doesn't
+	work (Christophe Benoit)
+
+2008-04-01  Yukihiro Nakadaira
+
+	* win_iconv.c: Added //TRANSLIT option.
+	http://bugzilla.gnome.org/show_bug.cgi?id=524314
+
+2008-03-20  Yukihiro Nakadaira
+
+	* win_iconv.c: The dwFlags parameter to MultiByteToWideChars()
+	must be zero for some code pages (Tor Lillqvist)
+
+2008-03-19  Yukihiro Nakadaira
+
+	* win_iconv.c: Added support for UCS-2 and GB18030 (Tor Lillqvist)
+
+2007-12-03  Yukihiro Nakadaira
+
+	* iconv.h: #include <stddef.h> to use size_t
+
+2007-11-28  Yukihiro Nakadaira
+
+	* win_iconv.c: bug fix for two things (Tor Lillqvist)
+	1) This is probably not important: Add a function
+	   must_use_null_useddefaultchar() that checks for those
+	   codepages for which the docs for WideCharToMultiByte() say
+	   one has to use a NULL lpDefaultChar pointer. Don't know if
+	   this is actually needed, but better to be safe than sorry.
+	2) This is essential: In kernel_wctomb(), the code should first
+	   check if bufsize is zero, and return the E2BIG error in that
+	   case.
+
+2007-11-26  Yukihiro Nakadaira
+
+	* win_iconv.c: ISO-8859-1 should be CP28591, not CP1252 (Tor
+	Lillqvist)
+
+2007-11-26  Yukihiro Nakadaira
+
+	* win_iconv.c: patch from Tor Lillqvist (with alteration)
+
+2007-09-04  Yukihiro Nakadaira
+
+	* : Initial import
+ 

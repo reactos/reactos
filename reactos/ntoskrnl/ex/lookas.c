@@ -90,7 +90,7 @@ ExInitPoolLookasidePointers(VOID)
 VOID
 NTAPI
 INIT_FUNCTION
-ExpInitLookasideLists()
+ExpInitLookasideLists(VOID)
 {
     ULONG i;
 

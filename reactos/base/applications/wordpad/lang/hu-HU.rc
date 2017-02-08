@@ -1,0 +1,261 @@
+/*
+ * Copyright 2006 Andras Kovacs
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+IDM_MAINMENU MENU
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "&Új...\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Megnyitás...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "M&entés\tCtrl+S",       ID_FILE_SAVE
+        MENUITEM "Mentés má&sként...",    ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",     ID_PRINT
+        MENUITEM "Print previe&w...",     ID_PREVIEW
+        MENUITEM "Page setup...",         ID_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Kilépés",              ID_FILE_EXIT
+    END
+    POPUP "Sz&erkesztés"
+    BEGIN
+        MENUITEM "&Visszavonás\tCtrl+Z",        ID_EDIT_UNDO
+        MENUITEM "&Előre\tCtrl+Y",              ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Kiv&ágás\tCtrl+X",            ID_EDIT_CUT
+        MENUITEM "Má&solás\tCtrl+C",            ID_EDIT_COPY
+        MENUITEM "&Beillesztés\tCtrl+V",        ID_EDIT_PASTE
+        MENUITEM "Tör&lés\tDel",                ID_EDIT_CLEAR
+        MENUITEM "M&indet kijelöli\tCtrl+A",    ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_FIND
+        MENUITEM "Find &next\tF3",              ID_FIND_NEXT
+        MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Csak &olvasható",             ID_EDIT_READONLY
+        MENUITEM "Mó&dosítva",                  ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "&Extrák"
+        BEGIN
+            MENUITEM "Kijelölés &információ",             ID_EDIT_SELECTIONINFO
+            MENUITEM "Karakter&formátum",                 ID_EDIT_CHARFORMAT
+            MENUITEM "A&laprtelmezett karakter formátum", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Bekezdés formátum",                ID_EDIT_PARAFORMAT
+            MENUITEM "Sz&övegszerzés",                    ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",        ID_TOGGLE_TOOLBAR
+        MENUITEM "&Format Bar",     ID_TOGGLE_FORMATBAR
+        MENUITEM "&Ruler",          ID_TOGGLE_RULER
+        MENUITEM "&Status Bar",     ID_TOGGLE_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",     ID_VIEWPROPERTIES
+    END
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "&Date and time...",  ID_DATETIME
+    END
+    POPUP "F&ormátum"
+    BEGIN
+        MENUITEM "&Font...",                     ID_FONTSETTINGS
+        MENUITEM "&Bullet points",               ID_BULLET
+        MENUITEM "&Paragraph...",                ID_PARAFORMAT
+        MENUITEM "&Tabs...",                     ID_TABSTOPS
+        POPUP "&Háttér"
+        BEGIN
+            MENUITEM "&Rendszer\tCtrl+1",       ID_BACK_1
+            MENUITEM "&Sárgában kérem\tCtrl+2",        ID_BACK_2
+        END
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Wine Wordpad",      ID_ABOUT
+    END
+END
+
+IDM_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Kiv&ágás\tCtrl+X",     ID_EDIT_CUT
+        MENUITEM "Má&solás\tCtrl+C",     ID_EDIT_COPY
+        MENUITEM "&Beillesztés\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bullet points",       ID_BULLET
+        MENUITEM "&Paragraph...",        ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Black",      ID_COLOR_BLACK
+        MENUITEM "Maroon",     ID_COLOR_MAROON
+        MENUITEM "Green",      ID_COLOR_GREEN
+        MENUITEM "Olive",      ID_COLOR_OLIVE
+        MENUITEM "Navy",       ID_COLOR_NAVY
+        MENUITEM "Purple",     ID_COLOR_PURPLE
+        MENUITEM "Teal",       ID_COLOR_TEAL
+        MENUITEM "Gray",       ID_COLOR_GRAY
+        MENUITEM "Silver",     ID_COLOR_SILVER
+        MENUITEM "Red",        ID_COLOR_RED
+        MENUITEM "Lime",       ID_COLOR_LIME
+        MENUITEM "Yellow",     ID_COLOR_YELLOW
+        MENUITEM "Blue",       ID_COLOR_BLUE
+        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
+        MENUITEM "Aqua",       ID_COLOR_AQUA
+        MENUITEM "White",      ID_COLOR_WHITE
+        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALL_FILES,              "All documents (*.*)"
+    STRING_TEXT_FILES_TXT,         "Text documents (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Unicode text document (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "Rich text format (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Rich text document"
+    STRING_NEWFILE_TXT,            "Text document"
+    STRING_NEWFILE_TXT_UNICODE,    "Unicode text document"
+    STRING_PRINTER_FILES_PRN,      "Printer files (*.prn)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "Left"
+    STRING_ALIGN_RIGHT,           "Right"
+    STRING_ALIGN_CENTER,          "Center"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,          "Options"
+    STRING_VIEWPROPS_TEXT,           "Text"
+    STRING_VIEWPROPS_RICHTEXT,       "Rich text"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PREVIEW_PRINT,            "Print"
+    STRING_PREVIEW_NEXTPAGE,         "Next page"
+    STRING_PREVIEW_PREVPAGE,         "Previous page"
+    STRING_PREVIEW_TWOPAGES,         "Two pages"
+    STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
+    STRING_PREVIEW_CLOSE,            "Close"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "in"
+    STRING_UNITS_INCH,               "inch"
+    STRING_UNITS_PT,                 "pt"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,     "Document"
+    STRING_PROMPT_SAVE_CHANGES,  "Save changes to '%s'?"
+    STRING_SEARCH_FINISHED,      "Finished searching the document."
+    STRING_LOAD_RICHED_FAILED,   "Failed to load the RichEdit library."
+    STRING_SAVE_LOSEFORMATTING,  "You have chosen to save in plain text format, which will cause all formatting to be lost. Are you sure that you wish to do this?"
+    STRING_INVALID_NUMBER,       "Invalid number format."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported."
+    STRING_WRITE_FAILED,              "Could not save the file."
+    STRING_WRITE_ACCESS_DENIED,       "You do not have access to save the file."
+    STRING_OPEN_FAILED,               "Could not open the file."
+    STRING_OPEN_ACCESS_DENIED,        "You do not have access to open the file."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Printing not implemented."
+    STRING_MAX_TAB_STOPS,             "Cannot add more than 32 tab stops."
+END
+
+IDD_DATETIME DIALOGEX 30, 20, 130, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Date and time"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Available formats",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "OK",IDOK,87,12,40,12
+    PUSHBUTTON   "Cancel",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOGEX 30, 20, 140, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "New"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "New document type",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "OK",IDOK,97,12,40,12
+    PUSHBUTTON   "Cancel",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Paragraph format"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Indentation", -1, 10, 10, 140, 68
+    LTEXT "Left", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "Right", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "First line", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "Alignment", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "OK", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Tabs"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Tab stops", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&Add", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&Remove", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "OK", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Remove al&l", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOGEX 0, 0, 280, 110
+STYLE DS_SHELLFONT | DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Line wrapping", -1, 5, 10, 145, 85
+    RADIOBUTTON "&No line wrapping", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "Toolbars", -1, 155, 10, 115, 85
+    CHECKBOX "&Toolbar", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "&Format Bar", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "&Status Bar", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END

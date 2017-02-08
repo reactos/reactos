@@ -53,7 +53,7 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-	return S_OK;
+	return S_FALSE;
 }
 
 /***********************************************************************

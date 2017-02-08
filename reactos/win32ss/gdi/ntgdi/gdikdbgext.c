@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/gdikdbgext.x
+ * FILE:            win32ss/gdi/ntgdi/gdikdbgext.c
  * PURPOSE:         KDBG extension for GDI
  * PROGRAMMERS:     Timo Kreuzer
  */

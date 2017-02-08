@@ -167,42 +167,12 @@ static MUI_ENTRY ltLTIntroPageEntries[] =
     {
         8,
         13,
-        "- Setup can not handle more than one primary partition per disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        14,
-        "- Setup can not delete a primary partition from a disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        15,
-        "  as long as extended partitions exist on this disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        16,
-        "- Setup can not delete the first extended partition from a disk",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        17,
-        "  as long as other extended partitions exist on this disk.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        18,
         "- Setup supports FAT file systems only.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
+        14,
         "- File system checks are not implemented yet.",
         TEXT_STYLE_NORMAL
     },
@@ -512,6 +482,7 @@ static MUI_ENTRY ltLTRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY ltLTComputerPageEntries[] =
 {
     {
@@ -829,12 +800,24 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Press P to create a primary partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press L to create a logical partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
         "\x07  Press D to delete an existing partition.",
         TEXT_STYLE_NORMAL
     },
@@ -842,6 +825,100 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
         0,
         0,
         "Pra’ome palaukti...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ltLTConfirmDeleteSystemPartitionEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "You have chosen to delete the system partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "System partitions can contain diagnostic programs, hardware configuration",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        11,
+        "programs, programs to start an operating system (like ReactOS) or other",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "programs provided by the hardware manufacturer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "Delete a system partition only when you are sure that there are no such",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "programs on the partition, or when you are sure you want to delete them.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "When you delete the partition, you might not be able to boot the",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        17,
+        "computer from the harddisk until you finished the ReactOS Setup.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        20,
+        "\x07  Press ENTER to delete the system partition. You will be asked",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "   to confirm the deletion of the partition again later.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Press ESC to return to the previous page. The partition will",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "   not be deleted.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER=Continue  ESC=Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1289,6 +1366,10 @@ static MUI_ENTRY ltLTRegistryEntries[] =
 MUI_ERROR ltLTErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS is not completely installed on your\n"
         "computer. If you quit Setup now, you will need to\n"
@@ -1360,9 +1441,9 @@ MUI_ERROR ltLTErrorEntries[] =
           "\n"
           "Creating or deleting partitions can destroy the partition table.\n"
           "\n"
-          "  \x07  Press F3 to quit Setup."
+          "  \x07  Press F3 to quit Setup.\n"
           "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+          "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1493,17 +1574,44 @@ MUI_ERROR ltLTErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Press any key to continue.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_FORMATTING_PARTITION,
+        "Setup is unable to format the partition:\n"
+        " %S\n"
+        "\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE ltLTPages[] =
 {
@@ -1546,6 +1654,10 @@ MUI_PAGE ltLTPages[] =
     {
         SELECT_PARTITION_PAGE,
         ltLTSelectPartitionEntries
+    },
+    {
+        CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
+        ltLTConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
@@ -1610,13 +1722,21 @@ MUI_STRING ltLTStrings[] =
     {STRING_PLEASEWAIT,
      "   Please wait..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Size of new partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a new partition on"},
+     "You have chosen to create a primary partition on"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Please enter the size of the new partition in megabytes."},
     {STRING_CREATEPARTITION,
@@ -1625,12 +1745,18 @@ MUI_STRING ltLTStrings[] =
     "This Partition will be formatted next."},
     {STRING_NONFORMATTEDPART,
     "You chose to install ReactOS on a new or unformatted Partition."},
+    {STRING_NONFORMATTEDSYSTEMPART,
+    "The system partition is not formatted yet."},
+    {STRING_NONFORMATTEDOTHERPART,
+    "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installs ReactOS onto Partition"},
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
+    {STRING_CONTINUE,
+    "ENTER = Continue"},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reboot computer"},
     {STRING_TXTSETUPFAILED,
@@ -1656,11 +1782,11 @@ MUI_STRING ltLTStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Reboot computer"},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\n\n"},
+    "Unable to open the console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "The most common cause of this is using an USB keyboard\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\n"},
+    "USB keyboards are not fully supported yet\r\n"},
     {STRING_FORMATTINGDISK,
     "Setup is formatting your disk"},
     {STRING_CHECKINGDISK,
@@ -1676,7 +1802,7 @@ MUI_STRING ltLTStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1684,11 +1810,11 @@ MUI_STRING ltLTStrings[] =
     {STRING_HDINFOPARTZEROED,
     "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
-    "%c%c  Type %lu    %I64u %s"},
+    "%c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
     "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c %c %sType %-3u%s                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
@@ -1696,9 +1822,11 @@ MUI_STRING ltLTStrings[] =
     {STRING_NEWPARTITION,
     "Setup created a new partition on"},
     {STRING_UNPSPACE,
-    "    Unpartitioned space              %6lu %s"},
+    "    %sUnpartitioned space%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "New (Unformatted)"},
     {STRING_FORMATUNUSED,

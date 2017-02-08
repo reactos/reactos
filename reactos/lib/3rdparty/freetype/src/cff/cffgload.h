@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (specification).                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by       */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __CFFGLOAD_H__
-#define __CFFGLOAD_H__
+#ifndef CFFGLOAD_H_
+#define CFFGLOAD_H_
 
 
 #include <ft2build.h>
@@ -29,7 +29,12 @@ FT_BEGIN_HEADER
 
 
 #define CFF_MAX_OPERANDS        48
-#define CFF_MAX_SUBRS_CALLS     32
+#define CFF_MAX_SUBRS_CALLS     16  /* maximum subroutine nesting;         */
+                                    /* only 10 are allowed but there exist */
+                                    /* fonts like `HiraKakuProN-W3.ttf'    */
+                                    /* (Hiragino Kaku Gothic ProN W3;      */
+                                    /* 8.2d6e1; 2014-12-19) that exceed    */
+                                    /* this limit                          */
 #define CFF_MAX_TRANS_ELEMENTS  32
 
 
@@ -106,6 +111,41 @@ FT_BEGIN_HEADER
   } CFF_Builder;
 
 
+  FT_LOCAL( FT_Error )
+  cff_check_points( CFF_Builder*  builder,
+                    FT_Int        count );
+
+  FT_LOCAL( void )
+  cff_builder_add_point( CFF_Builder*  builder,
+                         FT_Pos        x,
+                         FT_Pos        y,
+                         FT_Byte       flag );
+  FT_LOCAL( FT_Error )
+  cff_builder_add_point1( CFF_Builder*  builder,
+                          FT_Pos        x,
+                          FT_Pos        y );
+  FT_LOCAL( FT_Error )
+  cff_builder_start_point( CFF_Builder*  builder,
+                           FT_Pos        x,
+                           FT_Pos        y );
+  FT_LOCAL( void )
+  cff_builder_close_contour( CFF_Builder*  builder );
+
+
+  FT_LOCAL( FT_Int )
+  cff_lookup_glyph_by_stdcharcode( CFF_Font  cff,
+                                   FT_Int    charcode );
+  FT_LOCAL( FT_Error )
+  cff_get_glyph_data( TT_Face    face,
+                      FT_UInt    glyph_index,
+                      FT_Byte**  pointer,
+                      FT_ULong*  length );
+  FT_LOCAL( void )
+  cff_free_glyph_data( TT_Face    face,
+                       FT_Byte**  pointer,
+                       FT_ULong   length );
+
+
   /* execution context charstring zone */
 
   typedef struct  CFF_Decoder_Zone_
@@ -156,6 +196,8 @@ FT_BEGIN_HEADER
 
     FT_Bool            seac;
 
+    CFF_SubFont        current_subfont; /* for current glyph_index */
+
   } CFF_Decoder;
 
 
@@ -181,10 +223,12 @@ FT_BEGIN_HEADER
 
 #endif /* 0 */
 
+#ifdef CFF_CONFIG_OPTION_OLD_ENGINE
   FT_LOCAL( FT_Error )
   cff_decoder_parse_charstrings( CFF_Decoder*  decoder,
                                  FT_Byte*      charstring_base,
                                  FT_ULong      charstring_len );
+#endif
 
   FT_LOCAL( FT_Error )
   cff_slot_load( CFF_GlyphSlot  glyph,
@@ -195,7 +239,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __CFFGLOAD_H__ */
+#endif /* CFFGLOAD_H_ */
 
 
 /* END */

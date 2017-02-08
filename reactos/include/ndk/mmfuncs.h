@@ -137,6 +137,15 @@ NtExtendSection(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtFlushInstructionCache(
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _In_ SIZE_T NumberOfBytesToFlush
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtFlushVirtualMemory(
     _In_ HANDLE ProcessHandle,
     _Inout_ PVOID *BaseAddress,

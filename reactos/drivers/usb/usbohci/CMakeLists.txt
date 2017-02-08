@@ -10,28 +10,16 @@ list(APPEND SOURCE
     usbohci.cpp
     usb_request.cpp
     usb_queue.cpp
-    hardware.cpp)
+    hardware.cpp
+    usbohci.h)
 
 add_library(usbohci SHARED
     ${SOURCE}
+    guid.cpp
     usbohci.rc)
 
-target_link_libraries(usbohci
-    libusb
-    libcntpr
-    ${PSEH_LIB})
-
-# FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(MSVC)
-    #add_target_compile_flags(usbohci "/GR-")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
-else()
-    target_link_libraries(usbohci -lgcc)
-    #add_target_compile_flags(usbohci "-fno-exceptions -fno-rtti")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
-endif()
-
+target_link_libraries(usbohci uuid libusb libcntpr ${PSEH_LIB})
 set_module_type(usbohci kernelmodedriver)
 add_importlibs(usbohci ntoskrnl hal usbd)
-
+add_pch(usbohci usbohci.h SOURCE)
 add_cd_file(TARGET usbohci DESTINATION reactos/system32/drivers NO_CAB FOR all)

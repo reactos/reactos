@@ -1,0 +1,39 @@
+/*
+ *    Translated by xrogers
+ *    xxrogers@users.sourceforge.net
+ *    https://sourceforge.net/projects/reactospl
+ *    Translation update by Olaf Siejka (Caemyr), Apr 2011
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Update by wojo664 (June 2014)
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Edytuj"
+    IDS_MARK "Zaznacz"
+    IDS_COPY "Kopiuj\tWejdź"
+    IDS_PASTE "Wklej"
+    IDS_SELECTALL "Zaznacz wszystko"
+    IDS_SCROLL "Przewiń"
+    IDS_FIND "Znajdź..."
+    IDS_DEFAULTS "Ustawienia domyślne"
+    IDS_PROPERTIES "Właściwości"
+/*
+    IDS_SCROLLHERE "Przewiń tutaj"
+    IDS_SCROLLTOP "Przewiń na początek"
+    IDS_SCROLLBOTTOM "Przewiń na koniec"
+    IDS_SCROLLPAGE_UP "Poprzednia strona"
+    IDS_SCROLLPAGE_DOWN "Następna strona"
+    IDS_SCROLLUP "Przewiń do góry"
+    IDS_SCROLLDOWN "Przewiń na dół"
+*/
+    IDS_TERMINAL_TITLE "Konsola ReactOS"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Zaznacz"
+    IDS_SELECT_TITLE "Wybierz"
+END

@@ -2,29 +2,66 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Archivo"
-	BEGIN
-		MENUITEM "&Abrir...", IDM_OPEN_FILE
-		MENUITEM "&Cerrar", IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "&Salir", IDM_EXIT
-	END
-	POPUP "Ay&uda"
-	BEGIN
-		MENUITEM "&Acerca de...", IDM_ABOUT
-	END
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Abrir...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Cerrar\tCtrl+W", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Salir", IDM_EXIT
+    END
+    POPUP "&Reproducir"
+    BEGIN
+        MENUITEM "Reproducir/&Pausar\tCtrl+P", IDC_PLAY
+        MENUITEM "&Detener\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repe&tir\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "&Modo de ventana única", IDM_SWITCHVIEW
+    END
+    POPUP "&Dispositivo"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Propiedades", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "Control de &volumen", IDM_VOLUMECTL
+    END
+    POPUP "Ay&uda"
+    BEGIN
+        MENUITEM "&Acerca de...", IDM_ABOUT
+    END
 END
 
-STRINGTABLE DISCARDABLE
+ID_ACCELERATORS ACCELERATORS
 BEGIN
-	IDS_ALL_TYPES_FILTER "Todos los ficheros soportados (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Reproducir"
-	IDS_TOOLTIP_STOP "Detener"
-	IDS_TOOLTIP_EJECT "Expulsar"
-	IDS_TOOLTIP_BACKWARD "Marca anterior"
-	IDS_TOOLTIP_SEEKBACK "Rebobinar"
-	IDS_TOOLTIP_SEEKFORW "Avance rápido"
-	IDS_TOOLTIP_FORWARD "Marca siguiente"
-    IDS_APPTITLE "Reproductor Multimedia de ReactOS"
-	IDS_PLAY "Reproducir"
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MODE_UNKNOWN     "Unknown"
+    IDS_MODE_OPEN        "Opened"
+    IDS_MODE_STOP        "Stopped"
+    IDS_MODE_PLAY        "Playing"
+    IDS_MODE_PAUSE       "Paused"
+    IDS_MODE_RECORD      "Recording"
+    IDS_MODE_SEEK        "Seeking"
+    IDS_MODE_NOT_READY   "Not ready"
+    IDS_ALL_TYPES_FILTER "Todos los archivos soportados"
+    IDS_TOOLTIP_PLAY     "Reproducir"
+    IDS_TOOLTIP_STOP     "Detener"
+    IDS_TOOLTIP_EJECT    "Expulsar"
+    IDS_TOOLTIP_BACKWARD "Marca anterior"
+    IDS_TOOLTIP_SEEKBACK "Rebobinar"
+    IDS_TOOLTIP_SEEKFORW "Avance rápido"
+    IDS_TOOLTIP_FORWARD  "Siguiente marca"
+    IDS_TOOLTIP_PAUSE    "Pause"
+    IDS_APPTITLE         "Reproductor multimedia de ReactOS"
+    IDS_PLAY             "Reproducir"
+    IDS_DEFAULTMCIERRMSG "No hay una descripción disponible para este error."
 END

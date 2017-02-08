@@ -6,14 +6,14 @@ HKCR
 		{
 			val 'InfoTip' = e '@%%SystemRoot%%\system32\SHELL32.dll,-22915'
 			val 'IntroText' = e '@%%SystemRoot%%\system32\SHELL32.dll,-31748'
-			val 'LocalizedString' = e '@%%SystemRoot%%\system32\SHELL32.dll,-8964'
-			DefaultIcon = e '%%SystemRoot%%\System32\shell32.dll,31'
-			{
-				val Empty = e '%%SystemRoot%%\System32\shell32.dll,31'
-				val Full = e '%%SystemRoot%%\System32\shell32.dll,32'
-			}
-			InprocServer32 = s '%MODULE%'
-			{
+            val 'LocalizedString' = e '@%%SystemRoot%%\system32\SHELL32.dll,-8964'
+            DefaultIcon = e '%%SystemRoot%%\System32\shell32.dll,31'
+            {
+                val Empty = e '%%SystemRoot%%\System32\shell32.dll,31'
+                val Full = e '%%SystemRoot%%\System32\shell32.dll,32'
+            }
+            InprocServer32 = s '%MODULE%'
+            {
 				val ThreadingModel = s 'Apartment'
 			}
 			'ShellFolder'

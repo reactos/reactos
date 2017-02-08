@@ -1,8 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(httpapi.dll httpapi.spec)
 
 list(APPEND SOURCE
@@ -11,7 +9,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/httpapi.def)
 
 add_library(httpapi SHARED ${SOURCE})
-
 set_module_type(httpapi win32dll)
 target_link_libraries(httpapi wine)
 add_importlibs(httpapi msvcrt kernel32 ntdll)

@@ -1,0 +1,64 @@
+/*
+ * Copyright 2010 Łukasz Wojniłowicz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Błąd przy przekształcaniu obiektu do typu podstawowego"
+    IDS_INVALID_CALL_ARG    "Niewłaściwe wywołanie procedury lub argument"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
+    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_CREATE_OBJ_ERROR    "Serwer automatyzacji nie może stworzyć obiektu"
+    IDS_NO_PROPERTY         "Obiekt nie wspiera tej właściwości lub metody"
+    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_ARG_NOT_OPT         "Argument nieopcjonalny"
+    IDS_SYNTAX_ERROR        "Błąd składni"
+    IDS_SEMICOLON           "Oczekiwane ';'"
+    IDS_LBRACKET            "Oczekiwane '('"
+    IDS_RBRACKET            "Oczekiwane ')'"
+    IDS_EXPECTED_IDENTIFIER "Expected identifier"
+    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_INVALID_CHAR        "Invalid character"
+    IDS_UNTERMINATED_STR    "Niezakończona stała znakowa"
+    IDS_MISPLACED_RETURN    "'return' statement outside of function"
+    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
+    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_LABEL_REDEFINED     "Label redefined"
+    IDS_LABEL_NOT_FOUND     "Label not found"
+    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_DISABLED_CC         "Conditional compilation is turned off"
+    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_NOT_FUNC            "Oczekiwana funkcja"
+    IDS_NOT_DATE            "'[obiekt]' nie jest obiektem daty"
+    IDS_NOT_NUM             "Oczekiwana liczba"
+    IDS_OBJECT_EXPECTED     "Oczekiwany obiekt"
+    IDS_ILLEGAL_ASSIGN      "Niepoprawne przypisanie"
+    IDS_UNDEFINED           "'|' jest niezdefiniowany"
+    IDS_NOT_BOOL            "Oczekiwany obiekt boolean"
+    IDS_INVALID_DELETE      "Cannot delete '|'"
+    IDS_NOT_VBARRAY         "VBArray object expected"
+    IDS_JSCRIPT_EXPECTED    "Oczekiwany obiekt JScript"
+    IDS_REGEXP_SYNTAX_ERROR "Błąd składni w regularnym wyrażeniu"
+    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
+    IDS_URI_INVALID_CHAR    "Kodowane URI zawiera niewłaściwe znaki"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
+    IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
+    IDS_INVALID_LENGTH      "Długość tablicy musi być skończoną dodatnią liczbą stałą"
+    IDS_ARRAY_EXPECTED      "Oczekiwany obiekt tablicowy"
+}

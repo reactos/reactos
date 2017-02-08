@@ -603,8 +603,7 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
         return 0;
     }
 
-    MSVCRT_INVALID_PMT("dest[numberOfElements] is too small");
+    MSVCRT_INVALID_PMT("dest[numberOfElements] is too small", EINVAL);
     dest[0] = '\0';
-    *_errno() = EINVAL;
     return EINVAL;
 }

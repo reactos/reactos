@@ -1,56 +1,35 @@
+PROJECT(SHELL)
 
-add_subdirectory(notifyhook)
+set_cpp(WITH_RUNTIME)
 
-set_cpp()
-
-add_definitions(
-    -DWIN32
-    -D__WINDRES__)
-
-#add_pch(explorer precomp.h)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
 list(APPEND SOURCE
-    shell/mainframe.cpp
-    shell/unixfs.cpp
-    shell/ntobjfs.cpp
-    shell/filechild.cpp
-    shell/shellfs.cpp
-    shell/fatfs.cpp
-    shell/pane.cpp
-    shell/regfs.cpp
-    shell/webchild.cpp
-    shell/entries.cpp
-    shell/shellbrowser.cpp
-    shell/winfs.cpp
-    dialogs/searchprogram.cpp
-    dialogs/settings.cpp
-    i386-stub-win32.c
-    taskbar/taskbar.cpp
-    taskbar/favorites.cpp
-    taskbar/quicklaunch.cpp
-    taskbar/desktopbar.cpp
-    taskbar/startmenu.cpp
-    taskbar/traynotify.cpp
-    precomp.cpp
-    explorer.rc
-    services/startup.c
-    services/shellservices.cpp
-    desktop/desktop.cpp
+    desktop.cpp
     explorer.cpp
-    utility/xs-native.cpp
-    utility/shellclasses.cpp
-    utility/dragdropimpl.cpp
-    utility/utility.cpp
-    utility/xmlstorage.cpp
-    utility/window.cpp
-    utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
+    notifyiconscust.cpp
+    rshell.cpp
+    settings.cpp
+    shellservice.cpp
+    startctxmnu.cpp
+    startmnu.cpp
+    startmnucust.cpp
+    startmnusite.cpp
+    startup.cpp
+    taskband.cpp
+    taskswnd.cpp
+    tbsite.cpp
+    trayntfy.cpp
+    trayprop.cpp
+    traywnd.cpp
+    util.cpp
+    precomp.h)
 
-add_executable(explorer ${SOURCE})
-target_link_libraries(explorer comsupp wine uuid)
+file(GLOB explorer_rc_deps res/*.*)
+add_rc_deps(explorer.rc ${explorer_rc_deps})
+add_executable(explorer ${SOURCE} explorer.rc)
+target_link_libraries(explorer uuid atlnew wine)
 set_module_type(explorer win32gui UNICODE)
-
-add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
-add_dependencies(explorer psdk)
+add_importlibs(explorer advapi32 gdi32 user32 comctl32 ole32 oleaut32 shell32 browseui shlwapi shdocvw version uxtheme msvcrt kernel32 ntdll)
+add_pch(explorer precomp.h SOURCE)
 add_cd_file(TARGET explorer DESTINATION reactos FOR all)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)

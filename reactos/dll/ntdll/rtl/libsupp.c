@@ -10,11 +10,13 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
+
 #define NDEBUG
 #include <debug.h>
 
 SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;
 PTEB LdrpTopLevelDllBeingLoadedTeb = NULL;
+PVOID MmHighestUserAddress = (PVOID)MI_HIGHEST_USER_ADDRESS;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -64,7 +66,7 @@ RtlpClearInDbgPrint(VOID)
 
 KPROCESSOR_MODE
 NTAPI
-RtlpGetMode()
+RtlpGetMode(VOID)
 {
    return UserMode;
 }
@@ -126,6 +128,15 @@ RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
     return RtlEnterCriticalSection(&Lock->CriticalSection);
 }
 
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
+{
+    UNREFERENCED_PARAMETER(Exclusive);
+
+    return RtlTryEnterCriticalSection(&Lock->CriticalSection);
+}
+
 NTSTATUS
 NTAPI
 RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
@@ -173,6 +184,22 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
   /* meaningless in user mode */
 }
 #endif
+
+VOID
+NTAPI
+RtlpSetHeapParameters(IN PRTL_HEAP_PARAMETERS Parameters)
+{
+    PPEB Peb;
+
+    /* Get PEB */
+    Peb = RtlGetCurrentPeb();
+
+    /* Apply defaults for non-set parameters */
+    if (!Parameters->SegmentCommit) Parameters->SegmentCommit = Peb->HeapSegmentCommit;
+    if (!Parameters->SegmentReserve) Parameters->SegmentReserve = Peb->HeapSegmentReserve;
+    if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = Peb->HeapDeCommitFreeBlockThreshold;
+    if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = Peb->HeapDeCommitTotalFreeThreshold;
+}
 
 BOOLEAN
 NTAPI
@@ -271,8 +298,8 @@ BOOLEAN
 RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    RtlInitializeHandleTable(0xCFFF,
-			    sizeof(RTL_ATOM_HANDLE),
-			    &AtomTable->RtlHandleTable);
+                            sizeof(RTL_ATOM_HANDLE),
+                            &AtomTable->RtlHandleTable);
 
    return TRUE;
 }
@@ -413,6 +440,7 @@ NTSTATUS find_entry( PVOID BaseAddress, LDR_RESOURCE_INFO *info,
 
     root = RtlImageDirectoryEntryToData( BaseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &size );
     if (!root) return STATUS_RESOURCE_DATA_NOT_FOUND;
+    if (size < sizeof(*resdirptr)) return STATUS_RESOURCE_DATA_NOT_FOUND;
     resdirptr = root;
 
     if (!level--) goto done;
@@ -594,6 +622,34 @@ RtlpSafeCopyMemory(
     _SEH2_END;
 
     return STATUS_SUCCESS;
+}
+
+/* FIXME: code duplication with kernel32/client/time.c */
+ULONG
+NTAPI
+RtlGetTickCount(VOID)
+{
+    ULARGE_INTEGER TickCount;
+
+#ifdef _WIN64
+    TickCount.QuadPart = *((volatile ULONG64*)&SharedUserData->TickCount);
+#else
+    while (TRUE)
+    {
+        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
+        TickCount.LowPart = SharedUserData->TickCount.LowPart;
+
+        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time)
+            break;
+
+        YieldProcessor();
+    }
+#endif
+
+    return (ULONG)((UInt32x32To64(TickCount.LowPart,
+                                  SharedUserData->TickCountMultiplier) >> 24) +
+                    UInt32x32To64((TickCount.HighPart << 8) & 0xFFFFFFFF,
+                                  SharedUserData->TickCountMultiplier));
 }
 
 /* EOF */

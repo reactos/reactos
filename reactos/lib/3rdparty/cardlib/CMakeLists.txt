@@ -12,8 +12,13 @@ list(APPEND SOURCE
     cardrgnmouse.cpp
     cardstack.cpp
     cardwindow.cpp
-    dropzone.cpp)
+    dropzone.cpp
+    cardlib.h)
 
 add_library(cardlib ${SOURCE})
-allow_warnings(cardlib)
 add_dependencies(cardlib psdk)
+add_pch(cardlib cardlib.h SOURCE)
+
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(cardlib "-Wno-unused-but-set-variable")
+endif()

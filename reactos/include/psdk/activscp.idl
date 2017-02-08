@@ -60,6 +60,17 @@ typedef enum tagSCRIPTTHREADSTATE {
     SCRIPTTHREADSTATE_RUNNING     = 1
 } SCRIPTTHREADSTATE;
 
+typedef enum tagSCRIPTUICITEM {
+    SCRIPTUICITEM_INPUTBOX = 1,
+    SCRIPTUICITEM_MSGBOX   = 2
+} SCRIPTUICITEM;
+
+typedef enum tagSCRIPTUICHANDLING {
+    SCRIPTUICHANDLING_ALLOW       = 0,
+    SCRIPTUICHANDLING_NOUIERROR   = 1,
+    SCRIPTUICHANDLING_NOUIDEFAULT = 2
+} SCRIPTUICHANDLING;
+
 typedef DWORD SCRIPTTHREADID;
 cpp_quote("#define SCRIPTTHREADID_CURRENT ((SCRIPTTHREADID)-1)")
 cpp_quote("#define SCRIPTTHREADID_BASE ((SCRIPTTHREADID)-2)")
@@ -106,6 +117,10 @@ cpp_quote("#define SCRIPTSTAT_STATEMENT_COUNT      1")
 cpp_quote("#define SCRIPTSTAT_INSTRUCTION_COUNT    2")
 cpp_quote("#define SCRIPTSTAT_INTSTRUCTION_TIME    3")
 cpp_quote("#define SCRIPTSTAT_TOTAL_TIME           4")
+
+cpp_quote("#define SCRIPT_E_RECORDED  0x86664004")
+cpp_quote("#define SCRIPT_E_REPORTED  0x80020101")
+cpp_quote("#define SCRIPT_E_PROPAGATE 0x80020102")
 
 [
 object,
@@ -184,6 +199,18 @@ interface IActiveScriptSiteWindow : IUnknown
     HRESULT EnableModeless(
             [in] BOOL fEnable
     );
+}
+
+[
+    object,
+    uuid(aedae97e-d7ee-4796-b960-7f092ae844ab),
+    pointer_default(unique)
+]
+interface IActiveScriptSiteUIControl : IUnknown
+{
+    HRESULT GetUIBehavior(
+            [in]  SCRIPTUICITEM UicItem,
+            [out] SCRIPTUICHANDLING *pUicHandling);
 }
 
 [

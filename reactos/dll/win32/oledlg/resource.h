@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <oledlg.h>
+#pragma once
 
 #define IDS_RESULTOBJDESC               101
 #define IDS_RESULTFILEOBJDESC           102
@@ -40,6 +40,12 @@
 #define IDC_BROWSE                      1009
 #define IDC_FILELBL                     1010
 #define IDC_FILE                        1011
+
+/* String ids for verb menu */
+#define IDS_VERBMENU_CONVERT            0x130
+#define IDS_VERBMENU_SINGLEVERB_OBJECT  0x132
+#define IDS_VERBMENU_OBJECT_WITH_NAME   0x134
+#define IDS_VERBMENU_OBJECT             0x135
 
 /* String ids for Paste Special */
 #define IDS_PS_PASTE_DATA                 0x190

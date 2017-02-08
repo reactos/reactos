@@ -1,8 +1,9 @@
 /*
- * ReactOS Hebrew ASCII Keyboard layout
- * Copyright (C) 2005 ReactOS
+ * ReactOS Hebrew Keyboard layout
+ * Copyright (C) 2005 - 2013 ReactOS
  * License: LGPL, see: LGPL.txt
- * author: Royce Mitchell III
+ * Authors: Royce Mitchell III
+ *          Baruch Rutman 2013
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
@@ -92,7 +93,10 @@ enum
 	QOF,
 	RESH,
 	SHIN,
-	TAV
+	TAV,
+    
+    // symbols
+    SHEQEL = 0x20AA
 };
 
 ROSDATA USHORT scancode_to_vk[] =
@@ -291,23 +295,23 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 
   /* Specials */
   /* Ctrl-_ generates ? */
-  { VK_OEM_PLUS    ,0, {'=', '+'} },
-  { VK_OEM_1       ,0, {PEY_SOFIT, PEY_SOFIT} },
-  { 'Q'            ,0, {TAV, TAV} },
-  { 'W'            ,0, {TSADI_SOFIT, TSADI_SOFIT} },
-  { VK_OEM_7       ,0, {'\'','\"'} },
-  { VK_OEM_3       ,0, {'`', '~'} },
-  { VK_OEM_COMMA   ,0, {',', '<'} },
-  { VK_OEM_PERIOD  ,0, {'.', '>'} },
-  { VK_OEM_2       ,0, {'/', '?'} },
+  { VK_OEM_PLUS,    0,      {'=', '+'} },
+  { VK_OEM_1,       0,      {PEY_SOFIT, ':'} },
+  { 'Q',            0,      {TAV, '>'} },
+  { 'W',            0,      {TSADI_SOFIT, '<'} },
+  { VK_OEM_7,       CAPLOK, {'\'','W'} },
+  { VK_OEM_3,       0,      {';', '~'} },
+  { VK_OEM_COMMA,   0,      {',', '\"'} },
+  { VK_OEM_PERIOD,  0,      {'.', '?'} },
+  { VK_OEM_2,       CAPLOK, {'/', 'Q'} },
   /* Keys that do not have shift states */
-  { VK_TAB     ,0, {'\t','\t'} },
-  { VK_ADD     ,0, {'+', '+'} },
+  { VK_TAB,     0, {'\t','\t'} },
+  { VK_ADD,     0, {'+', '+'} },
   { VK_SUBTRACT,0, {'-', '-'} },
   { VK_MULTIPLY,0, {'*', '*'} },
-  { VK_DIVIDE  ,0, {'/', '/'} },
-  { VK_ESCAPE  ,0, {0x1b,0x1b} },
-  { VK_SPACE   ,0, {' ', ' '} },
+  { VK_DIVIDE,  0, {'/', '/'} },
+  { VK_ESCAPE,  0, {0x1b,0x1b} },
+  { VK_SPACE,   0, {' ', ' '} },
   { 0, 0 }
 };
 
@@ -325,32 +329,32 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
 
   /* The alphabet */
-  { 'A',         0, {SHIN, SHIN, 0x01, 0x01} },
-  { 'B',         0, {NUN, NUN, 0x02, 0x02} },
-  { 'C',         0, {BET, BET, 0x03, 0x03} },
-  { 'D',         0, {GIMEL, GIMEL, 0x04, 0x04} },
-  { 'E',         0, {QOF, QOF, 0x05, 0x05} },
-  { 'F',         0, {KAF, KAF, 0x06, 0x06} },
-  { 'G',         0, {AYIN, AYIN, 0x07, 0x07} },
-  { 'H',         0, {YUD, YUD, 0x08, 0x08} },
-  { 'I',         0, {NUN_SOFIT, NUN_SOFIT, 0x09, 0x09} },
-  { 'J',         0, {HET, HET, 0x0a, 0x0a} },
-  { 'K',         0, {LAMED, LAMED, 0x0b, 0x0b} },
-  { 'L',         0, {KAF_SOFIT, KAF_SOFIT, 0x0c, 0x0c} },
-  { 'M',         0, {TSADI, TSADI, 0x0d, 0x0d} },
-  { 'N',         0, {MEM, MEM, 0x0e, 0x0e} },
-  { 'O',         0, {MEM_SOFIT, MEM_SOFIT, 0x0f, 0x0f} },
-  { 'P',         0, {PEY, PEY, 0x10, 0x10} },
-  { VK_OEM_2,    0, {'/', '?', 0x11, 0x11} },
-  { 'R',         0, {RESH, RESH, 0x12, 0x12} },
-  { 'S',         0, {DALET, DALET, 0x13, 0x13} },
-  { 'T',         0, {ALEF, ALEF, 0x14, 0x14} },
-  { 'U',         0, {VAV, VAV, 0x15, 0x15} },
-  { 'V',         0, {HEY, HEY, 0x16, 0x16} },
-  { VK_OEM_7,    0, {'\'', '\"', 0x17, 0x17} },
-  { 'X',         0, {SAMEKH, SAMEKH, 0x18, 0x18} },
-  { 'Y',         0, {TET, TET, 0x19, 0x19} },
-  { 'Z',         0, {ZAYIN, ZAYIN, 0x1a, 0x1a} },
+  { 'A',         CAPLOK, {SHIN, 'A', 0x01, 0x01} },
+  { 'B',         CAPLOK, {NUN, 'B', 0x02, 0x02} },
+  { 'C',         CAPLOK, {BET, 'C', 0x03, 0x03} },
+  { 'D',         CAPLOK, {GIMEL, 'D', 0x04, 0x04} },
+  { 'E',         CAPLOK, {QOF, 'E', 0x05, 0x05} },
+  { 'F',         CAPLOK, {KAF, 'F', 0x06, 0x06} },
+  { 'G',         CAPLOK, {AYIN, 'G', 0x07, 0x07} },
+  { 'H',         CAPLOK, {YUD, 'H', 0x08, 0x08} },
+  { 'I',         CAPLOK, {NUN_SOFIT, 'I', 0x09, 0x09} },
+  { 'J',         CAPLOK, {HET, 'J', 0x0a, 0x0a} },
+  { 'K',         CAPLOK, {LAMED, 'K', 0x0b, 0x0b} },
+  { 'L',         CAPLOK, {KAF_SOFIT, 'L', 0x0c, 0x0c} },
+  { 'M',         CAPLOK, {TSADI, 'M', 0x0d, 0x0d} },
+  { 'N',         CAPLOK, {MEM, 'N', 0x0e, 0x0e} },
+  { 'O',         CAPLOK, {MEM_SOFIT, 'O', 0x0f, 0x0f} },
+  { 'P',         CAPLOK, {PEY, 'P', 0x10, 0x10} },
+  { VK_OEM_2,    CAPLOK, {'/', 'Q', 0x11, 0x11} },
+  { 'R',         CAPLOK, {RESH, 'R', 0x12, 0x12} },
+  { 'S',         CAPLOK, {DALET, 'S', 0x13, 0x13} },
+  { 'T',         CAPLOK, {ALEF, 'T', 0x14, 0x14} },
+  { 'U',         CAPLOK, {VAV, 'U', 0x15, 0x15} },
+  { 'V',         CAPLOK, {HEY, 'V', 0x16, 0x16} },
+  { VK_OEM_7,    CAPLOK, {'\'', 'W', 0x17, 0x17} },
+  { 'X',         CAPLOK, {SAMEKH, 'X', 0x18, 0x18} },
+  { 'Y',         CAPLOK, {TET, 'Y', 0x19, 0x19} },
+  { 'Z',         CAPLOK, {ZAYIN, 'Z', 0x1a, 0x1a} },
 
   /* Legacy Ascii generators */
   { '2', 0, {'2', '@', WCH_NONE, 0} },
@@ -496,7 +500,7 @@ ROSDATA KBDTABLES keyboard_layout_table =
 
   MAKELONG(0, 1), /* Version 1.0 */
 
-  /* Ligatures -- Hebrew doesn't have any */
+  /* Ligatures -- The Standard Hebrew Keyboard doesn't have any */
   0,
   0,
   NULL

@@ -14,17 +14,25 @@
 //#define NDEBUG
 #include <debug.h>
 
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #ifdef _WINKD_
 extern PMMPTE MmDebugPte;
 #endif
+
+/* Helper macros */
+#define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
+#define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
 /* GLOBALS *****************************************************************/
 
 /* Template PTE and PDE for a kernel page */
 MMPTE ValidKernelPde = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 MMPTE ValidKernelPte = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+
+/* The same, but for local pages */
+MMPTE ValidKernelPdeLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPteLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
@@ -54,7 +62,7 @@ BOOLEAN MiPfnsInitialized = FALSE;
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializeSessionSpaceLayout()
+MiInitializeSessionSpaceLayout(VOID)
 {
     MmSessionSize = MI_SESSION_SIZE;
     MmSessionViewSize = MI_SESSION_VIEW_SIZE;
@@ -177,7 +185,7 @@ MiMapPTEs(
 VOID
 NTAPI
 INIT_FUNCTION
-MiInitializePageTable()
+MiInitializePageTable(VOID)
 {
     ULONG64 PxePhysicalAddress;
     MMPTE TmplPte, *PointerPxe;
@@ -359,7 +367,7 @@ MiBuildNonPagedPool(VOID)
 VOID
 NTAPI
 INIT_FUNCTION
-MiBuildSystemPteSpace()
+MiBuildSystemPteSpace(VOID)
 {
     PMMPTE PointerPte;
 

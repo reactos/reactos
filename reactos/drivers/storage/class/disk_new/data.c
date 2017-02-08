@@ -79,4 +79,3 @@ DISK_MEDIA_TYPES_LIST const DiskMediaTypes[] = {
 #ifdef ALLOC_DATA_PRAGMA
 #pragma data_seg()
 #endif
-

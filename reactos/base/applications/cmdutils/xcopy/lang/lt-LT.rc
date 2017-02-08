@@ -1,0 +1,57 @@
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Neteisingas parametrų skaičius - pagalba: xcopy /?\n"
+    STRING_INVPARM,  "Neteisingas parametras „%1“ - pagalba: xcopy /?\n"
+    STRING_PAUSE,    "Spauskite <enter> kopijavimui pradėti\n"
+    STRING_SIMCOPY,  "bus nukopijuota failų: %1!d!\n"
+    STRING_COPY,     "nukopijuota failų: %1!d!\n"
+    STRING_QISDIR,   "Ar „%1“ yra failas, ar katalogas,\n\
+                     ar paskirtis?\n\
+                     (F - failas, K - katalogas)\n"
+    STRING_SRCPROMPT,"%1? (Taip|Ne)\n"
+    STRING_OVERWRITE,"Perrašyti %1? (Taip|Ne|Visus)\n"
+    STRING_COPYFAIL, "„%1“ kopijavimas į „%2“ nepavyko su r/c %3!d!\n"
+    STRING_OPENFAIL, "Nepavyko atverti „%1“\n"
+    STRING_READFAIL, "Klaida skaitant „%1“\n"
+    STRING_YES_CHAR, "T"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "V"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "K"
+
+    STRING_HELP
+"XCOPY - Kopijuoja šaltinio failus ir katalogų medžius į paskirties vietą\n\
+\n\
+Sintaksė:\n\
+XCOPY šaltinis [paskirtis] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Kur:\n\
+\n\
+[/I]  Tarti, kad katalogas, jei paskirtis neegzistuoja ir kopijuojami\n\
+\t2 ar daugiau failų\n\
+[/S]  Kopijuoti katalogus ir pakatalogius\n\
+[/E]  Kopijuoti katalogus ir pakatalogius, taip pat ir tuščius\n\
+[/Q]  Kopijuojant nerodyti vardų, kopijuoti tyliai.\n\
+[/F]  Kopijuojant rodyti pilnus šaltinio ir paskirties vardus\n\
+[/L]  Modeliuoti veikimą rodant failus, kurie būtų kopijuojami\n\
+[/W]  Raginti prieš pradedant kopijavimo operaciją\n\
+[/T]  Sukuria tuščią katalogų struktūrą, bet nekopijuoja jokių failų\n\
+[/Y]  Nerodyti raginimų, kai perrašomi failai\n\
+[/-Y] Įjungti raginimus, kai perrašomi failai\n\
+[/P]  Ragina prieš kopijuojant kiekvieną šaltinio failą\n\
+[/N]  Kopijuoti naudojant trumpus vardus\n\
+[/U]  Kopijuoti tik tuos failus, kurie jau egzistuoja paskirties vietoje\n\
+[/R]  Perrašyti visus nekeičiamus failus\n\
+[/H]  Kopijuoti paslėptus ir sisteminius failus\n\
+[/C]  Tęsti, net jei įvyksta klaida kopijuojant\n\
+[/A]  Kopijuoti tik failus su nustatytu archyvavimo požymiu\n\
+[/M]  Kopijuoti tik failus su nustatytu archyvavimo požymiu, pašalinti\n\
+\tarchyvavimo požymį\n\
+[/D | /D:m-d-y] Kopijuoti naujus failus arba modifikuotos po nurodytos datos.\n\
+\t\tJei data nenurodyta, kopijuoti tik jei paskirties failas yra\n\
+\t\tsenesnis už šaltinio failą\n\n"
+
+}

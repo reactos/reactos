@@ -149,7 +149,7 @@ typedef struct _SETUP_LOADER_BLOCK
     PCHAR MachineDirectoryPath;
     PCHAR NetBootSifPath;
     PVOID NetBootSecret;
-    CHAR NetBootIMirrorFilePath[26];
+    CHAR NetBootIMirrorFilePath[260];
     PCHAR ASRPnPSifFile;
     ULONG ASRPnPSifFileLength;
     CHAR NetBootAdministratorPassword[64];

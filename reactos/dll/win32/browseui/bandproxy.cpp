@@ -24,6 +24,7 @@ Used by the address band to dispatch navigation changes to the main browser obje
 TODO:
 
 */
+
 #include "precomp.h"
 
 CBandProxy::CBandProxy()
@@ -36,20 +37,15 @@ CBandProxy::~CBandProxy()
 
 HRESULT CBandProxy::FindBrowserWindow(IUnknown **browser)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
-    CComPtr<IWebBrowser2>                   webBrowser;
-    HRESULT                                 hResult;
+    IWebBrowser2* webBrowser;
+    HRESULT hResult;
 
     if (browser == NULL)
         return E_POINTER;
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
+    hResult = IUnknown_QueryService(fSite, SID_IWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &webBrowser));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = serviceProvider->QueryService(
-        SID_IWebBrowserApp, IID_IWebBrowser2, reinterpret_cast<void **>(&webBrowser));
-    if (FAILED(hResult))
-        return hResult;
-    *browser = webBrowser.Detach();
+    *browser = webBrowser;
     return S_OK;
 }
 
@@ -77,7 +73,7 @@ HRESULT STDMETHODCALLTYPE CBandProxy::IsConnected()
     HRESULT                                 hResult;
 
     hResult = FindBrowserWindow(&webBrowser);
-    if (FAILED(hResult) || webBrowser.p == NULL)
+    if (FAILED_UNEXPECTEDLY(hResult) || webBrowser.p == NULL)
         return S_FALSE;
     return S_OK;
 }
@@ -95,17 +91,17 @@ HRESULT STDMETHODCALLTYPE CBandProxy::NavigateToPIDL(LPCITEMIDLIST pidl)
     HRESULT                                 hResult;
 
     hResult = FindBrowserWindow(&webBrowserUnknown);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = webBrowserUnknown->QueryInterface(IID_IWebBrowserApp, reinterpret_cast<void **>(&webBrowser));
-    if (FAILED(hResult))
+    hResult = webBrowserUnknown->QueryInterface(IID_PPV_ARG(IWebBrowser2, &webBrowser));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = webBrowser->put_Visible(TRUE);
-    hResult = webBrowser->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+    hResult = webBrowser->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
     if (SUCCEEDED(hResult))
     {
         hResult = serviceProvider->QueryService(SID_STopLevelBrowser,
-            IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+            IID_PPV_ARG(IOleWindow, &oleWindow));
         if (SUCCEEDED(hResult))
         {
             hResult = oleWindow->GetWindow(&browserWindow);
@@ -120,7 +116,7 @@ HRESULT STDMETHODCALLTYPE CBandProxy::NavigateToPIDL(LPCITEMIDLIST pidl)
         return E_OUTOFMEMORY;
     memcpy(V_ARRAY(&args)->pvData, pidl, arraySize);
     hResult = webBrowser->Navigate2(&args, &emptyVariant, &emptyVariant, &emptyVariant, &emptyVariant);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
 }
@@ -132,20 +128,5 @@ HRESULT STDMETHODCALLTYPE CBandProxy::NavigateToURL(long paramC, long param10)
 
 HRESULT CreateBandProxy(REFIID riid, void **ppv)
 {
-    CComObject<CBandProxy>                  *theBandProxy;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theBandProxy = new CComObject<CBandProxy>);
-    if (theBandProxy == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theBandProxy->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theBandProxy;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBandProxy>(riid, ppv);
 }

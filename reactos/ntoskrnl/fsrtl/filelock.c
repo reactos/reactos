@@ -72,7 +72,7 @@ static PVOID NTAPI LockAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
     PVOID Result;
     Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, TAG_TABLE);
-    DPRINT("LockAllocate(%d) => %p\n", Bytes, Result);
+    DPRINT("LockAllocate(%lu) => %p\n", Bytes, Result);
     return Result;
 }
 
@@ -347,7 +347,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     ULARGE_INTEGER UnsignedStart;
     ULARGE_INTEGER UnsignedEnd;
     
-    DPRINT("FsRtlPrivateLock(%wZ, Offset %08x%08x (%d), Length %08x%08x (%d), Key %x, FailImmediately %d, Exclusive %d)\n", 
+    DPRINT("FsRtlPrivateLock(%wZ, Offset %08x%08x (%d), Length %08x%08x (%d), Key %x, FailImmediately %u, Exclusive %u)\n", 
            &FileObject->FileName, 
            FileOffset->HighPart,
            FileOffset->LowPart, 
@@ -418,7 +418,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     ToInsert.Exclusive.FileLock.FileObject = FileObject;
     ToInsert.Exclusive.FileLock.StartingByte = *FileOffset;
     ToInsert.Exclusive.FileLock.EndingByte.QuadPart = FileOffset->QuadPart + Length->QuadPart;
-    ToInsert.Exclusive.FileLock.ProcessId = Process->UniqueProcessId;
+    ToInsert.Exclusive.FileLock.ProcessId = Process;
     ToInsert.Exclusive.FileLock.Key = Key;
     ToInsert.Exclusive.FileLock.ExclusiveLock = ExclusiveLock;
 
@@ -432,7 +432,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     {
         if (Conflict->Exclusive.FileLock.ExclusiveLock || ExclusiveLock)
         {
-            DPRINT("Conflict %08x%08x:%08x%08x Exc %d (Want Exc %d)\n",
+            DPRINT("Conflict %08x%08x:%08x%08x Exc %u (Want Exc %u)\n",
                    Conflict->Exclusive.FileLock.StartingByte.HighPart,
                    Conflict->Exclusive.FileLock.StartingByte.LowPart,
                    Conflict->Exclusive.FileLock.EndingByte.HighPart,
@@ -613,7 +613,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     }
     else
     {
-        DPRINT("Inserted new lock %wZ %08x%08x %08x%08x exclusive %d\n",
+        DPRINT("Inserted new lock %wZ %08x%08x %08x%08x exclusive %u\n",
                &FileObject->FileName,
                Conflict->Exclusive.FileLock.StartingByte.HighPart,
                Conflict->Exclusive.FileLock.StartingByte.LowPart,
@@ -643,7 +643,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
             NewSharedRange->Start = *FileOffset;
             NewSharedRange->End.QuadPart = FileOffset->QuadPart + Length->QuadPart;
             NewSharedRange->Key = Key;
-            NewSharedRange->ProcessId = Process->UniqueProcessId;
+            NewSharedRange->ProcessId = Process;
             InsertTailList(&LockInfo->SharedLocks, &NewSharedRange->Entry);
         }
         
@@ -739,7 +739,7 @@ FsRtlCheckLockForWriteAccess(IN PFILE_LOCK FileLock,
         DPRINT("CheckLockForWriteAccess(%wZ) => TRUE\n", &IoStack->FileObject->FileName);
         return TRUE;
     }
-    Result = Process->UniqueProcessId == Found->Exclusive.FileLock.ProcessId;
+    Result = Process == Found->Exclusive.FileLock.ProcessId;
     DPRINT("CheckLockForWriteAccess(%wZ) => %s\n", &IoStack->FileObject->FileName, Result ? "TRUE" : "FALSE");
     return Result;
 }
@@ -775,7 +775,7 @@ FsRtlFastCheckLockForRead(IN PFILE_LOCK FileLock,
          &ToFind);
     if (!Found || !Found->Exclusive.FileLock.ExclusiveLock) return TRUE;
     return Found->Exclusive.FileLock.Key == Key && 
-        Found->Exclusive.FileLock.ProcessId == EProcess->UniqueProcessId;
+        Found->Exclusive.FileLock.ProcessId == EProcess;
 }
 
 /*
@@ -816,7 +816,7 @@ FsRtlFastCheckLockForWrite(IN PFILE_LOCK FileLock,
         return TRUE;
     }
     Result = Found->Exclusive.FileLock.Key == Key && 
-        Found->Exclusive.FileLock.ProcessId == EProcess->UniqueProcessId;
+        Found->Exclusive.FileLock.ProcessId == EProcess;
     DPRINT("CheckForWrite(%wZ) => %s\n", &FileObject->FileName, Result ? "TRUE" : "FALSE");
     return Result;
 }
@@ -868,7 +868,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         return STATUS_RANGE_NOT_LOCKED;
     }
 
-    DPRINT("Found lock entry: Exclusive %d %08x%08x:%08x%08x %wZ\n",
+    DPRINT("Found lock entry: Exclusive %u %08x%08x:%08x%08x %wZ\n",
            Entry->Exclusive.FileLock.ExclusiveLock,
            Entry->Exclusive.FileLock.StartingByte.HighPart,
            Entry->Exclusive.FileLock.StartingByte.LowPart,
@@ -879,7 +879,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
     if (Entry->Exclusive.FileLock.ExclusiveLock)
     {
         if (Entry->Exclusive.FileLock.Key != Key ||
-            Entry->Exclusive.FileLock.ProcessId != Process->UniqueProcessId ||
+            Entry->Exclusive.FileLock.ProcessId != Process ||
             Entry->Exclusive.FileLock.StartingByte.QuadPart != FileOffset->QuadPart ||
             Entry->Exclusive.FileLock.EndingByte.QuadPart != 
             FileOffset->QuadPart + Length->QuadPart)
@@ -907,7 +907,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
             if (SharedRange->Start.QuadPart == FileOffset->QuadPart &&
                 SharedRange->End.QuadPart == FileOffset->QuadPart + Length->QuadPart &&
                 SharedRange->Key == Key &&
-                SharedRange->ProcessId == Process->UniqueProcessId)
+                SharedRange->ProcessId == Process)
             {
                 FoundShared = TRUE;
                 DPRINT("Found shared element to delete %wZ Start %08x%08x End %08x%08x Key %x\n",
@@ -1010,7 +1010,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         // we looked, but can't guarantee that it won't just be re-queued
         // because somebody else snatched part of the range in a new thread.
         DPRINT("Locking another IRP %p for %p %wZ\n", 
-               &FileObject->FileName, FileLock, NextMatchingLockIrp);
+               NextMatchingLockIrp, FileLock, &FileObject->FileName);
         FsRtlProcessFileLock(InternalInfo->BelongsTo, NextMatchingLockIrp, NULL);
     }
     
@@ -1044,7 +1044,7 @@ FsRtlFastUnlockAll(IN PFILE_LOCK FileLock,
         PLOCK_SHARED_RANGE Range = CONTAINING_RECORD(ListEntry, LOCK_SHARED_RANGE, Entry);
         Length.QuadPart = Range->End.QuadPart - Range->Start.QuadPart;
         ListEntry = ListEntry->Flink;
-        if (Range->ProcessId != Process->UniqueProcessId)
+        if (Range->ProcessId != Process)
             continue;
         FsRtlFastUnlockSingle
             (FileLock,
@@ -1105,7 +1105,7 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
         LARGE_INTEGER Length;
         Length.QuadPart = Range->End.QuadPart - Range->Start.QuadPart;
         ListEntry = ListEntry->Flink;
-        if (Range->ProcessId != Process->UniqueProcessId ||
+        if (Range->ProcessId != Process ||
             Range->Key != Key)
             continue;
         FsRtlFastUnlockSingle
@@ -1128,7 +1128,7 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
             Entry->Exclusive.FileLock.EndingByte.QuadPart - 
             Entry->Exclusive.FileLock.StartingByte.QuadPart;
         if (Entry->Exclusive.FileLock.Key == Key && 
-            Entry->Exclusive.FileLock.ProcessId == Process->UniqueProcessId)
+            Entry->Exclusive.FileLock.ProcessId == Process)
         {
             FsRtlFastUnlockSingle
                 (FileLock, 

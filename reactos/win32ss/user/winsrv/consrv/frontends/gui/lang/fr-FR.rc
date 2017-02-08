@@ -1,0 +1,30 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Éd&ition"
+    IDS_MARK "&Marquer"
+    IDS_COPY "&Copier\tEntrée"
+    IDS_PASTE "C&oller"
+    IDS_SELECTALL "Sélectionner &tout"
+    IDS_SCROLL "&Défiler"
+    IDS_FIND "&Rechercher..."
+    IDS_DEFAULTS "&Défauts"
+    IDS_PROPERTIES "&Propriétés"
+/*
+    IDS_SCROLLHERE "Défiler ici"
+    IDS_SCROLLTOP "Défiler tout en haut"
+    IDS_SCROLLBOTTOM "Défiler tout en bas"
+    IDS_SCROLLPAGE_UP "Page précédente"
+    IDS_SCROLLPAGE_DOWN "Page suivante"
+    IDS_SCROLLUP "Défiler en haut"
+    IDS_SCROLLDOWN "Défiler en bas"
+*/
+    IDS_TERMINAL_TITLE "ReactOS Console"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Marquage"
+    IDS_SELECT_TITLE "Sélection"
+END

@@ -9,9 +9,6 @@
 
 #include "lsasrv.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
-
-
 typedef struct
 {
     LUID Luid;
@@ -104,7 +101,7 @@ LsarpLookupPrivilegeName(PLUID Value,
             NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
 
             NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
-            if (NameBuffer == NULL)
+            if (NameBuffer->Buffer == NULL)
             {
                 MIDL_user_free(NameBuffer);
                 return STATUS_NO_MEMORY;
@@ -121,6 +118,39 @@ LsarpLookupPrivilegeName(PLUID Value,
     return STATUS_NO_SUCH_PRIVILEGE;
 }
 
+NTSTATUS
+LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
+                                USHORT ClientLanguage,
+                                USHORT ClientSystemDefaultLanguage,
+                                PRPC_UNICODE_STRING *DisplayName,
+                                USHORT *LanguageReturned)
+{
+    PRPC_UNICODE_STRING DisplayNameBuffer;
+    UNIMPLEMENTED;
+
+    /* For now, description is equal to privilege name */
+
+    DisplayNameBuffer = MIDL_user_allocate(sizeof(RPC_UNICODE_STRING));
+    if (DisplayNameBuffer == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    DisplayNameBuffer->Length = Name->Length;
+    DisplayNameBuffer->MaximumLength = Name->MaximumLength;
+
+    DisplayNameBuffer->Buffer = MIDL_user_allocate(DisplayNameBuffer->MaximumLength);
+    if (DisplayNameBuffer->Buffer == NULL)
+    {
+        MIDL_user_free(DisplayNameBuffer);
+        return STATUS_NO_MEMORY;
+    }
+
+    wcscpy(DisplayNameBuffer->Buffer, Name->Buffer);
+
+    *DisplayName = DisplayNameBuffer;
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
@@ -260,7 +290,7 @@ LsapLookupAccountRightName(ULONG RightValue,
             NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
 
             NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
-            if (NameBuffer == NULL)
+            if (NameBuffer->Buffer == NULL)
             {
                 MIDL_user_free(NameBuffer);
                 return STATUS_INSUFFICIENT_RESOURCES;

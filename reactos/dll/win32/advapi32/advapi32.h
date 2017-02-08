@@ -15,25 +15,19 @@
 #include <stdio.h>
 
 /* PSDK/NDK Headers */
+#define WINE_STRICT_PROTOTYPES
 #define WIN32_NO_STATUS
 #define WIN32_LEAN_AND_MEAN
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #define _WMI_SOURCE_
-#include <windows.h>
-#include <winefs.h>
 #include <aclapi.h>
-#include <wmistr.h>
-#include <evntrace.h>
 #include <winsafer.h>
-#include <sddl.h>
 #define NTOS_MODE_USER
-#include <ndk/cmfuncs.h>
-#include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
-#include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/setypes.h>
 #include <ndk/sefuncs.h>
 
 /* this has to go after the NDK when being used with the NDK */
@@ -41,13 +35,12 @@
 
 #include <services/services.h>
 #include <svcctl_c.h>
-#include <lsa_c.h>
-#include <eventlogrpc_c.h>
+#include <winreg_c.h>
 
-#include "crypt/crypt.h"
 #include <wine/debug.h>
 #include <wine/unicode.h>
-#include <wincred.h>
+
+#include "wine/crypt.h"
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS
@@ -55,6 +48,11 @@
 #ifndef HAS_FN_PROGRESSA
 #define FN_PROGRESSA FN_PROGRESS
 #endif
+
+/* logon.c */
+
+NTSTATUS
+CloseLogonLsaHandle(VOID);
 
 /* rpc.c */
 
@@ -180,5 +178,17 @@ typedef struct _NTMARTA
 extern NTMARTA NtMartaStatic;
 
 DWORD CheckNtMartaPresent(VOID);
+
+/* heap allocation helpers */
+static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
+static inline void *heap_alloc( size_t len )
+{
+    return HeapAlloc( GetProcessHeap(), 0, len );
+}
+
+static inline BOOL heap_free( void *mem )
+{
+    return HeapFree( GetProcessHeap(), 0, mem );
+}
 
 #endif /* __ADVAPI32_H */

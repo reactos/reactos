@@ -12,7 +12,7 @@ BEGIN
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Aggiungi...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Rimuovi", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
-    PUSHBUTTON "&Propriet‡", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
+    PUSHBUTTON "&Propriet√†", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "A&vanzate...", IDC_ADVANCED_BUTTON, 79, 157, 65, 14
     PUSHBUTTON "&Risoluzione dei problemi...", IDC_TROUBLESHOOT_BUTTON, 148, 157, 97, 14
     PUSHBUTTON "OK", IDOK, 195, 185, 50, 14
@@ -25,7 +25,7 @@ CAPTION "Aggiungi periferica di gioco"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Selezionare una periferica di gioco dall'elenco seguente e premere il pulsante OK.  Se la periferica non È presente nella lista, premere il pulsante Personalizza.", -1, 35, 7, 210, 33
+    LTEXT "Selezionare una periferica di gioco dall'elenco seguente e premere il pulsante OK.  Se la periferica non √© presente nella lista, premere il pulsante Personalizza.", -1, 35, 7, 210, 33
     LTEXT "Periferi&che di gioco:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Attiva &timone e pedali", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP

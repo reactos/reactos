@@ -5,21 +5,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Громкость"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",IDC_DEVICE_NAME,40,10,194,19
-    GROUPBOX "Громкость микшера", -1, 7,30,230,100
-    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE,17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "ниже",-1,62,66,30,9
-    LTEXT "выше",-1,195,66,30,9
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
+    LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 19
+    GROUPBOX "Громкость микшера", -1, 7, 30, 230, 100
+    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
+    CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
+    LTEXT "ниже", -1, 62, 66, 30, 9
+    LTEXT "выше", -1, 195, 66, 30, 9
     CHECKBOX "В&ыключить звук", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     CHECKBOX "Отображать &значок на панели задач", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "&Дополнительно...", IDC_ADVANCED_BTN, 155,110,75,15
-    GROUPBOX "Настройки динамиков", IDC_SPEAKER_SET_BTN, 7,140,230,80
-    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Расположенные ниже кнопки позволяют выполнить индивидуальную настройку громкости динамиков и других параметров.",-1,70,155,150,36
-    PUSHBUTTON "Гром&кость...", IDC_SPEAKER_VOL_BTN, 70,200,80,15
-    PUSHBUTTON "Д&ополнительно...", IDC_ADVANCED2_BTN, 155,200,75,15
+    PUSHBUTTON "&Дополнительно...", IDC_ADVANCED_BTN, 155, 110, 75, 15
+    GROUPBOX "Настройки динамиков", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
+    LTEXT "Расположенные ниже кнопки позволяют выполнить индивидуальную настройку громкости динамиков и других параметров.", -1, 70, 155, 150, 36
+    PUSHBUTTON "Гром&кость...", IDC_SPEAKER_VOL_BTN, 70, 200, 80, 15
+    PUSHBUTTON "Д&ополнительно...", IDC_ADVANCED2_BTN, 155, 200, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
@@ -27,18 +27,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Звуки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Звуковая схема задает звуки, сопровождающие события в операционной системе ReactOS и программах. Можно выбрать одну из существующих схем или создать новую.",-1,8,7,230,30
-    LTEXT "Звуковая с&хема:",-1,8,42,150,9
+    LTEXT "Звуковая схема задает звуки, сопровождающие события в операционной системе ReactOS и программах. Можно выбрать одну из существующих схем или создать новую.", -1, 8, 7, 230, 30
+    LTEXT "Звуковая с&хема:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Сохранить &как...", IDC_SAVEAS_BTN, 119,70,65,15
-    PUSHBUTTON "&Удалить", IDC_DELETE_BTN, 188,70,50,15
-    LTEXT "Чтобы изменить звуковое сопровождение, щелкните на событии в списке и выберите нужный звук. Изменения можно сохранить как новую звуковую схему.",-1,8,90,230,28
-    LTEXT "Программные &события:",-1,8,118,150,9
+    PUSHBUTTON "Сохранить &как...", IDC_SAVEAS_BTN, 119, 70, 65, 15
+    PUSHBUTTON "&Удалить", IDC_DELETE_BTN, 188, 70, 50, 15
+    LTEXT "Чтобы изменить звуковое сопровождение, щелкните на событии в списке и выберите нужный звук. Изменения можно сохранить как новую звуковую схему.", -1, 8, 90, 230, 28
+    LTEXT "Программные &события:", -1, 8, 118, 150, 9
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Звуки:",IDC_TEXT_SOUND,8,194,80,9, WS_DISABLED
+    LTEXT "&Звуки:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED | BS_ICON
-    PUSHBUTTON "&Обзор...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
+    PUSHBUTTON "&Обзор...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -46,24 +46,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Аудио"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Воспроизведение звука", -1, 7,7,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "&Используемое по умолчанию устройство:",-1,50,20,180,9
+    GROUPBOX "Воспроизведение звука", -1, 7, 7, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
+    LTEXT "&Используемое по умолчанию устройство:", -1, 50, 20, 180, 9
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Громкость...", IDC_VOLUME1_BTN, 85,47,70,15
-    PUSHBUTTON "&Настройка...", IDC_ADV2_BTN, 160,47,70,15
-    GROUPBOX "Запись звука", -1, 7,75,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "И&используемое по умолчанию устройство:",-1,50,88,180,9
+    PUSHBUTTON "&Громкость...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "&Настройка...", IDC_ADV2_BTN, 160, 47, 70, 15
+    GROUPBOX "Запись звука", -1, 7, 75, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
+    LTEXT "И&спользуемое по умолчанию устройство:", -1, 50, 88, 180, 9
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Гро&мкость...", IDC_VOLUME2_BTN, 85,115,70,15
-    PUSHBUTTON "Н&астройка...", IDC_ADV1_BTN, 160,115,70,15
-    GROUPBOX "Воспроизведение MIDI", -1, 7,145,230,60
-    ICON IDI_MIDICON, IDI_MIDICON, 15,158,32,32
-    LTEXT "Ис&пользуемое по умолчанию устройство:",-1,50,158,180,9
+    PUSHBUTTON "Гро&мкость...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "Н&астройка...", IDC_ADV1_BTN, 160, 115, 70, 15
+    GROUPBOX "Воспроизведение MIDI", -1, 7, 145, 230, 60
+    ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
+    LTEXT "Ис&пользуемое по умолчанию устройство:", -1, 50, 158, 180, 9
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Гром&кость...", IDC_VOLUME3_BTN, 85,185,70,15
-    PUSHBUTTON "Св&едения...", IDC_ADV3_BTN, 160,185,70,15
+    PUSHBUTTON "Гром&кость...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "Св&едения...", IDC_ADV3_BTN, 160, 185, 70, 15
     CHECKBOX "Использовать то&лько устройства по умолчанию", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 180, 10
 END
 
@@ -72,20 +72,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Речь"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Можно изменить громкость и другие параметры для выбранных вами устройств воспроизведения и записи речи.",-1,8,7,230,30
-    GROUPBOX "Воспроизведение речи", -1, 7,37,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "&Используемое по умолчанию устройство:",-1,50,50,180,9
+    LTEXT "Можно изменить громкость и другие параметры для выбранных вами устройств воспроизведения и записи речи.", -1, 8, 7, 230, 30
+    GROUPBOX "Воспроизведение речи", -1, 7, 37, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
+    LTEXT "&Используемое по умолчанию устройство:", -1, 50, 50, 180, 9
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Громкость...", IDC_VOLUME4_BTN, 85,77,70,15
-    PUSHBUTTON "&Дополнительно...", IDC_ADV4_BTN, 160,77,70,15
-    GROUPBOX "Запись речи", -1, 7,105,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "И&спользуемое по умолчанию утройство:",-1,50,118,180,9
+    PUSHBUTTON "&Громкость...", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "&Дополнительно...", IDC_ADV4_BTN, 160, 77, 70, 15
+    GROUPBOX "Запись речи", -1, 7, 105, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
+    LTEXT "И&спользуемое по умолчанию утройство:", -1, 50, 118, 180, 9
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Гро&мкость...", IDC_VOLUME5_BTN, 85,145,70,15
-    PUSHBUTTON "Допо&лнительно...", IDC_ADV5_BTN, 160,145,70,15
-    PUSHBUTTON "&Проверка...", IDC_TEST_HARDWARE, 160,175,70,15
+    PUSHBUTTON "Гро&мкость...", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "Допо&лнительно...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "&Проверка...", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
+IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Сохранить схему как"
 FONT 8, "MS Shell Dlg"
@@ -106,7 +106,7 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 157, 36, 60, 14
 END
 
-IDD_SPEAKERS DIALOG 0, 0, 257, 204
+IDD_SPEAKERS DIALOGEX 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Динамики"
 FONT 8, "MS Shell Dlg"
@@ -118,7 +118,7 @@ BEGIN
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
-IDD_PERFORMANCE1 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE1 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Производительность"
 FONT 8, "MS Shell Dlg"
@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Этот параметр описывает настройку устройства обработки звука", 5398, 13, 78, 227, 22
 END
 
-IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
+IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Производительность"
 FONT 8, "MS Shell Dlg"
@@ -160,7 +160,7 @@ BEGIN
     LTEXT "Этот параметр описывает настройку устройства обработки звука", 5398, 13, 68, 218, 17
 END
 
-IDD_SETUP1 DIALOG 0, 0, 227, 206
+IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Установка"
 FONT 8, "MS Shell Dlg"
@@ -170,11 +170,11 @@ BEGIN
     LTEXT "Этот компьютер не может воспроизводить звук пока служба звука ReactOS не включена.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Включить Звук ReactOS", 10253, 60, 68, 150, 9
     LTEXT "Примечания", 10246, 58, 87, 150, 9
-    LTEXT "1. You must be an administrator to enable this service. If you are not logged on as administrator, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
+    LTEXT "1. Вы должны быть администратором, чтобы включить эту службу. Если вы не вошли в систему в качестве администратора, вам будет предложено ввести имя и пароль администратора.", 10247, 60, 100, 150, 40
     LTEXT "2. После того, как вы включите Звук ReactOS, вы должны перезагрузить компьютер.", 10248, 60, 140, 150, 40
 END
 
-IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
+IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Многоканальный"
 FONT 8, "MS Shell Dlg"
@@ -216,16 +216,16 @@ BEGIN
     PUSHBUTTON "&Востановить умолчания", 9505, 110, 199, 110, 14
 END
 
-IDD_SETUP2 DIALOG 0, 0, 227, 206
+IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Установка"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Звук ReactOS", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "The ReactOS Audio service is now enabled. However, audio may not function properly until you restart ReactOS. If you want to restart now, first save your work and close all programs.", 10261, 60, 25, 150, 50
+    LTEXT "ReactOS служба Звука включена. Однако, звук может не функционировать должным образом, пока вы не перезагрузите ReactOS. Если вы хотите перезагрузить компьютер сейчас, сначала сохраните данные и закройте все программы.", 10261, 60, 25, 150, 50
     LTEXT "Для перезагрузки ReactOS нажмите ""OK"".", 10262, 60, 75, 150, 20
-    LTEXT "If you Cancel, you will need to restart later for ReactOS Audio to function properly.", 10263, 60, 100, 150, 40
+    LTEXT "Нажмите Отмена, чтобы перезапустить ReactOS позже.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -233,15 +233,14 @@ BEGIN
     IDS_CPLNAME "Звук и аудиоустройства"
     IDS_CPLDESCRIPTION "Изменение звуковых схем вашего компьютера, настройка колонок и записывающих устройств."
     IDS_NO_SOUND "(Нет)"
-	IDS_NO_DEVICES "No Devices"
-
+    IDS_NO_DEVICES "Нет устройств"
     5825 "Ошибка программы"
-    5826 "Закрыть программу"
+    5826 "Закрытие программы"
     5827 "Сигнал почти полной разрядки батарей"
     5828 "Подключение устройства"
     5829 "Отключение устройства"
     5830 "Ошибка подключения устройства"
-    5831 "Очистка карзины"
+    5831 "Очистка корзины"
     5832 "Сигнал низкого заряда батарей"
     5833 "Развертывание"
     5834 "Команда меню"
@@ -250,7 +249,7 @@ BEGIN
     5837 "Уведомление о получении почты"
     5838 "Начать обзор"
     5839 "Открытие программы"
-    5840 "Печать завершена"
+    5840 "Завершение печати"
     5841 "Восстановление окна с полного экрана"
     5842 "Восстановление окна из значка"
     5843 "Звездочка"
@@ -264,5 +263,5 @@ BEGIN
     5851 "Главное меню"
     5852 "Выход из ReactOS"
     5853 "Вход в ReactOS"
-	5854 "Проводник ReactOS"
+    5854 "Проводник ReactOS"
 END

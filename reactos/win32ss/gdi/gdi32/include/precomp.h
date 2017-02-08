@@ -1,10 +1,13 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            lib/gdi32/include/precomp.h
+ * FILE:            win32ss/gdi/gdi32/include/precomp.h
  * PURPOSE:         User-Mode Win32 GDI Library Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
+
+#ifndef _GDI32_PCH_
+#define _GDI32_PCH_
 
 /* INCLUDES ******************************************************************/
 
@@ -14,10 +17,20 @@
 #define COM_NO_WINDOWS_H
 #define NTOS_MODE_USER
 
-#include <stdio.h>
+#include <stdarg.h>
 
 /* SDK/DDK/NDK Headers. */
 #include <windef.h>
+
+/* Avoid type casting, by defining RECT to RECTL */
+#define RECT RECTL
+#define PRECT PRECTL
+#define LPRECT LPRECTL
+#define LPCRECT LPCRECTL
+#define POINT POINTL
+#define LPPOINT PPOINTL
+#define PPOINT PPOINTL
+
 #include <winbase.h>
 #include <winnls.h>
 #include <objbase.h>
@@ -25,18 +38,12 @@
 #include <wingdi.h>
 #define _ENGINE_EXPORT_
 #include <winddi.h>
-#include <d3dnthal.h>
 #include <prntfont.h>
 #include <winddiui.h>
 #include <winspool.h>
 
-#include <pseh/pseh2.h>
-
-#include <ddraw.h>
 #include <ddrawi.h>
-#include <ddrawint.h>
 #include <ddrawgdi.h>
-#include <d3dhal.h>
 
 /* Public Win32K Headers */
 #include <ntgdityp.h>
@@ -49,4 +56,4 @@
 /* Deprecated NTGDI calls which shouldn't exist */
 #include <ntgdibad.h>
 
-/* EOF */
+#endif /* _GDI32_PCH_ */

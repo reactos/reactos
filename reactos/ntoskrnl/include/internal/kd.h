@@ -2,18 +2,11 @@
 
 #include <cportlib/cportlib.h>
 
-#ifdef _M_PPC
-#define KdDebuggerEnabled _KdDebuggerEnabled
-#define KdDebuggerNotPresent _KdDebuggerNotPresent
-#endif
-
 //
 // Kernel Debugger Port Definition
 //
 struct _KD_DISPATCH_TABLE;
 extern CPPORT GdbPortInfo;
-extern BOOLEAN _KdDebuggerEnabled;
-extern BOOLEAN _KdDebuggerNotPresent;
 extern BOOLEAN KdBreakAfterSymbolLoad;
 extern BOOLEAN KdPitchDebugger;
 extern BOOLEAN KdIgnoreUmExceptions;
@@ -43,7 +36,7 @@ KdPortPutByteEx(
 
 #if defined(KDBG) || DBG
 
-#if KDBG
+#if defined(KDBG)
 typedef
 BOOLEAN
 (NTAPI *PKDBG_CLI_ROUTINE)(
@@ -74,7 +67,7 @@ KdbSymGetAddressInformation(
     IN PROSSYM_INFO  RosSymInfo,
     IN ULONG_PTR  RelativeAddress,
 #ifdef __ROS_DWARF__
-	IN PROSSYM_LINEINFO RosSymLineInfo
+    IN PROSSYM_LINEINFO RosSymLineInfo
 #else
     OUT PULONG LineNumber  OPTIONAL,
     OUT PCH FileName  OPTIONAL,
@@ -361,7 +354,7 @@ extern ULONG Kd_WIN2000_Mask;
 
 #endif
 
-#if DBG
+#if DBG && defined(_M_IX86) && !defined(_WINKD_) // See ke/i386/traphdlr.c
 #define ID_Win32PreServiceHook 'WSH0'
 #define ID_Win32PostServiceHook 'WSH1'
 typedef void (NTAPI *PKDBG_PRESERVICEHOOK)(ULONG, PULONG_PTR);

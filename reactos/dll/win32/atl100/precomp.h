@@ -1,0 +1,24 @@
+#ifndef _ATL100_PCH_
+#define _ATL100_PCH_
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <oleauto.h>
+
+#include <wine/atlbase.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(atl);
+
+#endif /* _ATL100_PCH_ */

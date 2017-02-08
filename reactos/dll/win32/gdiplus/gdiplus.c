@@ -16,24 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-//#include <math.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "wingdi.h"
-
-//#include "objbase.h"
-
-//#include "winreg.h"
-//#include "shlwapi.h"
-
-//#include "gdiplus.h"
 #include "gdiplus_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 static const REAL mm_per_inch = 25.4;
 static const REAL point_per_inch = 72.0;
@@ -66,6 +49,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
         break;
 
     case DLL_PROCESS_DETACH:
+        if (reserved) break;
         free_installed_fonts();
         break;
     }
@@ -373,7 +357,7 @@ REAL units_scale(GpUnit from, GpUnit to, REAL dpi)
 }
 
 /* Calculates Bezier points from cardinal spline points. */
-void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
+void calc_curve_bezier(const GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2)
 {
     REAL xdiff, ydiff;
@@ -405,12 +389,12 @@ BOOL lengthen_path(GpPath *path, INT len)
     if(path->datalen == 0){
         path->datalen = len * 2;
 
-        path->pathdata.Points = GdipAlloc(path->datalen * sizeof(PointF));
+        path->pathdata.Points = heap_alloc_zero(path->datalen * sizeof(PointF));
         if(!path->pathdata.Points)   return FALSE;
 
-        path->pathdata.Types = GdipAlloc(path->datalen);
+        path->pathdata.Types = heap_alloc_zero(path->datalen);
         if(!path->pathdata.Types){
-            GdipFree(path->pathdata.Points);
+            heap_free(path->pathdata.Points);
             return FALSE;
         }
     }
@@ -419,12 +403,10 @@ BOOL lengthen_path(GpPath *path, INT len)
         while(path->datalen - path->pathdata.Count < len)
             path->datalen *= 2;
 
-        path->pathdata.Points = HeapReAlloc(GetProcessHeap(), 0,
-            path->pathdata.Points, path->datalen * sizeof(PointF));
+        path->pathdata.Points = heap_realloc(path->pathdata.Points, path->datalen * sizeof(PointF));
         if(!path->pathdata.Points)  return FALSE;
 
-        path->pathdata.Types = HeapReAlloc(GetProcessHeap(), 0,
-            path->pathdata.Types, path->datalen);
+        path->pathdata.Types = heap_realloc(path->pathdata.Types, path->datalen);
         if(!path->pathdata.Types)   return FALSE;
     }
 
@@ -442,9 +424,9 @@ void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
         for (x=0; x<width; x++)
         {
             BYTE alpha=src[3];
-            *dst++ = *src++ * alpha / 255;
-            *dst++ = *src++ * alpha / 255;
-            *dst++ = *src++ * alpha / 255;
+            *dst++ = (*src++ * alpha + 127) / 255;
+            *dst++ = (*src++ * alpha + 127) / 255;
+            *dst++ = (*src++ * alpha + 127) / 255;
             *dst++ = *src++;
         }
     }
@@ -458,7 +440,7 @@ void delete_element(region_element* element)
         case RegionDataRect:
             break;
         case RegionDataPath:
-            GdipDeletePath(element->elementdata.pathdata.path);
+            GdipDeletePath(element->elementdata.path);
             break;
         case RegionDataEmptyRect:
         case RegionDataInfiniteRect:
@@ -466,19 +448,19 @@ void delete_element(region_element* element)
         default:
             delete_element(element->elementdata.combine.left);
             delete_element(element->elementdata.combine.right);
-            GdipFree(element->elementdata.combine.left);
-            GdipFree(element->elementdata.combine.right);
+            heap_free(element->elementdata.combine.left);
+            heap_free(element->elementdata.combine.right);
             break;
     }
 }
 
-const char *debugstr_rectf(CONST RectF* rc)
+const char *debugstr_rectf(const RectF* rc)
 {
     if (!rc) return "(null)";
     return wine_dbg_sprintf("(%0.2f,%0.2f,%0.2f,%0.2f)", rc->X, rc->Y, rc->Width, rc->Height);
 }
 
-const char *debugstr_pointf(CONST PointF* pt)
+const char *debugstr_pointf(const PointF* pt)
 {
     if (!pt) return "(null)";
     return wine_dbg_sprintf("(%0.2f,%0.2f)", pt->X, pt->Y);

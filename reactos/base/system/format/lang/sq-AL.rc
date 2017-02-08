@@ -1,0 +1,47 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_HELP "Përdorim: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Specifiko driverin per te formatuar.\n\
+  -FS:file-system  Specifiko tipin e sistemit te dokumentave (%s).\n\
+  -V:label         Specifiko etiketen e volumit.\n\
+  -Q               Performon një formatim të shpejte.\n\
+  -A:size          Mbishkruan alokimin e parazgjedhur te mases per njesi. Konfigurimet e parazgjedhura\n\
+                   janë të rekomanduara per perdorim te pergjithshem\n\
+                   NTFS suporton 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT suporton 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS kompresimi nuk suportohet alokimet e mases per njesi\n\
+                   mbi 4096.\n\
+  -C               Dokumentat e krijuar ne volumin e ri do te kompresohen me\n\
+                   parazgjedhje.\n\n"
+    STRING_COMPLETE "%lu përgjindja e kompletuar.\r"
+    STRING_FORMAT_FAIL "FormatEx ishte e pamundur te mbaroje me sukses.\n\n"
+    STRING_NO_SUPPORT "Nuk suportohet"
+    STRING_FMIFS_FAIL "Nuk alokohet FMIFS pika hyrjes.\n\n"
+    STRING_UNKNOW_ARG "Argument i panjohur: %s\n"
+    STRING_DRIVE_PARM "Parametra e duhura te driverit mungojne.\n\n"
+    STRING_ERROR_DRIVE_TYPE "Nuk dihet tipi i driverit"
+    STRING_INSERT_DISK "Fusni nje floppy ne drive %C:\nadhe shtypni Enter kur te jeni gati..."
+    STRING_NO_VOLUME "Nuk mund te pyesi nje volum"
+    STRING_NO_VOLUME_SIZE "Nuk mund te pyesi masen e nje volumi"
+    STRING_FILESYSTEM "Tipi i dokumentave te sistemit eshte %s.\n"
+    STRING_LABEL_NAME_EDIT "Futu ne etiketimin e volumit aktual per drive %C: "
+    STRING_ERROR_LABEL "Një emërtim vëllimi i pasaktë u futur për këtë drive.\n"
+    STRING_YN_FORMAT "\nKUJDES, TË GJITHA TË DHËNAT MBI DISKUN JO_TE_LEVIZSHEM\n\
+DRIVE %C: DO TË HUMBASIN!\nVazhdo ne formatimin (P/J)? "
+    STRING_YES_NO_FAQ "PJ"
+    STRING_VERIFYING "Verifiko"
+    STRING_FAST_FMT "Format i Shpejte"
+    STRING_CREATE_FSYS "Krijo nje strukture te sistemit.\n"
+    STRING_FMT_COMPLETE "Formatimi mbaroj.\n"
+    STRING_VOL_COMPRESS "Volumi nuk suporton ngjeshje.\n"
+    STRING_ENTER_LABEL "Etiketa e Volumit (11 karaktere, Enter per anje)? "
+    STRING_NO_LABEL "Nuk gjindet etiketa e volumit"
+    STRING_FREE_SPACE "\n%I64d bytes totale ne hapesiren e diskut.\n%I64d bytes te disponushme ne disk.\n"
+    STRING_SERIAL_NUMBER "\nNumri Serial i Volumit është %04X-%04X\n"
+END

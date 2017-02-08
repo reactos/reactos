@@ -1,0 +1,114 @@
+/*
+ * Copyright 2009 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milaré
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Erro ao converter objeto em tipo primitivo"
+    IDS_INVALID_CALL_ARG    "Argumento ou chamada de procedimento inválida"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
+    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_CREATE_OBJ_ERROR    "O servidor de automação não conseguiu criar o objeto"
+    IDS_NO_PROPERTY         "O objeto não suporta esta propriedade ou método"
+    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_ARG_NOT_OPT         "Argumento não opcional"
+    IDS_SYNTAX_ERROR        "Erro de sintaxe"
+    IDS_SEMICOLON           "';' esperado"
+    IDS_LBRACKET            "'(' esperado"
+    IDS_RBRACKET            "')' esperado"
+    IDS_EXPECTED_IDENTIFIER "Expected identifier"
+    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_INVALID_CHAR        "Invalid character"
+    IDS_UNTERMINATED_STR    "Constante de string não terminada"
+    IDS_MISPLACED_RETURN    "'return' statement outside of function"
+    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
+    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_LABEL_REDEFINED     "Label redefined"
+    IDS_LABEL_NOT_FOUND     "Label not found"
+    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_DISABLED_CC         "Conditional compilation is turned off"
+    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_NOT_FUNC            "Função esperada"
+    IDS_NOT_DATE            "'[object]' não é um objeto de data"
+    IDS_NOT_NUM             "Número esperado"
+    IDS_OBJECT_EXPECTED     "Objeto esperado"
+    IDS_ILLEGAL_ASSIGN      "Atribuição ilegal"
+    IDS_UNDEFINED           "'|' é indefinido"
+    IDS_NOT_BOOL            "Objeto boleano esperado"
+    IDS_INVALID_DELETE      "Cannot delete '|'"
+    IDS_NOT_VBARRAY         "VBArray object expected"
+    IDS_JSCRIPT_EXPECTED    "Objeto JScript esperado"
+    IDS_REGEXP_SYNTAX_ERROR "Erro de sintaxe na expressão regular"
+    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
+    IDS_URI_INVALID_CHAR    "URI a ser codificado contém caracteres inválidos"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
+    IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
+    IDS_INVALID_LENGTH      "Tamanho do vetor tem que ser um inteiro finito positivo"
+    IDS_ARRAY_EXPECTED      "Objeto Array esperado"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Erro ao converter objecto em tipo primitivo"
+    IDS_INVALID_CALL_ARG    "Argumento ou chamada de procedimento inválida"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
+    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_CREATE_OBJ_ERROR    "O servidor de automação não conseguiu criar o objecto"
+    IDS_NO_PROPERTY         "O objecto não suporta esta propriedade ou método"
+    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_ARG_NOT_OPT         "Argumento não opcional"
+    IDS_SYNTAX_ERROR        "Erro de sintaxe"
+    IDS_SEMICOLON           "';' esperado"
+    IDS_LBRACKET            "'(' esperado"
+    IDS_RBRACKET            "')' esperado"
+    IDS_EXPECTED_IDENTIFIER "Expected identifier"
+    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_INVALID_CHAR        "Invalid character"
+    IDS_UNTERMINATED_STR    "Constante de string não terminada"
+    IDS_MISPLACED_RETURN    "'return' statement outside of function"
+    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
+    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_LABEL_REDEFINED     "Label redefined"
+    IDS_LABEL_NOT_FOUND     "Label not found"
+    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_DISABLED_CC         "Conditional compilation is turned off"
+    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_NOT_FUNC            "Função esperada"
+    IDS_NOT_DATE            "'[object]' não é um objecto de data"
+    IDS_NOT_NUM             "Número esperado"
+    IDS_OBJECT_EXPECTED     "Objecto esperado"
+    IDS_ILLEGAL_ASSIGN      "Atribuição ilegal"
+    IDS_UNDEFINED           "'|' é indefinido"
+    IDS_NOT_BOOL            "Objecto boleano esperado"
+    IDS_INVALID_DELETE      "Cannot delete '|'"
+    IDS_NOT_VBARRAY         "VBArray object expected"
+    IDS_JSCRIPT_EXPECTED    "Objecto JScript esperado"
+    IDS_REGEXP_SYNTAX_ERROR "Erro de sintaxe na expressão regular"
+    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
+    IDS_URI_INVALID_CHAR    "URI a ser codificado contém caracteres inválidos"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
+    IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
+    IDS_INVALID_LENGTH      "Tamanho do vector tem de ser um inteiro finito positivo"
+    IDS_ARRAY_EXPECTED      "Objecto Array esperado"
+}

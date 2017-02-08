@@ -18,34 +18,19 @@
 #include <config.h>
 #include <stdarg.h>
 //#include <stdlib.h>
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <wine/winternl.h>
 #include <wtsapi32.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wtsapi);
 
-static HMODULE WTSAPI32_hModule;
+/* FIXME: Inspect */
+#define GetCurrentProcessToken() ((HANDLE)~(ULONG_PTR)3)
 
-BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
-
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-        {
-            DisableThreadLibraryCalls(hinstDLL);
-            WTSAPI32_hModule = hinstDLL;
-            break;
-        }
-        case DLL_PROCESS_DETACH:
-        {
-            break;
-        }
-    }
-
-    return TRUE;
-}
 
 /************************************************************
  *                WTSCloseServer  (WTSAPI32.@)
@@ -83,6 +68,15 @@ BOOL WINAPI WTSDisconnectSession(HANDLE hServer, DWORD SessionId, BOOL bWait)
 }
 
 /************************************************************
+ *                WTSEnableChildSessions  (WTSAPI32.@)
+ */
+BOOL WINAPI WTSEnableChildSessions(BOOL enable)
+{
+    FIXME("Stub %d\n", enable);
+    return TRUE;
+}
+
+/************************************************************
  *                WTSEnumerateProcessesA  (WTSAPI32.@)
  */
 BOOL WINAPI WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version,
@@ -105,14 +99,85 @@ BOOL WINAPI WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version
 BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version,
     PWTS_PROCESS_INFOW* ppProcessInfo, DWORD* pCount)
 {
-    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
-          ppProcessInfo, pCount);
+    WTS_PROCESS_INFOW *processInfo;
+    SYSTEM_PROCESS_INFORMATION *spi;
+    ULONG size = 0x4000;
+    void *buf = NULL;
+    NTSTATUS status;
+    DWORD count;
+    WCHAR *name;
 
-    if (!ppProcessInfo || !pCount) return FALSE;
+    if (!ppProcessInfo || !pCount || Reserved != 0 || Version != 1)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-    *pCount = 0;
-    *ppProcessInfo = NULL;
+    if (hServer != WTS_CURRENT_SERVER_HANDLE)
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
 
+    do
+    {
+        size *= 2;
+        HeapFree(GetProcessHeap(), 0, buf);
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (!buf)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+        status = NtQuerySystemInformation(SystemProcessInformation, buf, size, NULL);
+    }
+    while (status == STATUS_INFO_LENGTH_MISMATCH);
+
+    if (status != STATUS_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, buf);
+        SetLastError(RtlNtStatusToDosError(status));
+        return FALSE;
+    }
+
+    spi = buf;
+    count = size = 0;
+    for (;;)
+    {
+        size += sizeof(WTS_PROCESS_INFOW) + spi->ProcessName.Length + sizeof(WCHAR);
+        count++;
+        if (spi->NextEntryOffset == 0) break;
+        spi = (SYSTEM_PROCESS_INFORMATION *)(((PCHAR)spi) + spi->NextEntryOffset);
+    }
+
+    processInfo = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!processInfo)
+    {
+        HeapFree(GetProcessHeap(), 0, buf);
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+    name = (WCHAR *)&processInfo[count];
+
+    *ppProcessInfo = processInfo;
+    *pCount = count;
+
+    spi = buf;
+    while (count--)
+    {
+        processInfo->SessionId = 0;
+        processInfo->ProcessId = HandleToUlong(spi->UniqueProcessId);
+        processInfo->pProcessName = name;
+        processInfo->pUserSid = NULL;
+        memcpy( name, spi->ProcessName.Buffer, spi->ProcessName.Length );
+        name[ spi->ProcessName.Length/sizeof(WCHAR) ] = 0;
+
+        processInfo++;
+        name += (spi->ProcessName.Length + sizeof(WCHAR))/sizeof(WCHAR);
+        spi = (SYSTEM_PROCESS_INFORMATION *)(((PCHAR)spi) + spi->NextEntryOffset);
+    }
+
+    HeapFree(GetProcessHeap(), 0, buf);
     return TRUE;
 }
 
@@ -141,7 +206,9 @@ BOOL WINAPI WTSEnumerateServersW(LPWSTR pDomainName, DWORD Reserved, DWORD Versi
 BOOL WINAPI WTSEnumerateSessionsA(HANDLE hServer, DWORD Reserved, DWORD Version,
     PWTS_SESSION_INFOA* ppSessionInfo, DWORD* pCount)
 {
-    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
+    static int once;
+
+    if (!once++) FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
           ppSessionInfo, pCount);
 
     if (!ppSessionInfo || !pCount) return FALSE;
@@ -174,7 +241,7 @@ BOOL WINAPI WTSEnumerateSessionsW(HANDLE hServer, DWORD Reserved, DWORD Version,
  */
 void WINAPI WTSFreeMemory(PVOID pMemory)
 {
-    FIXME("Stub %p\n", pMemory);
+    HeapFree(GetProcessHeap(), 0, pMemory);
 }
 
 /************************************************************
@@ -247,7 +314,16 @@ BOOL WINAPI WTSQuerySessionInformationW(
 BOOL WINAPI WTSQueryUserToken(ULONG session_id, PHANDLE token)
 {
     FIXME("%u %p\n", session_id, token);
-    return FALSE;
+
+    if (!token)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return DuplicateHandle(GetCurrentProcess(), GetCurrentProcessToken(),
+                           GetCurrentProcess(), token,
+                           0, FALSE, DUPLICATE_SAME_ACCESS);
 }
 
 /************************************************************

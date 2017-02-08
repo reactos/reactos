@@ -19,27 +19,9 @@
  *
  */
 
-#define NONAMELESSUNION
-#define COBJMACROS
-#define CONST_VTABLE
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-//#include <wingdi.h>
-#include <winuser.h>
-//#include <commctrl.h>
-#include <cpl.h>
-#include <ole2.h>
-
-#include <wine/debug.h>
-
 #include "inetcpl.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
+#include <cpl.h>
 
 DECLSPEC_HIDDEN HMODULE hcpl;
 
@@ -52,14 +34,25 @@ BOOL WINAPI DllMain(HINSTANCE hdll, DWORD reason, LPVOID reserved)
 
     switch (reason)
     {
-        /* case DLL_WINE_PREATTACH:
-            return FALSE;  prefer native version */
+#ifndef __REACTOS__
+        case DLL_WINE_PREATTACH:
+            return FALSE;  /* prefer native version */
+#endif
 
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hdll);
             hcpl = hdll;
     }
     return TRUE;
+}
+
+/***********************************************************************
+ *  DllInstall (inetcpl.@)
+ */
+HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
+{
+    FIXME("(%s, %s): stub\n", bInstall ? "TRUE" : "FALSE", debugstr_w(cmdline));
+    return S_OK;
 }
 
 /******************************************************************************
@@ -202,4 +195,24 @@ BOOL WINAPI LaunchInternetControlPanel(HWND parent)
 {
     display_cpl_sheets(parent);
     return TRUE;
+}
+
+/*********************************************************************
+ * LaunchConnectionDialog (inetcpl.@)
+ *
+ */
+BOOL WINAPI LaunchConnectionDialog(HWND hParent)
+{
+    FIXME("(%p): stub\n", hParent);
+    return FALSE;
+}
+
+/*********************************************************************
+ * LaunchInternetControlPanel (inetcpl.@)
+ *
+ */
+BOOL WINAPI LaunchPrivacyDialog(HWND hParent)
+{
+    FIXME("(%p): stub\n", hParent);
+    return FALSE;
 }

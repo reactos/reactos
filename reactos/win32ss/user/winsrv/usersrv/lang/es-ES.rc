@@ -1,0 +1,26 @@
+/* Spanish translation by Javier Remacha 2008-26-01 */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Finalizar programa - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Finalizando programa... Por favor, espere", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progreso", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "Si elige finalizar el programa ahora, perderá todos los datos no guardados. Para finalizar el programa ahora, haga clic en Finalizar ahora.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Finalizar ahora", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Finalizar programa - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Cancelar", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&Finalizar ahora", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Este programa no responde.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Para volver a ReactOS y ver el estado del programa, haga clic en Cancelar.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Si elige finalizar el programa ahora, perderá todos los datos no guardados. Para finalizar el programa ahora, haga clic en Finalizar ahora.", IDC_STATIC, 7, 53, 178, 26
+END

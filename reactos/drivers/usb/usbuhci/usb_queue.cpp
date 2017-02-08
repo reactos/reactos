@@ -9,7 +9,9 @@
  */
 
 #include "usbuhci.h"
-#include "hardware.h"
+
+#define NDEBUG
+#include <debug.h>
 
 class CUSBQueue : public IUHCIQueue
 {
@@ -141,13 +143,6 @@ CUSBQueue::AddQueueHead(
          // use full speed queue
          //
          m_Hardware->GetQueueHead(UHCI_BULK_QUEUE, &QueueHead);
-    }
-    else if (Request->GetTransferType() == USB_ENDPOINT_TYPE_INTERRUPT)
-    {
-         //
-         // use full speed queue
-         //
-         m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
     }
     else if (Request->GetTransferType() == USB_ENDPOINT_TYPE_INTERRUPT)
     {

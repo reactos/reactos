@@ -10,7 +10,10 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
+
 static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
 
 static NTSTATUS NTAPI
@@ -20,8 +23,9 @@ ForwardIrpAndWaitCompletion(
 	IN PVOID Context)
 {
 	UNREFERENCED_PARAMETER(DeviceObject);
+	__analysis_assume(Context != NULL);
 	if (Irp->PendingReturned)
-		KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
+		KeSetEvent(Context, IO_NO_INCREMENT, FALSE);
 	return STATUS_MORE_PROCESSING_REQUIRED;
 }
 

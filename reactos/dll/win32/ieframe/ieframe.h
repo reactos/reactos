@@ -18,7 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#ifndef _IEFRAME_H_
+#define _IEFRAME_H_
+
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -26,25 +29,33 @@
 
 #define COBJMACROS
 #define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-//#include "winuser.h"
+#include <winreg.h>
 #include <wincon.h>
-
-//#include "ole2.h"
-//#include "olectl.h"
 #include <shlobj.h>
 #include <mshtmhst.h>
-//#include "exdisp.h"
-#include <hlink.h>
+#include <mshtmdid.h>
+#include <exdispid.h>
 #include <htiface.h>
-//#include "shdeprecated.h"
+#include <idispids.h>
+#include <intshcut.h>
+#include <perhist.h>
+#include <shellapi.h>
+#include <shlwapi.h>
+#include <shdeprecated.h>
 #include <docobjectservice.h>
 
 #include <wine/unicode.h>
 #include <wine/list.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
+
+#include "resource.h"
 
 typedef struct ConnectionPoint ConnectionPoint;
 typedef struct DocHost DocHost;
@@ -63,6 +74,7 @@ typedef struct {
     IHlinkFrame    IHlinkFrame_iface;
     ITargetFrame2  ITargetFrame2_iface;
     ITargetFramePriv2 ITargetFramePriv2_iface;
+    IWebBrowserPriv2IE9 IWebBrowserPriv2IE9_iface;
 
     IUnknown *outer;
     DocHost *doc_host;
@@ -101,16 +113,17 @@ typedef struct {
 
 typedef struct {
     WCHAR *url;
+    IStream *stream;
 } travellog_entry_t;
 
 typedef struct _IDocHostContainerVtbl
 {
     ULONG (*addref)(DocHost*);
     ULONG (*release)(DocHost*);
-    void (WINAPI* GetDocObjRect)(DocHost*,RECT*);
-    HRESULT (WINAPI* SetStatusText)(DocHost*,LPCWSTR);
-    void (WINAPI* SetURL)(DocHost*,LPCWSTR);
-    HRESULT (*exec)(DocHost*,const GUID*,DWORD,DWORD,VARIANT*,VARIANT*);
+    void (*get_docobj_rect)(DocHost*,RECT*);
+    HRESULT (*set_status_text)(DocHost*,const WCHAR*);
+    void (*on_command_state_change)(DocHost*,LONG,BOOL);
+    void (*set_url)(DocHost*,const WCHAR*);
 } IDocHostContainerVtbl;
 
 struct DocHost {
@@ -132,6 +145,7 @@ struct DocHost {
     IDispatch *client_disp;
     IDocHostUIHandler *hostui;
     IOleInPlaceFrame *frame;
+    IOleCommandTarget *olecmd;
 
     IUnknown *document;
     IOleDocumentView *view;
@@ -158,10 +172,13 @@ struct DocHost {
     ShellBrowser *browser_service;
     IShellUIHelper2 *shell_ui_helper;
 
-    travellog_entry_t *travellog;
-    unsigned travellog_size;
-    unsigned travellog_length;
-    unsigned travellog_position;
+    struct {
+        travellog_entry_t *log;
+        unsigned size;
+        unsigned length;
+        unsigned position;
+        int loading_pos;
+    } travellog;
 
     ConnectionPointContainer cps;
     IEHTMLWindow html_window;
@@ -192,6 +209,10 @@ struct WebBrowser {
     IOleContainer *container;
     IOleInPlaceSiteEx *inplace;
 
+    IAdviseSink *sink;
+    DWORD sink_aspects;
+    DWORD sink_flags;
+
     /* window context */
 
     HWND frame_hwnd;
@@ -215,28 +236,23 @@ struct WebBrowser {
     DocHost doc_host;
 };
 
-typedef struct {
-    DocHost doc_host;
-
-    LONG ref;
-
-    InternetExplorer *ie;
-} IEDocHost;
-
 struct InternetExplorer {
+    DocHost doc_host;
     IWebBrowser2 IWebBrowser2_iface;
+    IExternalConnection IExternalConnection_iface;
     IServiceProvider IServiceProvider_iface;
     HlinkFrame hlink_frame;
 
     LONG ref;
+    LONG extern_ref;
 
     HWND frame_hwnd;
     HWND status_hwnd;
+    HWND toolbar_hwnd;
     HMENU menu;
     BOOL nohome;
 
     struct list entry;
-    IEDocHost *doc_host;
 };
 
 void WebBrowser_OleObject_Init(WebBrowser*) DECLSPEC_HIDDEN;
@@ -270,7 +286,8 @@ void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*) DECLSPEC_HIDDEN;
 HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*) DECLSPEC_HIDDEN;
 HRESULT go_home(DocHost*) DECLSPEC_HIDDEN;
 HRESULT go_back(DocHost*) DECLSPEC_HIDDEN;
-HRESULT refresh_document(DocHost*) DECLSPEC_HIDDEN;
+HRESULT go_forward(DocHost*) DECLSPEC_HIDDEN;
+HRESULT refresh_document(DocHost*,const VARIANT*) DECLSPEC_HIDDEN;
 HRESULT get_location_url(DocHost*,BSTR*) DECLSPEC_HIDDEN;
 HRESULT set_dochost_url(DocHost*,const WCHAR*) DECLSPEC_HIDDEN;
 void handle_navigation_error(DocHost*,HRESULT,BSTR,IHTMLWindow2*) DECLSPEC_HIDDEN;
@@ -278,6 +295,9 @@ HRESULT dochost_object_available(DocHost*,IUnknown*) DECLSPEC_HIDDEN;
 void set_doc_state(DocHost*,READYSTATE) DECLSPEC_HIDDEN;
 void deactivate_document(DocHost*) DECLSPEC_HIDDEN;
 void create_doc_view_hwnd(DocHost*) DECLSPEC_HIDDEN;
+void on_commandstate_change(DocHost*,LONG,BOOL) DECLSPEC_HIDDEN;
+void notify_download_state(DocHost*,BOOL) DECLSPEC_HIDDEN;
+void update_navigation_commands(DocHost *dochost) DECLSPEC_HIDDEN;
 
 #define WM_DOCHOSTTASK (WM_USER+0x300)
 void push_dochost_task(DocHost*,task_header_t*,task_proc_t,task_destr_t,BOOL) DECLSPEC_HIDDEN;
@@ -287,6 +307,7 @@ LRESULT process_dochost_tasks(DocHost*) DECLSPEC_HIDDEN;
 void InternetExplorer_WebBrowser_Init(InternetExplorer*) DECLSPEC_HIDDEN;
 HRESULT update_ie_statustext(InternetExplorer*, LPCWSTR) DECLSPEC_HIDDEN;
 void released_obj(void) DECLSPEC_HIDDEN;
+DWORD release_extern_ref(InternetExplorer*,BOOL) DECLSPEC_HIDDEN;
 
 void register_iewindow_class(void) DECLSPEC_HIDDEN;
 void unregister_iewindow_class(void) DECLSPEC_HIDDEN;
@@ -313,8 +334,6 @@ HRESULT WINAPI InternetExplorer_Create(IClassFactory*,IUnknown*,REFIID,void**) D
 HRESULT WINAPI InternetShortcut_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI WebBrowser_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI WebBrowserV1_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-
-const char *debugstr_variant(const VARIANT*) DECLSPEC_HIDDEN;
 
 extern LONG module_ref DECLSPEC_HIDDEN;
 extern HINSTANCE ieframe_instance DECLSPEC_HIDDEN;
@@ -392,3 +411,5 @@ static inline LPSTR co_strdupWtoA(LPCWSTR str)
         WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, 0, 0);
     return ret;
 }
+
+#endif /* _IEFRAME_H_ */

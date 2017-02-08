@@ -1,18 +1,17 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        enumprot.c
+ * FILE:        dll/win32/ws2_32_new/src/enumprot.c
  * PURPOSE:     Protocol Enumeration
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
-
-/* DATA **********************************************************************/
 
 /* FUNCTIONS *****************************************************************/
 
@@ -23,7 +22,7 @@ CheckProtocolMatch(IN LPINT ProtocolSet,
 {
     BOOL Return = FALSE;
     DWORD i = 0;
-    INT ProtocolId = 0;
+    INT ProtocolId;
 
     /* Make sure we have a set */
     if (ProtocolSet)

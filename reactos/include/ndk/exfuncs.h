@@ -401,13 +401,14 @@ NtQuerySystemEnvironmentValueEx(
     _Inout_ PULONG Attributes
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
     _Out_ PVOID SystemInformation,
-    _In_ ULONG Length,
+    _In_ ULONG InformationLength,
     _Out_opt_ PULONG ResultLength
 );
 
@@ -548,7 +549,10 @@ NTSTATUS
 NTAPI
 NtSetSystemEnvironmentValueEx(
     _In_ PUNICODE_STRING VariableName,
-    _In_ LPGUID VendorGuid
+    _In_ LPGUID VendorGuid,
+    _In_ PVOID Value,
+    _Inout_ PULONG ReturnLength,
+    _Inout_ PULONG Attributes
 );
 
 NTSYSCALLAPI
@@ -667,6 +671,17 @@ ZwCreateEventPair(
     _Out_ PHANDLE EventPairHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCreateKeyedEvent(
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG Flags
 );
 
 NTSYSAPI

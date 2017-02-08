@@ -8,8 +8,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msports);
-
 #define BITS_PER_BYTE 8
 #define BITMAP_SIZE_INCREMENT 0x400
 #define BITMAP_SIZE_INVALID_BITS 0x3FF

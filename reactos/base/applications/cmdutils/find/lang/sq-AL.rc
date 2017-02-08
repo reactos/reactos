@@ -1,0 +1,17 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FIND: Printon të gjitha linjat e një skedari që përmbajnë një fije.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""fije"" [ file... ]\n\
+    /C  Numërimi i numerave e linjave që përmbajnë nje fije\n\
+    /I  Injorojnë çështjen\n\
+    /N  Shfaq numrin e linjave, duke filluar nga 1\n\
+    /V  Shfaq linjat e nuk permbajne nje fije"
+    IDS_NO_SUCH_FILE "FIND: %s: Dokumenti nuk i gjet\n"
+    IDS_CANNOT_OPEN "FIND: %s: E pamundur te hapet dokumenti\n"
+END

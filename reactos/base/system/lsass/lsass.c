@@ -28,6 +28,7 @@
 #define NTOS_MODE_USER
 
 #include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #include <lsass/lsasrv.h>
 #include <samsrv/samsrv.h>
@@ -45,6 +46,9 @@ wWinMain(IN HINSTANCE hInstance,
 
     DPRINT("Local Security Authority Subsystem\n");
     DPRINT("  Initializing...\n");
+
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, TRUE);
 
     /* Initialize the LSA server DLL. */
     Status = LsapInitLsa();

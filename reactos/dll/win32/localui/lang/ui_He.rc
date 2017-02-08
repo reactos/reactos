@@ -1,0 +1,56 @@
+/*
+ * Hebrew resources for localui
+ *
+ * Copyright 2007 Detlef Riekenberg
+ *
+ * Translated by Baruch Rutman
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_LOCALPORT "יציאה מקומית"
+    IDS_INVALIDNAME "'%s' אינו שם יציאה חוקי"
+    IDS_PORTEXISTS "יציאה %s כבר קיימת"
+    IDS_NOTHINGTOCONFIG "ליציאה הזו אין אפשרויות להגדיר"
+}
+
+ADDPORT_DIALOG DIALOGEX 6, 18, 245, 47
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "הוסף יציאה מקומית"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "הזן את שם היציאה כדי להוסיפה:", -1, 7, 13, 194, 13, WS_VISIBLE
+    EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    DEFPUSHBUTTON "אישור", IDOK, 188, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "ביטול", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
+END
+
+
+LPTCONFIG_DIALOG DIALOGEX 6, 18, 220, 47
+STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "הגדרת יציאת LPT"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "פסק זמן (שניות)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    LTEXT "ניסיון שידור חוזר:", -1, 14, 22, 90, 13, WS_VISIBLE
+    EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
+    DEFPUSHBUTTON "אישור", IDOK, 164, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "ביטול", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
+END

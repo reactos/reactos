@@ -12,12 +12,6 @@
 #ifndef MMDRV_IOCTLS
 #define MMDRV_IOCTLS
 
-#include <windows.h>
-//#include <mmsystem.h>
-//#include <mmddk.h>
-#include <winioctl.h>
-
-
 /*
     Base names of the supported devices, as provided by drivers running in
     kernel mode.
@@ -143,4 +137,4 @@
 #define IOCTL_SOUND_GET_CHANGED_VOLUME \
     CTL_CODE(IOCTL_SOUND_BASE, IOCTL_AUX_BASE + 0x0004, METHOD_BUFFERED, FILE_READ_ACCESS)
 
-#endif
+#endif /* MMDRV_IOCTLS */

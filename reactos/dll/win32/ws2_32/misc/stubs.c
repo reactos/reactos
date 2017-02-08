@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        misc/stubs.c
+ * FILE:        dll/win32/ws2_32/misc/stubs.c
  * PURPOSE:     Stubs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
@@ -9,6 +9,9 @@
  */
 
 #include "ws2_32.h"
+
+#include <ws2tcpip.h>
+#include <strsafe.h>
 
 /*
  * @implemented
@@ -93,6 +96,32 @@ getsockname(IN     SOCKET s,
     return Error;
 }
 
+INT
+WSAAPI
+MapUnicodeProtocolInfoToAnsi(IN LPWSAPROTOCOL_INFOW UnicodeInfo,
+                             OUT LPWSAPROTOCOL_INFOA AnsiInfo)
+{
+    INT ReturnValue;
+
+    /* Copy all the data that doesn't need converting */
+    RtlCopyMemory(AnsiInfo,
+                  UnicodeInfo,
+                  FIELD_OFFSET(WSAPROTOCOL_INFOA, szProtocol));
+
+    /* Now convert the protocol string */
+    ReturnValue = WideCharToMultiByte(CP_ACP,
+                                      0,
+                                      UnicodeInfo->szProtocol,
+                                      -1,
+                                      AnsiInfo->szProtocol,
+                                      sizeof(AnsiInfo->szProtocol),
+                                      NULL,
+                                      NULL);
+    if (!ReturnValue) return WSASYSCALLFAILURE;
+
+    /* Return success */
+    return ERROR_SUCCESS;
+}
 
 /*
  * @implemented
@@ -108,6 +137,9 @@ getsockopt(IN      SOCKET s,
     PCATALOG_ENTRY Provider;
     INT Errno;
     int Error;
+    WSAPROTOCOL_INFOW ProtocolInfo;
+    PCHAR OldOptVal = NULL;
+    INT OldOptLen = 0;
 
     if (!WSAINITIALIZED)
     {
@@ -122,6 +154,47 @@ getsockopt(IN      SOCKET s,
         return SOCKET_ERROR;
     }
 
+    /* Check if ANSI data was requested */
+    if ((level == SOL_SOCKET) && (optname == SO_PROTOCOL_INFOA))
+    {
+        /* Validate size and pointers */
+        Errno = NO_ERROR;
+        _SEH2_TRY
+        {
+            if (!(optval) ||
+                !(optlen) ||
+                (*optlen < sizeof(WSAPROTOCOL_INFOA)))
+            {
+                /* Set return size and error code */
+                *optlen = sizeof(WSAPROTOCOL_INFOA);
+                Errno = WSAEFAULT;
+                _SEH2_LEAVE;
+            }
+
+            /* It worked. Save the values */
+            OldOptLen = *optlen;
+            OldOptVal = optval;
+
+            /* Hack them so WSP will know how to deal with it */
+            *optlen = sizeof(WSAPROTOCOL_INFOW);
+            optval = (PCHAR)&ProtocolInfo;
+            optname = SO_PROTOCOL_INFOW;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Errno = WSAEFAULT;
+        }
+        _SEH2_END;
+
+        /* Did we encounter invalid parameters? */
+        if (Errno != NO_ERROR)
+        {
+            /* Fail */
+            Error = SOCKET_ERROR;
+            goto Exit;
+        }
+    }
+
     Error = Provider->ProcTable.lpWSPGetSockOpt(s,
                                                 level,
                                                 optname,
@@ -129,6 +202,28 @@ getsockopt(IN      SOCKET s,
                                                 optlen,
                                                 &Errno);
 
+    /* Did we use the A->W hack? */
+    if (Error == ERROR_SUCCESS && OldOptVal)
+    {
+        /* We did, so we have to convert the unicode info to ansi */
+        Errno = MapUnicodeProtocolInfoToAnsi(&ProtocolInfo,
+                                             (LPWSAPROTOCOL_INFOA)
+                                             OldOptVal);
+
+        /* Return the length */
+        _SEH2_TRY
+        {
+            *optlen = OldOptLen;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Errno = WSAEFAULT;
+            Error = SOCKET_ERROR;
+        }
+        _SEH2_END;
+    }
+
+Exit:
     DereferenceProviderByPointer(Provider);
 
     if (Error == SOCKET_ERROR)
@@ -402,6 +497,11 @@ WSAEnumProtocolsA(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
+    if (lpProtocolBuffer)
+    {
+        RtlZeroMemory(lpProtocolBuffer, *lpdwBufferLength);
+    }
+    *lpdwBufferLength = sizeof(WSAPROTOCOL_INFOA);
     WSASetLastError(WSASYSCALLFAILURE);
     return SOCKET_ERROR;
 }
@@ -418,6 +518,11 @@ WSAEnumProtocolsW(IN      LPINT lpiProtocols,
 {
     UNIMPLEMENTED
 
+    if (lpProtocolBuffer)
+    {
+        RtlZeroMemory(lpProtocolBuffer, *lpdwBufferLength);
+    }
+    *lpdwBufferLength = sizeof(WSAPROTOCOL_INFOW);
     WSASetLastError(WSASYSCALLFAILURE);
     return SOCKET_ERROR;
 }
@@ -893,6 +998,16 @@ getnameinfo(const struct sockaddr FAR * sa,
             DWORD           servlen,
             INT             flags)
 {
+    if (!host && serv && flags & NI_NUMERICSERV)
+    {
+        const struct sockaddr_in *sa_in = (const struct sockaddr_in *)sa;
+        if (salen >= sizeof(*sa_in) && sa->sa_family == AF_INET)
+        {
+            StringCbPrintfA(serv, servlen, "%u", sa_in->sin_port);
+            return 0;
+        }
+    }
+
     UNIMPLEMENTED
 
     WSASetLastError(WSASYSCALLFAILURE);
@@ -916,22 +1031,5 @@ BOOL EXPORT WSApSetPostRoutine(PVOID Routine)
 
     return FALSE;
 }
-
-/*
- * @unimplemented
- */
-INT
-EXPORT
-GetAddrInfoW(IN PCWSTR pszNodeName,
-             IN PCWSTR pszServiceName,
-             IN const ADDRINFOW *ptHints,
-             OUT PADDRINFOW *pptResult)
-{
-    UNIMPLEMENTED
-
-    WSASetLastError(EAI_FAIL);
-    return EAI_FAIL;
-}
-
 
 /* EOF */

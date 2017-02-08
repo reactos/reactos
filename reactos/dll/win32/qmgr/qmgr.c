@@ -19,125 +19,125 @@
  */
 
 #include "qmgr.h"
-#include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
+BackgroundCopyManagerImpl globalMgr;
 
-/* Add a reference to the iface pointer */
-static ULONG WINAPI BITS_IBackgroundCopyManager_AddRef(
-        IBackgroundCopyManager* iface)
+static HRESULT WINAPI BackgroundCopyManager_QueryInterface(IBackgroundCopyManager *iface,
+        REFIID riid, void **ppv)
+{
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
+
+    if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IBackgroundCopyManager))
+    {
+        *ppv = iface;
+        IBackgroundCopyManager_AddRef(iface);
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI BackgroundCopyManager_AddRef(IBackgroundCopyManager *iface)
 {
     return 2;
 }
 
-/* Attempt to provide a new interface to interact with iface */
-static HRESULT WINAPI BITS_IBackgroundCopyManager_QueryInterface(
-        IBackgroundCopyManager* iface,
-        REFIID riid,
-        LPVOID *ppvObject)
-{
-    BackgroundCopyManagerImpl * This = (BackgroundCopyManagerImpl *)iface;
-
-    TRACE("IID: %s\n", debugstr_guid(riid));
-
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-            IsEqualGUID(riid, &IID_IBackgroundCopyManager))
-    {
-        *ppvObject = &This->lpVtbl;
-        BITS_IBackgroundCopyManager_AddRef(iface);
-        return S_OK;
-    }
-
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
-}
-
-/* Release an interface to iface */
-static ULONG WINAPI BITS_IBackgroundCopyManager_Release(
-        IBackgroundCopyManager* iface)
+static ULONG WINAPI BackgroundCopyManager_Release(IBackgroundCopyManager *iface)
 {
     return 1;
 }
 
 /*** IBackgroundCopyManager interface methods ***/
 
-static HRESULT WINAPI BITS_IBackgroundCopyManager_CreateJob(
-        IBackgroundCopyManager* iface,
-        LPCWSTR DisplayName,
-        BG_JOB_TYPE Type,
-        GUID *pJobId,
-        IBackgroundCopyJob **ppJob)
+static HRESULT WINAPI BackgroundCopyManager_CreateJob(IBackgroundCopyManager *iface,
+        LPCWSTR DisplayName, BG_JOB_TYPE Type, GUID *pJobId, IBackgroundCopyJob **ppJob)
 {
-    BackgroundCopyManagerImpl * This = (BackgroundCopyManagerImpl *) iface;
     BackgroundCopyJobImpl *job;
     HRESULT hres;
-    TRACE("\n");
 
-    hres = BackgroundCopyJobConstructor(DisplayName, Type, pJobId,
-                                        (LPVOID *) ppJob);
+    TRACE("(%s %d %p %p)\n", debugstr_w(DisplayName), Type, pJobId, ppJob);
+
+    hres = BackgroundCopyJobConstructor(DisplayName, Type, pJobId, &job);
     if (FAILED(hres))
         return hres;
 
     /* Add a reference to the job to job list */
+    *ppJob = (IBackgroundCopyJob *)&job->IBackgroundCopyJob3_iface;
     IBackgroundCopyJob_AddRef(*ppJob);
-    job = (BackgroundCopyJobImpl *) *ppJob;
-    EnterCriticalSection(&This->cs);
-    list_add_head(&This->jobs, &job->entryFromQmgr);
-    LeaveCriticalSection(&This->cs);
+    EnterCriticalSection(&globalMgr.cs);
+    list_add_head(&globalMgr.jobs, &job->entryFromQmgr);
+    LeaveCriticalSection(&globalMgr.cs);
     return S_OK;
 }
 
-static HRESULT WINAPI BITS_IBackgroundCopyManager_GetJob(
-        IBackgroundCopyManager* iface,
-        REFGUID jobID,
-        IBackgroundCopyJob **ppJob)
+static HRESULT WINAPI BackgroundCopyManager_GetJob(IBackgroundCopyManager *iface,
+        REFGUID jobID, IBackgroundCopyJob **job)
 {
-    FIXME("Not implemented\n");
+    BackgroundCopyManagerImpl *qmgr = &globalMgr;
+    HRESULT hr = BG_E_NOT_FOUND;
+    BackgroundCopyJobImpl *cur;
+
+    TRACE("(%s %p)\n", debugstr_guid(jobID), job);
+
+    if (!job || !jobID) return E_INVALIDARG;
+
+    *job = NULL;
+
+    EnterCriticalSection(&qmgr->cs);
+
+    LIST_FOR_EACH_ENTRY(cur, &qmgr->jobs, BackgroundCopyJobImpl, entryFromQmgr)
+    {
+        if (IsEqualGUID(&cur->jobId, jobID))
+        {
+            *job = (IBackgroundCopyJob *)&cur->IBackgroundCopyJob3_iface;
+            IBackgroundCopyJob3_AddRef(&cur->IBackgroundCopyJob3_iface);
+            hr = S_OK;
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&qmgr->cs);
+
+    return hr;
+}
+
+static HRESULT WINAPI BackgroundCopyManager_EnumJobs(IBackgroundCopyManager *iface,
+        DWORD flags, IEnumBackgroundCopyJobs **ppEnum)
+{
+    TRACE("(0x%x %p)\n", flags, ppEnum);
+    return enum_copy_job_create(&globalMgr, ppEnum);
+}
+
+static HRESULT WINAPI BackgroundCopyManager_GetErrorDescription(IBackgroundCopyManager *iface,
+        HRESULT hr, DWORD langid, LPWSTR *error_description)
+{
+    FIXME("(0x%08x 0x%x %p): stub\n", hr, langid, error_description);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BITS_IBackgroundCopyManager_EnumJobs(
-        IBackgroundCopyManager* iface,
-        DWORD dwFlags,
-        IEnumBackgroundCopyJobs **ppEnum)
+static const IBackgroundCopyManagerVtbl BackgroundCopyManagerVtbl =
 {
-    TRACE("\n");
-    return EnumBackgroundCopyJobsConstructor((LPVOID *) ppEnum, iface);
-}
-
-static HRESULT WINAPI BITS_IBackgroundCopyManager_GetErrorDescription(
-        IBackgroundCopyManager* iface,
-        HRESULT hResult,
-        DWORD LanguageId,
-        LPWSTR *pErrorDescription)
-{
-    FIXME("Not implemented\n");
-    return E_NOTIMPL;
-}
-
-
-static const IBackgroundCopyManagerVtbl BITS_IBackgroundCopyManager_Vtbl =
-{
-    BITS_IBackgroundCopyManager_QueryInterface,
-    BITS_IBackgroundCopyManager_AddRef,
-    BITS_IBackgroundCopyManager_Release,
-    BITS_IBackgroundCopyManager_CreateJob,
-    BITS_IBackgroundCopyManager_GetJob,
-    BITS_IBackgroundCopyManager_EnumJobs,
-    BITS_IBackgroundCopyManager_GetErrorDescription
+    BackgroundCopyManager_QueryInterface,
+    BackgroundCopyManager_AddRef,
+    BackgroundCopyManager_Release,
+    BackgroundCopyManager_CreateJob,
+    BackgroundCopyManager_GetJob,
+    BackgroundCopyManager_EnumJobs,
+    BackgroundCopyManager_GetErrorDescription
 };
 
 BackgroundCopyManagerImpl globalMgr = {
-    &BITS_IBackgroundCopyManager_Vtbl,
+    { &BackgroundCopyManagerVtbl },
     { NULL, -1, 0, 0, 0, 0 },
     NULL,
     LIST_INIT(globalMgr.jobs)
 };
 
 /* Constructor for instances of background copy manager */
-HRESULT BackgroundCopyManagerConstructor(IUnknown *pUnkOuter, LPVOID *ppObj)
+HRESULT BackgroundCopyManagerConstructor(LPVOID *ppObj)
 {
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+    TRACE("(%p)\n", ppObj);
     *ppObj = &globalMgr;
     return S_OK;
 }
@@ -161,7 +161,7 @@ DWORD WINAPI fileTransfer(void *param)
             LIST_FOR_EACH_ENTRY_SAFE(job, jobCur, &qmgr->jobs, BackgroundCopyJobImpl, entryFromQmgr)
             {
                 list_remove(&job->entryFromQmgr);
-                IBackgroundCopyJob_Release((IBackgroundCopyJob *) job);
+                IBackgroundCopyJob3_Release(&job->IBackgroundCopyJob3_iface);
             }
             return 0;
         }
@@ -176,7 +176,7 @@ DWORD WINAPI fileTransfer(void *param)
             if (job->state == BG_JOB_STATE_ACKNOWLEDGED || job->state == BG_JOB_STATE_CANCELLED)
             {
                 list_remove(&job->entryFromQmgr);
-                IBackgroundCopyJob_Release((IBackgroundCopyJob *) job);
+                IBackgroundCopyJob3_Release(&job->IBackgroundCopyJob3_iface);
             }
             else if (job->state == BG_JOB_STATE_QUEUED)
             {

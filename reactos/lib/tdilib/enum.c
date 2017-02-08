@@ -5,7 +5,8 @@
  * PURPOSE:     TDI entity enumeration
  */
 
-#include "iphlpapi_private.h"
+#include "precomp.h"
+
 #include "tdilib.h"
 
 /* A generic thing-getting function which interacts in the right way with
@@ -25,7 +26,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
                             DWORD toiType,
                             DWORD toiId,
                             DWORD teiEntity,
-			    DWORD teiInstance,
+                            DWORD teiInstance,
                             DWORD fixedPart,
                             DWORD entrySize,
                             PVOID *tdiEntitySet,
@@ -112,7 +113,7 @@ NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile,
                                          INFO_TYPE_PROVIDER,
                                          ENTITY_LIST_ID,
                                          GENERIC_ENTITY,
-					 0,
+                                         0,
                                          0,
                                          sizeof(TDIEntityID),
                                          (PVOID *)entitySet,

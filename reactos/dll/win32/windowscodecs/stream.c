@@ -16,22 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "wincodecs_private.h"
 
-#include <wine/debug.h>
-
-#define COBJMACROS
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <objbase.h>
 #include <shlwapi.h>
-#include <wincodec.h>
-//#include "wincodecs_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 /******************************************
  * StreamOnMemory implementation
@@ -265,6 +252,175 @@ static const IStreamVtbl StreamOnMemory_Vtbl =
     StreamOnMemory_UnlockRegion,
     StreamOnMemory_Stat,
     StreamOnMemory_Clone,
+};
+
+/******************************************
+ * StreamOnFileHandle implementation (internal)
+ *
+ */
+typedef struct StreamOnFileHandle {
+    IStream IStream_iface;
+    LONG ref;
+
+    HANDLE map;
+    void *mem;
+    IWICStream *stream;
+} StreamOnFileHandle;
+
+static inline StreamOnFileHandle *StreamOnFileHandle_from_IStream(IStream *iface)
+{
+    return CONTAINING_RECORD(iface, StreamOnFileHandle, IStream_iface);
+}
+
+static HRESULT WINAPI StreamOnFileHandle_QueryInterface(IStream *iface,
+    REFIID iid, void **ppv)
+{
+    TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+
+    if (IsEqualIID(&IID_IUnknown, iid) || IsEqualIID(&IID_IStream, iid) ||
+        IsEqualIID(&IID_ISequentialStream, iid))
+    {
+        *ppv = iface;
+        IUnknown_AddRef((IUnknown*)*ppv);
+        return S_OK;
+    }
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+}
+
+static ULONG WINAPI StreamOnFileHandle_AddRef(IStream *iface)
+{
+    StreamOnFileHandle *This = StreamOnFileHandle_from_IStream(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) refcount=%u\n", iface, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI StreamOnFileHandle_Release(IStream *iface)
+{
+    StreamOnFileHandle *This = StreamOnFileHandle_from_IStream(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) refcount=%u\n", iface, ref);
+
+    if (ref == 0) {
+        IWICStream_Release(This->stream);
+        UnmapViewOfFile(This->mem);
+        CloseHandle(This->map);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+    return ref;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Read(IStream *iface,
+    void *pv, ULONG cb, ULONG *pcbRead)
+{
+    StreamOnFileHandle *This = StreamOnFileHandle_from_IStream(iface);
+    TRACE("(%p)\n", This);
+
+    return IWICStream_Read(This->stream, pv, cb, pcbRead);
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Write(IStream *iface,
+    void const *pv, ULONG cb, ULONG *pcbWritten)
+{
+    ERR("(%p)\n", iface);
+    return HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Seek(IStream *iface,
+    LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
+{
+    StreamOnFileHandle *This = StreamOnFileHandle_from_IStream(iface);
+    TRACE("(%p)\n", This);
+
+    return IWICStream_Seek(This->stream, dlibMove, dwOrigin, plibNewPosition);
+}
+
+static HRESULT WINAPI StreamOnFileHandle_SetSize(IStream *iface,
+    ULARGE_INTEGER libNewSize)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_CopyTo(IStream *iface,
+    IStream *pstm, ULARGE_INTEGER cb, ULARGE_INTEGER *pcbRead, ULARGE_INTEGER *pcbWritten)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Commit(IStream *iface,
+    DWORD grfCommitFlags)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Revert(IStream *iface)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_LockRegion(IStream *iface,
+    ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_UnlockRegion(IStream *iface,
+    ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Stat(IStream *iface,
+    STATSTG *pstatstg, DWORD grfStatFlag)
+{
+    StreamOnFileHandle *This = StreamOnFileHandle_from_IStream(iface);
+    TRACE("(%p)\n", This);
+
+    return IWICStream_Stat(This->stream, pstatstg, grfStatFlag);
+}
+
+static HRESULT WINAPI StreamOnFileHandle_Clone(IStream *iface,
+    IStream **ppstm)
+{
+    TRACE("(%p)\n", iface);
+    return E_NOTIMPL;
+}
+
+
+static const IStreamVtbl StreamOnFileHandle_Vtbl =
+{
+    /*** IUnknown methods ***/
+    StreamOnFileHandle_QueryInterface,
+    StreamOnFileHandle_AddRef,
+    StreamOnFileHandle_Release,
+    /*** ISequentialStream methods ***/
+    StreamOnFileHandle_Read,
+    StreamOnFileHandle_Write,
+    /*** IStream methods ***/
+    StreamOnFileHandle_Seek,
+    StreamOnFileHandle_SetSize,
+    StreamOnFileHandle_CopyTo,
+    StreamOnFileHandle_Commit,
+    StreamOnFileHandle_Revert,
+    StreamOnFileHandle_LockRegion,
+    StreamOnFileHandle_UnlockRegion,
+    StreamOnFileHandle_Stat,
+    StreamOnFileHandle_Clone,
 };
 
 /******************************************
@@ -592,7 +748,7 @@ static HRESULT WINAPI IWICStreamImpl_QueryInterface(IWICStream *iface,
     if (IsEqualIID(&IID_IUnknown, iid) || IsEqualIID(&IID_IStream, iid) ||
         IsEqualIID(&IID_ISequentialStream, iid) || IsEqualIID(&IID_IWICStream, iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICStream_iface;
         IUnknown_AddRef((IUnknown*)*ppv);
         return S_OK;
     }
@@ -827,6 +983,76 @@ static HRESULT WINAPI IWICStreamImpl_InitializeFromMemory(IWICStream *iface,
     }
 
     return S_OK;
+}
+
+static HRESULT map_file(HANDLE file, HANDLE *map, void **mem, LARGE_INTEGER *size)
+{
+    *map = NULL;
+    if (!GetFileSizeEx(file, size)) return HRESULT_FROM_WIN32(GetLastError());
+    if (size->u.HighPart)
+    {
+        WARN("file too large\n");
+        return E_FAIL;
+    }
+    if (!(*map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, size->u.LowPart, NULL)))
+    {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+    if (!(*mem = MapViewOfFile(*map, FILE_MAP_READ, 0, 0, size->u.LowPart)))
+    {
+        CloseHandle(*map);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+    return S_OK;
+}
+
+HRESULT stream_initialize_from_filehandle(IWICStream *iface, HANDLE file)
+{
+    IWICStreamImpl *This = impl_from_IWICStream(iface);
+    StreamOnFileHandle *pObject;
+    IWICStream *stream = NULL;
+    HANDLE map;
+    void *mem;
+    LARGE_INTEGER size;
+    HRESULT hr;
+    TRACE("(%p,%p)\n", iface, file);
+
+    if (This->pStream) return WINCODEC_ERR_WRONGSTATE;
+
+    hr = map_file(file, &map, &mem, &size);
+    if (FAILED(hr)) return hr;
+
+    hr = StreamImpl_Create(&stream);
+    if (FAILED(hr)) goto error;
+
+    hr = IWICStreamImpl_InitializeFromMemory(stream, mem, size.u.LowPart);
+    if (FAILED(hr)) goto error;
+
+    pObject = HeapAlloc(GetProcessHeap(), 0, sizeof(StreamOnFileHandle));
+    if (!pObject)
+    {
+        hr = E_OUTOFMEMORY;
+        goto error;
+    }
+    pObject->IStream_iface.lpVtbl = &StreamOnFileHandle_Vtbl;
+    pObject->ref = 1;
+    pObject->map = map;
+    pObject->mem = mem;
+    pObject->stream = stream;
+
+    if (InterlockedCompareExchangePointer((void**)&This->pStream, pObject, NULL))
+    {
+        /* Some other thread set the stream first. */
+        IStream_Release(&pObject->IStream_iface);
+        return WINCODEC_ERR_WRONGSTATE;
+    }
+    return S_OK;
+
+error:
+    if (stream) IWICStream_Release(stream);
+    UnmapViewOfFile(mem);
+    CloseHandle(map);
+    return hr;
 }
 
 static HRESULT WINAPI IWICStreamImpl_InitializeFromIStreamRegion(IWICStream *iface,

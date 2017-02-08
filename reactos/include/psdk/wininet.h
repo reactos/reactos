@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #define INTERNETAPI
-#define BOOLAPI INTERNETAPI BOOL WINAPI
+#define BOOLAPI _Success_(return != 0) INTERNETAPI BOOL WINAPI
 
 typedef LPVOID HINTERNET;
 typedef HINTERNET * LPHINTERNET;
@@ -387,32 +387,104 @@ typedef struct _INTERNET_DIAGNOSTIC_SOCKET_INFO
 #define IDSI_FLAG_PROXY      0x00000004
 #define IDSI_FLAG_TUNNEL     0x00000008
 
-BOOLAPI InternetTimeFromSystemTimeA(CONST SYSTEMTIME *,DWORD ,LPSTR ,DWORD);
-BOOLAPI InternetTimeFromSystemTimeW(CONST SYSTEMTIME *,DWORD ,LPWSTR ,DWORD);
+BOOLAPI
+InternetTimeFromSystemTimeA(
+  _In_ CONST SYSTEMTIME *pst,
+  _In_ DWORD dwRFC,
+  _Out_writes_bytes_(cbTime) LPSTR lpszTime,
+  _In_ DWORD cbTime);
+
+BOOLAPI
+InternetTimeFromSystemTimeW(
+  _In_ CONST SYSTEMTIME *pst,
+  _In_ DWORD dwRFC,
+  _Out_writes_bytes_(cbTime) LPWSTR lpszTime,
+  _In_ DWORD cbTime);
+
 #define InternetTimeFromSystemTime WINELIB_NAME_AW(InternetTimeFromSystemTime)
 
 #define INTERNET_RFC1123_FORMAT    0
 #define INTERNET_RFC1123_BUFSIZE   30
 
-BOOLAPI InternetTimeToSystemTimeA(LPCSTR ,SYSTEMTIME *,DWORD);
-BOOLAPI InternetTimeToSystemTimeW(LPCWSTR ,SYSTEMTIME *,DWORD);
+BOOLAPI
+InternetTimeToSystemTimeA(
+  _In_ LPCSTR,
+  _Out_ SYSTEMTIME *,
+  _Reserved_ DWORD);
+
+BOOLAPI
+InternetTimeToSystemTimeW(
+  _In_ LPCWSTR,
+  _Out_ SYSTEMTIME *,
+  _Reserved_ DWORD);
+
 #define InternetTimeToSystemTime WINELIB_NAME_AW(InternetTimeToSystemTime)
 
-BOOLAPI InternetCrackUrlA(LPCSTR ,DWORD ,DWORD ,LPURL_COMPONENTSA);
-BOOLAPI InternetCrackUrlW(LPCWSTR ,DWORD ,DWORD ,LPURL_COMPONENTSW);
-#define InternetCrackUrl  WINELIB_NAME_AW(InternetCrackUrl)
+BOOLAPI
+InternetCrackUrlA(
+  _In_reads_(dwUrlLength) LPCSTR lpszUrl,
+  _In_ DWORD dwUrlLength,
+  _In_ DWORD dwFlags,
+  _Inout_ LPURL_COMPONENTSA lpUrlComponents);
 
-BOOLAPI InternetCreateUrlA(LPURL_COMPONENTSA ,DWORD ,LPSTR ,LPDWORD);
-BOOLAPI InternetCreateUrlW(LPURL_COMPONENTSW ,DWORD ,LPWSTR ,LPDWORD);
+BOOLAPI
+InternetCrackUrlW(
+  _In_reads_(dwUrlLength) LPCWSTR lpszUrl,
+  _In_ DWORD dwUrlLength,
+  _In_ DWORD dwFlags,
+  _Inout_ LPURL_COMPONENTSW lpUrlComponents);
+
+#define InternetCrackUrl WINELIB_NAME_AW(InternetCrackUrl)
+
+BOOLAPI
+InternetCreateUrlA(
+  _In_ LPURL_COMPONENTSA lpUrlComponents,
+  _In_ DWORD dwFlags,
+  _Out_writes_opt_(*lpdwUrlLength) LPSTR lpszUrl,
+  _Inout_ LPDWORD lpdwUrlLength);
+
+BOOLAPI
+InternetCreateUrlW(
+  _In_ LPURL_COMPONENTSW lpUrlComponents,
+  _In_ DWORD dwFlags,
+  _Out_writes_opt_(*lpdwUrlLength) LPWSTR lpszUrl,
+  _Inout_ LPDWORD lpdwUrlLength);
+
 #define InternetCreateUrl WINELIB_NAME_AW(InternetCreateUrl)
 
-BOOLAPI InternetCanonicalizeUrlA(LPCSTR ,LPSTR ,LPDWORD ,DWORD);
-BOOLAPI InternetCanonicalizeUrlW(LPCWSTR ,LPWSTR ,LPDWORD ,DWORD);
-#define InternetCanonicalizeUrl  WINELIB_NAME_AW(InternetCanonicalizeUrl)
+BOOLAPI
+InternetCanonicalizeUrlA(
+  _In_ LPCSTR lpszUrl,
+  _Out_writes_(*lpdwBufferLength) LPSTR lpszBuffer,
+  _Inout_ LPDWORD lpdwBufferLength,
+  _In_ DWORD dwFlags);
 
-BOOLAPI InternetCombineUrlA(LPCSTR ,LPCSTR ,LPSTR ,LPDWORD ,DWORD);
-BOOLAPI InternetCombineUrlW(LPCWSTR ,LPCWSTR ,LPWSTR ,LPDWORD ,DWORD);
-#define InternetCombineUrl  WINELIB_NAME_AW(InternetCombineUrl)
+BOOLAPI
+InternetCanonicalizeUrlW(
+  _In_ LPCWSTR lpszUrl,
+  _Out_writes_(*lpdwBufferLength) LPWSTR lpszBuffer,
+  _Inout_ LPDWORD lpdwBufferLength,
+  _In_ DWORD dwFlags);
+
+#define InternetCanonicalizeUrl WINELIB_NAME_AW(InternetCanonicalizeUrl)
+
+BOOLAPI
+InternetCombineUrlA(
+  _In_ LPCSTR lpszBaseUrl,
+  _In_ LPCSTR lpszRelativeUrl,
+  _Out_writes_(*lpdwBufferLength) LPSTR lpszBuffer,
+  _Inout_ LPDWORD lpdwBufferLength,
+  _In_ DWORD dwFlags);
+
+BOOLAPI
+InternetCombineUrlW(
+  _In_ LPCWSTR lpszBaseUrl,
+  _In_ LPCWSTR lpszRelativeUrl,
+  _Out_writes_(*lpdwBufferLength) LPWSTR lpszBuffer,
+  _Inout_ LPDWORD lpdwBufferLength,
+  _In_ DWORD dwFlags);
+
+#define InternetCombineUrl WINELIB_NAME_AW(InternetCombineUrl)
 
 #define ICU_ESCAPE      0x80000000
 #define ICU_USERNAME    0x40000000
@@ -421,10 +493,29 @@ BOOLAPI InternetCombineUrlW(LPCWSTR ,LPCWSTR ,LPWSTR ,LPDWORD ,DWORD);
 #define ICU_NO_META     0x08000000
 #define ICU_ENCODE_SPACES_ONLY 0x04000000
 #define ICU_BROWSER_MODE 0x02000000
+#define ICU_ENCODE_PERCENT 0x00001000
 
-INTERNETAPI HINTERNET WINAPI InternetOpenA(LPCSTR ,DWORD ,LPCSTR ,LPCSTR ,DWORD);
-INTERNETAPI HINTERNET WINAPI InternetOpenW(LPCWSTR ,DWORD ,LPCWSTR ,LPCWSTR ,DWORD);
-#define InternetOpen  WINELIB_NAME_AW(InternetOpen)
+INTERNETAPI
+HINTERNET
+WINAPI
+InternetOpenA(
+  _In_opt_ LPCSTR,
+  _In_ DWORD,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD);
+
+INTERNETAPI
+HINTERNET
+WINAPI
+InternetOpenW(
+  _In_opt_ LPCWSTR,
+  _In_ DWORD,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD);
+
+#define InternetOpen WINELIB_NAME_AW(InternetOpen)
 
 #define INTERNET_OPEN_TYPE_PRECONFIG                    0
 #define INTERNET_OPEN_TYPE_DIRECT                       1
@@ -434,13 +525,35 @@ INTERNETAPI HINTERNET WINAPI InternetOpenW(LPCWSTR ,DWORD ,LPCWSTR ,LPCWSTR ,DWO
 #define LOCAL_INTERNET_ACCESS       INTERNET_OPEN_TYPE_DIRECT
 #define CERN_PROXY_INTERNET_ACCESS  INTERNET_OPEN_TYPE_PROXY
 
-BOOLAPI InternetCloseHandle(HINTERNET);
+BOOLAPI InternetCloseHandle(_In_ HINTERNET);
 
-INTERNETAPI HINTERNET WINAPI InternetConnectA(HINTERNET ,LPCSTR ,INTERNET_PORT ,
-	LPCSTR ,LPCSTR ,DWORD ,DWORD ,DWORD_PTR );
-INTERNETAPI HINTERNET WINAPI InternetConnectW(HINTERNET ,LPCWSTR ,INTERNET_PORT ,
-	LPCWSTR ,LPCWSTR ,DWORD ,DWORD ,DWORD_PTR );
-#define InternetConnect  WINELIB_NAME_AW(InternetConnect)
+INTERNETAPI
+HINTERNET
+WINAPI
+InternetConnectA(
+  _In_ HINTERNET,
+  _In_ LPCSTR,
+  _In_ INTERNET_PORT,
+  _In_opt_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+INTERNETAPI
+HINTERNET
+WINAPI
+InternetConnectW(
+  _In_ HINTERNET,
+  _In_ LPCWSTR,
+  _In_ INTERNET_PORT,
+  _In_opt_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define InternetConnect WINELIB_NAME_AW(InternetConnect)
 
 #define INTERNET_SERVICE_URL    0
 #define INTERNET_SERVICE_FTP    1
@@ -458,41 +571,126 @@ INTERNETAPI HINTERNET WINAPI InternetConnectW(HINTERNET ,LPCWSTR ,INTERNET_PORT 
                     dwContext                       \
                     )
 
-INTERNETAPI HINTERNET WINAPI InternetOpenUrlA(HINTERNET ,LPCSTR ,LPCSTR ,DWORD ,DWORD ,DWORD_PTR);
-INTERNETAPI HINTERNET WINAPI InternetOpenUrlW(HINTERNET ,LPCWSTR ,LPCWSTR ,DWORD ,DWORD ,DWORD_PTR);
-#define InternetOpenUrl  WINELIB_NAME_AW(InternetOpenUrl)
+INTERNETAPI
+HINTERNET
+WINAPI
+InternetOpenUrlA(
+  _In_ HINTERNET hInternet,
+  _In_ LPCSTR lpszUrl,
+  _In_reads_opt_(dwHeadersLength) LPCSTR lpszHeaders,
+  _In_ DWORD dwHeadersLength,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
 
-BOOLAPI InternetReadFile( HINTERNET ,LPVOID ,DWORD ,LPDWORD );
-INTERNETAPI BOOL WINAPI InternetReadFileExA( HINTERNET ,LPINTERNET_BUFFERSA ,DWORD ,DWORD_PTR );
-INTERNETAPI BOOL WINAPI InternetReadFileExW( HINTERNET ,LPINTERNET_BUFFERSW ,DWORD ,DWORD_PTR );
-#define InternetReadFileEx  WINELIB_NAME_AW(InternetReadFileEx)
+INTERNETAPI
+HINTERNET
+WINAPI
+InternetOpenUrlW(
+  _In_ HINTERNET hInternet,
+  _In_ LPCWSTR lpszUrl,
+  _In_reads_opt_(dwHeadersLength) LPCWSTR lpszHeaders,
+  _In_ DWORD dwHeadersLength,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+#define InternetOpenUrl WINELIB_NAME_AW(InternetOpenUrl)
+
+BOOLAPI
+InternetReadFile(
+  _In_ HINTERNET hFile,
+  _Out_writes_bytes_(dwNumberOfBytesToRead) __out_data_source(NETWORK) LPVOID lpBuffer,
+  _In_ DWORD dwNumberOfBytesToRead,
+  _Out_ LPDWORD lpdwNumberOfBytesRead);
+
+BOOLAPI
+InternetReadFileExA(
+  _In_ HINTERNET hFile,
+  _Out_ __out_data_source(NETWORK) LPINTERNET_BUFFERSA lpBuffersOut,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+BOOLAPI
+InternetReadFileExW(
+  _In_ HINTERNET hFile,
+  _Out_ __out_data_source(NETWORK) LPINTERNET_BUFFERSW lpBuffersOut,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+#define InternetReadFileEx WINELIB_NAME_AW(InternetReadFileEx)
 
 #define IRF_ASYNC       WININET_API_FLAG_ASYNC
 #define IRF_SYNC        WININET_API_FLAG_SYNC
 #define IRF_USE_CONTEXT WININET_API_FLAG_USE_CONTEXT
 #define IRF_NO_WAIT     0x00000008
 
-INTERNETAPI DWORD WINAPI InternetSetFilePointer(HINTERNET ,LONG ,PVOID ,DWORD ,DWORD_PTR);
-BOOLAPI InternetWriteFile(HINTERNET ,LPCVOID ,DWORD ,LPDWORD);
-BOOLAPI InternetQueryDataAvailable(HINTERNET ,LPDWORD ,DWORD ,DWORD_PTR);
-BOOLAPI InternetFindNextFileA(HINTERNET ,LPVOID);
-BOOLAPI InternetFindNextFileW(HINTERNET ,LPVOID);
+INTERNETAPI
+DWORD
+WINAPI
+InternetSetFilePointer(
+  _In_ HINTERNET,
+  _In_ LONG,
+  _Inout_opt_ PVOID,
+  _In_ DWORD,
+  _Reserved_ DWORD_PTR);
+
+BOOLAPI
+InternetWriteFile(
+  _In_ HINTERNET hFile,
+  _In_reads_bytes_(dwNumberOfBytesToWrite) LPCVOID lpBuffer,
+  _In_ DWORD dwNumberOfBytesToWrite,
+  _Out_ LPDWORD lpdwNumberOfBytesWritten);
+
+BOOLAPI
+InternetQueryDataAvailable(
+  _In_ HINTERNET hFile,
+  _Out_opt_ __out_data_source(NETWORK) LPDWORD lpdwNumberOfBytesAvailable,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+BOOLAPI InternetFindNextFileA(_In_ HINTERNET, _Out_ LPVOID);
+BOOLAPI InternetFindNextFileW(_In_ HINTERNET, _Out_ LPVOID);
 #define InternetFindNextFile  WINELIB_NAME_AW(InternetFindNextFile)
 
-BOOLAPI InternetQueryOptionA(HINTERNET ,DWORD ,LPVOID ,LPDWORD);
-BOOLAPI InternetQueryOptionW(HINTERNET ,DWORD ,LPVOID ,LPDWORD);
-#define InternetQueryOption  WINELIB_NAME_AW(InternetQueryOption)
+BOOLAPI
+InternetQueryOptionA(
+  _In_opt_ HINTERNET hInternet,
+  _In_ DWORD dwOption,
+  _Out_writes_bytes_to_opt_(*lpdwBufferLength, *lpdwBufferLength) __out_data_source(NETWORK) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpdwBufferLength);
 
-BOOLAPI InternetSetOptionA(HINTERNET ,DWORD ,LPVOID ,DWORD);
-BOOLAPI InternetSetOptionW(HINTERNET ,DWORD ,LPVOID ,DWORD);
+BOOLAPI
+InternetQueryOptionW(
+  _In_opt_ HINTERNET hInternet,
+  _In_ DWORD dwOption,
+  _Out_writes_bytes_to_opt_(*lpdwBufferLength, *lpdwBufferLength) __out_data_source(NETWORK) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpdwBufferLength);
+
+#define InternetQueryOption WINELIB_NAME_AW(InternetQueryOption)
+
+BOOLAPI InternetSetOptionA(_In_opt_ HINTERNET, _In_ DWORD, _In_opt_ LPVOID, _In_ DWORD);
+BOOLAPI InternetSetOptionW(_In_opt_ HINTERNET, _In_ DWORD, _In_opt_ LPVOID, _In_ DWORD);
 #define InternetSetOption  WINELIB_NAME_AW(InternetSetOption)
 
-BOOLAPI InternetSetOptionExA(HINTERNET ,DWORD ,LPVOID ,DWORD ,DWORD);
-BOOLAPI InternetSetOptionExW(HINTERNET ,DWORD ,LPVOID ,DWORD ,DWORD);
-#define InternetSetOptionEx  WINELIB_NAME_AW(InternetSetOptionEx)
+BOOLAPI
+InternetSetOptionExA(
+  _In_opt_ HINTERNET,
+  _In_ DWORD,
+  _In_opt_ LPVOID,
+  _In_ DWORD,
+  _In_ DWORD);
 
-BOOLAPI InternetLockRequestFile(HINTERNET ,HANDLE *);
-BOOLAPI InternetUnlockRequestFile(HANDLE);
+BOOLAPI
+InternetSetOptionExW(
+  _In_opt_ HINTERNET,
+  _In_ DWORD,
+  _In_opt_ LPVOID,
+  _In_ DWORD,
+  _In_ DWORD);
+
+#define InternetSetOptionEx WINELIB_NAME_AW(InternetSetOptionEx)
+
+BOOLAPI InternetLockRequestFile(_In_ HINTERNET, _Out_ HANDLE *);
+BOOLAPI InternetUnlockRequestFile(_Inout_ HANDLE);
 
 #define ISO_GLOBAL      0x00000001
 #define ISO_REGISTRY    0x00000002
@@ -642,17 +840,43 @@ BOOLAPI InternetUnlockRequestFile(HANDLE);
 
 
 
-BOOLAPI InternetGetLastResponseInfoA(LPDWORD ,LPSTR ,LPDWORD);
-BOOLAPI InternetGetLastResponseInfoW(LPDWORD ,LPWSTR ,LPDWORD);
-#define InternetGetLastResponseInfo  WINELIB_NAME_AW(InternetGetLastResponseInfo)
+BOOLAPI
+InternetGetLastResponseInfoA(
+  _Out_ LPDWORD lpdwError,
+  _Out_writes_opt_(*lpdwBufferLength) LPSTR lpszBuffer,
+  _Inout_ LPDWORD lpdwBufferLength);
 
-typedef VOID (CALLBACK *INTERNET_STATUS_CALLBACK)(HINTERNET ,DWORD_PTR ,DWORD ,
-	LPVOID ,DWORD);
+BOOLAPI
+InternetGetLastResponseInfoW(
+  _Out_ LPDWORD lpdwError,
+  _Out_writes_opt_(*lpdwBufferLength) LPWSTR lpszBuffer,
+  _Inout_ LPDWORD lpdwBufferLength);
 
+#define InternetGetLastResponseInfo WINELIB_NAME_AW(InternetGetLastResponseInfo)
+
+typedef VOID
+(CALLBACK *INTERNET_STATUS_CALLBACK)(
+  _In_ HINTERNET,
+  _In_opt_ DWORD_PTR,
+  _In_ DWORD,
+  _In_opt_ LPVOID,
+  _In_ DWORD);
 typedef INTERNET_STATUS_CALLBACK * LPINTERNET_STATUS_CALLBACK;
 
-INTERNETAPI INTERNET_STATUS_CALLBACK WINAPI InternetSetStatusCallbackA(HINTERNET ,INTERNET_STATUS_CALLBACK);
-INTERNETAPI INTERNET_STATUS_CALLBACK WINAPI InternetSetStatusCallbackW(HINTERNET ,INTERNET_STATUS_CALLBACK);
+INTERNETAPI
+INTERNET_STATUS_CALLBACK
+WINAPI
+InternetSetStatusCallbackA(
+  _In_ HINTERNET,
+  _In_opt_ INTERNET_STATUS_CALLBACK);
+
+INTERNETAPI
+INTERNET_STATUS_CALLBACK
+WINAPI
+InternetSetStatusCallbackW(
+  _In_ HINTERNET,
+  _In_opt_ INTERNET_STATUS_CALLBACK);
+
 #define InternetSetStatusCallback WINELIB_NAME_AW(InternetSetStatusCallback)
 
 #define INTERNET_STATUS_RESOLVING_NAME          10
@@ -694,53 +918,145 @@ INTERNETAPI INTERNET_STATUS_CALLBACK WINAPI InternetSetStatusCallbackW(HINTERNET
 #define FTP_TRANSFER_TYPE_BINARY    0x00000002
 #define FTP_TRANSFER_TYPE_MASK      (FTP_TRANSFER_TYPE_ASCII | FTP_TRANSFER_TYPE_BINARY)
 
-BOOLAPI FtpCommandA(HINTERNET, BOOL, DWORD, LPCSTR, DWORD_PTR, HINTERNET *);
-BOOLAPI FtpCommandW(HINTERNET, BOOL, DWORD, LPCWSTR, DWORD_PTR, HINTERNET *);
-#define FtpCommand  WINELIB_NAME_AW(FtpCommand)
+BOOLAPI
+FtpCommandA(
+  _In_ HINTERNET,
+  _In_ BOOL,
+  _In_ DWORD,
+  _In_ LPCSTR,
+  _In_opt_ DWORD_PTR,
+  _Out_opt_ HINTERNET *);
 
-INTERNETAPI HINTERNET WINAPI FtpFindFirstFileA(HINTERNET ,LPCSTR ,
-	LPWIN32_FIND_DATAA ,DWORD ,DWORD_PTR);
-INTERNETAPI HINTERNET WINAPI FtpFindFirstFileW(HINTERNET ,LPCWSTR ,
-	LPWIN32_FIND_DATAW ,DWORD ,DWORD_PTR);
-#define FtpFindFirstFile  WINELIB_NAME_AW(FtpFindFirstFile)
+BOOLAPI
+FtpCommandW(
+  _In_ HINTERNET,
+  _In_ BOOL,
+  _In_ DWORD,
+  _In_ LPCWSTR,
+  _In_opt_ DWORD_PTR,
+  _Out_opt_ HINTERNET *);
 
-BOOLAPI FtpGetFileA(HINTERNET ,LPCSTR ,LPCSTR ,BOOL ,DWORD ,DWORD ,DWORD_PTR);
-BOOLAPI FtpGetFileW(HINTERNET ,LPCWSTR ,LPCWSTR ,BOOL ,DWORD ,DWORD ,DWORD_PTR);
-#define FtpGetFile  WINELIB_NAME_AW(FtpGetFile)
+#define FtpCommand WINELIB_NAME_AW(FtpCommand)
 
-DWORD WINAPI FtpGetFileSize(HINTERNET, LPDWORD);
+INTERNETAPI
+HINTERNET
+WINAPI
+FtpFindFirstFileA(
+  _In_ HINTERNET,
+  _In_opt_ LPCSTR,
+  _Out_opt_ LPWIN32_FIND_DATAA,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
 
-BOOLAPI FtpPutFileA(HINTERNET ,LPCSTR ,LPCSTR ,DWORD ,DWORD_PTR);
-BOOLAPI FtpPutFileW(HINTERNET ,LPCWSTR ,LPCWSTR ,DWORD ,DWORD_PTR);
-#define FtpPutFile  WINELIB_NAME_AW(FtpPutFile)
+INTERNETAPI
+HINTERNET
+WINAPI
+FtpFindFirstFileW(
+  _In_ HINTERNET,
+  _In_opt_ LPCWSTR,
+  _Out_opt_ LPWIN32_FIND_DATAW,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
 
-BOOLAPI FtpDeleteFileA(HINTERNET ,LPCSTR);
-BOOLAPI FtpDeleteFileW(HINTERNET ,LPCWSTR);
+#define FtpFindFirstFile WINELIB_NAME_AW(FtpFindFirstFile)
+
+BOOLAPI
+FtpGetFileA(
+  _In_ HINTERNET,
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _In_ BOOL,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+BOOLAPI
+FtpGetFileW(
+  _In_ HINTERNET,
+  _In_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_ BOOL,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define FtpGetFile WINELIB_NAME_AW(FtpGetFile)
+
+DWORD WINAPI FtpGetFileSize(_In_ HINTERNET, _Out_opt_ LPDWORD);
+
+BOOLAPI
+FtpPutFileA(
+  _In_ HINTERNET,
+  _In_ LPCSTR,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+BOOLAPI
+FtpPutFileW(
+  _In_ HINTERNET,
+  _In_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define FtpPutFile WINELIB_NAME_AW(FtpPutFile)
+
+BOOLAPI FtpDeleteFileA(_In_ HINTERNET, _In_ LPCSTR);
+BOOLAPI FtpDeleteFileW(_In_ HINTERNET, _In_ LPCWSTR);
 #define FtpDeleteFile  WINELIB_NAME_AW(FtpDeleteFile)
 
-BOOLAPI FtpRenameFileA(HINTERNET ,LPCSTR ,LPCSTR);
-BOOLAPI FtpRenameFileW(HINTERNET ,LPCWSTR ,LPCWSTR);
+BOOLAPI FtpRenameFileA(_In_ HINTERNET, _In_ LPCSTR, _In_ LPCSTR);
+BOOLAPI FtpRenameFileW(_In_ HINTERNET, _In_ LPCWSTR, _In_ LPCWSTR);
 #define FtpRenameFile  WINELIB_NAME_AW(FtpRenameFile)
 
-INTERNETAPI HINTERNET WINAPI FtpOpenFileA(HINTERNET ,LPCSTR ,DWORD ,DWORD ,DWORD_PTR);
-INTERNETAPI HINTERNET WINAPI FtpOpenFileW(HINTERNET ,LPCWSTR ,DWORD ,DWORD ,DWORD_PTR);
-#define FtpOpenFile  WINELIB_NAME_AW(FtpOpenFile)
+INTERNETAPI
+HINTERNET
+WINAPI
+FtpOpenFileA(
+  _In_ HINTERNET,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
 
-BOOLAPI FtpCreateDirectoryA(HINTERNET ,LPCSTR);
-BOOLAPI FtpCreateDirectoryW(HINTERNET ,LPCWSTR);
+INTERNETAPI
+HINTERNET
+WINAPI
+FtpOpenFileW(
+  _In_ HINTERNET,
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define FtpOpenFile WINELIB_NAME_AW(FtpOpenFile)
+
+BOOLAPI FtpCreateDirectoryA(_In_ HINTERNET, _In_ LPCSTR);
+BOOLAPI FtpCreateDirectoryW(_In_ HINTERNET, _In_ LPCWSTR);
 #define FtpCreateDirectory  WINELIB_NAME_AW(FtpCreateDirectory)
 
-BOOLAPI FtpRemoveDirectoryA(HINTERNET ,LPCSTR);
-BOOLAPI FtpRemoveDirectoryW(HINTERNET ,LPCWSTR);
+BOOLAPI FtpRemoveDirectoryA(_In_ HINTERNET, _In_ LPCSTR);
+BOOLAPI FtpRemoveDirectoryW(_In_ HINTERNET, _In_ LPCWSTR);
 #define FtpRemoveDirectory  WINELIB_NAME_AW(FtpRemoveDirectory)
 
-BOOLAPI FtpSetCurrentDirectoryA(HINTERNET ,LPCSTR);
-BOOLAPI FtpSetCurrentDirectoryW(HINTERNET ,LPCWSTR);
+BOOLAPI FtpSetCurrentDirectoryA(_In_ HINTERNET, _In_ LPCSTR);
+BOOLAPI FtpSetCurrentDirectoryW(_In_ HINTERNET, _In_ LPCWSTR);
 #define FtpSetCurrentDirectory  WINELIB_NAME_AW(FtpSetCurrentDirectory)
 
-BOOLAPI FtpGetCurrentDirectoryA(HINTERNET ,LPSTR ,LPDWORD);
-BOOLAPI FtpGetCurrentDirectoryW(HINTERNET ,LPWSTR ,LPDWORD);
-#define FtpGetCurrentDirectory  WINELIB_NAME_AW(FtpGetCurrentDirectory)
+BOOLAPI
+FtpGetCurrentDirectoryA(
+  _In_ HINTERNET hConnect,
+  _Out_writes_(*lpdwCurrentDirectory) LPSTR lpszCurrentDirectory,
+  _Inout_ LPDWORD lpdwCurrentDirectory);
+
+BOOLAPI
+FtpGetCurrentDirectoryW(
+  _In_ HINTERNET hConnect,
+  _Out_writes_(*lpdwCurrentDirectory) LPWSTR lpszCurrentDirectory,
+  _Inout_ LPDWORD lpdwCurrentDirectory);
+
+#define FtpGetCurrentDirectory WINELIB_NAME_AW(FtpGetCurrentDirectory)
 
 #define MAX_GOPHER_DISPLAY_TEXT     128
 #define MAX_GOPHER_SELECTOR_TEXT    256
@@ -805,17 +1121,17 @@ DECL_WINELIB_TYPE_AW(LPGOPHER_FIND_DATA)
 #define GOPHER_TYPE_ASK             0x40000000
 #define GOPHER_TYPE_GOPHER_PLUS     0x80000000
 
-#define IS_GOPHER_FILE(type)            (BOOL)(((type) & GOPHER_TYPE_FILE_MASK) ? TRUE : FALSE)
-#define IS_GOPHER_DIRECTORY(type)       (BOOL)(((type) & GOPHER_TYPE_DIRECTORY) ? TRUE : FALSE)
-#define IS_GOPHER_PHONE_SERVER(type)    (BOOL)(((type) & GOPHER_TYPE_CSO) ? TRUE : FALSE)
-#define IS_GOPHER_ERROR(type)           (BOOL)(((type) & GOPHER_TYPE_ERROR) ? TRUE : FALSE)
-#define IS_GOPHER_INDEX_SERVER(type)    (BOOL)(((type) & GOPHER_TYPE_INDEX_SERVER) ? TRUE : FALSE)
-#define IS_GOPHER_TELNET_SESSION(type)  (BOOL)(((type) & GOPHER_TYPE_TELNET) ? TRUE : FALSE)
-#define IS_GOPHER_BACKUP_SERVER(type)   (BOOL)(((type) & GOPHER_TYPE_REDUNDANT) ? TRUE : FALSE)
-#define IS_GOPHER_TN3270_SESSION(type)  (BOOL)(((type) & GOPHER_TYPE_TN3270) ? TRUE : FALSE)
-#define IS_GOPHER_ASK(type)             (BOOL)(((type) & GOPHER_TYPE_ASK) ? TRUE : FALSE)
-#define IS_GOPHER_PLUS(type)            (BOOL)(((type) & GOPHER_TYPE_GOPHER_PLUS) ? TRUE : FALSE)
-#define IS_GOPHER_TYPE_KNOWN(type)      (BOOL)(((type) & GOPHER_TYPE_UNKNOWN) ? FALSE : TRUE)
+#define IS_GOPHER_FILE(type)            (BOOL)(((type) & GOPHER_TYPE_FILE_MASK) != 0)
+#define IS_GOPHER_DIRECTORY(type)       (BOOL)(((type) & GOPHER_TYPE_DIRECTORY) != 0)
+#define IS_GOPHER_PHONE_SERVER(type)    (BOOL)(((type) & GOPHER_TYPE_CSO) != 0)
+#define IS_GOPHER_ERROR(type)           (BOOL)(((type) & GOPHER_TYPE_ERROR) != 0)
+#define IS_GOPHER_INDEX_SERVER(type)    (BOOL)(((type) & GOPHER_TYPE_INDEX_SERVER) != 0)
+#define IS_GOPHER_TELNET_SESSION(type)  (BOOL)(((type) & GOPHER_TYPE_TELNET) != 0)
+#define IS_GOPHER_BACKUP_SERVER(type)   (BOOL)(((type) & GOPHER_TYPE_REDUNDANT) != 0)
+#define IS_GOPHER_TN3270_SESSION(type)  (BOOL)(((type) & GOPHER_TYPE_TN3270) != 0)
+#define IS_GOPHER_ASK(type)             (BOOL)(((type) & GOPHER_TYPE_ASK) != 0)
+#define IS_GOPHER_PLUS(type)            (BOOL)(((type) & GOPHER_TYPE_GOPHER_PLUS) != 0)
+#define IS_GOPHER_TYPE_KNOWN(type)      (BOOL)(!((type) & GOPHER_TYPE_UNKNOWN))
 #define GOPHER_TYPE_FILE_MASK       (GOPHER_TYPE_TEXT_FILE \
                                     | GOPHER_TYPE_MAC_BINHEX        \
                                     | GOPHER_TYPE_DOS_ARCHIVE       \
@@ -1092,36 +1408,113 @@ DECL_WINELIB_TYPE_AW(LPGOPHER_ATTRIBUTE_TYPE)
 #define GOPHER_ATTRIBUTE_ID_TREEWALK    (GOPHER_ATTRIBUTE_ID_BASE + 24)
 #define GOPHER_ATTRIBUTE_ID_UNKNOWN     (GOPHER_ATTRIBUTE_ID_BASE + 25)
 
-BOOLAPI GopherCreateLocatorA(LPCSTR ,INTERNET_PORT ,LPCSTR ,
-	LPCSTR ,DWORD ,LPSTR ,LPDWORD);
-BOOLAPI GopherCreateLocatorW(LPCWSTR ,INTERNET_PORT ,LPCWSTR ,
-	LPCWSTR ,DWORD ,LPWSTR ,LPDWORD);
-#define GopherCreateLocator  WINELIB_NAME_AW(GopherCreateLocator)
+BOOLAPI
+GopherCreateLocatorA(
+  _In_ LPCSTR lpszHost,
+  _In_ INTERNET_PORT nServerPort,
+  _In_opt_ LPCSTR lpszDisplayString,
+  _In_opt_ LPCSTR lpszSelectorString,
+  _In_ DWORD dwGopherType,
+  _Out_writes_opt_(*lpdwBufferLength) LPSTR lpszLocator,
+  _Inout_ LPDWORD lpdwBufferLength);
 
-BOOLAPI GopherGetLocatorTypeA(LPCSTR ,LPDWORD);
-BOOLAPI GopherGetLocatorTypeW(LPCWSTR ,LPDWORD);
-#define GopherGetLocatorType  WINELIB_NAME_AW(GopherGetLocatorType)
+BOOLAPI
+GopherCreateLocatorW(
+  _In_ LPCWSTR lpszHost,
+  _In_ INTERNET_PORT nServerPort,
+  _In_opt_ LPCWSTR lpszDisplayString,
+  _In_opt_ LPCWSTR lpszSelectorString,
+  _In_ DWORD dwGopherType,
+  _Out_writes_opt_(*lpdwBufferLength) LPWSTR lpszLocator,
+  _Inout_ LPDWORD lpdwBufferLength);
 
-INTERNETAPI HINTERNET WINAPI GopherFindFirstFileA(HINTERNET ,LPCSTR ,
-	LPCSTR ,LPGOPHER_FIND_DATAA ,DWORD ,DWORD_PTR);
-INTERNETAPI HINTERNET WINAPI GopherFindFirstFileW(HINTERNET ,LPCWSTR ,
-	LPCWSTR ,LPGOPHER_FIND_DATAW ,DWORD ,DWORD_PTR);
-#define GopherFindFirstFile  WINELIB_NAME_AW(GopherFindFirstFile)
+#define GopherCreateLocator WINELIB_NAME_AW(GopherCreateLocator)
 
-INTERNETAPI HINTERNET WINAPI GopherOpenFileA(HINTERNET ,LPCSTR ,LPCSTR ,DWORD ,DWORD_PTR);
-INTERNETAPI HINTERNET WINAPI GopherOpenFileW(HINTERNET ,LPCWSTR ,LPCWSTR ,DWORD ,DWORD_PTR);
-#define GopherOpenFile  WINELIB_NAME_AW(GopherOpenFile)
+BOOLAPI GopherGetLocatorTypeA(_In_ LPCSTR, _Out_ LPDWORD);
+BOOLAPI GopherGetLocatorTypeW(_In_ LPCWSTR, _Out_ LPDWORD);
+#define GopherGetLocatorType WINELIB_NAME_AW(GopherGetLocatorType)
 
-typedef BOOL (CALLBACK *GOPHER_ATTRIBUTE_ENUMERATORA)(LPGOPHER_ATTRIBUTE_TYPEA ,DWORD);
-typedef BOOL (CALLBACK *GOPHER_ATTRIBUTE_ENUMERATORW)(LPGOPHER_ATTRIBUTE_TYPEW ,DWORD);
+INTERNETAPI
+HINTERNET
+WINAPI
+GopherFindFirstFileA(
+  _In_ HINTERNET hConnect,
+  _In_opt_ LPCSTR lpszLocator,
+  _In_opt_ LPCSTR lpszSearchString,
+  _Out_opt_ LPGOPHER_FIND_DATAA lpFindData,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+INTERNETAPI
+HINTERNET
+WINAPI
+GopherFindFirstFileW(
+  _In_ HINTERNET hConnect,
+  _In_opt_ LPCWSTR lpszLocator,
+  _In_opt_ LPCWSTR lpszSearchString,
+  _Out_opt_ LPGOPHER_FIND_DATAW lpFindData,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+#define GopherFindFirstFile WINELIB_NAME_AW(GopherFindFirstFile)
+
+INTERNETAPI
+HINTERNET
+WINAPI
+GopherOpenFileA(
+  _In_ HINTERNET,
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+INTERNETAPI
+HINTERNET
+WINAPI
+GopherOpenFileW(
+  _In_ HINTERNET,
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define GopherOpenFile WINELIB_NAME_AW(GopherOpenFile)
+
+typedef BOOL
+(CALLBACK *GOPHER_ATTRIBUTE_ENUMERATORA)(
+  _In_ LPGOPHER_ATTRIBUTE_TYPEA,
+  _In_ DWORD);
+
+typedef BOOL
+(CALLBACK *GOPHER_ATTRIBUTE_ENUMERATORW)(
+  _In_ LPGOPHER_ATTRIBUTE_TYPEW,
+  _In_ DWORD);
 
 DECL_WINELIB_TYPE_AW(GOPHER_ATTRIBUTE_ENUMERATOR)
 
-BOOLAPI GopherGetAttributeA(HINTERNET ,LPCSTR ,LPCSTR ,LPBYTE ,
-	DWORD ,LPDWORD ,GOPHER_ATTRIBUTE_ENUMERATORA ,DWORD_PTR);
-BOOLAPI GopherGetAttributeW(HINTERNET ,LPCWSTR ,LPCWSTR ,LPBYTE ,
-	DWORD ,LPDWORD ,GOPHER_ATTRIBUTE_ENUMERATORW ,DWORD_PTR);
-#define GopherGetAttribute  WINELIB_NAME_AW(GopherGetAttribute)
+BOOLAPI
+GopherGetAttributeA(
+  _In_ HINTERNET hConnect,
+  _In_ LPCSTR lpszLocator,
+  _In_opt_ LPCSTR lpszAttributeName,
+  _At_((LPSTR) lpBuffer, _Out_writes_(dwBufferLength)) LPBYTE lpBuffer,
+  _In_ DWORD dwBufferLength,
+  _Out_ LPDWORD lpdwCharactersReturned,
+  _In_opt_ GOPHER_ATTRIBUTE_ENUMERATORA lpfnEnumerator,
+  _In_opt_ DWORD_PTR dwContext);
+
+BOOLAPI
+GopherGetAttributeW(
+  _In_ HINTERNET hConnect,
+  _In_ LPCWSTR lpszLocator,
+  _In_opt_ LPCWSTR lpszAttributeName,
+  _At_((LPWSTR) lpBuffer, _Out_writes_(dwBufferLength)) LPBYTE lpBuffer,
+  _In_ DWORD dwBufferLength,
+  _Out_ LPDWORD lpdwCharactersReturned,
+  _In_opt_ GOPHER_ATTRIBUTE_ENUMERATORW lpfnEnumerator,
+  _In_opt_ DWORD_PTR dwContext);
+
+#define GopherGetAttribute WINELIB_NAME_AW(GopherGetAttribute)
 
 #define HTTP_MAJOR_VERSION      1
 #define HTTP_MINOR_VERSION      0
@@ -1260,15 +1653,52 @@ BOOLAPI GopherGetAttributeW(HINTERNET ,LPCWSTR ,LPCWSTR ,LPBYTE ,
 #define HTTP_STATUS_LAST                HTTP_STATUS_VERSION_NOT_SUP
 
 
-INTERNETAPI HINTERNET WINAPI HttpOpenRequestA(HINTERNET ,LPCSTR ,LPCSTR ,LPCSTR ,
-	LPCSTR ,LPCSTR * ,DWORD ,DWORD_PTR);
-INTERNETAPI HINTERNET WINAPI HttpOpenRequestW(HINTERNET ,LPCWSTR ,LPCWSTR ,LPCWSTR ,
-	LPCWSTR ,LPCWSTR * ,DWORD ,DWORD_PTR);
-#define HttpOpenRequest  WINELIB_NAME_AW(HttpOpenRequest)
+INTERNETAPI
+HINTERNET
+WINAPI
+HttpOpenRequestA(
+  _In_ HINTERNET hConnect,
+  _In_opt_ LPCSTR lpszVerb,
+  _In_opt_ LPCSTR lpszObjectName,
+  _In_opt_ LPCSTR lpszVersion,
+  _In_opt_ LPCSTR lpszReferrer,
+  _In_opt_z_ LPCSTR FAR * lplpszAcceptTypes,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
 
-BOOLAPI HttpAddRequestHeadersA(HINTERNET ,LPCSTR ,DWORD ,DWORD);
-BOOLAPI HttpAddRequestHeadersW(HINTERNET ,LPCWSTR ,DWORD ,DWORD);
-#define HttpAddRequestHeaders  WINELIB_NAME_AW(HttpAddRequestHeaders)
+INTERNETAPI
+HINTERNET
+WINAPI HttpOpenRequestW(
+  _In_ HINTERNET hConnect,
+  _In_opt_ LPCWSTR lpszVerb,
+  _In_opt_ LPCWSTR lpszObjectName,
+  _In_opt_ LPCWSTR lpszVersion,
+  _In_opt_ LPCWSTR lpszReferrer,
+  _In_opt_z_ LPCWSTR FAR * lplpszAcceptTypes,
+  _In_ DWORD dwFlags,
+  _In_opt_ DWORD_PTR dwContext);
+
+#define HttpOpenRequest WINELIB_NAME_AW(HttpOpenRequest)
+
+BOOLAPI
+HttpAddRequestHeadersA(
+  _In_ HINTERNET hRequest,
+  _When_(dwHeadersLength == (DWORD) - 1, _In_z_)
+  _When_(dwHeadersLength != (DWORD) - 1, _In_reads_(dwHeadersLength))
+    LPCSTR lpszHeaders,
+  _In_ DWORD dwHeadersLength,
+  _In_ DWORD dwModifiers);
+
+BOOLAPI
+HttpAddRequestHeadersW(
+  _In_ HINTERNET hRequest,
+  _When_(dwHeadersLength == (DWORD) - 1, _In_z_)
+  _When_(dwHeadersLength != (DWORD) - 1, _In_reads_(dwHeadersLength))
+    LPCWSTR lpszHeaders,
+  _In_ DWORD dwHeadersLength,
+  _In_ DWORD dwModifiers);
+
+#define HttpAddRequestHeaders WINELIB_NAME_AW(HttpAddRequestHeaders)
 
 #define HTTP_ADDREQ_INDEX_MASK      0x0000FFFF
 #define HTTP_ADDREQ_FLAGS_MASK      0xFFFF0000
@@ -1279,15 +1709,41 @@ BOOLAPI HttpAddRequestHeadersW(HINTERNET ,LPCWSTR ,DWORD ,DWORD);
 #define HTTP_ADDREQ_FLAG_COALESCE                  HTTP_ADDREQ_FLAG_COALESCE_WITH_COMMA
 #define HTTP_ADDREQ_FLAG_REPLACE    0x80000000
 
-BOOLAPI HttpSendRequestA(HINTERNET ,LPCSTR ,DWORD ,LPVOID ,DWORD);
-BOOLAPI HttpSendRequestW(HINTERNET ,LPCWSTR ,DWORD ,LPVOID ,DWORD);
-#define HttpSendRequest  WINELIB_NAME_AW(HttpSendRequest)
+BOOLAPI
+HttpSendRequestA(
+  _In_ HINTERNET hRequest,
+  _In_reads_opt_(dwHeadersLength) LPCSTR lpszHeaders,
+  _In_ DWORD dwHeadersLength,
+  _In_reads_bytes_opt_(dwOptionalLength) LPVOID lpOptional,
+  _In_ DWORD dwOptionalLength);
 
-INTERNETAPI BOOL WINAPI HttpSendRequestExA(HINTERNET ,LPINTERNET_BUFFERSA ,
-	LPINTERNET_BUFFERSA ,DWORD ,DWORD_PTR);
-INTERNETAPI BOOL WINAPI HttpSendRequestExW(HINTERNET ,LPINTERNET_BUFFERSW ,
-	LPINTERNET_BUFFERSW ,DWORD ,DWORD_PTR);
-#define HttpSendRequestEx  WINELIB_NAME_AW(HttpSendRequestEx)
+BOOLAPI
+HttpSendRequestW(
+  _In_ HINTERNET hRequest,
+  _In_reads_opt_(dwHeadersLength) LPCWSTR lpszHeaders,
+  _In_ DWORD dwHeadersLength,
+  _In_reads_bytes_opt_(dwOptionalLength) LPVOID lpOptional,
+  _In_ DWORD dwOptionalLength);
+
+#define HttpSendRequest WINELIB_NAME_AW(HttpSendRequest)
+
+BOOLAPI
+HttpSendRequestExA(
+  _In_ HINTERNET,
+  _In_opt_ LPINTERNET_BUFFERSA,
+  _Out_opt_ LPINTERNET_BUFFERSA,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+BOOLAPI
+HttpSendRequestExW(
+  _In_ HINTERNET,
+  _In_opt_ LPINTERNET_BUFFERSW,
+  _Out_opt_ LPINTERNET_BUFFERSW,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define HttpSendRequestEx WINELIB_NAME_AW(HttpSendRequestEx)
 
 #define HSR_ASYNC       WININET_API_FLAG_ASYNC
 #define HSR_SYNC        WININET_API_FLAG_SYNC
@@ -1296,18 +1752,66 @@ INTERNETAPI BOOL WINAPI HttpSendRequestExW(HINTERNET ,LPINTERNET_BUFFERSW ,
 #define HSR_DOWNLOAD    0x00000010
 #define HSR_CHUNKED     0x00000020
 
-INTERNETAPI BOOL WINAPI HttpEndRequestA(HINTERNET ,LPINTERNET_BUFFERSA ,DWORD ,DWORD_PTR);
-INTERNETAPI BOOL WINAPI HttpEndRequestW(HINTERNET ,LPINTERNET_BUFFERSW ,DWORD ,DWORD_PTR);
-#define HttpEndRequest  WINELIB_NAME_AW(HttpEndRequest)
+BOOLAPI
+HttpEndRequestA(
+  _In_ HINTERNET,
+  _Out_opt_ LPINTERNET_BUFFERSA,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
 
-BOOLAPI HttpQueryInfoA(HINTERNET ,DWORD ,LPVOID ,LPDWORD ,LPDWORD);
-BOOLAPI HttpQueryInfoW(HINTERNET ,DWORD ,LPVOID ,LPDWORD ,LPDWORD);
-#define HttpQueryInfo  WINELIB_NAME_AW(HttpQueryInfo)
+BOOLAPI
+HttpEndRequestW(
+  _In_ HINTERNET,
+  _Out_opt_ LPINTERNET_BUFFERSW,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+#define HttpEndRequest WINELIB_NAME_AW(HttpEndRequest)
+
+BOOLAPI
+HttpQueryInfoA(
+  _In_ HINTERNET hRequest,
+  _In_ DWORD dwInfoLevel,
+  _Inout_updates_bytes_to_opt_(*lpdwBufferLength, *lpdwBufferLength) __out_data_source(NETWORK) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpdwBufferLength,
+  _Inout_opt_ LPDWORD lpdwIndex);
+
+BOOLAPI
+HttpQueryInfoW(
+  _In_ HINTERNET hRequest,
+  _In_ DWORD dwInfoLevel,
+  _Inout_updates_bytes_to_opt_(*lpdwBufferLength, *lpdwBufferLength) __out_data_source(NETWORK) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpdwBufferLength,
+  _Inout_opt_ LPDWORD lpdwIndex);
+
+#define HttpQueryInfo WINELIB_NAME_AW(HttpQueryInfo)
+
+typedef enum {
+    COOKIE_STATE_UNKNOWN,
+    COOKIE_STATE_ACCEPT,
+    COOKIE_STATE_PROMPT,
+    COOKIE_STATE_LEASH,
+    COOKIE_STATE_DOWNGRADE,
+    COOKIE_STATE_REJECT,
+    COOKIE_STATE_MAX = COOKIE_STATE_REJECT
+} InternetCookieState;
 
 BOOLAPI InternetClearAllPerSiteCookieDecisions(VOID);
 
-BOOLAPI InternetEnumPerSiteCookieDecisionA(LPSTR,ULONG *,ULONG *,ULONG);
-BOOLAPI InternetEnumPerSiteCookieDecisionW(LPWSTR,ULONG *,ULONG *,ULONG);
+BOOLAPI
+InternetEnumPerSiteCookieDecisionA(
+  _Out_writes_to_(*pcSiteNameSize, *pcSiteNameSize) LPSTR pszSiteName,
+  _Inout_ ULONG *pcSiteNameSize,
+  _Out_ ULONG *pdwDecision,
+  _In_ ULONG dwIndex);
+
+BOOLAPI
+InternetEnumPerSiteCookieDecisionW(
+  _Out_writes_to_(*pcSiteNameSize, *pcSiteNameSize) LPWSTR pszSiteName,
+  _Inout_ ULONG *pcSiteNameSize,
+  _Out_ ULONG *pdwDecision,
+  _In_ ULONG dwIndex);
+
 #define InternetEnumPerSiteCookieDecision WINELIB_NAME_AW(InternetEnumPerSiteCookieDecision)
 
 #define INTERNET_COOKIE_IS_SECURE       0x00000001
@@ -1320,34 +1824,80 @@ BOOLAPI InternetEnumPerSiteCookieDecisionW(LPWSTR,ULONG *,ULONG *,ULONG);
 #define INTERNET_COOKIE_IS_RESTRICTED   0x00000200
 #define INTERNET_COOKIE_IE6             0x00000400
 #define INTERNET_COOKIE_IS_LEGACY       0x00000800
+#define INTERNET_COOKIE_HTTPONLY        0x00002000
 
-BOOLAPI InternetGetCookieExA(LPCSTR,LPCSTR,LPSTR,LPDWORD,DWORD,LPVOID);
-BOOLAPI InternetGetCookieExW(LPCWSTR,LPCWSTR,LPWSTR,LPDWORD,DWORD,LPVOID);
+BOOLAPI
+InternetGetCookieExA(
+  _In_ LPCSTR lpszUrl,
+  _In_opt_ LPCSTR lpszCookieName,
+  _In_reads_opt_(*lpdwSize) LPSTR lpszCookieData,
+  _Inout_ LPDWORD lpdwSize,
+  _In_ DWORD dwFlags,
+  _Reserved_ LPVOID lpReserved);
+
+BOOLAPI
+InternetGetCookieExW(
+  _In_ LPCWSTR lpszUrl,
+  _In_opt_ LPCWSTR lpszCookieName,
+  _In_reads_opt_(*lpdwSize) LPWSTR lpszCookieData,
+  _Inout_ LPDWORD lpdwSize,
+  _In_ DWORD dwFlags,
+  _Reserved_ LPVOID lpReserved);
+
 #define InternetGetCookieEx WINELIB_NAME_AW(InternetGetCookieEx)
 
-DWORD WINAPI InternetSetCookieExA(LPCSTR,LPCSTR,LPCSTR,DWORD,DWORD_PTR);
-DWORD WINAPI InternetSetCookieExW(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,DWORD_PTR);
+DWORD
+WINAPI
+InternetSetCookieExA(
+  _In_ LPCSTR,
+  _In_opt_ LPCSTR,
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
+DWORD
+WINAPI
+InternetSetCookieExW(
+  _In_ LPCWSTR,
+  _In_opt_ LPCWSTR,
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_opt_ DWORD_PTR);
+
 #define InternetSetCookieEx WINELIB_NAME_AW(InternetSetCookieEx)
 
-BOOLAPI InternetGetPerSiteCookieDecisionA(LPCSTR,ULONG *);
-BOOLAPI InternetGetPerSiteCookieDecisionW(LPCWSTR,ULONG *);
+BOOLAPI InternetGetPerSiteCookieDecisionA(_In_ LPCSTR, _Out_ ULONG *);
+BOOLAPI InternetGetPerSiteCookieDecisionW(_In_ LPCWSTR, _Out_ ULONG *);
 #define InternetGetPerSiteCookieDecision WINELIB_NAME_AW(InternetGetPerSiteCookieDecision)
 
-BOOLAPI InternetSetPerSiteCookieDecisionA(LPCSTR,DWORD);
-BOOLAPI InternetSetPerSiteCookieDecisionW(LPCWSTR,DWORD);
+BOOLAPI InternetSetPerSiteCookieDecisionA(_In_ LPCSTR, _In_ DWORD);
+BOOLAPI InternetSetPerSiteCookieDecisionW(_In_ LPCWSTR, _In_ DWORD);
 #define InternetSetPerSiteCookieDecision WINELIB_NAME_AW(InternetSetPerSiteCookieDecision)
 
-BOOLAPI InternetSetCookieA(LPCSTR ,LPCSTR ,LPCSTR);
-BOOLAPI InternetSetCookieW(LPCWSTR ,LPCWSTR ,LPCWSTR);
+BOOLAPI InternetSetCookieA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ LPCSTR);
+BOOLAPI InternetSetCookieW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ LPCWSTR);
 #define InternetSetCookie  WINELIB_NAME_AW(InternetSetCookie)
 
-BOOLAPI InternetGetCookieA(LPCSTR ,LPCSTR ,LPSTR ,LPDWORD);
-BOOLAPI InternetGetCookieW(LPCWSTR ,LPCWSTR ,LPWSTR ,LPDWORD);
-#define InternetGetCookie  WINELIB_NAME_AW(InternetGetCookie)
+BOOLAPI
+InternetGetCookieA(
+  _In_ LPCSTR lpszUrl,
+  _In_opt_ LPCSTR lpszCookieName,
+  _Out_writes_opt_(*lpdwSize) LPSTR lpszCookieData,
+  _Inout_ LPDWORD lpdwSize);
 
-INTERNETAPI DWORD WINAPI InternetAttemptConnect(DWORD);
-BOOLAPI InternetCheckConnectionA(LPCSTR ,DWORD ,DWORD);
-BOOLAPI InternetCheckConnectionW(LPCWSTR ,DWORD ,DWORD);
+BOOLAPI
+InternetGetCookieW(
+  _In_ LPCWSTR lpszUrl,
+  _In_opt_ LPCWSTR lpszCookieName,
+  _Out_writes_opt_(*lpdwSize) LPWSTR lpszCookieData,
+  _Inout_ LPDWORD lpdwSize);
+
+#define InternetGetCookie WINELIB_NAME_AW(InternetGetCookie)
+
+INTERNETAPI DWORD WINAPI InternetAttemptConnect(_In_ DWORD);
+
+BOOLAPI InternetCheckConnectionA(_In_ LPCSTR, _In_ DWORD, _In_ DWORD);
+BOOLAPI InternetCheckConnectionW(_In_ LPCWSTR, _In_ DWORD, _In_ DWORD);
 #define InternetCheckConnection  WINELIB_NAME_AW(InternetCheckConnection)
 
 #define FLAG_ICC_FORCE_CONNECTION       0x00000001
@@ -1371,9 +1921,34 @@ typedef struct
 INTERNET_AUTH_NOTIFY_DATA;
 
 
-INTERNETAPI DWORD WINAPI InternetErrorDlg(HWND ,HINTERNET ,DWORD ,DWORD ,LPVOID *);
-INTERNETAPI DWORD WINAPI InternetConfirmZoneCrossingA(HWND ,LPSTR ,LPSTR ,BOOL);
-INTERNETAPI DWORD WINAPI InternetConfirmZoneCrossingW(HWND ,LPWSTR ,LPWSTR ,BOOL);
+INTERNETAPI
+DWORD
+WINAPI
+InternetErrorDlg(
+  _In_ HWND,
+  _Inout_opt_ HINTERNET,
+  _In_ DWORD,
+  _In_ DWORD,
+  _Inout_opt_ LPVOID *);
+
+INTERNETAPI
+DWORD
+WINAPI
+InternetConfirmZoneCrossingA(
+  _In_ HWND,
+  _In_ LPSTR,
+  _In_ LPSTR,
+  _In_ BOOL);
+
+INTERNETAPI
+DWORD
+WINAPI
+InternetConfirmZoneCrossingW(
+  _In_ HWND,
+  _In_ LPWSTR,
+  _In_ LPWSTR,
+  _In_ BOOL);
+
 #define InternetConfirmZoneCrossing WINELIB_NAME_AW(InternetConfirmZoneCrossing)
 
 #define PRIVACY_TEMPLATE_NO_COOKIES  0
@@ -1390,8 +1965,24 @@ INTERNETAPI DWORD WINAPI InternetConfirmZoneCrossingW(HWND ,LPWSTR ,LPWSTR ,BOOL
 #define PRIVACY_TYPE_FIRST_PARTY 0
 #define PRIVACY_TYPE_THIRD_PARTY 1
 
-INTERNETAPI DWORD WINAPI PrivacySetZonePreferenceW(DWORD,DWORD,DWORD,LPCWSTR);
-INTERNETAPI DWORD WINAPI PrivacyGetZonePreferenceW(DWORD,DWORD,LPDWORD,LPWSTR,LPDWORD);
+INTERNETAPI
+DWORD
+WINAPI
+PrivacySetZonePreferenceW(
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_opt_ LPCWSTR);
+
+INTERNETAPI
+DWORD
+WINAPI
+PrivacyGetZonePreferenceW(
+  _In_ DWORD dwZone,
+  _In_ DWORD dwType,
+  _Out_opt_ LPDWORD pdwTemplate,
+  _Out_writes_opt_(*pdwBufferLength) LPWSTR pszBuffer,
+  _Inout_opt_ LPDWORD pdwBufferLength);
 
 #define INTERNET_ERROR_BASE                     12000
 
@@ -1496,7 +2087,6 @@ INTERNETAPI DWORD WINAPI PrivacyGetZonePreferenceW(DWORD,DWORD,LPDWORD,LPWSTR,LP
 #define EDITED_CACHE_ENTRY              0x00000008
 #define COOKIE_CACHE_ENTRY              0x00100000
 #define URLHISTORY_CACHE_ENTRY          0x00200000
-#define DELETED_CACHE_ENTRY             0x00400000
 #define TRACK_OFFLINE_CACHE_ENTRY       0x00000010
 #define TRACK_ONLINE_CACHE_ENTRY        0x00000020
 #define SPARSE_CACHE_ENTRY              0x00010000
@@ -1564,41 +2154,139 @@ typedef struct _INTERNET_CACHE_TIMESTAMPS
     FILETIME ftLastModified;
 } INTERNET_CACHE_TIMESTAMPS, *LPINTERNET_CACHE_TIMESTAMPS;
 
-BOOLAPI CreateUrlCacheEntryA(LPCSTR ,DWORD ,LPCSTR ,LPSTR ,DWORD);
-BOOLAPI CreateUrlCacheEntryW(LPCWSTR ,DWORD ,LPCWSTR ,LPWSTR ,DWORD);
-#define CreateUrlCacheEntry  WINELIB_NAME_AW(CreateUrlCacheEntry)
+BOOLAPI
+CreateUrlCacheEntryA(
+  _In_ LPCSTR lpszUrlName,
+  _In_ DWORD dwExpectedFileSize,
+  _In_opt_ LPCSTR lpszFileExtension,
+  _Inout_updates_(MAX_PATH) LPSTR lpszFileName,
+  _In_ DWORD dwReserved);
 
-BOOLAPI CommitUrlCacheEntryA(LPCSTR,LPCSTR,FILETIME,FILETIME,DWORD,LPBYTE,DWORD,LPCSTR,LPCSTR);
-BOOLAPI CommitUrlCacheEntryW(LPCWSTR,LPCWSTR,FILETIME,FILETIME,DWORD,LPWSTR,DWORD,LPCWSTR,LPCWSTR);
-#define CommitUrlCacheEntry  WINELIB_NAME_AW(CommitUrlCacheEntry)
+BOOLAPI
+CreateUrlCacheEntryW(
+  _In_ LPCWSTR lpszUrlName,
+  _In_ DWORD dwExpectedFileSize,
+  _In_opt_ LPCWSTR lpszFileExtension,
+  _Inout_updates_(MAX_PATH) LPWSTR lpszFileName,
+  _In_ DWORD dwReserved);
 
-BOOLAPI ResumeSuspendedDownload(HINTERNET, DWORD);
+#define CreateUrlCacheEntry WINELIB_NAME_AW(CreateUrlCacheEntry)
 
-BOOLAPI RetrieveUrlCacheEntryFileA(LPCSTR ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD ,DWORD);
-BOOLAPI RetrieveUrlCacheEntryFileW(LPCWSTR ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD ,DWORD);
-#define RetrieveUrlCacheEntryFile  WINELIB_NAME_AW(RetrieveUrlCacheEntryFile)
+BOOLAPI
+CommitUrlCacheEntryA(
+  _In_ LPCSTR lpszUrlName,
+  _In_opt_ LPCSTR lpszLocalFileName,
+  _In_ FILETIME ExpireTime,
+  _In_ FILETIME LastModifiedTime,
+  _In_ DWORD CacheEntryType,
+  _In_reads_opt_(cchHeaderInfo) LPBYTE lpHeaderInfo,
+  _In_ DWORD cchHeaderInfo,
+  _Reserved_ LPCSTR lpszFileExtension,
+  _In_opt_ LPCSTR lpszOriginalUrl);
 
-BOOLAPI UnlockUrlCacheEntryFileA(LPCSTR ,DWORD);
-BOOLAPI UnlockUrlCacheEntryFileW(LPCWSTR ,DWORD);
+BOOLAPI
+CommitUrlCacheEntryW(
+  _In_ LPCWSTR lpszUrlName,
+  _In_opt_ LPCWSTR lpszLocalFileName,
+  _In_ FILETIME ExpireTime,
+  _In_ FILETIME LastModifiedTime,
+  _In_ DWORD CacheEntryType,
+  _In_reads_opt_(cchHeaderInfo) LPWSTR lpszHeaderInfo,
+  _In_ DWORD cchHeaderInfo,
+  _Reserved_ LPCWSTR lpszFileExtension,
+  _In_opt_ LPCWSTR lpszOriginalUrl);
+
+#define CommitUrlCacheEntry WINELIB_NAME_AW(CommitUrlCacheEntry)
+
+BOOLAPI ResumeSuspendedDownload(_In_ HINTERNET, _In_ DWORD);
+
+BOOLAPI
+RetrieveUrlCacheEntryFileA(
+  _In_ LPCSTR lpszUrlName,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ DWORD dwReserved);
+
+BOOLAPI
+RetrieveUrlCacheEntryFileW(
+  _In_ LPCWSTR lpszUrlName,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ DWORD dwReserved);
+
+#define RetrieveUrlCacheEntryFile WINELIB_NAME_AW(RetrieveUrlCacheEntryFile)
+
+BOOLAPI UnlockUrlCacheEntryFileA(_In_ LPCSTR, _Reserved_ DWORD);
+BOOLAPI UnlockUrlCacheEntryFileW(_In_ LPCWSTR, _Reserved_ DWORD);
 #define UnlockUrlCacheEntryFile  WINELIB_NAME_AW(UnlockUrlCacheEntryFile)
 
-INTERNETAPI HANDLE WINAPI RetrieveUrlCacheEntryStreamA(LPCSTR ,
-	LPINTERNET_CACHE_ENTRY_INFOA , LPDWORD ,BOOL ,DWORD);
-INTERNETAPI HANDLE WINAPI RetrieveUrlCacheEntryStreamW(LPCWSTR ,LPINTERNET_CACHE_ENTRY_INFOW ,
-	LPDWORD ,BOOL ,DWORD);
-#define RetrieveUrlCacheEntryStream  WINELIB_NAME_AW(RetrieveUrlCacheEntryStream)
+INTERNETAPI
+HANDLE
+WINAPI
+RetrieveUrlCacheEntryStreamA(
+  _In_ LPCSTR  lpszUrlName,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _In_ BOOL fRandomRead,
+  _Reserved_ DWORD dwReserved);
 
-BOOLAPI ReadUrlCacheEntryStream( HANDLE ,DWORD ,LPVOID ,LPDWORD ,DWORD );
-BOOLAPI UnlockUrlCacheEntryStream( HANDLE ,DWORD );
-BOOLAPI GetUrlCacheEntryInfoA(LPCSTR ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD);
-BOOLAPI GetUrlCacheEntryInfoW(LPCWSTR ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD);
-#define GetUrlCacheEntryInfo  WINELIB_NAME_AW(GetUrlCacheEntryInfo)
+INTERNETAPI
+HANDLE
+WINAPI
+RetrieveUrlCacheEntryStreamW(
+  _In_ LPCWSTR  lpszUrlName,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _In_ BOOL fRandomRead,
+  _Reserved_ DWORD dwReserved);
 
-BOOLAPI GetUrlCacheEntryInfoExA(
-    LPCSTR ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD ,LPSTR ,LPDWORD ,LPVOID ,DWORD);
-BOOLAPI GetUrlCacheEntryInfoExW(
-    LPCWSTR ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD ,LPWSTR ,LPDWORD ,LPVOID ,DWORD);
-#define GetUrlCacheEntryInfoEx  WINELIB_NAME_AW(GetUrlCacheEntryInfoEx)
+#define RetrieveUrlCacheEntryStream WINELIB_NAME_AW(RetrieveUrlCacheEntryStream)
+
+BOOLAPI
+ReadUrlCacheEntryStream(
+  _In_ HANDLE hUrlCacheStream,
+  _In_ DWORD dwLocation,
+  _Out_writes_bytes_(*lpdwLen) __out_data_source(NETWORK) LPVOID lpBuffer,
+  _Inout_ LPDWORD lpdwLen,
+  _Reserved_ DWORD Reserved);
+
+BOOLAPI UnlockUrlCacheEntryStream(_In_ HANDLE, _Reserved_ DWORD);
+
+BOOLAPI
+GetUrlCacheEntryInfoA(
+  _In_ LPCSTR lpszUrlName,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo,
+  _Inout_opt_ LPDWORD lpcbCacheEntryInfo);
+
+BOOLAPI
+GetUrlCacheEntryInfoW(
+  _In_ LPCWSTR lpszUrlName,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpCacheEntryInfo,
+  _Inout_opt_ LPDWORD lpcbCacheEntryInfo);
+
+#define GetUrlCacheEntryInfo WINELIB_NAME_AW(GetUrlCacheEntryInfo)
+
+BOOLAPI
+GetUrlCacheEntryInfoExA(
+  _In_ LPCSTR lpszUrl,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo,
+  _Inout_opt_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ LPSTR lpszRedirectUrl,
+  _Reserved_ LPDWORD lpcbRedirectUrl,
+  _Reserved_ LPVOID lpReserved,
+  _In_ DWORD dwFlags);
+
+BOOLAPI
+GetUrlCacheEntryInfoExW(
+  _In_ LPCWSTR lpszUrl,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpCacheEntryInfo,
+  _Inout_opt_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ LPWSTR lpszRedirectUrl,
+  _Reserved_ LPDWORD lpcbRedirectUrl,
+  _Reserved_ LPVOID lpReserved,
+  _In_ DWORD dwFlags);
+
+#define GetUrlCacheEntryInfoEx WINELIB_NAME_AW(GetUrlCacheEntryInfoEx)
 
 #define CACHE_ENTRY_ATTRIBUTE_FC    0x00000004
 #define CACHE_ENTRY_HITRATE_FC      0x00000010
@@ -1610,55 +2298,185 @@ BOOLAPI GetUrlCacheEntryInfoExW(
 #define CACHE_ENTRY_EXEMPT_DELTA_FC 0x00000800
 
 
-BOOLAPI SetUrlCacheEntryInfoA(LPCSTR ,LPINTERNET_CACHE_ENTRY_INFOA ,DWORD);
-BOOLAPI SetUrlCacheEntryInfoW(LPCWSTR ,LPINTERNET_CACHE_ENTRY_INFOW ,DWORD);
-#define SetUrlCacheEntryInfo  WINELIB_NAME_AW(SetUrlCacheEntryInfo)
+BOOLAPI
+SetUrlCacheEntryInfoA(
+  _In_ LPCSTR,
+  _In_ LPINTERNET_CACHE_ENTRY_INFOA,
+  _In_ DWORD);
+
+BOOLAPI
+SetUrlCacheEntryInfoW(
+  _In_ LPCWSTR,
+  _In_ LPINTERNET_CACHE_ENTRY_INFOW,
+  _In_ DWORD);
+
+#define SetUrlCacheEntryInfo WINELIB_NAME_AW(SetUrlCacheEntryInfo)
 
 typedef LONGLONG GROUPID;
 
-INTERNETAPI GROUPID WINAPI CreateUrlCacheGroup(DWORD,LPVOID);
-BOOLAPI DeleteUrlCacheGroup(GROUPID ,DWORD ,LPVOID);
+INTERNETAPI GROUPID WINAPI CreateUrlCacheGroup(_In_ DWORD, _Reserved_ LPVOID);
+BOOLAPI DeleteUrlCacheGroup(_In_ GROUPID, _In_ DWORD, _Reserved_ LPVOID);
 
-INTERNETAPI HANDLE WINAPI FindFirstUrlCacheGroup(DWORD,DWORD,LPVOID,DWORD,GROUPID*,LPVOID);
-BOOLAPI FindNextUrlCacheGroup(HANDLE,GROUPID*,LPVOID);
+INTERNETAPI
+HANDLE
+WINAPI
+FindFirstUrlCacheGroup(
+  _In_ DWORD,
+  _In_ DWORD,
+  _Reserved_ LPVOID,
+  _Reserved_ DWORD,
+  _Out_ GROUPID*,
+  _Reserved_ LPVOID);
 
-BOOLAPI GetUrlCacheGroupAttributeA(GROUPID,DWORD,DWORD,LPINTERNET_CACHE_GROUP_INFOA,LPDWORD,LPVOID);
-BOOLAPI GetUrlCacheGroupAttributeW(GROUPID,DWORD,DWORD,LPINTERNET_CACHE_GROUP_INFOW,LPDWORD,LPVOID);
-#define GetUrlCacheGroupAttribute  WINELIB_NAME_AW(GetUrlCacheGroupAttribute)
+BOOLAPI FindNextUrlCacheGroup(_In_ HANDLE, _Out_ GROUPID*, _Reserved_ LPVOID);
+
+BOOLAPI
+GetUrlCacheGroupAttributeA(
+  _In_ GROUPID gid,
+  _Reserved_ DWORD dwFlags,
+  _In_ DWORD dwAttributes,
+  _Out_writes_bytes_(*lpcbGroupInfo) LPINTERNET_CACHE_GROUP_INFOA lpGroupInfo,
+  _Inout_ LPDWORD lpcbGroupInfo,
+  _Reserved_ LPVOID lpReserved);
+
+BOOLAPI
+GetUrlCacheGroupAttributeW(
+  _In_ GROUPID gid,
+  _Reserved_ DWORD dwFlags,
+  _In_ DWORD dwAttributes,
+  _Out_writes_bytes_(*lpcbGroupInfo) LPINTERNET_CACHE_GROUP_INFOW lpGroupInfo,
+  _Inout_ LPDWORD lpcbGroupInfo,
+  _Reserved_ LPVOID lpReserved);
+
+#define GetUrlCacheGroupAttribute WINELIB_NAME_AW(GetUrlCacheGroupAttribute)
 
 #define INTERNET_CACHE_GROUP_ADD      0
 #define INTERNET_CACHE_GROUP_REMOVE   1
 
-BOOLAPI SetUrlCacheEntryGroupA(LPCSTR,DWORD,GROUPID,LPBYTE,DWORD,LPVOID);
-BOOLAPI SetUrlCacheEntryGroupW(LPCWSTR,DWORD,GROUPID,LPBYTE,DWORD,LPVOID);
-#define SetUrlCacheEntryGroup  WINELIB_NAME_AW(SetUrlCacheEntryGroup)
+BOOLAPI
+SetUrlCacheEntryGroupA(
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_ GROUPID,
+  _Reserved_ LPBYTE,
+  _Reserved_ DWORD,
+  _Reserved_ LPVOID);
 
-BOOLAPI SetUrlCacheGroupAttributeA(GROUPID,DWORD,DWORD,LPINTERNET_CACHE_GROUP_INFOA,LPVOID);
-BOOLAPI SetUrlCacheGroupAttributeW(GROUPID,DWORD,DWORD,LPINTERNET_CACHE_GROUP_INFOW,LPVOID);
-#define SetUrlCacheGroupAttribute  WINELIB_NAME_AW(SetUrlCacheGroupAttribute)
+BOOLAPI
+SetUrlCacheEntryGroupW(
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_ GROUPID,
+  _Reserved_ LPBYTE,
+  _Reserved_ DWORD,
+  _Reserved_ LPVOID);
 
-INTERNETAPI HANDLE WINAPI FindFirstUrlCacheEntryExA(
-    LPCSTR ,DWORD ,DWORD ,GROUPID ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD ,LPVOID ,LPDWORD ,LPVOID );
-INTERNETAPI HANDLE WINAPI FindFirstUrlCacheEntryExW(
-    LPCWSTR ,DWORD ,DWORD ,GROUPID ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD ,LPVOID ,LPDWORD ,LPVOID );
-#define FindFirstUrlCacheEntryEx  WINELIB_NAME_AW(FindFirstUrlCacheEntryEx)
+#define SetUrlCacheEntryGroup WINELIB_NAME_AW(SetUrlCacheEntryGroup)
 
-BOOLAPI FindNextUrlCacheEntryExA(HANDLE ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD ,LPVOID ,LPDWORD ,LPVOID);
-BOOLAPI FindNextUrlCacheEntryExW(HANDLE ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD ,LPVOID ,LPDWORD ,LPVOID);
-#define FindNextUrlCacheEntryEx  WINELIB_NAME_AW(FindNextUrlCacheEntryEx)
+BOOLAPI
+SetUrlCacheGroupAttributeA(
+  _In_ GROUPID,
+  _Reserved_ DWORD,
+  _In_ DWORD,
+  _In_ LPINTERNET_CACHE_GROUP_INFOA,
+  _Reserved_ LPVOID);
 
-INTERNETAPI HANDLE WINAPI FindFirstUrlCacheEntryA(LPCSTR ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD);
-INTERNETAPI HANDLE WINAPI FindFirstUrlCacheEntryW(LPCWSTR ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD);
-#define FindFirstUrlCacheEntry  WINELIB_NAME_AW(FindFirstUrlCacheEntry)
+BOOLAPI
+SetUrlCacheGroupAttributeW(
+  _In_ GROUPID,
+  _Reserved_ DWORD,
+  _In_ DWORD,
+  _In_ LPINTERNET_CACHE_GROUP_INFOW,
+  _Reserved_ LPVOID);
 
-BOOLAPI FindNextUrlCacheEntryA(HANDLE ,LPINTERNET_CACHE_ENTRY_INFOA ,LPDWORD);
-BOOLAPI FindNextUrlCacheEntryW(HANDLE ,LPINTERNET_CACHE_ENTRY_INFOW ,LPDWORD);
-#define FindNextUrlCacheEntry  WINELIB_NAME_AW(FindNextUrlCacheEntry)
+#define SetUrlCacheGroupAttribute WINELIB_NAME_AW(SetUrlCacheGroupAttribute)
 
-BOOLAPI FindCloseUrlCache(HANDLE);
+INTERNETAPI
+HANDLE
+WINAPI
+FindFirstUrlCacheEntryExA(
+  _In_opt_ LPCSTR  lpszUrlSearchPattern,
+  _In_ DWORD dwFlags,
+  _In_ DWORD  dwFilter,
+  _In_ GROUPID  GroupId,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpFirstCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ LPVOID lpGroupAttributes,
+  _Reserved_ LPDWORD lpcbGroupAttributes,
+  _Reserved_ LPVOID lpReserved);
 
-BOOLAPI DeleteUrlCacheEntryA(LPCSTR);
-BOOLAPI DeleteUrlCacheEntryW(LPCWSTR);
+INTERNETAPI
+HANDLE
+WINAPI
+FindFirstUrlCacheEntryExW(
+  _In_opt_ LPCWSTR  lpszUrlSearchPattern,
+  _In_ DWORD dwFlags,
+  _In_ DWORD  dwFilter,
+  _In_ GROUPID  GroupId,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpFirstCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ LPVOID lpGroupAttributes,
+  _Reserved_ LPDWORD lpcbGroupAttributes,
+  _Reserved_ LPVOID lpReserved);
+
+#define FindFirstUrlCacheEntryEx WINELIB_NAME_AW(FindFirstUrlCacheEntryEx)
+
+BOOLAPI
+FindNextUrlCacheEntryExA(
+  _In_ HANDLE hEnumHandle,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpNextCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ LPVOID lpGroupAttributes,
+  _Reserved_ LPDWORD lpcbGroupAttributes,
+  _Reserved_ LPVOID lpReserved);
+
+BOOLAPI
+FindNextUrlCacheEntryExW(
+  _In_ HANDLE hEnumHandle,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpNextCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo,
+  _Reserved_ LPVOID lpGroupAttributes,
+  _Reserved_ LPDWORD lpcbGroupAttributes,
+  _Reserved_ LPVOID lpReserved);
+
+#define FindNextUrlCacheEntryEx WINELIB_NAME_AW(FindNextUrlCacheEntryEx)
+
+INTERNETAPI
+HANDLE
+WINAPI
+FindFirstUrlCacheEntryA(
+  _In_opt_ LPCSTR lpszUrlSearchPattern,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpFirstCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo);
+
+INTERNETAPI
+HANDLE
+WINAPI
+FindFirstUrlCacheEntryW(
+  _In_opt_ LPCWSTR lpszUrlSearchPattern,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpFirstCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo);
+
+#define FindFirstUrlCacheEntry WINELIB_NAME_AW(FindFirstUrlCacheEntry)
+
+BOOLAPI
+FindNextUrlCacheEntryA(
+  _In_ HANDLE hEnumHandle,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOA lpNextCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo);
+
+BOOLAPI
+FindNextUrlCacheEntryW(
+  _In_ HANDLE hEnumHandle,
+  _Inout_updates_bytes_opt_(*lpcbCacheEntryInfo) LPINTERNET_CACHE_ENTRY_INFOW lpNextCacheEntryInfo,
+  _Inout_ LPDWORD lpcbCacheEntryInfo);
+
+#define FindNextUrlCacheEntry WINELIB_NAME_AW(FindNextUrlCacheEntry)
+
+BOOLAPI FindCloseUrlCache(_In_ HANDLE);
+
+BOOLAPI DeleteUrlCacheEntryA(_In_ LPCSTR);
+BOOLAPI DeleteUrlCacheEntryW(_In_ LPCWSTR);
 #define DeleteUrlCacheEntry  WINELIB_NAME_AW(DeleteUrlCacheEntry)
 
 /* FCS_ flags and FreeUrlCacheSpace are no longer documented */
@@ -1670,31 +2488,50 @@ BOOLAPI FreeUrlCacheSpaceA(LPCSTR ,DWORD ,DWORD);
 BOOLAPI FreeUrlCacheSpaceW(LPCWSTR ,DWORD ,DWORD);
 #define FreeUrlCacheSpace  WINELIB_NAME_AW(FreeUrlCacheSpace)
 
+INTERNETAPI
+DWORD
+WINAPI
+InternetDialA(
+  _In_ HWND,
+  _In_opt_ LPSTR,
+  _In_ DWORD,
+  _Out_ DWORD_PTR*,
+  _Reserved_ DWORD);
 
-INTERNETAPI DWORD WINAPI InternetDialA(HWND ,LPSTR ,DWORD ,DWORD_PTR* ,DWORD);
-INTERNETAPI DWORD WINAPI InternetDialW(HWND ,LPWSTR ,DWORD ,DWORD_PTR* ,DWORD);
+INTERNETAPI
+DWORD
+WINAPI
+InternetDialW(
+  _In_ HWND,
+  _In_opt_ LPWSTR,
+  _In_ DWORD,
+  _Out_ DWORD_PTR*,
+  _Reserved_ DWORD);
+
 #define InternetDial WINELIB_NAME_AW(InternetDial)
-
 
 #define INTERNET_DIAL_UNATTENDED       0x8000
 
-INTERNETAPI DWORD WINAPI InternetHangUp(DWORD_PTR ,DWORD);
-BOOLAPI CreateMD5SSOHash(PWSTR,PWSTR,PWSTR,PBYTE);
+INTERNETAPI DWORD WINAPI InternetHangUp(_In_ DWORD_PTR, _Reserved_ DWORD);
+BOOLAPI CreateMD5SSOHash(_In_ PWSTR, _In_ PWSTR, _In_ PWSTR, _Out_ PBYTE);
 
 #define INTERENT_GOONLINE_REFRESH 0x00000001
 #define INTERENT_GOONLINE_MASK 0x00000001
-INTERNETAPI BOOL WINAPI InternetGoOnlineA(LPSTR ,HWND ,DWORD);
-INTERNETAPI BOOL WINAPI InternetGoOnlineW(LPWSTR ,HWND ,DWORD);
+
+BOOLAPI InternetGoOnlineA(_In_opt_ LPSTR, _In_ HWND, _In_ DWORD);
+BOOLAPI InternetGoOnlineW(_In_opt_ LPWSTR, _In_ HWND, _In_ DWORD);
 #define InternetGoOnline  WINELIB_NAME_AW(InternetGoOnline)
-INTERNETAPI BOOL WINAPI InternetAutodial(DWORD,HWND);
+
+BOOLAPI InternetAutodial(_In_ DWORD, _In_opt_ HWND);
 
 #define INTERNET_AUTODIAL_FORCE_ONLINE          1
 #define INTERNET_AUTODIAL_FORCE_UNATTENDED      2
 #define INTERNET_AUTODIAL_FAILIFSECURITYCHECK   4
 
 #define INTERNET_AUTODIAL_FLAGS_MASK (INTERNET_AUTODIAL_FORCE_ONLINE | INTERNET_AUTODIAL_FORCE_UNATTENDED | INTERNET_AUTODIAL_FAILIFSECURITYCHECK)
-INTERNETAPI BOOL WINAPI InternetAutodialHangup(DWORD);
-INTERNETAPI BOOL WINAPI InternetGetConnectedState(LPDWORD ,DWORD);
+
+BOOLAPI InternetAutodialHangup(_Reserved_ DWORD);
+BOOLAPI InternetGetConnectedState(_Out_ LPDWORD, _Reserved_ DWORD);
 
 #define INTERNET_CONNECTION_MODEM           1
 #define INTERNET_CONNECTION_LAN             2
@@ -1711,20 +2548,63 @@ typedef DWORD (CALLBACK *PFN_DIAL_HANDLER) (HWND,LPCSTR,DWORD,LPDWORD);
 #define INTERNET_CUSTOMDIAL_WILL_SUPPLY_STATE   2
 #define INTERNET_CUSTOMDIAL_CAN_HANGUP          4
 
-INTERNETAPI BOOL WINAPI InternetSetDialStateA(LPCSTR ,DWORD ,DWORD);
-INTERNETAPI BOOL WINAPI InternetSetDialStateW(LPCWSTR ,DWORD ,DWORD);
+BOOLAPI InternetSetDialStateA(_In_opt_ LPCSTR, _In_ DWORD, _Reserved_ DWORD);
+BOOLAPI InternetSetDialStateW(_In_opt_ LPCWSTR, _In_ DWORD, _Reserved_ DWORD);
 #define InternetSetDialState WINELIB_NAME_AW(InternetSetDialState)
+
 #define INTERNET_DIALSTATE_DISCONNECTED     1
 
-BOOL WINAPI InternetGetConnectedStateExA(LPDWORD, LPSTR, DWORD, DWORD);
-BOOL WINAPI InternetGetConnectedStateExW(LPDWORD, LPWSTR, DWORD, DWORD);
+BOOLAPI
+InternetGetConnectedStateExA(
+  _Out_opt_ LPDWORD lpdwFlags,
+  _Out_writes_opt_(cchNameLen) LPSTR lpszConnectionName,
+  _In_ DWORD cchNameLen,
+  _Reserved_ DWORD dwReserved);
+
+BOOLAPI
+InternetGetConnectedStateExW(
+  _Out_opt_ LPDWORD lpdwFlags,
+  _Out_writes_opt_(cchNameLen) LPWSTR lpszConnectionName,
+  _In_ DWORD cchNameLen,
+  _Reserved_ DWORD dwReserved);
+
 #define InternetGetConnectedStateEx WINELIB_NAME_AW(InternetGetConnectedStateEx)
 
-BOOL WINAPI InternetInitializeAutoProxyDll(DWORD);
-BOOL WINAPI DetectAutoProxyUrl(LPSTR, DWORD, DWORD);
+typedef struct AutoProxyHelperVtbl
+{
+    BOOL  (WINAPI *IsResolvable)(LPSTR);
+    DWORD (WINAPI *GetIPAddress)(LPSTR, LPDWORD);
+    DWORD (WINAPI *ResolveHostName)(LPSTR, LPSTR, LPDWORD);
+    BOOL  (WINAPI *IsInNet)(LPSTR, LPSTR, LPSTR);
+    BOOL  (WINAPI *IsResolvableEx)(LPSTR);
+    DWORD (WINAPI *GetIPAddressEx)(LPSTR, LPDWORD);
+    DWORD (WINAPI *ResolveHostNameEx)(LPSTR, LPSTR, LPDWORD);
+    BOOL  (WINAPI *IsInNetEx)(LPSTR, LPSTR);
+    DWORD (WINAPI *SortIpList)(LPSTR, LPSTR, LPDWORD);
+} AutoProxyHelperVtbl;
+
+typedef struct AutoProxyHelperFunctions
+{
+    const struct AutoProxyHelperVtbl *lpVtbl;
+} AutoProxyHelperFunctions;
+
+typedef struct
+{
+    DWORD dwStructSize;
+    LPSTR lpszScriptBuffer;
+    DWORD dwScriptBufferSize;
+} AUTO_PROXY_SCRIPT_BUFFER, *LPAUTO_PROXY_SCRIPT_BUFFER;
+
+BOOLAPI InternetInitializeAutoProxyDll(_In_ DWORD);
+
+BOOLAPI
+DetectAutoProxyUrl(
+  _Out_writes_(cchAutoProxyUrl) PSTR pszAutoProxyUrl,
+  _In_ DWORD cchAutoProxyUrl,
+  _In_ DWORD dwDetectFlags);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* _WINE_WININET_H_ */

@@ -1,8 +1,5 @@
-
 #ifndef INTERFACES_HPP
 #define INTERFACES_HPP
-
-#include "libusb.h"
 
 //---------------------------------------------------------------------------
 //
@@ -138,4 +135,4 @@ DECLARE_INTERFACE_(IUHCIQueue, IUSBQueue)
 
 typedef IUHCIQueue *PUHCIQUEUE;
 
-#endif
+#endif /* INTERFACES_HPP */

@@ -28,7 +28,7 @@
  *
  *      When we have more than 9 opened windows, a "More Windows..."
  *      option appears in the "Windows" menu. Each child window has
- *      a WND* associated with it, accesible via the children list of
+ *      a WND* associated with it, accessible via the children list of
  *      the parent window. This WND* has a wIDmenu member, which reflects
  *      the position of the child in the window list. For example, with
  *      9 child windows, we could have the following pattern:
@@ -112,6 +112,7 @@ typedef struct
      * states it must keep coherency with USER32 on its own. This is true for
      * Windows as well.
      */
+    LONG      reserved;
     UINT      nActiveChildren;
     HWND      hwndChildMaximized;
     HWND      hwndActiveChild;
@@ -216,7 +217,7 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
     0,                      /* style */
     MDIClientWndProcA,      /* procA */
     MDIClientWndProcW,      /* procW */
-    sizeof(MDICLIENTINFO),  /* extra */
+    sizeof(MDIWND),         /* extra */
     IDC_ARROW,              /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
 };
@@ -225,7 +226,7 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
 static MDICLIENTINFO *get_client_info( HWND client )
 {
 #ifdef __REACTOS__
-    return (MDICLIENTINFO *)GetWindowLongPtr(client, 0);
+    return (MDICLIENTINFO *)GetWindowLongPtr(client, GWLP_MDIWND);
 #else
     MDICLIENTINFO *ret = NULL;
     WND *win = WIN_GetPtr( client );
@@ -263,7 +264,7 @@ static BOOL is_close_enabled(HWND hwnd, HMENU hSysMenu)
 /**********************************************************************
  * 			MDI_GetWindow
  *
- * returns "activateable" child different from the current or zero
+ * returns "activatable" child different from the current or zero
  */
 static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
                             DWORD dwStyleMask )
@@ -339,7 +340,7 @@ static LRESULT MDISetMenu( HWND hwnd, HMENU hmenuFrame,
     MDICLIENTINFO *ci;
     HWND hwndFrame = GetParent(hwnd);
 
-    TRACE("%p %p %p\n", hwnd, hmenuFrame, hmenuWindow);
+    TRACE("%p, frame menu %p, window menu %p\n", hwnd, hmenuFrame, hmenuWindow);
 
     if (hmenuFrame && !IsMenu(hmenuFrame))
     {
@@ -684,7 +685,7 @@ static LONG MDI_ChildActivate( HWND client, HWND child )
          * SetFocus won't work. It appears that Windows sends WM_SETFOCUS
          * manually in this case.
          */
-        if (SetFocus( client ) == client)
+        if (SetFocus(client) == client)
             SendMessageW( client, WM_SETFOCUS, (WPARAM)client, 0 );
     }
 
@@ -859,8 +860,8 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
             for (r = 1; r <= rows && *pWnd; r++, i++)
             {
                 LONG posOptions = SWP_DRAWFRAME | SWP_NOACTIVATE | SWP_NOZORDER;
-                LONG style = GetWindowLongW(win_array[i], GWL_STYLE);  
-                if (!(style & WS_SIZEBOX)) posOptions |= SWP_NOSIZE; 
+                LONG style = GetWindowLongW(win_array[i], GWL_STYLE);
+                if (!(style & WS_SIZEBOX)) posOptions |= SWP_NOSIZE;
 
                 SetWindowPos(*pWnd, 0, x, y, xsize, ysize, posOptions);
                 y += ysize;
@@ -882,7 +883,7 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
 static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
 {
     HMENU menu = GetMenu( frame );
-    HMENU  	hSysPopup = 0;
+    HMENU  	hSysPopup;
     HBITMAP hSysMenuBitmap = 0;
     HICON hIcon;
     INT nItems;
@@ -890,36 +891,43 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
 
     TRACE("frame %p,child %p\n",frame,hChild);
 
-    if( !menu ) return 0;
+    if( !menu ) return FALSE;
 //// ReactOS start
     /* if the system buttons already exist do not add them again */
     nItems = GetMenuItemCount(menu) - 1;
     iId = GetMenuItemID(menu,nItems) ;
     if (iId == SC_RESTORE || iId == SC_CLOSE)
-	return 0;
-
+    {
+        ERR("system buttons already exist\n");
+	return FALSE;
+    }
+//// End
     /* create a copy of sysmenu popup and insert it into frame menu bar */
     if (!(hSysPopup = GetSystemMenu(hChild, FALSE)))
     {
         TRACE("child %p doesn't have a system menu\n", hChild);
-        return 0;
+        return FALSE;
     }
 
     AppendMenuW(menu, MF_HELP | MF_BITMAP,
-                SC_MINIMIZE, (LPCWSTR)HBMMENU_MBAR_MINIMIZE ) ;
+                SC_CLOSE, is_close_enabled(hChild, hSysPopup) ?
+                (LPCWSTR)HBMMENU_MBAR_CLOSE : (LPCWSTR)HBMMENU_MBAR_CLOSE_D );
     AppendMenuW(menu, MF_HELP | MF_BITMAP,
                 SC_RESTORE, (LPCWSTR)HBMMENU_MBAR_RESTORE );
     AppendMenuW(menu, MF_HELP | MF_BITMAP,
-                SC_CLOSE, is_close_enabled(hChild, hSysPopup) ?
-                (LPCWSTR)HBMMENU_MBAR_CLOSE : (LPCWSTR)HBMMENU_MBAR_CLOSE_D );
+                SC_MINIMIZE, (LPCWSTR)HBMMENU_MBAR_MINIMIZE ) ;
 
     /* The system menu is replaced by the child icon */
-    hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICONSM);
+    hIcon = (HICON)SendMessageW(hChild, WM_GETICON, ICON_SMALL, 0);
+    if (!hIcon)
+        hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICONSM);
+    if (!hIcon)
+        hIcon = (HICON)SendMessageW(hChild, WM_GETICON, ICON_BIG, 0);
     if (!hIcon)
         hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICON);
     if (!hIcon)
-        hIcon = LoadIconW(NULL, IDI_APPLICATION);
-//// End
+        hIcon = LoadImageW(0, (LPWSTR)IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                           GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
     if (hIcon)
     {
       HDC hMemDC;
@@ -951,7 +959,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     {
         TRACE("not inserted\n");
 	DestroyMenu(hSysPopup);
-	return 0;
+        return FALSE;
     }
 
     EnableMenuItem(hSysPopup, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
@@ -962,7 +970,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     /* redraw menu */
     DrawMenuBar(frame);
 
-    return 1;
+    return TRUE;
 }
 
 /**********************************************************************
@@ -977,13 +985,16 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 
     TRACE("frame %p,child %p\n",frame, hChild);
 
-    if( !menu ) return 0;
+    if (!menu) return FALSE;
 
     /* if there is no system buttons then nothing to do */
     nItems = GetMenuItemCount(menu) - 1;
-    iId = GetMenuItemID(menu,nItems) ;
-    if( !(iId == SC_RESTORE || iId == SC_CLOSE) )
-	return 0;
+    iId = GetMenuItemID(menu, nItems);
+    if ( !(iId == SC_RESTORE || iId == SC_CLOSE) )
+    {
+        ERR("no system buttons then nothing to do\n");
+        return FALSE;
+    }
 
     /*
      * Remove the system menu, If that menu is the icon of the window
@@ -1019,7 +1030,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 
     DrawMenuBar(frame);
 
-    return 1;
+    return TRUE;
 }
 
 
@@ -1085,9 +1096,12 @@ static void MDI_UpdateFrameText( HWND frame, HWND hClient, BOOL repaint, LPCWSTR
 
     DefWindowProcW( frame, WM_SETTEXT, 0, (LPARAM)lpBuffer );
 
-    if (repaint)  
-        SetWindowPos( frame, 0,0,0,0,0, SWP_FRAMECHANGED |  
-                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER ); 
+    if (repaint)
+    {
+       if (!NtUserCallTwoParam((DWORD_PTR)frame,DC_ACTIVE,TWOPARAM_ROUTINE_REDRAWTITLE))
+        SetWindowPos( frame, 0,0,0,0,0, SWP_FRAMECHANGED |
+                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER );
+    }
 }
 
 
@@ -1103,20 +1117,20 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 
     TRACE("%p %04x (%s) %08lx %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
 
-    if (!(ci = get_client_info(hwnd)))
+    if (!(ci = get_client_info( hwnd )))
     {
         if (message == WM_NCCREATE)
         {
 #ifdef __REACTOS__
           if (!(ci = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ci))))
              return FALSE;
-           SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
+           SetWindowLongPtrW( hwnd, GWLP_MDIWND, (LONG_PTR)ci );
            ci->hBmpClose = 0;
            NtUserSetWindowFNID( hwnd, FNID_MDICLIENT); // wine uses WIN_ISMDICLIENT
 #else
-           WND *wndPtr = WIN_GetPtr( hwnd );
-           wndPtr->flags |= WIN_ISMDICLIENT;
-           WIN_ReleasePtr( wndPtr );
+            WND *wndPtr = WIN_GetPtr( hwnd );
+            wndPtr->flags |= WIN_ISMDICLIENT;
+            WIN_ReleasePtr( wndPtr );
 #endif
         }
         return unicode ? DefWindowProcW( hwnd, message, wParam, lParam ) :
@@ -1133,8 +1147,8 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
         LPCLIENTCREATESTRUCT ccs = (LPCLIENTCREATESTRUCT)cs->lpCreateParams;
 
         ci->hWindowMenu		= ccs->hWindowMenu;
-	ci->idFirstChild	= ccs->idFirstChild;
-	ci->hwndChildMaximized  = 0;
+        ci->idFirstChild	= ccs->idFirstChild;
+        ci->hwndChildMaximized  = 0;
         ci->child = NULL;
 	ci->nActiveChildren	= 0;
 	ci->nTotalCreated	= 0;
@@ -1161,7 +1175,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
           HeapFree( GetProcessHeap(), 0, ci->frameTitle );
 #ifdef __REACTOS__
           HeapFree( GetProcessHeap(), 0, ci );
-          SetWindowLongPtrW( hwnd, 0, 0 );
+          SetWindowLongPtrW( hwnd, GWLP_MDIWND, 0 );
 #endif
           return 0;
       }
@@ -1177,7 +1191,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
       case WM_MDIACTIVATE:
       {
         if( ci->hwndActiveChild != (HWND)wParam )
-            SetWindowPos((HWND)wParam, 0,0,0,0,0, SWP_NOSIZE | SWP_NOMOVE);
+	    SetWindowPos((HWND)wParam, 0,0,0,0,0, SWP_NOSIZE | SWP_NOMOVE);
         return 0;
       }
 
@@ -1231,8 +1245,11 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 
       case WM_MDINEXT: /* lParam != 0 means previous window */
       {
-        HWND next = MDI_GetWindow( ci, (HWND)wParam, !lParam, 0 );
+        HWND hwnd = wParam ? WIN_GetFullHandle((HWND)wParam) : ci->hwndActiveChild;
+        HWND next = MDI_GetWindow( ci, hwnd, !lParam, 0 );
         MDI_SwitchActiveChild( ci, next, TRUE );
+        if(!lParam)
+            SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
 	break;
       }
 
@@ -1431,7 +1448,7 @@ LRESULT WINAPI DefFrameProcW( HWND hwnd, HWND hwndMDIClient,
                     case SC_NEXTWINDOW:
                     case SC_PREVWINDOW:
                     case SC_RESTORE:
-                        return SendMessageW( ci->hwndActiveChild, WM_SYSCOMMAND,
+                        return SendMessageW( ci->hwndChildMaximized, WM_SYSCOMMAND,
                                              wParam, lParam);
                     }
                 }
@@ -1505,6 +1522,7 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
     MDICLIENTINFO *ci = get_client_info( client );
 
     TRACE("%p %04x (%s) %08lx %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
+
     hwnd = WIN_GetFullHandle( hwnd );
     if (!ci) return DefWindowProcA( hwnd, message, wParam, lParam );
 
@@ -1514,6 +1532,7 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
 	DefWindowProcA(hwnd, message, wParam, lParam);
 	if( ci->hwndChildMaximized == hwnd )
 	    MDI_UpdateFrameText( GetParent(client), client, TRUE, NULL );
+        MDI_RefreshMenu( ci );
         return 1; /* success. FIXME: check text length */
 
     case WM_GETMINMAXINFO:
@@ -1523,9 +1542,7 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
     case WM_CHILDACTIVATE:
     case WM_SYSCOMMAND:
     case WM_SHOWWINDOW:
-#ifndef __REACTOS__
     case WM_SETVISIBLE:
-#endif
     case WM_SIZE:
     case WM_NEXTMENU:
     case WM_SYSCHAR:
@@ -1556,6 +1573,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         DefWindowProcW(hwnd, message, wParam, lParam);
         if( ci->hwndChildMaximized == hwnd )
             MDI_UpdateFrameText( GetParent(client), client, TRUE, NULL );
+        MDI_RefreshMenu( ci );
         return 1; /* success. FIXME: check text length */
 
     case WM_GETMINMAXINFO:
@@ -1563,7 +1581,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         return 0;
 
     case WM_MENUCHAR:
-        return 0x00010000; /* MDI children don't have menu bars */
+        return MAKELRESULT( 0, MNC_CLOSE ); /* MDI children don't have menu bars */
 
     case WM_CLOSE:
         SendMessageW( client, WM_MDIDESTROY, (WPARAM)hwnd, 0 );
@@ -1575,11 +1593,12 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         break;
 
     case WM_CHILDACTIVATE:
-        MDI_ChildActivate( client, hwnd );
+        if (IsWindowEnabled( hwnd ))
+            MDI_ChildActivate( client, hwnd );
         return 0;
 
     case WM_SYSCOMMAND:
-        switch( wParam & 0xfff0)
+        switch (wParam & 0xfff0)
         {
         case SC_MOVE:
             if( ci->hwndChildMaximized == hwnd )
@@ -1589,22 +1608,21 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         case SC_MINIMIZE:
             break;
         case SC_MAXIMIZE:
-            if (ci->hwndChildMaximized == hwnd )
+            if (ci->hwndChildMaximized == hwnd)
                 return SendMessageW( GetParent(client), message, wParam, lParam);
             break;
         case SC_NEXTWINDOW:
-            SendMessageW( client, WM_MDINEXT, 0, 0);
+            SendMessageW( client, WM_MDINEXT, (WPARAM)ci->hwndActiveChild, 0);
             return 0;
         case SC_PREVWINDOW:
-            SendMessageW( client, WM_MDINEXT, 0, 1);
+            SendMessageW( client, WM_MDINEXT, (WPARAM)ci->hwndActiveChild, 1);
             return 0;
         }
         break;
 
     case WM_SHOWWINDOW:
-#ifndef __REACTOS__
     case WM_SETVISIBLE:
-#endif
+        //// Commented out r57663
         /*if (ci->hwndChildMaximized) ci->mdiFlags &= ~MDIF_NEEDUPDATE;
         else*/ MDI_PostUpdate(client, ci, SB_BOTH+1);
         break;
@@ -1614,7 +1632,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         /* do not change */
         TRACE("current active %p, maximized %p\n", ci->hwndActiveChild, ci->hwndChildMaximized);
 
-        if( ci->hwndChildMaximized == hwnd && wParam != SIZE_MAXIMIZED)
+        if( ci->hwndChildMaximized == hwnd && wParam != SIZE_MAXIMIZED )
         {
             HWND frame;
 
@@ -1784,14 +1802,14 @@ BOOL WINAPI TranslateMDISysAccel( HWND hwndClient, LPMSG msg )
                 }
                 /* fall through */
             default:
-                return 0;
+                return FALSE;
             }
             TRACE("wParam = %04lx\n", wParam);
             SendMessageW(ci->hwndActiveChild, WM_SYSCOMMAND, wParam, msg->wParam);
-            return 1;
+            return TRUE;
         }
     }
-    return 0; /* failure */
+    return FALSE; /* failure */
 }
 
 /***********************************************************************
@@ -1802,6 +1820,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     SCROLLINFO info;
     RECT childRect, clientRect;
     HWND *list;
+    DWORD style;
     WINDOWINFO WindowInfo;
 
     GetClientRect( hwnd, &clientRect );
@@ -1821,16 +1840,18 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         return;
     }
 
+    TRACE("CalcChildScroll 1\n");
     if ((list = WIN_ListChildren( hwnd )))
     {
         int i;
         for (i = 0; list[i]; i++)
         {
-            DWORD style = GetWindowLongPtrW( list[i], GWL_STYLE );
+            style = GetWindowLongPtrW( list[i], GWL_STYLE );
             if (style & WS_MAXIMIZE)
             {
                 HeapFree( GetProcessHeap(), 0, list );
                 ShowScrollBar( hwnd, SB_BOTH, FALSE );
+                ERR("CalcChildScroll 2\n");
                 return;
             }
             if (style & WS_VISIBLE)
@@ -1839,40 +1860,53 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                 GetWindowRect( list[i], &rect );
                 OffsetRect(&rect, -WindowInfo.rcClient.left,
                                   -WindowInfo.rcClient.top);
+                //WIN_GetRectangles( list[i], COORDS_PARENT, &rect, NULL );
+                TRACE("CalcChildScroll L\n");
                 UnionRect( &childRect, &rect, &childRect );
             }
         }
         HeapFree( GetProcessHeap(), 0, list );
     }
     UnionRect( &childRect, &clientRect, &childRect );
-
+    TRACE("CalcChildScroll 3\n");
     /* set common info values */
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
 
-    /* set the specific */
+    /* set the specific values and apply but only if window style allows */
     /* Note how we set nPos to 0 because we scroll the clients instead of
      * the window, and we set nPage to 1 bigger than the clientRect because
      * otherwise the scrollbar never disables. This causes a somewhat ugly
      * effect though while scrolling.
      */
+    style = GetWindowLongW( hwnd, GWL_STYLE );
     switch( scroll )
     {
 	case SB_BOTH:
 	case SB_HORZ:
-			info.nMin = childRect.left;
-			info.nMax = childRect.right;
-			info.nPos = 0;
-			info.nPage = 1 + clientRect.right - clientRect.left;
-			SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
+                        if (style & (WS_HSCROLL | WS_VSCROLL))
+                        {
+                            info.nMin = childRect.left;
+                            info.nMax = childRect.right;
+                            info.nPos = 0;
+                            info.nPage = 1 + clientRect.right - clientRect.left;
+                            //info.nMax = childRect.right - clientRect.right;
+                            //info.nPos = clientRect.left - childRect.left;
+                            SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
+                        }
 			if (scroll == SB_HORZ) break;
 			/* fall through */
 	case SB_VERT:
-			info.nMin = childRect.top;
-			info.nMax = childRect.bottom;
-			info.nPos = 0;
-			info.nPage = 1 + clientRect.bottom - clientRect.top;
-			SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
+                        if (style & (WS_HSCROLL | WS_VSCROLL))
+                        {
+                            info.nMin = childRect.top;
+                            info.nMax = childRect.bottom;
+                            info.nPos = 0;
+                            info.nPage = 1 + clientRect.bottom - clientRect.top;
+                            //info.nMax = childRect.bottom - clientRect.bottom;
+                            //info.nPos = clientRect.top - childRect.top;
+                            SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
+                        }
 			break;
     }
 }
@@ -1973,8 +2007,9 @@ CascadeWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     return 0;
 }
 
+
 /***********************************************************************
- *              CascadeChildWindows (USER32.@)
+ *		CascadeChildWindows (USER32.@)
  */
 WORD WINAPI CascadeChildWindows( HWND parent, UINT flags )
 {
@@ -1997,11 +2032,12 @@ TileWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     return 0;
 }
 
+
 /***********************************************************************
- *              TileChildWindows (USER32.@)
+ *		TileChildWindows (USER32.@)
  */
 WORD WINAPI TileChildWindows( HWND parent, UINT flags )
-{  
+{
     return TileWindows( parent, flags, NULL, 0, NULL );
 }
 

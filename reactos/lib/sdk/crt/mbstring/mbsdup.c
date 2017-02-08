@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/mbsdup.c
+ * FILE:        lib/sdk/crt/mbstring/mbsdup.c
  * PURPOSE:     Duplicates a multi byte string
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

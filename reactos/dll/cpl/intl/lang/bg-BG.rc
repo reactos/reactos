@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON "По&дробности...", IDC_DETAIL_BUTTON, 172, 35, 60, 14
     GROUPBOX "Поддръжка на допълнителни езици", -1, 6, 62, 234, 82
     LTEXT "Повечето езици са сложени по подразбиране. За да сложите допълнителни езици, отбележете необходимото.", -1, 12, 72, 220, 18
-    CHECKBOX "&Слагане на файлове за сложни писмености или за писане отдясно наляво.", IDC_INST_FILES_FOR_RTOL_LANG, 15, 93, 216, 22, BS_MULTILINE
-    CHECKBOX "С&лагане на файлове за източно азиатски езици", IDC_INST_FILES_FOR_ASIAN, 15, 116, 216, 22, BS_MULTILINE
+    CHECKBOX "&Слагане на файлове за сложни писмености или за писане отдясно наляво.", IDC_INST_FILES_FOR_RTOL_LANG, 15, 93, 216, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "С&лагане на файлове за източно азиатски езици", IDC_INST_FILES_FOR_ASIAN, 15, 116, 216, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -52,7 +52,7 @@ BEGIN
     GROUPBOX "Знаков набор", -1, 6, 92, 233, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Подразбрани потребителски настройки", -1, 6, 183, 233, 33
-    CHECKBOX "Прилагане на всички настройки за текущия потребител и по подразбиране", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 192, 223, 22, BS_MULTILINE
+    CHECKBOX "Прилагане на всички настройки за текущия потребител и по подразбиране", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 192, 223, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -68,23 +68,22 @@ BEGIN
     LTEXT "&Десетичен разделител:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 142, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Брой цифри след запетайката:", -1, 8, 83, 127, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    COMBOBOX IDC_NUMBERSNDIGDEC, 142,81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_NUMBERSNDIGDEC, 142, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Разделител на &хилядите:", -1, 8, 100, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    COMBOBOX IDC_NUMBERSDIGITGRSYM, 142,97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_NUMBERSDIGITGRSYM, 142, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Хи&лядно подреждане:", -1, 8, 117, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    COMBOBOX IDC_NUMBERSDGROUPING, 142,113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_NUMBERSDGROUPING, 142, 113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Знак за &отрицателно число:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    COMBOBOX IDC_NUMBERSNSIGNSYM, 142,129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_NUMBERSNSIGNSYM, 142, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Из&писване на отрицателните числа:", -1, 8, 149, 127, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    COMBOBOX IDC_NUMBERSNNUMFORMAT, 142,145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_NUMBERSNNUMFORMAT, 142, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Водещи &нули:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 142, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Списъков разделител:", -1, 8, 181, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
-    COMBOBOX IDC_NUMBERSLSEP, 142,177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Списъков разделител:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_NUMBERSLSEP, 142, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Мерна уредба:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 142, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -112,7 +111,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 124, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Време"
@@ -133,10 +131,8 @@ BEGIN
     LTEXT "Изписване на времето\n\n\
 h = час    m = минута    s = секунда    t = pm или pm\n\n\
 h = 12 часа   H = 24 часа\n\
-hh, mm, ss = водеща нула   h, m, s = без водеща нула",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = водеща нула   h, m, s = без водеща нула", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -171,7 +167,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Подреждане"
@@ -182,7 +177,6 @@ BEGIN
     LTEXT "Изберете начина на подреждане за вашия език:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN
@@ -197,3 +191,27 @@ BEGIN
     IDS_CPLNAME "Местни и езикови настройки"
     IDS_CPLDESCRIPTION "Избор на езици и изписване на числата, валутите, времето и датата."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_APPLY_DEFAULT_TITLE "Change default settings"
+    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
+These changes apply to the logon screen and new user accounts.\n\
+The computer must be rebooted, in order to apply the changes to some system services."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
+    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
+    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
+    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+END
+

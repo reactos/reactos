@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/ismbal.c
+ * FILE:        lib/sdk/crt/mbstring/ismbal.c
  * PURPOSE:     Checks for alphabetic multibyte character
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

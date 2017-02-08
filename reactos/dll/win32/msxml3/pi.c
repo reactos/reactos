@@ -18,30 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include "msxml_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include "precomp.h"
 
 #ifdef HAVE_LIBXML2
 
@@ -57,7 +34,7 @@ static const struct nodemap_funcs dom_pi_attr_map;
 static const tid_t dompi_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMProcessingInstruction_tid,
-    0
+    NULL_tid
 };
 
 static inline dom_pi *impl_from_IXMLDOMProcessingInstruction( IXMLDOMProcessingInstruction *iface )
@@ -688,7 +665,9 @@ static HRESULT dom_pi_get_qualified_item(const xmlNodePtr node, BSTR name, BSTR 
 static HRESULT dom_pi_get_named_item(const xmlNodePtr node, BSTR name, IXMLDOMNode **item)
 {
     FIXME("(%p)->(%s %p): stub\n", node, debugstr_w(name), item );
-    return E_NOTIMPL;
+    if (item)
+        *item = NULL;
+    return S_FALSE;
 }
 
 static HRESULT dom_pi_set_named_item(xmlNodePtr node, IXMLDOMNode *newItem, IXMLDOMNode **namedItem)

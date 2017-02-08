@@ -1,0 +1,38 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "用法：ping [-t] [-n 次數] [-l 大小] [-w 超時] 目標主機\n\n\
+選項：\n\
+    -t             不停呼叫指定的主機直到被終止。\n\
+                   要停止 - 按下 Ctrl-C。\n\
+    -n 次數         發送迴響包的次數。\n\
+    -l 大小         發送包的大小。\n\
+    -w 超時         等待每個回覆的時間(毫秒)。\n\n\0"
+
+    IDS_PING_WITH_BYTES "\n正在呼叫 %1 [%2] ，資料包大小 %3!d! 位元組：\n\n\0"
+    IDS_PING_STATISTICS "\n%1 的呼叫統計：\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST "    資料包：發送個數 = %1!d!，接收個數 = %2!d!，丟失個數 = %3!d! (丟失率 %4!d!%%),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP "近似來回所需時間(毫秒)：\n\0"
+    IDS_MIN_MAX_AVERAGE "    最小值 = %1, 最大值 = %2, 平均值 = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES "空閒資源不足。\n\0"
+    IDS_UNKNOWN_HOST "未知主機 %1。\n\0"
+    IDS_SETSOCKOPT_FAILED "setsockopt 失敗 (%1!d!)。\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET "不能創建套接字 (#%1!d!)。\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "不能初始化 winsock dll。\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "目標主機的名稱或 IP 地址必須被指定。\n\0"
+    IDS_BAD_PARAMETER "錯誤參數 %1。\n\0"
+    IDS_BAD_OPTION_FORMAT "錯誤選項格式 %1。\n\0"
+    IDS_BAD_OPTION "錯誤選項 %1。\n\0"
+    IDS_BAD_VALUE_OPTION_L "-l 選項的值無效，有效的範圍是從 0 到 %1!d!。\n\0"
+    IDS_BAD_VALUE_OPTION_N "-n 選項的值無效，有效的範圍是從 1 到 %1!u!。\n\0"
+    IDS_REPLY_FROM "來自 %1 的回覆：位元組數=%2!d! 時間%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE "目標主機不可到達。\n\0"
+    IDS_COULD_NOT_TRANSMIT "無法發送資料 (%1!d!)。\n\0"
+    IDS_COULD_NOT_RECV "無法接收資料 (%1!d!)。\n\0"
+    IDS_REQUEST_TIMEOUT "請求超時。\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+END

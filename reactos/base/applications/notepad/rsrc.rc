@@ -19,20 +19,22 @@
 
 #include <windef.h>
 #include <winuser.h>
+#include <dlgs.h>
 
 #include "notepad_res.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Editor\0"
-#define REACTOS_STR_INTERNAL_NAME	"notepad\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"notepad.exe\0"
-
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Notepad"
+#define REACTOS_STR_INTERNAL_NAME     "notepad"
+#define REACTOS_STR_ORIGINAL_FILENAME "notepad.exe"
 #include <reactos/version.rc>
-
 
 IDI_NPICON ICON "res/notepad.ico"
 
-// UTF-8
+#include <reactos/manifest_exe.rc>
+
+/* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -84,6 +86,9 @@ IDI_NPICON ICON "res/notepad.ico"
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif
+#ifdef LANGUAGE_MS_MY
+    #include "lang/ms-MY.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
@@ -108,11 +113,17 @@ IDI_NPICON ICON "res/notepad.ico"
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
+#ifdef LANGUAGE_UZ_UZ
+    #include "lang/uz-UZ.rc"
+#endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/sl-SI.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
@@ -125,4 +136,7 @@ IDI_NPICON ICON "res/notepad.ico"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

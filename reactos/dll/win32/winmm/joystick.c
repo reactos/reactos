@@ -21,31 +21,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "winemm.h"
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-//#include <stdarg.h>
-//#include <stdio.h>
+
 #include <stdlib.h>
-//#include <string.h>
-//#include <fcntl.h>
+
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-
-#include "winemm.h"
-//#include "windef.h"
-//#include "winbase.h"
-//#include "mmsystem.h"
-//#include "wingdi.h"
-#include <winuser.h>
-#include <winnls.h>
-
-//#include "mmddk.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 
@@ -137,7 +123,7 @@ MMRESULT WINAPI joyConfigChanged(DWORD flags)
 /**************************************************************************
  * 				joyGetNumDevs		[WINMM.@]
  */
-UINT WINAPI joyGetNumDevs(void)
+UINT WINAPI DECLSPEC_HOTPATCH joyGetNumDevs(void)
 {
     UINT	ret = 0;
     int		i;
@@ -153,7 +139,7 @@ UINT WINAPI joyGetNumDevs(void)
 /**************************************************************************
  * 				joyGetDevCapsW		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
+MMRESULT WINAPI DECLSPEC_HOTPATCH joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
 {
     if (wID >= MAXJOYSTICK)	return JOYERR_PARMS;
     if (!JOY_LoadDriver(wID))	return MMSYSERR_NODRIVER;
@@ -167,7 +153,7 @@ MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
 /**************************************************************************
  * 				joyGetDevCapsA		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
+MMRESULT WINAPI DECLSPEC_HOTPATCH joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 {
     JOYCAPSW	jcw;
     MMRESULT	ret;
@@ -216,7 +202,7 @@ MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 /**************************************************************************
  *                              joyGetPosEx             [WINMM.@]
  */
-MMRESULT WINAPI joyGetPosEx(UINT wID, LPJOYINFOEX lpInfo)
+MMRESULT WINAPI DECLSPEC_HOTPATCH joyGetPosEx(UINT wID, LPJOYINFOEX lpInfo)
 {
     TRACE("(%d, %p);\n", wID, lpInfo);
 

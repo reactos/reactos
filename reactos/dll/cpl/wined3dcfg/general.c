@@ -1,122 +1,143 @@
 #include "wined3dcfg.h"
 
-static LONG ReadSetting(HKEY hKey, PWCHAR szKey, PWCHAR szBuffer, DWORD dwSize)
-{
-    return RegQueryValueExW(hKey, szKey, NULL, NULL, (LPBYTE)szBuffer, &dwSize);
-}
+#include <winreg.h>
 
-static VOID SaveSetting(HKEY hKey, PWCHAR szKey, PWCHAR szState)
+WINED3D_SETTINGS gwd3dsShaderLvl[] =
 {
-    RegSetValueExW(hKey, szKey, 0, REG_SZ, (LPBYTE)szState, (wcslen(szState) + 1) * sizeof(WCHAR));
+    {VALUE_DEFAULT, REG_NONE, 0},
+    {L"1.4", REG_DWORD, 1},
+    {L"2", REG_DWORD, 2},
+    {L"3", REG_DWORD, 3},
+};
+
+WINED3D_SETTINGS gwd3dsDisable[] =
+{
+    {VALUE_DEFAULT, REG_NONE, 0},
+    {VALUE_DISABLED, REG_SZ, 0}
+};
+
+WINED3D_SETTINGS gwd3dsEnable[] =
+{
+    {VALUE_DEFAULT, REG_NONE, 0},
+    {VALUE_ENABLED, REG_SZ, 0}
+};
+
+WINED3D_SETTINGS gwd3dsOffscreen[] =
+{
+    {VALUE_DEFAULT, REG_NONE, 0},
+    {VALUE_BACKBUFFER, REG_SZ, 0},
+    {VALUE_FBO, REG_SZ, 0}
+};
+
+WINED3D_SETTINGS gwd3dsVidMem[] =
+{
+    {VALUE_DEFAULT, REG_NONE, 0},
+    {L"8 MB", REG_SZ, 8},
+    {L"16 MB", REG_SZ, 16},
+    {L"32 MB", REG_SZ, 32},
+    {L"64 MB", REG_SZ, 64},
+    {L"128 MB", REG_SZ, 128},
+    {L"256 MB", REG_SZ, 256},
+    {L"512 MB", REG_SZ, 512},
+};
+
+WINED3D_SETTINGS gwd3dsDdRender[] =
+{
+    {VALUE_DEFAULT, REG_NONE, 0},
+    {VALUE_GDI, REG_SZ, 0}
+};
+
+
+void InitControl(HWND hWndDlg, HKEY hKey, PWCHAR szKey, PWINED3D_SETTINGS pSettings, INT iControlId, INT iCount)
+{
+    WCHAR szBuffer[MAX_KEY_LENGTH];
+    DWORD dwSize = MAX_KEY_LENGTH;
+    DWORD dwType = 0;
+    INT iCurrent;
+    INT iActive = 0;
+
+    RegQueryValueExW(hKey, szKey, NULL, &dwType, (LPBYTE)szBuffer, &dwSize);
+
+    for(iCurrent = 0; iCurrent < iCount; iCurrent++)
+    {
+        SendDlgItemMessageW(hWndDlg, iControlId, CB_ADDSTRING, 0, (LPARAM)pSettings[iCurrent].szValue);
+
+        if(dwSize && ((dwType == REG_DWORD && *szBuffer == pSettings[iCurrent].iValue) ||
+           (dwType == REG_SZ && !wcscmp(szBuffer, pSettings[iCurrent].szValue))))
+        {
+            iActive = iCurrent;
+        }
+    }
+
+    SendDlgItemMessageW(hWndDlg, iControlId, CB_SETCURSEL, iActive, 0);
+
 }
 
 static VOID InitSettings(HWND hWndDlg)
 {
     HKEY hKey;
-    WCHAR szBuffer[MAX_KEY_LENGTH];
-    DWORD dwSize = MAX_KEY_LENGTH;
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                      KEY_WINE,
-                      0,
-                      KEY_READ,
-                      &hKey) != ERROR_SUCCESS)
-    {
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, KEY_WINE, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return;
-    }
 
-    if(ReadSetting(hKey, KEY_GLSL, szBuffer, dwSize) == ERROR_SUCCESS)
-        CheckDlgButton(hWndDlg, IDC_GLSL, (wcscmp(VALUE_DISABLED, szBuffer) != 0) ? BST_CHECKED : BST_UNCHECKED);
-
-    if(ReadSetting(hKey, KEY_MULTISAMPLING, szBuffer, dwSize) == ERROR_SUCCESS)
-        CheckDlgButton(hWndDlg, IDC_MULTISAMPLING, (wcscmp(VALUE_ENABLED, szBuffer) == 0) ? BST_CHECKED : BST_UNCHECKED);
-
-    if(ReadSetting(hKey, KEY_PIXELSHADERS, szBuffer, dwSize) == ERROR_SUCCESS)
-        CheckDlgButton(hWndDlg, IDC_PIXELSHADERS, (wcscmp(VALUE_ENABLED, szBuffer) == 0) ? BST_CHECKED : BST_UNCHECKED);
-
-    if(ReadSetting(hKey, KEY_STRICTDRAWORDERING, szBuffer, dwSize) == ERROR_SUCCESS)
-        CheckDlgButton(hWndDlg, IDC_STRICTDRAWORDERING, (wcscmp(VALUE_ENABLED, szBuffer) == 0) ? BST_CHECKED : BST_UNCHECKED);
-
-    if(ReadSetting(hKey, KEY_VERTEXSHADERS, szBuffer, dwSize) == ERROR_SUCCESS)
-        CheckDlgButton(hWndDlg, IDC_VERTEXSHADERS, (wcscmp(VALUE_NONE, szBuffer) != 0) ? BST_CHECKED : BST_UNCHECKED);
-
-    SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_ADDSTRING, 0, (LPARAM)VALUE_FBO);
-    SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_ADDSTRING, 0, (LPARAM)VALUE_BACKBUFFER);
-
-    SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_SETITEMDATA, ITEM_FBO, (LPARAM)ITEM_FBO);
-    SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_SETITEMDATA, ITEM_BACKBUFFER, (LPARAM)ITEM_BACKBUFFER);
-
-    if(ReadSetting(hKey, KEY_OFFSCREEN, szBuffer, dwSize) == ERROR_SUCCESS && !wcscmp(VALUE_BACKBUFFER, szBuffer))
-        SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_SETCURSEL, 1, 0);
-    else
-        SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_SETCURSEL, 0, 0);
-
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_ADDSTRING, 0, (LPARAM)VALUE_READTEX);
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_ADDSTRING, 0, (LPARAM)VALUE_READDRAW);
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_ADDSTRING, 0, (LPARAM)VALUE_DISABLED);
-
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_SETITEMDATA, (WPARAM)ITEM_READTEX, (LPARAM)ITEM_READTEX);
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_SETITEMDATA, (WPARAM)ITEM_READDRAW, (LPARAM)ITEM_READDRAW);
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_SETITEMDATA, (WPARAM)ITEM_DISABLED, (LPARAM)ITEM_DISABLED);
-
-    SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_SETCURSEL, 0, 0);
-
-    if(ReadSetting(hKey, KEY_LOCKING, szBuffer, dwSize) == ERROR_SUCCESS)
-    {
-        if(!wcscmp(VALUE_READDRAW, szBuffer))
-            SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_SETCURSEL, 1, 0);
-        else if(!wcscmp(VALUE_DISABLED, szBuffer))
-            SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_SETCURSEL, 2, 0);
-    }
+    INIT_CONTROL(GLSL, gwd3dsDisable);
+    INIT_CONTROL(OFFSCREEN, gwd3dsOffscreen);
+    INIT_CONTROL(VIDMEMSIZE, gwd3dsVidMem);
+    INIT_CONTROL(MULTISAMPLING, gwd3dsDisable);
+    INIT_CONTROL(STRICTDRAWORDERING, gwd3dsEnable);
+    INIT_CONTROL(ALWAYSOFFSCREEN, gwd3dsEnable);
+    INIT_CONTROL(DDRENDERER, gwd3dsDdRender);
+    INIT_CONTROL(PSLEVEL, gwd3dsShaderLvl);
+    INIT_CONTROL(VSLEVEL, gwd3dsShaderLvl);
+    INIT_CONTROL(GSLEVEL, gwd3dsShaderLvl);
 
     RegCloseKey(hKey);
 }
 
-static VOID WriteSettings(HWND hWndDlg)
-{
-    HKEY hKey;
-    INT iCurSel;
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                      KEY_WINE,
-                      0,
-                      KEY_WRITE,
-                      &hKey) != ERROR_SUCCESS)
+static VOID SaveSetting(HWND hWnd, HKEY hKey, PWCHAR szKey, PWINED3D_SETTINGS pCfg, INT iControlId, INT iCount)
+{
+    INT iSel = 0;
+
+    iSel = (INT)SendDlgItemMessageW(hWnd, iControlId, CB_GETCURSEL, 0, 0);
+
+    if(iSel < 0 || iSel > iCount)
+        return;
+
+    if(pCfg[iSel].iType == REG_NONE)
     {
+        RegDeleteValueW(hKey, szKey);
         return;
     }
 
-    SaveSetting(hKey, KEY_GLSL, (IsDlgButtonChecked(hWndDlg, IDC_GLSL) == BST_CHECKED) ? VALUE_ENABLED : VALUE_DISABLED);
-    SaveSetting(hKey, KEY_MULTISAMPLING, (IsDlgButtonChecked(hWndDlg, IDC_MULTISAMPLING) == BST_CHECKED) ? VALUE_ENABLED : VALUE_DISABLED);
-    SaveSetting(hKey, KEY_PIXELSHADERS, (IsDlgButtonChecked(hWndDlg, IDC_PIXELSHADERS) == BST_CHECKED) ? VALUE_ENABLED : VALUE_DISABLED);
-    SaveSetting(hKey, KEY_STRICTDRAWORDERING, (IsDlgButtonChecked(hWndDlg, IDC_STRICTDRAWORDERING) == BST_CHECKED) ? VALUE_ENABLED : VALUE_DISABLED);
-    SaveSetting(hKey, KEY_VERTEXSHADERS, (IsDlgButtonChecked(hWndDlg, IDC_VERTEXSHADERS) == BST_CHECKED) ? VALUE_ENABLED : VALUE_NONE);
-
-    iCurSel = (INT)SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_GETCURSEL, 0, 0);
-
-    if(iCurSel != CB_ERR)
+    if(pCfg[iSel].iType == REG_DWORD)
     {
-        iCurSel = (INT)SendDlgItemMessageW(hWndDlg, IDC_LOCKING, CB_GETITEMDATA, (WPARAM)iCurSel, 0);
-
-        if(iCurSel == ITEM_READDRAW)
-            SaveSetting(hKey, KEY_LOCKING, VALUE_READDRAW);
-        else if(iCurSel == ITEM_DISABLED)
-            SaveSetting(hKey, KEY_LOCKING, VALUE_DISABLED);
-        else
-            SaveSetting(hKey, KEY_LOCKING, VALUE_READTEX);
-    }
-
-    iCurSel = (INT)SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_GETCURSEL, 0, 0);
-
-    if(iCurSel != CB_ERR)
+        RegSetValueExW(hKey, szKey, 0, REG_DWORD, (LPBYTE)&pCfg[iSel].iValue, sizeof(pCfg[iSel].iValue));
+        return;
+    } else if (pCfg[iSel].iType == REG_SZ)
     {
-        iCurSel = (INT)SendDlgItemMessageW(hWndDlg, IDC_OFFSCREEN, CB_GETITEMDATA, (WPARAM)iCurSel, 0);
-
-        if(iCurSel == ITEM_BACKBUFFER)
-            SaveSetting(hKey, KEY_OFFSCREEN, VALUE_BACKBUFFER);
-        else
-            SaveSetting(hKey, KEY_OFFSCREEN, VALUE_FBO);
+        RegSetValueExW(hKey, szKey, 0, pCfg[iSel].iType, (LPBYTE)pCfg[iSel].szValue, (wcslen(pCfg[iSel].szValue) + 1) * sizeof(WCHAR));
     }
+}
+
+
+static VOID WriteSettings(HWND hWndDlg)
+{
+    HKEY hKey;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, KEY_WINE, 0, KEY_WRITE, &hKey) != ERROR_SUCCESS)
+        return;
+
+    SAVE_CONTROL(GLSL, gwd3dsDisable);
+    SAVE_CONTROL(OFFSCREEN, gwd3dsOffscreen);
+    SAVE_CONTROL(VIDMEMSIZE, gwd3dsVidMem);
+    SAVE_CONTROL(MULTISAMPLING, gwd3dsDisable);
+    SAVE_CONTROL(STRICTDRAWORDERING, gwd3dsEnable);
+    SAVE_CONTROL(ALWAYSOFFSCREEN, gwd3dsEnable);
+    SAVE_CONTROL(DDRENDERER, gwd3dsDdRender);
+    SAVE_CONTROL(PSLEVEL, gwd3dsShaderLvl);
+    SAVE_CONTROL(VSLEVEL, gwd3dsShaderLvl);
+    SAVE_CONTROL(GSLEVEL, gwd3dsShaderLvl);
 
     RegCloseKey(hKey);
 }
@@ -133,20 +154,8 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             return TRUE;
 
         case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDC_GLSL:
-                case IDC_LOCKING:
-                case IDC_MULTISAMPLING:
-                case IDC_OFFSCREEN:
-                case IDC_PIXELSHADERS:
-                case IDC_STRICTDRAWORDERING:
-                case IDC_VERTEXSHADERS:
-                    PropSheet_Changed(GetParent(hWndDlg), hWndDlg);
-                    break;
-                default:
-                    break;
-            }
+            if (LOWORD(wParam) > IDC_MIN && LOWORD(wParam) < IDC_MAX)
+                PropSheet_Changed(GetParent(hWndDlg), hWndDlg);
             break;
 
         case WM_NOTIFY:

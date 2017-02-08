@@ -1,0 +1,110 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2008 Jonathan Ernst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+MAIN_MENU MENU
+{
+ POPUP "&Fichier" {
+  MENUITEM "&Ouvrir", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Imprimer", MNID_FILE_PRINT
+  MENUITEM "&Configuration de l'imprimante...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "&Quitter", MNID_FILE_EXIT
+ }
+ POPUP "É&dition" {
+   MENUITEM "&Copier...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annoter...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Signets" {
+   MENUITEM "&Définir...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Options" {
+  MENUITEM "&Toujours visible", MNID_HELP_HELPTOP
+  MENUITEM "Historique",	MNID_OPTS_HISTORY
+  POPUP    "Polices"
+  BEGIN
+    MENUITEM "Petite",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "Aid&e" {
+   MENUITEM "&Utiliser l'aide", MNID_HELP_HELPON
+   MENUITEM "&A propos de l'Aide de Wine", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",           MNID_CTXT_ANNOTATE
+		MENUITEM "Copier",                  MNID_CTXT_COPY
+		MENUITEM "Imprimer la rubrique...", MNID_CTXT_PRINT
+		POPUP    "Polices"
+		BEGIN
+			MENUITEM "Petite",          MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normale",         MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",          MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Aide de ReactOS"
+STID_WHERROR, 		"ERREUR"
+STID_WARNING,  		"ATTENTION"
+STID_INFO,  		"Information"
+STID_NOT_IMPLEMENTED, 	"Non implémenté"
+STID_HLPFILE_ERROR_s, 	"Une erreur est survenue en lisant le fichier d'aide « %s »"
+STID_INDEX, 		"&Index"
+STID_CONTENTS,		"Sommaire"
+STID_BACK, 		"&Précédent"
+STID_ALL_FILES, 	"Tous les fichiers (*.*)"
+STID_HELP_FILES_HLP, 	"Fichiers d'aide (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Impossible de trouver « %s ». Souhaitez-vous rechercher ce fichier vous-même ?"
+STID_NO_RICHEDIT	"La bibliothèque RichEdit n'a pu être localisée... Abandon"
+STID_PSH_INDEX,		"Rubriques d'aide : "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Recherche"
+{
+    LTEXT  "Pas encore implémenté", -1, 10, 10, 180, 150
+}

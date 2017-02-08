@@ -1258,7 +1258,7 @@ interface IXSLProcessor : IDispatch
     [id(DISPID_XMLDOM_PROCESSOR_SETSTARTMODE)]
     HRESULT setStartMode(
         [in] BSTR p, 
-        [in, defaultvalue("")] BSTR uri);
+        [in, defaultvalue(L"")] BSTR uri);
 
     [propget, id(DISPID_XMLDOM_PROCESSOR_STARTMODE)]
     HRESULT startMode([retval, out] BSTR *p);
@@ -1286,7 +1286,7 @@ interface IXSLProcessor : IDispatch
     HRESULT addParameter(
         [in] BSTR p, 
         [in] VARIANT var, 
-        [in, defaultvalue("")] BSTR uri);
+        [in, defaultvalue(L"")] BSTR uri);
 
     [id(DISPID_XMLDOM_PROCESSOR_ADDOBJECT)]
     HRESULT addObject(
@@ -2453,17 +2453,17 @@ interface IVBSAXXMLFilter : IDispatch
 interface IVBSAXXMLReader : IDispatch
 {
     [id(DISPID_SAX_XMLREADER_GETFEATURE)]
-    HRESULT getFeature( [in] const WCHAR * pFeature,
+    HRESULT getFeature( [in] BSTR pFeature,
                         [out, retval] VARIANT_BOOL * pValue);
     [id(DISPID_SAX_XMLREADER_PUTFEATURE)]
-    HRESULT putFeature( [in] const WCHAR * pFeature,
+    HRESULT putFeature( [in] BSTR pFeature,
                         [in] VARIANT_BOOL vfValue);
 
     [id(DISPID_SAX_XMLREADER_GETPROPERTY)]
-    HRESULT getProperty( [in] const WCHAR * pProp,
+    HRESULT getProperty( [in] BSTR pProp,
                          [out, retval] VARIANT * pValue);
     [id(DISPID_SAX_XMLREADER_PUTPROPERTY)]
-    HRESULT putProperty( [in] const WCHAR * pProp, [in] VARIANT value);
+    HRESULT putProperty( [in] BSTR pProp, [in] VARIANT value);
 
     [propget, id(DISPID_SAX_XMLREADER_ENTITYRESOLVER)]
     HRESULT entityResolver(
@@ -2488,19 +2488,19 @@ interface IVBSAXXMLReader : IDispatch
     HRESULT errorHandler([in] IVBSAXErrorHandler * errorHandler);
 
     [propget, id(DISPID_SAX_XMLREADER_BASEURL)]
-    HRESULT baseURL([out, retval] const WCHAR ** pBaseUrl);
+    HRESULT baseURL([out, retval] BSTR *pBaseUrl);
     [propput, id(DISPID_SAX_XMLREADER_BASEURL)]
-    HRESULT baseURL([in] const WCHAR * pBaseUrl);
+    HRESULT baseURL([in] BSTR pBaseUrl);
 
     [propget, id(DISPID_SAX_XMLREADER_SECUREBASEURL)]
-    HRESULT secureBaseURL([out, retval] const WCHAR ** pSecureBaseUrl);
+    HRESULT secureBaseURL([out, retval] BSTR *pSecureBaseUrl);
     [propput, id(DISPID_SAX_XMLREADER_SECUREBASEURL)]
-    HRESULT secureBaseURL([in] const WCHAR * secureBaseUrl);
+    HRESULT secureBaseURL([in] BSTR secureBaseUrl);
 
     [id(DISPID_SAX_XMLREADER_PARSE)]
     HRESULT parse( [in] VARIANT varInput);
     [id(DISPID_SAX_XMLREADER_PARSEURL)]
-    HRESULT parseURL([in] const WCHAR * url);
+    HRESULT parseURL([in] BSTR url);
 }
 
 [

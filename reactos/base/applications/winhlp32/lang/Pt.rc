@@ -1,0 +1,200 @@
+/*
+ * Help Viewer
+ * Portuguese Language Support
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Portuguese translation by Gustavo Junior Alves <alves@correionet.com.br>
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2003 Marcelo Duarte
+ * Copyright 2004,2007 Américo José Melo
+ * Copyright 2009 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milaré
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+MAIN_MENU MENU
+{
+ POPUP "&Arquivo" {
+  MENUITEM "&Abrir...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Imprimir", MNID_FILE_PRINT
+  MENUITEM "&Configurar Impressora...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "Sai&r", MNID_FILE_EXIT
+ }
+ POPUP "&Editar" {
+   MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "In&dicador" {
+   MENUITEM "&Definir...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Opções" {
+  MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
+  MENUITEM "Histórico",		MNID_OPTS_HISTORY
+  POPUP    "Fontes"
+  BEGIN
+    MENUITEM "Pequeno",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "Aj&uda" {
+   MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
+   MENUITEM "&Informações...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Anotação...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Copiar",                MNID_CTXT_COPY
+		MENUITEM "Imprimir...",            MNID_CTXT_PRINT
+		POPUP    "Fontes"
+		BEGIN
+			MENUITEM "Pequeno",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Ajuda ReactOS"
+STID_WHERROR, 		"ERRO"
+STID_WARNING,  		"AVISO"
+STID_INFO,  		"Informação"
+STID_NOT_IMPLEMENTED, 	"Não implementado"
+STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do arquivo de ajuda '%s'"
+STID_INDEX, 		"&Conteúdo"
+STID_CONTENTS,		"Sumário"
+STID_BACK, 		"&Voltar"
+STID_ALL_FILES, 	"Todos os arquivos (*.*)"
+STID_HELP_FILES_HLP, 	"Arquivos de ajuda (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Não é possível encontrar '%s'. Deseja procurar este arquivo você mesmo?"
+STID_NO_RICHEDIT	"Não foi possível encontrar uma implementação do richedit... Abortando"
+STID_PSH_INDEX,		"Tópicos de ajuda: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Índice"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Procura"
+{
+    LTEXT  "Ainda não implementado", -1, 10, 10, 180, 150
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+MAIN_MENU MENU
+{
+ POPUP "&Ficheiro" {
+  MENUITEM "&Abrir...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Imprimir", MNID_FILE_PRINT
+  MENUITEM "&Configurar Impressora...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "Sai&r", MNID_FILE_EXIT
+ }
+ POPUP "&Editar" {
+   MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "In&dicador" {
+   MENUITEM "&Definir...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Opções" {
+  MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
+  MENUITEM "Histórico",		MNID_OPTS_HISTORY
+  POPUP    "Tipos de Letra"
+  BEGIN
+    MENUITEM "Pequeno",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
+  END
+ }
+ POPUP "Aj&uda" {
+   MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
+   MENUITEM "&Informações...", MNID_HELP_ABOUT
+ }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Anotação...",         MNID_CTXT_ANNOTATE
+		MENUITEM "Copiar",              MNID_CTXT_COPY
+		MENUITEM "Imprimir...",         MNID_CTXT_PRINT
+		POPUP    "Tipos de letra"
+		BEGIN
+			MENUITEM "Pequeno",     MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",      MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Ajuda Wine"
+STID_WHERROR, 		"ERRO"
+STID_WARNING,  		"AVISO"
+STID_INFO,  		"Informação"
+STID_NOT_IMPLEMENTED, 	"Não implementado"
+STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do ficheiro de ajuda '%s'"
+STID_INDEX, 		"&Conteúdo"
+STID_CONTENTS,		"Sumário"
+STID_BACK, 		"&Voltar"
+STID_ALL_FILES, 	"Todos os ficheiros (*.*)"
+STID_HELP_FILES_HLP, 	"Ficheiros de ajuda (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Não é possível encontrar '%s'. Deseja procurar este ficheiro você mesmo?"
+STID_NO_RICHEDIT	"Não foi possível encontrar uma implementação do richedit... A abortar"
+STID_PSH_INDEX,		"Tópicos de ajuda: "
+}
+
+IDD_INDEX DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Índice"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOGEX 0, 0, 200, 190
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Procura"
+{
+    LTEXT  "Ainda não implementado", -1, 10, 10, 180, 150
+}

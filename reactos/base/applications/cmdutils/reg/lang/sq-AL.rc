@@ -1,0 +1,31 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Sintaksa e kësaj komande është:\n\nREG [ ADD | DELETE | QUERY ]\nREG Komandë /?\n"
+    STRING_ADD_USAGE, "REG ADD emri_çelsit [/v value_name | /ve] [/t tipi] [/s ndares] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE emri_çelsit [/v value_name | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY emri_çelsit [/v value_name | /ve] [/s]\n"
+    STRING_SUCCESS, "Operacioni përfundoi me sukses\n"
+    STRING_INVALID_KEY, "Error: Çelsi i pavlerfshem i emrit\n"
+    STRING_INVALID_CMDLINE, "Error: Parametrat e pavlefshme ne vijën komanduse\n"
+    STRING_NO_REMOTE, "Error: Në pamundësi për të shtuar çelësat në makinë në distancë\n"
+    STRING_CANNOT_FIND, "Error: Sistemi nuk ishte në gjendje për të gjetur çelësat të caktuar të regjistrit ose vlerës\n"
+    STRING_UNSUPPORTED_TYPE, "reg: Unsupported registry data type [%1]\n"
+    STRING_MISSING_INTEGER, "reg: The option [/d] must be followed by a valid integer\n"
+    STRING_MISSING_HEXDATA, "reg: The option [/d] must be followed by a valid hexadecimal value\n"
+    STRING_UNHANDLED_TYPE, "reg: Unhandled registry data type [/t 0x%1!x!, /d %2]\n"
+    STRING_OVERWRITE_VALUE, "The registry value '%1' already exists. Do you want to overwrite it?"
+    STRING_YESNO, " (Yes|No)"
+    STRING_YES, "Y"
+    STRING_NO, "N"
+    STRING_CANCELLED, "The registry operation was cancelled\n"
+    STRING_DEFAULT_VALUE, "(Default)"
+    STRING_DELETE_VALUE, "Are you sure you want to delete the registry value '%1'?"
+    STRING_DELETE_VALUEALL, "Are you sure you want to delete all registry values in '%1'?"
+    STRING_DELETE_SUBKEY, "Are you sure you want to delete the registry key '%1'?"
+}

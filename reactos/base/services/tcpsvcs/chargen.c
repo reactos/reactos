@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/services/tcpsvcs/chargen.c
+ * FILE:        base/services/tcpsvcs/chargen.c
  * PURPOSE:     Sends continous lines of chars to the client
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
@@ -12,7 +12,7 @@
 /* printable ASCII's characters for chargen */
 #define ASCII_START 32
 #define ASCII_END 126
-#define NUM_CHARS ASCII_END - ASCII_START
+#define NUM_CHARS ASCII_END - ASCII_START + 1
 
 /* number of chars to put on a line */
 #define LINESIZE 74 // 72 + CR + NL
@@ -58,7 +58,7 @@ GenerateChars(SOCKET sock)
 
     /* fill the array with printable characters */
     for (charIndex = 0, i = ASCII_START; i <= ASCII_END; charIndex++, i++)
-        chars[charIndex] = (char)i;
+        chars[charIndex] = (CHAR)i;
 
     loopIndex = 0;
     while (!bShutdown)

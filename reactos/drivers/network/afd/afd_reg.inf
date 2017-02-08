@@ -1,0 +1,7 @@
+; Afd driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ImagePath",0x00020000,"system32\drivers\afd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Type",0x00010001,0x00000001

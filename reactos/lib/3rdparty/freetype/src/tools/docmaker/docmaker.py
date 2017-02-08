@@ -1,16 +1,26 @@
 #!/usr/bin/env python
 #
-#  DocMaker (c) 2002, 2004, 2008 David Turner <david@freetype.org>
+#  docmaker.py
 #
-# This program is a re-write of the original DocMaker took used
-# to generate the API Reference of the FreeType font engine
-# by converting in-source comments into structured HTML.
+#    Convert source code markup to HTML documentation.
 #
-# This new version is capable of outputting XML data, as well
-# as accepts more liberal formatting options.
+#  Copyright 2002-2016 by
+#  David Turner.
 #
-# It also uses regular expression matching and substitution
-# to speed things significantly.
+#  This file is part of the FreeType project, and may only be used,
+#  modified, and distributed under the terms of the FreeType project
+#  license, LICENSE.TXT.  By continuing to use, modify, or distribute
+#  this file you indicate that you have read the license and
+#  understand and accept it fully.
+
+#
+# This program is a re-write of the original DocMaker tool used to generate
+# the API Reference of the FreeType font rendering engine by converting
+# in-source comments into structured HTML.
+#
+# This new version is capable of outputting XML data as well as accepting
+# more liberal formatting options.  It also uses regular expression matching
+# and substitution to speed up operation significantly.
 #
 
 from sources   import *
@@ -39,13 +49,13 @@ def  usage():
 
 
 def  main( argv ):
-    """main program loop"""
+    """Main program loop."""
 
     global output_dir
 
     try:
-        opts, args = getopt.getopt( sys.argv[1:], \
-                                    "ht:o:p:",    \
+        opts, args = getopt.getopt( sys.argv[1:],
+                                    "ht:o:p:",
                                     ["help", "title=", "output=", "prefix="] )
     except getopt.GetoptError:
         usage()
@@ -56,7 +66,6 @@ def  main( argv ):
         sys.exit( 1 )
 
     # process options
-    #
     project_title  = "Project"
     project_prefix = None
     output_dir     = None
@@ -90,7 +99,9 @@ def  main( argv ):
     # process sections
     content_processor.finish()
 
-    formatter = HtmlFormatter( content_processor, project_title, project_prefix )
+    formatter = HtmlFormatter( content_processor,
+                               project_title,
+                               project_prefix )
 
     formatter.toc_dump()
     formatter.index_dump()
@@ -98,9 +109,7 @@ def  main( argv ):
 
 
 # if called from the command line
-#
 if __name__ == '__main__':
     main( sys.argv )
-
 
 # eof

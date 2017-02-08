@@ -51,7 +51,7 @@ typedef enum _EX_POOL_PRIORITY {
 #if !defined(_WIN64) && (defined(_NTDDK_) || defined(_NTIFS_) || defined(_NDIS_))
 #define LOOKASIDE_ALIGN
 #else
-#define LOOKASIDE_ALIGN /* FIXME: DECLSPEC_CACHEALIGN */
+#define LOOKASIDE_ALIGN DECLSPEC_CACHEALIGN
 #endif
 
 typedef struct _LOOKASIDE_LIST_EX *PLOOKASIDE_LIST_EX;
@@ -271,7 +271,7 @@ typedef struct _RESOURCE_PERFORMANCE_DATA {
 
 /* Global debug flag */
 #if DEVL
-extern ULONG NtGlobalFlag;
+extern NTKERNELAPI ULONG NtGlobalFlag;
 #define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_##FlagName))
 #else
 #define IF_NTOS_DEBUG(FlagName) if(FALSE)

@@ -56,7 +56,9 @@ PVOID KernelMemory = 0;
 #define KernelMemorySize            (8 * 1024 * 1024)
 #define XROUNDUP(x,n)               ((((ULONG)x) + ((n) - 1)) & (~((n) - 1)))
 
-char reactos_module_strings[64][256];	// Array to hold module names
+#define TAG_MBOOT 'oobM'
+
+char reactos_module_strings[64][256];    // Array to hold module names
 
 /* Load Address of Next Module */
 ULONG_PTR NextModuleBase = 0;
@@ -113,7 +115,7 @@ int MmuPageMiss(int trapCode, ppc_trap_frame_t *trap)
     int i;
     printf("TRAP %x\n", trapCode);
     for( i = 0; i < 40; i++ )
-	printf("r[%d] %x\n", i, trap->gpr[i]);
+    printf("r[%d] %x\n", i, trap->gpr[i]);
     printf("HALT!\n");
     while(1);
 }
@@ -438,13 +440,13 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
     if(ModuleData)
     {
-	return TRUE;
+    return TRUE;
     }
 
     if(!KernelAddr)
-	KernelAddr = (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase;
+    KernelAddr = (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase;
     if(!MemLoadAddr)
-	MemLoadAddr = (PCHAR)NextModuleBase;
+    MemLoadAddr = (PCHAR)NextModuleBase;
 
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
     //printf("Loading file (elf at %x)\n", KernelAddr);
@@ -453,7 +455,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     if (!FsReadFile(KernelImage, sizeof(ehdr), NULL, &ehdr)) {
 
         /* Fail if we couldn't read */
-	printf("Couldn't read the elf header\n");
+    printf("Couldn't read the elf header\n");
         return FALSE;
     }
 
@@ -462,7 +464,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     //phnum = ehdr.e_phnum;
     shsize = ehdr.e_shentsize;
     shnum = ehdr.e_shnum;
-    sptr = (PCHAR)MmHeapAlloc(shnum * shsize);
+    sptr = (PCHAR)FrLdrTempAlloc(shnum * shsize, TAG_MBOOT);
 
     /* Read section headers */
     FsSetFilePointer(KernelImage,  ehdr.e_shoff);
@@ -471,32 +473,32 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     /* Now we'll get the PE Header */
     for( i = 0; i < shnum; i++ )
     {
-	shdr = ELF_SECTION(i);
-	shdr->sh_addr = 0;
+    shdr = ELF_SECTION(i);
+    shdr->sh_addr = 0;
 
-	/* Find the PE Header */
-	if (shdr->sh_type == TYPE_PEHEADER)
-	{
-	    FsSetFilePointer(KernelImage, shdr->sh_offset);
-	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr);
-	    ImageHeader = (PIMAGE_DOS_HEADER)MemLoadAddr;
-	    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)MemLoadAddr + SWAPD(ImageHeader->e_lfanew));
+    /* Find the PE Header */
+    if (shdr->sh_type == TYPE_PEHEADER)
+    {
+        FsSetFilePointer(KernelImage, shdr->sh_offset);
+        FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr);
+        ImageHeader = (PIMAGE_DOS_HEADER)MemLoadAddr;
+        NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)MemLoadAddr + SWAPD(ImageHeader->e_lfanew));
 #if 0
-	    printf("NtHeader at %x\n", SWAPD(ImageHeader->e_lfanew));
-	    printf("SectionAlignment %x\n",
-		   SWAPD(NtHeader->OptionalHeader.SectionAlignment));
-	    SectionAddr = ROUND_UP
-		(shdr->sh_size, SWAPD(NtHeader->OptionalHeader.SectionAlignment));
-	    printf("Header ends at %x\n", SectionAddr);
+        printf("NtHeader at %x\n", SWAPD(ImageHeader->e_lfanew));
+        printf("SectionAlignment %x\n",
+           SWAPD(NtHeader->OptionalHeader.SectionAlignment));
+        SectionAddr = ROUND_UP
+        (shdr->sh_size, SWAPD(NtHeader->OptionalHeader.SectionAlignment));
+        printf("Header ends at %x\n", SectionAddr);
 #endif
-	    break;
-	}
+        break;
+    }
     }
 
     if(i == shnum)
     {
-	printf("No peheader section encountered :-(\n");
-	return 0;
+    printf("No peheader section encountered :-(\n");
+    return 0;
     }
 #if 0
     else
@@ -515,27 +517,27 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     /* Walk each section */
     for (i=0; i < SectionCount; i++, Section++)
     {
-	shdr = ELF_SECTION((SWAPD(Section->PointerToRawData)+1));
+    shdr = ELF_SECTION((SWAPD(Section->PointerToRawData)+1));
 
-	shdr->sh_addr = SectionAddr = SWAPD(Section->VirtualAddress);
-	shdr->sh_addr += KernelAddr;
+    shdr->sh_addr = SectionAddr = SWAPD(Section->VirtualAddress);
+    shdr->sh_addr += KernelAddr;
 
-	Section->PointerToRawData = SWAPD((Section->VirtualAddress - KernelAddr));
+    Section->PointerToRawData = SWAPD((Section->VirtualAddress - KernelAddr));
 
-	if (shdr->sh_type != SHT_NOBITS)
-	{
-	    /* Content area */
-	    printf("Loading section %d at %x (real: %x:%d)\n", i, KernelAddr + SectionAddr, MemLoadAddr+SectionAddr, shdr->sh_size);
-	    FsSetFilePointer(KernelImage, shdr->sh_offset);
-	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr + SectionAddr);
-	}
-	else
-	{
-	    /* Zero it out */
-	    printf("BSS section %d at %x\n", i, KernelAddr + SectionAddr);
-	    memset(MemLoadAddr + SectionAddr, 0,
-		   ROUND_UP(shdr->sh_size,
-			    SWAPD(NtHeader->OptionalHeader.SectionAlignment)));
+    if (shdr->sh_type != SHT_NOBITS)
+    {
+        /* Content area */
+        printf("Loading section %d at %x (real: %x:%d)\n", i, KernelAddr + SectionAddr, MemLoadAddr+SectionAddr, shdr->sh_size);
+        FsSetFilePointer(KernelImage, shdr->sh_offset);
+        FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr + SectionAddr);
+    }
+    else
+    {
+        /* Zero it out */
+        printf("BSS section %d at %x\n", i, KernelAddr + SectionAddr);
+        memset(MemLoadAddr + SectionAddr, 0,
+           ROUND_UP(shdr->sh_size,
+                SWAPD(NtHeader->OptionalHeader.SectionAlignment)));
         }
     }
 
@@ -544,112 +546,112 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
     /* Handle relocation sections */
     for (i = 0; i < shnum; i++) {
-	Elf32_Rela reloc = { };
-	ULONG *Target32;
-	USHORT *Target16;
-	int numreloc, relstart, targetSection;
-	Elf32_Sym symbol;
-	PCHAR RelocSection, SymbolSection;
+    Elf32_Rela reloc = { };
+    ULONG *Target32;
+    USHORT *Target16;
+    int numreloc, relstart, targetSection;
+    Elf32_Sym symbol;
+    PCHAR RelocSection, SymbolSection;
 
-	shdr = ELF_SECTION(i);
-	/* Only relocs here */
-	if((shdr->sh_type != SHT_REL) &&
-	   (shdr->sh_type != SHT_RELA)) continue;
+    shdr = ELF_SECTION(i);
+    /* Only relocs here */
+    if((shdr->sh_type != SHT_REL) &&
+       (shdr->sh_type != SHT_RELA)) continue;
 
-	relstart = shdr->sh_offset;
-	relsize = shdr->sh_type == SHT_RELA ? 12 : 8;
-	numreloc = shdr->sh_size / relsize;
-	targetSection = shdr->sh_info;
+    relstart = shdr->sh_offset;
+    relsize = shdr->sh_type == SHT_RELA ? 12 : 8;
+    numreloc = shdr->sh_size / relsize;
+    targetSection = shdr->sh_info;
 
-	if (!ELF_SECTION(targetSection)->sh_addr) continue;
+    if (!ELF_SECTION(targetSection)->sh_addr) continue;
 
-	RelocSection = MmHeapAlloc(shdr->sh_size);
-	FsSetFilePointer(KernelImage, relstart);
-	FsReadFile(KernelImage, shdr->sh_size, NULL, RelocSection);
+    RelocSection = FrLdrTempAlloc(shdr->sh_size, TAG_MBOOT);
+    FsSetFilePointer(KernelImage, relstart);
+    FsReadFile(KernelImage, shdr->sh_size, NULL, RelocSection);
 
-	/* Get the symbol section */
-	shdr = ELF_SECTION(shdr->sh_link);
+    /* Get the symbol section */
+    shdr = ELF_SECTION(shdr->sh_link);
 
-	SymbolSection = MmHeapAlloc(shdr->sh_size);
-	FsSetFilePointer(KernelImage, shdr->sh_offset);
-	FsReadFile(KernelImage, shdr->sh_size, NULL, SymbolSection);
+    SymbolSection = FrLdrTempAlloc(shdr->sh_size, TAG_MBOOT);
+    FsSetFilePointer(KernelImage, shdr->sh_offset);
+    FsReadFile(KernelImage, shdr->sh_size, NULL, SymbolSection);
 
-	for(j = 0; j < numreloc; j++)
-	{
-	    ULONG S,A,P;
+    for(j = 0; j < numreloc; j++)
+    {
+        ULONG S,A,P;
 
-	    /* Get the reloc */
-	    memcpy(&reloc, RelocSection + (j * relsize), sizeof(reloc));
+        /* Get the reloc */
+        memcpy(&reloc, RelocSection + (j * relsize), sizeof(reloc));
 
-	    /* Get the symbol */
-	    memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
+        /* Get the symbol */
+        memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
 
-	    /* Compute addends */
-	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr;
-	    A = reloc.r_addend;
-	    P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
-
-#if 0
-	    printf("Symbol[%d] %d -> %d(%x:%x) -> %x(+%x)@%x\n",
-		   ELF32_R_TYPE(reloc.r_info),
-		   ELF32_R_SYM(reloc.r_info),
-		   symbol.st_shndx,
-		   ELF_SECTION(symbol.st_shndx)->sh_addr,
-		   symbol.st_value,
-		   S,
-		   A,
-		   P);
-#endif
-
-	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + (P - KernelAddr));
-	    Target16 = (USHORT *)Target32;
-
-	    switch (ELF32_R_TYPE(reloc.r_info))
-	    {
-	    case R_PPC_NONE:
-		break;
-	    case R_PPC_ADDR32:
-		*Target32 = S + A;
-		break;
-	    case R_PPC_REL32:
-		*Target32 = S + A - P;
-		break;
-	    case R_PPC_UADDR32: /* Special: Treat as RVA */
-		*Target32 = S + A - KernelAddr;
-		break;
-	    case R_PPC_ADDR24:
-		*Target32 = (ADDR24_MASK & (S+A)) | (*Target32 & ~ADDR24_MASK);
-		break;
-	    case R_PPC_REL24:
-		*Target32 = (ADDR24_MASK & (S+A-P)) | (*Target32 & ~ADDR24_MASK);
-		break;
-	    case R_PPC_ADDR16_LO:
-		*Target16 = S + A;
-		break;
-	    case R_PPC_ADDR16_HA:
-		*Target16 = (S + A + 0x8000) >> 16;
-		break;
-	    default:
-		break;
-	    }
+        /* Compute addends */
+        S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr;
+        A = reloc.r_addend;
+        P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
 
 #if 0
-	    printf("reloc[%d:%x]: (type %x sym %d val %d) off %x add %x (old %x new %x)\n",
-		   j,
-		   ((ULONG)Target32) - ((ULONG)MemLoadAddr),
-		   ELF32_R_TYPE(reloc.r_info),
-		   ELF32_R_SYM(reloc.r_info),
-		   symbol.st_value,
-		   reloc.r_offset, reloc.r_addend,
-		   x, *Target32);
+        printf("Symbol[%d] %d -> %d(%x:%x) -> %x(+%x)@%x\n",
+           ELF32_R_TYPE(reloc.r_info),
+           ELF32_R_SYM(reloc.r_info),
+           symbol.st_shndx,
+           ELF_SECTION(symbol.st_shndx)->sh_addr,
+           symbol.st_value,
+           S,
+           A,
+           P);
 #endif
-	}
 
-	MmHeapFree(SymbolSection);
-	MmHeapFree(RelocSection);
+        Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + (P - KernelAddr));
+        Target16 = (USHORT *)Target32;
+
+        switch (ELF32_R_TYPE(reloc.r_info))
+        {
+        case R_PPC_NONE:
+        break;
+        case R_PPC_ADDR32:
+        *Target32 = S + A;
+        break;
+        case R_PPC_REL32:
+        *Target32 = S + A - P;
+        break;
+        case R_PPC_UADDR32: /* Special: Treat as RVA */
+        *Target32 = S + A - KernelAddr;
+        break;
+        case R_PPC_ADDR24:
+        *Target32 = (ADDR24_MASK & (S+A)) | (*Target32 & ~ADDR24_MASK);
+        break;
+        case R_PPC_REL24:
+        *Target32 = (ADDR24_MASK & (S+A-P)) | (*Target32 & ~ADDR24_MASK);
+        break;
+        case R_PPC_ADDR16_LO:
+        *Target16 = S + A;
+        break;
+        case R_PPC_ADDR16_HA:
+        *Target16 = (S + A + 0x8000) >> 16;
+        break;
+        default:
+        break;
+        }
+
+#if 0
+        printf("reloc[%d:%x]: (type %x sym %d val %d) off %x add %x (old %x new %x)\n",
+           j,
+           ((ULONG)Target32) - ((ULONG)MemLoadAddr),
+           ELF32_R_TYPE(reloc.r_info),
+           ELF32_R_SYM(reloc.r_info),
+           symbol.st_value,
+           reloc.r_offset, reloc.r_addend,
+           x, *Target32);
+#endif
     }
 
-    MmHeapFree(sptr);
+    FrLdrTempFree(SymbolSection, TAG_MBOOT);
+    FrLdrTempFree(RelocSection, TAG_MBOOT);
+    }
+
+    FrLdrTempFree(sptr, TAG_MBOOT);
 
     ModuleData->ModStart = (ULONG)MemLoadAddr;
     /* Increase the next Load Base */
@@ -658,10 +660,10 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     ModuleData->String = (ULONG)MmAllocateMemory(strlen(ImageName)+1);
     strcpy((PCHAR)ModuleData->String, ImageName);
     printf("Module %s (%x-%x) next at %x\n",
-	   ModuleData->String,
-	   ModuleData->ModStart,
-	   ModuleData->ModEnd,
-	   NextModuleBase);
+       ModuleData->String,
+       ModuleData->ModStart,
+       ModuleData->ModEnd,
+       NextModuleBase);
     LoaderBlock.ModsCount++;
 
     /* Return Success */
@@ -750,10 +752,10 @@ FrLdrLoadModule(FILE *ModuleImage,
     }
 
     printf("Module %s (%x-%x) next at %x\n",
-	   ModuleData->String,
-	   ModuleData->ModStart,
-	   ModuleData->ModEnd,
-	   NextModuleBase);
+       ModuleData->String,
+       ModuleData->ModStart,
+       ModuleData->ModEnd,
+       NextModuleBase);
 
     return ThisModuleBase;
 }

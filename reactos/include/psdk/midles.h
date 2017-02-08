@@ -30,7 +30,8 @@ extern "C" {
 typedef enum
 {
     MES_ENCODE,
-    MES_DECODE
+    MES_DECODE,
+    MES_ENCODE_NDR64
 } MIDL_ES_CODE;
 
 typedef enum

@@ -16,28 +16,26 @@
 /* DDK/NDK/SDK headers */
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
-#include <ntddk.h>
-#include <ntddmou.h>
-#include <ntddvdeo.h>
 #include <ntifs.h>
-#include <tvout.h>
+#include <ntddmou.h>
 #include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
-#include <ndk/lpcfuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
+#include <ntintsafe.h>
 #include <ntddkbd.h>
-#include <bugcodes.h>
 
 /* Win32 headers */
 /* FIXME: Defines in winbase.h that we need... */
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define MAKEINTATOM(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #define WINBASEAPI
+#define STARTF_USESHOWWINDOW 1
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
@@ -45,6 +43,10 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <intrin.h>
+
+// Needed because windef.h messes up CDECL for whatever
+#undef CDECL
+#define CDECL __cdecl
 
 /* Avoid type casting, by defining RECT to RECTL */
 #define RECT RECTL
@@ -61,48 +63,45 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <winuser.h>
-#include <windowsx.h>
 #include <prntfont.h>
-#include <dde.h>
-#include <wincon.h>
-#include <winnls.h>
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
+#include <imm.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-/* CSRSS Header */
-#include <csr/csr.h>
-#include <win/winmsg.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Public Win32K headers */
-#include <include/callback.h>
+#include <include/ntgdityp.h>
+#include <ntgdi.h>
+#include <include/ntgdihdl.h>
+#include <include/ntgdibad.h>
+
+#ifndef __cplusplus
 #include <include/ntusrtyp.h>
 #include <include/ntuser.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdibad.h>
-#include <include/ntgdihdl.h>
-#include <ntgdi.h>
+#include <include/callback.h>
+#endif // __cplusplus
 
 /* Undocumented user definitions */
 #include <undocuser.h>
-#include <winlogon.h>
 
 /* Freetype headers */
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_TYPE1_TABLES_H
-#include <freetype/tttables.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
-#include <freetype/ftbitmap.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ftwinfnt.h>
-#include <freetype/freetype.h>
+
+#define InterlockedIncrementUL(Value) InterlockedIncrement((PLONG)Value)
+#define InterlockedDecrementUL(Value) InterlockedDecrement((PLONG)Value)
 
 /* Internal Win32K header */
 #include "win32kp.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __W32K_H */

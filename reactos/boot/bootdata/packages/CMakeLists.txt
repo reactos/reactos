@@ -15,29 +15,28 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/concat.cmake "
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn "")
 
+# This finalizes reactos.dff by concat-ing the two files: one generated and one static containing the optional file.
+# please keep it this way as it permits to add files to reactos.dff.in without having to run cmake again
+# and also avoids rebuilding reactos.cab in case nothing changes after a cmake run
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
     COMMAND ${CMAKE_COMMAND} -D SRC1=${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
                              -D SRC2=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn
-                             -D DST=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
+                             -D DST=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              -P ${CMAKE_CURRENT_BINARY_DIR}/concat.cmake
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+                             ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
+                             ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn
-)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn)
 
-# And now we build reactos.cab
-
-# First we create reactos.inf
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+add_custom_target(
+    reactos_cab_inf
     COMMAND native-cabman -C ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff -L ${CMAKE_CURRENT_BINARY_DIR} -I -P ${REACTOS_SOURCE_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff native-cabman)
 
-# Then we create the actual cab file using a custom target
-# Please do not change this into custom command + custom target. This breaks reactos.cab dependencies on modules
-# and you can't do something like "make gdi32/fast reactos_cab/fast bootcd/fast"
-add_custom_target(reactos_cab
-    COMMAND native-cabman -C ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -L ${CMAKE_CURRENT_BINARY_DIR} -N -P ${REACTOS_SOURCE_DIR}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman)
-
-add_cd_file(TARGET reactos_cab FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
+add_cd_file(
+    TARGET reactos_cab_inf
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+    DESTINATION reactos
+    NO_CAB FOR bootcd regtest)

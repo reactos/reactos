@@ -23,7 +23,7 @@ CmBattWaitWakeLoop(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     PCMBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     if (CmBattDebug & 0x20) DbgPrint("CmBattWaitWakeLoop: Entered.\n");
-    
+
     /* Check for success */
     if ((NT_SUCCESS(IoStatusBlock->Status)) && (DeviceExtension->WaitWakeEnable))
     {
@@ -48,7 +48,7 @@ CmBattWaitWakeLoop(IN PDEVICE_OBJECT DeviceObject,
         DeviceExtension->PowerIrp = NULL;
     }
 }
- 
+
 NTSTATUS
 NTAPI
 CmBattIoCompletion(IN PDEVICE_OBJECT DeviceObject,
@@ -87,6 +87,7 @@ CmBattGetAcpiInterfaces(IN PDEVICE_OBJECT DeviceObject,
 
     /* Build the query */
     IoStackLocation = IoGetNextIrpStackLocation(Irp);
+    IoStackLocation->MajorFunction = IRP_MJ_PNP;
     IoStackLocation->MinorFunction = IRP_MN_QUERY_INTERFACE;
     IoStackLocation->Parameters.QueryInterface.InterfaceType = &GUID_ACPI_INTERFACE_STANDARD;
     IoStackLocation->Parameters.QueryInterface.Size = sizeof(ACPI_INTERFACE_STANDARD);
@@ -100,16 +101,15 @@ CmBattGetAcpiInterfaces(IN PDEVICE_OBJECT DeviceObject,
 
     /* Initialize our wait event */
     KeInitializeEvent(&Event, SynchronizationEvent, 0);
-    
+
     /* Set the completion routine */
-    IoCopyCurrentIrpStackLocationToNext(Irp);
     IoSetCompletionRoutine(Irp,
                            (PVOID)CmBattIoCompletion,
                            &Event,
                            TRUE,
                            TRUE,
                            TRUE);
- 
+
     /* Now call ACPI */
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
@@ -122,10 +122,10 @@ CmBattGetAcpiInterfaces(IN PDEVICE_OBJECT DeviceObject,
                               NULL);
         Status = Irp->IoStatus.Status;
     }
-    
+
     /* Free the IRP */
     IoFreeIrp(Irp);
-    
+
     /* Return status */
     if (!(NT_SUCCESS(Status)) && (CmBattDebug & 0xC))
         DbgPrint("CmBattGetAcpiInterfaces: Could not get ACPI driver interfaces, status = %x\n", Status);
@@ -157,7 +157,7 @@ CmBattRemoveDevice(IN PDEVICE_OBJECT DeviceObject,
                  DeviceExtension,
                  DeviceExtension->FdoType,
                  DeviceExtension->DeviceId);
-                 
+
     /* Make sure it's safe to go ahead */
     IoReleaseRemoveLockAndWait(&DeviceExtension->RemoveLock, 0);
 
@@ -168,7 +168,7 @@ CmBattRemoveDevice(IN PDEVICE_OBJECT DeviceObject,
         IoCancelIrp(DeviceExtension->PowerIrp);
         DeviceExtension->PowerIrp = NULL;
     }
-    
+
     /* Check what type of FDO is being removed */
     Context = DeviceExtension->AcpiInterface.Context;
     if (DeviceExtension->FdoType == CmBattBattery)
@@ -187,7 +187,7 @@ CmBattRemoveDevice(IN PDEVICE_OBJECT DeviceObject,
         CmBattWmiDeRegistration(DeviceExtension);
         AcAdapterPdo = NULL;
     }
-    
+
     /* Detach and delete */
     IoDetachDevice(DeviceExtension->AttachedDevice);
     IoDeleteDevice(DeviceExtension->DeviceObject);
@@ -209,30 +209,30 @@ CmBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
     DeviceExtension = DeviceObject->DeviceExtension;
     switch (IoStackLocation->MinorFunction)
     {
-        case IRP_MN_WAIT_WAKE:        
+        case IRP_MN_WAIT_WAKE:
             if (CmBattDebug & 0x10)
                 DbgPrint("CmBattPowerDispatch: IRP_MN_WAIT_WAKE\n");
             break;
-        
+
         case IRP_MN_POWER_SEQUENCE:
             if (CmBattDebug & 0x10)
                 DbgPrint("CmBattPowerDispatch: IRP_MN_POWER_SEQUENCE\n");
             break;
-        
+
         case IRP_MN_QUERY_POWER:
             if (CmBattDebug & 0x10)
                 DbgPrint("CmBattPowerDispatch: IRP_MN_WAIT_WAKE\n");
             break;
-        
+
         case IRP_MN_SET_POWER:
             if (CmBattDebug & 0x10)
                 DbgPrint("CmBattPowerDispatch: IRP_MN_SET_POWER type: %d, State: %d \n",
                          IoStackLocation->Parameters.Power.Type,
                          IoStackLocation->Parameters.Power.State);
             break;
-            
+
         default:
-        
+
             if (CmBattDebug & 1)
                 DbgPrint("CmBattPowerDispatch: minor %d\n", IoStackLocation->MinorFunction);
             break;
@@ -252,7 +252,7 @@ CmBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
         Status = Irp->IoStatus.Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -271,12 +271,12 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
     /* Get stack location and device extension */
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     DeviceExtension = DeviceObject->DeviceExtension;
-    
+
     /* Set default error */
     Status = STATUS_NOT_SUPPORTED;
 
     /* Try to acquire the lock before doing anything */
-    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, 0);
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
     if (!NT_SUCCESS(Status))
     {
         /* Complete the request */
@@ -287,9 +287,9 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
 
     /* What's the operation? */
     switch (IoStackLocation->MinorFunction)
-    {            
+    {
         case IRP_MN_QUERY_PNP_DEVICE_STATE:
-        
+
             /* Initialize our wait event */
             KeInitializeEvent(&Event, SynchronizationEvent, 0);
 
@@ -322,28 +322,28 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
             return Status;
-        
+
         case IRP_MN_SURPRISE_REMOVAL:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_SURPRISE_REMOVAL\n");
-                
+
             /* Lock the device extension and set the handle count to invalid */
             ExAcquireFastMutex(&DeviceExtension->FastMutex);
             DeviceExtension->HandleCount = -1;
             ExReleaseFastMutex(&DeviceExtension->FastMutex);
             Status = STATUS_SUCCESS;
             break;
-        
+
         case IRP_MN_START_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_START_DEVICE\n");
-          
+
             /* Mark the extension as started */
             if (DeviceExtension->FdoType == CmBattBattery) DeviceExtension->Started = TRUE;
             Status = STATUS_SUCCESS;
             break;
-        
-        case IRP_MN_STOP_DEVICE:        
+
+        case IRP_MN_STOP_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_STOP_DEVICE\n");
 
@@ -351,7 +351,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
             if (DeviceExtension->FdoType == CmBattBattery) DeviceExtension->Started = FALSE;
             Status = STATUS_SUCCESS;
             break;
-        
+
         case IRP_MN_QUERY_REMOVE_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_REMOVE_DEVICE\n");
@@ -376,23 +376,23 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
                 /* Fail because there's still open handles */
                 Status = STATUS_UNSUCCESSFUL;
             }
-            
+
             /* Release the lock and return */
             ExReleaseFastMutex(&DeviceExtension->FastMutex);
             break;
-        
+
         case IRP_MN_REMOVE_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_REMOVE_DEVICE\n");
-             
+
             /* Call the remove code */
             Status = CmBattRemoveDevice(DeviceObject, Irp);
             break;
-        
+
         case IRP_MN_CANCEL_REMOVE_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_CANCEL_REMOVE_DEVICE\n");
-            
+
             /* Lock the extension and get the handle count */
             ExAcquireFastMutex(&DeviceExtension->FastMutex);
             if (DeviceExtension->HandleCount == -1)
@@ -403,33 +403,33 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
             else if (CmBattDebug & 2)
             {
                 /* Nop, but warn about it */
-                DbgPrint("CmBattPnpDispatch: Received CANCEL_REMOVE when OpenCount == %x\n", 
+                DbgPrint("CmBattPnpDispatch: Received CANCEL_REMOVE when OpenCount == %x\n",
                          DeviceExtension->HandleCount);
             }
-            
+
             /* Return success in all cases, and release the lock */
             Status = STATUS_SUCCESS;
             ExReleaseFastMutex(&DeviceExtension->FastMutex);
             break;
-        
+
         case IRP_MN_QUERY_STOP_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_STOP_DEVICE\n");
-            
-            /* There's no real support for this */    
+
+            /* There's no real support for this */
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         case IRP_MN_CANCEL_STOP_DEVICE:
             if (CmBattDebug & 0x20)
                 DbgPrint("CmBattPnpDispatch: IRP_MN_CANCEL_STOP_DEVICE\n");
-        
-            /* There's no real support for this */    
+
+            /* There's no real support for this */
             Status = STATUS_NOT_IMPLEMENTED;
             break;
-        
+
         case IRP_MN_QUERY_CAPABILITIES:
-        
+
             /* Initialize our wait event */
             KeInitializeEvent(&Event, SynchronizationEvent, 0);
 
@@ -496,14 +496,14 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
                          IoStackLocation->MinorFunction);
             break;
     }
-    
-    /* Release the remove lock */  
+
+    /* Release the remove lock */
     IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
 
     /* Set IRP status if we have one */
     if (Status != STATUS_NOT_SUPPORTED) Irp->IoStatus.Status = Status;
 
-    /* Did someone pick it up? */    
+    /* Did someone pick it up? */
     if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
     {
         /* Still unsupported, try ACPI */
@@ -539,7 +539,7 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
     ULONG ResultLength;
     PAGED_CODE();
     if (CmBattDebug & 0x220) DbgPrint("CmBattCreateFdo: Entered\n");
-    
+
     /* Get unique ID */
     Status = CmBattGetUniqueId(DeviceObject, &UniqueId);
     if (!NT_SUCCESS(Status))
@@ -549,7 +549,7 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
         if (CmBattDebug & 2)
           DbgPrint("CmBattCreateFdo: Error %x from _UID, assuming unit #0\n", Status);
     }
-    
+
     /* Create the FDO */
     Status = IoCreateDevice(DriverObject,
                             DeviceExtensionSize,
@@ -565,7 +565,7 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBattCreateFdo: error (0x%x) creating device object\n", Status);
         return Status;
     }
-    
+
     /* Set FDO flags */
     FdoDeviceObject->Flags |= (DO_POWER_PAGABLE | DO_BUFFERED_IO);
     FdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -576,7 +576,7 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->DeviceObject = FdoDeviceObject;
     FdoExtension->FdoDeviceObject = FdoDeviceObject;
     FdoExtension->PdoDeviceObject = DeviceObject;
-    
+
     /* Attach to ACPI */
     FdoExtension->AttachedDevice = IoAttachDeviceToDeviceStack(FdoDeviceObject,
                                                                DeviceObject);
@@ -588,7 +588,7 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBattCreateFdo: IoAttachDeviceToDeviceStack failed.\n");
         return STATUS_UNSUCCESSFUL;
     }
-    
+
     /* Get ACPI interface for EVAL */
     Status = CmBattGetAcpiInterfaces(FdoExtension->AttachedDevice,
                                      &FdoExtension->AcpiInterface);
@@ -604,14 +604,14 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
 
     /* Setup the rest of the extension */
     ExInitializeFastMutex(&FdoExtension->FastMutex);
-    IoInitializeRemoveLock(&FdoExtension->RemoveLock, 0, 0, 0);
+    IoInitializeRemoveLock(&FdoExtension->RemoveLock, 'RbmC', 0, 0);
     FdoExtension->HandleCount = 0;
     FdoExtension->WaitWakeEnable = FALSE;
     FdoExtension->DeviceId = UniqueId;
     FdoExtension->DeviceName = NULL;
     FdoExtension->DelayNotification = FALSE;
     FdoExtension->ArFlag = 0;
-    
+
     /* Open the device key */
     Status = IoOpenDeviceRegistryKey(DeviceObject,
                                      PLUGPLAY_REGKEY_DEVICE,
@@ -630,9 +630,9 @@ CmBattCreateFdo(IN PDRIVER_OBJECT DriverObject,
         if (NT_SUCCESS(Status))
         {
             /* Set value */
-            FdoExtension->WaitWakeEnable = *(PULONG)PartialInfo->Data;
+            FdoExtension->WaitWakeEnable = ((*(PULONG)PartialInfo->Data) != 0);
         }
-        
+
         /* Close the handle */
         ZwClose(KeyHandle);
     }
@@ -652,7 +652,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     BATTERY_MINIPORT_INFO MiniportInfo;
     NTSTATUS Status;
     PDEVICE_OBJECT FdoDeviceObject;
-    PCMBATT_DEVICE_EXTENSION FdoExtension; 
+    PCMBATT_DEVICE_EXTENSION FdoExtension;
     PAGED_CODE();
     if (CmBattDebug & 0x220)
         DbgPrint("CmBattAddBattery: pdo %x\n", DeviceObject);
@@ -680,7 +680,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->InterruptTime = KeQueryInterruptTime();
     FdoExtension->TripPointSet = CmBattSetTripPpoint(FdoExtension, 0) !=
                                  STATUS_OBJECT_NAME_NOT_FOUND;
-       
+
     /* Setup the battery miniport information structure */
     RtlZeroMemory(&MiniportInfo, sizeof(MiniportInfo));
     MiniportInfo.Pdo = DeviceObject;
@@ -694,7 +694,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     MiniportInfo.SetStatusNotify = (PVOID)CmBattSetStatusNotify;
     MiniportInfo.DisableStatusNotify = (PVOID)CmBattDisableStatusNotify;
     MiniportInfo.DeviceName = FdoExtension->DeviceName;
- 
+
     /* Register with the class driver */
     Status = BatteryClassInitializeDevice(&MiniportInfo, &FdoExtension->ClassData);
     if (!NT_SUCCESS(Status))
@@ -714,7 +714,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBattAddBattery: Could not register as a WMI provider, status = %Lx\n", Status);
         return Status;
     }
-    
+
     /* Register ACPI */
     Status = FdoExtension->AcpiInterface.RegisterForDeviceNotifications(FdoExtension->AcpiInterface.Context,
                                                                         (PVOID)CmBattNotifyHandler,
@@ -728,7 +728,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
         if (CmBattDebug & 0xC)
             DbgPrint("CmBattAddBattery: Could not register for battery notify, status = %Lx\n", Status);
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -757,7 +757,7 @@ CmBattAddAcAdapter(IN PDRIVER_OBJECT DriverObject,
         /* Set this as the AC adapter's PDO */
         AcAdapterPdo = PdoDeviceObject;
     }
-    
+
     /* Create the FDO for the adapter */
     Status = CmBattCreateFdo(DriverObject,
                              PdoDeviceObject,
@@ -770,7 +770,7 @@ CmBattAddAcAdapter(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBattAddAcAdapter: error (0x%x) creating Fdo\n", Status);
         return Status;
     }
-    
+
     /* Set the type and do WMI registration */
     DeviceExtension = FdoDeviceObject->DeviceExtension;
     DeviceExtension->FdoType = CmBattAcAdapter;
@@ -781,7 +781,7 @@ CmBattAddAcAdapter(IN PDRIVER_OBJECT DriverObject,
         if (CmBattDebug & 0xC)
             DbgPrint("CmBattAddBattery: Could not register as a WMI provider, status = %Lx\n", Status);
     }
-    
+
     /* Register with ACPI */
     Status = DeviceExtension->AcpiInterface.RegisterForDeviceNotifications(DeviceExtension->AcpiInterface.Context,
                                                                            (PVOID)CmBattNotifyHandler,
@@ -809,7 +809,7 @@ CmBattAddDevice(IN PDRIVER_OBJECT DriverObject,
     PAGED_CODE();
     if (CmBattDebug & 0x220)
         DbgPrint("CmBattAddDevice: Entered with pdo %x\n", PdoDeviceObject);
-    
+
     /* Make sure we have a PDO */
     if (!PdoDeviceObject)
     {
@@ -817,7 +817,7 @@ CmBattAddDevice(IN PDRIVER_OBJECT DriverObject,
         if (CmBattDebug & 0x24) DbgPrint("CmBattAddDevice: Asked to do detection\n");
         return STATUS_NO_MORE_ENTRIES;
     }
-    
+
     /* Open the driver key */
     Status = IoOpenDeviceRegistryKey(PdoDeviceObject,
                                      PLUGPLAY_REGKEY_DRIVER,
@@ -846,7 +846,7 @@ CmBattAddDevice(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBattAddDevice: Could not read the power type identifier: %x\n", Status);
         return Status;
     }
-    
+
     /* Check what kind of power source this is */
     PowerSourceType = *(PULONG)PartialInfo->Data;
     if (PowerSourceType == 1)
@@ -866,7 +866,7 @@ CmBattAddDevice(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBattAddDevice: Invalid POWER_SOURCE_TYPE == %d \n", PowerSourceType);
         return STATUS_UNSUCCESSFUL;
     }
-    
+
     /* Return whatever the FDO creation routine did */
     return Status;
 }

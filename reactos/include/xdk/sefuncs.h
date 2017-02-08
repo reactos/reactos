@@ -588,4 +588,5 @@ SeLocateProcessImageName(
     ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
 
 extern NTKERNELAPI PSE_EXPORTS SeExports;
+
 $endif (_NTIFS_)

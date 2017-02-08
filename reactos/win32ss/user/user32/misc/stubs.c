@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/stubs.c
+ * FILE:            win32ss/user/user32/misc/stubs.c
  * PURPOSE:         User32.dll stubs
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:           If you implement a function, remove it from this file
@@ -41,7 +41,7 @@ VOID
 WINAPI
 SetDebugErrorLevel( DWORD dwLevel )
 {
-    DbgPrint("(%ld): stub\n", dwLevel);
+    FIXME("(%lu): stub\n", dwLevel);
 }
 
 
@@ -222,17 +222,6 @@ GetAccCursorInfo ( PCURSORINFO pci )
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-ClientThreadSetup ( VOID )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 UINT
 WINAPI
 GetRawInputDeviceInfoW(
@@ -308,6 +297,7 @@ DefRawInputProc(
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 GetRawInputBuffer(
     PRAWINPUT pData,
     PUINT pcbSize,
@@ -345,7 +335,8 @@ GetRawInputDeviceList(
 {
     if(pRawInputDeviceList)
         memset(pRawInputDeviceList, 0, sizeof *pRawInputDeviceList);
-    *puiNumDevices = 0;
+    if(puiNumDevices)
+       *puiNumDevices = 0;
 
     UNIMPLEMENTED;
     return 0;
@@ -356,6 +347,7 @@ GetRawInputDeviceList(
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 GetRegisteredRawInputDevices(
     PRAWINPUTDEVICE pRawInputDevices,
     PUINT puiNumDevices,
@@ -370,6 +362,7 @@ GetRegisteredRawInputDevices(
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 RegisterRawInputDevices(
     PCRAWINPUTDEVICE pRawInputDevices,
     UINT uiNumDevices,
@@ -476,33 +469,6 @@ VOID WINAPI ShowStartGlass(DWORD unknown)
 }
 
 /*
- * @unimplemented
- */
-BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_OF_SERVICE pqosPrev)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI SetProcessDPIAware(VOID)
-{
-    UNIMPLEMENTED;
-    return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
  * @implemented
  */
 DWORD WINAPI GetMenuIndex(HMENU hMenu, HMENU hSubMenu)
@@ -529,9 +495,10 @@ BuildReasonArray(PVOID Pointer)
 
 VOID
 WINAPI
-CreateSystemThreads(DWORD dwUnknown)
+CreateSystemThreads(DWORD Unused)
 {
-    NtUserxCreateSystemThreads(dwUnknown);
+    /* Thread call for remote processes (non-CSRSS) only */
+    NtUserxCreateSystemThreads(TRUE);
     ExitThread(0);
 }
 
@@ -551,19 +518,24 @@ DeviceEventWorker(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
     return FALSE;
 }
 
-HCURSOR
-WINAPI
-GetCursorFrameInfo(HCURSOR hCursor, LPCWSTR name, DWORD istep, PDWORD rate_jiffies, INT *num_steps)
-{
-   if (hCursor) return NtUserGetCursorFrameInfo(hCursor, istep, rate_jiffies, num_steps);
-
-   return LoadImageW( NULL, name, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
-}
-
 BOOL
 WINAPI
 GetReasonTitleFromReasonCode(DWORD dw1, DWORD dw2, DWORD dw3)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+IsSETEnabled(VOID)
+{
+    /*
+     * Determines whether the Shutdown Event Tracker is enabled.
+     *
+     * See http://undoc.airesoft.co.uk/user32.dll/IsSETEnabled.php
+     * for more information.
+     */
     UNIMPLEMENTED;
     return FALSE;
 }

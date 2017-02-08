@@ -6,15 +6,10 @@
  *					an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
-BOOL recover_main(INT argc, WCHAR **argv)
+BOOL recover_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_recover(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_RECOVER);
 }

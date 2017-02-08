@@ -46,7 +46,7 @@ typedef struct
     //
     PHID_DESCRIPTOR HidDescriptor;
 
-}HID_USB_DEVICE_EXTENSION, *PHID_USB_DEVICE_EXTENSION;
+} HID_USB_DEVICE_EXTENSION, *PHID_USB_DEVICE_EXTENSION;
 
 typedef struct
 {
@@ -65,7 +65,7 @@ typedef struct
     //
     PDEVICE_OBJECT DeviceObject;
 
-}HID_USB_RESET_CONTEXT, *PHID_USB_RESET_CONTEXT;
+} HID_USB_RESET_CONTEXT, *PHID_USB_RESET_CONTEXT;
 
 
 NTSTATUS
@@ -75,7 +75,7 @@ Hid_GetDescriptor(
     IN USHORT UrbLength,
     IN OUT PVOID *UrbBuffer,
     IN OUT PULONG UrbBufferLength,
-    IN UCHAR DescriptorType, 
+    IN UCHAR DescriptorType,
     IN UCHAR Index,
     IN USHORT LanguageIndex);
 
@@ -87,3 +87,5 @@ Hid_DispatchUrb(
 #define USB_SET_IDLE_REQUEST 0xA
 #define USB_GET_PROTOCOL_REQUEST 0x3
 
+#define HIDUSB_TAG 'UdiH'
+#define HIDUSB_URB_TAG 'rUiH'

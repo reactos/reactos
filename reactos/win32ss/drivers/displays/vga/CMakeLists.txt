@@ -1,7 +1,5 @@
 
-spec2def(vgaddi.dll vgaddi.spec)
-
-add_library(vgaddi SHARED
+list(APPEND SOURCE
     main/enable.c
     objects/screen.c
     objects/pointer.c
@@ -12,14 +10,15 @@ add_library(vgaddi SHARED
     objects/offscreen.c
     objects/copybits.c
     vgavideo/vgavideo.c
-    vgaddi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/vgaddi.def)
+    vgaddi.h)
 
-set_entrypoint(vgaddi DrvEnableDriver 12)
-set_subsystem(vgaddi native)
-set_image_base(vgaddi 0x00010000)
-add_pch(vgaddi vgaddi.h)
+add_library(vgaddi SHARED
+    ${SOURCE}
+    vgaddi.rc)
+
+set_module_type(vgaddi kerneldll ENTRYPOINT DrvEnableDriver 12)
+add_pch(vgaddi vgaddi.h SOURCE)
 add_importlibs(vgaddi win32k)
 target_link_libraries(vgaddi libcntpr)
-add_dependencies(vgaddi psdk bugcodes)
+add_dependencies(vgaddi psdk)
 add_cd_file(TARGET vgaddi DESTINATION reactos/system32 FOR all)

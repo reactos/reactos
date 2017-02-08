@@ -1,15 +1,20 @@
-// Russian language resource file (Dmitry Chapyshev, 2007-06-21)
+/* Russian language resource file (Dmitry Chapyshev, 2007-06-21) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Install"
-	IDS_PRINT, "Печать"
-	IDS_STRING, "В чащах юга жил бы цитрус? Да, но фальшивый экземпляр! 1234567890"
-	IDS_OPEN, "Open Font..."
-	IDS_ERROR, "Ошибка"
-	IDS_ERROR_NOMEM, "Недостаточно памяти, чтобы завершить операцию."
-	IDS_ERROR_NOFONT, "%1 не является корректным файлом шрифта."
-	IDS_ERROR_NOCLASS, "Невозможно инициализировать класс окна."
+    IDS_INSTALL "Установить"
+    IDS_PRINT "Печать"
+    IDS_STRING "Съешь же ещё этих мягких французских булок, да выпей чаю. 1234567890"
+    IDS_OPEN "Открыть шрифт..."
+    IDS_ERROR "Ошибка"
+    IDS_ERROR_NOMEM "Недостаточно памяти для выполнения операции."
+    IDS_ERROR_NOFONT "%1 не является корректным файлом шрифта."
+    IDS_ERROR_NOCLASS "Невозможно инициализировать класс окна."
+    IDS_FILTER_LIST "Все поддерживаемые шрифты (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType шрифты (*.ttf)\0*.ttf\0\
+OpenType шрифты (*.otf)\0*.otf\0\
+Файлы шрифтов (*.fon)\0*.fon\0\
+Все файлы (*.*)\0*.*\0"
 END

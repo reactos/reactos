@@ -22,81 +22,87 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
-
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 /* DCL usage masks */
-#define WINED3DSP_DCL_USAGE_SHIFT               0
-#define WINED3DSP_DCL_USAGE_MASK                (0xf << WINED3DSP_DCL_USAGE_SHIFT)
-#define WINED3DSP_DCL_USAGEINDEX_SHIFT          16
-#define WINED3DSP_DCL_USAGEINDEX_MASK           (0xf << WINED3DSP_DCL_USAGEINDEX_SHIFT)
+#define WINED3D_SM1_DCL_USAGE_SHIFT             0
+#define WINED3D_SM1_DCL_USAGE_MASK              (0xfu << WINED3D_SM1_DCL_USAGE_SHIFT)
+#define WINED3D_SM1_DCL_USAGE_INDEX_SHIFT       16
+#define WINED3D_SM1_DCL_USAGE_INDEX_MASK        (0xfu << WINED3D_SM1_DCL_USAGE_INDEX_SHIFT)
 
 /* DCL sampler type */
-#define WINED3DSP_TEXTURETYPE_SHIFT             27
-#define WINED3DSP_TEXTURETYPE_MASK              (0xf << WINED3DSP_TEXTURETYPE_SHIFT)
+#define WINED3D_SM1_RESOURCE_TYPE_SHIFT         27
+#define WINED3D_SM1_RESOURCE_TYPE_MASK          (0xfu << WINED3D_SM1_RESOURCE_TYPE_SHIFT)
 
 /* Opcode-related masks */
-#define WINED3DSI_OPCODE_MASK                   0x0000ffff
+#define WINED3D_SM1_OPCODE_MASK                 0x0000ffff
 
-#define WINED3D_OPCODESPECIFICCONTROL_SHIFT     16
-#define WINED3D_OPCODESPECIFICCONTROL_MASK      (0xff << WINED3D_OPCODESPECIFICCONTROL_SHIFT)
+#define WINED3D_SM1_INSTRUCTION_FLAGS_SHIFT     16
+#define WINED3D_SM1_INSTRUCTION_FLAGS_MASK      (0xffu << WINED3D_SM1_INSTRUCTION_FLAGS_SHIFT)
 
-#define WINED3DSI_INSTLENGTH_SHIFT              24
-#define WINED3DSI_INSTLENGTH_MASK               (0xf << WINED3DSI_INSTLENGTH_SHIFT)
+#define WINED3D_SM1_INSTRUCTION_LENGTH_SHIFT    24
+#define WINED3D_SM1_INSTRUCTION_LENGTH_MASK     (0xfu << WINED3D_SM1_INSTRUCTION_LENGTH_SHIFT)
 
-#define WINED3DSI_COISSUE                       (1 << 30)
+#define WINED3D_SM1_COISSUE                     (0x1u << 30)
 
-#define WINED3DSI_COMMENTSIZE_SHIFT             16
-#define WINED3DSI_COMMENTSIZE_MASK              (0x7fff << WINED3DSI_COMMENTSIZE_SHIFT)
+#define WINED3D_SM1_COMMENT_SIZE_SHIFT          16
+#define WINED3D_SM1_COMMENT_SIZE_MASK           (0x7fffu << WINED3D_SM1_COMMENT_SIZE_SHIFT)
 
-#define WINED3DSHADER_INSTRUCTION_PREDICATED    (1 << 28)
+#define WINED3D_SM1_INSTRUCTION_PREDICATED      (0x1u << 28)
 
 /* Register number mask */
-#define WINED3DSP_REGNUM_MASK                   0x000007ff
+#define WINED3D_SM1_REGISTER_NUMBER_MASK        0x000007ff
 
 /* Register type masks  */
-#define WINED3DSP_REGTYPE_SHIFT                 28
-#define WINED3DSP_REGTYPE_MASK                  (0x7 << WINED3DSP_REGTYPE_SHIFT)
-#define WINED3DSP_REGTYPE_SHIFT2                8
-#define WINED3DSP_REGTYPE_MASK2                 (0x18 << WINED3DSP_REGTYPE_SHIFT2)
+#define WINED3D_SM1_REGISTER_TYPE_SHIFT         28
+#define WINED3D_SM1_REGISTER_TYPE_MASK          (0x7u << WINED3D_SM1_REGISTER_TYPE_SHIFT)
+#define WINED3D_SM1_REGISTER_TYPE_SHIFT2        8
+#define WINED3D_SM1_REGISTER_TYPE_MASK2         (0x18u << WINED3D_SM1_REGISTER_TYPE_SHIFT2)
 
 /* Relative addressing mask */
-#define WINED3DSHADER_ADDRESSMODE_SHIFT         13
-#define WINED3DSHADER_ADDRESSMODE_MASK          (1 << WINED3DSHADER_ADDRESSMODE_SHIFT)
+#define WINED3D_SM1_ADDRESS_MODE_SHIFT          13
+#define WINED3D_SM1_ADDRESS_MODE_MASK           (0x1u << WINED3D_SM1_ADDRESS_MODE_SHIFT)
 
 /* Destination modifier mask */
-#define WINED3DSP_DSTMOD_SHIFT                  20
-#define WINED3DSP_DSTMOD_MASK                   (0xf << WINED3DSP_DSTMOD_SHIFT)
+#define WINED3D_SM1_DST_MODIFIER_SHIFT          20
+#define WINED3D_SM1_DST_MODIFIER_MASK           (0xfu << WINED3D_SM1_DST_MODIFIER_SHIFT)
 
 /* Destination shift mask */
-#define WINED3DSP_DSTSHIFT_SHIFT                24
-#define WINED3DSP_DSTSHIFT_MASK                 (0xf << WINED3DSP_DSTSHIFT_SHIFT)
+#define WINED3D_SM1_DSTSHIFT_SHIFT              24
+#define WINED3D_SM1_DSTSHIFT_MASK               (0xfu << WINED3D_SM1_DSTSHIFT_SHIFT)
 
 /* Write mask */
 #define WINED3D_SM1_WRITEMASK_SHIFT             16
-#define WINED3D_SM1_WRITEMASK_MASK              (0xf << WINED3D_SM1_WRITEMASK_SHIFT)
+#define WINED3D_SM1_WRITEMASK_MASK              (0xfu << WINED3D_SM1_WRITEMASK_SHIFT)
 
 /* Swizzle mask */
-#define WINED3DSP_SWIZZLE_SHIFT                 16
-#define WINED3DSP_SWIZZLE_MASK                  (0xff << WINED3DSP_SWIZZLE_SHIFT)
+#define WINED3D_SM1_SWIZZLE_SHIFT               16
+#define WINED3D_SM1_SWIZZLE_MASK                (0xffu << WINED3D_SM1_SWIZZLE_SHIFT)
 
 /* Source modifier mask */
-#define WINED3DSP_SRCMOD_SHIFT                  24
-#define WINED3DSP_SRCMOD_MASK                   (0xf << WINED3DSP_SRCMOD_SHIFT)
+#define WINED3D_SM1_SRC_MODIFIER_SHIFT          24
+#define WINED3D_SM1_SRC_MODIFIER_MASK           (0xfu << WINED3D_SM1_SRC_MODIFIER_SHIFT)
 
-#define WINED3DSP_END                           0x0000ffff
+#define WINED3D_SM1_END                         0x0000ffff
 
 #define WINED3D_SM1_VERSION_MAJOR(version)      (((version) >> 8) & 0xff)
 #define WINED3D_SM1_VERSION_MINOR(version)      (((version) >> 0) & 0xff)
 
-enum WINED3DSHADER_ADDRESSMODE_TYPE
+enum wined3d_sm1_address_mode_type
 {
-    WINED3DSHADER_ADDRMODE_ABSOLUTE = 0 << WINED3DSHADER_ADDRESSMODE_SHIFT,
-    WINED3DSHADER_ADDRMODE_RELATIVE = 1 << WINED3DSHADER_ADDRESSMODE_SHIFT,
+    WINED3D_SM1_ADDRESS_MODE_ABSOLUTE = 0u << WINED3D_SM1_ADDRESS_MODE_SHIFT,
+    WINED3D_SM1_ADDRESS_MODE_RELATIVE = 1u << WINED3D_SM1_ADDRESS_MODE_SHIFT,
+};
+
+enum wined3d_sm1_resource_type
+{
+    WINED3D_SM1_RESOURCE_UNKNOWN        = 0x0,
+    WINED3D_SM1_RESOURCE_TEXTURE_1D     = 0x1,
+    WINED3D_SM1_RESOURCE_TEXTURE_2D     = 0x2,
+    WINED3D_SM1_RESOURCE_TEXTURE_CUBE   = 0x3,
+    WINED3D_SM1_RESOURCE_TEXTURE_3D     = 0x4,
 };
 
 enum wined3d_sm1_opcode
@@ -377,6 +383,15 @@ static const struct wined3d_sm1_opcode_info ps_opcode_table[] =
     {0,                       0, 0, WINED3DSIH_TABLE_SIZE,   0,                           0                          },
 };
 
+static const enum wined3d_shader_resource_type resource_type_table[] =
+{
+    /* WINED3D_SM1_RESOURCE_UNKNOWN */      WINED3D_SHADER_RESOURCE_NONE,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_1D */   WINED3D_SHADER_RESOURCE_TEXTURE_1D,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_2D */   WINED3D_SHADER_RESOURCE_TEXTURE_2D,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_CUBE */ WINED3D_SHADER_RESOURCE_TEXTURE_CUBE,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_3D */   WINED3D_SHADER_RESOURCE_TEXTURE_3D,
+};
+
 /* Read a parameter opcode from the input stream,
  * and possibly a relative addressing token.
  * Return the number of tokens read */
@@ -390,14 +405,14 @@ static int shader_get_param(const struct wined3d_sm1_data *priv, const DWORD *pt
      * VS >= 2.0 have relative addressing (with token)
      * VS >= 1.0 < 2.0 have relative addressing (without token)
      * The version check below should work in general */
-    if (*ptr & WINED3DSHADER_ADDRMODE_RELATIVE)
+    if (*ptr & WINED3D_SM1_ADDRESS_MODE_RELATIVE)
     {
         if (priv->shader_version.major < 2)
         {
-            *addr_token = (1 << 31)
-                    | ((WINED3DSPR_ADDR << WINED3DSP_REGTYPE_SHIFT2) & WINED3DSP_REGTYPE_MASK2)
-                    | ((WINED3DSPR_ADDR << WINED3DSP_REGTYPE_SHIFT) & WINED3DSP_REGTYPE_MASK)
-                    | (WINED3DSP_NOSWIZZLE << WINED3DSP_SWIZZLE_SHIFT);
+            *addr_token = (1u << 31)
+                    | ((WINED3DSPR_ADDR << WINED3D_SM1_REGISTER_TYPE_SHIFT2) & WINED3D_SM1_REGISTER_TYPE_MASK2)
+                    | ((WINED3DSPR_ADDR << WINED3D_SM1_REGISTER_TYPE_SHIFT) & WINED3D_SM1_REGISTER_TYPE_MASK)
+                    | (WINED3DSP_NOSWIZZLE << WINED3D_SM1_SWIZZLE_SHIFT);
         }
         else
         {
@@ -417,7 +432,7 @@ static const struct wined3d_sm1_opcode_info *shader_get_opcode(const struct wine
 
     while (opcode_table[i].handler_idx != WINED3DSIH_TABLE_SIZE)
     {
-        if ((code & WINED3DSI_OPCODE_MASK) == opcode_table[i].opcode
+        if ((code & WINED3D_SM1_OPCODE_MASK) == opcode_table[i].opcode
                 && shader_version >= opcode_table[i].min_version
                 && (!opcode_table[i].max_version || shader_version <= opcode_table[i].max_version))
         {
@@ -427,7 +442,7 @@ static const struct wined3d_sm1_opcode_info *shader_get_opcode(const struct wine
     }
 
     FIXME("Unsupported opcode %#x(%d) masked %#x, shader version %#x\n",
-            code, code, code & WINED3DSI_OPCODE_MASK, shader_version);
+            code, code, code & WINED3D_SM1_OPCODE_MASK, shader_version);
 
     return NULL;
 }
@@ -436,39 +451,39 @@ static const struct wined3d_sm1_opcode_info *shader_get_opcode(const struct wine
 static int shader_skip_opcode(const struct wined3d_sm1_data *priv,
         const struct wined3d_sm1_opcode_info *opcode_info, DWORD opcode_token)
 {
-   /* Shaders >= 2.0 may contain address tokens, but fortunately they
-    * have a useful length mask - use it here. Shaders 1.0 contain no such tokens */
-    return (priv->shader_version.major >= 2)
-            ? ((opcode_token & WINED3DSI_INSTLENGTH_MASK) >> WINED3DSI_INSTLENGTH_SHIFT) : opcode_info->param_count;
+    /* Shaders >= 2.0 may contain address tokens, but fortunately they
+     * have a useful length mask - use it here. Shaders 1.0 contain no such tokens */
+    DWORD length = (opcode_token & WINED3D_SM1_INSTRUCTION_LENGTH_MASK) >> WINED3D_SM1_INSTRUCTION_LENGTH_SHIFT;
+    return (priv->shader_version.major >= 2) ? length : opcode_info->param_count;
 }
 
 static void shader_parse_src_param(DWORD param, const struct wined3d_shader_src_param *rel_addr,
         struct wined3d_shader_src_param *src)
 {
-    src->reg.type = ((param & WINED3DSP_REGTYPE_MASK) >> WINED3DSP_REGTYPE_SHIFT)
-            | ((param & WINED3DSP_REGTYPE_MASK2) >> WINED3DSP_REGTYPE_SHIFT2);
+    src->reg.type = ((param & WINED3D_SM1_REGISTER_TYPE_MASK) >> WINED3D_SM1_REGISTER_TYPE_SHIFT)
+            | ((param & WINED3D_SM1_REGISTER_TYPE_MASK2) >> WINED3D_SM1_REGISTER_TYPE_SHIFT2);
     src->reg.data_type = WINED3D_DATA_FLOAT;
-    src->reg.idx[0].offset = param & WINED3DSP_REGNUM_MASK;
+    src->reg.idx[0].offset = param & WINED3D_SM1_REGISTER_NUMBER_MASK;
     src->reg.idx[0].rel_addr = rel_addr;
     src->reg.idx[1].offset = ~0U;
     src->reg.idx[1].rel_addr = NULL;
-    src->swizzle = (param & WINED3DSP_SWIZZLE_MASK) >> WINED3DSP_SWIZZLE_SHIFT;
-    src->modifiers = (param & WINED3DSP_SRCMOD_MASK) >> WINED3DSP_SRCMOD_SHIFT;
+    src->swizzle = (param & WINED3D_SM1_SWIZZLE_MASK) >> WINED3D_SM1_SWIZZLE_SHIFT;
+    src->modifiers = (param & WINED3D_SM1_SRC_MODIFIER_MASK) >> WINED3D_SM1_SRC_MODIFIER_SHIFT;
 }
 
 static void shader_parse_dst_param(DWORD param, const struct wined3d_shader_src_param *rel_addr,
         struct wined3d_shader_dst_param *dst)
 {
-    dst->reg.type = ((param & WINED3DSP_REGTYPE_MASK) >> WINED3DSP_REGTYPE_SHIFT)
-            | ((param & WINED3DSP_REGTYPE_MASK2) >> WINED3DSP_REGTYPE_SHIFT2);
+    dst->reg.type = ((param & WINED3D_SM1_REGISTER_TYPE_MASK) >> WINED3D_SM1_REGISTER_TYPE_SHIFT)
+            | ((param & WINED3D_SM1_REGISTER_TYPE_MASK2) >> WINED3D_SM1_REGISTER_TYPE_SHIFT2);
     dst->reg.data_type = WINED3D_DATA_FLOAT;
-    dst->reg.idx[0].offset = param & WINED3DSP_REGNUM_MASK;
+    dst->reg.idx[0].offset = param & WINED3D_SM1_REGISTER_NUMBER_MASK;
     dst->reg.idx[0].rel_addr = rel_addr;
     dst->reg.idx[1].offset = ~0U;
     dst->reg.idx[1].rel_addr = NULL;
     dst->write_mask = (param & WINED3D_SM1_WRITEMASK_MASK) >> WINED3D_SM1_WRITEMASK_SHIFT;
-    dst->modifiers = (param & WINED3DSP_DSTMOD_MASK) >> WINED3DSP_DSTMOD_SHIFT;
-    dst->shift = (param & WINED3DSP_DSTSHIFT_MASK) >> WINED3DSP_DSTSHIFT_SHIFT;
+    dst->modifiers = (param & WINED3D_SM1_DST_MODIFIER_MASK) >> WINED3D_SM1_DST_MODIFIER_SHIFT;
+    dst->shift = (param & WINED3D_SM1_DSTSHIFT_MASK) >> WINED3D_SM1_DSTSHIFT_SHIFT;
 }
 
 /* Read the parameters of an unrecognized opcode from the input stream
@@ -493,21 +508,19 @@ static int shader_skip_unrecognized(const struct wined3d_sm1_data *priv, const D
 
         FIXME("Unrecognized opcode param: token=0x%08x addr_token=0x%08x name=", token, addr_token);
 
-        if (token & WINED3DSHADER_ADDRMODE_RELATIVE) shader_parse_src_param(addr_token, NULL, &rel_addr);
+        if (token & WINED3D_SM1_ADDRESS_MODE_RELATIVE) shader_parse_src_param(addr_token, NULL, &rel_addr);
 
         if (!i)
         {
             struct wined3d_shader_dst_param dst;
 
-            shader_parse_dst_param(token, token & WINED3DSHADER_ADDRMODE_RELATIVE ? &rel_addr : NULL, &dst);
-            shader_dump_dst_param(&dst, &priv->shader_version);
+            shader_parse_dst_param(token, token & WINED3D_SM1_ADDRESS_MODE_RELATIVE ? &rel_addr : NULL, &dst);
         }
         else
         {
             struct wined3d_shader_src_param src;
 
-            shader_parse_src_param(token, token & WINED3DSHADER_ADDRMODE_RELATIVE ? &rel_addr : NULL, &src);
-            shader_dump_src_param(&src, &priv->shader_version);
+            shader_parse_src_param(token, token & WINED3D_SM1_ADDRESS_MODE_RELATIVE ? &rel_addr : NULL, &src);
         }
         FIXME("\n");
         ++i;
@@ -582,7 +595,7 @@ static void shader_sm1_read_src_param(struct wined3d_sm1_data *priv, const DWORD
     DWORD token, addr_token;
 
     *ptr += shader_get_param(priv, *ptr, &token, &addr_token);
-    if (token & WINED3DSHADER_ADDRMODE_RELATIVE)
+    if (token & WINED3D_SM1_ADDRESS_MODE_RELATIVE)
     {
         shader_parse_src_param(addr_token, NULL, src_rel_addr);
         shader_parse_src_param(token, src_rel_addr, src_param);
@@ -599,7 +612,7 @@ static void shader_sm1_read_dst_param(struct wined3d_sm1_data *priv, const DWORD
     DWORD token, addr_token;
 
     *ptr += shader_get_param(priv, *ptr, &token, &addr_token);
-    if (token & WINED3DSHADER_ADDRMODE_RELATIVE)
+    if (token & WINED3D_SM1_ADDRESS_MODE_RELATIVE)
     {
         shader_parse_src_param(addr_token, NULL, dst_rel_addr);
         shader_parse_dst_param(token, dst_rel_addr, dst_param);
@@ -612,12 +625,23 @@ static void shader_sm1_read_dst_param(struct wined3d_sm1_data *priv, const DWORD
 
 static void shader_sm1_read_semantic(const DWORD **ptr, struct wined3d_shader_semantic *semantic)
 {
+    enum wined3d_sm1_resource_type resource_type;
     DWORD usage_token = *(*ptr)++;
     DWORD dst_token = *(*ptr)++;
 
-    semantic->usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
-    semantic->usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
-    semantic->sampler_type = (usage_token & WINED3DSP_TEXTURETYPE_MASK) >> WINED3DSP_TEXTURETYPE_SHIFT;
+    semantic->usage = (usage_token & WINED3D_SM1_DCL_USAGE_MASK) >> WINED3D_SM1_DCL_USAGE_SHIFT;
+    semantic->usage_idx = (usage_token & WINED3D_SM1_DCL_USAGE_INDEX_MASK) >> WINED3D_SM1_DCL_USAGE_INDEX_SHIFT;
+    resource_type = (usage_token & WINED3D_SM1_RESOURCE_TYPE_MASK) >> WINED3D_SM1_RESOURCE_TYPE_SHIFT;
+    if (resource_type >= ARRAY_SIZE(resource_type_table))
+    {
+        FIXME("Unhandled resource type %#x.\n", resource_type);
+        semantic->resource_type = WINED3D_SHADER_RESOURCE_NONE;
+    }
+    else
+    {
+        semantic->resource_type = resource_type_table[resource_type];
+    }
+    semantic->resource_data_type = WINED3D_DATA_FLOAT;
     shader_parse_dst_param(dst_token, NULL, &semantic->reg);
 }
 
@@ -645,9 +669,9 @@ static void shader_sm1_read_comment(const DWORD **ptr)
     const char *comment;
     UINT size;
 
-    while ((token & WINED3DSI_OPCODE_MASK) == WINED3D_SM1_OP_COMMENT)
+    while ((token & WINED3D_SM1_OPCODE_MASK) == WINED3D_SM1_OP_COMMENT)
     {
-        size = (token & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
+        size = (token & WINED3D_SM1_COMMENT_SIZE_MASK) >> WINED3D_SM1_COMMENT_SIZE_SHIFT;
         comment = (const char *)++(*ptr);
         *ptr += size;
 
@@ -701,9 +725,9 @@ static void shader_sm1_read_instruction(void *data, const DWORD **ptr, struct wi
     }
 
     ins->handler_idx = opcode_info->handler_idx;
-    ins->flags = (opcode_token & WINED3D_OPCODESPECIFICCONTROL_MASK) >> WINED3D_OPCODESPECIFICCONTROL_SHIFT;
-    ins->coissue = opcode_token & WINED3DSI_COISSUE;
-    ins->predicate = opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED ? &priv->pred_param : NULL;
+    ins->flags = (opcode_token & WINED3D_SM1_INSTRUCTION_FLAGS_MASK) >> WINED3D_SM1_INSTRUCTION_FLAGS_SHIFT;
+    ins->coissue = opcode_token & WINED3D_SM1_COISSUE;
+    ins->predicate = opcode_token & WINED3D_SM1_INSTRUCTION_PREDICATED ? &priv->pred_param : NULL;
     ins->dst_count = opcode_info->dst_count ? 1 : 0;
     ins->dst = &priv->dst_param;
     ins->src_count = opcode_info->param_count - opcode_info->dst_count;
@@ -753,7 +777,7 @@ static BOOL shader_sm1_is_end(void *data, const DWORD **ptr)
 {
     shader_sm1_read_comment(ptr);
 
-    if (**ptr == WINED3DSP_END)
+    if (**ptr == WINED3D_SM1_END)
     {
         ++(*ptr);
         return TRUE;

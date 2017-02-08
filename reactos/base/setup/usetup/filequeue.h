@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/filequeue.h
+ * FILE:            base/setup/usetup/filequeue.h
  * PURPOSE:         File queue functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -51,55 +51,62 @@
 
 typedef PVOID HSPFILEQ;
 
-typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(PVOID Context,
-				   UINT Notification,
-				   UINT_PTR Param1,
-				   UINT_PTR Param2);
+typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(
+    PVOID Context,
+    UINT Notification,
+    UINT_PTR Param1,
+    UINT_PTR Param2);
 
 typedef struct _COPYCONTEXT
 {
-  LPCWSTR DestinationRootPath; /* Not owned by this structure */
-  LPCWSTR InstallPath; /* Not owned by this structure */
-  ULONG TotalOperations;
-  ULONG CompletedOperations;
-  PPROGRESSBAR ProgressBar;
-  PPROGRESSBAR MemoryBars[4];
+    LPCWSTR DestinationRootPath; /* Not owned by this structure */
+    LPCWSTR InstallPath; /* Not owned by this structure */
+    ULONG TotalOperations;
+    ULONG CompletedOperations;
+    PPROGRESSBAR ProgressBar;
+    PPROGRESSBAR MemoryBars[4];
 } COPYCONTEXT, *PCOPYCONTEXT;
 
 /* FUNCTIONS ****************************************************************/
 
-HSPFILEQ WINAPI
+HSPFILEQ
+WINAPI
 SetupOpenFileQueue(VOID);
 
-VOID WINAPI
+VOID
+WINAPI
 SetupCloseFileQueue(
-	IN HSPFILEQ QueueHandle);
-
-BOOL WINAPI
-SetupQueueCopyWNew(
-	IN HSPFILEQ QueueHandle,
-	IN PCWSTR SourceRootPath,
-	IN PCWSTR SourcePath,
-	IN PCWSTR SourceFileName,
-	IN PCWSTR SourceDescription,
-	IN PCWSTR SourceTagFile,
-	IN PCWSTR TargetDirectory,
-	IN PCWSTR TargetFileName,
-	IN DWORD CopyStyle);
+    IN HSPFILEQ QueueHandle);
 
 BOOL
-SetupQueueCopy(HSPFILEQ QueueHandle,
-         PCWSTR SourceCabinet,
-	       PCWSTR SourceRootPath,
-	       PCWSTR SourcePath,
-	       PCWSTR SourceFilename,
-	       PCWSTR TargetDirectory,
-	       PCWSTR TargetFilename);
+WINAPI
+SetupQueueCopyWNew(
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR SourceRootPath,
+    IN PCWSTR SourcePath,
+    IN PCWSTR SourceFileName,
+    IN PCWSTR SourceDescription,
+    IN PCWSTR SourceTagFile,
+    IN PCWSTR TargetDirectory,
+    IN PCWSTR TargetFileName,
+    IN DWORD CopyStyle);
 
-BOOL WINAPI
-SetupCommitFileQueueW(HWND Owner,
-		     HSPFILEQ QueueHandle,
-		     PSP_FILE_CALLBACK_W MsgHandler,
-		     PVOID Context);
+BOOL
+SetupQueueCopy(
+    HSPFILEQ QueueHandle,
+    PCWSTR SourceCabinet,
+    PCWSTR SourceRootPath,
+    PCWSTR SourcePath,
+    PCWSTR SourceFilename,
+    PCWSTR TargetDirectory,
+    PCWSTR TargetFilename);
+
+BOOL
+WINAPI
+SetupCommitFileQueueW(
+    HWND Owner,
+    HSPFILEQ QueueHandle,
+    PSP_FILE_CALLBACK_W MsgHandler,
+    PVOID Context);
 
 /* EOF */

@@ -18,6 +18,9 @@
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 ***************************************************************************/
 // TFTPServer.cpp
+#define MYBYTE unsigned char
+#define MYWORD unsigned short
+#define MYDWORD unsigned int
 
 #ifdef _MSC_VER
    #define strcasecmp _stricmp
@@ -41,40 +44,42 @@ struct tftpConnType
 {
     SOCKET sock;
     sockaddr_in addr;
-    DWORD server;
-    WORD port;
+    MYDWORD server;
+    MYWORD port;
+    bool loaded;
+    bool ready;
 };
 
 struct acknowledgement
 {
-    WORD opcode;
-    WORD block;
+    MYWORD opcode;
+    MYWORD block;
 };
 
 struct message
 {
-    WORD opcode;
+    MYWORD opcode;
     char buffer[514];
 };
 
 struct tftperror
 {
-    WORD opcode;
-    WORD errorcode;
+    MYWORD opcode;
+    MYWORD errorcode;
     char errormessage[512];
 };
 
 struct packet
 {
-    WORD opcode;
-    WORD block;
+    MYWORD opcode;
+    MYWORD block;
     char buffer;
 };
 
 struct data12
 {
-    DWORD rangeStart;
-    DWORD rangeEnd;
+    MYDWORD rangeStart;
+    MYDWORD rangeEnd;
 };
 
 struct request
@@ -84,15 +89,15 @@ struct request
     time_t expiry;
     SOCKET sock;
     SOCKET knock;
-    BYTE sockInd;
-    BYTE attempt;
+    MYBYTE sockInd;
+    MYBYTE attempt;
     char path[256];
     FILE *file;
     char *filename;
     char *mode;
     char *alias;
-    DWORD tsize;
-    DWORD fblock;
+    MYDWORD tsize;
+    MYDWORD fblock;
     int bytesReady;
     int bytesRecd;
     int bytesRead[2];
@@ -111,18 +116,27 @@ struct request
         message mesin;
         acknowledgement acin;
     };
-    WORD blksize;
-    WORD timeout;
-    WORD block;
-    WORD tblock;
+    MYWORD blksize;
+    MYWORD timeout;
+    MYWORD block;
+    MYWORD tblock;
+};
+
+struct data1
+{
+    tftpConnType tftpConn[MAX_SERVERS];
+    MYDWORD allServers[MAX_SERVERS];
+    MYDWORD staticServers[MAX_SERVERS];
+    MYDWORD listenServers[MAX_SERVERS];
+    MYWORD listenPorts[MAX_SERVERS];
+    SOCKET maxFD;
+    bool ready;
+    bool busy;
 };
 
 struct data2
 {
     WSADATA wsaData;
-    tftpConnType tftpConn[MAX_SERVERS];
-    DWORD servers[MAX_SERVERS];
-    WORD ports[MAX_SERVERS];
     home homes[8];
     FILE *logfile;
     data12 hostRanges[32];
@@ -131,31 +145,40 @@ struct data2
     char fileOverwrite;
     int minport;
     int maxport;
-    SOCKET maxFD;
-    BYTE logLevel;
+    MYDWORD failureCount;
+    MYBYTE logLevel;
+    bool ifspecified;
 };
 
 struct data15
 {
     union
     {
-        //DWORD ip;
+        //MYDWORD ip;
         unsigned ip:32;
-        BYTE octate[4];
+        MYBYTE octate[4];
     };
 };
 
 //Functions
-void runProg(void);
+bool detectChange();
+void closeConn();
+void getInterfaces(data1*);
+void runProg();
 void processRequest(LPVOID lpParam);
-char* myGetToken(char*, BYTE);
-void init(void);
+char* myGetToken(char*, MYBYTE);
+char* myTrim(char*, char*);
+void init(void*);
 bool cleanReq(request*);
-bool getSection(const char*, char*, BYTE, char*);
+bool addServer(MYDWORD*, MYDWORD);
+FILE* openSection(const char*, MYBYTE, char*);
+char* readSection(char*, FILE*);
+bool getSection(const char*, char*, MYBYTE, char*);
 bool isIP(char*s);
 char* myLower(char*);
 char* myUpper(char*);
-char* IP2String(char*, DWORD);
-void printWindowsError(void);
-void logMess(request*, BYTE);
-void logMess(char*, BYTE);
+char* IP2String(char*, MYDWORD);
+MYDWORD* findServer(MYDWORD*, MYDWORD);
+void printWindowsError();
+void logMess(request*, MYBYTE);
+void logMess(char*, MYBYTE);

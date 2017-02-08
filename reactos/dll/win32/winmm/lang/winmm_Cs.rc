@@ -1,0 +1,128 @@
+/*
+ * Czech resources for winmm
+ * Copyright 1999 Eric Pouech
+ * Copyright 2004 David Kredba
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+STRINGTABLE LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+BEGIN
+
+/* MMSYS errors */
+MMSYSERR_NOERROR, 		"Určený příkaz byl proveden."
+MMSYSERR_ERROR, 		"Nedefinovaná vnějąí chyba."
+MMSYSERR_BADDEVICEID, 		"Pouľité ID zařízení je mimo moľnosti systému."
+MMSYSERR_NOTENABLED, 		"Ovladač nebyl povolen."
+MMSYSERR_ALLOCATED, 		"Zařízení je dosud pouľíváno. Vyčkejte na jeho uvolnění a zkuste to znovu."
+MMSYSERR_INVALHANDLE, 		"Ukazatel na zařízení je neplatný."
+MMSYSERR_NODRIVER, 		"V systému není nainstalován ľádný ovladač !\n"
+MMSYSERR_NOMEM, 		"Není dost paměti pro tuto úlohu. Ukončete jednu nebo víc aplikací k získání více volné paměti a zkuste to znovu."
+MMSYSERR_NOTSUPPORTED, 		"Tato funkce není podporována. Pouľijte funkci Capabilities k určení, jaké funkce a zprávy ovladač podporuje."
+MMSYSERR_BADERRNUM, 		"Uvedené číslo chyby není v systému definováno."
+MMSYSERR_INVALFLAG, 		"Systémové funkci byl předán neplatný příznak."
+MMSYSERR_INVALPARAM, 		"Systémové funkci byl předán neplatný parametr."
+
+/* WAVE errors */
+WAVERR_BADFORMAT, 		"Tento formát není podporován nebo nemůľe být přeloľen. Pouľijte funkci Capabilities k určení podporovaného formátu."
+WAVERR_STILLPLAYING, 		"Nemohu provést tuto operaci dokud jsou data přehrávána. Zresetujte multimediální zařízení nebo vyčkejte na konec přehrávání."
+WAVERR_UNPREPARED, 		"Wave hlavička nebyla připravena. Pouľijte funkci Prepare k její konstrukci a pak to zkuste znovu."
+WAVERR_SYNC, 			"Nemohu otevřít zařízení bez pouľití příznaku WAVE_ALLOWSYNC. Pouľijte ho a zkuste to znovu."
+
+/* MIDI errors */
+MIDIERR_UNPREPARED, 		"MIDI hlavička nebyla připravena. Pouľijte funkci Prepare k její konstrukci a pak to zkuste znovu."
+MIDIERR_STILLPLAYING, 		"Nemohu provést tuto operaci dokud jsou data přehrávána. Zresetujte multimediální zařízení nebo vyčkejte na konec přehrávání."
+MIDIERR_NOMAP, 			"MIDI map nebyla nalezena. To můľe ukazovat na problém s ovladačem nebo je soubor MIDIMAP.CFG poąkozen či chybí."
+MIDIERR_NOTREADY, 		"Port přenáąí data na zařízení. Počkejte na dokončení přenosu a zkuste to znovu."
+MIDIERR_NODEVICE, 		"Současné nastavení MIDI mapperu se odkazuje na MIDI zařízení nepřítomné v systému. Upravte nastavení MIDI mapperu."
+MIDIERR_INVALIDSETUP, 		"Současné nastavení MIDI je poąkozené. Přepiąte soubor MIDIMAP.CFG ve ReactOS sloľce SYSTEM originálem a zkuste to znovu."
+
+/* MCI errors */
+MCIERR_INVALID_DEVICE_ID, 	"Neplatný identifikátor MCI zařízení. Pouľijte identifikátor vrácený při otevření MCI zařízení."
+MCIERR_UNRECOGNIZED_KEYWORD, 	"Ovladač nepřipouątí pouľitý parametr příkazu."
+MCIERR_UNRECOGNIZED_COMMAND,	"Ovladač nepřipouątí pouľitý příkaz."
+MCIERR_HARDWARE, 		"S multimediálním zařízením něco není v pořádku. Ujistěte se, ľe pracuje jak má, případně oslovte jeho výrobce."
+MCIERR_INVALID_DEVICE_NAME, 	"Uvedené zařízení není pouľitelné nebo není podporované MCI."
+MCIERR_OUT_OF_MEMORY, 		"Není dost paměti na provedení této úlohy. \nUkončete jednu nebo víc aplikací a zkuste to znovu."
+MCIERR_DEVICE_OPEN, 		"Jméno zařízení uľ je pouľito jako alias touto aplikací. Pouľijte unikátní alias."
+MCIERR_CANNOT_LOAD_DRIVER, 	"Vyskytl se nerozpoznatelný problém při zavádění uvedeného ovladače."
+MCIERR_MISSING_COMMAND_STRING, 	"Nebyl zadán ľádný příkaz."
+MCIERR_PARAM_OVERFLOW, 		"Výstupní řetězec se nevejde do výstupního zásobníku. Zvětąete velikost zásobníku."
+MCIERR_MISSING_STRING_ARGUMENT, "Tento příkaz vyľaduje textový parametr. Zadejte jeden."
+MCIERR_BAD_INTEGER, 		"Toto číslo je neplatné pro tento příkaz."
+MCIERR_PARSER_INTERNAL, 	"Ovladač zařízení vrátil neplatný návratový typ. Zeptejte se dodavatele zařízení na nový ovladač."
+MCIERR_DRIVER_INTERNAL, 	"Byl rozpoznán problém s ovladačem. Získejte od výrobce nový ovladač."
+MCIERR_MISSING_PARAMETER, 	"Tento příkaz vyľaduje parametr. Zadejte ho."
+MCIERR_UNSUPPORTED_FUNCTION, 	"Vámi pouľité MCI zařízení nepodporuje uvedený příkaz."
+MCIERR_FILE_NOT_FOUND, 		"Soubor nebyl nalezen. Ujistěte se, ľe cesta k souboru a jeho jméno jsou platné."
+MCIERR_DEVICE_NOT_READY, 	"Ovladač zařízení není připraven."
+MCIERR_INTERNAL, 		"Při inicialiazaci MCI doąlo k problémům. Zkuste zrestartovat ReactOS."
+MCIERR_DRIVER, 			"Ovladač má problémy a ukončil svou činnost. Ovladač nevrátil popis chyby."
+MCIERR_CANNOT_USE_ALL, 		"Nemohu pouľít 'all' jako jméno zařízení při provádění tohoto příkazu."
+MCIERR_MULTIPLE, 		"Vyskytly se chyby na více zařízeních. Zadejte příkazy zvláą» pro kaľdé jedno zařízeníify, aby bylo zjiątěno, které zařízení chybuje."
+MCIERR_EXTENSION_NOT_FOUND, 	"Nedokáľi přiřadit soubor s touto příponou vhodnému zařízení."
+MCIERR_OUTOFRANGE, 		"Uvedený parametr je mimo meze uvedeného příkazu."
+MCIERR_FLAGS_NOT_COMPATIBLE, 	"Tyto parametry nemohou být poľity spolu."
+MCIERR_FILE_NOT_SAVED, 		"Nemohu uloľit soubor. Ujistěte se, ľe je dost místa na disku nebo je-li Vaąe sí»ové připojení průchozí."
+MCIERR_DEVICE_TYPE_REQUIRED, 	"Nemohu najít poľadované zařízení. Ujistěte se, ľe je nainstalováno, nebo ľe jste jeho název uvedli přesně."
+MCIERR_DEVICE_LOCKED, 		"Toto zařízení je právě uzavíráno. Vyčkejte několik sekund a zkuste to znovu."
+MCIERR_DUPLICATE_ALIAS, 	"Tento alias je uľ pouľíván v této aplikaci. Pouľijte jiné jméno."
+MCIERR_BAD_CONSTANT, 		"Uvedený parametr je neplatný pro tento příkaz."
+MCIERR_MUST_USE_SHAREABLE, 	"Uvedené zařízení je uľ pouľíváno. Chcete-li ho sdílet, pouľijte 'shareable' parametr s kaľdým příkazem 'open'."
+MCIERR_MISSING_DEVICE_NAME, 	"Tento příkaz vyľaduje alias, soubor, ovladač nebo název zařízení. Uveďte jeden prosím."
+MCIERR_BAD_TIME_FORMAT, 	"Pouľitý formát času je neplatný. Nahlédněte do MCI dokumentace a zjistěte si platné formáty."
+MCIERR_NO_CLOSING_QUOTE, 	"Hodnota parametru není uzavřena uvozovkami. Doplňte je."
+MCIERR_DUPLICATE_FLAGS, 	"Parametr nebo hodnota byla zadána dvakrát. Zadejte jen jeden/jednu."
+MCIERR_INVALID_FILE, 		"Tento soubor nemůľe být přehrán na tomto MCI zařízení. Soubor můľe být poąkozen nebo nemá správný formát."
+MCIERR_NULL_PARAMETER_BLOCK, 	"MCI byl předán prázdný blok parametrů."
+MCIERR_UNNAMED_RESOURCE, 	"Nemohu uloľit soubor bez názvu. Zadejte název."
+MCIERR_NEW_REQUIRES_ALIAS, 	"Při pouľití parametru 'new' musíte zadat alias."
+MCIERR_NOTIFY_ON_AUTO_OPEN, 	"Nelze pouľít parametr 'notify' s automaticky otevřeným zařízením."
+MCIERR_NO_ELEMENT_ALLOWED, 	"Nelze pouľít soubor s tímto zařízením."
+MCIERR_NONAPPLICABLE_FUNCTION, 	"Nelze dokončit skupinu příkazů v tomto pořadí. Opravte pořadí příkazů a zkuste to znovu."
+MCIERR_ILLEGAL_FOR_AUTO_OPEN, 	"Tento příkaz nelze dokončit na automaticky otevřeném zařízení. Vyčkejte na zavření zařízení a zkuste to znovu."
+MCIERR_FILENAME_REQUIRED, 	"Název souboru je neplatný. Ujistěte se, ľe název souboru má 8 znaků následovaných tečkou a příponou."
+MCIERR_EXTRA_CHARACTERS, 	"Nelze zadat znaky za řetězec uzavřený uvozovkami."
+MCIERR_DEVICE_NOT_INSTALLED, 	"Toto zařízení není v systému nainstalováno. Nainstalujte ho v Ovládacím panelu, na záloľce Ovladače."
+MCIERR_GET_CD, 			"Nemohu přistoupit k uvedenému souboru nebo MCI zařízení. Změňte adresář nebo restartujte Váą počítač."
+MCIERR_SET_CD, 			"Nemohu přistoupit k uvedenému souboru nebo MCI zařízení, protoľe aplikace nemůľe změnit adresář."
+MCIERR_SET_DRIVE, 		"Nemohu přistoupit k uvedenému souboru nebo MCI zařízení, protoľe aplikace nemůľe změnit jednotku disku."
+MCIERR_DEVICE_LENGTH, 		"Určete zařízení nebo ovladač jehoľ název je kratąí neľ 79 znaků."
+MCIERR_DEVICE_ORD_LENGTH, 	"Určete zařízení nebo ovladač jehoľ název je kratąí neľ 69 znaků."
+MCIERR_NO_INTEGER, 		"Tento příkaz vyľaduje celočíselný parametr. Pouľijte ho prosím."
+MCIERR_WAVE_OUTPUTSINUSE, 	"Vąechna wave zařízení, která by mohla přehrát soubory s tímto formátem jsou pouľívána. Vyčkejte na uvolnění zařízení a zkuste to znovu."
+MCIERR_WAVE_SETOUTPUTINUSE, 	"Nemohu nastavit toto wave zařízení na playback, jelikoľ je pouľíváno. Vyčkejte na uvolnění zařízení a zkuste to znovu."
+MCIERR_WAVE_INPUTSINUSE, 	"Vąechna wave zařízení, která by mohla nahrávat oubory s tímto formátem jsou pouľívána. Vyčkejte na uvolnění zařízení a zkuste to znovu."
+MCIERR_WAVE_SETINPUTINUSE, 	"Nemohu nastavit toto wave zařízení na nahrávání, jelikoľ je pouľíváno. Vyčkejte na uvolnění zařízení a zkuste to znovu."
+MCIERR_WAVE_OUTPUTUNSPECIFIED,	"Jakékoliv waveform kompatibilní přehrávací zařízení můľe být pouľito."
+MCIERR_WAVE_INPUTUNSPECIFIED, 	"Jakékoliv waveform kompatibilní nahrávací zařízení můľe být pouľito."
+MCIERR_WAVE_OUTPUTSUNSUITABLE, 	"Není nainstalováno ľádné wave zařízení, které by bylo schopno přehrát soubory v tomto formátu. Pouľijte záloľku Ovladače k instalaci wave zařízení."
+MCIERR_WAVE_SETOUTPUTUNSUITABLE,"Přehrávací zařízení nedokázalo rozpoznat formát souboru."
+MCIERR_WAVE_INPUTSUNSUITABLE, 	"Není nainstalováno ľádné wave zařízení, které by bylo schopno nahrát soubory v tomto formátu. Pouľijte záloľku Ovladače k instalaci wave zařízení."
+MCIERR_WAVE_SETINPUTUNSUITABLE, "Zařízení, ze kterého zkouąíte nahrávat, nedokáľe rozpoznat formát výstupního souboru."
+MCIERR_NO_WINDOW, 		"Okno display chybí."
+MCIERR_CREATEWINDOW, 		"Nemohu vytvořit nebo pouľít okno."
+MCIERR_FILE_READ, 		"Nemohu přečíst zadaný soubor. Ujistěte se, ľe soubor stále existuje a zkontrolujte svůj disk nebo sí»ovou konektivitu."
+MCIERR_FILE_WRITE, 		"Nemohu zapisovat do zadaného souboru. Ujistěte se, ľe máte dost místa na disku nebo zda jste připojeni k síti."
+MCIERR_SEQ_DIV_INCOMPATIBLE, 	"Formáty času ""song pointer"" a SMPTE jsou vzájemně výlučné. Nemůľete je pouľít současně."
+MCIERR_SEQ_NOMIDIPRESENT, 	"V systému nejsou nainstalovány MIDI zařízení. Nainstalujte je ze záloľky Ovladač v Ovládacím panelu."
+MCIERR_SEQ_PORT_INUSE, 		"Tento MIDI port je pouľíván. Vyčkejte na jeho uvolnění; pak to zkuste znovu."
+MCIERR_SEQ_PORT_MAPNODEVICE, 	"Nastavení MIDI mapperu odkazuje na MIDI zařízení, které není v systému nainstalováno. Nainstalujte ho pomocí záloľky MIDI Mapper v Ovládacím panelu."
+MCIERR_SEQ_PORT_MISCERROR, 	"Nastala chyba při práci s tímto portem."
+MCIERR_SEQ_PORT_NONEXISTENT, 	"Toto MIDI zařízení není nainstalováno v systému. Nainstalujte ho v Ovládacím panelu na záloľce Driver."
+MCIERR_SEQ_PORTUNSPECIFIED, 	"Systém nezná tento MIDI port."
+MCIERR_SEQ_TIMER, 		"Vąechny časovače multimédií jsou pouľívány aplikacemi. Ukončete jednu z těchto aplikací a zkuste to znovu."
+
+END

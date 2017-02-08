@@ -30,131 +30,176 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *****************************************************************/
-
-
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
-		IN ULONG DiskSector,
-		IN ULONG SectorCount,
-		IN ULONG SectorSize,
-		IN OUT PUCHAR Buffer,
-		IN BOOLEAN Override)
+NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
+             IN LONGLONG StartingOffset,
+             IN ULONG Length,
+             IN ULONG SectorSize,
+             IN OUT PUCHAR Buffer,
+             IN BOOLEAN Override)
 {
-  PIO_STACK_LOCATION Stack;
-  IO_STATUS_BLOCK IoStatus;
-  LARGE_INTEGER Offset;
-  ULONG BlockSize;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+    IO_STATUS_BLOCK IoStatus;
+    LARGE_INTEGER Offset;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    ULONGLONG RealReadOffset;
+    ULONG RealLength;
+    BOOLEAN AllocatedBuffer = FALSE;
+    PUCHAR ReadBuffer = Buffer;
 
-  KeInitializeEvent(&Event,
-		    NotificationEvent,
-		    FALSE);
+    DPRINT("NtfsReadDisk(%p, %I64x, %u, %u, %p, %d)\n", DeviceObject, StartingOffset, Length, SectorSize, Buffer, Override);
 
-  Offset.QuadPart = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
-  BlockSize = SectorCount * SectorSize;
+    KeInitializeEvent(&Event,
+                      NotificationEvent,
+                      FALSE);
 
-  DPRINT("NtfsReadSectors(DeviceObject %p, DiskSector %d, Buffer %p)\n",
-	 DeviceObject, DiskSector, Buffer);
-  DPRINT("Offset %I64x BlockSize %ld\n",
-	 Offset.QuadPart,
-	 BlockSize);
+    RealReadOffset = (ULONGLONG)StartingOffset;
+    RealLength = Length;
 
-  DPRINT("Building synchronous FSD Request...\n");
-  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-				     DeviceObject,
-				     Buffer,
-				     BlockSize,
-				     &Offset,
-				     &Event,
-				     &IoStatus);
-  if (Irp == NULL)
+    if ((RealReadOffset % SectorSize) != 0 || (RealLength % SectorSize) != 0)
     {
-      DPRINT("IoBuildSynchronousFsdRequest failed\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
+        RealReadOffset = ROUND_DOWN(StartingOffset, SectorSize);
+        RealLength = ROUND_UP(Length, SectorSize);
+
+        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + SectorSize, TAG_NTFS);
+        if (ReadBuffer == NULL)
+        {
+            DPRINT1("Not enough memory!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        AllocatedBuffer = TRUE;
     }
 
-  if (Override)
+    Offset.QuadPart = RealReadOffset;
+
+    DPRINT("Building synchronous FSD Request...\n");
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+                                       DeviceObject,
+                                       ReadBuffer,
+                                       RealLength,
+                                       &Offset,
+                                       &Event,
+                                       &IoStatus);
+    if (Irp == NULL)
     {
-      Stack = IoGetNextIrpStackLocation(Irp);
-      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+        DPRINT("IoBuildSynchronousFsdRequest failed\n");
+
+        if (AllocatedBuffer)
+        {
+            ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+        }
+
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  DPRINT("Calling IO Driver... with irp %p\n", Irp);
-  Status = IoCallDriver(DeviceObject, Irp);
-
-  DPRINT("Waiting for IO Operation for %p\n", Irp);
-  if (Status == STATUS_PENDING)
+    if (Override)
     {
-      DPRINT("Operation pending\n");
-      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status... for %p\n", Irp);
-      Status = IoStatus.Status;
+        Stack = IoGetNextIrpStackLocation(Irp);
+        Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-  DPRINT("NtfsReadSectors() done (Status %x)\n", Status);
+    DPRINT("Calling IO Driver... with irp %p\n", Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
 
-  return Status;
+    DPRINT("Waiting for IO Operation for %p\n", Irp);
+    if (Status == STATUS_PENDING)
+    {
+        DPRINT("Operation pending\n");
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        DPRINT("Getting IO Status... for %p\n", Irp);
+        Status = IoStatus.Status;
+    }
+
+    if (AllocatedBuffer)
+    {
+        if (NT_SUCCESS(Status))
+        {
+            RtlCopyMemory(Buffer, ReadBuffer + (StartingOffset - RealReadOffset), Length);
+        }
+
+        ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+    }
+
+    DPRINT("NtfsReadDisk() done (Status %x)\n", Status);
+
+    return Status;
+}
+
+NTSTATUS
+NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
+                IN ULONG DiskSector,
+                IN ULONG SectorCount,
+                IN ULONG SectorSize,
+                IN OUT PUCHAR Buffer,
+                IN BOOLEAN Override)
+{
+    LONGLONG Offset;
+    ULONG BlockSize;
+
+    Offset = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
+    BlockSize = SectorCount * SectorSize;
+
+    return NtfsReadDisk(DeviceObject, Offset, BlockSize, SectorSize, Buffer, Override);
 }
 
 
 NTSTATUS
 NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
-		    IN ULONG ControlCode,
-		    IN PVOID InputBuffer,
-		    IN ULONG InputBufferSize,
-		    IN OUT PVOID OutputBuffer,
-		    IN OUT PULONG OutputBufferSize,
-		    IN BOOLEAN Override)
+                    IN ULONG ControlCode,
+                    IN PVOID InputBuffer,
+                    IN ULONG InputBufferSize,
+                    IN OUT PVOID OutputBuffer,
+                    IN OUT PULONG OutputBufferSize,
+                    IN BOOLEAN Override)
 {
-  PIO_STACK_LOCATION Stack;
-  IO_STATUS_BLOCK IoStatus;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+    IO_STATUS_BLOCK IoStatus;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
 
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-  DPRINT("Building device I/O control request ...\n");
-  Irp = IoBuildDeviceIoControlRequest(ControlCode,
-				      DeviceObject,
-				      InputBuffer,
-				      InputBufferSize,
-				      OutputBuffer,
-				      (OutputBufferSize) ? *OutputBufferSize : 0,
-				      FALSE,
-				      &Event,
-				      &IoStatus);
-  if (Irp == NULL)
+    DPRINT("Building device I/O control request ...\n");
+    Irp = IoBuildDeviceIoControlRequest(ControlCode,
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferSize,
+                                        OutputBuffer,
+                                        (OutputBufferSize) ? *OutputBufferSize : 0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatus);
+    if (Irp == NULL)
     {
-      DPRINT("IoBuildDeviceIoControlRequest() failed\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
+        DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  if (Override)
+    if (Override)
     {
-      Stack = IoGetNextIrpStackLocation(Irp);
-      Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+        Stack = IoGetNextIrpStackLocation(Irp);
+        Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-  DPRINT("Calling IO Driver... with irp %p\n", Irp);
-  Status = IoCallDriver(DeviceObject, Irp);
-  if (Status == STATUS_PENDING)
+    DPRINT("Calling IO Driver... with irp %p\n", Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
     {
-      KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-      Status = IoStatus.Status;
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        Status = IoStatus.Status;
     }
 
-  if (OutputBufferSize)
+    if (OutputBufferSize)
     {
-      *OutputBufferSize = IoStatus.Information;
+        *OutputBufferSize = IoStatus.Information;
     }
 
-  return Status;
+    return Status;
 }
 
 /* EOF */

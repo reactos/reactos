@@ -5,8 +5,10 @@
  */
 #include <math.h>
 
+_Check_return_
 float
-_sqrtf(float x)
+__cdecl
+sqrtf(float x)
 {
-   return ((float)sqrt((double)x));
+   return (float)sqrt((double)x);
 }

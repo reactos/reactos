@@ -1,21 +1,26 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Feb, 2008; Jul, 2012)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Feb, 2008; Jul, 2012)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Instaluj"
-	IDS_PRINT, "Drukuj"
-	IDS_STRING, "Zażółć gęślą Jaźń żółwiątkiem. 1234567890. !@#$%^&*()_+=-/?"
-	IDS_OPEN, "Otwórz czcionkę..."
-	IDS_ERROR, "Błąd"
-	IDS_ERROR_NOMEM, "Brakuje pamięci do ukończenia tej operacji."
-	IDS_ERROR_NOFONT, "Plik %1 nie jest poprawnym plikiem czcionki."
-	IDS_ERROR_NOCLASS, "Nie udało się zainicjować klasy window."
+    IDS_INSTALL "Instaluj"
+    IDS_PRINT "Drukuj"
+    IDS_STRING "Zażółć gęślą Jaźń żółwiątkiem. 1234567890. !@#$%^&*()_+=-/?"
+    IDS_OPEN "Otwórz czcionkę..."
+    IDS_ERROR "Błąd"
+    IDS_ERROR_NOMEM "Brakuje pamięci do ukończenia tej operacji."
+    IDS_ERROR_NOFONT "Plik %1 nie jest poprawnym plikiem czcionki."
+    IDS_ERROR_NOCLASS "Nie udało się zainicjować klasy window."
+    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+TrueType Font (*.ttf)\0*.ttf\0\
+OpenType Font (*.otf)\0*.otf\0\
+Font File (*.fon)\0*.fon\0\
+All Files (*.*)\0*.*\0"
 END

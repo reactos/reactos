@@ -9,6 +9,7 @@
 #define _sxprintf wvsnprintfW
 #define USE_COUNT 1
 #define USE_VARARGS 1
+#define _UNICODE
 #define USER32_WSPRINTF
 
 #include "_sxprintf.c"

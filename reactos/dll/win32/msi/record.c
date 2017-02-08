@@ -18,31 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
-//#include "msi.h"
-//#include "msiquery.h"
 #include "msipriv.h"
-//#include "objidl.h"
-//#include "winnls.h"
-#include <ole2.h>
-
-#include <winreg.h>
-#include <shlwapi.h>
-
-//#include "query.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
@@ -382,7 +358,7 @@ BOOL WINAPI MsiRecordIsNull( MSIHANDLE handle, UINT iField )
 
     rec = msihandle2msiinfo( handle, MSIHANDLETYPE_RECORD );
     if( !rec )
-        return 0;
+        return FALSE;
     msiobj_lock( &rec->hdr );
     ret = MSI_RecordIsNull( rec, iField );
     msiobj_unlock( &rec->hdr );
@@ -687,7 +663,7 @@ static UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
         hGlob = GlobalAlloc(GMEM_FIXED, sz);
         if( hGlob )
         {
-            BOOL r = ReadFile(handle, hGlob, sz, &read, NULL);
+            BOOL r = ReadFile(handle, hGlob, sz, &read, NULL) && read == sz;
             if( !r )
             {
                 GlobalFree(hGlob);

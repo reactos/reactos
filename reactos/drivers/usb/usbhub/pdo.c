@@ -11,7 +11,15 @@
 
 #include "usbhub.h"
 
+#include <wdmguid.h>
+
+#define NDEBUG
+#include <debug.h>
+
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
+
+DEFINE_GUID(GUID_DEVINTERFACE_USB_DEVICE,
+			0xA5DCBF10L, 0x6530, 0x11D2, 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED);
 
 NTSTATUS
 NTAPI
@@ -41,6 +49,11 @@ UrbCompletion(
     IoCompleteRequest(OriginalIrp, IO_NO_INCREMENT);
 
     //
+    // Free our allocated IRP
+    //
+    IoFreeIrp(Irp);
+
+    //
     // Return this status so the IO Manager doesnt mess with the Irp
     //
     return STATUS_MORE_PROCESSING_REQUIRED;
@@ -54,7 +67,6 @@ FowardUrbToRootHub(
     OUT PVOID OutParameter1,
     OUT PVOID OutParameter2)
 {
-    NTSTATUS Status;
     PIRP ForwardIrp;
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION ForwardStack, CurrentStack;
@@ -115,7 +127,7 @@ FowardUrbToRootHub(
                            TRUE,
                            TRUE);
 
-    Status = IoCallDriver(RootHubDeviceObject, ForwardIrp);
+    IoCallDriver(RootHubDeviceObject, ForwardIrp);
 
     //
     // Always return pending as the completion routine will take care of it
@@ -194,8 +206,6 @@ USBHUB_PdoHandleInternalDeviceControl(
     {
         case IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO:
         {
-            PHUB_DEVICE_EXTENSION DeviceExtension;
-
             DPRINT("IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
             if (Irp->AssociatedIrp.SystemBuffer == NULL
                 || Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
@@ -205,7 +215,6 @@ USBHUB_PdoHandleInternalDeviceControl(
             else
             {
                 PVOID* pHubPointer;
-                DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
                 pHubPointer = (PVOID*)Irp->AssociatedIrp.SystemBuffer;
                 // FIXME
@@ -241,22 +250,22 @@ USBHUB_PdoHandleInternalDeviceControl(
                 // Debugging only
                 //
                 case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
-                    DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE\n");
+                    DPRINT("URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE\n");
                     break;
                 case URB_FUNCTION_CLASS_DEVICE:
-                    DPRINT1("URB_FUNCTION_CLASS_DEVICE\n");
+                    DPRINT("URB_FUNCTION_CLASS_DEVICE\n");
                     break;
                 case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
-                    DPRINT1("URB_FUNCTION_GET_STATUS_FROM_DEVICE\n");
+                    DPRINT("URB_FUNCTION_GET_STATUS_FROM_DEVICE\n");
                     break;
                 case URB_FUNCTION_SELECT_CONFIGURATION:
-                    DPRINT1("URB_FUNCTION_SELECT_CONFIGURATION\n");
+                    DPRINT("URB_FUNCTION_SELECT_CONFIGURATION\n");
                     break;
                 case URB_FUNCTION_SELECT_INTERFACE:
-                    DPRINT1("URB_FUNCTION_SELECT_INTERFACE\n");
+                    DPRINT("URB_FUNCTION_SELECT_INTERFACE\n");
                     break;
                 case URB_FUNCTION_CLASS_OTHER:
-                    DPRINT1("URB_FUNCTION_CLASS_OTHER\n");
+                    DPRINT("URB_FUNCTION_CLASS_OTHER\n");
                     break;
                 case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
                 {
@@ -277,7 +286,7 @@ USBHUB_PdoHandleInternalDeviceControl(
 
                 }
                 case URB_FUNCTION_CLASS_INTERFACE:
-                    DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
+                    DPRINT("URB_FUNCTION_CLASS_INTERFACE\n");
                     break;
                 case URB_FUNCTION_VENDOR_DEVICE:
                     DPRINT("URB_FUNCTION_VENDOR_DEVICE\n");
@@ -293,7 +302,6 @@ USBHUB_PdoHandleInternalDeviceControl(
             //
             Status = FowardUrbToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Irp, Urb, NULL);
             return Status;
-            break;
         }
         //
         // FIXME: Can these be sent to RootHub?
@@ -304,7 +312,7 @@ USBHUB_PdoHandleInternalDeviceControl(
         case IOCTL_INTERNAL_USB_GET_PORT_STATUS:
         {
             PORT_STATUS_CHANGE PortStatus;
-            LONG PortId;
+            ULONG PortId;
             PUCHAR PortStatusBits;
 
             PortStatusBits = (PUCHAR)Stack->Parameters.Others.Argument1;
@@ -408,8 +416,10 @@ USBHUB_PdoStartDevice(
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
 
     //
-    // FIXME: Fow now assume success
+    // register device interface
     //
+    IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_DEVICE, NULL, &ChildDeviceExtension->SymbolicLinkName);
+    IoSetDeviceInterfaceState(&ChildDeviceExtension->SymbolicLinkName, TRUE);
 
     UNIMPLEMENTED
     return STATUS_SUCCESS;
@@ -497,10 +507,8 @@ USBHUB_PdoQueryDeviceText(
     PUNICODE_STRING SourceString = NULL;
     PWCHAR ReturnString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    LCID LocaleId;
 
     DeviceTextType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.DeviceTextType;
-    LocaleId = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.LocaleId;
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //

@@ -6,14 +6,22 @@
  * PROGRAMMER:      Andrew Greenwood
  *                  Johannes Anderwald
  */
+
 #include "wdmaud.h"
+
+#include <stdio.h>
+
+#define NDEBUG
+#include <debug.h>
+
+#define TAG_WDMAUD 'DMDW'
 
 PVOID
 AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_WDMAUD);
     if (!Item)
         return Item;
 
@@ -414,7 +422,7 @@ OpenDevice(
 
     if (FileObject)
     {
-        Status = ObReferenceObjectByHandle(hDevice, FILE_READ_DATA | FILE_WRITE_DATA, IoFileObjectType, KernelMode, (PVOID*)FileObject, NULL);
+        Status = ObReferenceObjectByHandle(hDevice, FILE_READ_DATA | FILE_WRITE_DATA, *IoFileObjectType, KernelMode, (PVOID*)FileObject, NULL);
 
         if (!NT_SUCCESS(Status))
         {

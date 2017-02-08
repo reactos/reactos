@@ -20,9 +20,6 @@
  */
 
 #include "private_mciavi.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 
 static BOOL MCIAVI_GetInfoAudio(WINE_MCIAVI* wma, const MMCKINFO* mmckList, MMCKINFO *mmckStream)
 {
@@ -190,8 +187,11 @@ static BOOL	MCIAVI_AddFrame(WINE_MCIAVI* wma, LPMMCKINFO mmck,
      */
     twocc = TWOCCFromFOURCC(mmck->ckid);
     if (twocc == TWOCCFromFOURCC(wma->inbih->biCompression))
-	twocc = cktypeDIBcompressed;
-    
+        twocc = cktypeDIBcompressed;
+    /* Also detect some chunks that seem to be used by Indeo videos where the chunk is named
+     * after the codec. */
+    else if (twocc == LOWORD(wma->ash_video.fccHandler))
+        twocc = cktypeDIBcompressed;
     switch (twocc) {
     case cktypeDIBbits:
     case cktypeDIBcompressed:
@@ -398,8 +398,8 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
 	mmioAscend(wma->hFile, &mmckInfo, 0);
     }
     if (alb.numVideoFrames != wma->dwPlayableVideoFrames) {
-	WARN("Found %d video frames (/%d), reducing playable frames\n",
-	     alb.numVideoFrames, wma->dwPlayableVideoFrames);
+	WARN("AVI header says %d frames, we found %d video frames, reducing playable frames\n",
+	     wma->dwPlayableVideoFrames, alb.numVideoFrames);
 	wma->dwPlayableVideoFrames = alb.numVideoFrames;
     }
     wma->dwPlayableAudioBlocks = alb.numAudioBlocks;
@@ -600,20 +600,20 @@ void MCIAVI_PlayAudioBlocks(WINE_MCIAVI* wma, unsigned nHdr, LPWAVEHDR waveHdr)
     }
 }
 
-LRESULT MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC)
+double MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC)
 {
     void* 		pBitmapData;
     LPBITMAPINFO	pBitmapInfo;
 
     if (!hDC || !wma->inbih)
-	return TRUE;
+	return 0;
 
     TRACE("Painting frame %u (cached %u)\n", wma->dwCurrVideoFrame, wma->dwCachedFrame);
 
     if (wma->dwCurrVideoFrame != wma->dwCachedFrame)
     {
         if (!wma->lpVideoIndex[wma->dwCurrVideoFrame].dwOffset)
-	    return FALSE;
+	    return 0;
 
         if (wma->lpVideoIndex[wma->dwCurrVideoFrame].dwSize)
         {
@@ -626,7 +626,7 @@ LRESULT MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC)
                                          wma->outbih, wma->outdata) != ICERR_OK)
             {
                 WARN("Decompression error\n");
-                return FALSE;
+                return 0;
             }
         }
 
@@ -648,5 +648,5 @@ LRESULT MCIAVI_PaintFrame(WINE_MCIAVI* wma, HDC hDC)
                   wma->source.right - wma->source.left, wma->source.bottom - wma->source.top,
                   pBitmapData, pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 
-    return TRUE;
+    return (wma->ash_video.dwScale / (double)wma->ash_video.dwRate) * 1000000;
 }

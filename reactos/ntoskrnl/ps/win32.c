@@ -18,13 +18,13 @@
 PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout = NULL;
 PKWIN32_THREAD_CALLOUT PspW32ThreadCallout = NULL;
 PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch = NULL;
-extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
-extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
-extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose;
-extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose;
-extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
-extern PKWIN32_OPENMETHOD_CALLOUT ExpDesktopObjectOpen;
-extern PKWIN32_CLOSEMETHOD_CALLOUT ExpDesktopObjectClose;
+extern PKWIN32_SESSION_CALLOUT ExpWindowStationObjectParse;
+extern PKWIN32_SESSION_CALLOUT ExpWindowStationObjectDelete;
+extern PKWIN32_SESSION_CALLOUT ExpWindowStationObjectOkToClose;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectOkToClose;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectDelete;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectOpen;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectClose;
 extern PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -82,13 +82,9 @@ PsConvertToGuiThread(VOID)
         MmDeleteKernelStack(OldStack, FALSE);
     }
 
-    /* This check is bizare. Check out win32k later */
-    if (!Process->Win32Process)
-    {
-        /* Now tell win32k about us */
-        Status = PspW32ProcessCallout(Process, TRUE);
-        if (!NT_SUCCESS(Status)) return Status;
-    }
+    /* Always do the process callout! */
+    Status = PspW32ProcessCallout(Process, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the new service table */
     Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;
@@ -127,60 +123,6 @@ PsEstablishWin32Callouts(IN PWIN32_CALLOUTS_FPNS CalloutData)
     ExpDesktopObjectClose = CalloutData->DesktopCloseProcedure;
     PopEventCallout = CalloutData->PowerEventCallout;
     KeGdiFlushUserBatch = CalloutData->BatchFlushRoutine;
-}
-
-NTSTATUS
-NTAPI
-NtW32Call(IN ULONG RoutineIndex,
-          IN PVOID Argument,
-          IN ULONG ArgumentLength,
-          OUT PVOID* Result,
-          OUT PULONG ResultLength)
-{
-    PVOID RetResult;
-    ULONG RetResultLength;
-    NTSTATUS Status;
-    ASSERT(KeGetPreviousMode() != KernelMode);
-
-    /* Enter SEH for probing */
-    _SEH2_TRY
-    {
-        /* Probe arguments */
-        ProbeForWritePointer(Result);
-        ProbeForWriteUlong(ResultLength);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Return the exception code */
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    /* Call kernel function */
-    Status = KeUserModeCallback(RoutineIndex,
-                                Argument,
-                                ArgumentLength,
-                                &RetResult,
-                                &RetResultLength);
-    if (NT_SUCCESS(Status))
-    {
-        /* Enter SEH for write back */
-        _SEH2_TRY
-        {
-            /* Return results to user mode */
-            *Result = RetResult;
-            *ResultLength = RetResultLength;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-    }
-
-    /* Return the result */
-    return Status;
 }
 
 /* EOF */

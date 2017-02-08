@@ -16,19 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
-#include <commctrl.h>
+#pragma once
 
-#define IDS_HTMLDISABLED    7500
 #define IDS_HTMLDOCUMENT    7501
-#define IDS_DOWNLOADING     7502
-#define IDS_INSTALLING      7503
 
-#define ID_DWL_DIALOG       7600
-#define ID_DWL_PROGRESS     7601
-#define ID_DWL_INSTALL      7602
-#define ID_DWL_STATUS       7603
+#define IDS_STATUS_FIRST            7550
+#define IDS_STATUS_DOWNLOADINGFROM  IDS_STATUS_FIRST
+#define IDS_STATUS_DONE             (IDS_STATUS_FIRST+1)
+#define IDS_STATUS_LAST             IDS_STATUS_DONE
 
 #define ID_PROMPT_DIALOG    7700
 #define ID_PROMPT_PROMPT    7701
@@ -40,23 +35,6 @@
 #define IDS_PRINT_FOOTER_TEMPLATE  8404
 
 #define IDR_BROWSE_CONTEXT_MENU  24641
-
-#define IDM_TRACETAGS           6004
-#define IDM_RESOURCEFAILURES    6005
-#define IDM_DUMPTRACKINGINFO    6006
-#define IDM_DEBUGBREAK          6007
-#define IDM_DEBUGVIEW           6008
-#define IDM_DUMPTREE            6009
-#define IDM_DUMPLINES           6010
-
-#define IDM_SAVEHTML            6012
-#define IDM_MEMORYMONITOR       6013
-#define IDM_PERFORMANCEMETERS   6014
-#define IDM_DUMPDISPLAYTREE     6015
-#define IDM_DUMPFORMATCACHES    6016
-#define IDM_DUMPLAYOUTRECTS     6017
-
-#define _IDM_REFRESH            6042
 
 #define IDD_HYPERLINK           8000
 

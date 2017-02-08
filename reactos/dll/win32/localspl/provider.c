@@ -18,28 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winreg.h>
-#include <winspool.h>
-#include <winuser.h>
-#include <ddk/winddiui.h>
-#include <ddk/winsplp.h>
-
-#include <wine/list.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
 #include "localspl_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(localspl);
+#include <shlwapi.h>
+#include <ddk/winddiui.h>
 
 /* ############################### */
 
@@ -101,9 +83,7 @@ static const WCHAR bs_ports_bsW[] = {'\\','P','o','r','t','s','\\',0};
 static const WCHAR configuration_fileW[] = {'C','o','n','f','i','g','u','r','a','t','i','o','n',' ','F','i','l','e',0};
 static const WCHAR datatypeW[] = {'D','a','t','a','t','y','p','e',0};
 static const WCHAR data_fileW[] = {'D','a','t','a',' ','F','i','l','e',0};
-static const WCHAR default_devmodeW[] = {'D','e','f','a','u','l','t',' ','D','e','v','M','o','d','e',0};
 static const WCHAR dependent_filesW[] = {'D','e','p','e','n','d','e','n','t',' ','F','i','l','e','s',0};
-static const WCHAR descriptionW[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR driverW[] = {'D','r','i','v','e','r',0};
 static const WCHAR emptyW[] = {0};
 static const WCHAR fmt_driversW[] = { 'S','y','s','t','e','m','\\',
@@ -118,13 +98,10 @@ static const WCHAR fmt_printprocessorsW[] = { 'S','y','s','t','e','m','\\',
                                   'P','r','i','n','t','\\',
                                   'E','n','v','i','r','o','n','m','e','n','t','s','\\','%','s','\\',
                                   'P','r','i','n','t',' ','P','r','o','c','e','s','s','o','r','s',0 };
-static const WCHAR hardwareidW[] = {'H','a','r','d','w','a','r','e','I','D',0};
 static const WCHAR help_fileW[] = {'H','e','l','p',' ','F','i','l','e',0};
 static const WCHAR ia64_envnameW[] = {'W','i','n','d','o','w','s',' ','I','A','6','4',0};
 static const WCHAR ia64_subdirW[] = {'i','a','6','4',0};
 static const WCHAR localportW[] = {'L','o','c','a','l',' ','P','o','r','t',0};
-static const WCHAR locationW[] = {'L','o','c','a','t','i','o','n',0};
-static const WCHAR manufacturerW[] = {'M','a','n','u','f','a','c','t','u','r','e','r',0};
 static const WCHAR monitorW[] = {'M','o','n','i','t','o','r',0};
 static const WCHAR monitorsW[] = {'S','y','s','t','e','m','\\',
                                 'C','u', 'r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
@@ -132,17 +109,14 @@ static const WCHAR monitorsW[] = {'S','y','s','t','e','m','\\',
                                 'P','r','i','n','t','\\',
                                 'M','o','n','i','t','o','r','s','\\',0};
 static const WCHAR monitorUIW[] = {'M','o','n','i','t','o','r','U','I',0};
-static const WCHAR nameW[] = {'N','a','m','e',0};
-static const WCHAR oem_urlW[] = {'O','E','M',' ','U','r','l',0};
-static const WCHAR parametersW[] = {'P','a','r','a','m','e','t','e','r','s',0};
-static const WCHAR portW[] = {'P','o','r','t',0};
 static const WCHAR previous_namesW[] = {'P','r','e','v','i','o','u','s',' ','N','a','m','e','s',0};
 static const WCHAR printersW[] = {'S','y','s','t','e','m','\\',
                                   'C','u', 'r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
                                   'C','o','n','t','r','o','l','\\',
                                   'P','r','i','n','t','\\',
                                   'P','r','i','n','t','e','r','s',0};
-static const WCHAR spooldriversW[] = {'\\','s','p','o','o','l','\\','d','r','i','v','e','r','s','\\',0};
+static const WCHAR spoolW[] = {'\\','s','p','o','o','l',0};
+static const WCHAR driversW[] = {'\\','d','r','i','v','e','r','s','\\',0};
 static const WCHAR spoolprtprocsW[] = {'\\','s','p','o','o','l','\\','p','r','t','p','r','o','c','s','\\',0};
 static const WCHAR version0_regpathW[] = {'\\','V','e','r','s','i','o','n','-','0',0};
 static const WCHAR version0_subdirW[] = {'\\','0',0};
@@ -214,47 +188,35 @@ static LPWSTR strdupW(LPCWSTR p)
  *  Failure: FALSE
  *
  */
-static BOOL apd_copyfile(LPWSTR filename, apd_data_t *apd)
+static BOOL apd_copyfile( WCHAR *pathname, WCHAR *file_part, apd_data_t *apd )
 {
-    LPWSTR  ptr;
-    LPWSTR  srcname;
-    DWORD   res;
+    WCHAR *srcname;
+    BOOL res;
 
     apd->src[apd->srclen] = '\0';
     apd->dst[apd->dstlen] = '\0';
 
-    if (!filename || !filename[0]) {
+    if (!pathname || !pathname[0]) {
         /* nothing to copy */
         return TRUE;
     }
 
-    ptr = strrchrW(filename, '\\');
-    if (ptr) {
-        ptr++;
-    }
-    else
-    {
-        ptr = filename;
-    }
-
-    if (apd->copyflags & APD_COPY_FROM_DIRECTORY) {
-        /* we have an absolute Path */
-        srcname = filename;
-    }
+    if (apd->copyflags & APD_COPY_FROM_DIRECTORY)
+        srcname = pathname;
     else
     {
         srcname = apd->src;
-        lstrcatW(srcname, ptr);
+        strcatW( srcname, file_part );
     }
-    lstrcatW(apd->dst, ptr);
+    strcatW( apd->dst, file_part );
 
-    TRACE("%s => %s\n", debugstr_w(filename), debugstr_w(apd->dst));
+    TRACE("%s => %s\n", debugstr_w(srcname), debugstr_w(apd->dst));
 
     /* FIXME: handle APD_COPY_NEW_FILES */
     res = CopyFileW(srcname, apd->dst, FALSE);
-    TRACE("got %u with %u\n", res, GetLastError());
+    TRACE("got %d with %u\n", res, GetLastError());
 
-    return (apd->lazy) ? TRUE : res;
+    return apd->lazy || res;
 }
 
 /******************************************************************
@@ -264,7 +226,7 @@ static BOOL apd_copyfile(LPWSTR filename, apd_data_t *apd)
  *
  * RETURNS
  *  the length (in WCHAR) of the serverpart (0 for the local computer)
- *  (-length), when the name is to long
+ *  (-length), when the name is too long
  *
  */
 static LONG copy_servername_from_name(LPCWSTR name, LPWSTR target)
@@ -1073,6 +1035,7 @@ static BOOL WINAPI fpGetPrinterDriverDirectory(LPWSTR pName, LPWSTR pEnvironment
 {
     DWORD needed;
     const printenv_t * env;
+    WCHAR * const dir = (WCHAR *)pDriverDirectory;
 
     TRACE("(%s, %s, %d, %p, %d, %p)\n", debugstr_w(pName),
           debugstr_w(pEnvironment), Level, pDriverDirectory, cbBuf, pcbNeeded);
@@ -1090,7 +1053,8 @@ static BOOL WINAPI fpGetPrinterDriverDirectory(LPWSTR pName, LPWSTR pEnvironment
     /* GetSystemDirectoryW returns number of WCHAR including the '\0' */
     needed = GetSystemDirectoryW(NULL, 0);
     /* add the Size for the Subdirectories */
-    needed += lstrlenW(spooldriversW);
+    needed += lstrlenW(spoolW);
+    needed += lstrlenW(driversW);
     needed += lstrlenW(env->subdir);
     needed *= sizeof(WCHAR);  /* return-value is size in Bytes */
 
@@ -1101,18 +1065,22 @@ static BOOL WINAPI fpGetPrinterDriverDirectory(LPWSTR pName, LPWSTR pEnvironment
         return FALSE;
     }
 
-    if (pDriverDirectory == NULL) {
+    if (dir == NULL) {
         /* ERROR_INVALID_USER_BUFFER is NT, ERROR_INVALID_PARAMETER is win9x */
         SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
 
-    GetSystemDirectoryW((LPWSTR) pDriverDirectory, cbBuf/sizeof(WCHAR));
+    GetSystemDirectoryW( dir, cbBuf / sizeof(WCHAR) );
     /* add the Subdirectories */
-    lstrcatW((LPWSTR) pDriverDirectory, spooldriversW);
-    lstrcatW((LPWSTR) pDriverDirectory, env->subdir);
+    lstrcatW( dir, spoolW );
+    CreateDirectoryW( dir, NULL );
+    lstrcatW( dir, driversW );
+    CreateDirectoryW( dir, NULL );
+    lstrcatW( dir, env->subdir );
+    CreateDirectoryW( dir, NULL );
 
-    TRACE("=> %s\n", debugstr_w((LPWSTR) pDriverDirectory));
+    TRACE( "=> %s\n", debugstr_w( dir ) );
     return TRUE;
 }
 
@@ -1139,7 +1107,7 @@ static HMODULE driver_load(const printenv_t * env, LPWSTR dllname)
 
     if (!fpGetPrinterDriverDirectory(NULL, (LPWSTR) env->envname, 1,
                                      (LPBYTE) fullname, len, &len)) {
-        /* Should never Fail */
+        /* Should never fail */
         SetLastError(ERROR_BUFFER_OVERFLOW);
         return NULL;
     }
@@ -1286,6 +1254,12 @@ end:
     return (HANDLE)printer;
 }
 
+static inline WCHAR *get_file_part( WCHAR *name )
+{
+    WCHAR *ptr = strrchrW( name, '\\' );
+    if (ptr) return ptr + 1;
+    return name;
+}
 
 /******************************************************************************
  *  myAddPrinterDriverEx [internal]
@@ -1301,7 +1275,7 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
     DRIVER_INFO_8W di;
     BOOL    (WINAPI *pDrvDriverEvent)(DWORD, DWORD, LPBYTE, LPARAM);
     HMODULE hui;
-    LPWSTR  ptr;
+    WCHAR *file;
     HKEY    hroot;
     HKEY    hdrv;
     DWORD   disposition;
@@ -1337,7 +1311,7 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
     len = sizeof(apd.src) - sizeof(version3_subdirW) - sizeof(WCHAR);
     if (!fpGetPrinterDriverDirectory(NULL, (LPWSTR) env->envname, 1,
                                     (LPBYTE) apd.src, len, &len)) {
-        /* Should never Fail */
+        /* Should never fail */
         return FALSE;
     }
     memcpy(apd.dst, apd.src, len);
@@ -1369,54 +1343,53 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
     }
     RegCloseKey(hroot);
 
-    if (disposition == REG_OPENED_EXISTING_KEY) {
-        TRACE("driver %s already installed\n", debugstr_w(di.pName));
-        RegCloseKey(hdrv);
-        SetLastError(ERROR_PRINTER_DRIVER_ALREADY_INSTALLED);
-        return FALSE;
-    }
-
     /* Verified with the Adobe PS Driver, that w2k does not use di.Version */
     RegSetValueExW(hdrv, versionW, 0, REG_DWORD, (const BYTE*) &env->driverversion,
                    sizeof(DWORD));
 
-    RegSetValueExW(hdrv, driverW, 0, REG_SZ, (LPBYTE) di.pDriverPath,
-                   (lstrlenW(di.pDriverPath)+1)* sizeof(WCHAR));
-    apd_copyfile(di.pDriverPath, &apd);
+    file = get_file_part( di.pDriverPath );
+    RegSetValueExW( hdrv, driverW, 0, REG_SZ, (LPBYTE)file, (strlenW( file ) + 1) * sizeof(WCHAR) );
+    apd_copyfile( di.pDriverPath, file, &apd );
 
-    RegSetValueExW(hdrv, data_fileW, 0, REG_SZ, (LPBYTE) di.pDataFile,
-                   (lstrlenW(di.pDataFile)+1)* sizeof(WCHAR));
-    apd_copyfile(di.pDataFile, &apd);
+    file = get_file_part( di.pDataFile );
+    RegSetValueExW( hdrv, data_fileW, 0, REG_SZ, (LPBYTE)file, (strlenW( file ) + 1) * sizeof(WCHAR) );
+    apd_copyfile( di.pDataFile, file, &apd );
 
-    RegSetValueExW(hdrv, configuration_fileW, 0, REG_SZ, (LPBYTE) di.pConfigFile,
-                   (lstrlenW(di.pConfigFile)+1)* sizeof(WCHAR));
-    apd_copyfile(di.pConfigFile, &apd);
+    file = get_file_part( di.pConfigFile );
+    RegSetValueExW( hdrv, configuration_fileW, 0, REG_SZ, (LPBYTE)file, (strlenW( file ) + 1) * sizeof(WCHAR) );
+    apd_copyfile( di.pConfigFile, file, &apd );
 
     /* settings for level 3 */
     if (di.pHelpFile)
-        RegSetValueExW(hdrv, help_fileW, 0, REG_SZ, (LPBYTE) di.pHelpFile,
-                       (lstrlenW(di.pHelpFile)+1)* sizeof(WCHAR));
+    {
+        file = get_file_part( di.pHelpFile );
+        RegSetValueExW( hdrv, help_fileW, 0, REG_SZ, (LPBYTE)file, (strlenW( file ) + 1) * sizeof(WCHAR) );
+        apd_copyfile( di.pHelpFile, file, &apd );
+    }
     else
-        RegSetValueExW(hdrv, help_fileW, 0, REG_SZ, (const BYTE*)emptyW, sizeof(emptyW));
-    apd_copyfile(di.pHelpFile, &apd);
+        RegSetValueExW( hdrv, help_fileW, 0, REG_SZ, (const BYTE*)emptyW, sizeof(emptyW) );
 
+    if (di.pDependentFiles && *di.pDependentFiles)
+    {
+        WCHAR *reg, *reg_ptr, *in_ptr;
+        reg = reg_ptr = HeapAlloc( GetProcessHeap(), 0, multi_sz_lenW( di.pDependentFiles ) );
 
-    ptr = di.pDependentFiles;
-    if (ptr)
-        RegSetValueExW(hdrv, dependent_filesW, 0, REG_MULTI_SZ, (LPBYTE) di.pDependentFiles,
-                       multi_sz_lenW(di.pDependentFiles));
+        for (in_ptr = di.pDependentFiles; *in_ptr; in_ptr += strlenW( in_ptr ) + 1)
+        {
+            file = get_file_part( in_ptr );
+            len = strlenW( file ) + 1;
+            memcpy( reg_ptr, file, len * sizeof(WCHAR) );
+            reg_ptr += len;
+            apd_copyfile( in_ptr, file, &apd );
+        }
+        *reg_ptr = 0;
+
+        RegSetValueExW( hdrv, dependent_filesW, 0, REG_MULTI_SZ, (LPBYTE)reg, (reg_ptr - reg + 1) * sizeof(WCHAR) );
+        HeapFree( GetProcessHeap(), 0, reg );
+    }
     else
         RegSetValueExW(hdrv, dependent_filesW, 0, REG_MULTI_SZ, (const BYTE*)emptyW, sizeof(emptyW));
-    while ((ptr != NULL) && (ptr[0])) {
-        if (apd_copyfile(ptr, &apd)) {
-            ptr += lstrlenW(ptr) + 1;
-        }
-        else
-        {
-            WARN("Failed to copy %s\n", debugstr_w(ptr));
-            ptr = NULL;
-        }
-    }
+
     /* The language-Monitor was already copied by the caller to "%SystemRoot%\system32" */
     if (di.pMonitorName)
         RegSetValueExW(hdrv, monitorW, 0, REG_SZ, (LPBYTE) di.pMonitorName,
@@ -1680,7 +1653,7 @@ static BOOL WINAPI fpAddPortEx(LPWSTR pName, DWORD level, LPBYTE pBuffer, LPWSTR
     else
     {
         FIXME("not implemented for %s (monitor %p: %s)\n",
-            debugstr_w(pMonitorName), pm, pm ? debugstr_w(pm->dllname) : NULL);
+            debugstr_w(pMonitorName), pm, pm ? debugstr_w(pm->dllname) : "(null)");
             SetLastError(ERROR_INVALID_PARAMETER);
             res = FALSE;
     }

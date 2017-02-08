@@ -218,9 +218,9 @@ LdrFindResource_U(PVOID BaseAddress,
     {
         if (ResourceInfo)
         {
-            DPRINT( "module %p type %ws name %ws lang %04lx level %lu\n",
-                     BaseAddress, (LPCWSTR)ResourceInfo->Type,
-                     Level > 1 ? (LPCWSTR)ResourceInfo->Name : L"",
+            DPRINT( "module %p type %lx name %lx lang %04lx level %lu\n",
+                     BaseAddress, ResourceInfo->Type, 
+                     Level > 1 ? ResourceInfo->Name : 0,
                      Level > 2 ? ResourceInfo->Language : 0, Level );
         }
 
@@ -308,9 +308,6 @@ LdrpCompareResourceNames_U(
     }
     else
     {
-        /* Fail if ResourceName2 is an ID */
-        if (Entry->Id <= USHRT_MAX) return -1;
-
         /* Get the resource string */
         ResourceString = (PIMAGE_RESOURCE_DIR_STRING_U)(ResourceData +
                                                         Entry->NameOffset);

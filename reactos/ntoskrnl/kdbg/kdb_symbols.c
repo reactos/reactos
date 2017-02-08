@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/kdb_symbols.c
+ * FILE:            ntoskrnl/kdbg/kdb_symbols.c
  * PURPOSE:         Getting symbol information...
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
@@ -391,10 +391,10 @@ KdbpSymLoadModuleSymbols(
     DPRINT("Attempting to open image: %wZ\n", FileName);
 
     Status = ZwOpenFile(&FileHandle,
-                        FILE_READ_ACCESS,
+                        FILE_READ_ACCESS | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        FILE_SHARE_READ|FILE_SHARE_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {

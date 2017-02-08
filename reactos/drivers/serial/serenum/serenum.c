@@ -7,8 +7,9 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define INITGUID
 #include "serenum.h"
+
+#include <debug.h>
 
 static DRIVER_DISPATCH SerenumPnp;
 static DRIVER_DISPATCH IrpStub;

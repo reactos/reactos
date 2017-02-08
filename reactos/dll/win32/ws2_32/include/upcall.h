@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/upcall.h
+ * FILE:        dll/win32/ws2_32/include/upcall.h
  * PURPOSE:     Upcall function defintions
  */
+
 #ifndef __UPCALL_H
 #define __UPCALL_H
 
@@ -100,5 +101,3 @@ WPUSetEvent(
     OUT LPINT lpErrno);
 
 #endif /* __UPCALL_H */
-
-/* EOF */

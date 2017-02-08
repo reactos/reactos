@@ -1,10 +1,15 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS CRT
- * FILE:             lib/crt/math/sin.c
+ * FILE:             lib/sdk/crt/math/sin.c
  * PURPOSE:          Generic C Implementation of sin
  * PROGRAMMER:       Timo Kreuzer (timo.kreuzer@reactos.org)
  */
+
+#ifdef _MSC_VER
+#pragma warning(suppress:4164) /* intrinsic not declared */
+#pragma function(sin)
+#endif /* _MSC_VER */
 
 #define PRECISION 9
 #define M_PI 3.141592653589793238462643

@@ -1,0 +1,24 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "結束程式"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT "正在結束程式... 請稍等", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "如果您選擇立即結束程式，您將失去所有未儲存的資料。若要立即結束程式，請按下“立即結束”。", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "立即結束(&E)", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "結束程式 - "
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "取消", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "立即結束(&E) ", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "此程式並未響應", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "若要返回至 ReactOS 並檢視程式的狀態，請按下“取消”", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "如果您選擇立即結束程式，您將失去所有未儲存的資料。若要立即結束程式，請按下“立即結束”。", IDC_STATIC, 7, 53, 178, 26
+END

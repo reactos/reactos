@@ -8,6 +8,9 @@
  */
 
 #include "precomp.h"
+
+#include <mmsystem.h>
+#include <mmreg.h>
 #include <dsound.h>
 
 #if 0
@@ -208,7 +211,7 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
         return FALSE;
 
     pContext->hSoundWnd = hDlgs;
-    hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hMainDialog, SoundPageWndProc, (LPARAM)pContext);
+    hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hMainDialog, SoundPageWndProc, (LPARAM)pContext); EnableDialogTheme(hwndDlg);
     if (!hwndDlg)
         return FALSE;
 
@@ -221,7 +224,7 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
             if (dwCertified == DS_CERTIFIED)
                 LoadStringW(hInst, IDS_OPTION_YES, szText, sizeof(szText)/sizeof(WCHAR));
             else if (dwCertified == DS_UNCERTIFIED)
-                LoadStringW(hInst, IDS_OPTION_NO, szText, sizeof(szText)/sizeof(WCHAR));
+                LoadStringW(hInst, IDS_NOT_APPLICABLE, szText, sizeof(szText)/sizeof(WCHAR));
         }
         else
         {
@@ -243,8 +246,6 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
 
     /* set further device details */
     SetDeviceDetails(hwndDlg, &GUID_DEVCLASS_MEDIA, lpcstrDescription);
-
-
 
     /* load sound resource string */
     szSound[0] = L'\0';

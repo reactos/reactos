@@ -7,7 +7,11 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+
 #include "precomp.h"
+
+#include <dispatch.h>
+#include <fileobjs.h>
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;
@@ -161,9 +165,9 @@ NTSTATUS TiCreateFileObject(
             TI_DbgPrint(MIN_TRACE, ("AddressCount: %d\n", Address->TAAddressCount));
             if( Address->TAAddressCount == 1 )
             {
-	            TI_DbgPrint(MIN_TRACE, ("AddressLength: %\n",
+	            TI_DbgPrint(MIN_TRACE, ("AddressLength: %u\n",
 				            Address->Address[0].AddressLength));
-	            TI_DbgPrint(MIN_TRACE, ("AddressType: %\n",
+	            TI_DbgPrint(MIN_TRACE, ("AddressType: %u\n",
 				            Address->Address[0].AddressType));
             }
 
@@ -314,6 +318,9 @@ NTSTATUS TiCloseFileObject(
             Status = STATUS_INVALID_PARAMETER;
             break;
     }
+
+    if (NT_SUCCESS(Status))
+        ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
 
     Irp->IoStatus.Status = Status;
 
@@ -516,6 +523,11 @@ TiDispatch(
     case IOCTL_DELETE_IP_ADDRESS:
       TI_DbgPrint(MIN_TRACE, ("DELETE_IP_ADDRESS\n"));
       Status = DispTdiDeleteIPAddress(Irp, IrpSp);
+      break;
+
+    case IOCTL_QUERY_IP_HW_ADDRESS:
+      TI_DbgPrint(MIN_TRACE, ("QUERY_IP_HW_ADDRESS\n"));
+      Status = DispTdiQueryIpHwAddress(DeviceObject, Irp, IrpSp);
       break;
 
     default:

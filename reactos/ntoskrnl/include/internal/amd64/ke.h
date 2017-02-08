@@ -81,7 +81,6 @@ typedef struct _KI_INTERRUPT_DISPATCH_ENTRY
 } KI_INTERRUPT_DISPATCH_ENTRY, *PKI_INTERRUPT_DISPATCH_ENTRY;
 #include <poppack.h>
 
-extern ULONG Ke386CacheAlignment;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
@@ -191,6 +190,19 @@ KeFlushProcessTb(VOID)
 
 FORCEINLINE
 VOID
+KeSweepICache(IN PVOID BaseAddress,
+              IN SIZE_T FlushSize)
+{
+    //
+    // Always sweep the whole cache
+    //
+    UNREFERENCED_PARAMETER(BaseAddress);
+    UNREFERENCED_PARAMETER(FlushSize);
+    __wbinvd();
+}
+
+FORCEINLINE
+VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
 #ifndef CONFIG_SMP
@@ -248,7 +260,7 @@ KeQueryInterruptHandler(IN ULONG Vector)
 
 VOID
 FORCEINLINE
-KiSendEOI()
+KiSendEOI(VOID)
 {
     /* Write 0 to the apic EOI register */
     *((volatile ULONG*)APIC_EOI_REGISTER) = 0;

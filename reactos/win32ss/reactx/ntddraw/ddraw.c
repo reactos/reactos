@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
- * FILE:             subsystems/win32/win32k/ntddraw/ddraw.c
+ * FILE:             win32ss/reactx/ntddraw/ddraw.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       19/1-2006   Magnus Olsen
@@ -20,7 +20,7 @@ extern ULONG gcEngFuncs;
 extern EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
 
-DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
+DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl + 1];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext = 0;
 

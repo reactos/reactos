@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
- * FILE:        include/internal/version.h
+ * FILE:        include/reactos/version.h.cmake
  * PURPOSE:     Defines the current version
  * PROGRAMMER:  David Welch (welch@mcmail.com)
  * REVISIONS:
@@ -22,9 +22,10 @@
 
 #define COPYRIGHT_YEAR "@COPYRIGHT_YEAR@"
 
-/* KERNEL_VERSION_BUILD_TYPE is L"SVN", L"RC1", L"RC2" or L"" (for the release) */
+/* KERNEL_VERSION_BUILD_TYPE is "SVN" or "" (for the release) */
 #define KERNEL_VERSION_BUILD_TYPE "@KERNEL_VERSION_BUILD_TYPE@"
-
+/* KERNEL_VERSION_RELEASE_TYPE is "RC1", "RC2" or "" (for the final one) */
+#define KERNEL_VERSION_RELEASE_TYPE "@KERNEL_VERSION_RELEASE_TYPE@"
 
 #endif
 

@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,9 +18,10 @@
 
 #include <ft2build.h>
 #include "t1afm.h"
-#include "t1errors.h"
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
+#include "t1errors.h"
 
 
   /*************************************************************************/
@@ -108,7 +108,7 @@
                FT_Stream     stream,
                AFM_FontInfo  fi )
   {
-    FT_Error      error = T1_Err_Ok;
+    FT_Error      error  = FT_Err_Ok;
     FT_Memory     memory = stream->memory;
     FT_Byte*      start;
     FT_Byte*      limit;
@@ -122,14 +122,13 @@
 
     start = (FT_Byte*)stream->cursor;
     limit = (FT_Byte*)stream->limit;
-    p     = start;
 
     /* Figure out how long the width table is.          */
     /* This info is a little-endian short at offset 99. */
     p = start + 99;
     if ( p + 2 > limit )
     {
-      error = T1_Err_Unknown_File_Format;
+      error = FT_THROW( Unknown_File_Format );
       goto Exit;
     }
     width_table_length = FT_PEEK_USHORT_LE( p );
@@ -149,7 +148,7 @@
 
     if ( p + 2 > limit )
     {
-      error = T1_Err_Unknown_File_Format;
+      error = FT_THROW( Unknown_File_Format );
       goto Exit;
     }
 
@@ -157,7 +156,7 @@
     p += 2;
     if ( p + 4 * fi->NumKernPair > limit )
     {
-      error = T1_Err_Unknown_File_Format;
+      error = FT_THROW( Unknown_File_Format );
       goto Exit;
     }
 
@@ -170,8 +169,8 @@
       goto Exit;
 
     /* now, read each kern pair */
-    kp             = fi->KernPairs;
-    limit          = p + 4 * fi->NumKernPair;
+    kp    = fi->KernPairs;
+    limit = p + 4 * fi->NumKernPair;
 
     /* PFM kerning data are stored by encoding rather than glyph index, */
     /* so find the PostScript charmap of this font and install it       */
@@ -239,9 +238,19 @@
     FT_Memory      memory  = stream->memory;
     AFM_ParserRec  parser;
     AFM_FontInfo   fi      = NULL;
-    FT_Error       error   = T1_Err_Unknown_File_Format;
-    T1_Font        t1_font = &( (T1_Face)t1_face )->type1;
+    FT_Error       error   = FT_ERR( Unknown_File_Format );
+    T1_Face        face    = (T1_Face)t1_face;
+    T1_Font        t1_font = &face->type1;
 
+
+    if ( face->afm_data )
+    {
+      FT_TRACE1(( "T1_Read_Metrics:"
+                  " Freeing previously attached metrics data.\n" ));
+      T1_Done_Metrics( memory, (AFM_FontInfo)face->afm_data );
+
+      face->afm_data = NULL;
+    }
 
     if ( FT_NEW( fi )                   ||
          FT_FRAME_ENTER( stream->size ) )
@@ -251,8 +260,8 @@
     fi->Ascender  = t1_font->font_bbox.yMax;
     fi->Descender = t1_font->font_bbox.yMin;
 
-    psaux = (PSAux_Service)( (T1_Face)t1_face )->psaux;
-    if ( psaux && psaux->afm_parser_funcs )
+    psaux = (PSAux_Service)face->psaux;
+    if ( psaux->afm_parser_funcs )
     {
       error = psaux->afm_parser_funcs->init( &parser,
                                              stream->memory,
@@ -270,7 +279,7 @@
       }
     }
 
-    if ( error == T1_Err_Unknown_File_Format )
+    if ( FT_ERR_EQ( error, Unknown_File_Format ) )
     {
       FT_Byte*  start = stream->cursor;
 
@@ -299,7 +308,7 @@
       if ( fi->NumKernPair )
       {
         t1_face->face_flags |= FT_FACE_FLAG_KERNING;
-        ( (T1_Face)t1_face )->afm_data = fi;
+        face->afm_data       = fi;
         fi = NULL;
       }
     }
@@ -363,11 +372,11 @@
                         FT_Fixed*  kerning )
   {
     AFM_FontInfo  fi = (AFM_FontInfo)( (T1_Face)face )->afm_data;
-    FT_Int        i;
+    FT_UInt       i;
 
 
     if ( !fi )
-      return T1_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     for ( i = 0; i < fi->NumTrackKern; i++ )
     {
@@ -390,7 +399,7 @@
       }
     }
 
-    return T1_Err_Ok;
+    return FT_Err_Ok;
   }
 
 

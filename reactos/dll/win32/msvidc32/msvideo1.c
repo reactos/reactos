@@ -71,7 +71,7 @@ typedef BYTE uint8_t;
 
 typedef struct Msvideo1Context {
     DWORD dwMagic;
-    int mode_8bit;  /* if it's not 8-bit, it's 16-bit */
+    BOOL mode_8bit;  /* if it's not 8-bit, it's 16-bit */
 } Msvideo1Context;
 
 static void 
@@ -303,39 +303,45 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
     if( (info==NULL) || (info->dwMagic!=CRAM_MAGIC) )
         return ICERR_BADPARAM;
 
-    TRACE("planes = %d\n", in->bmiHeader.biPlanes );
-    TRACE("bpp    = %d\n", in->bmiHeader.biBitCount );
-    TRACE("height = %d\n", in->bmiHeader.biHeight );
-    TRACE("width  = %d\n", in->bmiHeader.biWidth );
-    TRACE("compr  = %x\n", in->bmiHeader.biCompression );
+    TRACE("in->planes  = %d\n", in->bmiHeader.biPlanes );
+    TRACE("in->bpp     = %d\n", in->bmiHeader.biBitCount );
+    TRACE("in->height  = %d\n", in->bmiHeader.biHeight );
+    TRACE("in->width   = %d\n", in->bmiHeader.biWidth );
+    TRACE("in->compr   = 0x%x\n", in->bmiHeader.biCompression );
 
     if( ( in->bmiHeader.biCompression != CRAM_MAGIC ) &&
         ( in->bmiHeader.biCompression != MSVC_MAGIC ) &&
         ( in->bmiHeader.biCompression != WHAM_MAGIC ) )
-        return ICERR_UNSUPPORTED;
+    {
+        TRACE("can't do 0x%x compression\n", in->bmiHeader.biCompression);
+        return ICERR_BADFORMAT;
+    }
 
     if( ( in->bmiHeader.biBitCount != 16 ) &&
         ( in->bmiHeader.biBitCount != 8 ) )
     {
         TRACE("can't do %d bpp\n", in->bmiHeader.biBitCount );
-        return ICERR_UNSUPPORTED;
+        return ICERR_BADFORMAT;
     }
 
     /* output must be same dimensions as input */
     if( out )
     {
-        if( in->bmiHeader.biBitCount != out->bmiHeader.biBitCount )
-            return ICERR_UNSUPPORTED;
-        if( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes )
-            return ICERR_UNSUPPORTED;
-        if( in->bmiHeader.biHeight != out->bmiHeader.biHeight )
-            return ICERR_UNSUPPORTED;
-        if( in->bmiHeader.biWidth != out->bmiHeader.biWidth )
-            return ICERR_UNSUPPORTED;
+        TRACE("out->planes = %d\n", out->bmiHeader.biPlanes );
+        TRACE("out->bpp    = %d\n", out->bmiHeader.biBitCount );
+        TRACE("out->height = %d\n", out->bmiHeader.biHeight );
+        TRACE("out->width  = %d\n", out->bmiHeader.biWidth );
+        if(( in->bmiHeader.biBitCount != out->bmiHeader.biBitCount ) ||
+          ( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes ) ||
+          ( in->bmiHeader.biHeight != out->bmiHeader.biHeight ) ||
+          ( in->bmiHeader.biWidth != out->bmiHeader.biWidth ))
+        {
+            TRACE("incompatible output requested\n");
+            return ICERR_BADFORMAT;
+        }
     }
 
     TRACE("OK!\n");
-
     return ICERR_OK;
 }
 
@@ -374,12 +380,12 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
 
     TRACE("bitmap is %d bpp\n", in->bmiHeader.biBitCount);
     if( in->bmiHeader.biBitCount == 8 )
-        info->mode_8bit = 1;
+        info->mode_8bit = TRUE;
     else if( in->bmiHeader.biBitCount == 16 )
-        info->mode_8bit = 0;
+        info->mode_8bit = FALSE;
     else
     {
-        info->mode_8bit = 0;
+        info->mode_8bit = FALSE;
         FIXME("Unsupported output format %i\n", in->bmiHeader.biBitCount);
     }
 
@@ -556,12 +562,15 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
         break;
 
     case ICM_COMPRESS_QUERY:
-        FIXME("compression not implemented\n");
         r = ICERR_BADFORMAT;
+        /* fall through */
+    case ICM_COMPRESS_GET_FORMAT:
+    case ICM_COMPRESS_END:
+    case ICM_COMPRESS:
+        FIXME("compression not implemented\n");
         break;
 
     case ICM_CONFIGURE:
-        r = ICERR_UNSUPPORTED;
         break;
 
     default:
@@ -583,9 +592,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hModule);
         MSVIDC32_hModule = hModule;
-        break;
-
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;

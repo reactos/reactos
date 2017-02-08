@@ -24,67 +24,67 @@ void delay(unsigned msec);
 
 VOID PcBeep(VOID)
 {
-	sound(700);
-	delay(200);
-	sound(0);
+    sound(700);
+    delay(200);
+    sound(0);
 }
 
 void delay(unsigned msec)
 {
-	REGS		Regs;
-	unsigned	usec;
-	unsigned	msec_this;
+    REGS        Regs;
+    unsigned    usec;
+    unsigned    msec_this;
 
-	// Int 15h AH=86h
-	// BIOS - WAIT (AT,PS)
-	//
-	// AH = 86h
-	// CX:DX = interval in microseconds
-	// Return:
-	// CF clear if successful (wait interval elapsed)
-	// CF set on error or AH=83h wait already in progress
-	// AH = status (see #00496)
+    // Int 15h AH=86h
+    // BIOS - WAIT (AT,PS)
+    //
+    // AH = 86h
+    // CX:DX = interval in microseconds
+    // Return:
+    // CF clear if successful (wait interval elapsed)
+    // CF set on error or AH=83h wait already in progress
+    // AH = status (see #00496)
 
-	// Note: The resolution of the wait period is 977 microseconds on
-	// many systems because many BIOSes use the 1/1024 second fast
-	// interrupt from the AT real-time clock chip which is available on INT 70;
-	// because newer BIOSes may have much more precise timers available, it is
-	// not possible to use this function accurately for very short delays unless
-	// the precise behavior of the BIOS is known (or found through testing)
+    // Note: The resolution of the wait period is 977 microseconds on
+    // many systems because many BIOSes use the 1/1024 second fast
+    // interrupt from the AT real-time clock chip which is available on INT 70;
+    // because newer BIOSes may have much more precise timers available, it is
+    // not possible to use this function accurately for very short delays unless
+    // the precise behavior of the BIOS is known (or found through testing)
 
-	while (msec)
-	{
-		msec_this = msec;
+    while (msec)
+    {
+        msec_this = msec;
 
-		if (msec_this > 4000)
-		{
-			msec_this = 4000;
-		}
+        if (msec_this > 4000)
+        {
+            msec_this = 4000;
+        }
 
-		usec = msec_this * 1000;
+        usec = msec_this * 1000;
 
-		Regs.b.ah = 0x86;
-		Regs.w.cx = usec >> 16;
-		Regs.w.dx = usec & 0xffff;
-		Int386(0x15, &Regs, &Regs);
+        Regs.b.ah = 0x86;
+        Regs.w.cx = usec >> 16;
+        Regs.w.dx = usec & 0xffff;
+        Int386(0x15, &Regs, &Regs);
 
-		msec -= msec_this;
-	}
+        msec -= msec_this;
+    }
 }
 
 void sound(int freq)
 {
-	int scale;
+    int scale;
 
-	if (freq == 0)
-	{
-		WRITE_PORT_UCHAR((PUCHAR)0x61, READ_PORT_UCHAR((PUCHAR)0x61) & ~3);
-		return;
-	}
+    if (freq == 0)
+    {
+        WRITE_PORT_UCHAR((PUCHAR)0x61, READ_PORT_UCHAR((PUCHAR)0x61) & ~3);
+        return;
+    }
 
-	scale = 1193046 / freq;
-	WRITE_PORT_UCHAR((PUCHAR)0x43, 0xb6);
-	WRITE_PORT_UCHAR((PUCHAR)0x42, scale & 0xff);
-	WRITE_PORT_UCHAR((PUCHAR)0x42, scale >> 8);
-	WRITE_PORT_UCHAR((PUCHAR)0x61, READ_PORT_UCHAR((PUCHAR)0x61) | 3);
+    scale = 1193046 / freq;
+    WRITE_PORT_UCHAR((PUCHAR)0x43, 0xb6);
+    WRITE_PORT_UCHAR((PUCHAR)0x42, scale & 0xff);
+    WRITE_PORT_UCHAR((PUCHAR)0x42, scale >> 8);
+    WRITE_PORT_UCHAR((PUCHAR)0x61, READ_PORT_UCHAR((PUCHAR)0x61) | 3);
 }

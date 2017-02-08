@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS Column List Box
- * FILE:            lib/clb/clb.c
+ * FILE:            base/applications/regedit/clb/clb.c
  * PURPOSE:         Column List Box
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *

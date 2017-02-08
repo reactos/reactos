@@ -16,72 +16,79 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winuser.h"
-//#include "msvideo_private.h"
+#include <windef.h>
+#include <winuser.h>
 
-#ifdef LANGUAGE_DA_DK
-    #include "msvfw32_Da.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "msvfw32_En.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "msvfw32_Hu.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "msvfw32_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "msvfw32_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "msvfw32_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "msvfw32_Pl.rc"
-#endif
-#ifdef LANGUAGE_PT_PT
-    #include "msvfw32_Pt.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "msvfw32_Sv.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "msvfw32_Tr.rc"
-#endif
+#include "resource.h"
+
+#include <reactos/manifest_dll.rc>
 
 /* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DA_DK
+    #include "lang/msvfw32_Da.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
-    #include "msvfw32_De.rc"
+    #include "lang/msvfw32_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/msvfw32_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "msvfw32_Es.rc"
+    #include "lang/msvfw32_Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "msvfw32_Fr.rc"
+    #include "lang/msvfw32_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "msvfw32_He.rc"
+    #include "lang/msvfw32_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/msvfw32_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "msvfw32_It.rc"
+    #include "lang/msvfw32_It.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/msvfw32_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "msvfw32_Lt.rc"
+    #include "lang/msvfw32_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/msvfw32_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/msvfw32_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/msvfw32_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/msvfw32_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "msvfw32_Ro.rc"
+    #include "lang/msvfw32_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "msvfw32_Ru.rc"
+    #include "lang/msvfw32_Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "msvfw32_Si.rc"
+    #include "lang/msvfw32_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/msvfw32_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/msvfw32_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/msvfw32_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "msvfw32_Uk.rc"
+    #include "lang/msvfw32_Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "msvfw32_Zh.rc"
+    #include "lang/msvfw32_Zh.rc"
 #endif

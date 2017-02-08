@@ -49,10 +49,11 @@
 
 #include "precomp.h"
 
+#include <debug.h>
+
 /*
  * Hardware Support Routines
  */
-
 
 static BOOLEAN NTAPI
 ReadyForWrite(PCONTROLLER_INFO ControllerInfo)
@@ -1041,4 +1042,3 @@ HwDumpRegisters(PCONTROLLER_INFO ControllerInfo)
     INFO_(FLOPPY, "MAIN_STATUS_REGISTER =0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER));
     INFO_(FLOPPY, "DIGITAL_INPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER));
 }
-

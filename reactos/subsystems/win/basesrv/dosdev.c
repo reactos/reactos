@@ -99,17 +99,17 @@ CSR_API(BaseSrvDefineDosDevice)
     DWORD dwFlags;
     PWSTR lpBuffer;
 
-    DPRINT("BaseSrvDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n",
-           DefineDosDeviceRequest->dwFlags,
+    DPRINT("BaseSrvDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetPath:%wZ\n",
+           DefineDosDeviceRequest->Flags,
            &DefineDosDeviceRequest->DeviceName,
-           &DefineDosDeviceRequest->TargetName);
+           &DefineDosDeviceRequest->TargetPath);
 
     Matched = AddHistory = FALSE;
     HistoryEntry = NULL;
     AdminSid = SystemSid = WorldSid = NULL;
     SecurityDescriptor = NULL;
     ListHead = &DosDeviceHistory;
-    dwFlags = DefineDosDeviceRequest->dwFlags;
+    dwFlags = DefineDosDeviceRequest->Flags;
 
     /* Validate the flags */
     if ( (dwFlags & 0xFFFFFFF0) ||
@@ -136,7 +136,7 @@ CSR_API(BaseSrvDefineDosDevice)
         if (!NT_SUCCESS(Status))
             _SEH2_LEAVE;
 
-        RequestLinkTarget = &DefineDosDeviceRequest->TargetName;
+        RequestLinkTarget = &DefineDosDeviceRequest->TargetPath;
         lpBuffer = (PWSTR)RtlAllocateHeap(BaseSrvHeap,
                                           HEAP_ZERO_MEMORY,
                                           RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));

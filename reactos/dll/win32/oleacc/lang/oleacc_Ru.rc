@@ -1,0 +1,123 @@
+/*
+ * Russian resources for oleacc
+ *
+ * Copyright 2014 Kudratov Olimjon (olim98@bk.ru)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "неизвестный объект" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "заголовок"
+    ROLE_SYSTEM_MENUBAR     "строка меню"
+    ROLE_SYSTEM_SCROLLBAR   "полоса прокрутки"
+    ROLE_SYSTEM_GRIP        "захват"
+    ROLE_SYSTEM_SOUND       "звук"
+    ROLE_SYSTEM_CURSOR      "указатель"
+    ROLE_SYSTEM_CARET       "точка вставки"
+    ROLE_SYSTEM_ALERT       "оповещение"
+    ROLE_SYSTEM_WINDOW      "окно"
+    ROLE_SYSTEM_CLIENT      "клиент"
+    ROLE_SYSTEM_MENUPOPUP   "всплывающее меню"
+    ROLE_SYSTEM_MENUITEM    "элемент меню"
+    ROLE_SYSTEM_TOOLTIP     "подсказка"
+    ROLE_SYSTEM_APPLICATION "приложение"
+    ROLE_SYSTEM_DOCUMENT    "документ"
+    ROLE_SYSTEM_PANE        "панель"
+    ROLE_SYSTEM_CHART       "диаграмма"
+    ROLE_SYSTEM_DIALOG      "диалог"
+    ROLE_SYSTEM_BORDER      "граница"
+    ROLE_SYSTEM_GROUPING    "группировка"
+    ROLE_SYSTEM_SEPARATOR   "разделитель"
+    ROLE_SYSTEM_TOOLBAR     "панель инструментов"
+    ROLE_SYSTEM_STATUSBAR   "строка состояния"
+    ROLE_SYSTEM_TABLE        "таблица"
+    ROLE_SYSTEM_COLUMNHEADER "заголовок столбца"
+    ROLE_SYSTEM_ROWHEADER    "заголовок строки"
+    ROLE_SYSTEM_COLUMN       "столбец"
+    ROLE_SYSTEM_ROW          "строка"
+    ROLE_SYSTEM_CELL         "ячейка"
+    ROLE_SYSTEM_LINK         "ссылка"
+    ROLE_SYSTEM_HELPBALLOON  "подсказка"
+    ROLE_SYSTEM_CHARACTER    "знак"
+    ROLE_SYSTEM_LIST         "список"
+    ROLE_SYSTEM_LISTITEM     "элемент списка"
+    ROLE_SYSTEM_OUTLINE      "структура"
+    ROLE_SYSTEM_OUTLINEITEM  "элемент структуры"
+    ROLE_SYSTEM_PAGETAB      "язычок страницы"
+    ROLE_SYSTEM_PROPERTYPAGE "страница свойств"
+    ROLE_SYSTEM_INDICATOR    "индикатор"
+    ROLE_SYSTEM_GRAPHIC      "графика"
+    ROLE_SYSTEM_STATICTEXT   "текст"
+    ROLE_SYSTEM_TEXT         "редактируемый текст"
+    ROLE_SYSTEM_PUSHBUTTON   "кнопка"
+    ROLE_SYSTEM_CHECKBUTTON  "флажок"
+    ROLE_SYSTEM_RADIOBUTTON  "переключатель"
+    ROLE_SYSTEM_COMBOBOX     "поле со списком"
+    ROLE_SYSTEM_DROPLIST     "раскрывающийся список"
+    ROLE_SYSTEM_PROGRESSBAR  "индикатор выполнения"
+    ROLE_SYSTEM_DIAL         "набор номера"
+    ROLE_SYSTEM_HOTKEYFIELD  "поле горячей клавиши"
+    ROLE_SYSTEM_SLIDER       "ползунок"
+    ROLE_SYSTEM_SPINBUTTON   "регулятор"
+    ROLE_SYSTEM_DIAGRAM      "диаграмма"
+    ROLE_SYSTEM_ANIMATION    "анимация"
+    ROLE_SYSTEM_EQUATION     "формула"
+    ROLE_SYSTEM_BUTTONDROPDOWN "кнопка списка"
+    ROLE_SYSTEM_BUTTONMENU   "кнопка меню"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "кнопка раскрытия таблицы"
+    ROLE_SYSTEM_WHITESPACE   "разделитель"
+    ROLE_SYSTEM_PAGETABLIST  "список табуляций"
+    ROLE_SYSTEM_CLOCK        "часы"
+    ROLE_SYSTEM_SPLITBUTTON  "кнопка разделения"
+    ROLE_SYSTEM_IPADDRESS    "IP-адрес"
+    ROLE_SYSTEM_OUTLINEBUTTON "кнопка контура"
+
+    IDS_STATE_NORMAL            "обычный"
+    IDS_STATE_UNAVAILABLE       "сведения отсутствуют"
+    IDS_STATE_SELECTED          "выделенный"
+    IDS_STATE_FOCUSED           "с фокусом ввода"
+    IDS_STATE_PRESSED           "нажато"
+    IDS_STATE_CHECKED           "отмечено"
+    IDS_STATE_MIXED             "оба типа"
+    IDS_STATE_READONLY          "только чтение"
+    IDS_STATE_HOTTRACKED        "отслеженное"
+    IDS_STATE_DEFAULT           "по умолчанию"
+    IDS_STATE_EXPANDED          "развернуто"
+    IDS_STATE_COLLAPSED         "свернуто"
+    IDS_STATE_BUSY              "занято"
+    IDS_STATE_FLOATING          "перемещаемый"
+    IDS_STATE_MARQUEED          "бегущая строка"
+    IDS_STATE_ANIMATED          "анимировано"
+    IDS_STATE_INVISIBLE         "невидимо"
+    IDS_STATE_OFFSCREEN         "за экраном"
+    IDS_STATE_SIZEABLE          "изменяемого размера"
+    IDS_STATE_MOVEABLE          "перемещаемое"
+    IDS_STATE_SELFVOICING       "говорящее"
+    IDS_STATE_FOCUSABLE         "фокусируемое"
+    IDS_STATE_SELECTABLE        "выделяемое"
+    IDS_STATE_LINKED            "связанное"
+    IDS_STATE_TRAVERSED         "пройденное"
+    IDS_STATE_MULTISELECTABLE   "со множественным выделением"
+    IDS_STATE_EXTSELECTABLE     "с расширенным выделением"
+    IDS_STATE_ALERT_LOW         "низкий уровень оповещений"
+    IDS_STATE_ALERT_MEDIUM      "средний уровень оповещений"
+    IDS_STATE_ALERT_HIGH        "высокий уровень оповещений"
+    IDS_STATE_PROTECTED         "защищенный режим"
+    IDS_STATE_HASPOPUP          "есть всплывающая подсказка"
+}

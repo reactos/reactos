@@ -6,8 +6,12 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#include "precomp.h"
 
-#include "priv.h"
+#include <bdamedia.h>
+
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _KSISTREAM_POINTER
 {
@@ -189,7 +193,7 @@ IKsPin_PinMasterClock(
             {
                 Mode = ExGetPreviousMode();
 
-                Status = ObReferenceObjectByHandle(*Handle, SYNCHRONIZE | DIRECTORY_QUERY, IoFileObjectType, Mode, (PVOID*)&FileObject, NULL);
+                Status = ObReferenceObjectByHandle(*Handle, SYNCHRONIZE | DIRECTORY_QUERY, *IoFileObjectType, Mode, (PVOID*)&FileObject, NULL);
 
                 DPRINT("IKsPin_PinMasterClock ObReferenceObjectByHandle %lx\n", Status);
                 if (NT_SUCCESS(Status))
@@ -2217,7 +2221,7 @@ IKsPin_DispatchCreateClock(
                    pResolution = &Resolution;
                 }
 
-                Status = KsAllocateDefaultClockEx(&This->DefaultClock, 
+                Status = KsAllocateDefaultClockEx(&This->DefaultClock,
                                                   (PVOID)&This->Pin,
                                                   (PFNKSSETTIMER)This->Pin.Descriptor->Dispatch->Clock->SetTimer,
                                                   (PFNKSCANCELTIMER)This->Pin.Descriptor->Dispatch->Clock->CancelTimer,
@@ -2261,7 +2265,7 @@ IKsPin_DispatchCreateNode(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-static KSDISPATCH_TABLE PinDispatchTable = 
+static KSDISPATCH_TABLE PinDispatchTable =
 {
     IKsPin_DispatchDeviceIoControl,
     KsDispatchInvalidDeviceRequest,
@@ -2325,10 +2329,10 @@ KspCreatePin(
             DPRINT("KspCreatePin Index %lu FileAlignment %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].FileAlignment);
             DPRINT("KspCreatePin Index %lu MemoryTypeWeight %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].MemoryTypeWeight);
             DPRINT("KspCreatePin Index %lu PhysicalRange MinFrameSize %lu MaxFrameSize %lu Stepping %lu\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MinFrameSize,
-                   Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MaxFrameSize, 
+                   Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MaxFrameSize,
                    Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.Stepping);
 
-            DPRINT("KspCreatePin Index %lu FramingRange  MinFrameSize %lu MaxFrameSize %lu Stepping %lu InPlaceWeight %lu NotInPlaceWeight %lu\n", 
+            DPRINT("KspCreatePin Index %lu FramingRange  MinFrameSize %lu MaxFrameSize %lu Stepping %lu InPlaceWeight %lu NotInPlaceWeight %lu\n",
                    Index,
                    Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MinFrameSize,
                    Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MaxFrameSize,
@@ -2357,9 +2361,11 @@ KspCreatePin(
 
          if (IsEqualGUIDAligned(&Descriptor->PinDescriptor.DataRanges[Index]->SubFormat, &KSDATAFORMAT_SUBTYPE_BDA_MPEG2_TRANSPORT))
          {
+#if !defined(NDEBUG)
              PKS_DATARANGE_BDA_TRANSPORT Transport = (PKS_DATARANGE_BDA_TRANSPORT)&Descriptor->PinDescriptor.DataRanges[Index];
              DPRINT("KSDATAFORMAT_SUBTYPE_BDA_MPEG2_TRANSPORT AvgTimePerFrame %I64u ulcbPhyiscalFrame %lu ulcbPhyiscalFrameAlignment %lu ulcbPhyiscalPacket %lu\n", Transport->BdaTransportInfo.AvgTimePerFrame, Transport->BdaTransportInfo.ulcbPhyiscalFrame,
                     Transport->BdaTransportInfo.ulcbPhyiscalFrameAlignment, Transport->BdaTransportInfo.ulcbPhyiscalPacket);
+#endif
          }
     }
     if (!FrameSize)

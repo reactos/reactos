@@ -110,6 +110,7 @@ list(APPEND IDL_SOURCES
     sensevts.idl
     servprov.idl
 #    shappmgr.idl
+    shdeprecated.idl
 #    shgina.idl
 #    shimgdata.idl
     shldisp.idl
@@ -126,7 +127,7 @@ list(APPEND IDL_SOURCES
 #    termmgr.idl
     textstor.idl
 #    tlog.idl
-#    tlogstg.idl
+    tlogstg.idl
 #    trkadm.idl
 #    trkcom.idl
     unknwn.idl

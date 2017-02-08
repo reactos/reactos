@@ -6,7 +6,6 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#define _WIN32_DCOM // For CoInitializeEx, etc...
 #include "rapps.h"
 
 SETTINGS_INFO NewSettingsInfo;
@@ -49,15 +48,26 @@ ChooseFolder(HWND hwnd)
 }
 
 static VOID
-InitSettingsControls(HWND hDlg, SETTINGS_INFO Info)
+InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
 {
-    SendDlgItemMessage(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info.bSaveWndPos, 0);
-    SendDlgItemMessage(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info.bUpdateAtStart, 0);
-    SendDlgItemMessage(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info.bLogEnabled, 0);
-    SendDlgItemMessage(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info.bDelInstaller, 0);
+    SendDlgItemMessage(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info->bSaveWndPos, 0);
+    SendDlgItemMessage(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info->bUpdateAtStart, 0);
+    SendDlgItemMessage(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info->bLogEnabled, 0);
+    SendDlgItemMessage(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info->bDelInstaller, 0);
 
     SetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
-                   Info.szDownloadDir);
+                   Info->szDownloadDir);
+
+    CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT+Info->Proxy);
+
+    if(IDC_PROXY_DEFAULT + Info->Proxy == IDC_USE_PROXY)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
+        EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
+    }
+
+    SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
+    SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
 }
 
 static
@@ -69,7 +79,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
         {
             NewSettingsInfo = SettingsInfo;
-            InitSettingsControls(hDlg, SettingsInfo);
+            InitSettingsControls(hDlg, &SettingsInfo);
         }
         break;
 
@@ -97,24 +107,54 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                     IS_CHECKED(NewSettingsInfo.bDelInstaller, IDC_DEL_AFTER_INSTALL);
                     break;
 
+                case IDC_PROXY_DEFAULT:
+                    NewSettingsInfo.Proxy = 0;
+                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
+                    break;
+
+                case IDC_NO_PROXY:
+                    NewSettingsInfo.Proxy = 1;
+                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
+                    break;
+
+                case IDC_USE_PROXY:
+                    NewSettingsInfo.Proxy = 2;
+                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
+                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
+                    break;
+
                 case IDC_DEFAULT_SETTINGS:
                     FillDefaultSettings(&NewSettingsInfo);
-                    InitSettingsControls(hDlg, NewSettingsInfo);
+                    InitSettingsControls(hDlg, &NewSettingsInfo);
                     break;
 
                 case IDOK:
                 {
                     WCHAR szDir[MAX_PATH];
+                    WCHAR szProxy[MAX_PATH];
+                    WCHAR szNoProxy[MAX_PATH];
                     DWORD dwAttr;
 
                     GetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
                                    szDir, MAX_PATH);
 
+                    GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
+                                   szProxy, MAX_PATH);
+                    StringCbCopyW(NewSettingsInfo.szProxyServer, sizeof(NewSettingsInfo.szProxyServer), szProxy);
+
+                    GetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR),
+                                   szNoProxy, MAX_PATH);
+                    StringCbCopyW(NewSettingsInfo.szNoProxyFor, sizeof(NewSettingsInfo.szNoProxyFor), szNoProxy);
+
                     dwAttr = GetFileAttributesW(szDir);
                     if (dwAttr != INVALID_FILE_ATTRIBUTES &&
                         (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
                     {
-                        wcscpy(NewSettingsInfo.szDownloadDir, szDir);
+                        StringCbCopyW(NewSettingsInfo.szDownloadDir,
+                                      sizeof(NewSettingsInfo.szDownloadDir),
+                                      szDir);
                     }
                     else
                     {
@@ -131,9 +171,11 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                                 EndDialog(hDlg, LOWORD(wParam));
                             }
                         }
-
-                        SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
-                        break;
+                        else
+                        {
+                            SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
+                            break;
+                        }
                     }
 
                     SettingsInfo = NewSettingsInfo;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ntddk.h>
-
 //
 // OHCI Operational Registers
 //
@@ -153,7 +151,7 @@
                                 | OHCI_BULK_LIST_ENABLE)
 
 //
-//  All interupts
+//  All interrupts
 // 
 #define OHCI_ALL_INTERRUPTS     (OHCI_SCHEDULING_OVERRUN \
                                 | OHCI_WRITEBACK_DONE_HEAD \
@@ -165,7 +163,7 @@
                                 | OHCI_OWNERSHIP_CHANGE)
 
 //
-//  All normal interupts
+//  All normal interrupts
 //
 #define OHCI_NORMAL_INTERRUPTS      (OHCI_SCHEDULING_OVERRUN \
                                     | OHCI_WRITEBACK_DONE_HEAD \
@@ -347,4 +345,3 @@ C_ASSERT(sizeof(OHCI_ISO_TD) == 48);
 #define OHCI_ITD_SET_FRAME_COUNT(x)             (((x) - 1) << 24)
 #define OHCI_ITD_GET_CONDITION_CODE(x)          ((x) >> 28)
 #define OHCI_ITD_NO_CONDITION_CODE              0xf0000000
-

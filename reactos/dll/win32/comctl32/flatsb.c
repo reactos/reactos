@@ -29,15 +29,7 @@
  *
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winerror.h>
-#include <winuser.h>
-#include <commctrl.h>
 #include "comctl32.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
@@ -63,7 +55,7 @@ typedef struct
 BOOL WINAPI InitializeFlatSB(HWND hwnd)
 {
     TRACE("[%p]\n", hwnd);
-    return FALSE;
+    return TRUE;
 }
 
 /***********************************************************************

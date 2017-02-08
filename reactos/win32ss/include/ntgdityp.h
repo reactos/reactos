@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 Graphical Subsystem (WIN32K)
- * FILE:            include/win32k/ntgdityp.h
+ * FILE:            win32ss/include/ntgdityp.h
  * PURPOSE:         Win32 Shared GDI Types for NtGdi*
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -10,6 +10,8 @@
 
 #ifndef _NTGDITYP_
 #define _NTGDITYP_
+
+#include "ntwin32.h"
 
 /* ENUMERATIONS **************************************************************/
 
@@ -108,7 +110,7 @@ enum
     XFORM_FORMAT_LTOL = 0x20,
     XFORM_NO_TRANSLATION = 0x40,
 
-    /* Reactos specific */
+    /* ReactOS specific */
     XFORM_INTEGER = 0x1000,
 };
 
@@ -223,8 +225,12 @@ typedef DWORD LFTYPE;
 #define METARGN 2 // GetMetaRgn
 #define APIRGN  3
 
-/* Undocumented flag for fdwInit in CreateDIBitmap */
+/* New flag for fdwInit in CreateDIBitmap. See support.microsoft.com/kb/kbview/108497*/
 #define CBM_CREATDIB 2
+
+/* New color use parameter. See support.microsoft.com/kb/kbview/108497 */
+#define DIB_PAL_INDICES 2
+
 
 /* TYPES *********************************************************************/
 
@@ -432,9 +438,7 @@ typedef struct _CFONT
     DWORD           dwCFCount;
 } CFONT, *PCFONT;
 
-//
-// GDI Batch structures.
-//
+/* GDI Batch structures. */
 typedef struct _GDIBATCHHDR
 {
   SHORT Size;
@@ -460,24 +464,13 @@ typedef struct _GDIBSPATBLT
   ULONG ulBrushClr;
 } GDIBSPATBLT, *PGDIBSPATBLT;
 
-#ifndef _NTUSRTYP_
+/* FIXME: this should go to some "public" GDI32 header */
 typedef struct _PATRECT
 {
   RECT r;
   HBRUSH hBrush;
 } PATRECT, * PPATRECT;
-#endif
-#ifndef __WIN32K_NTUSER_H
-typedef struct _W32CLIENTINFO
-{
-    ULONG CI_flags;
-    ULONG cSpins;
-    ULONG ulWindowsVersion;
-    ULONG ulAppCompatFlags;
-    ULONG ulAppCompatFlags2;
-    ULONG W32ClientInfo[57];
-} W32CLIENTINFO, *PW32CLIENTINFO;
-#endif
+
 typedef struct _GDIBSPPATBLT
 {
   GDIBATCHHDR gbHdr;
@@ -535,26 +528,20 @@ typedef struct _GDIBSEXTSELCLPRGN
 {
   GDIBATCHHDR gbHdr;
   int fnMode;
-  RECTL;
+  RECTL rcl;
 } GDIBSEXTSELCLPRGN, *PGDIBSEXTSELCLPRGN;
-//
-//   Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn.
+
+/* Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn. */
 typedef struct _GDIBSOBJECT
 {
   GDIBATCHHDR gbHdr;
   HGDIOBJ hgdiobj;
 } GDIBSOBJECT, *PGDIBSOBJECT;
 
-//
-// Declarations missing in ddk/winddi.h
-//
+/* Declaration missing in ddk/winddi.h */
 typedef VOID (APIENTRY *PFN_DrvMovePanning)(LONG, LONG, FLONG);
-//typedef BOOL (APIENTRY *PFN_DrvOffset)(SURFOBJ*, LONG, LONG, FLONG);
 
-
-//
-// Most of these are defined in ddk/winddi.h
-//
+/* Most of these are defined in ddk/winddi.h */
 typedef struct _DRIVER_FUNCTIONS
 {
     PFN_DrvEnablePDEV              EnablePDEV;
@@ -742,5 +729,6 @@ ASSERT_PFN(DeriveSurface);
 ASSERT_PFN(QueryGlyphAttrs);
 ASSERT_PFN(Notify);
 ASSERT_PFN(SynchronizeSurface);
+ASSERT_PFN(ResetDevice);
 
 #endif

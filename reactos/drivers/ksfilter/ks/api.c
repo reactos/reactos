@@ -6,8 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+#include "precomp.h"
 
-#include "priv.h"
+#define NDEBUG
+#include <debug.h>
 
 const GUID GUID_NULL              = {0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 const GUID KSMEDIUMSETID_Standard = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
@@ -1138,7 +1140,7 @@ KsSynchronousIoControlDevice(
         if (Status)
         {
             /* store bytes returned */
-            *BytesReturned = IoStatusBlock.Information;
+            *BytesReturned = (ULONG)IoStatusBlock.Information;
             /* return status */
             return IoStatusBlock.Status;
         }
@@ -1179,7 +1181,7 @@ KsSynchronousIoControlDevice(
         Status = IoStatusBlock.Status;
     }
 
-    *BytesReturned = IoStatusBlock.Information;
+    *BytesReturned = (ULONG)IoStatusBlock.Information;
     return Status;
 }
 
@@ -1714,8 +1716,8 @@ KsCompletePendingRequest(
         return;
     }
 
-    /* FIXME 
-     * delete object / device header 
+    /* FIXME
+     * delete object / device header
      * remove dead pin / filter instance
      */
     UNIMPLEMENTED
@@ -1780,7 +1782,7 @@ KspDeviceSetGetBusData(
     Status = IoCallDriver(DeviceObject, Irp);
 
     /* is the request still pending */
-    if (Status == STATUS_PENDING) 
+    if (Status == STATUS_PENDING)
     {
         /* have a nap */
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -1885,7 +1887,7 @@ KsGetNextSibling(
     /* get the basic header */
     BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory ||
            BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
     return (PVOID)BasicHeader->Next.Pin;
@@ -2126,7 +2128,7 @@ KspMergePropertySet(
     PKSPROPERTY_ITEM PropertyItem, CurrentPropertyItem;
     NTSTATUS Status;
 
-    // max properties 
+    // max properties
     PropertyCount = PropertySetA->PropertiesCount + PropertySetB->PropertiesCount;
 
     // allocate items
@@ -2516,7 +2518,7 @@ KsRegisterAggregatedClientUnknown(
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
     /* sanity check */
-    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory ||
            BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
     if (BasicHeader->ClientAggregate)

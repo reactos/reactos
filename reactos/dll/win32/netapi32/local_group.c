@@ -22,10 +22,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
+typedef enum _ENUM_PHASE
+{
+    BuiltinPhase,
+    AccountPhase,
+    DonePhase
+} ENUM_PHASE;
 
 typedef struct _ENUM_CONTEXT
 {
     SAM_HANDLE ServerHandle;
+    SAM_HANDLE DomainHandle;
     SAM_HANDLE BuiltinDomainHandle;
     SAM_HANDLE AccountDomainHandle;
 
@@ -33,9 +40,23 @@ typedef struct _ENUM_CONTEXT
     PSAM_RID_ENUMERATION Buffer;
     ULONG Returned;
     ULONG Index;
-    BOOLEAN BuiltinDone;
+    ENUM_PHASE Phase;
 
 } ENUM_CONTEXT, *PENUM_CONTEXT;
+
+typedef struct _MEMBER_ENUM_CONTEXT
+{
+    SAM_HANDLE ServerHandle;
+    SAM_HANDLE DomainHandle;
+    SAM_HANDLE AliasHandle;
+    LSA_HANDLE LsaHandle;
+
+    PSID *Sids;
+    ULONG Count;
+    PLSA_REFERENCED_DOMAIN_LIST Domains;
+    PLSA_TRANSLATED_NAME Names;
+
+} MEMBER_ENUM_CONTEXT, *PMEMBER_ENUM_CONTEXT;
 
 
 static
@@ -196,6 +217,115 @@ done:
 }
 
 
+static
+NET_API_STATUS
+BuildSidListFromDomainAndName(IN PUNICODE_STRING ServerName,
+                              IN PLOCALGROUP_MEMBERS_INFO_3 buf,
+                              IN ULONG EntryCount,
+                              OUT PLOCALGROUP_MEMBERS_INFO_0 *MemberList)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE LsaHandle = NULL;
+    PUNICODE_STRING NamesArray = NULL;
+    ULONG i;
+    PLSA_REFERENCED_DOMAIN_LIST Domains = NULL;
+    PLSA_TRANSLATED_SID Sids = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MemberBuffer = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    ApiStatus = NetApiBufferAllocate(sizeof(UNICODE_STRING) * EntryCount,
+                                     (LPVOID*)&NamesArray);
+    if (ApiStatus != NERR_Success)
+    {
+        goto done;
+    }
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        RtlInitUnicodeString(&NamesArray[i],
+                             buf[i].lgrmi3_domainandname);
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               0,
+                               0,
+                               NULL);
+
+    Status = LsaOpenPolicy(ServerName,
+                           (PLSA_OBJECT_ATTRIBUTES)&ObjectAttributes,
+                           POLICY_EXECUTE,
+                           &LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    Status = LsaLookupNames(LsaHandle,
+                            EntryCount,
+                            NamesArray,
+                            &Domains,
+                            &Sids);
+    if (!NT_SUCCESS(Status))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    ApiStatus = NetApiBufferAllocate(sizeof(LOCALGROUP_MEMBERS_INFO_0) * EntryCount,
+                                     (LPVOID*)&MemberBuffer);
+    if (ApiStatus != NERR_Success)
+    {
+        goto done;
+    }
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        ApiStatus = BuildSidFromSidAndRid(Domains->Domains[Sids[i].DomainIndex].Sid,
+                                          Sids[i].RelativeId,
+                                          &MemberBuffer[i].lgrmi0_sid);
+        if (ApiStatus != NERR_Success)
+        {
+            goto done;
+        }
+    }
+
+done:
+    if (ApiStatus != NERR_Success)
+    {
+        if (MemberBuffer != NULL)
+        {
+            for (i = 0; i < EntryCount; i++)
+            {
+                if (MemberBuffer[i].lgrmi0_sid != NULL)
+                    NetApiBufferFree(MemberBuffer[i].lgrmi0_sid);
+            }
+
+            NetApiBufferFree(MemberBuffer);
+            MemberBuffer = NULL;
+        }
+    }
+
+    if (Sids != NULL)
+        LsaFreeMemory(Sids);
+
+    if (Domains != NULL)
+        LsaFreeMemory(Domains);
+
+    if (LsaHandle != NULL)
+        LsaClose(LsaHandle);
+
+    if (NamesArray != NULL)
+        NetApiBufferFree(NamesArray);
+
+    *MemberList = MemberBuffer;
+
+    return ApiStatus;
+}
+
+
 /************************************************************
  * NetLocalGroupAdd  (NETAPI32.@)
  */
@@ -337,7 +467,12 @@ NetLocalGroupAdd(
 
 done:
     if (AliasHandle != NULL)
-        SamCloseHandle(AliasHandle);
+    {
+        if (ApiStatus != NERR_Success)
+            SamDeleteAlias(AliasHandle);
+        else
+            SamCloseHandle(AliasHandle);
+    }
 
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
@@ -352,74 +487,488 @@ done:
 /************************************************************
  *                NetLocalGroupAddMember  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupAddMember(
+NET_API_STATUS
+WINAPI
+NetLocalGroupAddMember(
     LPCWSTR servername,
     LPCWSTR groupname,
     PSID membersid)
 {
-    FIXME("(%s %s %p) stub!\n", debugstr_w(servername),
+    LOCALGROUP_MEMBERS_INFO_0 Member;
+
+    TRACE("(%s %s %p)\n", debugstr_w(servername),
           debugstr_w(groupname), membersid);
-    return NERR_Success;
+
+    Member.lgrmi0_sid = membersid;
+
+    return NetLocalGroupAddMembers(servername,
+                                   groupname,
+                                   0,
+                                   (LPBYTE)&Member,
+                                   1);
 }
+
 
 /************************************************************
  *                NetLocalGroupAddMembers  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupAddMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupAddMembers(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
     LPBYTE buf,
     DWORD totalentries)
 {
-    FIXME("(%s %s %d %p %d) stub!\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MemberList = NULL;
+    ULONG i;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %d)\n", debugstr_w(servername),
           debugstr_w(groupname), level, buf, totalentries);
-    return NERR_Success;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, groupname);
+
+    switch (level)
+    {
+        case 0:
+            MemberList = (PLOCALGROUP_MEMBERS_INFO_0)buf;
+            break;
+
+        case 3:
+            Status = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
+                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                   totalentries,
+                                                   &MemberList);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("BuildSidListFromDomainAndName failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &AliasName,
+                                ALIAS_ADD_MEMBER,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+            SamCloseHandle(DomainHandle);
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &AliasName,
+                                    ALIAS_ADD_MEMBER,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    /* Add new members to the alias */
+    for (i = 0; i < totalentries; i++)
+    {
+        Status = SamAddMemberToAlias(AliasHandle,
+                                     MemberList[i].lgrmi0_sid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamAddMemberToAlias failed (Status %lu)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+done:
+    if (level == 3 && MemberList != NULL)
+    {
+        for (i = 0; i < totalentries; i++)
+        {
+            if (MemberList[i].lgrmi0_sid != NULL)
+                NetApiBufferFree(MemberList[i].lgrmi0_sid);
+        }
+
+        NetApiBufferFree(MemberList);
+    }
+
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupDel  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupDel(
+NET_API_STATUS
+WINAPI
+NetLocalGroupDel(
     LPCWSTR servername,
     LPCWSTR groupname)
 {
-    FIXME("(%s %s) stub!\n", debugstr_w(servername), debugstr_w(groupname));
-    return NERR_Success;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s)\n", debugstr_w(servername), debugstr_w(groupname));
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &GroupName,
+                                DELETE,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        TRACE("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+        {
+            SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &GroupName,
+                                    DELETE,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    /* Delete the alias */
+    Status = SamDeleteAlias(AliasHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamDeleteAlias failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupDelMember  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupDelMember(
+NET_API_STATUS
+WINAPI
+NetLocalGroupDelMember(
     LPCWSTR servername,
     LPCWSTR groupname,
     PSID membersid)
 {
-    FIXME("(%s %s %p) stub!\n", debugstr_w(servername),
+    LOCALGROUP_MEMBERS_INFO_0 Member;
+
+    TRACE("(%s %s %p)\n", debugstr_w(servername),
           debugstr_w(groupname), membersid);
-    return NERR_Success;
+
+    Member.lgrmi0_sid = membersid;
+
+    return NetLocalGroupDelMembers(servername,
+                                   groupname,
+                                   0,
+                                   (LPBYTE)&Member,
+                                   1);
 }
+
 
 /************************************************************
  *                NetLocalGroupDelMembers  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupDelMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupDelMembers(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
     LPBYTE buf,
     DWORD totalentries)
 {
-    FIXME("(%s %s %d %p %d) stub!\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MemberList = NULL;
+    ULONG i;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %d)\n", debugstr_w(servername),
           debugstr_w(groupname), level, buf, totalentries);
-    return NERR_Success;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, groupname);
+
+    switch (level)
+    {
+        case 0:
+            MemberList = (PLOCALGROUP_MEMBERS_INFO_0)buf;
+            break;
+
+        case 3:
+            Status = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
+                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                   totalentries,
+                                                   &MemberList);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("BuildSidListFromDomainAndName failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &AliasName,
+                                ALIAS_REMOVE_MEMBER,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+            SamCloseHandle(DomainHandle);
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &AliasName,
+                                    ALIAS_REMOVE_MEMBER,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    /* Remove members from the alias */
+    for (i = 0; i < totalentries; i++)
+    {
+        Status = SamRemoveMemberFromAlias(AliasHandle,
+                                          MemberList[i].lgrmi0_sid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamAddMemberToAlias failed (Status %lu)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+done:
+    if (level == 3 && MemberList != NULL)
+    {
+        for (i = 0; i < totalentries; i++)
+        {
+            if (MemberList[i].lgrmi0_sid != NULL)
+                NetApiBufferFree(MemberList[i].lgrmi0_sid);
+        }
+
+        NetApiBufferFree(MemberList);
+    }
+
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupEnum  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupEnum(
+NET_API_STATUS
+WINAPI
+NetLocalGroupEnum(
     LPCWSTR servername,
     DWORD level,
     LPBYTE* bufptr,
@@ -462,7 +1011,6 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         EnumContext->Buffer = NULL;
         EnumContext->Returned = 0;
         EnumContext->Index = 0;
-        EnumContext->BuiltinDone = FALSE;
 
         Status = SamConnect((servername != NULL) ? &ServerName : NULL,
                             &EnumContext->ServerHandle,
@@ -495,6 +1043,9 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
+
+        EnumContext->Phase = BuiltinPhase;
+        EnumContext->DomainHandle = EnumContext->BuiltinDomainHandle;
     }
 
 
@@ -505,15 +1056,9 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
         if (EnumContext->Index >= EnumContext->Returned)
         {
-//            if (EnumContext->BuiltinDone == TRUE)
-//            {
-//                ApiStatus = NERR_Success;
-//                goto done;
-//            }
-
             TRACE("Calling SamEnumerateAliasesInDomain\n");
 
-            Status = SamEnumerateAliasesInDomain(EnumContext->BuiltinDomainHandle,
+            Status = SamEnumerateAliasesInDomain(EnumContext->DomainHandle,
                                                  &EnumContext->EnumerationContext,
                                                  (PVOID *)&EnumContext->Buffer,
                                                  prefmaxlen,
@@ -532,10 +1077,6 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
                 ApiStatus = NERR_BufTooSmall;
                 goto done;
             }
-            else
-            {
-                EnumContext->BuiltinDone = TRUE;
-            }
         }
 
         TRACE("EnumContext: %lu\n", EnumContext);
@@ -547,7 +1088,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
         TRACE("RID: %lu\n", CurrentAlias->RelativeId);
 
-        Status = SamOpenAlias(EnumContext->BuiltinDomainHandle,
+        Status = SamOpenAlias(EnumContext->DomainHandle,
                               ALIAS_READ_INFORMATION,
                               CurrentAlias->RelativeId,
                               &AliasHandle);
@@ -590,10 +1131,39 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
         (*entriesread)++;
 
+        if (EnumContext->Index == EnumContext->Returned)
+        {
+            switch (EnumContext->Phase)
+            {
+                case BuiltinPhase:
+                    EnumContext->Phase = AccountPhase;
+                    EnumContext->DomainHandle = EnumContext->AccountDomainHandle;
+                    EnumContext->EnumerationContext = 0;
+                    EnumContext->Index = 0;
+                    EnumContext->Returned = 0;
+
+                    if (EnumContext->Buffer != NULL)
+                    {
+                        for (i = 0; i < EnumContext->Returned; i++)
+                        {
+                            SamFreeMemory(EnumContext->Buffer[i].Name.Buffer);
+                        }
+
+                        SamFreeMemory(EnumContext->Buffer);
+                        EnumContext->Buffer = NULL;
+                    }
+                    break;
+
+                case AccountPhase:
+                case DonePhase:
+                    EnumContext->Phase = DonePhase;
+                    break;
+            }
+        }
 //    }
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Returned)
+    if (ApiStatus == NERR_Success && EnumContext->Phase != DonePhase)
         ApiStatus = ERROR_MORE_DATA;
 
     if (EnumContext != NULL)
@@ -701,7 +1271,7 @@ NetLocalGroupGetInfo(
                                 &GroupName,
                                 ALIAS_READ_INFORMATION,
                                 &AliasHandle);
-    if (ApiStatus != NERR_Success)
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
     {
         ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
         goto done;
@@ -732,6 +1302,8 @@ NetLocalGroupGetInfo(
         if (ApiStatus != NERR_Success)
         {
             ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
             goto done;
         }
     }
@@ -774,7 +1346,9 @@ done:
 /************************************************************
  *                NetLocalGroupGetMembers  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupGetMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupGetMembers(
     LPCWSTR servername,
     LPCWSTR localgroupname,
     DWORD level,
@@ -784,64 +1358,531 @@ NET_API_STATUS WINAPI NetLocalGroupGetMembers(
     LPDWORD totalentries,
     PDWORD_PTR resumehandle)
 {
-    FIXME("(%s %s %d %p %d, %p %p %p) stub!\n", debugstr_w(servername),
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    PMEMBER_ENUM_CONTEXT EnumContext = NULL;
+    LPVOID Buffer = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MembersInfo0;
+    PLOCALGROUP_MEMBERS_INFO_1 MembersInfo1;
+    PLOCALGROUP_MEMBERS_INFO_2 MembersInfo2;
+    PLOCALGROUP_MEMBERS_INFO_3 MembersInfo3;
+    LPWSTR Ptr;
+    ULONG Size = 0;
+    ULONG SidLength;
+    ULONG i;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %d %p %p %p)\n", debugstr_w(servername),
           debugstr_w(localgroupname), level, bufptr, prefmaxlen, entriesread,
           totalentries, resumehandle);
 
-    if (level == 3)
+    *entriesread = 0;
+    *totalentries = 0;
+    *bufptr = NULL;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, localgroupname);
+
+    if (resumehandle != NULL && *resumehandle != 0)
     {
-        WCHAR userName[MAX_COMPUTERNAME_LENGTH + 1];
-        DWORD userNameLen;
-        DWORD len,needlen;
-        PLOCALGROUP_MEMBERS_INFO_3 ptr;
+        EnumContext = (PMEMBER_ENUM_CONTEXT)*resumehandle;
+    }
+    else
+    {
+        /* Allocate the enumeration context */
+        ApiStatus = NetApiBufferAllocate(sizeof(MEMBER_ENUM_CONTEXT), (PVOID*)&EnumContext);
+        if (ApiStatus != NERR_Success)
+            goto done;
 
-        /* still a stub,  current user is belonging to all groups */
+        /* Connect to the SAM Server */
+        Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                            &EnumContext->ServerHandle,
+                            SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamConnect failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
 
-        *totalentries = 1;
-        *entriesread = 0;
+        /* Open the Builtin Domain */
+        Status = OpenBuiltinDomain(EnumContext->ServerHandle,
+                                   DOMAIN_LOOKUP,
+                                   &EnumContext->DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
 
-        userNameLen = MAX_COMPUTERNAME_LENGTH + 1;
-        GetUserNameW(userName,&userNameLen);
-        needlen = sizeof(LOCALGROUP_MEMBERS_INFO_3) +
-             (userNameLen+2) * sizeof(WCHAR);
-        if (prefmaxlen != MAX_PREFERRED_LENGTH)
-            len = min(prefmaxlen,needlen);
-        else
-            len = needlen;
+        /* Open the alias account in the builtin domain */
+        ApiStatus = OpenAliasByName(EnumContext->DomainHandle,
+                                    &AliasName,
+                                    ALIAS_LIST_MEMBERS,
+                                    &EnumContext->AliasHandle);
+        if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            goto done;
+        }
 
-        NetApiBufferAllocate(len, (LPVOID *) bufptr);
-        if (len < needlen)
-            return ERROR_MORE_DATA;
+        if (EnumContext->AliasHandle == NULL)
+        {
+            if (EnumContext->DomainHandle != NULL)
+                SamCloseHandle(EnumContext->DomainHandle);
 
-        ptr = (PLOCALGROUP_MEMBERS_INFO_3)*bufptr;
-        ptr->lgrmi3_domainandname = (LPWSTR)(*bufptr+sizeof(LOCALGROUP_MEMBERS_INFO_3));
-        lstrcpyW(ptr->lgrmi3_domainandname,userName);
+            /* Open the Acount Domain */
+            Status = OpenAccountDomain(EnumContext->ServerHandle,
+                                       (servername != NULL) ? &ServerName : NULL,
+                                       DOMAIN_LOOKUP,
+                                       &EnumContext->DomainHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
 
-        *entriesread = 1;
+            /* Open the alias account in the account domain */
+            ApiStatus = OpenAliasByName(EnumContext->DomainHandle,
+                                        &AliasName,
+                                        ALIAS_LIST_MEMBERS,
+                                        &EnumContext->AliasHandle);
+            if (ApiStatus != NERR_Success)
+            {
+                ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+                if (ApiStatus == ERROR_NONE_MAPPED)
+                    ApiStatus = NERR_GroupNotFound;
+                goto done;
+            }
+        }
+
+        /* Get the member list */
+        Status = SamGetMembersInAlias(EnumContext->AliasHandle,
+                                      &EnumContext->Sids,
+                                      &EnumContext->Count);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamGetMemberInAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        if (EnumContext->Count == 0)
+        {
+            TRACE("No member found. We're done.\n");
+            ApiStatus = NERR_Success;
+            goto done;
+        }
+
+        /* Get name and domain information for all members */
+        if (level != 0)
+        {
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       NULL,
+                                       0,
+                                       0,
+                                       NULL);
+
+            Status = LsaOpenPolicy((servername != NULL) ? &ServerName : NULL,
+                                   (PLSA_OBJECT_ATTRIBUTES)&ObjectAttributes,
+                                   POLICY_EXECUTE,
+                                   &EnumContext->LsaHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            Status = LsaLookupSids(EnumContext->LsaHandle,
+                                   EnumContext->Count,
+                                   EnumContext->Sids,
+                                   &EnumContext->Domains,
+                                   &EnumContext->Names);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+        }
     }
 
-    return NERR_Success;
+    /* Calculate the required buffer size */
+    for (i = 0; i < EnumContext->Count; i++)
+    {
+        switch (level)
+        {
+            case 0:
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_0) +
+                        RtlLengthSid(EnumContext->Sids[i]);
+                break;
+
+            case 1:
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_1) +
+                        RtlLengthSid(EnumContext->Sids[i]) +
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                break;
+
+            case 2:
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_2) +
+                        RtlLengthSid(EnumContext->Sids[i]) +
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                    Size += EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
+                break;
+
+            case 3:
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_3) +
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                    Size += EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
+                break;
+
+            default:
+                ApiStatus = ERROR_INVALID_LEVEL;
+                goto done;
+        }
+    }
+
+    /* Allocate the member buffer */
+    ApiStatus = NetApiBufferAllocate(Size, &Buffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    ZeroMemory(Buffer, Size);
+
+    /* Fill the member buffer */
+    switch (level)
+    {
+        case 0:
+            MembersInfo0 = (PLOCALGROUP_MEMBERS_INFO_0)Buffer;
+            Ptr = (PVOID)((ULONG_PTR)Buffer + sizeof(LOCALGROUP_MEMBERS_INFO_0) * EnumContext->Count);
+            break;
+
+        case 1:
+            MembersInfo1 = (PLOCALGROUP_MEMBERS_INFO_1)Buffer;
+            Ptr = (PVOID)((ULONG_PTR)Buffer + sizeof(LOCALGROUP_MEMBERS_INFO_1) * EnumContext->Count);
+            break;
+
+        case 2:
+            MembersInfo2 = (PLOCALGROUP_MEMBERS_INFO_2)Buffer;
+            Ptr = (PVOID)((ULONG_PTR)Buffer + sizeof(LOCALGROUP_MEMBERS_INFO_2) * EnumContext->Count);
+            break;
+
+        case 3:
+            MembersInfo3 = (PLOCALGROUP_MEMBERS_INFO_3)Buffer;
+            Ptr = (PVOID)((ULONG_PTR)Buffer + sizeof(LOCALGROUP_MEMBERS_INFO_3) * EnumContext->Count);
+            break;
+    }
+
+    for (i = 0; i < EnumContext->Count; i++)
+    {
+        switch (level)
+        {
+            case 0:
+                MembersInfo0->lgrmi0_sid = (PSID)Ptr;
+
+                SidLength = RtlLengthSid(EnumContext->Sids[i]);
+                memcpy(MembersInfo0->lgrmi0_sid,
+                       EnumContext->Sids[i],
+                       SidLength);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + SidLength);
+                MembersInfo0++;
+                break;
+
+            case 1:
+                MembersInfo1->lgrmi1_sid = (PSID)Ptr;
+
+                SidLength = RtlLengthSid(EnumContext->Sids[i]);
+                memcpy(MembersInfo1->lgrmi1_sid,
+                       EnumContext->Sids[i],
+                       SidLength);
+
+                Ptr = (PVOID)((ULONG_PTR)Ptr + SidLength);
+
+                MembersInfo1->lgrmi1_sidusage = EnumContext->Names[i].Use;
+
+                TRACE("Name: %S\n", EnumContext->Names[i].Name.Buffer);
+
+                MembersInfo1->lgrmi1_name = Ptr;
+
+                memcpy(MembersInfo1->lgrmi1_name,
+                       EnumContext->Names[i].Name.Buffer,
+                       EnumContext->Names[i].Name.Length);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Names[i].Name.Length + sizeof(WCHAR));
+                MembersInfo1++;
+                break;
+
+            case 2:
+                MembersInfo2->lgrmi2_sid = (PSID)Ptr;
+
+                SidLength = RtlLengthSid(EnumContext->Sids[i]);
+                memcpy(MembersInfo2->lgrmi2_sid,
+                       EnumContext->Sids[i],
+                       SidLength);
+
+                Ptr = (PVOID)((ULONG_PTR)Ptr + SidLength);
+
+                MembersInfo2->lgrmi2_sidusage = EnumContext->Names[i].Use;
+
+                MembersInfo2->lgrmi2_domainandname = Ptr;
+
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                {
+                    memcpy(MembersInfo2->lgrmi2_domainandname,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
+
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
+
+                    *((LPWSTR)Ptr) = L'\\';
+
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + sizeof(WCHAR));
+                }
+
+                memcpy(Ptr,
+                       EnumContext->Names[i].Name.Buffer,
+                       EnumContext->Names[i].Name.Length);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Names[i].Name.Length + sizeof(WCHAR));
+                MembersInfo2++;
+                break;
+
+            case 3:
+                MembersInfo3->lgrmi3_domainandname = Ptr;
+
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                {
+                    memcpy(MembersInfo3->lgrmi3_domainandname,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
+
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
+
+                    *((LPWSTR)Ptr) = L'\\';
+
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + sizeof(WCHAR));
+                }
+
+                memcpy(Ptr,
+                       EnumContext->Names[i].Name.Buffer,
+                       EnumContext->Names[i].Name.Length);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Names[i].Name.Length + sizeof(WCHAR));
+                MembersInfo3++;
+                break;
+        }
+    }
+
+    *entriesread = EnumContext->Count;
+
+    *bufptr = (LPBYTE)Buffer;
+
+done:
+    if (EnumContext != NULL)
+        *totalentries = EnumContext->Count;
+
+    if (resumehandle == NULL || ApiStatus != ERROR_MORE_DATA)
+    {
+        /* Release the enumeration context */
+        if (EnumContext != NULL)
+        {
+            if (EnumContext->LsaHandle != NULL)
+                LsaClose(EnumContext->LsaHandle);
+
+            if (EnumContext->AliasHandle != NULL)
+                SamCloseHandle(EnumContext->AliasHandle);
+
+            if (EnumContext->DomainHandle != NULL)
+                SamCloseHandle(EnumContext->DomainHandle);
+
+            if (EnumContext->ServerHandle != NULL)
+                SamCloseHandle(EnumContext->ServerHandle);
+
+            if (EnumContext->Sids != NULL)
+                SamFreeMemory(EnumContext->Sids);
+
+            if (EnumContext->Domains != NULL)
+                LsaFreeMemory(EnumContext->Domains);
+
+            if (EnumContext->Names != NULL)
+                LsaFreeMemory(EnumContext->Names);
+
+            NetApiBufferFree(EnumContext);
+            EnumContext = NULL;
+        }
+    }
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupSetInfo  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupSetInfo(
+NET_API_STATUS
+WINAPI
+NetLocalGroupSetInfo(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
     LPBYTE buf,
     LPDWORD parm_err)
 {
-    FIXME("(%s %s %d %p %p) stub!\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    ALIAS_NAME_INFORMATION AliasNameInfo;
+    ALIAS_ADM_COMMENT_INFORMATION AdminCommentInfo;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %p)\n", debugstr_w(servername),
           debugstr_w(groupname), level, buf, parm_err);
-    return NERR_Success;
+
+    if (parm_err != NULL)
+        *parm_err = PARM_ERROR_NONE;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &AliasName,
+                                ALIAS_WRITE_ACCOUNT,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+            SamCloseHandle(DomainHandle);
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &AliasName,
+                                    ALIAS_WRITE_ACCOUNT,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    switch (level)
+    {
+        case 0:
+            /* Set the alias name */
+            RtlInitUnicodeString(&AliasNameInfo.Name,
+                                 ((PLOCALGROUP_INFO_0)buf)->lgrpi0_name);
+
+            Status = SamSetInformationAlias(AliasHandle,
+                                            AliasNameInformation,
+                                            &AliasNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SamSetInformationAlias failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 1:
+        case 1002:
+            /* Set the alias admin comment */
+            if (level == 1)
+                RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                     ((PLOCALGROUP_INFO_1)buf)->lgrpi1_comment);
+            else
+                RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                     ((PLOCALGROUP_INFO_1002)buf)->lgrpi1002_comment);
+
+            Status = SamSetInformationAlias(AliasHandle,
+                                            AliasAdminCommentInformation,
+                                            &AdminCommentInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SamSetInformationAlias failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+done:
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupSetMember (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupSetMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupSetMembers(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
@@ -852,3 +1893,5 @@ NET_API_STATUS WINAPI NetLocalGroupSetMembers(
             debugstr_w(groupname), level, buf, totalentries);
     return NERR_Success;
 }
+
+/* EOF */
